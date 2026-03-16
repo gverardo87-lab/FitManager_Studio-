@@ -22,9 +22,10 @@ interface CommandStripProps {
 }
 
 export function CommandStrip({ summary, todayEvents, dateAnchor }: CommandStripProps) {
-  const [clockTime, setClockTime] = useState(() => new Date());
+  const [clockTime, setClockTime] = useState(new Date(0));
 
   useEffect(() => {
+    setClockTime(new Date());
     const timerId = window.setInterval(() => setClockTime(new Date()), 5000);
     return () => window.clearInterval(timerId);
   }, []);

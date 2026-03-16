@@ -33,10 +33,11 @@ interface AgendaLiveProps {
 
 export function AgendaLive({ events, isLoading }: AgendaLiveProps) {
   const updateEvent = useUpdateEvent();
-  const [clockTime, setClockTime] = useState(() => new Date());
+  const [clockTime, setClockTime] = useState(new Date(0));
   const [updatingEventId, setUpdatingEventId] = useState<number | null>(null);
 
   useEffect(() => {
+    setClockTime(new Date());
     const timerId = window.setInterval(() => setClockTime(new Date()), 60_000);
     return () => window.clearInterval(timerId);
   }, []);
