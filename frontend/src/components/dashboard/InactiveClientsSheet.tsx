@@ -76,7 +76,7 @@ export function InactiveClientsSheet({ open, onOpenChange }: InactiveClientsShee
         <SheetHeader>
           <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-orange-100 dark:bg-orange-900/30">
-              <UserX className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+              <UserX aria-hidden="true" className="h-5 w-5 text-orange-600 dark:text-orange-400" />
             </div>
             <div>
               <SheetTitle>Clienti inattivi</SheetTitle>
@@ -134,7 +134,7 @@ export function InactiveClientsSheet({ open, onOpenChange }: InactiveClientsShee
 
                   {/* Ultima sessione */}
                   <div className="mb-2 flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Clock className="h-3 w-3" />
+                    <Clock aria-hidden="true" className="h-3 w-3" />
                     {item.ultimo_evento_data ? (
                       <span>
                         Ultima sessione: {formatShortDate(item.ultimo_evento_data)}
@@ -156,7 +156,7 @@ export function InactiveClientsSheet({ open, onOpenChange }: InactiveClientsShee
                         href={`tel:${item.telefono}`}
                         className="inline-flex items-center gap-1.5 rounded-md border bg-white px-2.5 py-1 text-xs font-medium transition-colors hover:bg-blue-50 hover:text-blue-600 dark:bg-zinc-900 dark:hover:bg-blue-950/30 dark:hover:text-blue-400"
                       >
-                        <Phone className="h-3 w-3" />
+                        <Phone aria-hidden="true" className="h-3 w-3" />
                         {item.telefono}
                       </a>
                     )}
@@ -165,7 +165,7 @@ export function InactiveClientsSheet({ open, onOpenChange }: InactiveClientsShee
                         href={`mailto:${item.email}`}
                         className="inline-flex items-center gap-1.5 rounded-md border bg-white px-2.5 py-1 text-xs font-medium transition-colors hover:bg-blue-50 hover:text-blue-600 dark:bg-zinc-900 dark:hover:bg-blue-950/30 dark:hover:text-blue-400"
                       >
-                        <Mail className="h-3 w-3" />
+                        <Mail aria-hidden="true" className="h-3 w-3" />
                         {item.email}
                       </a>
                     )}
@@ -182,9 +182,9 @@ export function InactiveClientsSheet({ open, onOpenChange }: InactiveClientsShee
                       size="sm"
                       className="h-8 w-full gap-1.5 bg-blue-600 text-xs font-medium text-white hover:bg-blue-700"
                     >
-                      <Calendar className="h-3.5 w-3.5" />
+                      <Calendar aria-hidden="true" className="h-3.5 w-3.5" />
                       Pianifica sessione
-                      <ArrowRight className="h-3 w-3" />
+                      <ArrowRight aria-hidden="true" className="h-3 w-3" />
                     </Button>
                   </Link>
                 </div>

@@ -66,7 +66,7 @@ export function AgendaLive({ events, isLoading }: AgendaLiveProps) {
       <div className="flex items-center justify-between border-b px-4 py-3 sm:px-5">
         <div className="flex items-center gap-2.5">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-100 to-violet-100 dark:from-blue-900/30 dark:to-violet-900/30">
-            <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            <Calendar aria-hidden="true" className="h-4 w-4 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
             <h3 className="text-sm font-bold">Agenda Oggi</h3>
@@ -77,7 +77,7 @@ export function AgendaLive({ events, isLoading }: AgendaLiveProps) {
         </div>
         <Link href="/agenda">
           <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-muted-foreground hover:text-foreground">
-            Vedi tutto <ArrowRight className="h-3 w-3" />
+            Vedi tutto <ArrowRight aria-hidden="true" className="h-3 w-3" />
           </Button>
         </Link>
       </div>
@@ -86,12 +86,12 @@ export function AgendaLive({ events, isLoading }: AgendaLiveProps) {
       {events.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted/50">
-            <Calendar className="h-6 w-6 text-muted-foreground/30" />
+            <Calendar aria-hidden="true" className="h-6 w-6 text-muted-foreground/30" />
           </div>
           <p className="text-sm font-medium text-muted-foreground">Nessun appuntamento oggi</p>
           <Link href="/agenda">
             <Button variant="outline" size="sm" className="mt-1 gap-1 text-xs">
-              Apri agenda <ArrowRight className="h-3 w-3" />
+              Apri agenda <ArrowRight aria-hidden="true" className="h-3 w-3" />
             </Button>
           </Link>
         </div>

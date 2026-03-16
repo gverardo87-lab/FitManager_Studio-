@@ -121,7 +121,7 @@ export default function DashboardPage() {
       {isError && (
         <div className="flex flex-col gap-3 rounded-xl border border-destructive/50 bg-destructive/5 p-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
-            <AlertCircle className="h-4 w-4 text-destructive" />
+            <AlertCircle aria-hidden="true" className="h-4 w-4 text-destructive" />
             <p className="text-sm text-destructive">
               Impossibile caricare i dati della dashboard.
             </p>
@@ -258,7 +258,7 @@ function WelcomeCard({ exerciseCount }: { exerciseCount: number }) {
         <div className="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full bg-primary/5 blur-3xl" />
         <div className="relative flex flex-col items-center text-center sm:items-start sm:text-left">
           <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10">
-            <Sparkles className="h-7 w-7 text-primary" />
+            <Sparkles aria-hidden="true" className="h-7 w-7 text-primary" />
           </div>
           <h2 className="text-xl font-bold tracking-tight sm:text-2xl">
             Benvenuto in FitManager Studio+
@@ -301,7 +301,7 @@ function WelcomeCard({ exerciseCount }: { exerciseCount: number }) {
 
       {/* Tip saldo iniziale */}
       <Link href="/impostazioni" className="group flex items-center gap-2 rounded-lg border border-dashed border-muted-foreground/20 px-4 py-3 transition-colors hover:border-primary/30 hover:bg-primary/5">
-        <Settings className="h-4 w-4 text-muted-foreground/50 group-hover:text-primary" />
+        <Settings aria-hidden="true" className="h-4 w-4 text-muted-foreground/50 group-hover:text-primary" />
         <p className="text-xs text-muted-foreground">
           <span className="font-medium">Suggerimento:</span> configura il saldo iniziale di cassa in Impostazioni per un bilancio accurato fin da subito
         </p>

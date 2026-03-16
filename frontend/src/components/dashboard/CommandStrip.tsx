@@ -111,7 +111,7 @@ export function CommandStrip({ summary, todayEvents, dateAnchor }: CommandStripP
 
             {/* Today sessions badge */}
             <div className="flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-xs font-semibold text-white/80">
-              <CalendarCheck className="h-3 w-3" />
+              <CalendarCheck aria-hidden="true" className="h-3 w-3" />
               {todayAppointments} {todayAppointments === 1 ? "sessione" : "sessioni"}
             </div>
           </div>

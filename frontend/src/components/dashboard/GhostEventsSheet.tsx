@@ -132,7 +132,7 @@ export function GhostEventsSheet({ open, onOpenChange }: GhostEventsSheetProps) 
         <SheetHeader>
           <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-100 dark:bg-red-900/30">
-              <Ghost className="h-5 w-5 text-red-600 dark:text-red-400" />
+              <Ghost aria-hidden="true" className="h-5 w-5 text-red-600 dark:text-red-400" />
             </div>
             <div>
               <SheetTitle>Eventi da aggiornare</SheetTitle>
@@ -202,7 +202,7 @@ export function GhostEventsSheet({ open, onOpenChange }: GhostEventsSheetProps) 
                           )}
                         </div>
                         <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                          <Calendar className="h-3 w-3" />
+                          <Calendar aria-hidden="true" className="h-3 w-3" />
                           <span>{formatEventDate(event.data_inizio)}</span>
                         </div>
                       </div>
@@ -218,7 +218,7 @@ export function GhostEventsSheet({ open, onOpenChange }: GhostEventsSheetProps) 
                       {/* Cliente */}
                       {event.cliente_nome && (
                         <div className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-                          <User className="h-3 w-3" />
+                          <User aria-hidden="true" className="h-3 w-3" />
                           <span>{event.cliente_nome} {event.cliente_cognome}</span>
                         </div>
                       )}
@@ -248,7 +248,7 @@ export function GhostEventsSheet({ open, onOpenChange }: GhostEventsSheetProps) 
                           {isResolving ? (
                             <Loader2 className="h-3.5 w-3.5 animate-spin" />
                           ) : (
-                            <XCircle className="h-3.5 w-3.5" />
+                            <XCircle aria-hidden="true" className="h-3.5 w-3.5" />
                           )}
                           Cancellata
                         </Button>
@@ -291,7 +291,7 @@ export function GhostEventsSheet({ open, onOpenChange }: GhostEventsSheetProps) 
                       {bulkAction === "Cancellato" ? (
                         <Loader2 className="h-3.5 w-3.5 animate-spin" />
                       ) : (
-                        <XCircle className="h-3.5 w-3.5" />
+                        <XCircle aria-hidden="true" className="h-3.5 w-3.5" />
                       )}
                       Cancella tutte
                     </Button>

@@ -67,7 +67,7 @@ export function ExpiringContractsSheet({ open, onOpenChange }: ExpiringContracts
         <SheetHeader>
           <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/30">
-              <CreditCard className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+              <CreditCard aria-hidden="true" className="h-5 w-5 text-amber-600 dark:text-amber-400" />
             </div>
             <div>
               <SheetTitle>Contratti in scadenza</SheetTitle>
@@ -121,7 +121,7 @@ export function ExpiringContractsSheet({ open, onOpenChange }: ExpiringContracts
                     {/* Header: cliente + countdown */}
                     <div className="mb-2 flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <User className="h-3.5 w-3.5 text-muted-foreground" />
+                        <User aria-hidden="true" className="h-3.5 w-3.5 text-muted-foreground" />
                         <span className="text-sm font-semibold">
                           {item.client_nome} {item.client_cognome}
                         </span>
@@ -134,11 +134,11 @@ export function ExpiringContractsSheet({ open, onOpenChange }: ExpiringContracts
                     {/* Pacchetto + scadenza */}
                     <div className="mb-3 flex items-center gap-3 text-xs text-muted-foreground">
                       <div className="flex items-center gap-1">
-                        <CreditCard className="h-3 w-3" />
+                        <CreditCard aria-hidden="true" className="h-3 w-3" />
                         <span>{item.tipo_pacchetto || "Pacchetto"}</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
+                        <Calendar aria-hidden="true" className="h-3 w-3" />
                         <span>Scade il {formatShortDate(item.data_scadenza)}</span>
                       </div>
                     </div>
@@ -163,7 +163,7 @@ export function ExpiringContractsSheet({ open, onOpenChange }: ExpiringContracts
 
                     {/* Crediti residui (evidenziato) */}
                     <div className="mb-3 flex items-center gap-2">
-                      <Dumbbell className="h-3.5 w-3.5 text-amber-500" />
+                      <Dumbbell aria-hidden="true" className="h-3.5 w-3.5 text-amber-500" />
                       <span className="text-sm font-bold text-amber-600 dark:text-amber-400">
                         {item.crediti_residui} {item.crediti_residui === 1 ? "seduta" : "sedute"} da usare
                       </span>
@@ -184,7 +184,7 @@ export function ExpiringContractsSheet({ open, onOpenChange }: ExpiringContracts
                         className="h-8 w-full gap-1.5 text-xs font-medium"
                       >
                         Vai al contratto
-                        <ArrowRight className="h-3 w-3" />
+                        <ArrowRight aria-hidden="true" className="h-3 w-3" />
                       </Button>
                     </Link>
                   </div>

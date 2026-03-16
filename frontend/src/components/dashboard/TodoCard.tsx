@@ -357,7 +357,7 @@ export function TodoCard({
       <div className={`mb-3 shrink-0 rounded-lg border p-3 backdrop-blur-[1px] ${hero.panelTone}`}>
         <div className="flex min-w-0 items-start gap-2.5">
           <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${hero.iconTone}`}>
-            <HeroIcon className="h-4 w-4" />
+            <HeroIcon aria-hidden="true" className="h-4 w-4" />
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">Azione consigliata</p>
@@ -415,7 +415,7 @@ export function TodoCard({
             onClick={() => setShowDateInput((prev) => !prev)}
             title="Aggiungi scadenza"
           >
-            <CalendarDays className="h-4 w-4" />
+            <CalendarDays aria-hidden="true" className="h-4 w-4" />
           </Button>
           <Button
             variant="outline"
@@ -424,7 +424,7 @@ export function TodoCard({
             onClick={handleCreate}
             disabled={!newTitle.trim() || createTodo.isPending}
           >
-            <Plus className="h-4 w-4" />
+            <Plus aria-hidden="true" className="h-4 w-4" />
           </Button>
         </div>
         {showDateInput && (
@@ -470,7 +470,7 @@ export function TodoCard({
       {/* Todo list — scrollable, fills remaining space */}
       {todos.length === 0 ? (
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-amber-300/50 p-6 text-center dark:border-amber-800/30">
-          <ListTodo className="h-8 w-8 text-amber-400/40" />
+          <ListTodo aria-hidden="true" className="h-8 w-8 text-amber-400/40" />
           <p className="font-[family-name:var(--font-caveat)] text-2xl font-semibold text-amber-700/60 dark:text-amber-400/50">Nessun promemoria</p>
           <p className="text-xs text-muted-foreground/70">
             Scrivi qualcosa qui sopra
@@ -536,7 +536,7 @@ function TodoItem({
             : "border-amber-400/60 hover:border-emerald-400 dark:border-amber-600/40"
         }`}
       >
-        {todo.completato && <Check className="h-3 w-3" />}
+        {todo.completato && <Check aria-hidden="true" className="h-3 w-3" />}
       </button>
 
       <div className="min-w-0 flex-1">

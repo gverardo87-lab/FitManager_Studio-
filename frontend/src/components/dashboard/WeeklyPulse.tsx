@@ -166,7 +166,7 @@ export function WeeklyPulse({ events, dateAnchor, isLoading }: WeeklyPulseProps)
           )}
           <Link href="/agenda">
             <Button variant="ghost" size="sm" className="h-8 gap-1 text-xs text-muted-foreground hover:text-foreground">
-              Agenda <ArrowRight className="h-3 w-3" />
+              Agenda <ArrowRight aria-hidden="true" className="h-3 w-3" />
             </Button>
           </Link>
         </div>
@@ -176,7 +176,7 @@ export function WeeklyPulse({ events, dateAnchor, isLoading }: WeeklyPulseProps)
       {!hasData ? (
         <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-muted-foreground/15 p-8 text-center">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted/50">
-            <CalendarCheck className="h-6 w-6 text-muted-foreground/30" />
+            <CalendarCheck aria-hidden="true" className="h-6 w-6 text-muted-foreground/30" />
           </div>
           <p className="text-sm font-medium text-muted-foreground">Nessuna seduta pianificata questa settimana</p>
           <p className="text-xs text-muted-foreground/60">Pianifica appuntamenti dall&apos;agenda</p>

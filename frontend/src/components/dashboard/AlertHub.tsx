@@ -106,7 +106,7 @@ export function AlertHub({ alerts, isLoading, alertActions }: AlertHubProps) {
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30">
-            <Bell className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+            <Bell aria-hidden="true" className="h-4 w-4 text-amber-600 dark:text-amber-400" />
             {criticalCount > 0 && (
               <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white shadow-sm shadow-red-500/30">
                 {criticalCount}
@@ -139,7 +139,7 @@ export function AlertHub({ alerts, isLoading, alertActions }: AlertHubProps) {
             className="flex items-center justify-center gap-1.5 rounded-xl border border-dashed border-zinc-300 px-3 py-3 text-xs font-medium text-muted-foreground transition-colors hover:border-zinc-400 hover:bg-zinc-50 hover:text-foreground dark:border-zinc-700 dark:hover:border-zinc-600 dark:hover:bg-zinc-800/50"
           >
             +{remaining} {remaining === 1 ? "altro" : "altri"}
-            <ChevronDown className="h-3 w-3" />
+            <ChevronDown aria-hidden="true" className="h-3 w-3" />
           </button>
         )}
       </div>
@@ -171,7 +171,7 @@ function AlertCard({ item, onAction }: { item: AlertItem; onAction?: () => void 
           {item.count}
         </Badge>
       )}
-      <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
+      <ArrowRight aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
     </div>
   );
 

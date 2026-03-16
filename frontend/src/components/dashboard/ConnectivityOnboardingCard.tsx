@@ -54,7 +54,7 @@ export function ConnectivityOnboardingCard() {
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div className="flex items-start gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300">
-            <Icon className="h-5 w-5" />
+            <Icon aria-hidden="true" className="h-5 w-5" />
           </div>
           <div className="space-y-2">
             <p className="text-sm font-semibold text-foreground">{prompt.title}</p>

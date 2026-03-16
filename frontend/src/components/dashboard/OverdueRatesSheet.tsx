@@ -101,7 +101,7 @@ export function OverdueRatesSheet({ open, onOpenChange }: OverdueRatesSheetProps
         <SheetHeader>
           <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-100 dark:bg-red-900/30">
-              <ShieldAlert className="h-5 w-5 text-red-600 dark:text-red-400" />
+              <ShieldAlert aria-hidden="true" className="h-5 w-5 text-red-600 dark:text-red-400" />
             </div>
             <div>
               <SheetTitle>Rate scadute</SheetTitle>
@@ -157,7 +157,7 @@ export function OverdueRatesSheet({ open, onOpenChange }: OverdueRatesSheetProps
                     {/* Header: cliente + ritardo */}
                     <div className="mb-2 flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <User className="h-3.5 w-3.5 text-muted-foreground" />
+                        <User aria-hidden="true" className="h-3.5 w-3.5 text-muted-foreground" />
                         <span className="text-sm font-semibold">
                           {item.client_nome} {item.client_cognome}
                         </span>
@@ -173,11 +173,11 @@ export function OverdueRatesSheet({ open, onOpenChange }: OverdueRatesSheetProps
                     {/* Contratto + scadenza */}
                     <div className="mb-2 flex items-center gap-3 text-xs text-muted-foreground">
                       <div className="flex items-center gap-1">
-                        <CreditCard className="h-3 w-3" />
+                        <CreditCard aria-hidden="true" className="h-3 w-3" />
                         <span>{item.tipo_pacchetto || "Contratto"}</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
+                        <Calendar aria-hidden="true" className="h-3 w-3" />
                         <span>Scad. {formatShortDate(item.data_scadenza)}</span>
                       </div>
                     </div>
