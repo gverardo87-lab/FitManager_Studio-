@@ -2117,6 +2117,54 @@ export interface WorkoutLogListResponse {
 }
 
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// WORKOUT SCHEDULE (api/schemas/workout_schedule.py)
+// ════════════════════════════════════════════════════════════
+
+export type ScheduleSlotStato = "pianificato" | "completato" | "saltato" | "parziale";
+
+/** POST /api/workouts/{id}/schedule/generate */
+export interface ScheduleGenerateRequest {
+  pattern_giorni: number[]; // 0=Lun..6=Dom
+  data_inizio: string;      // "YYYY-MM-DD"
+  settimane: number;
+}
+
+/** PUT /api/workout-schedule/{id} */
+export interface ScheduleSlotUpdate {
+  data_pianificata?: string;
+  stato?: ScheduleSlotStato;
+  note?: string;
+}
+
+/** POST /api/workouts/{id}/schedule/bulk-move */
+export interface ScheduleBulkMoveRequest {
+  slot_ids: number[];
+  offset_giorni: number;
+}
+
+/** GET response — singolo slot enriched */
+export interface ScheduleSlot {
+  id: number;
+  id_scheda: number;
+  id_sessione: number;
+  id_cliente: number;
+  data_pianificata: string;
+  stato: ScheduleSlotStato;
+  id_log: number | null;
+  note: string | null;
+  created_at: string | null;
+  sessione_nome: string;
+  sessione_numero: number;
+  focus_muscolare: string | null;
+}
+
+/** GET /api/workouts/{id}/schedule */
+export interface ScheduleListResponse {
+  items: ScheduleSlot[];
+  total: number;
+}
+
+// ════════════════════════════════════════════════════════════
 // MISURAZIONI CORPOREE (api/schemas/measurement.py)
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
