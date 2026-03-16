@@ -55,11 +55,11 @@ const CLIENTI_KPI: ClientiKpiDef[] = [
     key: "attivi",
     label: "Attivi",
     icon: Users,
-    borderColor: "border-l-emerald-500",
-    gradient: "from-emerald-50/80 to-white dark:from-emerald-950/40 dark:to-zinc-900",
-    iconBg: "bg-emerald-100 dark:bg-emerald-900/30",
-    iconColor: "text-emerald-600 dark:text-emerald-400",
-    valueColor: "text-emerald-700 dark:text-emerald-400",
+    borderColor: "border-l-teal-500",
+    gradient: "from-teal-50/80 to-white dark:from-teal-950/40 dark:to-zinc-900",
+    iconBg: "bg-teal-100 dark:bg-teal-900/30",
+    iconColor: "text-teal-600 dark:text-teal-400",
+    valueColor: "text-teal-700 dark:text-teal-400",
   },
   {
     key: "inattivi",
@@ -75,11 +75,11 @@ const CLIENTI_KPI: ClientiKpiDef[] = [
     key: "con_crediti",
     label: "Con Crediti",
     icon: CreditCard,
-    borderColor: "border-l-blue-500",
-    gradient: "from-blue-50/80 to-white dark:from-blue-950/40 dark:to-zinc-900",
-    iconBg: "bg-blue-100 dark:bg-blue-900/30",
-    iconColor: "text-blue-600 dark:text-blue-400",
-    valueColor: "text-blue-700 dark:text-blue-400",
+    borderColor: "border-l-teal-500",
+    gradient: "from-teal-50/80 to-white dark:from-teal-950/40 dark:to-zinc-900",
+    iconBg: "bg-teal-100 dark:bg-teal-900/30",
+    iconColor: "text-teal-600 dark:text-teal-400",
+    valueColor: "text-teal-700 dark:text-teal-400",
   },
   {
     key: "rate_scadute",
@@ -114,13 +114,13 @@ interface FilterChipDef {
 }
 
 const STATO_CHIPS: FilterChipDef[] = [
-  { key: "Attivo", label: "Attivi", color: "#10b981", icon: Users },
+  { key: "Attivo", label: "Attivi", color: "#14b8a6", icon: Users },
   { key: "Inattivo", label: "Inattivi", color: "#a1a1aa", icon: UserX },
 ];
 
 const SITUAZIONE_CHIPS: FilterChipDef[] = [
   { key: "rate_scadute", label: "Con Rate Scadute", color: "#ef4444", icon: AlertTriangle },
-  { key: "con_crediti", label: "Con Crediti", color: "#3b82f6", icon: CreditCard },
+  { key: "con_crediti", label: "Con Crediti", color: "#14b8a6", icon: CreditCard },
 ];
 
 // ── Page Component ──
@@ -258,8 +258,8 @@ export default function ClientiPage() {
       {/* ── Header gradient ── */}
       <div data-guide="clienti-header" className={revealClass(0, "flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between")} style={revealStyle(0)}>
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/40 dark:to-blue-800/30">
-            <Users className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-teal-100 to-teal-200 dark:from-teal-900/40 dark:to-teal-800/30">
+            <Users className="h-5 w-5 text-teal-600 dark:text-teal-400" />
           </div>
           <div>
             <h1 className="text-2xl font-bold tracking-tight">
@@ -494,9 +494,9 @@ function FilterBar({
 // ── Skeleton per la tabella ──
 
 const KPI_BORDERS = [
-  "border-l-blue-500",
-  "border-l-emerald-500",
-  "border-l-amber-500",
+  "border-l-teal-500",
+  "border-l-zinc-400",
+  "border-l-teal-500",
   "border-l-red-500",
 ] as const;
 

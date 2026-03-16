@@ -221,7 +221,7 @@ export function ClientsTable({ clients, onEdit, onDelete, onNewClient }: Clients
                         variant="secondary"
                         className={
                           client.crediti_residui > 0
-                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                            ? "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400"
                             : ""
                         }
                       >
@@ -244,7 +244,7 @@ export function ClientsTable({ clients, onEdit, onDelete, onNewClient }: Clients
                         variant={client.stato === "Attivo" ? "default" : "secondary"}
                         className={
                           client.stato === "Attivo"
-                            ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400"
+                            ? "bg-teal-100 text-teal-700 hover:bg-teal-100 dark:bg-teal-900/30 dark:text-teal-400"
                             : ""
                         }
                       >
