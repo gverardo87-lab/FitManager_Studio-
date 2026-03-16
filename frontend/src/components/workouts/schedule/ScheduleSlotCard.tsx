@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, X, GripVertical, Undo2 } from "lucide-react";
+import { Check, X, GripVertical, Undo2, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ScheduleSlot } from "@/types/api";
 
@@ -78,6 +78,9 @@ export function ScheduleSlotCard({
       >
         {slot.sessione_nome}
       </span>
+
+      {/* Click affordance — visible by default, hides when actions appear */}
+      <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground/30 group-hover:hidden" />
 
       {/* Quick actions: complete / skip (pianificato) or reopen (completato/saltato) */}
       {isPianificato ? (
