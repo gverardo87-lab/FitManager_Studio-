@@ -255,7 +255,7 @@ export function OggiTimeline({
         )}
       >
         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted/40">
-          <CalendarClock className="h-7 w-7 text-muted-foreground/40" />
+          <CalendarClock className="h-7 w-7 text-muted-foreground/40" aria-hidden="true" />
         </div>
         <p className="mt-4 text-[14px] font-bold text-muted-foreground">
           Nessuna seduta in agenda oggi
@@ -283,7 +283,7 @@ export function OggiTimeline({
     >
       {/* Header */}
       <div className="mb-7 flex items-center gap-2.5">
-        <Clock3 className="h-4 w-4 text-primary/50" />
+        <Clock3 className="h-4 w-4 text-primary/50" aria-hidden="true" />
         <h2 className="text-[15px] font-extrabold tracking-tight text-foreground">Sedute di oggi</h2>
         <span
           className={surfaceChipClassName(

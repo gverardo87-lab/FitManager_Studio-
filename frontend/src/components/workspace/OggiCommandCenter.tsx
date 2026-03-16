@@ -102,7 +102,7 @@ function PrepNotes({ eventId }: { eventId: number }) {
   return (
     <div className={surfaceRoleClassName({ role: "context", tone: "neutral" }, "oggi-notes-shell px-3.5 py-3")}>
       <div className="mb-2.5 flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
-        <NotebookPen className="h-3 w-3" />
+        <NotebookPen className="h-3 w-3" aria-hidden="true" />
         Note pre-seduta
         {note.trim() && (
           <span className={surfaceChipClassName({ tone: "teal" }, "ml-auto px-2 py-0.5 text-[9px] font-bold")}>
@@ -113,7 +113,8 @@ function PrepNotes({ eventId }: { eventId: number }) {
       <Textarea
         value={note}
         onChange={(e) => handleChange(e.target.value)}
-        placeholder="Annotazione rapida: modifica al programma, vincolo clinico, follow-up."
+        aria-label="Note pre-seduta"
+        placeholder="Annotazione rapida: modifica, vincolo clinico, follow-up…"
         rows={3}
         className="min-h-20 resize-none border-border/60 bg-background/70 text-[12px] leading-5 placeholder:text-muted-foreground/50 focus-visible:ring-ring/30"
       />
@@ -145,7 +146,7 @@ export function OggiCommandCenter({ session, status, avatar, className }: OggiCo
       <div className={cn(surfaceRoleClassName({ role: "hero", tone: "neutral" }, cn("oggi-dossier-shell flex items-center justify-center px-8 py-14 text-center", className)), "oggi-lift oggi-glow-neutral")}>
         <div className="max-w-xs">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-muted/30">
-            <Stethoscope className="h-7 w-7 text-muted-foreground/40" />
+            <Stethoscope className="h-7 w-7 text-muted-foreground/40" aria-hidden="true" />
           </div>
           <p className="mt-4 text-[14px] font-bold text-muted-foreground">Nessuna seduta in focus</p>
           <p className="mt-1.5 text-[11.5px] leading-5 text-muted-foreground/60">
@@ -167,14 +168,14 @@ export function OggiCommandCenter({ session, status, avatar, className }: OggiCo
         {session.event_notes && (
           <div className={surfaceRoleClassName({ role: "context", tone: "neutral" }, "oggi-notes-shell mt-4 px-3.5 py-3")}>
             <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
-              <FileText className="h-3 w-3" />
+              <FileText className="h-3 w-3" aria-hidden="true" />
               Note evento
             </div>
             <p className="mt-2.5 text-[12px] leading-5 text-foreground/80">{session.event_notes}</p>
           </div>
         )}
         <Button asChild size="sm" className="mt-5 h-9 rounded-full px-4 text-[12px] font-semibold">
-          <Link href="/agenda">Apri agenda <ArrowRight className="ml-1 h-3.5 w-3.5" /></Link>
+          <Link href="/agenda">Apri agenda <ArrowRight className="ml-1 h-3.5 w-3.5" aria-hidden="true" /></Link>
         </Button>
       </div>
     );
@@ -309,7 +310,7 @@ export function OggiCommandCenter({ session, status, avatar, className }: OggiCo
             {contextParts.length > 0 && (
               <p className="mt-1.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
                 {contextParts.map((part, i) => (
-                  <span key={i} className="flex items-center gap-1.5">
+                  <span key={part} className="flex items-center gap-1.5">
                     {i > 0 && <span className="h-0.5 w-0.5 rounded-full bg-current opacity-30" />}
                     {part}
                   </span>
@@ -409,11 +410,11 @@ export function OggiCommandCenter({ session, status, avatar, className }: OggiCo
         {/* AZIONI */}
         <div className="flex flex-wrap items-center gap-2 pt-1">
           <Button asChild size="sm" className="h-9 rounded-full px-4 text-[12px] font-bold shadow-sm transition-shadow hover:shadow-md">
-            <Link href={profileHref}>Profilo <ArrowRight className="ml-1 h-3.5 w-3.5" /></Link>
+            <Link href={profileHref}>Profilo <ArrowRight className="ml-1 h-3.5 w-3.5" aria-hidden="true" /></Link>
           </Button>
           {planHref && (
             <Button asChild variant="outline" size="sm" className="h-9 rounded-full px-4 text-[12px] font-bold transition-colors">
-              <Link href={planHref}>Scheda attiva <ArrowRight className="ml-1 h-3.5 w-3.5" /></Link>
+              <Link href={planHref}>Scheda attiva <ArrowRight className="ml-1 h-3.5 w-3.5" aria-hidden="true" /></Link>
             </Button>
           )}
           <Button asChild variant="ghost" size="sm" className="h-9 rounded-full px-4 text-[12px] font-semibold text-muted-foreground transition-colors hover:text-foreground">

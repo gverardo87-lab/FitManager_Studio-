@@ -164,7 +164,7 @@ export function OggiHero({
           : "text-foreground";
 
   return (
-    <section className={cn("oggi-hero-mesh", className)}>
+    <section aria-label="Riepilogo giornata" className={cn("oggi-hero-mesh", className)}>
       <div
         className={surfaceRoleClassName(
           { role: "page", tone: "neutral" },

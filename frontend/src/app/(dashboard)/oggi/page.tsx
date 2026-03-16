@@ -150,7 +150,7 @@ export default function OggiWorkspacePage() {
     return (
       <div className={surfaceRoleClassName({ role: "hero", tone: "red" }, "p-6")}>
         <div className="flex items-start gap-3">
-          <AlertCircle className="mt-0.5 h-5 w-5 text-red-500" />
+          <AlertCircle className="mt-0.5 h-5 w-5 text-red-500" aria-hidden="true" />
           <div className="min-w-0 flex-1">
             <h1 className="text-base font-bold text-red-700 dark:text-red-300">
               Impossibile aprire le sedute di oggi
@@ -168,7 +168,7 @@ export default function OggiWorkspacePage() {
             void todayQuery.refetch();
           }}
         >
-          <RefreshCw className="mr-2 h-3.5 w-3.5" />
+          <RefreshCw className="mr-2 h-3.5 w-3.5" aria-hidden="true" />
           Riprova
         </Button>
       </div>

@@ -551,4 +551,33 @@
   .oggi-clear-dot {
     animation: oggi-clear-breathe 3s ease-in-out infinite;
   }
+
+  /* ── Reduced motion: disable non-essential animations ── */
+
+  @media (prefers-reduced-motion: reduce) {
+    .oggi-mesh-drift,
+    .oggi-hero-mesh::after,
+    .oggi-pulse-dot,
+    .oggi-status-beat,
+    .oggi-clear-dot,
+    .oggi-dossier-enter,
+    .oggi-hero-divider,
+    .oggi-dossier-enter .oggi-readiness-halo,
+    .oggi-smartwatch-colon {
+      animation: none;
+    }
+
+    .oggi-lift:hover {
+      transform: none;
+    }
+
+    .oggi-session-card:hover {
+      transform: none;
+    }
+
+    .oggi-session-card-selected,
+    .oggi-session-card-selected:hover {
+      transform: none;
+    }
+  }
 }
