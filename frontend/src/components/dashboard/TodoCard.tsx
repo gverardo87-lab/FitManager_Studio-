@@ -553,9 +553,10 @@ function TodoItem({
 
       <button
         onClick={onDelete}
-        className="shrink-0 rounded p-1 text-muted-foreground/30 opacity-100 transition-opacity hover:text-red-500 sm:opacity-0 sm:group-hover:opacity-100"
+        aria-label={`Elimina ${todo.titolo}`}
+        className="shrink-0 rounded p-1 text-muted-foreground/40 transition-all hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 sm:opacity-0 sm:group-hover:opacity-100"
       >
-        <Trash2 className="h-3.5 w-3.5" />
+        <Trash2 aria-hidden="true" className="h-3.5 w-3.5" />
       </button>
     </div>
   );
