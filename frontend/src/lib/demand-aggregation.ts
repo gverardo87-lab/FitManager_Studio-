@@ -26,6 +26,8 @@ export const PRIMARY_DIMENSIONS = [
 
 export const SECONDARY_DIMENSIONS = ["carry", "axial_load", "joint_stress"] as const;
 
+const PRIMARY_DIMENSIONS_SET = new Set<string>(PRIMARY_DIMENSIONS);
+
 export type PrimaryDimension = (typeof PRIMARY_DIMENSIONS)[number];
 export type SecondaryDimension = (typeof SECONDARY_DIMENSIONS)[number];
 export type DemandDimension = PrimaryDimension | SecondaryDimension;
@@ -77,7 +79,7 @@ function emptyValues(): Record<DemandDimension, number> {
 }
 
 function patternToPrimary(pattern: string): PrimaryDimension | null {
-  if (PRIMARY_DIMENSIONS.includes(pattern as PrimaryDimension)) {
+  if (PRIMARY_DIMENSIONS_SET.has(pattern as PrimaryDimension)) {
     return pattern as PrimaryDimension;
   }
   return ISOLATION_TO_PRIMARY[pattern] ?? null;

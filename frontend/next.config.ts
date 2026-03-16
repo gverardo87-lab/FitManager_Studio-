@@ -5,9 +5,20 @@ const nextConfig: NextConfig = {
   // Per distribuzione (installer) non serve Node.js di sistema — solo node.exe bundled.
   output: "standalone",
 
+  // Turbopack workspace root: evita che Next.js inferisca la root dal package-lock.json
+  // nella cartella padre (monorepo), dove react-big-calendar non è installato.
+  turbopack: {
+    root: __dirname,
+  },
+
   // Permette di avviare una seconda istanza dev con cache separata:
   // NEXT_DIST_DIR=.next-dev npm run dev -- -p 3001
   distDir: process.env.NEXT_DIST_DIR || ".next",
+
+  // Tree-shake barrel imports di librerie pesanti (lucide-react, recharts, date-fns)
+  experimental: {
+    optimizePackageImports: ["lucide-react", "recharts", "date-fns"],
+  },
 
   // Permette a <Image> di caricare media dall'API backend (StaticFiles)
   images: {

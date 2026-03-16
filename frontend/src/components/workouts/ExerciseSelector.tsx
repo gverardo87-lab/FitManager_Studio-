@@ -159,6 +159,9 @@ const DIFFICULTY_ORDER: string[] = ["beginner", "intermediate", "advanced"];
 const FORCE_TYPE_ORDER: string[] = ["push", "pull", "static"];
 const LATERAL_ORDER: string[] = ["bilateral", "unilateral", "alternating"];
 
+// O(1) lookup per categorie principali (hot path filter)
+const PRINCIPALE_CATEGORIES = new Set(["compound", "isolation", "bodyweight", "cardio"]);
+
 // ════════════════════════════════════════════════════════════
 // MAIN COMPONENT
 // ════════════════════════════════════════════════════════════
@@ -217,7 +220,7 @@ export function ExerciseSelector({
 
   // E' la sezione "principale"? (mostra set completo di filtri)
   const isPrincipale = !categoryFilter || categoryFilter.length === 0 ||
-    categoryFilter.some((c) => ["compound", "isolation", "bodyweight", "cardio"].includes(c));
+    categoryFilter.some((c) => PRINCIPALE_CATEGORIES.has(c));
 
   // ── Section pool: base filter by category ──
 

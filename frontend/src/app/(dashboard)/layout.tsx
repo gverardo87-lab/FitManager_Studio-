@@ -23,7 +23,12 @@ import { usePathname, useRouter } from "next/navigation";
 import { Menu } from "lucide-react";
 
 import { Sidebar } from "@/components/layout/Sidebar";
-import { CommandPalette } from "@/components/layout/CommandPalette";
+import dynamic from "next/dynamic";
+
+const CommandPalette = dynamic(
+  () => import("@/components/layout/CommandPalette").then((m) => ({ default: m.CommandPalette })),
+  { ssr: false },
+);
 import { SpotlightTour } from "@/components/guide/SpotlightTour";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { Button } from "@/components/ui/button";

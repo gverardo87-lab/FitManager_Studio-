@@ -86,7 +86,7 @@ const FORCE_TYPE_ORDER: string[] = ["push", "pull", "static"];
 const LATERAL_ORDER: string[] = ["bilateral", "unilateral", "alternating"];
 
 // Tutte le categorie disponibili per il multi-toggle
-const ALL_CATEGORIES = CATEGORY_OPTIONS.map((o) => o.value);
+const ALL_CATEGORIES = new Set(CATEGORY_OPTIONS.map((o) => o.value));
 
 // ════════════════════════════════════════════════════════════
 // KPI HELPER
@@ -130,7 +130,7 @@ export default function EserciziPage() {
   const [activeCategories, setActiveCategories] = useState<Set<string>>(() => {
     if (_savedFilters?.cat) return new Set(_savedFilters.cat as string[]);
     const urlCat = _urlParams.get("cat");
-    if (urlCat) return new Set(urlCat.split(",").filter((c) => ALL_CATEGORIES.includes(c)));
+    if (urlCat) return new Set(urlCat.split(",").filter((c) => ALL_CATEGORIES.has(c)));
     return new Set(ALL_CATEGORIES);
   });
   const [selectedPattern, setSelectedPattern] = useState<string | null>(
@@ -158,7 +158,7 @@ export default function EserciziPage() {
 
   // ── Sync filtri → sessionStorage + URL (feedback visivo) ──
   useEffect(() => {
-    const catArr = activeCategories.size < ALL_CATEGORIES.length ? [...activeCategories] : null;
+    const catArr = activeCategories.size < ALL_CATEGORIES.size ? [...activeCategories] : null;
     saveFilters("esercizi", {
       cat: catArr,
       pattern: selectedPattern,
@@ -188,7 +188,7 @@ export default function EserciziPage() {
   // ── Pool post-categoria (base per chip dinamici) ──
 
   const categoryPool = useMemo(() => {
-    if (activeCategories.size === ALL_CATEGORIES.length) return allExercises;
+    if (activeCategories.size === ALL_CATEGORIES.size) return allExercises;
     return allExercises.filter((e) => activeCategories.has(e.categoria));
   }, [allExercises, activeCategories]);
 
@@ -290,7 +290,7 @@ export default function EserciziPage() {
 
   // ── Stato filtri ──
 
-  const isFiltered = activeCategories.size < ALL_CATEGORIES.length ||
+  const isFiltered = activeCategories.size < ALL_CATEGORIES.size ||
     !!selectedPattern || !!selectedMuscle || !!selectedEquipment ||
     !!selectedDifficulty || !!selectedForceType || !!selectedLateral || !!search;
 

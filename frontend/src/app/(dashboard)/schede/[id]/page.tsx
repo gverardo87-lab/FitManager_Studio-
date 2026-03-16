@@ -13,7 +13,12 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { SessionCard, type SessionCardData } from "@/components/workouts/SessionCard";
-import { ExerciseSelector } from "@/components/workouts/ExerciseSelector";
+import dynamic from "next/dynamic";
+
+const ExerciseSelector = dynamic(
+  () => import("@/components/workouts/ExerciseSelector").then((m) => ({ default: m.ExerciseSelector })),
+  { ssr: false },
+);
 import { ScientificAnalysisTab } from "@/components/workouts/ScientificAnalysisTab";
 import { BuilderHeader } from "@/components/workouts/BuilderHeader";
 import { BuilderSafetyCard } from "@/components/workouts/BuilderSafetyCard";
