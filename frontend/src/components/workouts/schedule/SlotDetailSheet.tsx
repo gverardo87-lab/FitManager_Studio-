@@ -1,6 +1,7 @@
 "use client";
 
-import { Check, X, Dumbbell, Clock, Target } from "lucide-react";
+import { useMemo } from "react";
+import { Check, X, Dumbbell, Clock, Target, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -27,6 +28,7 @@ interface SlotDetailSheetProps {
   onOpenChange: (open: boolean) => void;
   onComplete: (slotId: number) => void;
   onSkip: (slotId: number) => void;
+  onReopen?: (slotId: number) => void;
 }
 
 export function SlotDetailSheet({
@@ -36,10 +38,19 @@ export function SlotDetailSheet({
   onOpenChange,
   onComplete,
   onSkip,
+  onReopen,
 }: SlotDetailSheetProps) {
   const session = plan.sessioni.find((s) => s.id === slot.id_sessione);
   const statoConfig = STATO_LABELS[slot.stato] ?? STATO_LABELS.pianificato;
-  const canAct = slot.stato === "pianificato";
+
+  const todayStr = useMemo(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }, []);
+  const isFuture = slot.data_pianificata > todayStr;
+  const canComplete = slot.stato === "pianificato" && !isFuture;
+  const canSkip = slot.stato === "pianificato";
+  const canReopen = slot.stato === "completato" || slot.stato === "saltato";
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -66,19 +77,26 @@ export function SlotDetailSheet({
             )}
           </div>
 
-          {/* Actions */}
-          {canAct && (
+          {/* Actions — pianificato */}
+          {canSkip && (
             <div className="flex gap-2">
-              <Button
-                className="flex-1"
-                onClick={() => {
-                  onComplete(slot.id);
-                  onOpenChange(false);
-                }}
-              >
-                <Check className="h-4 w-4 mr-2" />
-                Completata
-              </Button>
+              {canComplete ? (
+                <Button
+                  className="flex-1"
+                  onClick={() => {
+                    onComplete(slot.id);
+                    onOpenChange(false);
+                  }}
+                >
+                  <Check className="h-4 w-4 mr-2" />
+                  Completata
+                </Button>
+              ) : (
+                <Button className="flex-1" disabled title="Non puoi completare una sessione futura">
+                  <Check className="h-4 w-4 mr-2" />
+                  Completata
+                </Button>
+              )}
               <Button
                 variant="outline"
                 className="text-red-600 hover:bg-red-50"
@@ -92,6 +110,21 @@ export function SlotDetailSheet({
               </Button>
             </div>
           )}
+
+          {/* Actions — reopen */}
+          {canReopen && onReopen ? (
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                onReopen(slot.id);
+                onOpenChange(false);
+              }}
+            >
+              <Undo2 className="h-4 w-4 mr-2" />
+              Riapri sessione
+            </Button>
+          ) : null}
 
           <Separator />
 

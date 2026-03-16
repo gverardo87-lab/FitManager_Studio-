@@ -305,6 +305,20 @@ def update_slot(
     if data.stato is not None:
         if data.stato not in VALID_STATI:
             raise HTTPException(status_code=422, detail=f"Stato non valido: {data.stato}")
+
+        # Reopen: quando si torna a pianificato da completato, soft-delete il log collegato
+        if data.stato == "pianificato" and slot.stato == "completato" and slot.id_log:
+            linked_log = session.exec(
+                select(WorkoutLog).where(
+                    WorkoutLog.id == slot.id_log,
+                    WorkoutLog.deleted_at == None,
+                )
+            ).first()
+            if linked_log:
+                linked_log.deleted_at = datetime.now(timezone.utc)
+                log_audit(session, "workout_log", linked_log.id, "DELETE", trainer.id)
+            slot.id_log = None
+
         slot.stato = data.stato
 
     if data.note is not None:
@@ -345,8 +359,15 @@ def complete_slot(
             detail="Slot gia' completato",
         )
 
-    # Data esecuzione: oggi per slot odierni/futuri, data pianificata per passati
+    # Guard: non si puo' completare una sessione futura
     today = date_type.today()
+    if slot.data_pianificata > today:
+        raise HTTPException(
+            status_code=422,
+            detail="Non puoi completare una sessione futura",
+        )
+
+    # Data esecuzione: data pianificata per passati, oggi per odierni
     exec_date = slot.data_pianificata if slot.data_pianificata <= today else today
 
     # Crea WorkoutLog

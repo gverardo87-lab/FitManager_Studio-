@@ -41,6 +41,7 @@ interface ScheduleCalendarProps {
   onDelete: (slotId: number) => void;
   onSlotClick: (slot: ScheduleSlot) => void;
   onMove?: (slotId: number, newDate: string) => void;
+  onReopen?: (slotId: number) => void;
 }
 
 export function ScheduleCalendar({
@@ -50,6 +51,7 @@ export function ScheduleCalendar({
   onDelete,
   onSlotClick,
   onMove,
+  onReopen,
 }: ScheduleCalendarProps) {
   const todayStr = useMemo(() => dateToStr(new Date()), []);
   const scrollTargetRef = useRef<HTMLTableRowElement>(null);
@@ -271,6 +273,7 @@ export function ScheduleCalendar({
                             onComplete={onComplete}
                             onSkip={onSkip}
                             onDelete={onDelete}
+                            onReopen={onReopen}
                             onClick={onSlotClick}
                           />
                         ))}

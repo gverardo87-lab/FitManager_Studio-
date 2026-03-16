@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { ArrowLeft, CalendarDays, Settings2, Dumbbell, Target } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -37,7 +37,6 @@ const LIVELLO_LABELS: Record<string, string> = {
 
 export default function WorkoutSchedulePage() {
   const params = useParams();
-  const router = useRouter();
   const workoutId = Number(params.id);
   const { revealClass, revealStyle } = usePageReveal();
 
@@ -54,14 +53,40 @@ export default function WorkoutSchedulePage() {
   const slots = scheduleData?.items ?? [];
   const hasSchedule = slots.length > 0;
 
-  // Compliance stats
+  // Compliance stats + week progress (single pass)
   const stats = useMemo(() => {
-    if (slots.length === 0) return { completed: 0, total: 0, skipped: 0, pct: 0 };
-    const completed = slots.filter((s) => s.stato === "completato").length;
-    const skipped = slots.filter((s) => s.stato === "saltato").length;
+    if (slots.length === 0)
+      return { completed: 0, total: 0, skipped: 0, pct: 0, weeksDone: 0, weeksTotal: 0 };
+
+    let completed = 0;
+    let skipped = 0;
+    const weekSlots = new Map<string, ScheduleSlot[]>();
+
+    for (const s of slots) {
+      if (s.stato === "completato") completed++;
+      else if (s.stato === "saltato") skipped++;
+
+      // Group by ISO week (monday date)
+      const d = new Date(s.data_pianificata + "T00:00:00");
+      const day = d.getDay();
+      const diff = day === 0 ? -6 : 1 - day;
+      d.setDate(d.getDate() + diff);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      const arr = weekSlots.get(key) ?? [];
+      arr.push(s);
+      weekSlots.set(key, arr);
+    }
+
     const total = slots.length;
     const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
-    return { completed, total, skipped, pct };
+
+    // A week is "done" when all its slots are completato or saltato
+    let weeksDone = 0;
+    for (const ws of weekSlots.values()) {
+      if (ws.every((s) => s.stato === "completato" || s.stato === "saltato")) weeksDone++;
+    }
+
+    return { completed, total, skipped, pct, weeksDone, weeksTotal: weekSlots.size };
   }, [slots]);
 
   const complianceColor =
@@ -86,6 +111,12 @@ export default function WorkoutSchedulePage() {
   const handleMove = useCallback(
     (slotId: number, newDate: string) =>
       updateMutation.mutate({ slotId, data_pianificata: newDate }),
+    [updateMutation],
+  );
+
+  const handleReopen = useCallback(
+    (slotId: number) =>
+      updateMutation.mutate({ slotId, stato: "pianificato" }),
     [updateMutation],
   );
 
@@ -177,6 +208,21 @@ export default function WorkoutSchedulePage() {
               <p className="text-xs text-muted-foreground">Rimanenti</p>
             </div>
           </div>
+
+          {/* Week progress bar */}
+          {stats.weeksTotal > 0 && (
+            <div className="flex items-center gap-3 mt-3">
+              <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-teal-500 transition-all duration-500"
+                  style={{ width: `${Math.round((stats.weeksDone / stats.weeksTotal) * 100)}%` }}
+                />
+              </div>
+              <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">
+                {stats.weeksDone}/{stats.weeksTotal} settimane
+              </span>
+            </div>
+          )}
         </div>
       )}
 
@@ -190,6 +236,7 @@ export default function WorkoutSchedulePage() {
             onDelete={handleDelete}
             onSlotClick={handleSlotClick}
             onMove={handleMove}
+            onReopen={handleReopen}
           />
         ) : (
           <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed py-16 text-center">
@@ -225,6 +272,7 @@ export default function WorkoutSchedulePage() {
           }}
           onComplete={handleComplete}
           onSkip={handleSkip}
+          onReopen={handleReopen}
         />
       )}
     </div>
