@@ -121,14 +121,14 @@ Skills installate in `.agents/skills/` — knowledge base attive per audit e cod
 
 | Skill | Source | Quando si attiva |
 |-------|--------|-----------------|
-| `vercel-react-best-practices` | Vercel Labs | Scrittura, review o refactor di codice React/Next.js. 62 regole in 8 categorie, prioritizzate per impatto. Le regole chiave sono codificate in `frontend/CLAUDE.md` sezione "React Performance Rules". |
-| `web-design-guidelines` | Vercel Labs | Audit UI on-demand (`/web-design-guidelines <file>`). Scarica linee guida aggiornate da GitHub e controlla conformita' WCAG + UX. |
-| `code-review` | Built-in | Review pull request (`/code-review`). Analisi diff, architettura, sicurezza. |
+| `vercel-react-best-practices` | Vercel Labs | 62 regole in 8 categorie. Regole CRITICAL/HIGH codificate in `frontend/CLAUDE.md` sezione "React Performance Rules". |
+| `web-design-guidelines` | Vercel Labs | Audit WCAG + UX on-demand (`/web-design-guidelines <file>`). Usare prima di merge su componenti UI nuovi. |
+| `code-review` | Built-in | Review PR (`/code-review`). Multi-agent: 2 CLAUDE.md compliance + 2 bug detection. High-signal only. |
 | `frontend-design` | Built-in | Creazione UI production-grade (`/frontend-design`). Design system coerente, no estetica AI generica. |
 
 **Integrazione nel workflow**:
-- Le regole Vercel CRITICAL/HIGH sono codificate nei CLAUDE.md come regole operative (non servono invocazioni esplicite).
-- `/web-design-guidelines` per audit accessibilita' pre-lancio su componenti specifici.
+- Regole Vercel CRITICAL/HIGH codificate in frontend/CLAUDE.md (non servono invocazioni esplicite).
+- `/web-design-guidelines <file>` prima di merge su componenti UI nuovi o modificati.
 - `/code-review` su ogni PR verso main.
 - `/frontend-design` quando si crea una nuova pagina o componente complesso.
 

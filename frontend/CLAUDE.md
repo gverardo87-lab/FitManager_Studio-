@@ -34,7 +34,7 @@ frontend/src/
 ├── components/              Componenti organizzati per dominio
 │   ├── auth/                AuthGuard (route protection client-side)
 │   ├── guide/               SpotlightTour (overlay 19 passi cross-page)
-│   ├── layout/              Sidebar (sezioni, clearPageState, LogoIcon) + CommandPalette (~1170 LOC, assistant mode)
+│   ├── layout/              Sidebar (sezioni, clearPageState, LogoIcon) + CommandPalette (dynamic, ~1170 LOC, assistant mode)
 │   ├── agenda/              AgendaCalendar, CustomEvent, CustomToolbar, EventHoverCard, EventSheet, calendar-setup
 │   ├── clients/             ClientsTable, ClientSheet, ClientForm, ClientProfileHeader/Kpi,
 │   │                        ClinicalAnalysisPanel, GoalFormDialog, GoalsSummary, MeasurementChart,
@@ -56,9 +56,8 @@ frontend/src/
 │   │                        connectivity-status-ui, connectivity-wizard-ui, connectivity-wizard-panels,
 │   │                        connectivity-wizard-state, system-status-utils
 │   ├── workspace/           SessionPrepCard (client+non-client), workspace-ui.ts (config/metadata)
-│   ├── workouts/            SessionCard, SortableExerciseRow, BlockCard, ExerciseSelector,
-│   │                        TemplateSelector, WorkoutPreview, ExportButtons, ExerciseDetailPanel,
-│   │                        SmartAnalysisPanel, MuscleMapPanel, RiskBodyMap
+│   ├── workouts/            SessionCard, SortableExerciseRow, BlockCard, ExerciseSelector (dynamic),
+│   │                        TemplateSelector, ExportButtons, ExerciseDetailPanel, RiskBodyMap
 │   └── ui/                  shadcn/ui (33 primitives + AnimatedNumber + Skeleton shimmer + LogoIcon)
 ├── hooks/                   React Query + app hooks — 28 moduli
 │   ├── useAgenda, useClients, useContracts, useRates, useMovements
@@ -623,15 +622,26 @@ API vietate in `useState` initializer: `document`, `window`, `localStorage`, `se
 
 ### CRITICAL — Bundle Size
 
-**Barrel imports** (`bundle-barrel-imports`): Next.js 16 ha `optimizePackageImports` per `lucide-react`,
-ma per moduli interni MAI creare barrel file (`index.ts` con `export *`).
-Importare direttamente dal file sorgente.
+**Barrel imports** (`bundle-barrel-imports`): `next.config.ts` ha `optimizePackageImports` per
+`lucide-react`, `recharts`, `date-fns`. Per moduli interni MAI creare barrel file (`index.ts`
+con `export *`). Importare direttamente dal file sorgente.
 
 **Dynamic imports** (`bundle-dynamic-imports`): componenti pesanti non visibili al primo render
-devono usare `next/dynamic` con `{ ssr: false }`. Candidati in questo progetto:
-- `recharts` (gia' lazy in alcune pagine — verificare consistenza)
-- `CommandPalette` (caricato on-demand via Ctrl+K)
-- `MuscleMap` SVG (pesante, visibile solo in drill-down)
+usano `next/dynamic` con `{ ssr: false }`. Gia' implementati:
+- `CommandPalette` in `layout.tsx` (dialog Ctrl+K, ~1170 LOC)
+- `ExerciseSelector` in `schede/[id]/page.tsx` (dialog on-demand, ~950 LOC)
+
+Candidati futuri se serve:
+- `InteractiveBodyMap` (tab ProgressiTab, recharts + SVG pesante)
+- `ForecastTab` (tab 5 di Cassa, recharts)
+
+Sintassi per named export:
+```typescript
+const Component = dynamic(
+  () => import("@/components/path/Component").then((m) => ({ default: m.Component })),
+  { ssr: false },
+);
+```
 
 **Preload on intent** (`bundle-preload`): per componenti lazy, preload su `onMouseEnter`/`onFocus`
 del bottone che li apre. Riduce latenza percepita a zero.
@@ -760,6 +770,43 @@ Regole base per ogni componente:
 | Heading hierarchy | `h1` → `h2` → `h3` senza salti. Un solo `h1` per pagina |
 
 **Audit on-demand**: invocare `/web-design-guidelines <file>` per analisi WCAG completa su un file.
+Integrato nel workflow: usare prima di merge su componenti UI nuovi o modificati significativamente.
+
+### MEDIUM — Async & Loading
+
+**useTransition per update non urgenti** (`rerender-transitions`):
+```typescript
+// ❌ filtro blocca l'input
+const [filter, setFilter] = useState("");
+const filtered = items.filter(i => i.name.includes(filter));
+
+// ✅ input resta fluido, lista si aggiorna in background
+const [filter, setFilter] = useState("");
+const [deferredFilter, setDeferredFilter] = useState("");
+const [isPending, startTransition] = useTransition();
+const handleChange = (v: string) => {
+  setFilter(v);
+  startTransition(() => setDeferredFilter(v));
+};
+const filtered = items.filter(i => i.name.includes(deferredFilter));
+```
+Applicare su ExerciseSelector e pagina Esercizi (filtro su 391+ items).
+
+**Suspense boundaries** (`async-suspense-boundaries`): non applicabile nel nostro stack
+(client-heavy, React Query gestisce loading). Documentato per completezza.
+
+### MEDIUM — Ref Patterns
+
+**useRef per valori transienti** (`rerender-use-ref-transient-values`):
+```typescript
+// ❌ re-render ad ogni tick
+const [now, setNow] = useState(Date.now());
+
+// ✅ zero re-render, accesso diretto
+const nowRef = useRef(Date.now());
+```
+Usare `useRef` per timer ID, abort controller, valore precedente, dimensioni DOM.
+MAI usare `useRef` per dati che devono triggerare un re-render.
 
 ### Checklist pre-commit (React)
 
@@ -768,6 +815,8 @@ Prima di committare codice frontend, verificare:
 - [ ] Costanti/array/oggetti statici hoistati a module level
 - [ ] `useMemo` solo su calcoli O(n), mai su espressioni banali
 - [ ] Zero componenti definiti dentro altri componenti
+- [ ] Array costanti usati per lookup ripetuti → `Set` con `.has()` (mai `.includes()` su hot path)
+- [ ] Componenti pesanti (>500 LOC, dialog/tab) → valutare `next/dynamic`
 - [ ] SVG informativi con `role="img"` + `aria-label`
 - [ ] Elementi selezionabili con `aria-selected`
 - [ ] Ternario `? : null` invece di `&&` con valori potenzialmente falsy non-boolean
