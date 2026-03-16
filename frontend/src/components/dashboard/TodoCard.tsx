@@ -303,7 +303,7 @@ export function TodoCard({
 
   if (isLoading) {
     return (
-      <div className="flex h-[480px] flex-col space-y-4 rounded-xl border p-4 sm:p-5">
+      <div className="flex h-[480px] lg:max-h-[calc(100vh-14rem)] flex-col space-y-4 rounded-xl border p-4 sm:p-5">
         <Skeleton className="h-5 w-40" />
         <Skeleton className="h-24 w-full rounded-lg" />
         {Array.from({ length: 3 }).map((_, i) => (
@@ -320,7 +320,7 @@ export function TodoCard({
   return (
     <div
       id="todo-panel"
-      className="relative flex h-[480px] min-w-0 flex-col overflow-hidden rounded-2xl border-2 border-amber-300/70 bg-gradient-to-br from-amber-50 via-yellow-50/95 to-amber-100/70 p-4 shadow-[4px_6px_16px_-2px_rgba(0,0,0,0.10),_0_1px_3px_rgba(0,0,0,0.06)] sm:p-5 dark:border-amber-700/50 dark:from-amber-950/50 dark:via-zinc-900 dark:to-amber-900/30"
+      className="relative flex h-[480px] lg:max-h-[calc(100vh-14rem)] min-w-0 flex-col overflow-hidden rounded-2xl border-2 border-amber-300/70 bg-gradient-to-br from-amber-50 via-yellow-50/95 to-amber-100/70 p-4 shadow-[4px_6px_16px_-2px_rgba(0,0,0,0.10),_0_1px_3px_rgba(0,0,0,0.06)] sm:p-5 dark:border-amber-700/50 dark:from-amber-950/50 dark:via-zinc-900 dark:to-amber-900/30"
       style={{ backgroundImage: "repeating-linear-gradient(transparent, transparent 31px, rgba(180,160,120,0.10) 31px, rgba(180,160,120,0.10) 32px)" }}
     >
       {/* Angolo piegato post-it — con ombra sotto la piega */}

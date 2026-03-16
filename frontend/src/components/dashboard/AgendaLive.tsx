@@ -61,7 +61,7 @@ export function AgendaLive({ events, isLoading }: AgendaLiveProps) {
   }
 
   return (
-    <div className={surfaceRoleClassName({ role: "page", tone: "neutral" }, "flex h-[420px] min-w-0 flex-col")}>
+    <div className={surfaceRoleClassName({ role: "page", tone: "neutral" }, "flex h-[420px] lg:max-h-[calc(100vh-14rem)] min-w-0 flex-col")}>
       {/* Header */}
       <div className="flex items-center justify-between border-b px-4 py-3 sm:px-5">
         <div className="flex items-center gap-2.5">
@@ -198,7 +198,7 @@ export function AgendaLive({ events, isLoading }: AgendaLiveProps) {
 
 function AgendaLiveSkeleton() {
   return (
-    <div className="flex h-[420px] flex-col rounded-2xl border">
+    <div className="flex h-[420px] lg:max-h-[calc(100vh-14rem)] flex-col rounded-2xl border">
       <div className="flex items-center justify-between border-b px-4 py-3 sm:px-5">
         <div className="flex items-center gap-2.5">
           <Skeleton className="h-8 w-8 rounded-lg" />
