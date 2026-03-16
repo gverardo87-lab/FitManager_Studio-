@@ -145,40 +145,36 @@ export default function WorkoutSchedulePage() {
     <div className="space-y-5 pb-8">
       {/* Header */}
       <div className={revealClass(0)} style={revealStyle(0)}>
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <Link
-                href={resolveBackNavigation(null, { href: "/allenamenti", label: "Allenamenti" }).href}
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </Link>
-              <h1 className="text-xl font-semibold truncate">{plan.nome}</h1>
-            </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              {plan.client_nome && (
-                <span className="text-sm text-muted-foreground">
-                  {plan.client_nome} {plan.client_cognome}
-                </span>
-              )}
-              <Badge variant="outline" className="text-xs">
-                <Target className="mr-1 h-3 w-3" />
-                {OBIETTIVO_LABELS[plan.obiettivo] ?? plan.obiettivo}
-              </Badge>
-              <Badge variant="outline" className="text-xs">
-                {LIVELLO_LABELS[plan.livello] ?? plan.livello}
-              </Badge>
-              <Badge variant="outline" className="text-xs">
-                <Dumbbell className="mr-1 h-3 w-3" />
-                {plan.sessioni.length} sessioni
-              </Badge>
-            </div>
-          </div>
-
+        <div className="flex items-center gap-2 mb-1">
+          <Link
+            href={resolveBackNavigation(null, { href: "/allenamenti", label: "Allenamenti" }).href}
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
+          <h1 className="text-xl font-semibold truncate">{plan.nome}</h1>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          {plan.client_nome && (
+            <span className="text-sm text-muted-foreground">
+              {plan.client_nome} {plan.client_cognome}
+            </span>
+          )}
+          <Badge variant="outline" className="text-xs">
+            <Target className="mr-1 h-3 w-3" />
+            {OBIETTIVO_LABELS[plan.obiettivo] ?? plan.obiettivo}
+          </Badge>
+          <Badge variant="outline" className="text-xs">
+            {LIVELLO_LABELS[plan.livello] ?? plan.livello}
+          </Badge>
+          <Badge variant="outline" className="text-xs">
+            <Dumbbell className="mr-1 h-3 w-3" />
+            {plan.sessioni.length} sessioni
+          </Badge>
           <Button
             variant="outline"
             size="sm"
+            className="ml-auto"
             onClick={() => setSetupOpen(true)}
           >
             <Settings2 className="h-4 w-4 mr-1.5" />
