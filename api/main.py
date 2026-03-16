@@ -64,6 +64,7 @@ from api.routers.training_methodology import router as training_methodology_rout
 from api.routers.workspace import router as workspace_router
 from api.routers.nutrition import router as nutrition_router
 from api.routers.client_avatar import router as client_avatar_router
+from api.routers.workout_schedule import router as workout_schedule_router
 from api.services.system_runtime import (
     BACKUP_DIR,
     build_health_response,
@@ -308,6 +309,7 @@ app.include_router(training_methodology_router, prefix=API_PREFIX)
 app.include_router(workspace_router, prefix=API_PREFIX)
 app.include_router(nutrition_router, prefix=API_PREFIX)
 app.include_router(client_avatar_router, prefix=API_PREFIX)
+app.include_router(workout_schedule_router, prefix=API_PREFIX)
 
 
 @app.get("/health", response_model=HealthResponse)

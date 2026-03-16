@@ -129,6 +129,14 @@ frontend/.next-dev/
 # External repos (cloned for data import, not tracked)
 tools/external/
 
+# Root-level Node/Playwright (non frontend)
+node_modules/
+.next/
+package.json
+package-lock.json
+screenshots/
+.mcp.json
+
 # --- NOSTRE REGOLE CUSTOM ---
 
 # Ignora i file di database SQLite nella cartella data

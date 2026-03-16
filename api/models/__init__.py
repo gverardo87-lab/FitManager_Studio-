@@ -17,6 +17,7 @@ from .medical_condition import MedicalCondition, ExerciseCondition
 from .measurement import Metric, ClientMeasurement, MeasurementValue
 from .goal import ClientGoal
 from .workout_log import WorkoutLog
+from .workout_schedule import WorkoutScheduleSlot
 
 __all__ = [
     "Trainer",
@@ -45,4 +46,5 @@ __all__ = [
     "MeasurementValue",
     "ClientGoal",
     "WorkoutLog",
+    "WorkoutScheduleSlot",
 ]
