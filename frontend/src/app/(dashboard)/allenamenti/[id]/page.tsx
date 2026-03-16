@@ -189,40 +189,48 @@ export default function WorkoutSchedulePage() {
         </div>
       </div>
 
-      {/* KPI bar */}
+      {/* Inline KPI + progress */}
       {hasSchedule && (
         <div className={revealClass(50)} style={revealStyle(50)}>
-          <div className="grid grid-cols-3 gap-3">
-            <div className="rounded-lg border bg-card p-3 text-center">
-              <p className="text-2xl font-bold text-emerald-600">{stats.completed}</p>
-              <p className="text-xs text-muted-foreground">Completate</p>
-            </div>
-            <div className="rounded-lg border bg-card p-3 text-center">
-              <p className={`text-2xl font-bold ${complianceColor}`}>{stats.pct}%</p>
-              <p className="text-xs text-muted-foreground">Compliance</p>
-            </div>
-            <div className="rounded-lg border bg-card p-3 text-center">
-              <p className="text-2xl font-bold text-zinc-500">
-                {stats.total - stats.completed - stats.skipped}
-              </p>
-              <p className="text-xs text-muted-foreground">Rimanenti</p>
-            </div>
-          </div>
-
-          {/* Week progress bar */}
-          {stats.weeksTotal > 0 && (
-            <div className="flex items-center gap-3 mt-3">
-              <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-teal-500 transition-all duration-500"
-                  style={{ width: `${Math.round((stats.weeksDone / stats.weeksTotal) * 100)}%` }}
-                />
-              </div>
-              <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">
-                {stats.weeksDone}/{stats.weeksTotal} settimane
+          <div className="flex items-center gap-3 rounded-lg border bg-card px-4 py-2.5">
+            {/* Stats */}
+            <div className="flex items-center gap-4 text-sm">
+              <span>
+                <span className="font-semibold text-emerald-600">{stats.completed}</span>
+                <span className="text-muted-foreground ml-1">completate</span>
+              </span>
+              <span className="text-muted-foreground/30">|</span>
+              <span>
+                <span className={`font-semibold ${complianceColor}`}>{stats.pct}%</span>
+                <span className="text-muted-foreground ml-1">compliance</span>
+              </span>
+              <span className="text-muted-foreground/30">|</span>
+              <span>
+                <span className="font-semibold text-zinc-500">
+                  {stats.total - stats.completed - stats.skipped}
+                </span>
+                <span className="text-muted-foreground ml-1">rimanenti</span>
               </span>
             </div>
-          )}
+
+            {/* Week progress */}
+            {stats.weeksTotal > 0 ? (
+              <>
+                <div className="ml-auto" />
+                <div className="flex items-center gap-2">
+                  <div className="w-24 h-1.5 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-teal-500 transition-all duration-500"
+                      style={{ width: `${Math.round((stats.weeksDone / stats.weeksTotal) * 100)}%` }}
+                    />
+                  </div>
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">
+                    {stats.weeksDone}/{stats.weeksTotal} sett.
+                  </span>
+                </div>
+              </>
+            ) : null}
+          </div>
         </div>
       )}
 

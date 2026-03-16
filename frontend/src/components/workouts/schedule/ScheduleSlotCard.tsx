@@ -5,14 +5,14 @@ import { Button } from "@/components/ui/button";
 import type { ScheduleSlot } from "@/types/api";
 
 const STATO_DOT: Record<string, string> = {
-  pianificato: "bg-zinc-400",
+  pianificato: "bg-teal-400/60",
   completato: "bg-emerald-500",
   saltato: "bg-red-500",
   parziale: "bg-amber-500",
 };
 
 const STATO_STYLE: Record<string, string> = {
-  pianificato: "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700",
+  pianificato: "bg-teal-50/40 dark:bg-teal-950/15 border-teal-200/60 dark:border-teal-800/40 border-dashed",
   completato:
     "bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800",
   saltato:

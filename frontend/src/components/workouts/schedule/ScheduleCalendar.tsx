@@ -54,6 +54,11 @@ export function ScheduleCalendar({
   onReopen,
 }: ScheduleCalendarProps) {
   const todayStr = useMemo(() => dateToStr(new Date()), []);
+  // 0=Mon..6=Sun for today column highlight
+  const todayDayIndex = useMemo(() => {
+    const d = new Date().getDay();
+    return d === 0 ? 6 : d - 1;
+  }, []);
   const scrollTargetRef = useRef<HTMLTableRowElement>(null);
   const [dragOverDate, setDragOverDate] = useState<string | null>(null);
 
@@ -180,10 +185,14 @@ export function ScheduleCalendar({
             <th className="w-[100px] min-w-[100px] border-b border-r bg-muted/50 px-2 py-2.5 text-left text-xs font-medium text-muted-foreground">
               Settimana
             </th>
-            {GIORNO_LABELS.map((g) => (
+            {GIORNO_LABELS.map((g, i) => (
               <th
                 key={g}
-                className="min-w-[110px] border-b bg-muted/50 px-1 py-2.5 text-center text-xs font-medium text-muted-foreground"
+                className={`min-w-[110px] border-b px-1 py-2.5 text-center text-xs font-medium ${
+                  i === todayDayIndex
+                    ? "bg-teal-100/60 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400"
+                    : "bg-muted/50 text-muted-foreground"
+                }`}
               >
                 {g}
               </th>
@@ -228,9 +237,10 @@ export function ScheduleCalendar({
               </td>
 
               {/* Day cells — droppable */}
-              {week.days.map((day) => {
+              {week.days.map((day, dayIdx) => {
                 const isToday = day.dateStr === todayStr;
                 const isPastDay = day.dateStr < todayStr;
+                const isTodayColumn = dayIdx === todayDayIndex && !isToday;
                 const hasSlots = day.slots.length > 0;
                 const isDragOver = dragOverDate === day.dateStr;
 
@@ -245,7 +255,9 @@ export function ScheduleCalendar({
                         ? "bg-teal-100/70 dark:bg-teal-900/40 ring-2 ring-inset ring-teal-400"
                         : isToday
                           ? "bg-teal-100/50 dark:bg-teal-900/30"
-                          : ""
+                          : isTodayColumn
+                            ? "bg-teal-50/30 dark:bg-teal-950/10"
+                            : ""
                     }`}
                   >
                     {/* Day number */}
