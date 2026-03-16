@@ -103,7 +103,7 @@
 :root {
   --font-geist-sans: "Segoe UI", "Helvetica Neue", ui-sans-serif, system-ui, sans-serif;
   --font-geist-mono: "Cascadia Code", "SFMono-Regular", Consolas, ui-monospace, monospace;
-  --font-caveat: "Segoe Print", "Bradley Hand", "Comic Sans MS", "Marker Felt", cursive;
+  --font-caveat: "Segoe Print", "Bradley Hand", cursive;
   --radius: 0.75rem;
   /* Motion tokens — easing fisico */
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
