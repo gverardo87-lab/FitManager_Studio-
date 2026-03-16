@@ -517,7 +517,7 @@ function TodoItem({
     todo.data_scadenza === todayISO;
 
   const containerClass = todo.completato
-    ? "bg-amber-100/30 opacity-60 border border-amber-200/40 dark:bg-zinc-900/30 dark:border-amber-800/20"
+    ? "bg-amber-100/30 border border-amber-200/40 dark:bg-zinc-900/30 dark:border-amber-800/20"
     : isOverdue
       ? "border border-l-4 border-l-red-500 bg-red-50/60 dark:bg-red-950/20"
       : isToday
@@ -526,7 +526,7 @@ function TodoItem({
 
   return (
     <div
-      className={`group flex min-w-0 items-center gap-2 overflow-hidden rounded-lg px-3 py-2 transition-all hover:shadow-sm ${containerClass}`}
+      className={`group flex min-w-0 items-center gap-2 rounded-lg px-3 py-2 transition-all hover:shadow-sm ${containerClass}`}
     >
       <button
         onClick={onToggle}
@@ -554,7 +554,12 @@ function TodoItem({
       <button
         onClick={onDelete}
         aria-label={`Elimina ${todo.titolo}`}
-        className="shrink-0 rounded p-1 text-muted-foreground/40 transition-all hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 sm:opacity-0 sm:group-hover:opacity-100"
+        className={cn(
+          "shrink-0 rounded p-1 transition-all hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30",
+          todo.completato
+            ? "text-muted-foreground/60"
+            : "text-muted-foreground/40 sm:opacity-0 sm:group-hover:opacity-100",
+        )}
       >
         <Trash2 aria-hidden="true" className="h-3.5 w-3.5" />
       </button>
