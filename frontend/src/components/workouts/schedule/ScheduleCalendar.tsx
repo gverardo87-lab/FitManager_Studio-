@@ -273,7 +273,7 @@ export function ScheduleCalendar({
                       {day.date.getDate()}
                     </div>
 
-                    {/* Slot cards */}
+                    {/* Slot cards or rest indicator */}
                     {hasSlots ? (
                       <div className="space-y-1">
                         {day.slots.map((slot) => (
@@ -290,7 +290,11 @@ export function ScheduleCalendar({
                           />
                         ))}
                       </div>
-                    ) : null}
+                    ) : (
+                      <div className="flex items-center justify-center py-1">
+                        <span className="text-[10px] text-muted-foreground/25">—</span>
+                      </div>
+                    )}
                   </td>
                 );
               })}
