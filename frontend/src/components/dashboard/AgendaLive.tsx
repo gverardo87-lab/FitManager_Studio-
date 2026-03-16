@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useUpdateEvent, type EventHydrated } from "@/hooks/useAgenda";
+import { surfaceRoleClassName } from "@/components/ui/surface-role";
 import { CATEGORY_COLORS, STATUS_COLORS } from "@/lib/dashboard-helpers";
 import { EVENT_STATUSES } from "@/types/api";
 
@@ -60,7 +61,7 @@ export function AgendaLive({ events, isLoading }: AgendaLiveProps) {
   }
 
   return (
-    <div className="flex h-[420px] min-w-0 flex-col rounded-2xl border bg-gradient-to-br from-white via-white to-zinc-50/70 shadow-sm dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-800/50">
+    <div className={surfaceRoleClassName({ role: "page", tone: "neutral" }, "flex h-[420px] min-w-0 flex-col")}>
       {/* Header */}
       <div className="flex items-center justify-between border-b px-4 py-3 sm:px-5">
         <div className="flex items-center gap-2.5">

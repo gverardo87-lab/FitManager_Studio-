@@ -20,6 +20,7 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart";
 import type { EventHydrated } from "@/hooks/useAgenda";
+import { surfaceRoleClassName } from "@/components/ui/surface-role";
 import { weekStartDate } from "@/lib/dashboard-helpers";
 
 // ── Categorie evento ──
@@ -139,7 +140,7 @@ export function WeeklyPulse({ events, dateAnchor, isLoading }: WeeklyPulseProps)
   };
 
   return (
-    <div className="rounded-2xl border bg-gradient-to-br from-white via-white to-zinc-50/70 p-4 shadow-sm sm:p-5 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-800/50">
+    <div className={surfaceRoleClassName({ role: "page", tone: "neutral" }, "p-4 sm:p-5")}>
       {/* Header */}
       <div className="mb-2 flex flex-wrap items-start justify-between gap-2">
         <div className="flex items-center gap-2.5">

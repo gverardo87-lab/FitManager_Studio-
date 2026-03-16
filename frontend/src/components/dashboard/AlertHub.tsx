@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { surfaceRoleClassName } from "@/components/ui/surface-role";
 import type { DashboardAlerts, AlertItem } from "@/types/api";
 import { MAX_VISIBLE_ALERTS } from "@/lib/dashboard-helpers";
 
@@ -100,7 +101,7 @@ export function AlertHub({ alerts, isLoading, alertActions }: AlertHubProps) {
   const remaining = visibleAlerts.length - MAX_VISIBLE_ALERTS;
 
   return (
-    <div id="alert-panel" className="rounded-2xl border bg-gradient-to-br from-white via-white to-zinc-50/70 p-4 shadow-sm sm:p-5 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-800/50">
+    <div id="alert-panel" className={surfaceRoleClassName({ role: "page", tone: "neutral" }, "p-4 sm:p-5")}>
       {/* Header */}
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
