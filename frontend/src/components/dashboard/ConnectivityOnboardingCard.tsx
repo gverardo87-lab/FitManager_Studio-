@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Globe, Router, X } from "lucide-react";
 
@@ -14,14 +14,15 @@ const SETTINGS_HREF = "/impostazioni?from=dashboard#connettivita";
 
 export function ConnectivityOnboardingCard() {
   const { data, isLoading, isError } = useConnectivityStatus();
-  const [dismissedPromptId, setDismissedPromptId] = useState<string | null>(() => {
-    if (typeof window === "undefined") return null;
+  const [dismissedPromptId, setDismissedPromptId] = useState<string | null>(null);
+
+  useEffect(() => {
     try {
-      return window.localStorage.getItem(STORAGE_KEY);
+      setDismissedPromptId(window.localStorage.getItem(STORAGE_KEY));
     } catch {
-      return null;
+      // localStorage non disponibile — il prompt resta visibile
     }
-  });
+  }, []);
 
   const prompt = useMemo(() => {
     if (!data) return null;
