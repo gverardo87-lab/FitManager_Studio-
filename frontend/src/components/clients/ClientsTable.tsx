@@ -143,11 +143,14 @@ export function ClientsTable({ clients, onEdit, onDelete, onNewClient }: Clients
                 const ratio = prezzo > 0 ? versato / prezzo : 0;
 
                 return (
-                  <TableRow key={client.id} className="transition-colors hover:bg-muted/50">
-                    {/* ── Nome + nota + dot rate scadute ── */}
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-1.5">
-                        <Link href={`/clienti/${client.id}`} className="hover:underline">
+                  <TableRow key={client.id} className={`transition-colors hover:bg-muted/50 ${client.ha_rate_scadute ? "bg-red-50/40 dark:bg-red-950/20" : ""}`}>
+                    {/* ── Nome + avatar + nota + dot rate scadute ── */}
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold">
+                          {client.cognome.charAt(0)}{client.nome.charAt(0)}
+                        </span>
+                        <Link href={`/clienti/${client.id}`} className="font-semibold hover:underline">
                           {client.cognome} {client.nome}
                         </Link>
                         {client.ha_rate_scadute && (
@@ -234,7 +237,7 @@ export function ClientsTable({ clients, onEdit, onDelete, onNewClient }: Clients
                       {client.ultimo_evento_data ? (
                         formatShortDate(client.ultimo_evento_data)
                       ) : (
-                        <span className="italic">Mai</span>
+                        <span className="text-muted-foreground/50">Mai</span>
                       )}
                     </TableCell>
 
