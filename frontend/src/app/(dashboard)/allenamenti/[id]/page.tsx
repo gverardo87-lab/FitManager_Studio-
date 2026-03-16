@@ -44,7 +44,6 @@ export default function WorkoutSchedulePage() {
   const { data: plan, isLoading: planLoading } = useWorkout(workoutId);
   const { data: scheduleData, isLoading: scheduleLoading } = useWorkoutSchedule(workoutId);
 
-  const [weekOffset, setWeekOffset] = useState(0);
   const [setupOpen, setSetupOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<ScheduleSlot | null>(null);
 
@@ -82,6 +81,12 @@ export default function WorkoutSchedulePage() {
   const handleDelete = useCallback(
     (slotId: number) => deleteMutation.mutate(slotId),
     [deleteMutation],
+  );
+
+  const handleMove = useCallback(
+    (slotId: number, newDate: string) =>
+      updateMutation.mutate({ slotId, data_pianificata: newDate }),
+    [updateMutation],
   );
 
   const handleSlotClick = useCallback((slot: ScheduleSlot) => {
@@ -180,12 +185,11 @@ export default function WorkoutSchedulePage() {
         {hasSchedule ? (
           <ScheduleCalendar
             slots={slots}
-            currentWeekOffset={weekOffset}
-            onWeekChange={setWeekOffset}
             onComplete={handleComplete}
             onSkip={handleSkip}
             onDelete={handleDelete}
             onSlotClick={handleSlotClick}
+            onMove={handleMove}
           />
         ) : (
           <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed py-16 text-center">
@@ -208,7 +212,7 @@ export default function WorkoutSchedulePage() {
         plan={plan}
         open={setupOpen}
         onOpenChange={setSetupOpen}
-        onGenerated={() => setWeekOffset(0)}
+        onGenerated={() => {}}
       />
 
       {selectedSlot && (

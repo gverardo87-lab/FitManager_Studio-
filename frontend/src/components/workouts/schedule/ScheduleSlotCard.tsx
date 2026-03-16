@@ -1,41 +1,25 @@
 "use client";
 
-import { Check, X, Clock, MoreHorizontal, GripVertical } from "lucide-react";
+import { Check, X, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import type { ScheduleSlot } from "@/types/api";
 
-const STATO_CONFIG = {
-  pianificato: {
-    bg: "bg-white dark:bg-zinc-900",
-    border: "border-zinc-200 dark:border-zinc-700",
-    dot: "bg-zinc-300",
-    label: "Pianificato",
-  },
-  completato: {
-    bg: "bg-emerald-50 dark:bg-emerald-950/30",
-    border: "border-emerald-300 dark:border-emerald-700",
-    dot: "bg-emerald-500",
-    label: "Completato",
-  },
-  saltato: {
-    bg: "bg-red-50 dark:bg-red-950/30",
-    border: "border-red-300 dark:border-red-700",
-    dot: "bg-red-500",
-    label: "Saltato",
-  },
-  parziale: {
-    bg: "bg-amber-50 dark:bg-amber-950/30",
-    border: "border-amber-300 dark:border-amber-700",
-    dot: "bg-amber-500",
-    label: "Parziale",
-  },
-} as const;
+const STATO_DOT: Record<string, string> = {
+  pianificato: "bg-zinc-400",
+  completato: "bg-emerald-500",
+  saltato: "bg-red-500",
+  parziale: "bg-amber-500",
+};
+
+const STATO_STYLE: Record<string, string> = {
+  pianificato: "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700",
+  completato:
+    "bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800",
+  saltato:
+    "bg-red-50/60 dark:bg-red-950/20 border-red-200 dark:border-red-800",
+  parziale:
+    "bg-amber-50/80 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800",
+};
 
 interface ScheduleSlotCardProps {
   slot: ScheduleSlot;
@@ -50,88 +34,74 @@ interface ScheduleSlotCardProps {
 export function ScheduleSlotCard({
   slot,
   isToday,
-  isPast,
   onComplete,
   onSkip,
-  onDelete,
   onClick,
 }: ScheduleSlotCardProps) {
-  const config = STATO_CONFIG[slot.stato];
   const canAct = slot.stato === "pianificato";
 
   return (
     <div
+      draggable={canAct}
+      onDragStart={(e) => {
+        e.dataTransfer.setData("application/slot-id", String(slot.id));
+        e.dataTransfer.effectAllowed = "move";
+      }}
       onClick={() => onClick(slot)}
-      className={`group relative rounded-lg border p-2.5 cursor-pointer transition-all hover:shadow-sm ${config.bg} ${config.border} ${
-        isToday ? "ring-2 ring-teal-500/50" : ""
-      }`}
+      className={`group flex items-center gap-1 rounded-md border px-1.5 py-1 cursor-pointer
+        transition-all hover:shadow-sm
+        ${STATO_STYLE[slot.stato] ?? STATO_STYLE.pianificato}
+        ${isToday ? "ring-1 ring-teal-500/40" : ""}
+        ${canAct ? "hover:border-zinc-400 dark:hover:border-zinc-500" : ""}`}
     >
-      {/* Header: dot + nome */}
-      <div className="flex items-start gap-2">
-        <div className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${config.dot}`} />
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium truncate">{slot.sessione_nome}</p>
-          {slot.focus_muscolare && (
-            <p className="text-xs text-muted-foreground truncate">
-              {slot.focus_muscolare}
-            </p>
-          )}
-        </div>
+      {/* Drag handle — only for actionable slots */}
+      {canAct ? (
+        <GripVertical className="h-3 w-3 shrink-0 text-muted-foreground/30 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab" />
+      ) : null}
 
-        {/* Quick actions */}
-        {canAct && (
-          <div className="flex shrink-0 gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 text-emerald-600 hover:bg-emerald-100"
-              onClick={(e) => {
-                e.stopPropagation();
-                onComplete(slot.id);
-              }}
-              title="Completata"
-            >
-              <Check className="h-3.5 w-3.5" />
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <MoreHorizontal className="h-3.5 w-3.5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onSkip(slot.id)}>
-                  <X className="mr-2 h-4 w-4 text-red-500" />
-                  Segna come saltata
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => onDelete(slot.id)}
-                  className="text-red-600"
-                >
-                  Rimuovi dal calendario
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        )}
-      </div>
+      {/* Status dot */}
+      <div
+        className={`h-2 w-2 shrink-0 rounded-full ${STATO_DOT[slot.stato] ?? STATO_DOT.pianificato}`}
+      />
 
-      {/* Status icon for completed/skipped */}
-      {slot.stato === "completato" && (
-        <div className="absolute -top-1.5 -right-1.5 rounded-full bg-emerald-500 p-0.5">
-          <Check className="h-3 w-3 text-white" />
+      {/* Session name (truncated) */}
+      <span
+        className={`min-w-0 flex-1 truncate text-xs font-medium ${
+          slot.stato === "saltato" ? "line-through decoration-red-400/60 text-muted-foreground" : ""
+        }`}
+      >
+        {slot.sessione_nome}
+      </span>
+
+      {/* Quick actions: complete / skip */}
+      {canAct ? (
+        <div className="flex shrink-0 gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-5 w-5 text-emerald-600 hover:bg-emerald-100 dark:hover:bg-emerald-900/40"
+            onClick={(e) => {
+              e.stopPropagation();
+              onComplete(slot.id);
+            }}
+            title="Completata"
+          >
+            <Check className="h-3 w-3" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-5 w-5 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/40"
+            onClick={(e) => {
+              e.stopPropagation();
+              onSkip(slot.id);
+            }}
+            title="Saltata"
+          >
+            <X className="h-3 w-3" />
+          </Button>
         </div>
-      )}
-      {slot.stato === "saltato" && (
-        <div className="absolute -top-1.5 -right-1.5 rounded-full bg-red-500 p-0.5">
-          <X className="h-3 w-3 text-white" />
-        </div>
-      )}
+      ) : null}
     </div>
   );
 }
