@@ -254,7 +254,7 @@ export default function ClientiPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div>
       {/* ── Header gradient ── */}
       <div data-guide="clienti-header" className={revealClass(0, "flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between")} style={revealStyle(0)}>
         <div className="flex items-center gap-3">
@@ -262,14 +262,14 @@ export default function ClientiPage() {
             <Users className="h-5 w-5 text-teal-600 dark:text-teal-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">
+            <h1 className="text-3xl font-bold tracking-tight">
               Clienti
               {isFiltered && (
                 <span className="text-muted-foreground/60 text-base font-normal"> (filtro attivo)</span>
               )}
             </h1>
             {data && (
-              <p className="text-sm text-muted-foreground">
+              <p className="text-base text-muted-foreground/70">
                 {data.total} client{data.total !== 1 ? "i" : "e"} nel tuo portafoglio
               </p>
             )}
@@ -291,7 +291,7 @@ export default function ClientiPage() {
 
       {/* ── KPI Cards ── */}
       {data && (
-        <div data-guide="clienti-kpi" className={revealClass(50, "grid grid-cols-2 gap-3 lg:grid-cols-4")} style={revealStyle(50)}>
+        <div data-guide="clienti-kpi" className={revealClass(50, "mt-8 grid grid-cols-2 gap-3 lg:grid-cols-4")} style={revealStyle(50)}>
           {CLIENTI_KPI.map((kpi) => {
             const value = getKpiValue(kpi.key, data);
             const isAlert = kpi.key === "rate_scadute";
@@ -320,16 +320,16 @@ export default function ClientiPage() {
             return (
               <div
                 key={kpi.key}
-                className={`flex items-start gap-3 rounded-xl border border-l-4 ${borderColor} bg-gradient-to-br ${gradient} p-3 shadow-sm transition-shadow hover:shadow-md sm:p-4`}
+                className={`flex items-start gap-3 rounded-xl border border-l-4 ${borderColor} bg-gradient-to-br ${gradient} p-4 shadow-sm transition-shadow hover:shadow-md sm:p-5`}
               >
                 <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${iconBg}`}>
                   <Icon className={`h-4 w-4 ${iconColor}`} />
                 </div>
                 <div>
-                  <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                     {kpi.label}
                   </p>
-                  <p className={`text-xl font-bold tracking-tight sm:text-2xl ${valueColor}`}>
+                  <p className={`text-2xl font-bold tracking-tight sm:text-3xl ${valueColor}`}>
                     {value}
                   </p>
                 </div>
@@ -341,7 +341,7 @@ export default function ClientiPage() {
 
       {/* ── FilterBar chip (pattern Agenda) ── */}
       {data && (
-        <div className={revealClass(100)} style={revealStyle(100)}>
+        <div className={revealClass(100, "mt-6")} style={revealStyle(100)}>
           <FilterBar
             activeStati={activeStati}
             onToggleStato={handleToggleStato}
@@ -352,7 +352,7 @@ export default function ClientiPage() {
       )}
 
       {/* ── Contenuto ── */}
-      <div className={revealClass(150)} style={revealStyle(150)}>
+      <div className={revealClass(150, "mt-8")} style={revealStyle(150)}>
         {isLoading && <TableSkeleton />}
 
         {isError && (
@@ -506,7 +506,7 @@ function TableSkeleton() {
       {/* KPI cards — specchio esatto delle 4 card reali */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {KPI_BORDERS.map((border, i) => (
-          <div key={i} className={`flex items-start gap-3 rounded-xl border border-l-4 ${border} p-3 sm:p-4`}>
+          <div key={i} className={`flex items-start gap-3 rounded-xl border border-l-4 ${border} p-4 sm:p-5`}>
             <Skeleton className="h-8 w-8 shrink-0 rounded-lg sm:h-10 sm:w-10" />
             <div className="flex-1 space-y-2">
               <Skeleton className="h-2.5 w-16" />
