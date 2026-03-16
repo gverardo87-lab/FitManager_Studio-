@@ -2,7 +2,6 @@
 
 import type { PreFlightStatus } from "@/components/workspace/OggiTimeline";
 import {
-  surfaceChipClassName,
   surfaceRoleClassName,
   type SurfaceTone,
 } from "@/components/ui/surface-role";
@@ -140,11 +139,11 @@ export function OggiHero({
   prep,
   attentionCount,
   readyCount,
-  internalCount,
+  internalCount: _internalCount,
   focusSession,
   focusStatus,
   lastUpdatedAt,
-  isRefreshing = false,
+  isRefreshing: _isRefreshing = false,
   className,
 }: OggiHeroProps) {
   const now = getReferenceDate(prep.current_time);
@@ -153,7 +152,7 @@ export function OggiHero({
     focusSession,
     focusStatus,
   });
-  const syncLabel = lastUpdatedAt ? TIME_FMT.format(getReferenceDate(lastUpdatedAt)) : null;
+  const _syncLabel = lastUpdatedAt ? TIME_FMT.format(getReferenceDate(lastUpdatedAt)) : null;
 
   const leadColor =
     tone === "red"
@@ -169,95 +168,74 @@ export function OggiHero({
       <div
         className={surfaceRoleClassName(
           { role: "page", tone: "neutral" },
-          "oggi-command-bar px-6 py-7 sm:px-8 sm:py-8",
+          "oggi-command-bar px-6 py-8 sm:px-10 sm:py-10",
         )}
       >
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 flex-1">
-            <p className="flex items-center gap-2.5 text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground/70">
-              <span>{DATE_FMT.format(now)}</span>
-              <span className="h-0.5 w-3 rounded-full bg-current opacity-20" />
-              <span>preparazione sedute</span>
+            {/* Breadcrumb — Practice Better style */}
+            <p className="flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.18em] text-muted-foreground/60 sm:text-[13px]">
+              <span>Oggi</span>
+              <span className="text-primary/40">|</span>
+              <span className="text-primary/70">Preparazione sedute</span>
             </p>
-            <div className="mt-3 flex items-center gap-5">
-              <h1 className="oggi-title-gradient text-[2.6rem] font-black leading-tight tracking-tighter sm:text-[3rem]">
-                Oggi
-              </h1>
-              <AnalogClock className="h-[76px] w-[76px] shrink-0 sm:h-[92px] sm:w-[92px]" />
+
+            {/* Row 1: Clock + Greeting + Date */}
+            <div className="mt-5 flex items-center gap-6 sm:mt-6">
+              <AnalogClock />
+              <div className="min-w-0">
+                <h1 className="oggi-title-gradient pb-1 text-[1.9rem] font-black leading-[1.25] tracking-tight sm:text-[2.3rem]">
+                  {getGreeting()}
+                </h1>
+                <p className="mt-1.5 text-[15px] font-medium capitalize text-foreground/50 sm:text-[16px]">
+                  {DATE_FMT.format(now)}
+                </p>
+              </div>
             </div>
-            <p className="mt-3 text-[15px] font-semibold text-primary/90">
-              {getGreeting()}, Dott.ssa Chiara Bassani
-            </p>
-            <div className="oggi-hero-divider mt-4" />
-            <p className={cn("mt-4 text-[14.5px] font-semibold leading-snug transition-colors duration-300 sm:text-[15.5px]", leadColor)}>
+
+            {/* Row 2: Briefing lead — azione operativa con respiro */}
+            <div className="oggi-hero-divider mt-6" />
+            <p className={cn("mt-5 max-w-xl text-[16px] font-bold leading-relaxed transition-colors duration-300 sm:text-[17px]", leadColor)}>
               {lead}
             </p>
-            {detail && (
-              <p className="mt-2 max-w-lg text-[11.5px] leading-[1.65] text-muted-foreground/65">
-                {detail}
-              </p>
-            )}
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 sm:flex-col sm:items-end sm:gap-2.5">
-            <span
-              className={surfaceChipClassName(
-                { tone: "neutral" },
-                "px-3.5 py-1.5 text-[11px] font-bold tabular-nums",
-              )}
-            >
-              {prep.total_sessions} {prep.total_sessions === 1 ? "seduta" : "sedute"}
-            </span>
+          <div className="flex shrink-0 flex-wrap items-center gap-2.5 sm:flex-col sm:items-end sm:gap-1">
+            {/* KPI stat block — numeri prominenti */}
+            <div className="flex items-center gap-3 sm:flex-col sm:items-end sm:gap-5">
+              {/* Sedute totali */}
+              <div className="text-right">
+                <p className="text-[1.75rem] font-black tabular-nums leading-none tracking-tight text-foreground sm:text-[2rem]">
+                  {prep.total_sessions}
+                </p>
+                <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground/60">
+                  {prep.total_sessions === 1 ? "seduta" : "sedute"}
+                </p>
+              </div>
 
-            {attentionCount > 0 && (
-              <span
-                className={surfaceChipClassName(
-                  { tone: "red" },
-                  "px-3.5 py-1.5 text-[11px] font-bold tabular-nums",
-                )}
-              >
-                {attentionCount} da verificare
-              </span>
-            )}
+              {/* Attenzione / Pronte */}
+              {attentionCount > 0 ? (
+                <div className="text-right">
+                  <p className="text-[1.75rem] font-black tabular-nums leading-none tracking-tight text-red-600 dark:text-red-400 sm:text-[2rem]">
+                    {attentionCount}
+                  </p>
+                  <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.14em] text-red-600/70 dark:text-red-400/70">
+                    da verificare
+                  </p>
+                </div>
+              ) : readyCount > 0 ? (
+                <div className="text-right">
+                  <p className="text-[1.75rem] font-black tabular-nums leading-none tracking-tight text-emerald-600 dark:text-emerald-400 sm:text-[2rem]">
+                    {readyCount}
+                  </p>
+                  <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.14em] text-emerald-600/70 dark:text-emerald-400/70">
+                    {readyCount === 1 ? "pronta" : "pronte"}
+                  </p>
+                </div>
+              ) : null}
+            </div>
 
-            {attentionCount === 0 && readyCount > 0 && (
-              <span
-                className={surfaceChipClassName(
-                  { tone: "teal" },
-                  "px-3.5 py-1.5 text-[11px] font-bold tabular-nums",
-                )}
-              >
-                {readyCount} {readyCount === 1 ? "pronta" : "pronte"}
-              </span>
-            )}
-
-            {internalCount > 0 && (
-              <span
-                className={surfaceChipClassName(
-                  { tone: "neutral" },
-                  "px-3.5 py-1.5 text-[11px] font-bold tabular-nums",
-                )}
-              >
-                {internalCount} {internalCount === 1 ? "interno" : "interni"}
-              </span>
-            )}
-
-            {syncLabel && (
-              <span
-                className={surfaceChipClassName(
-                  { tone: isRefreshing ? "amber" : "neutral" },
-                  "px-3 py-1.5 text-[10px] font-bold transition-colors duration-300",
-                )}
-              >
-                <span
-                  className={cn(
-                    "h-1.5 w-1.5 rounded-full transition-colors duration-300",
-                    isRefreshing ? "oggi-pulse-dot bg-amber-500" : "bg-emerald-500",
-                  )}
-                />
-                {isRefreshing ? "Sync" : `Agg. ${syncLabel}`}
-              </span>
-            )}
+            {/* Meta chips rimossi — interni visibili nella timeline, sync non necessario qui */}
           </div>
         </div>
       </div>
@@ -270,20 +248,21 @@ export function OggiHeroSkeleton({ className }: { className?: string }) {
     <div
       className={surfaceRoleClassName(
         { role: "page", tone: "neutral" },
-        cn("oggi-command-bar px-6 py-7 sm:px-8 sm:py-8", className),
+        cn("oggi-command-bar px-6 py-8 sm:px-10 sm:py-10", className),
       )}
     >
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0 flex-1 space-y-3">
-          <div className="h-3 w-44 rounded bg-muted/50" />
-          <div className="flex items-center gap-5">
-            <div className="h-12 w-28 rounded-xl bg-muted/30" />
-            <div className="h-[76px] w-[76px] rounded-full bg-muted/20 sm:h-[92px] sm:w-[92px]" />
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0 flex-1 space-y-4">
+          <div className="h-3 w-40 rounded bg-muted/40" />
+          <div className="flex items-center gap-6">
+            <div className="h-[82px] w-[82px] rounded-[22px] bg-muted/20 sm:h-[96px] sm:w-[96px] sm:rounded-[26px]" />
+            <div className="space-y-2.5">
+              <div className="h-7 w-52 rounded-lg bg-muted/30" />
+              <div className="h-4 w-36 rounded bg-muted/20" />
+            </div>
           </div>
-          <div className="h-4 w-60 rounded bg-muted/40" />
           <div className="h-[1.5px] w-12 rounded bg-muted/30" />
-          <div className="h-4 w-72 rounded bg-muted/35" />
-          <div className="h-3 w-56 rounded bg-muted/25" />
+          <div className="h-5 w-80 rounded bg-muted/30" />
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:flex-col sm:items-end sm:gap-2.5">
           <div className="h-7 w-20 rounded-full bg-muted/35" />

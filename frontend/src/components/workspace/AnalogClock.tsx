@@ -1,22 +1,23 @@
 "use client";
 
 /**
- * AnalogClock — orologio analogico stile Apple Watch.
+ * SmartWatch — orologio digitale stile Apple Watch Ultra.
  *
- * Lancette ore/minuti, tick marks, dot secondi.
- * Aggiorna ogni 10s. Monocromatico, si adatta al tema.
+ * Rounded-rect con ore:minuti dominante (colon pulsante),
+ * giorno + data compatta sotto. Aggiorna ogni 10s.
  */
 
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
-const HOUR_TICKS = Array.from({ length: 12 }, (_, i) => i);
+const DAY_FMT = new Intl.DateTimeFormat("it-IT", { weekday: "short" });
+const DATE_SHORT_FMT = new Intl.DateTimeFormat("it-IT", { day: "numeric", month: "short" });
 
-interface AnalogClockProps {
+interface SmartWatchProps {
   className?: string;
 }
 
-export function AnalogClock({ className }: AnalogClockProps) {
+export function AnalogClock({ className }: SmartWatchProps) {
   const [now, setNow] = useState(new Date(0));
 
   useEffect(() => {
@@ -26,88 +27,40 @@ export function AnalogClock({ className }: AnalogClockProps) {
   }, []);
 
   const hydrated = now.getTime() > 0;
-  const hours = now.getHours() % 12;
-  const minutes = now.getMinutes();
-
-  const hourAngle = hours * 30 + minutes * 0.5;
-  const minuteAngle = minutes * 6;
+  const hh = hydrated ? String(now.getHours()).padStart(2, "0") : "--";
+  const mm = hydrated ? String(now.getMinutes()).padStart(2, "0") : "--";
+  const dayStr = hydrated ? DAY_FMT.format(now).toUpperCase().replace(".", "") : "---";
+  const dateStr = hydrated ? DATE_SHORT_FMT.format(now) : "";
 
   return (
-    <div className={cn("relative transition-opacity duration-500", hydrated ? "opacity-100" : "opacity-0", className)}>
-      <svg viewBox="0 0 100 100" className="h-full w-full drop-shadow-lg" role="img" aria-label={hydrated ? `Orologio: ${hours === 0 ? 12 : hours}:${String(minutes).padStart(2, "0")}` : "Orologio"}>
-        {/* Outer ring */}
-        <circle
-          cx="50" cy="50" r="48"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          className="text-primary/20"
-        />
+    <div
+      className={cn(
+        "oggi-smartwatch relative flex shrink-0 flex-col items-center justify-center transition-opacity duration-500",
+        hydrated ? "opacity-100" : "opacity-0",
+        className,
+      )}
+      role="img"
+      aria-label={hydrated ? `Orologio: ${hh}:${mm}` : "Orologio"}
+    >
+      {/* Time — dominant, with pulsing colon */}
+      <div className="flex items-baseline tabular-nums">
+        <span className="oggi-smartwatch-time text-[1.85rem] font-black leading-none tracking-tight sm:text-[2.15rem]">
+          {hh}
+        </span>
+        <span className="oggi-smartwatch-colon oggi-smartwatch-time mx-[1px] text-[1.6rem] font-black leading-none sm:text-[1.9rem]">
+          :
+        </span>
+        <span className="oggi-smartwatch-time text-[1.85rem] font-black leading-none tracking-tight sm:text-[2.15rem]">
+          {mm}
+        </span>
+      </div>
 
-        {/* Glass face */}
-        <circle
-          cx="50" cy="50" r="46"
-          fill="currentColor"
-          className="text-background"
-          opacity="0.85"
-        />
-
-        {/* Inner subtle ring */}
-        <circle
-          cx="50" cy="50" r="44"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="0.5"
-          className="text-primary/10"
-        />
-
-        {/* Hour ticks */}
-        {HOUR_TICKS.map((i) => {
-          const angle = (i * 30 - 90) * (Math.PI / 180);
-          const isQuarter = i % 3 === 0;
-          const outerR = 42;
-          const innerR = isQuarter ? 36 : 38.5;
-          return (
-            <line
-              key={i}
-              x1={50 + Math.cos(angle) * innerR}
-              y1={50 + Math.sin(angle) * innerR}
-              x2={50 + Math.cos(angle) * outerR}
-              y2={50 + Math.sin(angle) * outerR}
-              stroke="currentColor"
-              strokeWidth={isQuarter ? "2.2" : "0.8"}
-              strokeLinecap="round"
-              className={isQuarter ? "text-foreground/70" : "text-foreground/25"}
-            />
-          );
-        })}
-
-        {/* Hour hand */}
-        <line
-          x1="50" y1="50"
-          x2={50 + Math.cos((hourAngle - 90) * (Math.PI / 180)) * 24}
-          y2={50 + Math.sin((hourAngle - 90) * (Math.PI / 180)) * 24}
-          stroke="currentColor"
-          strokeWidth="3"
-          strokeLinecap="round"
-          className="text-foreground/80 transition-all duration-700 ease-out"
-        />
-
-        {/* Minute hand */}
-        <line
-          x1="50" y1="50"
-          x2={50 + Math.cos((minuteAngle - 90) * (Math.PI / 180)) * 34}
-          y2={50 + Math.sin((minuteAngle - 90) * (Math.PI / 180)) * 34}
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          className="text-foreground/60 transition-all duration-700 ease-out"
-        />
-
-        {/* Center dot */}
-        <circle cx="50" cy="50" r="2.5" fill="currentColor" className="text-primary" />
-        <circle cx="50" cy="50" r="1" fill="currentColor" className="text-primary-foreground" />
-      </svg>
+      {/* Date — compact below */}
+      <span className="mt-1.5 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground/65 sm:text-[11px]">
+        <span className="text-primary/70">{dayStr}</span>
+        <span className="h-[3px] w-[3px] rounded-full bg-primary/40" />
+        <span>{dateStr}</span>
+      </span>
     </div>
   );
 }

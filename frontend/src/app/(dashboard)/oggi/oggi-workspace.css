@@ -323,6 +323,72 @@
     background-clip: text;
   }
 
+  /* ── SmartWatch — Apple Watch style ── */
+
+  .oggi-smartwatch {
+    width: 82px;
+    height: 82px;
+    border-radius: 22px;
+    border: 1.5px solid color-mix(in oklch, var(--border) 70%, var(--primary) 30%);
+    background:
+      radial-gradient(ellipse 80% 80% at 30% 20%, oklch(0.97 0.01 170 / 0.4), transparent 60%),
+      linear-gradient(
+        160deg,
+        color-mix(in oklch, var(--background) 96%, var(--primary) 4%),
+        color-mix(in oklch, var(--background) 90%, var(--accent) 10%)
+      );
+    box-shadow:
+      0 1px 3px oklch(0 0 0 / 0.06),
+      0 4px 12px -4px oklch(0 0 0 / 0.08),
+      inset 0 1px 0 oklch(1 0 0 / 0.5);
+  }
+
+  .dark .oggi-smartwatch {
+    border-color: color-mix(in oklch, var(--border) 60%, var(--primary) 40%);
+    background:
+      radial-gradient(ellipse 80% 80% at 30% 20%, oklch(0.22 0.03 170 / 0.25), transparent 60%),
+      linear-gradient(
+        160deg,
+        color-mix(in oklch, var(--card) 95%, var(--primary) 5%),
+        color-mix(in oklch, var(--background) 92%, var(--accent) 8%)
+      );
+    box-shadow:
+      0 1px 3px oklch(0 0 0 / 0.3),
+      0 4px 12px -4px oklch(0 0 0 / 0.4),
+      inset 0 1px 0 oklch(1 0 0 / 0.04);
+  }
+
+  .oggi-smartwatch-time {
+    background: linear-gradient(180deg, oklch(0.18 0.02 170), oklch(0.30 0.04 200));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .dark .oggi-smartwatch-time {
+    background: linear-gradient(180deg, oklch(0.95 0.08 170), oklch(0.82 0.06 200));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  @keyframes oggi-colon-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.25; }
+  }
+
+  .oggi-smartwatch-colon {
+    animation: oggi-colon-pulse 2s ease-in-out infinite;
+  }
+
+  @media (min-width: 640px) {
+    .oggi-smartwatch {
+      width: 96px;
+      height: 96px;
+      border-radius: 26px;
+    }
+  }
+
   /* ── Attention status heartbeat ── */
 
   @keyframes oggi-status-beat {
