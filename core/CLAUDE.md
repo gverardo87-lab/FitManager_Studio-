@@ -3,17 +3,10 @@
 Moduli AI e workout in attesa di essere esposti via API endpoints.
 I repository sono legacy (sqlite3 raw) — il backend API usa SQLModel ORM.
 
-## Coordinamento parallelo layer (Codex + Claude Code)
+## Coordinamento
 
-Prima di editare file in `core/`:
-1. Claim task su `docs/ai-sync/WORKBOARD.md`.
-2. Compila `Locked files` con path reali in `core/`.
-3. Se un file e gia lockato da altro agente, fermati e usa handoff.
-
-A fine task:
-1. Aggiorna `WORKBOARD.md` (commit, check, note).
-2. Sincronizza `docs/upgrades/*` quando cambia comportamento o governance.
-3. Rilascia lock file.
+Per task cross-layer, coordinare esplicitamente per evitare conflitti.
+A fine task: verifiche reali e note sui rischi residui.
 
 ## Stato attuale
 

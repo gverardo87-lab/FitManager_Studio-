@@ -15,16 +15,10 @@ Quando le istruzioni confliggono, usare questo ordine:
 6. `POSTMORTEMS.md`
 7. runbook, upgrade docs e altra documentazione solo quando servono
 
-Le spec in `docs/upgrades/specs/` sono storiche di default e guidano il lavoro attivo solo se la task
-le richiama esplicitamente o se non esiste una guida piu' recente.
+Le spec completate sono archiviate in `docs/archive/specs/` come riferimento storico.
 
-File legacy da non usare come nuova fonte di regole:
-
-- `CLAUDE.md`
-- `codex.md`
-- `docs/ai-sync/MULTI_AGENT_SYNC.md`
-
-Servono solo come compatibilita' e redirect.
+Il root `CLAUDE.md` e' l'entry point letto automaticamente da Claude Code.
+Per regole operative dettagliate, riferirsi a questo file e ai layer-specifici.
 
 ## 2) Delivery Loop
 
@@ -70,36 +64,19 @@ Non nascondere i rischi. Se emergono, esplicitarli presto.
 - Invalidare le query in modo simmetrico sulle operazioni inverse.
 - Gestire sempre loading/error/empty state.
 - Evitare dati sensibili nelle overview di default.
-- Applicare la skill piu' specifica disponibile per il surface toccato.
-- Usare skill responsive/mobile solo se il task impatta davvero il layout adattivo.
-- Usare skill guide/help solo per superfici guida.
-- Riferimento rapido:
-  - dashboard overview -> `fitmanager-dashboard-crm-design`
-  - workspace operativi -> `fitmanager-operational-workspace-design`
-  - record page CRM -> `fitmanager-crm-record-page-design`
-  - responsive/mobile -> `fitmanager-responsive-adaptive-ui`
-  - guide/help -> `fitmanager-guide-content-architecture`
-  - assets guida illustrati -> `fitmanager-guide-illustrated-playbook`
+- Applicare le skill disponibili (`.agents/skills/`) quando il task lo richiede.
 
 ### Cross-layer
 
 - Nessuna nuova policy di prodotto inventata nei docs o nel codice.
 - I documenti storici non devono diventare regole operative.
-- Per assistant/help routing usare `fitmanager-assistant-guide-linking` con guardrail API/frontend.
 - Preferire la soluzione piu' semplice e robusta compatibile con il launch scope.
 - Evitare refactor larghi, nuove astrazioni o nuova documentazione se non richiesti dal task.
 
 ## 5) Collaborazione e documentazione
 
-Quando la task tocca codice condiviso, piu' file o governance/processo, il claim su `docs/ai-sync/WORKBOARD.md` e' obbligatorio:
-
-1. claim su `docs/ai-sync/WORKBOARD.md` prima di editare
-2. `Locked files` aggiornati ai path reali
-3. nessun edit su file lockato senza handoff esplicito
-4. a fine task: checks reali, rilascio lock, note sui rischi
-
-Sincronizzare `docs/upgrades/*` solo quando cambia comportamento, architettura, processo o workflow di delivery.
-`WORKBOARD.md` e `UPGRADE_LOG.md` sono ledger operativi/storici, non sorgenti di verita' per le regole del prodotto.
+Quando la task tocca codice condiviso o piu' layer, coordinare esplicitamente per evitare conflitti.
+A fine task: verifiche reali e note sui rischi residui.
 
 ## 6) Quality Gates
 

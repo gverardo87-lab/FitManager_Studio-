@@ -143,7 +143,7 @@ Skills installate in `.agents/skills/` — knowledge base attive per audit e cod
 | `MANIFESTO.md` | Missione prodotto, visual identity, principi UX | Quando serve contesto di prodotto |
 | `LAUNCH_SCOPE.md` | Cosa e' in scope per il lancio | Quando prioritizzi feature |
 | `POSTMORTEMS.md` | Lezioni da errori passati | Quando incontri un pattern sospetto |
-| `AGENTS.md` | Delivery loop, quality gates, commit standard | Quando coordini con altri agenti |
+| `AGENTS.md` | Delivery loop, quality gates, commit standard | Quando serve contesto operativo agenti |
 
 ## Commit
 
