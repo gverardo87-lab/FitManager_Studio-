@@ -523,17 +523,16 @@ function ProgramCard({ plan }: { plan: WorkoutPlan }) {
               </div>
             )}
 
-            {/* CTA per "da_attivare" (inline, senza drill-down) */}
+            {/* CTA per "da_attivare" */}
             {status === "da_attivare" && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs shrink-0"
-                onClick={(e) => { e.stopPropagation(); setActivateOpen(true); }}
-              >
-                <CalendarDays className="mr-1.5 h-3.5 w-3.5" />
-                Attiva
-              </Button>
+              <div className="flex gap-1.5 shrink-0">
+                <Link href={`/allenamenti/${plan.id}`} onClick={(e) => e.stopPropagation()}>
+                  <Button variant="default" size="sm" className="text-xs">
+                    <CalendarDays className="mr-1.5 h-3.5 w-3.5" />
+                    Pianifica
+                  </Button>
+                </Link>
+              </div>
             )}
           </div>
         </div>
@@ -580,15 +579,22 @@ function ProgramCard({ plan }: { plan: WorkoutPlan }) {
 
             {/* Azioni */}
             <div className="flex items-center justify-between pt-1">
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs"
-                onClick={() => setActivateOpen(true)}
-              >
-                <CalendarDays className="mr-1.5 h-3.5 w-3.5" />
-                Modifica date
-              </Button>
+              <div className="flex gap-1.5">
+                <Link href={`/allenamenti/${plan.id}`}>
+                  <Button variant="default" size="sm" className="text-xs">
+                    <CalendarDays className="mr-1.5 h-3.5 w-3.5" />
+                    Calendario
+                  </Button>
+                </Link>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs"
+                  onClick={() => setActivateOpen(true)}
+                >
+                  Modifica date
+                </Button>
+              </div>
               <Link href={`/schede/${plan.id}?from=allenamenti`}>
                 <Button variant="ghost" size="sm" className="text-xs text-primary">
                   Vai alla Scheda →

@@ -8,7 +8,7 @@
 
 import { use, useState, useCallback, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Plus } from "lucide-react";
+import { Plus, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -152,6 +152,27 @@ export default function SchedaDetailPage({ params }: { params: Promise<{ id: str
         onLogoChange={builder.handleLogoChange}
         showAdvanced={showAdvanced} onToggleAdvanced={() => setShowAdvanced((v) => !v)} hasSessions={builder.sessions.length > 0}
       />
+
+      {/* CTA Calendario — visibile solo con cliente + sessioni */}
+      {plan.id_cliente && builder.sessions.length > 0 && (
+        <div className="flex items-center justify-between rounded-lg border border-teal-200 dark:border-teal-800 bg-teal-50/50 dark:bg-teal-950/20 px-4 py-2.5">
+          <div className="text-sm">
+            <span className="font-medium">Pianifica il calendario</span>
+            <span className="text-muted-foreground ml-1.5 hidden sm:inline">
+              — distribuisci le sessioni nella settimana
+            </span>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            className="text-xs border-teal-300 dark:border-teal-700 hover:bg-teal-100 dark:hover:bg-teal-900/40"
+            onClick={() => guardedNavigate(`/allenamenti/${plan.id}`)}
+          >
+            <CalendarDays className="mr-1.5 h-3.5 w-3.5" />
+            Calendario
+          </Button>
+        </div>
+      )}
 
       <div className="space-y-3">
           {safetyMap && safetyMap.condition_count > 0 && (
