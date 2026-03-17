@@ -188,6 +188,7 @@ export default function DashboardLayout({
     <AuthGuard>
     <CommandPalette />
     <SpotlightTour
+      key={activeTour.id}
       tour={activeTour}
       open={tourOpen}
       onComplete={() => {
