@@ -15,14 +15,14 @@
  * La Sidebar cancella il valore salvato onClick → fresh nav = top.
  *
  * SpotlightTour: tour guidato con overlay su elementi reali.
- * Supporta tour completo (19 step) e mini-tour contestuali (via HelpBot).
+ * Supporta tour completo (19 step), mini-tour e spotlight singolo.
  * Manual trigger da /guida via custom event.
  *
  * HelpBot: dispatcher contestuale FAB + Panel.
- * Gestisce primo avvio (onboarding conversazionale) e suggerimenti per pagina.
+ * Lancia spotlight/mini-tour via callback diretto (no custom events).
  */
 
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Menu } from "lucide-react";
 
@@ -85,6 +85,37 @@ export default function DashboardLayout({
     }
   }, [router, pathname]);
 
+  // ── Callback: launch mini-tour (called by HelpBot) ──
+  const handleMiniTour = useCallback((page: string) => {
+    const mini = buildMiniTour(page);
+    if (mini) {
+      setActiveTour(mini);
+      setTourOpen(true);
+    }
+  }, [buildMiniTour]);
+
+  // ── Callback: launch spotlight (called by HelpBot) ──
+  const handleSpotlight = useCallback((spot: SpotlightTarget) => {
+    // Navigate first if needed
+    if (spot.navigateTo && pathname !== spot.navigateTo) {
+      router.push(spot.navigateTo);
+    }
+
+    // Build 1-step tour
+    setActiveTour({
+      id: `spotlight-${spot.target}`,
+      title: spot.title,
+      steps: [{
+        target: spot.target,
+        title: spot.title,
+        description: spot.description,
+        placement: spot.placement,
+        navigateTo: spot.navigateTo,
+      }],
+    });
+    setTourOpen(true);
+  }, [pathname, router]);
+
   // ── Hook 1: Continuously save scroll position via scroll event ──
   useEffect(() => {
     const main = mainRef.current;
@@ -107,18 +138,13 @@ export default function DashboardLayout({
   }, [pathname]);
 
   // ── Hook 2: Restore scroll from sessionStorage or reset to top ──
-  // Sidebar onClick clears saved scroll → fresh nav = top.
-  // Back-nav or detail→list nav: saved scroll still present → restored.
-  // prevPathnameRef guard prevents React Strict Mode double-invocation.
   useEffect(() => {
     const main = mainRef.current;
     if (!main) return;
 
-    // Strict Mode guard: skip if we already processed this pathname
     if (prevPathnameRef.current === pathname) return;
     prevPathnameRef.current = pathname;
 
-    // Clear any previous scroll timers
     scrollTimersRef.current.forEach(clearTimeout);
     scrollTimersRef.current = [];
 
@@ -126,12 +152,10 @@ export default function DashboardLayout({
     if (saved) {
       const target = parseInt(saved, 10);
       const tryRestore = () => { main.scrollTop = target; };
-      // Multiple retries at increasing intervals (waits for React Query async data)
       [0, 50, 100, 250, 500, 1000, 2000].forEach(delay => {
         scrollTimersRef.current.push(setTimeout(tryRestore, delay));
       });
     } else {
-      // No saved position (cleared by Sidebar or first visit) → top
       main.scrollTop = 0;
     }
   }, [pathname]);
@@ -149,51 +173,16 @@ export default function DashboardLayout({
     return () => window.removeEventListener("start-guide-tour", handler);
   }, []);
 
-  // ── Hook 5: Listen for mini-tour trigger from HelpBot ──
+  // ── Hook 5: Listen for mini-tour trigger (custom event — onboarding + /guida) ──
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent).detail as { page: string } | undefined;
       if (!detail?.page) return;
-      const mini = buildMiniTour(detail.page);
-      if (mini) {
-        setActiveTour(mini);
-        setTourOpen(true);
-      }
+      handleMiniTour(detail.page);
     };
     window.addEventListener("start-mini-tour", handler);
     return () => window.removeEventListener("start-mini-tour", handler);
-  }, [buildMiniTour]);
-
-  // ── Hook 6: Listen for action spotlight (single-step tour) ──
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const spot = (e as CustomEvent).detail as SpotlightTarget | undefined;
-      if (!spot) return;
-
-      // Navigate first if needed
-      if (spot.navigateTo && pathname !== spot.navigateTo) {
-        router.push(spot.navigateTo);
-      }
-
-      // Build 1-step tour
-      const singleStepTour: TourDefinition = {
-        id: `spotlight-${spot.target}`,
-        title: spot.title,
-        steps: [{
-          target: spot.target,
-          title: spot.title,
-          description: spot.description,
-          placement: spot.placement,
-          navigateTo: spot.navigateTo,
-        }],
-      };
-
-      setActiveTour(singleStepTour);
-      setTourOpen(true);
-    };
-    window.addEventListener("start-action-spotlight", handler);
-    return () => window.removeEventListener("start-action-spotlight", handler);
-  }, [pathname, router]);
+  }, [handleMiniTour]);
 
   return (
     <AuthGuard>
@@ -203,7 +192,6 @@ export default function DashboardLayout({
       open={tourOpen}
       onComplete={() => {
         setTourOpen(false);
-        // Only mark completed for the full tour
         if (activeTour.id === "scopri-fitmanager") {
           markTourCompleted("scopri-fitmanager");
         }
@@ -216,7 +204,11 @@ export default function DashboardLayout({
       }}
       onNavigate={handleTourNavigate}
     />
-    <HelpBot tourOpen={tourOpen} />
+    <HelpBot
+      tourOpen={tourOpen}
+      onMiniTour={handleMiniTour}
+      onSpotlight={handleSpotlight}
+    />
     <div className="bg-mesh-app flex h-screen">
       {/* ── Sidebar desktop (fissa, visibile da lg in su) ── */}
       <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:border-r lg:bg-sidebar dark:lg:bg-sidebar">

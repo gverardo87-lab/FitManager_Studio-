@@ -21,8 +21,15 @@ import {
   PROACTIVE_TRIGGERS,
 } from "@/lib/helpbot-data";
 import type { Chapter } from "@/lib/helpbot-data";
-import type { BotAction, BotMessage } from "@/lib/helpbot-types";
+import type { BotAction, BotMessage, SpotlightTarget } from "@/lib/helpbot-types";
 import { GUIDE_FAQ } from "@/lib/guide-tours";
+
+// ── Hook options ──
+
+interface UseHelpBotOptions {
+  onMiniTour: (page: string) => void;
+  onSpotlight: (spot: SpotlightTarget) => void;
+}
 
 // ── Helpers ──
 
@@ -36,7 +43,7 @@ export type HelpBotView = "chat" | "chapters" | "chapter-detail";
 
 // ── Hook ──
 
-export function useHelpBot() {
+export function useHelpBot({ onMiniTour, onSpotlight }: UseHelpBotOptions) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<BotMessage[]>([]);
   const [hasUnread, setHasUnread] = useState(false);
@@ -138,9 +145,7 @@ export function useHelpBot() {
 
       if (choice === "tour") {
         setOpen(false);
-        setTimeout(() => {
-          window.dispatchEvent(new CustomEvent("start-mini-tour", { detail: { page: "/" } }));
-        }, 1000);
+        setTimeout(() => onMiniTour("/"), 1000);
       }
     }, 800);
   }, [markOnboardingDone]);
@@ -239,9 +244,9 @@ export function useHelpBot() {
   }, []);
 
   // ── Send action ──
-  // NOTA: chiudiamo il panel PRIMA, poi dopo 250ms dispatch lo spotlight/tour.
-  // Senza delay, React batcha setOpen(false) + setTourOpen(true) nello stesso
-  // render e SpotlightTour non riesce a montarsi correttamente.
+  // Chiude panel PRIMA, poi dopo 300ms lancia spotlight/tour via callback
+  // diretto dal layout. Il delay permette al panel di smontarsi e a React
+  // di completare il render prima che SpotlightTour si attivi.
   const sendAction = useCallback((action: BotAction) => {
     switch (action.type) {
       case "navigate":
@@ -251,18 +256,15 @@ export function useHelpBot() {
       case "mini-tour":
         setOpen(false);
         if (action.payload) {
-          setTimeout(() => {
-            window.dispatchEvent(new CustomEvent("start-mini-tour", { detail: { page: action.payload } }));
-          }, 250);
+          const page = action.payload;
+          setTimeout(() => onMiniTour(page), 300);
         }
         break;
       case "spotlight": {
         const spot = action.payload ? resolveSpotlight(action.payload) : null;
         setOpen(false);
         if (spot) {
-          setTimeout(() => {
-            window.dispatchEvent(new CustomEvent("start-action-spotlight", { detail: spot }));
-          }, 250);
+          setTimeout(() => onSpotlight(spot), 300);
         }
         break;
       }
@@ -273,16 +275,14 @@ export function useHelpBot() {
         setOpen(false);
         break;
     }
-  }, [router, handleOnboardingChoice]);
+  }, [router, handleOnboardingChoice, onMiniTour, onSpotlight]);
 
   // ── Launch mini-tour for current page ──
   const launchMiniTour = useCallback(() => {
     setOpen(false);
     const page = "/" + pathname.split("/").filter(Boolean)[0] || "/";
-    setTimeout(() => {
-      window.dispatchEvent(new CustomEvent("start-mini-tour", { detail: { page } }));
-    }, 250);
-  }, [pathname]);
+    setTimeout(() => onMiniTour(page), 300);
+  }, [pathname, onMiniTour]);
 
   // ── FAQ search ──
   const searchFaq = useCallback((query: string) => {

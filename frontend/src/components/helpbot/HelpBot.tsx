@@ -1,8 +1,8 @@
 // ════════════════════════════════════════════════════════════
 // HelpBot — Wrapper FAB + Panel
 //
-// Renderizzato in layout.tsx. Gestisce lo state via useHelpBot.
-// Nasconde il FAB durante SpotlightTour.
+// Renderizzato in layout.tsx. Riceve callback diretti per
+// lanciare spotlight e mini-tour (no custom events).
 // ════════════════════════════════════════════════════════════
 
 "use client";
@@ -10,12 +10,15 @@
 import { useHelpBot } from "@/hooks/useHelpBot";
 import { HelpBotFab } from "./HelpBotFab";
 import { HelpBotPanel } from "./HelpBotPanel";
+import type { SpotlightTarget } from "@/lib/helpbot-types";
 
 interface HelpBotProps {
   tourOpen: boolean;
+  onMiniTour: (page: string) => void;
+  onSpotlight: (spot: SpotlightTarget) => void;
 }
 
-export function HelpBot({ tourOpen }: HelpBotProps) {
+export function HelpBot({ tourOpen, onMiniTour, onSpotlight }: HelpBotProps) {
   const {
     open,
     messages,
@@ -32,7 +35,7 @@ export function HelpBot({ tourOpen }: HelpBotProps) {
     browseChapters,
     openChapter,
     backToChat,
-  } = useHelpBot();
+  } = useHelpBot({ onMiniTour, onSpotlight });
 
   return (
     <>
