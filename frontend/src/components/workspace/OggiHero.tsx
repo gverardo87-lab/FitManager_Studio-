@@ -174,7 +174,7 @@ export function OggiHero({
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 flex-1">
             {/* Breadcrumb — Practice Better style */}
-            <p className="flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.18em] text-muted-foreground/60 sm:text-[13px]">
+            <p className="flex items-center gap-2 text-[13px] font-bold uppercase tracking-[0.18em] text-muted-foreground/60 sm:text-sm">
               <span>Oggi</span>
               <span className="text-primary/40">|</span>
               <span className="text-primary/70">Preparazione sedute</span>
@@ -187,7 +187,7 @@ export function OggiHero({
                 <h1 className="oggi-title-gradient pb-1 text-[1.9rem] font-black leading-[1.25] tracking-tight sm:text-[2.3rem]">
                   {getGreeting()}
                 </h1>
-                <p className="mt-1.5 text-[15px] font-medium capitalize text-foreground/50 sm:text-[16px]">
+                <p className="mt-1.5 text-base font-medium capitalize text-foreground/50 sm:text-lg">
                   {DATE_FMT.format(now)}
                 </p>
               </div>
@@ -195,7 +195,7 @@ export function OggiHero({
 
             {/* Row 2: Briefing lead — azione operativa con respiro */}
             <div className="oggi-hero-divider mt-6" />
-            <p className={cn("mt-5 max-w-xl text-[16px] font-bold leading-relaxed transition-colors duration-300 sm:text-[17px]", leadColor)}>
+            <p className={cn("mt-5 max-w-xl text-base font-bold leading-relaxed transition-colors duration-300 sm:text-lg", leadColor)}>
               {lead}
             </p>
           </div>
@@ -208,7 +208,7 @@ export function OggiHero({
                 <p className="text-[1.75rem] font-black tabular-nums leading-none tracking-tight text-foreground sm:text-[2rem]">
                   {prep.total_sessions}
                 </p>
-                <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground/60">
+                <p className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground/60">
                   {prep.total_sessions === 1 ? "seduta" : "sedute"}
                 </p>
               </div>
@@ -219,7 +219,7 @@ export function OggiHero({
                   <p className="text-[1.75rem] font-black tabular-nums leading-none tracking-tight text-red-600 dark:text-red-400 sm:text-[2rem]">
                     {attentionCount}
                   </p>
-                  <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.14em] text-red-600/70 dark:text-red-400/70">
+                  <p className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-red-600/70 dark:text-red-400/70">
                     da verificare
                   </p>
                 </div>
@@ -228,7 +228,7 @@ export function OggiHero({
                   <p className="text-[1.75rem] font-black tabular-nums leading-none tracking-tight text-emerald-600 dark:text-emerald-400 sm:text-[2rem]">
                     {readyCount}
                   </p>
-                  <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.14em] text-emerald-600/70 dark:text-emerald-400/70">
+                  <p className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-emerald-600/70 dark:text-emerald-400/70">
                     {readyCount === 1 ? "pronta" : "pronte"}
                   </p>
                 </div>
@@ -255,7 +255,7 @@ export function OggiHeroSkeleton({ className }: { className?: string }) {
         <div className="min-w-0 flex-1 space-y-4">
           <div className="h-3 w-40 rounded bg-muted/40" />
           <div className="flex items-center gap-6">
-            <div className="h-[82px] w-[82px] rounded-[22px] bg-muted/20 sm:h-[96px] sm:w-[96px] sm:rounded-[26px]" />
+            <div className="h-[96px] w-[96px] rounded-[24px] bg-muted/20 sm:h-[110px] sm:w-[110px] sm:rounded-[28px]" />
             <div className="space-y-2.5">
               <div className="h-7 w-52 rounded-lg bg-muted/30" />
               <div className="h-4 w-36 rounded bg-muted/20" />

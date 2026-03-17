@@ -44,19 +44,19 @@ export function AnalogClock({ className }: SmartWatchProps) {
     >
       {/* Time — dominant, with pulsing colon */}
       <div className="flex items-baseline tabular-nums">
-        <span className="oggi-smartwatch-time text-[1.85rem] font-black leading-none tracking-tight sm:text-[2.15rem]">
+        <span className="oggi-smartwatch-time text-[2.1rem] font-black leading-none tracking-tight sm:text-[2.5rem]">
           {hh}
         </span>
-        <span className="oggi-smartwatch-colon oggi-smartwatch-time mx-[1px] text-[1.6rem] font-black leading-none sm:text-[1.9rem]">
+        <span className="oggi-smartwatch-colon oggi-smartwatch-time mx-[1px] text-[1.8rem] font-black leading-none sm:text-[2.2rem]">
           :
         </span>
-        <span className="oggi-smartwatch-time text-[1.85rem] font-black leading-none tracking-tight sm:text-[2.15rem]">
+        <span className="oggi-smartwatch-time text-[2.1rem] font-black leading-none tracking-tight sm:text-[2.5rem]">
           {mm}
         </span>
       </div>
 
       {/* Date — compact below */}
-      <span className="mt-1.5 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground/65 sm:text-[11px]">
+      <span className="mt-2 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground/65 sm:text-[12px]">
         <span className="text-primary/70">{dayStr}</span>
         <span className="h-[3px] w-[3px] rounded-full bg-primary/40" />
         <span>{dateStr}</span>
