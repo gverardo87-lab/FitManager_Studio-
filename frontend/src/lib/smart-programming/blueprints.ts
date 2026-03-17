@@ -80,6 +80,7 @@ export const SLOT_VOLUME: Record<SlotType, Record<string, { serie: number; ripet
   compound_primary: {
     forza: { serie: 5, ripetizioni: "3-5", riposo: 180 },
     ipertrofia: { serie: 4, ripetizioni: "6-8", riposo: 120 },
+    tonificazione: { serie: 3, ripetizioni: "12-15", riposo: 75 },  // ACSM 2009 — endurance/toning zone
     resistenza: { serie: 3, ripetizioni: "12-15", riposo: 60 },
     dimagrimento: { serie: 3, ripetizioni: "10-12", riposo: 75 },
     generale: { serie: 3, ripetizioni: "8-12", riposo: 90 },
@@ -87,6 +88,7 @@ export const SLOT_VOLUME: Record<SlotType, Record<string, { serie: number; ripet
   compound_secondary: {
     forza: { serie: 4, ripetizioni: "5-6", riposo: 150 },
     ipertrofia: { serie: 3, ripetizioni: "8-10", riposo: 90 },
+    tonificazione: { serie: 3, ripetizioni: "12-15", riposo: 60 },  // ACSM 2009
     resistenza: { serie: 3, ripetizioni: "12-15", riposo: 45 },
     dimagrimento: { serie: 3, ripetizioni: "10-12", riposo: 60 },
     generale: { serie: 3, ripetizioni: "8-12", riposo: 90 },
@@ -94,6 +96,7 @@ export const SLOT_VOLUME: Record<SlotType, Record<string, { serie: number; ripet
   isolation_target: {
     forza: { serie: 3, ripetizioni: "8-10", riposo: 90 },
     ipertrofia: { serie: 3, ripetizioni: "10-12", riposo: 60 },
+    tonificazione: { serie: 2, ripetizioni: "15-20", riposo: 45 },  // ACSM 2009 — high rep, short rest
     resistenza: { serie: 3, ripetizioni: "15-20", riposo: 45 },
     dimagrimento: { serie: 3, ripetizioni: "12-15", riposo: 45 },
     generale: { serie: 3, ripetizioni: "10-12", riposo: 60 },
@@ -101,6 +104,7 @@ export const SLOT_VOLUME: Record<SlotType, Record<string, { serie: number; ripet
   isolation_accessory: {
     forza: { serie: 2, ripetizioni: "10-12", riposo: 60 },
     ipertrofia: { serie: 3, ripetizioni: "12-15", riposo: 45 },
+    tonificazione: { serie: 2, ripetizioni: "15-20", riposo: 30 },  // ACSM 2009
     resistenza: { serie: 2, ripetizioni: "15-20", riposo: 30 },
     dimagrimento: { serie: 2, ripetizioni: "12-15", riposo: 45 },
     generale: { serie: 2, ripetizioni: "10-15", riposo: 60 },

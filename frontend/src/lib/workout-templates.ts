@@ -411,11 +411,12 @@ interface SmartDefaults {
 }
 
 const OBIETTIVO_DEFAULTS: Record<string, SmartDefaults> = {
-  forza:        { serie: 5, ripetizioni: "3-5",   tempo_riposo_sec: 180 },
-  ipertrofia:   { serie: 4, ripetizioni: "8-12",  tempo_riposo_sec: 90  },
-  resistenza:   { serie: 3, ripetizioni: "15-20", tempo_riposo_sec: 45  },
-  dimagrimento: { serie: 3, ripetizioni: "12-15", tempo_riposo_sec: 60  },
-  generale:     { serie: 3, ripetizioni: "8-12",  tempo_riposo_sec: 90  },
+  forza:         { serie: 5, ripetizioni: "3-5",   tempo_riposo_sec: 180 },
+  ipertrofia:    { serie: 4, ripetizioni: "8-12",  tempo_riposo_sec: 90  },
+  tonificazione: { serie: 3, ripetizioni: "12-15", tempo_riposo_sec: 60  }, // ACSM 2009
+  resistenza:    { serie: 3, ripetizioni: "15-20", tempo_riposo_sec: 45  },
+  dimagrimento:  { serie: 3, ripetizioni: "12-15", tempo_riposo_sec: 60  },
+  generale:      { serie: 3, ripetizioni: "8-12",  tempo_riposo_sec: 90  },
 };
 
 /**
