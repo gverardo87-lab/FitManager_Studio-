@@ -40,6 +40,8 @@ export function GaugeRing({
           width={size}
           height={size}
           viewBox={`0 0 ${size} ${size}`}
+          role="img"
+          aria-label={`${label}: ${Math.round(clamped)}${suffix ?? ""}`}
           className="motion-reduce:transition-none"
         >
           {/* Background ring */}
