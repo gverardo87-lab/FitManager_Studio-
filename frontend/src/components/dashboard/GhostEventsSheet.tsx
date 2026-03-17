@@ -158,7 +158,7 @@ export function GhostEventsSheet({ open, onOpenChange }: GhostEventsSheetProps) 
         {!isLoading && events.length === 0 && (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30">
-              <CheckCircle2 className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
+              <CheckCircle2 aria-hidden="true" className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
             </div>
             <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
               Tutto aggiornato!
@@ -232,9 +232,9 @@ export function GhostEventsSheet({ open, onOpenChange }: GhostEventsSheetProps) 
                           onClick={() => handleResolve(event, "Completato")}
                         >
                           {isResolving ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            <Loader2 aria-hidden="true" className="h-3.5 w-3.5 animate-spin" />
                           ) : (
-                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            <CheckCircle2 aria-hidden="true" className="h-3.5 w-3.5" />
                           )}
                           Completata
                         </Button>
@@ -246,7 +246,7 @@ export function GhostEventsSheet({ open, onOpenChange }: GhostEventsSheetProps) 
                           onClick={() => handleResolve(event, "Cancellato")}
                         >
                           {isResolving ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            <Loader2 aria-hidden="true" className="h-3.5 w-3.5 animate-spin" />
                           ) : (
                             <XCircle aria-hidden="true" className="h-3.5 w-3.5" />
                           )}
@@ -275,9 +275,9 @@ export function GhostEventsSheet({ open, onOpenChange }: GhostEventsSheetProps) 
                       onClick={() => handleBulkResolve("Completato")}
                     >
                       {bulkAction === "Completato" ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        <Loader2 aria-hidden="true" className="h-3.5 w-3.5 animate-spin" />
                       ) : (
-                        <CheckCircle2 className="h-3.5 w-3.5" />
+                        <CheckCircle2 aria-hidden="true" className="h-3.5 w-3.5" />
                       )}
                       Completa tutte
                     </Button>
@@ -289,7 +289,7 @@ export function GhostEventsSheet({ open, onOpenChange }: GhostEventsSheetProps) 
                       onClick={() => handleBulkResolve("Cancellato")}
                     >
                       {bulkAction === "Cancellato" ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        <Loader2 aria-hidden="true" className="h-3.5 w-3.5 animate-spin" />
                       ) : (
                         <XCircle aria-hidden="true" className="h-3.5 w-3.5" />
                       )}

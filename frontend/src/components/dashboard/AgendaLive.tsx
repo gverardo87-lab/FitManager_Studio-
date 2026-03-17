@@ -182,7 +182,7 @@ export function AgendaLive({ events, isLoading }: AgendaLiveProps) {
                       </Select>
                       {updatingEventId === event.id && (
                         <div className="mt-1 flex items-center gap-1 text-[9px] text-muted-foreground">
-                          <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                          <Loader2 aria-hidden="true" className="h-2.5 w-2.5 animate-spin" />
                         </div>
                       )}
                     </div>

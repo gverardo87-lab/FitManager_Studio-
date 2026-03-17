@@ -145,7 +145,7 @@ export function WeeklyPulse({ events, dateAnchor, isLoading }: WeeklyPulseProps)
       <div className="mb-2 flex flex-wrap items-start justify-between gap-2">
         <div className="flex items-center gap-2.5">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30">
-            <BarChart3 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+            <BarChart3 aria-hidden="true" className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div>
             <h3 className="text-sm font-bold sm:text-base">Sedute della settimana</h3>

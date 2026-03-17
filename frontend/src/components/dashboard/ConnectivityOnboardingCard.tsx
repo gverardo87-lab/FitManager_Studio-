@@ -73,7 +73,7 @@ export function ConnectivityOnboardingCard() {
             <Link href={SETTINGS_HREF}>{prompt.ctaLabel}</Link>
           </Button>
           <Button variant="ghost" size="sm" onClick={handleDismiss}>
-            <X className="mr-2 h-4 w-4" />
+            <X aria-hidden="true" className="mr-2 h-4 w-4" />
             Non ora
           </Button>
         </div>

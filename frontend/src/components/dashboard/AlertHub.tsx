@@ -87,7 +87,7 @@ export function AlertHub({ alerts, isLoading, alertActions }: AlertHubProps) {
   if (visibleAlerts.length === 0) {
     return (
       <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50/60 px-4 py-3 dark:border-emerald-900/40 dark:bg-emerald-950/20">
-        <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+        <CheckCircle2 aria-hidden="true" className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
         <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
           Nessun alert operativo — tutto sotto controllo
         </p>
@@ -156,7 +156,7 @@ function AlertCard({ item, onAction }: { item: AlertItem; onAction?: () => void 
   const content = (
     <div className={`flex items-center gap-3 rounded-xl border-l-[3px] ${styles.accent} ${styles.bg} px-3.5 py-3 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md`}>
       <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${styles.iconBg}`}>
-        <Icon className={`h-4 w-4 ${styles.icon}`} />
+        <Icon aria-hidden="true" className={`h-4 w-4 ${styles.icon}`} />
       </div>
       <div className="min-w-0 flex-1">
         <p className={`text-sm font-semibold leading-tight ${styles.text}`}>
