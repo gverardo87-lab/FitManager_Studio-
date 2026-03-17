@@ -4,7 +4,8 @@
  * SmartWatch — orologio digitale stile Apple Watch Ultra.
  *
  * Rounded-rect con ore:minuti dominante (colon pulsante),
- * giorno + data compatta sotto. Aggiorna ogni 10s.
+ * giorno + data compatta sotto. Countdown prossima seduta.
+ * Aggiorna ogni 10s.
  */
 
 import { useEffect, useState } from "react";
@@ -13,11 +14,22 @@ import { cn } from "@/lib/utils";
 const DAY_FMT = new Intl.DateTimeFormat("it-IT", { weekday: "short" });
 const DATE_SHORT_FMT = new Intl.DateTimeFormat("it-IT", { day: "numeric", month: "short" });
 
+function formatCountdown(ms: number): string {
+  const totalMin = Math.max(0, Math.floor(ms / 60_000));
+  if (totalMin < 1) return "ora";
+  if (totalMin < 60) return `${totalMin}min`;
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  return m > 0 ? `${h}h${m}m` : `${h}h`;
+}
+
 interface SmartWatchProps {
+  nextSessionAt?: string | null;
+  nextSessionName?: string | null;
   className?: string;
 }
 
-export function AnalogClock({ className }: SmartWatchProps) {
+export function AnalogClock({ nextSessionAt, nextSessionName, className }: SmartWatchProps) {
   const [now, setNow] = useState(new Date(0));
 
   useEffect(() => {
@@ -31,6 +43,11 @@ export function AnalogClock({ className }: SmartWatchProps) {
   const mm = hydrated ? String(now.getMinutes()).padStart(2, "0") : "--";
   const dayStr = hydrated ? DAY_FMT.format(now).toUpperCase().replace(".", "") : "---";
   const dateStr = hydrated ? DATE_SHORT_FMT.format(now) : "";
+
+  // Countdown
+  const nextMs = nextSessionAt ? new Date(nextSessionAt).getTime() : null;
+  const deltaMs = hydrated && nextMs && !Number.isNaN(nextMs) ? nextMs - now.getTime() : null;
+  const showCountdown = deltaMs !== null && deltaMs > 0;
 
   return (
     <div
@@ -55,12 +72,19 @@ export function AnalogClock({ className }: SmartWatchProps) {
         </span>
       </div>
 
-      {/* Date — compact below */}
-      <span className="mt-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground/65">
-        <span className="text-primary/70">{dayStr}</span>
-        <span className="h-[3px] w-[3px] rounded-full bg-primary/40" />
-        <span>{dateStr}</span>
-      </span>
+      {/* Countdown or Date */}
+      {showCountdown ? (
+        <span className="mt-1.5 flex items-center gap-1 text-[10px] font-bold tabular-nums text-primary/80 sm:text-[11px]">
+          <span className="oggi-pulse-dot h-1.5 w-1.5 rounded-full bg-primary/60" />
+          tra {formatCountdown(deltaMs)}
+        </span>
+      ) : (
+        <span className="mt-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground/65">
+          <span className="text-primary/70">{dayStr}</span>
+          <span className="h-[3px] w-[3px] rounded-full bg-primary/40" />
+          <span>{dateStr}</span>
+        </span>
+      )}
     </div>
   );
 }

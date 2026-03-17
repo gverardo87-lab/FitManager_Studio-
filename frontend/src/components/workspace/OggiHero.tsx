@@ -147,11 +147,17 @@ export function OggiHero({
   className,
 }: OggiHeroProps) {
   const now = getReferenceDate(prep.current_time);
+  const nowMs = now.getTime();
   const { tone, lead, detail } = getFocusBrief({
     prep,
     focusSession,
     focusStatus,
   });
+
+  // Prossima seduta futura per countdown
+  const nextSession = [...prep.sessions, ...prep.non_client_events]
+    .filter((s) => new Date(s.starts_at).getTime() > nowMs)
+    .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime())[0] ?? null;
   const _syncLabel = lastUpdatedAt ? TIME_FMT.format(getReferenceDate(lastUpdatedAt)) : null;
 
   const leadColor =
@@ -182,7 +188,10 @@ export function OggiHero({
 
             {/* Row 1: Clock + Greeting + Date */}
             <div className="mt-5 flex items-center gap-6 sm:mt-6">
-              <AnalogClock />
+              <AnalogClock
+                nextSessionAt={nextSession?.starts_at}
+                nextSessionName={nextSession?.client_name ?? nextSession?.event_title}
+              />
               <div className="min-w-0">
                 <h1 className="oggi-title-gradient pb-1 text-[1.9rem] font-black leading-[1.25] tracking-tight sm:text-[2.3rem]">
                   {getGreeting()}
@@ -255,7 +264,7 @@ export function OggiHeroSkeleton({ className }: { className?: string }) {
         <div className="min-w-0 flex-1 space-y-4">
           <div className="h-3 w-40 rounded bg-muted/40" />
           <div className="flex items-center gap-6">
-            <div className="h-[96px] w-[96px] rounded-[24px] bg-muted/20 sm:h-[110px] sm:w-[110px] sm:rounded-[28px]" />
+            <div className="h-[101px] w-[101px] rounded-[25px] bg-muted/20 sm:h-[116px] sm:w-[116px] sm:rounded-[29px]" />
             <div className="space-y-2.5">
               <div className="h-7 w-52 rounded-lg bg-muted/30" />
               <div className="h-4 w-36 rounded bg-muted/20" />
