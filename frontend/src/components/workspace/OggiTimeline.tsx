@@ -136,7 +136,7 @@ function SessionItem({
       aria-selected={selected}
       aria-label={`${name} — ${TIME_FMT.format(new Date(session.starts_at))} — ${meta.label}`}
       className={cn(
-        "oggi-session-card group relative w-full rounded-xl px-3.5 py-3 text-left",
+        "oggi-session-card group relative min-w-0 w-full rounded-xl px-3.5 py-3 text-left",
         selected
           ? cn(
               surfaceRoleClassName({ role: "signal", tone, interactive: true }),
@@ -278,7 +278,7 @@ export function OggiTimeline({
     <div
       className={surfaceRoleClassName(
         { role: "page", tone: "neutral" },
-        cn("oggi-rail-shell oggi-scrollbar px-4 py-5 sm:px-5 sm:py-6", className),
+        cn("oggi-rail-shell oggi-scrollbar overflow-x-hidden px-4 py-5 sm:px-5 sm:py-6", className),
       )}
     >
       {/* Header */}

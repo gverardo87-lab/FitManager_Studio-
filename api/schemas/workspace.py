@@ -238,6 +238,7 @@ class SessionPrepItem(BaseModel):
     clinical_alerts: list[SessionPrepAlert] = Field(default_factory=list)
     quality_hints: list[SessionPrepHint] = Field(default_factory=list)
     active_plan_name: str | None = None
+    active_plan_id: int | None = None
     contract_credits_remaining: int | None = None
     contract_credits_total: int | None = None
     contract_expiring_days: int | None = None

@@ -1362,6 +1362,7 @@ export interface SessionPrepItem {
   clinical_alerts: SessionPrepAlert[];
   quality_hints: SessionPrepHint[];
   active_plan_name: string | null;
+  active_plan_id: number | null;
   contract_credits_remaining: number | null;
   contract_credits_total: number | null;
   contract_expiring_days: number | null;

@@ -39,6 +39,7 @@ class ClinicalReadinessClientItem(BaseModel):
     has_workout_plan: bool = False
     workout_activated: bool = False
     workout_plan_name: Optional[str] = None
+    workout_plan_id: Optional[int] = None
     missing_steps: List[str] = []        # anamnesi_missing | anamnesi_legacy | baseline | workout | workout_not_activated
     readiness_score: int = 0             # 0..100
     priority: str = "low"                # high | medium | low

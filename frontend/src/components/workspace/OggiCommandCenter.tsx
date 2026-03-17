@@ -275,8 +275,8 @@ export function OggiCommandCenter({ session, status, avatar, className }: OggiCo
     contextParts.push(`${session.days_since_last_session}g senza allenamento`);
 
   const profileHref = appendFromParam(`/clienti/${session.client_id}`, "oggi");
-  const planHref = session.active_plan_name
-    ? appendFromParam(`/allenamenti?idCliente=${session.client_id}`, "oggi")
+  const planHref = session.active_plan_id
+    ? appendFromParam(`/schede/${session.active_plan_id}`, "oggi")
     : null;
 
   return (

@@ -177,6 +177,7 @@ def _build_clinical_readiness_item(
     has_measurements: bool,
     has_workout_plan: bool,
     workout_plan_name: str | None = None,
+    workout_plan_id: int | None = None,
     workout_activated: bool = False,
     latest_measurement_date: date | None,
     latest_workout_updated_at: str | date | datetime | None,
@@ -280,6 +281,7 @@ def _build_clinical_readiness_item(
         has_workout_plan=has_workout_plan,
         workout_activated=workout_activated,
         workout_plan_name=workout_plan_name,
+        workout_plan_id=workout_plan_id,
         missing_steps=missing_steps,
         readiness_score=readiness_score,
         priority=priority,
@@ -362,6 +364,7 @@ def compute_clinical_readiness_data(
             WorkoutPlan.nome,
             WorkoutPlan.data_inizio,
             WorkoutPlan.data_fine,
+            WorkoutPlan.id,
         )
         .where(
             WorkoutPlan.trainer_id == trainer_id,
@@ -375,12 +378,12 @@ def compute_clinical_readiness_data(
         )
     ).all()
     # Keep only the latest plan per client (first row per id_cliente after ORDER BY desc)
-    # Tuple: (nome, data_inizio, data_fine)
-    latest_plan_info: dict[int, tuple[str | None, date | None, date | None]] = {}
+    # Tuple: (nome, data_inizio, data_fine, plan_id)
+    latest_plan_info: dict[int, tuple[str | None, date | None, date | None, int | None]] = {}
     for row in workout_detail_rows:
         cid = row[0]
         if cid is not None and cid not in latest_plan_info:
-            latest_plan_info[cid] = (row[1], row[2], row[3])
+            latest_plan_info[cid] = (row[1], row[2], row[3], row[4])
 
     items: list[ClinicalReadinessClientItem] = []
     for client in active_clients:
@@ -394,6 +397,7 @@ def compute_clinical_readiness_data(
                 has_measurements=client_id in clients_with_measurements,
                 has_workout_plan=client_id in clients_with_workout,
                 workout_plan_name=plan_info[0] if plan_info else None,
+                workout_plan_id=plan_info[3] if plan_info else None,
                 # Activated = both data_inizio AND data_fine set (matches frontend getProgramStatus)
                 workout_activated=(
                     plan_info[1] is not None and plan_info[2] is not None
