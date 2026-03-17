@@ -401,7 +401,7 @@ export function TodoCard({
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Scrivi un promemoria\u2026"
+            placeholder="Scrivi un promemoria…"
             autoComplete="off"
             className="h-10 border-amber-300/60 bg-white/60 font-[family-name:var(--font-caveat)] text-lg placeholder:font-sans placeholder:text-sm dark:border-amber-800/40 dark:bg-zinc-900/40"
             maxLength={200}
@@ -479,8 +479,8 @@ export function TodoCard({
           </p>
         </div>
       ) : (
-        <ScrollArea className="min-h-0 flex-1 pr-1">
-          <div className="space-y-1.5">
+        <ScrollArea className="min-h-0 min-w-0 flex-1 pr-1">
+          <div className="min-w-0 space-y-1.5">
             {todos.map((todo) => (
               <TodoItem
                 key={todo.id}
@@ -542,8 +542,8 @@ function TodoItem({
         {todo.completato && <Check aria-hidden="true" className="h-3 w-3" />}
       </button>
 
-      <div className="min-w-0 flex-1">
-        <p className={`truncate font-[family-name:var(--font-caveat)] text-xl font-semibold leading-tight sm:text-2xl ${urgencyClass}`}>
+      <div className="w-0 flex-1">
+        <p className={`truncate font-[family-name:var(--font-caveat)] text-lg font-semibold leading-tight sm:text-xl ${urgencyClass}`}>
           {todo.titolo}
         </p>
       </div>
@@ -557,12 +557,7 @@ function TodoItem({
       <button
         onClick={onDelete}
         aria-label={`Elimina ${todo.titolo}`}
-        className={cn(
-          "shrink-0 rounded p-1 transition-all hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30",
-          todo.completato
-            ? "text-muted-foreground/60"
-            : "text-muted-foreground/40 sm:opacity-0 sm:group-hover:opacity-100",
-        )}
+        className="shrink-0 rounded p-1 text-muted-foreground/50 transition-colors hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"
       >
         <Trash2 aria-hidden="true" className="h-3.5 w-3.5" />
       </button>

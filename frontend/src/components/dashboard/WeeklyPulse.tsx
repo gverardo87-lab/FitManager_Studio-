@@ -113,11 +113,7 @@ export function WeeklyPulse({ events, dateAnchor, isLoading }: WeeklyPulseProps)
     return { chartData: data, totalSessions: total, totalCompleted: completed, activeCats: active };
   }, [events, mondayTs]);
 
-  if (isLoading) return <WeeklyPulseSkeleton />;
-
-  const hasData = totalSessions > 0;
-
-  // Custom XAxis tick: today highlighted + dot
+  // Custom XAxis tick: today highlighted + dot (must be before early return)
   const renderTick = useCallback(({ x, y, payload }: TickProps) => {
     const idx = (DAY_LABELS as readonly string[]).indexOf(payload.value);
     const today = idx >= 0 && idx === todayIdx;
@@ -138,6 +134,10 @@ export function WeeklyPulse({ events, dateAnchor, isLoading }: WeeklyPulseProps)
       </g>
     );
   }, [todayIdx]);
+
+  if (isLoading) return <WeeklyPulseSkeleton />;
+
+  const hasData = totalSessions > 0;
 
   return (
     <div className={surfaceRoleClassName({ role: "page", tone: "neutral" }, "p-4 sm:p-5")}>
