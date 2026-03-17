@@ -88,22 +88,29 @@ export default function DashboardLayout({
   // ── Callback: launch mini-tour (called by HelpBot) ──
   const handleMiniTour = useCallback((page: string) => {
     const mini = buildMiniTour(page);
-    if (mini) {
-      setActiveTour(mini);
+    if (!mini) return;
+
+    setTourOpen(false);
+    setActiveTour(mini);
+    requestAnimationFrame(() => {
       setTourOpen(true);
-    }
+    });
   }, [buildMiniTour]);
 
   // ── Callback: launch spotlight (called by HelpBot) ──
+  // Due fasi: (1) chiudi tour + prepara nuovo, (2) apri dopo un frame.
+  // Senza questa separazione, React batcha setActiveTour + setTourOpen
+  // e SpotlightTour non monta correttamente sulla stessa pagina.
   const handleSpotlight = useCallback((spot: SpotlightTarget) => {
     // Navigate first if needed
     if (spot.navigateTo && pathname !== spot.navigateTo) {
       router.push(spot.navigateTo);
     }
 
-    // Build 1-step tour
+    // Phase 1: close + prepare
+    setTourOpen(false);
     setActiveTour({
-      id: `spotlight-${spot.target}`,
+      id: `spotlight-${spot.target}-${Date.now()}`,
       title: spot.title,
       steps: [{
         target: spot.target,
@@ -113,7 +120,11 @@ export default function DashboardLayout({
         navigateTo: spot.navigateTo,
       }],
     });
-    setTourOpen(true);
+
+    // Phase 2: open after React commits the close + new tour
+    requestAnimationFrame(() => {
+      setTourOpen(true);
+    });
   }, [pathname, router]);
 
   // ── Hook 1: Continuously save scroll position via scroll event ──
