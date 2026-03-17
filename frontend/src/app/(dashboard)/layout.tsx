@@ -15,10 +15,14 @@
  * La Sidebar cancella il valore salvato onClick → fresh nav = top.
  *
  * SpotlightTour: tour guidato con overlay su elementi reali.
- * Auto-trigger su prima visita dashboard. Manual trigger da /guida via custom event.
+ * Supporta tour completo (19 step) e mini-tour contestuali (via HelpBot).
+ * Manual trigger da /guida via custom event.
+ *
+ * HelpBot: dispatcher contestuale FAB + Panel.
+ * Gestisce primo avvio (onboarding conversazionale) e suggerimenti per pagina.
  */
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Menu } from "lucide-react";
 
@@ -30,6 +34,7 @@ const CommandPalette = dynamic(
   { ssr: false },
 );
 import { SpotlightTour } from "@/components/guide/SpotlightTour";
+import { HelpBot } from "@/components/helpbot/HelpBot";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { Button } from "@/components/ui/button";
 import {
@@ -39,7 +44,8 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { useGuideProgress } from "@/hooks/useGuideProgress";
-import { TOUR_SCOPRI_FITMANAGER } from "@/lib/guide-tours";
+import { TOUR_SCOPRI_FITMANAGER, MINI_TOUR_MAP } from "@/lib/guide-tours";
+import type { TourDefinition } from "@/lib/guide-tours";
 
 export default function DashboardLayout({
   children,
@@ -48,12 +54,28 @@ export default function DashboardLayout({
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
+  const [activeTour, setActiveTour] = useState<TourDefinition>(TOUR_SCOPRI_FITMANAGER);
   const mainRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const prevPathnameRef = useRef(pathname);
   const scrollTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const router = useRouter();
   const { shouldShowOnboarding, markTourCompleted, markTourDismissed } = useGuideProgress();
+
+  // ── Build mini-tour from step indices ──
+  const buildMiniTour = useCallback((page: string): TourDefinition | null => {
+    const indices = MINI_TOUR_MAP[page];
+    if (!indices || indices.length === 0) return null;
+    const steps = indices
+      .map((i) => TOUR_SCOPRI_FITMANAGER.steps[i])
+      .filter(Boolean);
+    if (steps.length === 0) return null;
+    return {
+      id: `mini-tour-${page}`,
+      title: "Tour rapido",
+      steps,
+    };
+  }, []);
 
   // ── Tour navigation callback (cross-page tour) ──
   const handleTourNavigate = useCallback((href: string) => {
@@ -113,37 +135,56 @@ export default function DashboardLayout({
     }
   }, [pathname]);
 
-  // ── Hook 3: Auto-trigger tour on first dashboard visit ──
-  useEffect(() => {
-    if (shouldShowOnboarding && pathname === "/") {
-      const timer = setTimeout(() => setTourOpen(true), 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [shouldShowOnboarding, pathname]);
+  // ── Hook 3: REMOVED — auto-trigger SpotlightTour on first visit ──
+  // Now handled by HelpBot onboarding sequence.
 
-  // ── Hook 4: Listen for manual tour trigger from /guida ──
+  // ── Hook 4: Listen for manual tour trigger from /guida (full tour) ──
   useEffect(() => {
-    const handler = () => setTourOpen(true);
+    const handler = () => {
+      setActiveTour(TOUR_SCOPRI_FITMANAGER);
+      setTourOpen(true);
+    };
     window.addEventListener("start-guide-tour", handler);
     return () => window.removeEventListener("start-guide-tour", handler);
   }, []);
+
+  // ── Hook 5: Listen for mini-tour trigger from HelpBot ──
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { page: string } | undefined;
+      if (!detail?.page) return;
+      const mini = buildMiniTour(detail.page);
+      if (mini) {
+        setActiveTour(mini);
+        setTourOpen(true);
+      }
+    };
+    window.addEventListener("start-mini-tour", handler);
+    return () => window.removeEventListener("start-mini-tour", handler);
+  }, [buildMiniTour]);
 
   return (
     <AuthGuard>
     <CommandPalette />
     <SpotlightTour
-      tour={TOUR_SCOPRI_FITMANAGER}
+      tour={activeTour}
       open={tourOpen}
       onComplete={() => {
         setTourOpen(false);
-        markTourCompleted("scopri-fitmanager");
+        // Only mark completed for the full tour
+        if (activeTour.id === "scopri-fitmanager") {
+          markTourCompleted("scopri-fitmanager");
+        }
       }}
       onDismiss={() => {
         setTourOpen(false);
-        markTourDismissed("scopri-fitmanager");
+        if (activeTour.id === "scopri-fitmanager") {
+          markTourDismissed("scopri-fitmanager");
+        }
       }}
       onNavigate={handleTourNavigate}
     />
+    <HelpBot tourOpen={tourOpen} />
     <div className="bg-mesh-app flex h-screen">
       {/* ── Sidebar desktop (fissa, visibile da lg in su) ── */}
       <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:border-r lg:bg-sidebar dark:lg:bg-sidebar">

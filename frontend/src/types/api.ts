@@ -439,6 +439,8 @@ export interface Client {
   email: string | null;
   data_nascita: string | null; // Backend restituisce come string
   sesso: string | null;
+  indirizzo: string | null;
+  codice_fiscale: string | null;
   stato: string;
   note_interne: string | null;
   crediti_residui: number;

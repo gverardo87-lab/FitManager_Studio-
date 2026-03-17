@@ -57,6 +57,8 @@ class ClientCreate(BaseModel):
     email: Optional[str] = None
     data_nascita: Optional[date] = None
     sesso: Optional[str] = Field(None, pattern=r"^(Uomo|Donna|Altro)$")
+    indirizzo: Optional[str] = Field(None, max_length=500)
+    codice_fiscale: Optional[str] = None
     anamnesi: Optional[dict] = Field(default_factory=dict)
     stato: str = Field(default="Attivo", pattern=r"^(Attivo|Inattivo)$")
     note_interne: Optional[str] = None
@@ -86,6 +88,16 @@ class ClientCreate(BaseModel):
             raise ValueError("Data di nascita non puo' essere nel futuro")
         return v
 
+    @field_validator("codice_fiscale")
+    @classmethod
+    def validate_codice_fiscale(cls, v: Optional[str]) -> Optional[str]:
+        if v is None or v == "":
+            return None
+        v = v.upper().strip()
+        if not re.match(r"^[A-Z]{6}\d{2}[A-Z]\d{2}[A-Z]\d{3}[A-Z]$", v):
+            raise ValueError("Codice fiscale non valido (16 caratteri alfanumerici)")
+        return v
+
 
 class ClientUpdate(BaseModel):
     """
@@ -102,6 +114,8 @@ class ClientUpdate(BaseModel):
     email: Optional[str] = None
     data_nascita: Optional[date] = None
     sesso: Optional[str] = Field(None, pattern=r"^(Uomo|Donna|Altro)$")
+    indirizzo: Optional[str] = Field(None, max_length=500)
+    codice_fiscale: Optional[str] = None
     anamnesi: Optional[dict] = None
     stato: Optional[str] = Field(None, pattern=r"^(Attivo|Inattivo)$")
     note_interne: Optional[str] = None
@@ -131,6 +145,16 @@ class ClientUpdate(BaseModel):
             raise ValueError("Data di nascita non puo' essere nel futuro")
         return v
 
+    @field_validator("codice_fiscale")
+    @classmethod
+    def validate_codice_fiscale(cls, v: Optional[str]) -> Optional[str]:
+        if v is None or v == "":
+            return None
+        v = v.upper().strip()
+        if not re.match(r"^[A-Z]{6}\d{2}[A-Z]\d{2}[A-Z]\d{3}[A-Z]$", v):
+            raise ValueError("Codice fiscale non valido (16 caratteri alfanumerici)")
+        return v
+
 
 # --- Response schemas (cosa l'API restituisce) ---
 
@@ -143,6 +167,8 @@ class ClientResponse(BaseModel):
     email: Optional[str] = None
     data_nascita: Optional[str] = None
     sesso: Optional[str] = None
+    indirizzo: Optional[str] = None
+    codice_fiscale: Optional[str] = None
     stato: str
     note_interne: Optional[str] = None
     crediti_residui: int = 0
@@ -181,6 +207,8 @@ class ClientDossierIdentity(BaseModel):
     email: Optional[str] = None
     data_nascita: Optional[str] = None
     sesso: Optional[str] = None
+    indirizzo: Optional[str] = None
+    codice_fiscale: Optional[str] = None
     stato: str
     note_interne: Optional[str] = None
     client_since: Optional[str] = None
@@ -380,6 +408,8 @@ def _build_client_enriched_response(
         email=client.email,
         data_nascita=str(client.data_nascita) if client.data_nascita else None,
         sesso=client.sesso,
+        indirizzo=client.indirizzo,
+        codice_fiscale=client.codice_fiscale,
         stato=client.stato,
         note_interne=client.note_interne,
         crediti_residui=credits.get(client.id, 0),
@@ -567,6 +597,8 @@ def _build_client_dossier_response(
             email=client.email,
             data_nascita=_stringify_date(client.data_nascita),
             sesso=client.sesso,
+            indirizzo=client.indirizzo,
+            codice_fiscale=client.codice_fiscale,
             stato=client.stato,
             note_interne=client.note_interne,
             client_since=_stringify_date(client.data_creazione),
@@ -762,6 +794,8 @@ def list_clients(
             email=c.email,
             data_nascita=str(c.data_nascita) if c.data_nascita else None,
             sesso=c.sesso,
+            indirizzo=c.indirizzo,
+            codice_fiscale=c.codice_fiscale,
             stato=c.stato,
             note_interne=c.note_interne,
             crediti_residui=credits.get(c.id, 0),
@@ -851,6 +885,8 @@ def create_client(
         email=data.email,
         data_nascita=data.data_nascita,
         sesso=data.sesso,
+        indirizzo=data.indirizzo,
+        codice_fiscale=data.codice_fiscale,
         anamnesi_json=json.dumps(data.anamnesi) if data.anamnesi else None,
         stato=data.stato,
         note_interne=data.note_interne,
@@ -973,6 +1009,8 @@ def _to_response(client: Client, crediti_residui: int = 0) -> ClientResponse:
         email=client.email,
         data_nascita=str(client.data_nascita) if client.data_nascita else None,
         sesso=client.sesso,
+        indirizzo=client.indirizzo,
+        codice_fiscale=client.codice_fiscale,
         stato=client.stato,
         note_interne=client.note_interne,
         crediti_residui=crediti_residui,

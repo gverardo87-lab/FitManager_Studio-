@@ -50,6 +50,14 @@ const clientSchema = z.object({
     .optional(),
   data_nascita: z.string().optional(),
   sesso: z.enum(["Uomo", "Donna", "Altro"]).optional(),
+  indirizzo: z.string().max(500).optional(),
+  codice_fiscale: z
+    .string()
+    .refine(
+      (val) => val === "" || /^[A-Za-z]{6}\d{2}[A-Za-z]\d{2}[A-Za-z]\d{3}[A-Za-z]$/.test(val),
+      { message: "Codice fiscale non valido (16 caratteri)" }
+    )
+    .optional(),
   stato: z.enum(["Attivo", "Inattivo"]),
   note_interne: z.string().optional(),
 });
@@ -81,6 +89,8 @@ export function ClientForm({ client, onSubmit, isPending, onDirtyChange }: Clien
       email: client?.email ?? "",
       data_nascita: client?.data_nascita ?? "",
       sesso: (client?.sesso as ClientFormValues["sesso"]) ?? undefined,
+      indirizzo: client?.indirizzo ?? "",
+      codice_fiscale: client?.codice_fiscale ?? "",
       stato: (client?.stato as "Attivo" | "Inattivo") ?? "Attivo",
       note_interne: client?.note_interne ?? "",
     },
@@ -96,6 +106,8 @@ export function ClientForm({ client, onSubmit, isPending, onDirtyChange }: Clien
       email: values.email || undefined,
       data_nascita: values.data_nascita || undefined,
       sesso: values.sesso || undefined,
+      indirizzo: values.indirizzo || undefined,
+      codice_fiscale: values.codice_fiscale?.toUpperCase() || undefined,
       note_interne: values.note_interne || undefined,
     };
     onSubmit(cleaned);
@@ -168,6 +180,27 @@ export function ClientForm({ client, onSubmit, isPending, onDirtyChange }: Clien
               <SelectItem value="Altro">Altro</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+      </div>
+
+      {/* ── Indirizzo / Codice Fiscale ── */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="indirizzo">Indirizzo <span className="text-muted-foreground font-normal">(opzionale)</span></Label>
+          <Input id="indirizzo" {...register("indirizzo")} placeholder="Via Roma 1, 20100 Milano" />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="codice_fiscale">Codice Fiscale <span className="text-muted-foreground font-normal">(opzionale)</span></Label>
+          <Input
+            id="codice_fiscale"
+            {...register("codice_fiscale")}
+            placeholder="RSSMRA85M01H501Z"
+            maxLength={16}
+            className="uppercase"
+          />
+          {errors.codice_fiscale && (
+            <p className="text-sm text-destructive">{errors.codice_fiscale.message}</p>
+          )}
         </div>
       </div>
 

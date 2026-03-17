@@ -197,6 +197,22 @@ export const TOUR_SCOPRI_FITMANAGER: TourDefinition = {
   ],
 };
 
+// ── Mini-Tour Map ──
+// Mapping pagina → indici degli step in TOUR_SCOPRI_FITMANAGER
+// Usato dal HelpBot per lanciare tour contestuali (subset del tour completo).
+
+export const MINI_TOUR_MAP: Record<string, number[]> = {
+  "/":            [0],         // dashboard-header
+  "/clienti":     [1, 2, 3],   // header, new, kpi
+  "/contratti":   [4, 5, 6],   // header, new, kpi
+  "/agenda":      [7, 8],      // header, new
+  "/cassa":       [9, 10],     // header, new
+  "/esercizi":    [11, 12],    // header, filters
+  "/schede":      [13, 14],    // header, new
+  "/allenamenti": [15],        // monitoraggio
+  "/impostazioni":[16],        // backup
+};
+
 // ── FAQ ──
 
 export interface GuideFaq {

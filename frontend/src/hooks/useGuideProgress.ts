@@ -12,11 +12,17 @@ const STORAGE_KEY = "fitmanager.guide.progress.v1";
 interface GuideProgress {
   completedTours: string[];
   dismissedTours: string[];
+  /** Pagine gia' visitate dal bot (progressive reveal) */
+  helpBotSeenPages: string[];
+  /** Primo avvio bot completato */
+  helpBotOnboardingDone: boolean;
 }
 
 const EMPTY_PROGRESS: GuideProgress = {
   completedTours: [],
   dismissedTours: [],
+  helpBotSeenPages: [],
+  helpBotOnboardingDone: false,
 };
 
 function loadFromStorage(): GuideProgress {
@@ -28,6 +34,8 @@ function loadFromStorage(): GuideProgress {
     return {
       completedTours: Array.isArray(parsed.completedTours) ? parsed.completedTours : [],
       dismissedTours: Array.isArray(parsed.dismissedTours) ? parsed.dismissedTours : [],
+      helpBotSeenPages: Array.isArray(parsed.helpBotSeenPages) ? parsed.helpBotSeenPages : [],
+      helpBotOnboardingDone: parsed.helpBotOnboardingDone === true,
     };
   } catch {
     return EMPTY_PROGRESS;
@@ -65,6 +73,24 @@ export function useGuideProgress() {
     [progress.completedTours],
   );
 
+  const markPageSeen = useCallback((page: string) => {
+    setProgress((prev) => ({
+      ...prev,
+      helpBotSeenPages: prev.helpBotSeenPages.includes(page)
+        ? prev.helpBotSeenPages
+        : [...prev.helpBotSeenPages, page],
+    }));
+  }, []);
+
+  const isPageSeen = useCallback(
+    (page: string) => progress.helpBotSeenPages.includes(page),
+    [progress.helpBotSeenPages],
+  );
+
+  const markOnboardingDone = useCallback(() => {
+    setProgress((prev) => ({ ...prev, helpBotOnboardingDone: true }));
+  }, []);
+
   const resetProgress = useCallback(() => {
     setProgress(EMPTY_PROGRESS);
   }, []);
@@ -81,6 +107,9 @@ export function useGuideProgress() {
     markTourCompleted,
     markTourDismissed,
     isTourCompleted,
+    markPageSeen,
+    isPageSeen,
+    markOnboardingDone,
     resetProgress,
     shouldShowOnboarding,
   };
