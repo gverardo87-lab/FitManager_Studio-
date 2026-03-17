@@ -182,7 +182,7 @@ export function GhostEventsSheet({ open, onOpenChange }: GhostEventsSheetProps) 
                   return (
                     <div
                       key={event.id}
-                      className={`rounded-lg border p-4 transition-all ${
+                      className={`rounded-lg border p-4 transition-[shadow,opacity,transform] ${
                         isResolving
                           ? "opacity-40 scale-[0.98]"
                           : "hover:shadow-sm"

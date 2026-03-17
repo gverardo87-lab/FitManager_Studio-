@@ -154,7 +154,7 @@ function AlertCard({ item, onAction }: { item: AlertItem; onAction?: () => void 
   const Icon = ALERT_ICON[item.category] ?? AlertCircle;
 
   const content = (
-    <div className={`flex items-center gap-3 rounded-xl border-l-[3px] ${styles.accent} ${styles.bg} px-3.5 py-3 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md`}>
+    <div className={`flex items-center gap-3 rounded-xl border-l-[3px] ${styles.accent} ${styles.bg} px-3.5 py-3 transition-[shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-md`}>
       <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${styles.iconBg}`}>
         <Icon aria-hidden="true" className={`h-4 w-4 ${styles.icon}`} />
       </div>

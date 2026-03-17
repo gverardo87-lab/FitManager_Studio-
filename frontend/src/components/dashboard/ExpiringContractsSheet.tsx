@@ -116,7 +116,7 @@ export function ExpiringContractsSheet({ open, onOpenChange }: ExpiringContracts
                 return (
                   <div
                     key={item.contract_id}
-                    className="rounded-lg border p-4 transition-all hover:shadow-sm"
+                    className="rounded-lg border p-4 transition-shadow hover:shadow-sm"
                   >
                     {/* Header: cliente + countdown */}
                     <div className="mb-2 flex items-center justify-between">

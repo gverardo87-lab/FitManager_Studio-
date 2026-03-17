@@ -120,7 +120,7 @@ export function InactiveClientsSheet({ open, onOpenChange }: InactiveClientsShee
               {items.map((item) => (
                 <div
                   key={item.client_id}
-                  className="rounded-lg border p-4 transition-all hover:shadow-sm"
+                  className="rounded-lg border p-4 transition-shadow hover:shadow-sm"
                 >
                   {/* Header: nome + badge inattivita' */}
                   <div className="mb-2 flex items-center justify-between">

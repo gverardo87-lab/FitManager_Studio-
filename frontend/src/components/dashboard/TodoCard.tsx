@@ -527,7 +527,7 @@ function TodoItem({
 
   return (
     <div
-      className={`group flex min-w-0 items-center gap-2 rounded-lg px-3 py-2 transition-all hover:shadow-sm ${containerClass}`}
+      className={`group flex min-w-0 items-center gap-2 rounded-lg px-3 py-2 transition-shadow hover:shadow-sm ${containerClass}`}
     >
       <button
         onClick={onToggle}
