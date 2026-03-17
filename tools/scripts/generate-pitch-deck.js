@@ -29,6 +29,8 @@ const FONT_H = "Georgia";
 const FONT_B = "Calibri";
 const SHOTS = "C:/Users/gvera/Projects/FitManager_AI_Studio/data/screenshots";
 const OUT = "C:/Users/gvera/Projects/FitManager_AI_Studio/data";
+const LOGO = "C:/Users/gvera/Projects/FitManager_AI_Studio/data/pitch-logo.png";
+const ICON = "C:/Users/gvera/Projects/FitManager_AI_Studio/data/pitch-icon.png";
 
 // ─── HELPERS ────────────────────────────────────────────────
 const shadow = () => ({ type: "outer", color: "000000", blur: 8, offset: 3, angle: 135, opacity: 0.12 });
@@ -50,6 +52,11 @@ function topAccent(s, color) {
   s.addShape("rect", { x: 0, y: 0, w: 10, h: 0.06, fill: { color: color || C.teal } });
 }
 
+// Logo watermark — small brand mark bottom-left (logo 444×406 = ratio 1.094:1)
+function logoMark(s) {
+  s.addImage({ path: LOGO, x: 0.1, y: 4.95, w: 0.55, h: 0.5 });
+}
+
 // Screenshot slide helper: dark bg, accent bar, title, subtitle, centered screenshot (ratio 1.6:1)
 function screenshotSlide(title, subtitle, imgPath, accent, num) {
   const s = pres.addSlide();
@@ -59,6 +66,7 @@ function screenshotSlide(title, subtitle, imgPath, accent, num) {
   s.addText(subtitle, { x: 0.8, y: 0.5, w: 8.2, h: 0.25, fontSize: 11, fontFace: FONT_B, color: C.slate });
   s.addShape("rect", { x: 1.15, y: 0.85, w: 7.7, h: 4.75, fill: { color: C.darkAlt }, shadow: shadow() });
   s.addImage({ path: imgPath, x: 1.25, y: 0.9, w: 7.5, h: 4.65 });
+  logoMark(s);
   sNum(s, num);
   return s;
 }
@@ -79,9 +87,16 @@ const TOTAL = 17;
   s.background = { color: C.dark };
   topAccent(s, C.teal);
 
+  // Hero logo (444×406 = ratio 1.094:1 → w=1.6, h=1.46)
+  s.addImage({ path: LOGO, x: 0.8, y: 0.35, w: 1.6, h: 1.46 });
+
   s.addText("FitManager Studio+", {
-    x: 0.8, y: 1.0, w: 8.4, h: 1.0,
-    fontSize: 48, fontFace: FONT_H, color: C.white, bold: true,
+    x: 2.6, y: 0.45, w: 6.8, h: 0.7,
+    fontSize: 42, fontFace: FONT_H, color: C.white, bold: true,
+  });
+  s.addText("Kinesiologist Workflow Platform", {
+    x: 2.6, y: 1.1, w: 6.8, h: 0.35,
+    fontSize: 14, fontFace: FONT_B, color: C.slate, italic: true,
   });
 
   s.addText("Il software che trasforma\nil personal trainer in un professionista clinico.", {
@@ -155,6 +170,7 @@ const TOTAL = 17;
     });
   });
 
+  logoMark(s);
   sNum(s, 2);
 })();
 
@@ -204,6 +220,7 @@ const TOTAL = 17;
     });
   });
 
+  logoMark(s);
   sNum(s, 3);
 })();
 
@@ -246,6 +263,7 @@ screenshotSlide(
     fontSize: 11, fontFace: FONT_B, color: C.mintLight, italic: true, valign: "middle", margin: 0,
   });
 
+  logoMark(s);
   sNum(s, 5);
 })();
 
@@ -402,6 +420,7 @@ screenshotSlide(
     fontSize: 13, fontFace: FONT_B, color: C.dark, lineSpacingMultiple: 1.35, margin: 0,
   });
 
+  logoMark(s);
   sNum(s, 10);
 })();
 
@@ -447,28 +466,26 @@ screenshotSlide(
   });
 
   // Evidence bar
-  s.addShape("rect", { x: 0.5, y: 3.8, w: 9.0, h: 0.6, fill: { color: C.darkAlt } });
-  bar(s, 0.5, 3.8, 0.6, C.teal);
+  s.addShape("rect", { x: 0.5, y: 3.8, w: 9.0, h: 0.55, fill: { color: C.darkAlt } });
+  bar(s, 0.5, 3.8, 0.55, C.teal);
   const evidence = [
     { num: "18", label: "Fonti peer-reviewed" },
     { num: "35+", label: "Formule evidence-based" },
-    { num: "~5.600", label: "Righe di logica scientifica" },
+    { num: "5.600", label: "Righe di logica scientifica" },
   ];
   evidence.forEach((ev, i) => {
-    const evx = 1.0 + i * 3.0;
-    s.addText(ev.num, { x: evx, y: 3.82, w: 1.0, h: 0.55, fontSize: 22, fontFace: FONT_H, color: C.mint, bold: true, valign: "middle" });
-    s.addText(ev.label, { x: evx + 1.0, y: 3.82, w: 1.8, h: 0.55, fontSize: 11, fontFace: FONT_B, color: C.slate, valign: "middle" });
+    const evx = 0.8 + i * 3.0;
+    s.addText(ev.num, { x: evx, y: 3.82, w: 1.3, h: 0.5, fontSize: 18, fontFace: FONT_H, color: C.mint, bold: true, valign: "middle" });
+    s.addText(ev.label, { x: evx + 1.3, y: 3.82, w: 1.6, h: 0.5, fontSize: 11, fontFace: FONT_B, color: C.slate, valign: "middle" });
   });
 
   // Sources preview
-  s.addText("Fonti: Schoenfeld, Israetel (RP), NSCA (Haff & Triplett), Contreras, Helms, Bompa, LARN 2014 (SINU), CREA 2018, OMS/ACSM/AHA", {
-    x: 0.8, y: 4.55, w: 8.4, h: 0.4,
-    fontSize: 10, fontFace: FONT_B, color: C.slateDark, italic: true,
+  s.addText("Fonti: Schoenfeld, Israetel (RP), NSCA (Haff & Triplett), Contreras, Helms, Bompa, LARN 2014, CREA 2018, OMS/ACSM/AHA", {
+    x: 0.5, y: 4.45, w: 9.0, h: 0.35,
+    fontSize: 9, fontFace: FONT_B, color: C.slateDark, italic: true,
   });
 
-  // Exercise detail screenshot — small, as proof
-  s.addShape("rect", { x: 5.6, y: 4.3, w: 3.95, h: 0.85, fill: { color: C.darkAlt } });
-
+  logoMark(s);
   sNum(s, 11);
 })();
 
@@ -539,6 +556,7 @@ screenshotSlide(
     fontSize: 12, fontFace: FONT_B, color: C.dark, bold: true, margin: 0,
   });
 
+  logoMark(s);
   sNum(s, 12);
 })();
 
@@ -583,6 +601,7 @@ screenshotSlide(
     autoPage: false,
   });
 
+  logoMark(s);
   sNum(s, 13);
 })();
 
@@ -678,12 +697,12 @@ screenshotSlide(
   });
 
   s.addText("EUR 149 - 249", {
-    x: 1.0, y: 1.5, w: 3.6, h: 0.55,
-    fontSize: 36, fontFace: FONT_H, color: C.teal, bold: true, align: "center",
+    x: 1.0, y: 1.45, w: 3.6, h: 0.5,
+    fontSize: 28, fontFace: FONT_H, color: C.teal, bold: true, align: "center",
   });
   s.addText("Una tantum. Per sempre.", {
-    x: 1.0, y: 2.05, w: 3.6, h: 0.3,
-    fontSize: 14, fontFace: FONT_B, color: C.dark, align: "center", bold: true,
+    x: 1.0, y: 1.95, w: 3.6, h: 0.3,
+    fontSize: 13, fontFace: FONT_B, color: C.dark, align: "center", bold: true,
   });
 
   const ourFeats = [
@@ -696,7 +715,7 @@ screenshotSlide(
   s.addText(ourFeats.map((f, i) => ({
     text: f,
     options: { bullet: true, breakLine: i < ourFeats.length - 1, fontSize: 11, color: C.slateDark },
-  })), { x: 1.2, y: 2.4, w: 3.2, h: 1.6, fontFace: FONT_B, paraSpaceAfter: 5 });
+  })), { x: 1.2, y: 2.3, w: 3.2, h: 1.7, fontFace: FONT_B, paraSpaceAfter: 5 });
 
   // RIGHT: Competitors
   card(s, 5.2, 0.9, 4.0, 3.3, C.white);
@@ -707,12 +726,12 @@ screenshotSlide(
   });
 
   s.addText("EUR 468 - 696", {
-    x: 5.4, y: 1.5, w: 3.6, h: 0.55,
-    fontSize: 30, fontFace: FONT_H, color: C.coral, bold: true, align: "center",
+    x: 5.4, y: 1.45, w: 3.6, h: 0.5,
+    fontSize: 26, fontFace: FONT_H, color: C.coral, bold: true, align: "center",
   });
   s.addText("All'anno. Ogni anno. Per sempre.", {
-    x: 5.4, y: 2.05, w: 3.6, h: 0.3,
-    fontSize: 14, fontFace: FONT_B, color: C.dark, align: "center", bold: true,
+    x: 5.4, y: 1.95, w: 3.6, h: 0.3,
+    fontSize: 13, fontFace: FONT_B, color: C.dark, align: "center", bold: true,
   });
 
   const theirFeats = [
@@ -725,7 +744,7 @@ screenshotSlide(
   s.addText(theirFeats.map((f, i) => ({
     text: f,
     options: { bullet: true, breakLine: i < theirFeats.length - 1, fontSize: 11, color: C.slateDark },
-  })), { x: 5.6, y: 2.4, w: 3.2, h: 1.6, fontFace: FONT_B, paraSpaceAfter: 5 });
+  })), { x: 5.6, y: 2.3, w: 3.2, h: 1.7, fontFace: FONT_B, paraSpaceAfter: 5 });
 
   // Bottom insight
   card(s, 0.8, 4.4, 8.4, 0.9, C.greenBg);
@@ -739,6 +758,7 @@ screenshotSlide(
     fontSize: 12, fontFace: FONT_B, color: C.slateDark, margin: 0, lineSpacingMultiple: 1.2,
   });
 
+  logoMark(s);
   sNum(s, 15);
 })();
 
@@ -801,6 +821,7 @@ screenshotSlide(
     });
   });
 
+  logoMark(s);
   sNum(s, 16);
 })();
 
@@ -813,25 +834,25 @@ screenshotSlide(
   topAccent(s, C.teal);
 
   s.addText("Il tuo studio.\nI tuoi dati.\nLa tua scienza.", {
-    x: 0.8, y: 0.7, w: 8.4, h: 2.0,
-    fontSize: 44, fontFace: FONT_H, color: C.white, bold: true, lineSpacingMultiple: 1.2,
+    x: 0.8, y: 0.9, w: 8.4, h: 1.8,
+    fontSize: 36, fontFace: FONT_H, color: C.white, bold: true, lineSpacingMultiple: 1.3,
   });
 
   s.addText("FitManager Studio+", {
-    x: 0.8, y: 2.8, w: 8.4, h: 0.5,
-    fontSize: 24, fontFace: FONT_B, color: C.mint,
+    x: 0.8, y: 2.85, w: 8.4, h: 0.45,
+    fontSize: 20, fontFace: FONT_B, color: C.mint,
   });
 
   // CTA
-  s.addShape("rect", { x: 0.8, y: 3.6, w: 3.6, h: 0.55, fill: { color: C.teal } });
+  s.addShape("rect", { x: 0.8, y: 3.5, w: 3.6, h: 0.55, fill: { color: C.teal } });
   s.addText("Richiedi una demo gratuita", {
-    x: 0.8, y: 3.6, w: 3.6, h: 0.55,
+    x: 0.8, y: 3.5, w: 3.6, h: 0.55,
     fontSize: 16, fontFace: FONT_B, color: C.white, bold: true, align: "center", valign: "middle",
   });
 
   s.addText("info@fitmanager.studio", {
-    x: 0.8, y: 4.3, w: 8.4, h: 0.35,
-    fontSize: 14, fontFace: FONT_B, color: C.slate,
+    x: 0.8, y: 4.15, w: 8.4, h: 0.3,
+    fontSize: 13, fontFace: FONT_B, color: C.slate,
   });
 
   // Bottom bar
