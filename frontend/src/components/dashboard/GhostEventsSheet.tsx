@@ -37,15 +37,7 @@ import {
 import { useGhostEvents } from "@/hooks/useDashboard";
 import { useUpdateEvent } from "@/hooks/useAgenda";
 import type { Event } from "@/types/api";
-
-// ── Colori categoria (mirror agenda) ──
-
-const CATEGORY_COLORS: Record<string, string> = {
-  PT: "bg-blue-500",
-  SALA: "bg-emerald-500",
-  CORSO: "bg-violet-500",
-  COLLOQUIO: "bg-amber-500",
-};
+import { CATEGORY_COLORS } from "@/lib/dashboard-helpers";
 
 // ── Helpers ──
 

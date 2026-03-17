@@ -70,7 +70,7 @@ export function AgendaLive({ events, isLoading }: AgendaLiveProps) {
             <Calendar aria-hidden="true" className="h-4 w-4 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
-            <h3 className="text-sm font-bold">Agenda Oggi</h3>
+            <h2 className="text-sm font-bold">Agenda Oggi</h2>
             <p className="text-[10px] font-medium text-muted-foreground">
               {events.length} {events.length === 1 ? "sessione" : "sessioni"}
             </p>

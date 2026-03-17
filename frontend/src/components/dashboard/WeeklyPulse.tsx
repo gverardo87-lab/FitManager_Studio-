@@ -148,7 +148,7 @@ export function WeeklyPulse({ events, dateAnchor, isLoading }: WeeklyPulseProps)
             <BarChart3 aria-hidden="true" className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div>
-            <h3 className="text-sm font-bold sm:text-base">Sedute della settimana</h3>
+            <h2 className="text-sm font-bold sm:text-base">Sedute della settimana</h2>
             <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/70">
               {weekLabel}
             </p>

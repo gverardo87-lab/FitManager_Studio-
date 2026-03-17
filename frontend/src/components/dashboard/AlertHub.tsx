@@ -114,7 +114,7 @@ export function AlertHub({ alerts, isLoading, alertActions }: AlertHubProps) {
             )}
           </div>
           <div>
-            <h3 className="text-sm font-bold sm:text-base">Alert operativi</h3>
+            <h2 className="text-sm font-bold sm:text-base">Alert operativi</h2>
             <p className="text-[11px] font-medium text-muted-foreground/70">
               {visibleAlerts.length} {visibleAlerts.length === 1 ? "notifica attiva" : "notifiche attive"}
             </p>

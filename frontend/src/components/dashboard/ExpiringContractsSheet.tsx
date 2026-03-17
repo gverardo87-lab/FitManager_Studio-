@@ -126,7 +126,7 @@ export function ExpiringContractsSheet({ open, onOpenChange }: ExpiringContracts
                           {item.client_nome} {item.client_cognome}
                         </span>
                       </div>
-                      <div className={`rounded-md border px-2 py-0.5 text-[10px] font-bold ${countdownColor(item.giorni_rimasti)}`}>
+                      <div className={`rounded-md border px-2 py-0.5 text-[10px] font-bold tabular-nums ${countdownColor(item.giorni_rimasti)}`}>
                         {countdownLabel(item.giorni_rimasti)}
                       </div>
                     </div>

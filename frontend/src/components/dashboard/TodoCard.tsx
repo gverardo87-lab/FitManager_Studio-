@@ -345,7 +345,7 @@ export function TodoCard({
 
       {/* Header */}
       <div className="mb-3 flex flex-wrap items-center gap-2 pl-7">
-        <h3 className="font-[family-name:var(--font-caveat)] text-2xl font-bold text-amber-900/80 sm:text-3xl dark:text-amber-200/80">Promemoria</h3>
+        <h2 className="font-[family-name:var(--font-caveat)] text-2xl font-bold text-amber-900/80 sm:text-3xl dark:text-amber-200/80">Promemoria</h2>
         {todos.length > 0 && (
           <span className="ml-auto font-[family-name:var(--font-caveat)] text-base font-semibold tabular-nums text-amber-700/60 dark:text-amber-400/60">
             {activeCount} attivi
