@@ -413,7 +413,7 @@ export function TodoCard({
               showDateInput && "text-pink-500",
             )}
             onClick={() => setShowDateInput((prev) => !prev)}
-            title="Aggiungi scadenza"
+            aria-label="Aggiungi scadenza"
           >
             <CalendarDays aria-hidden="true" className="h-4 w-4" />
           </Button>
@@ -423,6 +423,7 @@ export function TodoCard({
             className="h-8 w-8 shrink-0 border-amber-300/60 dark:border-amber-800/40"
             onClick={handleCreate}
             disabled={!newTitle.trim() || createTodo.isPending}
+            aria-label="Crea promemoria"
           >
             <Plus aria-hidden="true" className="h-4 w-4" />
           </Button>
@@ -530,6 +531,7 @@ function TodoItem({
     >
       <button
         onClick={onToggle}
+        aria-label={todo.completato ? `Riapri ${todo.titolo}` : `Completa ${todo.titolo}`}
         className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition-colors ${
           todo.completato
             ? "border-emerald-500 bg-emerald-500 text-white"
