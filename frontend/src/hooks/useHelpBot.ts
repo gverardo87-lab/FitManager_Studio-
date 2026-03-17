@@ -13,6 +13,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useGuideProgress } from "./useGuideProgress";
 import {
   resolveChapter,
+  resolveSpotlight,
   CHAPTERS,
   ONBOARDING_STEPS,
   ONBOARDING_TOUR_RESPONSE,
@@ -250,6 +251,14 @@ export function useHelpBot() {
         }
         setOpen(false);
         break;
+      case "spotlight": {
+        const spot = action.payload ? resolveSpotlight(action.payload) : null;
+        if (spot) {
+          window.dispatchEvent(new CustomEvent("start-action-spotlight", { detail: spot }));
+        }
+        setOpen(false);
+        break;
+      }
       case "onboarding-choice":
         handleOnboardingChoice(action.payload as "tour" | "skip");
         break;

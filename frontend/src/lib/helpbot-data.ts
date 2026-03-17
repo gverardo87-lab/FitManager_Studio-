@@ -8,7 +8,7 @@
 // File puro dati. Zero React, zero side-effect.
 // ════════════════════════════════════════════════════════════
 
-import type { BotAction, ProactiveTrigger } from "./helpbot-types";
+import type { BotAction, ProactiveTrigger, SpotlightTarget } from "./helpbot-types";
 
 // ── Chapter interface ──
 
@@ -17,6 +17,8 @@ export interface ChapterAction {
   title: string;
   description: string;
   action?: BotAction;
+  /** Se presente, l'azione puo' evidenziare un elemento sulla pagina */
+  spotlight?: SpotlightTarget;
 }
 
 export interface ChapterFaq {
@@ -56,42 +58,103 @@ export const CHAPTERS: Chapter[] = [
         id: "crea-cliente",
         title: "Crea un nuovo cliente",
         description: "Clicca \"Nuovo Cliente\" in alto a destra per aprire il form di registrazione.",
-        action: { label: "Nuovo Cliente", type: "navigate", payload: "/clienti" },
+        action: { label: "Mostrami", type: "spotlight", payload: "crea-cliente" },
+        spotlight: {
+          target: "clienti-new-button",
+          title: "Nuovo Cliente",
+          description: "Clicca qui per aprire il form di registrazione. Compila nome, cognome e almeno un contatto per iniziare.",
+          placement: "bottom",
+          navigateTo: "/clienti",
+        },
       },
       {
         id: "compila-dati",
         title: "Compila tutti i dati",
         description: "Nome, cognome, email, telefono, data di nascita, sesso, indirizzo e codice fiscale. Solo nome e cognome sono obbligatori.",
+        action: { label: "Mostrami", type: "spotlight", payload: "compila-dati" },
+        spotlight: {
+          target: "clienti-new-button",
+          title: "Form Registrazione",
+          description: "Il form si apre cliccando qui. Campi: nome e cognome (obbligatori), email, telefono, data nascita, sesso, indirizzo e codice fiscale.",
+          placement: "bottom",
+          navigateTo: "/clienti",
+        },
       },
       {
         id: "cerca-cliente",
         title: "Cerca un cliente",
         description: "La barra di ricerca in alto filtra per nome e cognome in tempo reale.",
+        action: { label: "Mostrami", type: "spotlight", payload: "cerca-cliente" },
+        spotlight: {
+          target: "clienti-search",
+          title: "Ricerca Clienti",
+          description: "Digita nome, cognome o email per filtrare la lista in tempo reale. La ricerca ignora accenti e maiuscole.",
+          placement: "bottom",
+          navigateTo: "/clienti",
+        },
       },
       {
         id: "filtra-stato",
         title: "Filtra per stato",
         description: "I chip Attivi e Inattivi filtrano la lista. Il conteggio si aggiorna dinamicamente.",
+        action: { label: "Mostrami", type: "spotlight", payload: "filtra-stato" },
+        spotlight: {
+          target: "clienti-filter-stato",
+          title: "Filtro Stato",
+          description: "Clicca i chip Attivi e Inattivi per mostrare o nascondere clienti per stato. L'icona occhio indica quali filtri sono attivi.",
+          placement: "bottom",
+          navigateTo: "/clienti",
+        },
       },
       {
         id: "filtra-situazione",
         title: "Filtra per situazione",
         description: "\"Con Rate Scadute\" evidenzia chi ha pagamenti in ritardo. \"Con Crediti\" chi ha ancora sedute disponibili.",
+        action: { label: "Mostrami", type: "spotlight", payload: "filtra-situazione" },
+        spotlight: {
+          target: "clienti-filter-situazione",
+          title: "Filtro Situazione",
+          description: "\"Con Rate Scadute\" mostra chi ha pagamenti in ritardo (rosso). \"Con Crediti\" chi ha sedute disponibili (blu).",
+          placement: "bottom",
+          navigateTo: "/clienti",
+        },
       },
       {
         id: "apri-profilo",
         title: "Apri il profilo",
         description: "Clicca sulla riga di un cliente per accedere al profilo completo con avatar, anamnesi e misurazioni.",
+        action: { label: "Mostrami", type: "spotlight", payload: "apri-profilo" },
+        spotlight: {
+          target: "clienti-table-first-row",
+          title: "Profilo Cliente",
+          description: "Clicca su una riga per aprire il profilo completo: avatar con semaforo, anamnesi, misurazioni, contratti e schede.",
+          placement: "bottom",
+          navigateTo: "/clienti",
+        },
       },
       {
         id: "leggi-avatar",
         title: "Leggi l'Avatar del cliente",
         description: "L'hero del profilo mostra 5 box interattivi: Clinica, Contratto, Scheda, Sedute PT e Corpo. Clicca ciascuno per scorrere alla tab corrispondente. Il ReadinessRing a sinistra indica la prontezza complessiva da 0 a 100.",
+        action: { label: "Mostrami", type: "spotlight", payload: "leggi-avatar" },
+        spotlight: {
+          target: "client-avatar-hero",
+          title: "Avatar Cliente",
+          description: "5 box interattivi: Clinica, Contratto, Scheda, Sedute e Corpo. Clicca ciascuno per scorrere alla tab corrispondente. Il ring a sinistra e' la prontezza complessiva (0-100).",
+          placement: "bottom",
+        },
       },
       {
         id: "segui-5-passi",
         title: "Segui i 5 passi progressivi",
         description: "L'OnboardingChecklist ti guida nell'ordine giusto: (1) Contratto — crea il pacchetto, (2) Anamnesi — compila il questionario clinico, (3) Misurazioni — registra peso e composizione, (4) Scheda — crea il programma, (5) Prima sessione — prenota in agenda. Ogni passo ha una CTA e si completa automaticamente.",
+        action: { label: "Mostrami", type: "spotlight", payload: "segui-5-passi" },
+        spotlight: {
+          target: "client-onboarding-checklist",
+          title: "5 Passi Progressivi",
+          description: "L'ordine giusto: (1) Contratto, (2) Anamnesi, (3) Misurazioni, (4) Scheda, (5) Prima sessione. Ogni passo ha la sua CTA e si completa automaticamente.",
+          placement: "bottom",
+        },
       },
     ],
     faqs: [
@@ -583,6 +646,16 @@ export function resolveChapter(pathname: string): Chapter | null {
     .sort((a, b) => b.routePattern.length - a.routePattern.length);
 
   return prefix[0] ?? null;
+}
+
+// ── Resolve spotlight target by action ID ──
+
+export function resolveSpotlight(actionId: string): SpotlightTarget | null {
+  for (const chapter of CHAPTERS) {
+    const action = chapter.actions.find((a) => a.id === actionId);
+    if (action?.spotlight) return action.spotlight;
+  }
+  return null;
 }
 
 // ── Onboarding messages ──

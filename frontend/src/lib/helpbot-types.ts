@@ -17,9 +17,20 @@ export interface BotMessage {
 /** Azione eseguibile dal bot */
 export interface BotAction {
   label: string;
-  type: "navigate" | "mini-tour" | "dismiss" | "onboarding-choice";
-  /** href per navigate, tour id per mini-tour */
+  type: "navigate" | "mini-tour" | "dismiss" | "onboarding-choice" | "spotlight";
+  /** href per navigate, tour id per mini-tour, target per spotlight */
   payload?: string;
+}
+
+/** Definizione spotlight singolo (1-step tour su un elemento) */
+export interface SpotlightTarget {
+  /** Matcha data-guide="..." sull'elemento target */
+  target: string;
+  title: string;
+  description: string;
+  placement: "top" | "bottom" | "left" | "right";
+  /** Se presente, naviga a questa route prima di cercare il target */
+  navigateTo?: string;
 }
 
 /** Trigger proattivo basato su stato utente */

@@ -46,6 +46,7 @@ import {
 import { useGuideProgress } from "@/hooks/useGuideProgress";
 import { TOUR_SCOPRI_FITMANAGER, MINI_TOUR_MAP } from "@/lib/guide-tours";
 import type { TourDefinition } from "@/lib/guide-tours";
+import type { SpotlightTarget } from "@/lib/helpbot-types";
 
 export default function DashboardLayout({
   children,
@@ -162,6 +163,37 @@ export default function DashboardLayout({
     window.addEventListener("start-mini-tour", handler);
     return () => window.removeEventListener("start-mini-tour", handler);
   }, [buildMiniTour]);
+
+  // ── Hook 6: Listen for action spotlight (single-step tour) ──
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const spot = (e as CustomEvent).detail as SpotlightTarget | undefined;
+      if (!spot) return;
+
+      // Navigate first if needed
+      if (spot.navigateTo && pathname !== spot.navigateTo) {
+        router.push(spot.navigateTo);
+      }
+
+      // Build 1-step tour
+      const singleStepTour: TourDefinition = {
+        id: `spotlight-${spot.target}`,
+        title: spot.title,
+        steps: [{
+          target: spot.target,
+          title: spot.title,
+          description: spot.description,
+          placement: spot.placement,
+          navigateTo: spot.navigateTo,
+        }],
+      };
+
+      setActiveTour(singleStepTour);
+      setTourOpen(true);
+    };
+    window.addEventListener("start-action-spotlight", handler);
+    return () => window.removeEventListener("start-action-spotlight", handler);
+  }, [pathname, router]);
 
   return (
     <AuthGuard>

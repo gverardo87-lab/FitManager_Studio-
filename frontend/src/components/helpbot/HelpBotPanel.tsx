@@ -14,7 +14,7 @@ import {
   X, Send, Compass, ArrowRight, ArrowLeft, ChevronRight, BookOpen,
   UserPlus, HeartPulse, FileText, Calendar, Wallet, Dumbbell,
   ClipboardList, Activity, Gauge, RefreshCw, Shield, LayoutDashboard,
-  HelpCircle,
+  HelpCircle, Crosshair,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -123,10 +123,19 @@ function ActionCard({ action, index, onAction }: { action: ChapterAction; index:
             <button
               type="button"
               onClick={() => onAction(action.action!)}
-              className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-primary transition-colors hover:text-primary/80"
+              className={`mt-1.5 inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium transition-colors ${
+                action.action.type === "spotlight"
+                  ? "bg-primary/10 text-primary hover:bg-primary/20"
+                  : "text-primary hover:text-primary/80"
+              }`}
             >
+              {action.action.type === "spotlight" ? (
+                <Crosshair className="h-3 w-3" />
+              ) : null}
               {action.action.label}
-              <ArrowRight className="h-3 w-3" />
+              {action.action.type !== "spotlight" ? (
+                <ArrowRight className="h-3 w-3" />
+              ) : null}
             </button>
           ) : null}
         </div>

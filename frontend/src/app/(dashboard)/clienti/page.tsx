@@ -418,7 +418,7 @@ function FilterBar({
     <div className="rounded-xl border bg-gradient-to-br from-white to-zinc-50/50 p-3 shadow-sm dark:from-zinc-900 dark:to-zinc-800/50">
       <div className="flex flex-col gap-2">
         {/* Riga 1: Stato */}
-        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+        <div data-guide="clienti-filter-stato" className="flex flex-wrap items-center gap-1.5 sm:gap-2">
           <span className="w-14 shrink-0 text-[11px] font-medium uppercase tracking-wide text-muted-foreground sm:w-16">
             Stato:
           </span>
@@ -453,7 +453,7 @@ function FilterBar({
         </div>
 
         {/* Riga 2: Situazione */}
-        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+        <div data-guide="clienti-filter-situazione" className="flex flex-wrap items-center gap-1.5 sm:gap-2">
           <span className="w-14 shrink-0 text-[11px] font-medium uppercase tracking-wide text-muted-foreground sm:w-16">
             Filtro:
           </span>

@@ -128,18 +128,22 @@ export default function ClientProfilePage({
 
   return (
     <div className="space-y-4">
-      <AvatarHero
-        client={client}
-        avatar={avatar ?? null}
-        isLoading={avatarLoading}
-        onEdit={() => setSheetOpen(true)}
-        onTabChange={handleTabChange}
-        backHref={backHref}
-        backLabel={backLabel}
-      />
+      <div data-guide="client-avatar-hero">
+        <AvatarHero
+          client={client}
+          avatar={avatar ?? null}
+          isLoading={avatarLoading}
+          onEdit={() => setSheetOpen(true)}
+          onTabChange={handleTabChange}
+          backHref={backHref}
+          backLabel={backLabel}
+        />
+      </div>
 
       {/* Onboarding Checklist — hero CTA + stepper (solo se profilo incompleto) */}
-      <OnboardingChecklist steps={onboardingSteps} />
+      <div data-guide="client-onboarding-checklist">
+        <OnboardingChecklist steps={onboardingSteps} />
+      </div>
 
       {/* Tabs con completion dots */}
       <Tabs value={activeTab} onValueChange={handleTabChange}>

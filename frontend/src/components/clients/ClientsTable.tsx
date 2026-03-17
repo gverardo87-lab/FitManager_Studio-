@@ -90,7 +90,7 @@ export function ClientsTable({ clients, onEdit, onDelete, onNewClient }: Clients
   return (
     <div className="space-y-4">
       {/* ── Barra ricerca ── */}
-      <div className="relative max-w-sm">
+      <div data-guide="clienti-search" className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           placeholder="Cerca cliente per nome o email..."
@@ -136,14 +136,14 @@ export function ClientsTable({ clients, onEdit, onDelete, onNewClient }: Clients
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((client) => {
+              {filtered.map((client, i) => {
                 const hasContracts = client.contratti_attivi > 0;
                 const prezzo = client.prezzo_totale_attivo;
                 const versato = client.totale_versato;
                 const ratio = prezzo > 0 ? versato / prezzo : 0;
 
                 return (
-                  <TableRow key={client.id} className={`transition-colors hover:bg-muted/50 ${client.ha_rate_scadute ? "bg-red-50/40 dark:bg-red-950/20" : ""}`}>
+                  <TableRow key={client.id} {...(i === 0 ? { "data-guide": "clienti-table-first-row" } : {})} className={`transition-colors hover:bg-muted/50 ${client.ha_rate_scadute ? "bg-red-50/40 dark:bg-red-950/20" : ""}`}>
                     {/* ── Nome + avatar + nota + dot rate scadute ── */}
                     <TableCell>
                       <div className="flex items-center gap-3">
