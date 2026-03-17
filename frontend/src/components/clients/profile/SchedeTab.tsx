@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ClipboardList, Plus } from "lucide-react";
+import { Activity, ClipboardList, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -62,6 +62,7 @@ export function SchedeTab({ clientId, onNewScheda, fromContext }: SchedeTabProps
               <TableHead className="text-center hidden sm:table-cell">Sessioni</TableHead>
               <TableHead className="hidden sm:table-cell">Stato</TableHead>
               <TableHead className="hidden md:table-cell">Data</TableHead>
+              <TableHead className="w-10" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -95,6 +96,18 @@ export function SchedeTab({ clientId, onNewScheda, fromContext }: SchedeTabProps
                   {w.created_at
                     ? format(new Date(w.created_at), "dd MMM yyyy", { locale: it })
                     : "—"}
+                </TableCell>
+                <TableCell className="px-1">
+                  {getProgramStatus(w) !== "da_attivare" && (
+                    <Link
+                      href={`/allenamenti?idCliente=${clientId}&planId=${w.id}&from=clienti-${clientId}`}
+                      onClick={(e) => e.stopPropagation()}
+                      title="Aderenza programma"
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground/50 transition-colors hover:bg-primary/10 hover:text-primary"
+                    >
+                      <Activity aria-hidden="true" className="h-3.5 w-3.5" />
+                    </Link>
+                  )}
                 </TableCell>
               </TableRow>
             ))}

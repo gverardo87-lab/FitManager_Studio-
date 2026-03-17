@@ -18,7 +18,7 @@
  * - Status derivato client-side da date (zero campo DB)
  */
 
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { loadFilters, saveFilters, getUrlParams, syncUrlParams, resolveBackNavigation } from "@/lib/url-state";
 import { usePageReveal } from "@/lib/page-reveal";
@@ -169,6 +169,7 @@ export default function AllenamentiPage() {
   const { revealClass, revealStyle } = usePageReveal();
   const router = useRouter();
   const initialClientId = getUrlParams().get("idCliente");
+  const initialPlanId = getUrlParams().get("planId");
   const fromParam = getUrlParams().get("from");
 
   const backNav = useMemo(() => {
@@ -415,7 +416,7 @@ export default function AllenamentiPage() {
       ) : (
         <div className={revealClass(150, "space-y-4")} style={revealStyle(150)}>
           {filteredPlans.map((plan) => (
-            <ProgramCard key={plan.id} plan={plan} />
+            <ProgramCard key={plan.id} plan={plan} autoExpand={initialPlanId === String(plan.id)} />
           ))}
         </div>
       )}
@@ -427,10 +428,18 @@ export default function AllenamentiPage() {
 // PROGRAM CARD (premium)
 // ════════════════════════════════════════════════════════════
 
-function ProgramCard({ plan }: { plan: WorkoutPlan }) {
+function ProgramCard({ plan, autoExpand = false }: { plan: WorkoutPlan; autoExpand?: boolean }) {
   const status = getProgramStatus(plan);
   const [activateOpen, setActivateOpen] = useState(false);
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(autoExpand);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (autoExpand && cardRef.current) {
+      cardRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [autoExpand]);
+
   const { data: logsData } = useWorkoutLogs(plan.id);
   const logs = useMemo(() => logsData?.items ?? [], [logsData]);
 
@@ -462,7 +471,7 @@ function ProgramCard({ plan }: { plan: WorkoutPlan }) {
 
   return (
     <>
-      <div className={`rounded-xl border transition-all duration-200 ${
+      <div ref={cardRef} className={`rounded-xl border transition-all duration-200 ${
         status === "da_attivare"
           ? `border-l-4 ${STATUS_CARD_BORDER[status]} bg-gradient-to-br ${STATUS_CARD_GRADIENT[status]} shadow-sm hover:-translate-y-0.5 hover:shadow-lg`
           : status === "attivo" && compliance < 60
