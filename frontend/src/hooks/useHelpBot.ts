@@ -137,10 +137,10 @@ export function useHelpBot() {
       markOnboardingDone();
 
       if (choice === "tour") {
+        setOpen(false);
         setTimeout(() => {
           window.dispatchEvent(new CustomEvent("start-mini-tour", { detail: { page: "/" } }));
-          setOpen(false);
-        }, 800);
+        }, 1000);
       }
     }, 800);
   }, [markOnboardingDone]);
@@ -239,24 +239,31 @@ export function useHelpBot() {
   }, []);
 
   // ── Send action ──
+  // NOTA: chiudiamo il panel PRIMA, poi dopo 250ms dispatch lo spotlight/tour.
+  // Senza delay, React batcha setOpen(false) + setTourOpen(true) nello stesso
+  // render e SpotlightTour non riesce a montarsi correttamente.
   const sendAction = useCallback((action: BotAction) => {
     switch (action.type) {
       case "navigate":
-        if (action.payload) router.push(action.payload);
         setOpen(false);
+        if (action.payload) router.push(action.payload);
         break;
       case "mini-tour":
-        if (action.payload) {
-          window.dispatchEvent(new CustomEvent("start-mini-tour", { detail: { page: action.payload } }));
-        }
         setOpen(false);
+        if (action.payload) {
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent("start-mini-tour", { detail: { page: action.payload } }));
+          }, 250);
+        }
         break;
       case "spotlight": {
         const spot = action.payload ? resolveSpotlight(action.payload) : null;
-        if (spot) {
-          window.dispatchEvent(new CustomEvent("start-action-spotlight", { detail: spot }));
-        }
         setOpen(false);
+        if (spot) {
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent("start-action-spotlight", { detail: spot }));
+          }, 250);
+        }
         break;
       }
       case "onboarding-choice":
@@ -270,9 +277,11 @@ export function useHelpBot() {
 
   // ── Launch mini-tour for current page ──
   const launchMiniTour = useCallback(() => {
-    const basePage = "/" + pathname.split("/").filter(Boolean)[0] || "/";
-    window.dispatchEvent(new CustomEvent("start-mini-tour", { detail: { page: basePage } }));
     setOpen(false);
+    const page = "/" + pathname.split("/").filter(Boolean)[0] || "/";
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent("start-mini-tour", { detail: { page } }));
+    }, 250);
   }, [pathname]);
 
   // ── FAQ search ──
