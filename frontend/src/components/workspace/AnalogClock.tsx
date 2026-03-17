@@ -56,7 +56,7 @@ export function AnalogClock({ className }: SmartWatchProps) {
       </div>
 
       {/* Date — compact below */}
-      <span className="mt-2 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground/65 sm:text-[12px]">
+      <span className="mt-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground/65">
         <span className="text-primary/70">{dayStr}</span>
         <span className="h-[3px] w-[3px] rounded-full bg-primary/40" />
         <span>{dateStr}</span>

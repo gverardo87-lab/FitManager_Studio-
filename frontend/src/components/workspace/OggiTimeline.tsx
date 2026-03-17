@@ -161,14 +161,14 @@ function SessionItem({
             <span
               className={surfaceChipClassName(
                 { tone: selected ? tone : "neutral" },
-                "shrink-0 px-2 py-0.5 text-[10px] font-bold tabular-nums",
+                "shrink-0 px-2 py-0.5 text-[11px] font-bold tabular-nums",
               )}
             >
               {TIME_FMT.format(new Date(session.starts_at))}
             </span>
-            <p className="truncate text-[13px] font-bold text-foreground">{name}</p>
+            <p className="truncate text-sm font-bold text-foreground">{name}</p>
           </div>
-          <p className="mt-1 truncate pl-1 text-[10.5px] text-muted-foreground/80">{subline}</p>
+          <p className="mt-1 truncate pl-1 text-[11px] text-muted-foreground/80">{subline}</p>
           {avatar ? (
             <div className="mt-1.5 flex items-center gap-1 pl-1" aria-label="Stato dimensioni cliente">
               <span className={cn("h-1.5 w-1.5 rounded-full", SEMAPHORE_DOT[avatar.clinical.status])} title="Clinica" />
@@ -181,7 +181,7 @@ function SessionItem({
 
         <span
           className={cn(
-            "shrink-0 text-[9px] font-bold uppercase tracking-[0.12em] transition-colors duration-200",
+            "shrink-0 text-[10px] font-bold uppercase tracking-[0.12em] transition-colors duration-200",
             selected ? meta.color : "text-muted-foreground/60 group-hover:text-muted-foreground",
           )}
         >
@@ -215,12 +215,12 @@ function GroupLabel({
   return (
     <div className="flex items-center gap-2 px-1 pb-1">
       <span className={cn("h-2 w-2 shrink-0 rounded-full", dotClass, tone === "red" && "oggi-status-beat")} />
-      <p className={cn("text-[10px] font-bold uppercase tracking-[0.16em]", textClass)}>{label}</p>
+      <p className={cn("text-[11px] font-bold uppercase tracking-[0.16em]", textClass)}>{label}</p>
       <span className="h-px flex-1 bg-border/40" />
       <span
         className={surfaceChipClassName(
           { tone },
-          "px-2 py-0.5 text-[9px] font-bold tabular-nums",
+          "px-2 py-0.5 text-[10px] font-bold tabular-nums",
         )}
       >
         {count}
@@ -257,10 +257,10 @@ export function OggiTimeline({
         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted/40">
           <CalendarClock className="h-7 w-7 text-muted-foreground/40" aria-hidden="true" />
         </div>
-        <p className="mt-4 text-[14px] font-bold text-muted-foreground">
+        <p className="mt-4 text-sm font-bold text-muted-foreground">
           Nessuna seduta in agenda oggi
         </p>
-        <p className="mt-1.5 max-w-[220px] text-[11.5px] leading-5 text-muted-foreground/60">
+        <p className="mt-1.5 max-w-[220px] text-xs leading-5 text-muted-foreground/60">
           Usa l&apos;agenda per pianificare sedute o impegni interni.
         </p>
       </div>
@@ -284,11 +284,11 @@ export function OggiTimeline({
       {/* Header */}
       <div className="mb-7 flex items-center gap-2.5">
         <Clock3 className="h-4 w-4 text-primary/50" aria-hidden="true" />
-        <h2 className="text-[15px] font-extrabold tracking-tight text-foreground">Sedute di oggi</h2>
+        <h2 className="text-base font-extrabold tracking-tight text-foreground">Sedute di oggi</h2>
         <span
           className={surfaceChipClassName(
             { tone: "neutral" },
-            "ml-auto px-2.5 py-1 text-[9px] font-bold tabular-nums",
+            "ml-auto px-2.5 py-1 text-[10px] font-bold tabular-nums",
           )}
         >
           {sessions.filter((s) => s.client_id).length} clienti

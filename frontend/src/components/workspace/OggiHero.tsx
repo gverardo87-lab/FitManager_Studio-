@@ -174,7 +174,7 @@ export function OggiHero({
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 flex-1">
             {/* Breadcrumb — Practice Better style */}
-            <p className="flex items-center gap-2 text-[13px] font-bold uppercase tracking-[0.18em] text-muted-foreground/60 sm:text-sm">
+            <p className="flex items-center gap-2 text-sm font-bold uppercase tracking-[0.18em] text-muted-foreground/60">
               <span>Oggi</span>
               <span className="text-primary/40">|</span>
               <span className="text-primary/70">Preparazione sedute</span>

@@ -130,7 +130,7 @@ export function AvatarBriefing({ avatar }: AvatarBriefingProps) {
 
   return (
     <div className={surfaceRoleClassName({ role: "context", tone: "neutral" }, "px-3.5 py-3")}>
-      <p className="text-[12px] leading-[1.6] text-foreground/80">
+      <p className="text-xs leading-[1.6] text-foreground/80">
         {sentences.join(" ")}
       </p>
     </div>

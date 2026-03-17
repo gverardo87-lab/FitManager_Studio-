@@ -133,7 +133,7 @@ export default function OggiWorkspacePage() {
         <OggiHeroSkeleton />
         {todayQuery.isError && (
           <div className={surfaceRoleClassName({ role: "context", tone: "amber" }, "px-4 py-3")}>
-            <p className="text-[12px] font-semibold text-amber-800 dark:text-amber-300">
+            <p className="text-xs font-semibold text-amber-800 dark:text-amber-300">
               Le attenzioni extra di oggi non sono disponibili.
             </p>
           </div>
@@ -196,10 +196,10 @@ export default function OggiWorkspacePage() {
       {todayQuery.isError && (
         <div className={revealClass(12)} style={revealStyle(12)}>
           <div className={surfaceRoleClassName({ role: "context", tone: "amber" }, "px-4 py-3")}>
-            <p className="text-[12px] font-semibold text-amber-800 dark:text-amber-300">
+            <p className="text-xs font-semibold text-amber-800 dark:text-amber-300">
               Le attenzioni extra di oggi non sono disponibili.
             </p>
-            <p className="mt-1 text-[11px] text-amber-700/80 dark:text-amber-300/80">
+            <p className="mt-1 text-xs text-amber-700/80 dark:text-amber-300/80">
               La pagina resta operativa sulle sedute di oggi; i casi fuori seduta verranno ricaricati al prossimo refresh.
             </p>
           </div>
