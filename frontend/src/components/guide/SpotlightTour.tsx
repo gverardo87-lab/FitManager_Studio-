@@ -164,6 +164,13 @@ export function SpotlightTour({ tour, open, onComplete, onDismiss, onNavigate }:
       return;
     }
 
+    // Reset visible BEFORE searching — this effect is the sole owner of
+    // the visible flag. The "reset on open" effect below must NOT touch it,
+    // otherwise React's effect execution order (declaration order) causes
+    // the reset effect to run AFTER this one, overwriting visible=true
+    // back to false when the target is found synchronously (same-page).
+    setVisible(false);
+
     // Naviga se lo step lo richiede (no-op se gia' sulla pagina giusta)
     if (step.navigateTo && onNavigate) {
       onNavigate(step.navigateTo);
@@ -197,7 +204,11 @@ export function SpotlightTour({ tour, open, onComplete, onDismiss, onNavigate }:
       }
     };
 
-    tryFind();
+    // Defer first attempt to next microtask so that the reset effect
+    // (which also runs on `open` change) executes first in this batch.
+    // Without this, on same-page spotlights the synchronous tryFind()
+    // sets visible=true, then the reset effect overwrites it to false.
+    retryTimerRef.current = setTimeout(tryFind, 0);
 
     return () => {
       if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
@@ -270,11 +281,14 @@ export function SpotlightTour({ tour, open, onComplete, onDismiss, onNavigate }:
   }, [open, goNext, goBack, onDismiss]);
 
   // ── Reset step on open ──
+  // NOTE: do NOT setVisible(false) here. The tryFind effect (above) is the
+  // sole owner of `visible`. React runs effects in declaration order, so
+  // this effect runs AFTER tryFind. If tryFind found the target synchronously
+  // (same-page spotlight), setVisible(false) here would overwrite it → blank.
 
   useEffect(() => {
     if (open) {
       setCurrentStep(0);
-      setVisible(false);
     }
   }, [open]);
 
