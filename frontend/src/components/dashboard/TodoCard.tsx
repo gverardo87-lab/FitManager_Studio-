@@ -347,7 +347,7 @@ export function TodoCard({
       <div className="mb-3 flex flex-wrap items-center gap-2 pl-7">
         <h3 className="font-[family-name:var(--font-caveat)] text-2xl font-bold text-amber-900/80 sm:text-3xl dark:text-amber-200/80">Promemoria</h3>
         {todos.length > 0 && (
-          <span className="ml-auto font-[family-name:var(--font-caveat)] text-base font-semibold text-amber-700/60 dark:text-amber-400/60">
+          <span className="ml-auto font-[family-name:var(--font-caveat)] text-base font-semibold tabular-nums text-amber-700/60 dark:text-amber-400/60">
             {activeCount} attivi
           </span>
         )}
@@ -401,7 +401,8 @@ export function TodoCard({
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Scrivi un promemoria..."
+            placeholder="Scrivi un promemoria\u2026"
+            autoComplete="off"
             className="h-10 border-amber-300/60 bg-white/60 font-[family-name:var(--font-caveat)] text-lg placeholder:font-sans placeholder:text-sm dark:border-amber-800/40 dark:bg-zinc-900/40"
             maxLength={200}
           />

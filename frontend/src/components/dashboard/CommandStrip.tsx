@@ -103,7 +103,7 @@ export function CommandStrip({ summary, todayEvents, dateAnchor }: CommandStripP
             </div>
 
             {/* Status */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2" aria-live="polite">
               <span className={`h-2 w-2 rounded-full ${statusDotColor}`} />
               <span className="text-xs font-medium text-white/70">
                 {statusText}
