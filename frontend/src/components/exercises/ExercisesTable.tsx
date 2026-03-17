@@ -77,7 +77,7 @@ export function ExercisesTable({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[56px]" />
+                <TableHead className="w-[76px]" />
                 <TableHead>Nome</TableHead>
                 <TableHead className="hidden sm:table-cell">Categoria</TableHead>
                 <TableHead className="hidden md:table-cell">Muscoli</TableHead>
@@ -90,17 +90,17 @@ export function ExercisesTable({
               {exercises.map((exercise) => (
                 <TableRow key={exercise.id} className="transition-colors hover:bg-muted/50">
                   {/* Thumbnail */}
-                  <TableCell className="w-[56px] pr-0">
+                  <TableCell className="w-[76px] pr-0">
                     {exercise.thumbnail_url ? (
                       <img
                         src={getMediaUrl(exercise.thumbnail_url) ?? ""}
                         alt=""
                         loading="lazy"
-                        className="h-10 w-10 rounded-md object-cover bg-muted"
+                        className="h-[60px] w-[60px] rounded-lg object-cover bg-muted"
                       />
                     ) : (
-                      <div className="flex h-10 w-10 items-center justify-center rounded-md bg-muted/50">
-                        <Dumbbell aria-hidden="true" className="h-4 w-4 text-muted-foreground/30" />
+                      <div className="flex h-[60px] w-[60px] items-center justify-center rounded-lg bg-muted/50">
+                        <Dumbbell aria-hidden="true" className="h-5 w-5 text-muted-foreground/30" />
                       </div>
                     )}
                   </TableCell>
