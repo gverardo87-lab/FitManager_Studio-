@@ -28,9 +28,12 @@ import {
   Search,
   SunMedium,
   HandCoins,
+  Moon,
+  Sun,
   UtensilsCrossed,
 } from "lucide-react";
 
+import { useTheme } from "next-themes";
 import { LogoIcon } from "@/components/ui/logo";
 import { cn } from "@/lib/utils";
 import { getStoredTrainer, logout } from "@/lib/auth";
@@ -193,6 +196,7 @@ interface SidebarProps {
 export function Sidebar({ onNavigate, guidePulse }: SidebarProps) {
   const pathname = usePathname();
   const trainer = getStoredTrainer();
+  const { theme, setTheme } = useTheme();
 
   return (
     <div className="flex h-full flex-col">
@@ -289,15 +293,27 @@ export function Sidebar({ onNavigate, guidePulse }: SidebarProps) {
             </div>
           </div>
         )}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-full justify-start gap-2 text-muted-foreground hover:text-destructive"
-          onClick={() => logout()}
-        >
-          <LogOut className="h-4 w-4" />
-          Esci
-        </Button>
+        <div className="flex gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="flex-1 justify-start gap-2 text-muted-foreground hover:text-destructive"
+            onClick={() => logout()}
+          >
+            <LogOut aria-hidden="true" className="h-4 w-4" />
+            Esci
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="shrink-0 text-muted-foreground hover:text-foreground"
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            aria-label={theme === "dark" ? "Tema chiaro" : "Tema scuro"}
+          >
+            <Sun aria-hidden="true" className="h-4 w-4 rotate-0 scale-100 transition-transform dark:-rotate-90 dark:scale-0" />
+            <Moon aria-hidden="true" className="absolute h-4 w-4 rotate-90 scale-0 transition-transform dark:rotate-0 dark:scale-100" />
+          </Button>
+        </div>
       </div>
     </div>
   );
