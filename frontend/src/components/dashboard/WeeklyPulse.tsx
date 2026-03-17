@@ -8,7 +8,7 @@
  * indicatore "oggi" su asse X, legenda dinamica solo categorie attive.
  */
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import Link from "next/link";
 import { ArrowRight, BarChart3, CalendarCheck } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
@@ -118,7 +118,7 @@ export function WeeklyPulse({ events, dateAnchor, isLoading }: WeeklyPulseProps)
   const hasData = totalSessions > 0;
 
   // Custom XAxis tick: today highlighted + dot
-  const renderTick = ({ x, y, payload }: TickProps) => {
+  const renderTick = useCallback(({ x, y, payload }: TickProps) => {
     const idx = (DAY_LABELS as readonly string[]).indexOf(payload.value);
     const today = idx >= 0 && idx === todayIdx;
     return (
@@ -137,7 +137,7 @@ export function WeeklyPulse({ events, dateAnchor, isLoading }: WeeklyPulseProps)
         {today && <circle cx={x} cy={y + 24} r={2.5} fill="oklch(0.50 0.15 170)" />}
       </g>
     );
-  };
+  }, [todayIdx]);
 
   return (
     <div className={surfaceRoleClassName({ role: "page", tone: "neutral" }, "p-4 sm:p-5")}>
