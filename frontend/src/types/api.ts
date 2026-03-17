@@ -1810,6 +1810,7 @@ export interface Exercise {
   grip_demand: number | null;
   metabolic_demand: number | null;
 
+  thumbnail_url: string | null;
   muscle_map_url: string | null;
   is_builtin: boolean;
   created_at: string | null;

@@ -22,17 +22,14 @@ import { usePageReveal } from "@/lib/page-reveal";
 import {
   Plus,
   Dumbbell,
-  Layers,
-  User,
-  Activity,
   Eye,
   EyeOff,
+  Filter,
   Search,
   X,
   ChevronDown,
 } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -43,7 +40,6 @@ import { DeleteExerciseDialog } from "@/components/exercises/DeleteExerciseDialo
 import { useExercises } from "@/hooks/useExercises";
 import {
   CATEGORY_OPTIONS,
-  CATEGORY_LABELS,
   CATEGORY_CHIP_COLORS,
   EQUIPMENT_LABELS,
   DIFFICULTY_LABELS,
@@ -87,24 +83,6 @@ const LATERAL_ORDER: string[] = ["bilateral", "unilateral", "alternating"];
 
 // Tutte le categorie disponibili per il multi-toggle
 const ALL_CATEGORIES = new Set(CATEGORY_OPTIONS.map((o) => o.value));
-
-// ════════════════════════════════════════════════════════════
-// KPI HELPER
-// ════════════════════════════════════════════════════════════
-
-function useExerciseKpi(exercises: Exercise[]) {
-  return useMemo(() => {
-    const total = exercises.length;
-    const custom = exercises.filter((e) => !e.is_builtin).length;
-    const byCategory = exercises.reduce<Record<string, number>>((acc, e) => {
-      acc[e.categoria] = (acc[e.categoria] ?? 0) + 1;
-      return acc;
-    }, {});
-    const equipmentCount = new Set(exercises.map((e) => e.attrezzatura)).size;
-
-    return { total, custom, byCategory, equipmentCount };
-  }, [exercises]);
-}
 
 // ════════════════════════════════════════════════════════════
 // PAGE COMPONENT
@@ -151,7 +129,10 @@ export default function EserciziPage() {
   const [selectedLateral, setSelectedLateral] = useState<string | null>(
     () => (_savedFilters?.lateral as string | null) ?? _urlParams.get("lateral"),
   );
-  const [showBiomechanics, setShowBiomechanics] = useState(false);
+  const [showSecondaryFilters, setShowSecondaryFilters] = useState(() =>
+    !!(selectedPattern || selectedMuscle || selectedEquipment ||
+       selectedDifficulty || selectedForceType || selectedLateral),
+  );
   const [search, setSearch] = useState(
     () => (_savedFilters?.q as string) ?? _urlParams.get("q") ?? "",
   );
@@ -183,7 +164,6 @@ export default function EserciziPage() {
       selectedDifficulty, selectedForceType, selectedLateral, search, pathname]);
 
   const allExercises = useMemo(() => data?.items ?? [], [data]);
-  const kpi = useExerciseKpi(allExercises);
 
   // ── Pool post-categoria (base per chip dinamici) ──
 
@@ -302,7 +282,7 @@ export default function EserciziPage() {
     setSelectedDifficulty(null);
     setSelectedForceType(null);
     setSelectedLateral(null);
-    setShowBiomechanics(false);
+    setShowSecondaryFilters(false);
     setSearch("");
   }, []);
 
@@ -339,13 +319,18 @@ export default function EserciziPage() {
     setDeleteOpen(true);
   }, []);
 
+  const secondaryFilterCount = [
+    selectedPattern, selectedMuscle, selectedEquipment,
+    selectedDifficulty, selectedForceType, selectedLateral,
+  ].filter(Boolean).length;
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* ── Header ── */}
       <div data-guide="esercizi-header" className={revealClass(0, "flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between")} style={revealStyle(0)}>
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-violet-100 to-violet-200 dark:from-violet-900/40 dark:to-violet-800/30">
-            <Dumbbell className="h-5 w-5 text-violet-600 dark:text-violet-400" />
+            <Dumbbell aria-hidden="true" className="h-5 w-5 text-violet-600 dark:text-violet-400" />
           </div>
           <div>
             <h1 className="text-2xl font-bold tracking-tight">
@@ -362,60 +347,40 @@ export default function EserciziPage() {
           </div>
         </div>
         <Button onClick={handleNewExercise}>
-          <Plus className="h-4 w-4 sm:mr-2" />
+          <Plus aria-hidden="true" className="h-4 w-4 sm:mr-2" />
           <span className="hidden sm:inline">Nuovo Esercizio</span>
         </Button>
       </div>
 
-      {/* ── KPI Cards ── */}
+      {/* ── Search bar (prima dei filtri) ── */}
       {data && (
-        <div className={revealClass(50, "grid grid-cols-2 gap-3 lg:grid-cols-4")} style={revealStyle(50)}>
-          <KpiCard
-            label="Totale"
-            value={kpi.total}
-            icon={<Layers className="h-4 w-4" />}
-            gradient="from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20"
-            border="border-blue-200 dark:border-blue-800"
+        <div className={revealClass(30, "relative")} style={revealStyle(30)}>
+          <Search aria-hidden="true" className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Cerca per nome, muscolo, attrezzatura…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+            autoComplete="off"
           />
-          <KpiCard
-            label="Custom"
-            value={kpi.custom}
-            icon={<User className="h-4 w-4" />}
-            gradient="from-emerald-50 to-emerald-100 dark:from-emerald-950/30 dark:to-emerald-900/20"
-            border="border-emerald-200 dark:border-emerald-800"
-          />
-          <KpiCard
-            label="Attrezzature"
-            value={kpi.equipmentCount}
-            icon={<Dumbbell className="h-4 w-4" />}
-            gradient="from-amber-50 to-amber-100 dark:from-amber-950/30 dark:to-amber-900/20"
-            border="border-amber-200 dark:border-amber-800"
-          />
-          <div className="rounded-xl border border-violet-200 bg-gradient-to-br from-violet-50 to-violet-100 p-4 dark:border-violet-800 dark:from-violet-950/30 dark:to-violet-900/20">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Activity className="h-4 w-4" />
-              Per Categoria
-            </div>
-            <div className="mt-2 flex flex-wrap gap-1">
-              {Object.entries(kpi.byCategory).map(([cat, count]) => (
-                <Badge key={cat} variant="outline" className="text-xs">
-                  {CATEGORY_LABELS[cat] ?? cat}: {count}
-                </Badge>
-              ))}
-            </div>
-          </div>
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              aria-label="Cancella ricerca"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X aria-hidden="true" className="h-4 w-4" />
+            </button>
+          )}
         </div>
       )}
 
-      {/* ── FilterBar chip interattivi ── */}
+      {/* ── FilterBar ── */}
       {data && (
-        <div data-guide="esercizi-filters" className={revealClass(100, "rounded-xl border bg-gradient-to-br from-white to-zinc-50/50 p-3 shadow-sm dark:from-zinc-900 dark:to-zinc-800/50")} style={revealStyle(100)}>
+        <div data-guide="esercizi-filters" className={revealClass(60, "rounded-xl border bg-gradient-to-br from-white to-zinc-50/50 p-3 shadow-sm dark:from-zinc-900 dark:to-zinc-800/50")} style={revealStyle(60)}>
           <div className="flex flex-col gap-2">
-            {/* Riga 1: Categoria (multi-toggle, pattern Clienti) */}
+            {/* Riga 1: Categoria (multi-toggle) + bottone Filtri */}
             <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-              <span className="w-20 shrink-0 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                Categoria:
-              </span>
               {CATEGORY_OPTIONS.map((opt) => {
                 const active = activeCategories.has(opt.value);
                 const Icon = active ? Eye : EyeOff;
@@ -425,7 +390,7 @@ export default function EserciziPage() {
                     key={opt.value}
                     type="button"
                     onClick={() => handleToggleCategory(opt.value)}
-                    className={`flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-medium transition-all duration-200 sm:gap-1.5 sm:px-3 sm:text-xs ${
+                    className={`flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-medium transition-colors sm:gap-1.5 sm:px-3 sm:text-xs ${
                       active
                         ? "border-transparent shadow-sm"
                         : "border-dashed border-muted-foreground/30 opacity-40"
@@ -433,138 +398,80 @@ export default function EserciziPage() {
                     style={active ? { backgroundColor: color + "20", color } : undefined}
                   >
                     <div
-                      className="h-2.5 w-2.5 rounded-full transition-opacity"
+                      className="h-2.5 w-2.5 rounded-full"
                       style={{ backgroundColor: color, opacity: active ? 1 : 0.3 }}
                     />
                     {opt.label}
-                    <Icon className="h-3 w-3" />
+                    <Icon aria-hidden="true" className="h-3 w-3" />
                   </button>
                 );
               })}
+
+              {/* Bottone filtri secondari */}
+              <button
+                type="button"
+                onClick={() => setShowSecondaryFilters((v) => !v)}
+                className={`ml-auto inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                  showSecondaryFilters || secondaryFilterCount > 0
+                    ? "border-primary/30 bg-primary/5 text-primary"
+                    : "border-muted-foreground/30 text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Filter aria-hidden="true" className="h-3 w-3" />
+                Filtri
+                {secondaryFilterCount > 0 && (
+                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground">
+                    {secondaryFilterCount}
+                  </span>
+                )}
+                <ChevronDown aria-hidden="true" className={`h-3 w-3 transition-transform ${showSecondaryFilters ? "rotate-180" : ""}`} />
+              </button>
             </div>
 
-            {/* Riga 2: Pattern movimento (select-one) */}
-            {availablePatterns.length > 0 && (
-              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                <span className="w-20 shrink-0 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                  Movimento:
-                </span>
-                {availablePatterns.map(({ value, count }) => (
-                  <SelectOneChip
-                    key={value}
-                    label={PATTERN_CHIP_LABELS[value] ?? value}
-                    count={count}
-                    active={selectedPattern === value}
-                    onClick={() => setSelectedPattern(selectedPattern === value ? null : value)}
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* Riga 3: Muscolo (select-one, ordinamento anatomico) */}
-            {availableMuscles.length > 0 && (
-              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                <span className="w-20 shrink-0 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                  Muscolo:
-                </span>
-                {availableMuscles.map(({ value, count }) => (
-                  <SelectOneChip
-                    key={value}
-                    label={MUSCLE_LABELS[value] ?? value}
-                    count={count}
-                    active={selectedMuscle === value}
-                    onClick={() => setSelectedMuscle(selectedMuscle === value ? null : value)}
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* Riga 4: Attrezzatura (select-one) */}
-            {availableEquipment.length > 0 && (
-              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                <span className="w-20 shrink-0 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                  Attrezz.:
-                </span>
-                {availableEquipment.map(({ value, count }) => (
-                  <SelectOneChip
-                    key={value}
-                    label={EQUIPMENT_LABELS[value] ?? value}
-                    count={count}
-                    active={selectedEquipment === value}
-                    onClick={() => setSelectedEquipment(selectedEquipment === value ? null : value)}
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* Riga 5: Livello (select-one) */}
-            {availableDifficulties.length > 0 && (
-              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                <span className="w-20 shrink-0 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                  Livello:
-                </span>
-                {availableDifficulties.map(({ value, count }) => (
-                  <SelectOneChip
-                    key={value}
-                    label={DIFFICULTY_LABELS[value] ?? value}
-                    count={count}
-                    active={selectedDifficulty === value}
-                    onClick={() => setSelectedDifficulty(selectedDifficulty === value ? null : value)}
-                  />
-                ))}
-
-                {/* Biomeccanica toggle */}
-                {hasBiomechanicsData && (
-                  <button
-                    onClick={() => setShowBiomechanics(!showBiomechanics)}
-                    className={`ml-auto inline-flex items-center gap-1 text-[11px] transition-colors ${
-                      showBiomechanics || selectedForceType || selectedLateral
-                        ? "text-primary font-medium"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <ChevronDown className={`h-3 w-3 transition-transform ${showBiomechanics ? "rotate-180" : ""}`} />
-                    Biomeccanica
-                  </button>
-                )}
-              </div>
-            )}
-
-            {/* Righe biomeccanica (collapsibili) */}
-            {showBiomechanics && (
+            {/* Filtri secondari (collassabili) */}
+            {showSecondaryFilters && (
               <>
-                {availableForceTypes.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                    <span className="w-20 shrink-0 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                      Forza:
-                    </span>
-                    {availableForceTypes.map(({ value, count }) => (
-                      <SelectOneChip
-                        key={value}
-                        label={FORCE_TYPE_LABELS[value] ?? value}
-                        count={count}
-                        active={selectedForceType === value}
-                        onClick={() => setSelectedForceType(selectedForceType === value ? null : value)}
-                      />
+                {availablePatterns.length > 0 && (
+                  <FilterRow label="Movimento">
+                    {availablePatterns.map(({ value, count }) => (
+                      <SelectOneChip key={value} label={PATTERN_CHIP_LABELS[value] ?? value} count={count} active={selectedPattern === value} onClick={() => setSelectedPattern(selectedPattern === value ? null : value)} />
                     ))}
-                  </div>
+                  </FilterRow>
                 )}
-
-                {availableLaterals.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                    <span className="w-20 shrink-0 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                      Lateralita:
-                    </span>
-                    {availableLaterals.map(({ value, count }) => (
-                      <SelectOneChip
-                        key={value}
-                        label={LATERAL_PATTERN_LABELS[value] ?? value}
-                        count={count}
-                        active={selectedLateral === value}
-                        onClick={() => setSelectedLateral(selectedLateral === value ? null : value)}
-                      />
+                {availableMuscles.length > 0 && (
+                  <FilterRow label="Muscolo">
+                    {availableMuscles.map(({ value, count }) => (
+                      <SelectOneChip key={value} label={MUSCLE_LABELS[value] ?? value} count={count} active={selectedMuscle === value} onClick={() => setSelectedMuscle(selectedMuscle === value ? null : value)} />
                     ))}
-                  </div>
+                  </FilterRow>
+                )}
+                {availableEquipment.length > 0 && (
+                  <FilterRow label="Attrezz.">
+                    {availableEquipment.map(({ value, count }) => (
+                      <SelectOneChip key={value} label={EQUIPMENT_LABELS[value] ?? value} count={count} active={selectedEquipment === value} onClick={() => setSelectedEquipment(selectedEquipment === value ? null : value)} />
+                    ))}
+                  </FilterRow>
+                )}
+                {availableDifficulties.length > 0 && (
+                  <FilterRow label="Livello">
+                    {availableDifficulties.map(({ value, count }) => (
+                      <SelectOneChip key={value} label={DIFFICULTY_LABELS[value] ?? value} count={count} active={selectedDifficulty === value} onClick={() => setSelectedDifficulty(selectedDifficulty === value ? null : value)} />
+                    ))}
+                  </FilterRow>
+                )}
+                {availableForceTypes.length > 0 && (
+                  <FilterRow label="Forza">
+                    {availableForceTypes.map(({ value, count }) => (
+                      <SelectOneChip key={value} label={FORCE_TYPE_LABELS[value] ?? value} count={count} active={selectedForceType === value} onClick={() => setSelectedForceType(selectedForceType === value ? null : value)} />
+                    ))}
+                  </FilterRow>
+                )}
+                {availableLaterals.length > 0 && (
+                  <FilterRow label="Lateralita">
+                    {availableLaterals.map(({ value, count }) => (
+                      <SelectOneChip key={value} label={LATERAL_PATTERN_LABELS[value] ?? value} count={count} active={selectedLateral === value} onClick={() => setSelectedLateral(selectedLateral === value ? null : value)} />
+                    ))}
+                  </FilterRow>
                 )}
               </>
             )}
@@ -572,15 +479,10 @@ export default function EserciziPage() {
             {/* Reset filtri */}
             {isFiltered && (
               <div className="flex items-center justify-between pt-1 border-t border-muted/50">
-                <span className="text-[11px] text-muted-foreground">
-                  {filtered.length} eserciz{filtered.length === 1 ? "io" : "i"} trovati
+                <span className="text-xs text-muted-foreground">
+                  {filtered.length} eserciz{filtered.length === 1 ? "io" : "i"} trovat{filtered.length === 1 ? "o" : "i"}
                 </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={resetFilters}
-                  className="h-6 text-xs text-muted-foreground"
-                >
+                <Button variant="ghost" size="sm" onClick={resetFilters} className="h-6 text-xs text-muted-foreground">
                   Resetta filtri
                 </Button>
               </div>
@@ -589,29 +491,8 @@ export default function EserciziPage() {
         </div>
       )}
 
-      {/* ── Ricerca testuale ── */}
-      {data && (
-        <div className={revealClass(130, "relative")} style={revealStyle(130)}>
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Cerca per nome, muscolo, attrezzatura..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
-          {search && (
-            <button
-              onClick={() => setSearch("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          )}
-        </div>
-      )}
-
       {/* ── Content ── */}
-      <div className={revealClass(160)} style={revealStyle(160)}>
+      <div className={revealClass(90)} style={revealStyle(90)}>
         {isLoading && <TableSkeleton />}
 
         {isError && (
@@ -654,6 +535,18 @@ export default function EserciziPage() {
 // SHARED UI COMPONENTS
 // ════════════════════════════════════════════════════════════
 
+/** Riga filtro con label a sinistra. */
+function FilterRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+      <span className="w-20 shrink-0 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+        {label}:
+      </span>
+      {children}
+    </div>
+  );
+}
+
 /** Chip select-one: bg-primary quando attivo, muted altrimenti */
 function SelectOneChip({
   label,
@@ -681,30 +574,6 @@ function SelectOneChip({
         {count}
       </span>
     </button>
-  );
-}
-
-function KpiCard({
-  label,
-  value,
-  icon,
-  gradient,
-  border,
-}: {
-  label: string;
-  value: number;
-  icon: React.ReactNode;
-  gradient: string;
-  border: string;
-}) {
-  return (
-    <div className={`rounded-xl border ${border} bg-gradient-to-br ${gradient} p-4`}>
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        {icon}
-        {label}
-      </div>
-      <p className="mt-1 text-2xl font-bold tabular-nums">{value}</p>
-    </div>
   );
 }
 

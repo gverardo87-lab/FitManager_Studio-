@@ -8,6 +8,7 @@
 
 import Link from "next/link";
 import { MoreHorizontal, Pencil, Trash2, Dumbbell, Lock } from "lucide-react";
+import { getMediaUrl } from "@/lib/media";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -76,6 +77,7 @@ export function ExercisesTable({
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[56px]" />
                 <TableHead>Nome</TableHead>
                 <TableHead className="hidden sm:table-cell">Categoria</TableHead>
                 <TableHead className="hidden md:table-cell">Muscoli</TableHead>
@@ -87,6 +89,21 @@ export function ExercisesTable({
             <TableBody>
               {exercises.map((exercise) => (
                 <TableRow key={exercise.id} className="transition-colors hover:bg-muted/50">
+                  {/* Thumbnail */}
+                  <TableCell className="w-[56px] pr-0">
+                    {exercise.thumbnail_url ? (
+                      <img
+                        src={getMediaUrl(exercise.thumbnail_url) ?? ""}
+                        alt=""
+                        loading="lazy"
+                        className="h-10 w-10 rounded-md object-cover bg-muted"
+                      />
+                    ) : (
+                      <div className="flex h-10 w-10 items-center justify-center rounded-md bg-muted/50">
+                        <Dumbbell aria-hidden="true" className="h-4 w-4 text-muted-foreground/30" />
+                      </div>
+                    )}
+                  </TableCell>
                   {/* Nome */}
                   <TableCell>
                     <div className="flex items-center gap-2">

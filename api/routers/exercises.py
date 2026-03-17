@@ -88,8 +88,11 @@ def _to_response(
     muscoli_dettaglio: list | None = None,
     articolazioni: list | None = None,
     condizioni: list | None = None,
+    thumbnail_url: str | None = None,
 ) -> ExerciseResponse:
     resp = ExerciseResponse.model_validate(exercise)
+    if thumbnail_url is not None:
+        resp.thumbnail_url = thumbnail_url
     if media is not None:
         resp.media = [ExerciseMediaResponse.model_validate(m) for m in media]
     if relazioni is not None:
@@ -356,8 +359,32 @@ def list_exercises(
         query.order_by(Exercise.nome).offset(offset).limit(page_size)
     ).all()
 
+    # Batch fetch thumbnail: first "fdb:exec_start" image per exercise
+    exercise_ids = [e.id for e in exercises if e.id is not None]
+    thumbnail_map: dict[int, str] = {}
+    if exercise_ids:
+        all_media = session.exec(
+            select(ExerciseMedia)
+            .where(
+                ExerciseMedia.exercise_id.in_(exercise_ids),
+                ExerciseMedia.tipo == "image",
+            )
+            .order_by(ExerciseMedia.exercise_id, ExerciseMedia.ordine)
+        ).all()
+        for m in all_media:
+            eid = m.exercise_id
+            if eid in thumbnail_map:
+                # Prefer fdb:exec_start over existing
+                if m.descrizione and "exec_start" in m.descrizione:
+                    thumbnail_map[eid] = m.url
+            else:
+                thumbnail_map[eid] = m.url
+
     return ExerciseListResponse(
-        items=[_to_response(e) for e in exercises],
+        items=[
+            _to_response(e, thumbnail_url=thumbnail_map.get(e.id))
+            for e in exercises
+        ],
         total=total,
         page=page,
         page_size=page_size,

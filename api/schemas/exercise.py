@@ -363,6 +363,7 @@ class ExerciseResponse(BaseModel):
     grip_demand: Optional[int] = None
     metabolic_demand: Optional[int] = None
 
+    thumbnail_url: Optional[str] = None
     muscle_map_url: Optional[str] = None
     is_builtin: bool = False
     created_at: Optional[datetime] = None
