@@ -9,7 +9,7 @@ from pydantic import BaseModel, ConfigDict, model_validator
 
 HealthStatus = Literal["ok", "degraded"]
 ConnectionStatus = Literal["connected", "disconnected"]
-LicenseStatus = Literal["valid", "missing", "invalid", "expired", "unconfigured"]
+LicenseStatus = Literal["valid", "missing", "invalid", "expired", "unconfigured", "wrong_machine"]
 AppMode = Literal["development", "production"]
 DistributionMode = Literal["source", "installer"]
 ConnectivityProfile = Literal["local_only", "trusted_devices", "public_portal"]
@@ -46,6 +46,8 @@ class HealthResponse(BaseModel):
     distribution_mode: DistributionMode
     public_portal_enabled: bool
     public_base_url_configured: bool
+    machine_id: str
+    machine_id_full: str
     started_at: datetime
     uptime_seconds: int
 

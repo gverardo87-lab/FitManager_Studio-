@@ -45,6 +45,8 @@ export function mapLicenseStatus(
       return { label: "Non valida", tone: "critical" };
     case "unconfigured":
       return { label: "Non configurata", tone: "warning" };
+    case "wrong_machine":
+      return { label: "Computer non autorizzato", tone: "critical" };
     default:
       return { label: status, tone: "neutral" };
   }

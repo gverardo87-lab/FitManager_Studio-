@@ -31,7 +31,7 @@ DEFAULT_PUBLIC_KEY_PEM = ""
 PUBLIC_KEY_FILE = DATA_DIR / "license_public.pem"
 
 
-LicenseStatus = Literal["valid", "missing", "invalid", "expired", "unconfigured"]
+LicenseStatus = Literal["valid", "missing", "invalid", "expired", "unconfigured", "wrong_machine"]
 
 
 class LicenseClaims(BaseModel):
@@ -40,6 +40,7 @@ class LicenseClaims(BaseModel):
     client_id: str = Field(min_length=1)
     tier: str = Field(min_length=1)
     max_clients: int | None = Field(default=None, ge=1)
+    machine_id: str | None = None
     exp: int
 
 
@@ -143,6 +144,21 @@ def check_license(
 
     try:
         claims = _decode_claims(token, key)
+
+        # Hardware binding: se il JWT contiene machine_id, verifica che
+        # corrisponda al fingerprint della macchina corrente.
+        if claims.machine_id:
+            from api.services.machine_fingerprint import get_machine_fingerprint
+
+            current_fp = get_machine_fingerprint()
+            if current_fp != "unavailable" and claims.machine_id != current_fp:
+                return LicenseCheckResult(
+                    status="wrong_machine",
+                    message="Licenza associata a un altro computer",
+                    expires_at=_to_utc_datetime(claims.exp),
+                    claims=claims,
+                )
+
         return LicenseCheckResult(
             status="valid",
             message="Licenza valida",

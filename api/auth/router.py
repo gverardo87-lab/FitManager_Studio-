@@ -64,6 +64,7 @@ def register(data: TrainerRegister, session: Session = Depends(get_session)):
         trainer_id=trainer.id,
         nome=trainer.nome,
         cognome=trainer.cognome,
+        email=trainer.email,
     )
 
 
@@ -120,4 +121,5 @@ def login(data: TrainerLogin, session: Session = Depends(get_session)):
         trainer_id=trainer.id,
         nome=trainer.nome,
         cognome=trainer.cognome,
+        email=trainer.email,
     )

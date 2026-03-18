@@ -59,6 +59,14 @@ cd frontend && npx next build                                      # frontend bu
 # --- Utility ---
 bash tools/scripts/kill-port.sh 8001                               # kill zombie uvicorn
 bash tools/scripts/restart-backend.sh                              # restart backend dev
+
+# --- Licenza (admin) ---
+python -m tools.admin_scripts.generate_license generate-keys       # genera keypair RSA
+python -m tools.admin_scripts.generate_license fingerprint         # mostra fingerprint macchina
+python -m tools.admin_scripts.generate_license sign \              # firma licenza per un cliente
+  --client "nome-cognome" --tier pro --months 12 \
+  --machine-id <SHA256_64_CHAR> --output cliente.key
+python -m tools.admin_scripts.generate_license verify data/license.key  # verifica licenza
 ```
 
 ## 3 database — 3 session factory
@@ -104,6 +112,7 @@ Tutte con PRAGMA: `journal_mode=WAL`, `foreign_keys=ON`, `busy_timeout=5000`.
 - **`extra: "forbid"` su Pydantic**: un campo typo nel payload = 422 silenzioso. Dopo refactor payload, verificare sempre nomi campo vs schema.
 - **Proxy Next.js intercetta PRIMA dei rewrite**: `/api` in `PUBLIC_ROUTES` (auth JWT gestita dal backend).
 - **Seed data**: 344 esercizi JSON + 426 relazioni + 494 media in `data/exercises/`, seed idempotente al startup.
+- **Licenza con hardware binding**: JWT RS256 con `machine_id` (SHA-256 di CPU+Board+BIOS via PowerShell). Generazione via CLI (`tools/admin_scripts/generate_license.py`). Flusso completo in `docs/LICENSE_ACTIVATION.md`. `/licenza` NON e' in `AUTH_ONLY_PAGES` (il trainer loggato senza licenza deve vederla).
 
 ## Motori scientifici
 
@@ -144,6 +153,7 @@ Skills installate in `.agents/skills/` — knowledge base attive per audit e cod
 | `LAUNCH_SCOPE.md` | Cosa e' in scope per il lancio | Quando prioritizzi feature |
 | `POSTMORTEMS.md` | Lezioni da errori passati | Quando incontri un pattern sospetto |
 | `AGENTS.md` | Delivery loop, quality gates, commit standard | Quando serve contesto operativo agenti |
+| `docs/LICENSE_ACTIVATION.md` | Attivazione licenza, hardware binding, CLI admin | Quando tocchi licenza, fingerprint, setup |
 
 ## Commit
 

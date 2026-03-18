@@ -45,6 +45,7 @@ a = Analysis(
         'fastapi',
         'starlette',
         'starlette.middleware',
+        'starlette.middleware.base',
         'starlette.middleware.cors',
         'starlette.staticfiles',
         'starlette.responses',

@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+from unittest.mock import patch
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -109,6 +110,98 @@ def test_check_license_expired(tmp_path):
     assert result.claims is not None
     assert result.expires_at is not None
     assert result.expires_at < datetime.now(timezone.utc)
+
+
+def test_check_license_valid_with_matching_machine_id(tmp_path):
+    """Licenza con machine_id che corrisponde alla macchina corrente = valid."""
+    private_key, public_key = _generate_rsa_keypair()
+    machine_fp = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+    token = jwt.encode(
+        {
+            "client_id": "test",
+            "tier": "pro",
+            "machine_id": machine_fp,
+            "exp": int((datetime.now(timezone.utc) + timedelta(days=30)).timestamp()),
+        },
+        private_key,
+        algorithm=LICENSE_ALGORITHM,
+    )
+    license_file = tmp_path / "license.key"
+    license_file.write_text(token, encoding="utf-8")
+
+    with patch(
+        "api.services.machine_fingerprint.get_machine_fingerprint",
+        return_value=machine_fp,
+    ):
+        result = check_license(token_path=license_file, public_key=public_key)
+
+    assert result.status == "valid"
+
+
+def test_check_license_wrong_machine(tmp_path):
+    """Licenza con machine_id diverso dalla macchina corrente = wrong_machine."""
+    private_key, public_key = _generate_rsa_keypair()
+    token = jwt.encode(
+        {
+            "client_id": "test",
+            "tier": "pro",
+            "machine_id": "aaaa" * 16,
+            "exp": int((datetime.now(timezone.utc) + timedelta(days=30)).timestamp()),
+        },
+        private_key,
+        algorithm=LICENSE_ALGORITHM,
+    )
+    license_file = tmp_path / "license.key"
+    license_file.write_text(token, encoding="utf-8")
+
+    with patch(
+        "api.services.machine_fingerprint.get_machine_fingerprint",
+        return_value="bbbb" * 16,
+    ):
+        result = check_license(token_path=license_file, public_key=public_key)
+
+    assert result.status == "wrong_machine"
+    assert result.message == "Licenza associata a un altro computer"
+    assert result.claims is not None
+
+
+def test_check_license_no_machine_id_backward_compat(tmp_path):
+    """Licenza senza machine_id (backward compat) = valid."""
+    private_key, public_key = _generate_rsa_keypair()
+    token = _create_license_token(
+        private_key,
+        datetime.now(timezone.utc) + timedelta(days=30),
+    )
+    license_file = tmp_path / "license.key"
+    license_file.write_text(token, encoding="utf-8")
+
+    result = check_license(token_path=license_file, public_key=public_key)
+    assert result.status == "valid"
+
+
+def test_check_license_machine_unavailable_skips_check(tmp_path):
+    """Se fingerprint non disponibile, il check machine viene saltato."""
+    private_key, public_key = _generate_rsa_keypair()
+    token = jwt.encode(
+        {
+            "client_id": "test",
+            "tier": "pro",
+            "machine_id": "aaaa" * 16,
+            "exp": int((datetime.now(timezone.utc) + timedelta(days=30)).timestamp()),
+        },
+        private_key,
+        algorithm=LICENSE_ALGORITHM,
+    )
+    license_file = tmp_path / "license.key"
+    license_file.write_text(token, encoding="utf-8")
+
+    with patch(
+        "api.services.machine_fingerprint.get_machine_fingerprint",
+        return_value="unavailable",
+    ):
+        result = check_license(token_path=license_file, public_key=public_key)
+
+    assert result.status == "valid"
 
 
 def test_check_license_invalid_signature(tmp_path):

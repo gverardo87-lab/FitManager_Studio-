@@ -257,6 +257,11 @@ export function SystemStatusSection() {
               tone: portalTone,
             }}
           />
+          <StatusItem
+            label="Codice macchina"
+            value={data.machine_id}
+            badge={{ label: "Hardware ID", tone: "neutral" }}
+          />
           <StatusItem label="Avvio istanza" value={formatDateTime(data.started_at)} />
           <StatusItem label="Uptime" value={formatUptime(data.uptime_seconds)} />
         </div>

@@ -19,6 +19,7 @@ from pathlib import Path
 
 from fastapi import Depends, FastAPI, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 from starlette.staticfiles import StaticFiles
 from sqlmodel import Session
@@ -238,8 +239,50 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS: regex per accettare localhost, LAN (192.168.x.x), Tailscale (100.x.x.x)
-# Nessun IP hardcodato — funziona da qualsiasi rete automaticamente.
+def _is_license_exempt_path(path: str) -> bool:
+    if path in LICENSE_EXEMPT_PATHS:
+        return True
+    return any(path.startswith(prefix) for prefix in LICENSE_EXEMPT_PREFIXES)
+
+
+class LicenseMiddleware(BaseHTTPMiddleware):
+    """Middleware licenza (gated): enforcement opzionale via env.
+
+    Registrato con add_middleware PRIMA di CORSMiddleware, cosi' Starlette
+    lo esegue DENTRO il layer CORS (CORS = outermost). Senza questo,
+    le response 403 non avrebbero header CORS e il browser bloccherebbe
+    il body — impedendo al frontend di leggere license_status e fare redirect.
+    """
+
+    async def dispatch(self, request: Request, call_next):
+        if not is_license_enforcement_enabled():
+            return await call_next(request)
+
+        path = request.url.path
+        if _is_license_exempt_path(path):
+            return await call_next(request)
+
+        result = check_license()
+        request.state.license_status = result.status
+
+        if result.is_valid:
+            return await call_next(request)
+
+        return JSONResponse(
+            status_code=status.HTTP_403_FORBIDDEN,
+            content={
+                "detail": result.message,
+                "license_status": result.status,
+            },
+        )
+
+
+# IMPORTANTE: ordine add_middleware conta. Starlette usa insert(0, ...) quindi
+# l'ULTIMO add_middleware diventa il layer PIU' ESTERNO nella catena middleware.
+# Registrare LicenseMiddleware PRIMA di CORSMiddleware garantisce che CORS
+# avvolga License — cosi' le response 403 del license check hanno header CORS
+# e il browser puo' leggere il body (license_status) per fare redirect a /licenza.
+app.add_middleware(LicenseMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origin_regex=r"^http://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|100\.\d+\.\d+\.\d+)(:\d+)?$",
@@ -248,36 +291,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-def _is_license_exempt_path(path: str) -> bool:
-    if path in LICENSE_EXEMPT_PATHS:
-        return True
-    return any(path.startswith(prefix) for prefix in LICENSE_EXEMPT_PREFIXES)
-
-
-@app.middleware("http")
-async def license_middleware(request: Request, call_next):
-    """Middleware licenza (gated): enforcement opzionale via env."""
-    if not is_license_enforcement_enabled():
-        return await call_next(request)
-
-    path = request.url.path
-    if _is_license_exempt_path(path):
-        return await call_next(request)
-
-    result = check_license()
-    request.state.license_status = result.status
-
-    if result.is_valid:
-        return await call_next(request)
-
-    return JSONResponse(
-        status_code=status.HTTP_403_FORBIDDEN,
-        content={
-            "detail": result.message,
-            "license_status": result.status,
-        },
-    )
 
 # Static files: serve media (immagini/video esercizi)
 # Usa DATA_DIR da config.py (gestisce PyInstaller frozen correttamente)

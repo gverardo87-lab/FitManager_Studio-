@@ -22,8 +22,9 @@ const TOKEN_COOKIE = "fitmanager_token";
 // che gestisce autonomamente l'auth JWT. Il proxy non deve interferire.
 const PUBLIC_ROUTES = ["/login", "/register", "/licenza", "/setup", "/public", "/api", "/health"];
 
-// Rotte da cui ridirigere gli utenti già autenticati (solo pagine auth, non API)
-const AUTH_ONLY_PAGES = ["/login", "/register", "/licenza", "/setup"];
+// Rotte da cui ridirigere gli utenti già autenticati (solo pagine auth, non API).
+// /licenza NON è qui: un trainer loggato ma senza licenza valida deve poterla vedere.
+const AUTH_ONLY_PAGES = ["/login", "/register", "/setup"];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;

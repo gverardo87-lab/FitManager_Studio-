@@ -15,6 +15,7 @@ from api.schemas.system import (
     SupportSnapshotResponse,
 )
 from api.services.license import check_license
+from api.services.machine_fingerprint import get_machine_fingerprint, get_machine_fingerprint_short
 
 BACKUP_DIR = DATA_DIR / "backups"
 APP_STARTED_AT = datetime.now(timezone.utc)
@@ -109,6 +110,8 @@ def build_health_response(
         distribution_mode=get_distribution_mode(),
         public_portal_enabled=is_public_portal_enabled(),
         public_base_url_configured=is_public_base_url_configured(),
+        machine_id=get_machine_fingerprint_short(),
+        machine_id_full=get_machine_fingerprint(),
         started_at=APP_STARTED_AT,
         uptime_seconds=int((datetime.now(timezone.utc) - APP_STARTED_AT).total_seconds()),
     )

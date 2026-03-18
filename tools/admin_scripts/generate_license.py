@@ -81,6 +81,8 @@ def cmd_sign(args: argparse.Namespace) -> None:
     }
     if args.max_clients is not None:
         claims["max_clients"] = args.max_clients
+    if args.machine_id is not None:
+        claims["machine_id"] = args.machine_id
 
     token = jwt.encode(claims, private_key_pem, algorithm=LICENSE_ALGORITHM)
 
@@ -94,6 +96,8 @@ def cmd_sign(args: argparse.Namespace) -> None:
     print(f"  Scadenza: {exp.strftime('%Y-%m-%d')}")
     if args.max_clients:
         print(f"  Max clienti: {args.max_clients}")
+    if args.machine_id:
+        print(f"  Machine ID: {args.machine_id}")
     print(f"  Output: {output_path}")
 
 
@@ -122,8 +126,39 @@ def cmd_verify(args: argparse.Namespace) -> None:
         print(f"Tier: {result.claims.tier}")
         if result.claims.max_clients:
             print(f"Max clienti: {result.claims.max_clients}")
+        if result.claims.machine_id:
+            print(f"Machine ID (nel token): {result.claims.machine_id}")
+
+            from api.services.machine_fingerprint import get_machine_fingerprint
+
+            current = get_machine_fingerprint()
+            if current == "unavailable":
+                print("Machine ID (corrente): non disponibile")
+            elif current == result.claims.machine_id:
+                print(f"Machine ID (corrente): {current} -- MATCH")
+            else:
+                print(f"Machine ID (corrente): {current} -- MISMATCH!")
 
     sys.exit(0 if result.is_valid else 1)
+
+
+def cmd_fingerprint(_args: argparse.Namespace) -> None:
+    """Mostra il fingerprint hardware della macchina corrente."""
+    from api.services.machine_fingerprint import (
+        get_machine_fingerprint,
+        get_machine_fingerprint_display,
+        get_machine_fingerprint_short,
+    )
+
+    full = get_machine_fingerprint()
+    short = get_machine_fingerprint_short()
+    display = get_machine_fingerprint_display()
+
+    print(f"Machine ID (completo): {full}")
+    print(f"Machine ID (breve):    {short}")
+    print(f"Machine ID (display):  {display}")
+    print()
+    print(f"Usa il valore completo con: --machine-id {full}")
 
 
 def main() -> None:
@@ -142,11 +177,15 @@ def main() -> None:
     sign.add_argument("--tier", required=True, choices=["basic", "pro", "enterprise"], help="Tier licenza")
     sign.add_argument("--months", type=int, default=12, help="Durata in mesi (default 12)")
     sign.add_argument("--max-clients", type=int, default=None, help="Limite clienti (default illimitato)")
+    sign.add_argument("--machine-id", default=None, help="Fingerprint hardware (SHA-256) per binding macchina")
     sign.add_argument("--output", default="data/license.key", help="Path output (default data/license.key)")
 
     # verify
     ver = sub.add_parser("verify", help="Verifica un file licenza")
     ver.add_argument("license_file", help="Path al file .key da verificare")
+
+    # fingerprint
+    sub.add_parser("fingerprint", help="Mostra fingerprint hardware macchina corrente")
 
     args = parser.parse_args()
 
@@ -156,6 +195,8 @@ def main() -> None:
         cmd_sign(args)
     elif args.command == "verify":
         cmd_verify(args)
+    elif args.command == "fingerprint":
+        cmd_fingerprint(args)
 
 
 if __name__ == "__main__":

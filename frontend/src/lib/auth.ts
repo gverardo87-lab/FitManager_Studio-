@@ -34,6 +34,7 @@ export interface StoredTrainer {
   id: number;
   nome: string;
   cognome: string;
+  email: string;
 }
 
 // ════════════════════════════════════════════════════════════
@@ -61,6 +62,7 @@ export async function login(credentials: TrainerLogin): Promise<StoredTrainer> {
     id: data.trainer_id,
     nome: data.nome,
     cognome: data.cognome,
+    email: data.email,
   };
   Cookies.set(TRAINER_COOKIE, JSON.stringify(trainer), {
     expires: COOKIE_EXPIRES_DAYS,
@@ -95,6 +97,7 @@ export async function register(
     id: data.trainer_id,
     nome: data.nome,
     cognome: data.cognome,
+    email: data.email,
   };
   Cookies.set(TRAINER_COOKIE, JSON.stringify(trainer), {
     expires: COOKIE_EXPIRES_DAYS,

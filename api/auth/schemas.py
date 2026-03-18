@@ -38,6 +38,7 @@ class TokenResponse(BaseModel):
     trainer_id: int
     nome: str
     cognome: str
+    email: str
 
 
 class PasswordResetRequest(BaseModel):

@@ -74,6 +74,7 @@ export interface TokenResponse {
   trainer_id: number;
   nome: string;
   cognome: string;
+  email: string;
 }
 
 export type InstallationHealthStatus = "ok" | "degraded";
@@ -83,7 +84,8 @@ export type InstallationLicenseStatus =
   | "missing"
   | "invalid"
   | "expired"
-  | "unconfigured";
+  | "unconfigured"
+  | "wrong_machine";
 export type InstallationAppMode = "development" | "production";
 export type InstallationDistributionMode = "source" | "installer";
 export type InstallationConnectivityProfile =
@@ -124,6 +126,8 @@ export interface InstallationHealthResponse {
   distribution_mode: InstallationDistributionMode;
   public_portal_enabled: boolean;
   public_base_url_configured: boolean;
+  machine_id: string;
+  machine_id_full: string;
   started_at: string;
   uptime_seconds: number;
 }
