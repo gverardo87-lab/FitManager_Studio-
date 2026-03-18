@@ -202,11 +202,11 @@ export const CHAPTERS: Chapter[] = [
         description: "Rate mensili automatiche con un click, oppure aggiungi rate manuali. Ogni rata ha data scadenza, importo e stato (pendente, parziale, saldata).",
         action: { label: "Mostrami", type: "spotlight", payload: "genera-rate" },
         spotlight: {
-          target: "contratti-table-first-row",
+          target: "contratto-piano-rate",
           title: "Piano Rateale",
-          description: "Apri il dettaglio contratto cliccando qui. Nella sezione Rate trovi il bottone \"Genera Piano\" per creare rate mensili automatiche.",
-          placement: "bottom",
-          navigateTo: "/contratti",
+          description: "Qui gestisci le rate: genera un piano automatico, aggiungi rate manuali, oppure clicca \"Paga\" per registrare un pagamento.",
+          placement: "top",
+          navigateTo: "/contratti/:first",
         },
       },
       {
@@ -215,11 +215,11 @@ export const CHAPTERS: Chapter[] = [
         description: "Dal dettaglio contratto, clicca \"Paga\" sulla rata. Importo completo o parziale, con metodo selezionabile (contanti, POS, bonifico). Il saldo Cassa si aggiorna automaticamente.",
         action: { label: "Mostrami", type: "spotlight", payload: "registra-pagamento" },
         spotlight: {
-          target: "contratti-table-first-row",
+          target: "contratto-piano-rate",
           title: "Pagamento Rate",
-          description: "Apri il contratto per accedere al piano rate. Clicca \"Paga\" su una rata per registrare il pagamento (completo o parziale).",
-          placement: "bottom",
-          navigateTo: "/contratti",
+          description: "Clicca \"Paga\" su una rata per registrare il pagamento. Puoi pagare l'intero o un parziale con metodo selezionabile.",
+          placement: "top",
+          navigateTo: "/contratti/:first",
         },
       },
       {
@@ -273,6 +273,61 @@ export const CHAPTERS: Chapter[] = [
           navigateTo: "/contratti",
         },
       },
+      // ── Azioni pagina dettaglio contratto ──
+      // navigateTo: "/contratti/:first" → risolto a runtime da useHelpBot
+      // con l'ID del primo contratto in cache React Query.
+      {
+        id: "esplora-header-contratto",
+        title: "Esplora l'header del contratto",
+        description: "In alto nel dettaglio: nome cliente (link al profilo), tipo pacchetto, badge Attivo/Chiuso, date inizio e scadenza. A destra i bottoni Modifica ed Elimina.",
+        action: { label: "Mostrami", type: "spotlight", payload: "esplora-header-contratto" },
+        spotlight: {
+          target: "contratto-header",
+          title: "Header Contratto",
+          description: "Nome cliente cliccabile, tipo pacchetto, badge stato, date e bottoni Modifica/Elimina. Da qui controlli identita' e stato del contratto a colpo d'occhio.",
+          placement: "bottom",
+          navigateTo: "/contratti/:first",
+        },
+      },
+      {
+        id: "gestisci-piano-rate",
+        title: "Gestisci il piano rate",
+        description: "Nel tab Pagamenti: genera un piano automatico (numero rate, frequenza, data inizio) oppure aggiungi rate manuali. Ogni rata mostra stato, scadenza, importo e storico pagamenti.",
+        action: { label: "Mostrami", type: "spotlight", payload: "gestisci-piano-rate" },
+        spotlight: {
+          target: "contratto-piano-rate",
+          title: "Piano Pagamenti",
+          description: "Genera rate automatiche o aggiungile manualmente. Ogni rata ha stato colorato, bottone Paga (completo o parziale) e dropdown Modifica/Elimina/Revoca.",
+          placement: "top",
+          navigateTo: "/contratti/:first",
+        },
+      },
+      {
+        id: "naviga-tab-dettaglio",
+        title: "Naviga i 3 tab del dettaglio",
+        description: "Piano Pagamenti (rate, incassi, storico), Sessioni (eventi PT collegati al contratto) e Dettagli (tipo, date, prezzo, note). Il tab Pagamenti e' il cuore operativo.",
+        action: { label: "Mostrami", type: "spotlight", payload: "naviga-tab-dettaglio" },
+        spotlight: {
+          target: "contratto-tabs",
+          title: "3 Tab del Contratto",
+          description: "Pagamenti: gestisci rate e incassi. Sessioni: vedi gli appuntamenti PT collegati. Dettagli: info contratto, date e note.",
+          placement: "bottom",
+          navigateTo: "/contratti/:first",
+        },
+      },
+      {
+        id: "vedi-catena-rinnovi",
+        title: "Consulta la catena rinnovi",
+        description: "Se il contratto e' stato rinnovato, vedrai un breadcrumb navigabile: contratto originale → corrente → rinnovi successivi. Ogni nodo e' cliccabile.",
+        action: { label: "Mostrami", type: "spotlight", payload: "vedi-catena-rinnovi" },
+        spotlight: {
+          target: "contratto-catena-rinnovi",
+          title: "Catena Rinnovi",
+          description: "Breadcrumb navigabile che mostra il contratto originale e tutti i rinnovi successivi. Clicca su un nodo per aprirne il dettaglio.",
+          placement: "bottom",
+          navigateTo: "/contratti/:first",
+        },
+      },
     ],
     faqs: [
       {
@@ -286,6 +341,14 @@ export const CHAPTERS: Chapter[] = [
       {
         question: "I crediti si scalano automaticamente?",
         answer: "Si. Ogni sessione PT completata in agenda scala un credito dal contratto. Quando crediti e saldo sono esauriti, il contratto si chiude automaticamente.",
+      },
+      {
+        question: "Come genero un piano rate automatico?",
+        answer: "Apri il dettaglio contratto, vai al tab Piano Pagamenti. Se non ci sono rate, vedrai il form: scegli numero rate, frequenza (mensile, bimestrale...) e data prima rata. Clicca Genera.",
+      },
+      {
+        question: "Posso pagare una rata parzialmente?",
+        answer: "Si. Clicca Paga sulla rata, usa il quick button 50% o inserisci un importo personalizzato. Il sistema traccia ogni pagamento singolarmente nello storico.",
       },
     ],
     miniTourSteps: [4, 5, 6],

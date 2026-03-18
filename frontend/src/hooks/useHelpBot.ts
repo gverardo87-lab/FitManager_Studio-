@@ -22,6 +22,7 @@ import {
 } from "@/lib/helpbot-data";
 import type { Chapter } from "@/lib/helpbot-data";
 import type { BotAction, BotMessage, SpotlightTarget } from "@/lib/helpbot-types";
+import type { ContractListResponse } from "@/types/api";
 import { GUIDE_FAQ } from "@/lib/guide-tours";
 
 // ── Hook options ──
@@ -36,6 +37,32 @@ interface UseHelpBotOptions {
 let msgCounter = 0;
 function makeBotMessage(text: string, actions?: BotAction[]): BotMessage {
   return { id: `bot-${++msgCounter}`, sender: "bot", text, actions, ts: Date.now() };
+}
+
+/**
+ * Resolve dynamic ":first" placeholder in navigateTo.
+ * Es. "/contratti/:first" → "/contratti/42" (primo contratto in cache).
+ * Se la cache e' vuota, fallback alla lista "/contratti".
+ */
+function resolveDynamicNavigateTo(
+  spot: SpotlightTarget,
+  queryClient: ReturnType<typeof import("@tanstack/react-query").useQueryClient>,
+): SpotlightTarget {
+  if (!spot.navigateTo?.includes(":first")) return spot;
+
+  const contracts = queryClient.getQueryData<ContractListResponse>(["contracts"]);
+  const firstId = contracts?.items?.[0]?.id;
+
+  if (!firstId) {
+    // Cache vuota: fallback alla lista (spotlight non trovera' il target
+    // della detail page, ma almeno naviga senza errori)
+    return { ...spot, navigateTo: "/contratti" };
+  }
+
+  return {
+    ...spot,
+    navigateTo: spot.navigateTo.replace(":first", String(firstId)),
+  };
 }
 
 // ── Views ──
@@ -264,7 +291,9 @@ export function useHelpBot({ onMiniTour, onSpotlight }: UseHelpBotOptions) {
         const spot = action.payload ? resolveSpotlight(action.payload) : null;
         setOpen(false);
         if (spot) {
-          setTimeout(() => onSpotlight(spot), 300);
+          // Resolve dynamic ":first" placeholder → first contract ID from cache
+          const resolved = resolveDynamicNavigateTo(spot, queryClient);
+          setTimeout(() => onSpotlight(resolved), 300);
         }
         break;
       }

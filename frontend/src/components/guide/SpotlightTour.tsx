@@ -292,16 +292,33 @@ export function SpotlightTour({ tour, open, onComplete, onDismiss, onNavigate }:
     }
   }, [open]);
 
+  // ── Click-outside dismiss (document listener) ──
+  // L'overlay usa pointer-events:none per lasciare passare scroll/wheel.
+  // Il dismiss avviene via mousedown su document: se il click non e' sul
+  // tooltip, chiudi il tour.
+  const tooltipRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open || !visible) return;
+
+    const handleMouseDown = (e: MouseEvent) => {
+      if (tooltipRef.current?.contains(e.target as Node)) return;
+      onDismiss();
+    };
+
+    document.addEventListener("mousedown", handleMouseDown);
+    return () => document.removeEventListener("mousedown", handleMouseDown);
+  }, [open, visible, onDismiss]);
+
   // ── Render ──
 
   if (!open || !visible || !targetRect || !tooltipPos || !step) return null;
 
   return createPortal(
     <>
-      {/* ── Overlay click = dismiss ── */}
+      {/* ── Overlay — pointer-events:none per permettere scroll ── */}
       <div
-        className="fixed inset-0 z-[10000]"
-        onClick={onDismiss}
+        className="fixed inset-0 z-[10000] pointer-events-none"
         aria-hidden="true"
       />
 
@@ -318,6 +335,7 @@ export function SpotlightTour({ tour, open, onComplete, onDismiss, onNavigate }:
 
       {/* ── Tooltip card ── */}
       <div
+        ref={tooltipRef}
         className="fixed z-[10001] animate-in fade-in-0 zoom-in-95 duration-200"
         style={{
           top: tooltipPos.top,
@@ -326,7 +344,6 @@ export function SpotlightTour({ tour, open, onComplete, onDismiss, onNavigate }:
         }}
         role="dialog"
         aria-label={`Tour: ${step.title}`}
-        onClick={(e) => e.stopPropagation()}
       >
         <div className="rounded-xl border border-border bg-card p-4 shadow-2xl">
           {/* Header */}

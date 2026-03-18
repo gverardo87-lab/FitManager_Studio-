@@ -85,10 +85,14 @@ export function PaymentPlanTab({ contract }: PaymentPlanTabProps) {
   const rates = contract.rate ?? [];
   const hasRates = rates.length > 0;
 
-  return hasRates ? (
-    <RatesList rates={rates} contract={contract} />
-  ) : (
-    <GeneratePlanForm contract={contract} />
+  return (
+    <div data-guide="contratto-piano-rate">
+      {hasRates ? (
+        <RatesList rates={rates} contract={contract} />
+      ) : (
+        <GeneratePlanForm contract={contract} />
+      )}
+    </div>
   );
 }
 

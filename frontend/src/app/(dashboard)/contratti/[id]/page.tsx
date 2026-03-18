@@ -93,7 +93,7 @@ export default function ContractDetailPage({
   return (
     <div className="space-y-6">
       {/* ── Header ── */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div data-guide="contratto-header" className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-3">
           <Link
             href={backHref}
@@ -142,7 +142,7 @@ export default function ContractDetailPage({
             </div>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div data-guide="contratto-azioni" className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => setSheetOpen(true)}>
             <Pencil className="mr-2 h-4 w-4" />
             Modifica
@@ -177,11 +177,13 @@ export default function ContractDetailPage({
 
       {/* ── Renewal chain (solo se presente) ── */}
       {(contract.contratto_originale || contract.rinnovi_successivi.length > 0) && (
-        <RenewalChainSection contract={contract} />
+        <div data-guide="contratto-catena-rinnovi">
+          <RenewalChainSection contract={contract} />
+        </div>
       )}
 
       {/* ── Tabs ── */}
-      <Tabs defaultValue="payments">
+      <Tabs data-guide="contratto-tabs" defaultValue="payments">
         <TabsList>
           <TabsTrigger value="payments">
             <Receipt className="mr-2 h-4 w-4" />

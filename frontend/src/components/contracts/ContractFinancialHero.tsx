@@ -51,7 +51,7 @@ export function ContractFinancialHero({ contract }: { contract: ContractWithRate
   const creditiResidui = contract.crediti_residui;
 
   return (
-    <div className="rounded-xl border bg-gradient-to-br from-zinc-50 to-zinc-100/50 p-5 dark:from-zinc-900 dark:to-zinc-800/50">
+    <div data-guide="contratto-hero-finanziario" className="rounded-xl border bg-gradient-to-br from-zinc-50 to-zinc-100/50 p-5 dark:from-zinc-900 dark:to-zinc-800/50">
       <div className="space-y-3">
         {/* ── Riga 1: Valore | Acconto | Da Rateizzare ── */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
