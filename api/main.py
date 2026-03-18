@@ -196,6 +196,10 @@ async def lifespan(app: FastAPI):
     # ── 2. Business tables ──
     create_db_and_tables()
 
+    # ── 2b. Schema sync: aggiunge colonne mancanti dopo upgrade/restore ──
+    from api.services.schema_sync import sync_schema
+    sync_schema(engine)
+
     # ── 3. Catalog DB ──
     catalog_path = CATALOG_DATABASE_URL.replace("sqlite:///", "")
     if not Path(catalog_path).exists():

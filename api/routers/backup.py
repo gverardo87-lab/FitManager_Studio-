@@ -376,11 +376,16 @@ def restore_backup(
     # 2. Chiudi il pool connessioni — le prossime request creano connessioni fresche
     engine.dispose()
 
-    # 3. Assicura che tutte le tabelle esistano (CREATE IF NOT EXISTS).
-    #    Se il backup e' piu' vecchio e manca una tabella recente (es. esercizi_media),
-    #    senza questo step l'app crasherebbe su ogni query a quella tabella.
+    # 3. Assicura che tutte le tabelle esistano (CREATE IF NOT EXISTS)
+    #    e aggiunge colonne mancanti (ALTER TABLE ADD COLUMN).
+    #    Se il backup e' piu' vecchio, potrebbe mancare una tabella o colonna
+    #    recente — senza questo step l'app crasherebbe.
     from api.database import create_db_and_tables
     create_db_and_tables()
+    from api.services.schema_sync import sync_schema
+    added = sync_schema(engine)
+    if added:
+        logger.info("Post-restore schema sync: %d changes", len(added))
 
     logger.warning(
         "Database ripristinato via sqlite3.backup(): %d bytes, trainer %d. Safety: %s",
