@@ -176,7 +176,7 @@ export default function PublicAnamnesiPage({
             className="h-11 w-11 object-contain"
           />
         </div>
-        <span className="text-[11px] font-medium tracking-wide text-white/70">Dott.ssa Chiara Bassani</span>
+        <span className="text-[11px] font-medium tracking-wide text-white/70">{info?.trainer_name ?? "FitManager Studio+"}</span>
       </div>
 
       {/* ── Loading ── */}

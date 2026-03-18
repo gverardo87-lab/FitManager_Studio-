@@ -209,7 +209,7 @@ export function Sidebar({ onNavigate, guidePulse }: SidebarProps) {
           <h1 className="text-[16px] font-bold leading-tight tracking-tight text-foreground">
             FitManager <span className="text-primary">Studio+</span>
           </h1>
-          <p className="text-[10px] font-medium text-muted-foreground/60">Dott.ssa Bassani</p>
+          <p className="text-[10px] font-medium text-muted-foreground/60">{trainer ? `${trainer.nome} ${trainer.cognome}` : ""}</p>
         </div>
       </div>
 
