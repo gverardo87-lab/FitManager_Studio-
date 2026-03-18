@@ -2,13 +2,10 @@
 "use client";
 
 /**
- * Pagina Impostazioni — gestione backup e dati.
+ * Pagina Impostazioni — organizzata in 2 tab.
  *
- * Sezioni:
- * 1. Backup Database — crea, lista, scarica, ripristina
- * 2. Export Dati — download JSON (GDPR / portabilita&apos;)
- *
- * Scalabile: future sezioni (profilo, sicurezza, tema) si aggiungono qui.
+ * Tab Sistema: stato installazione, connettivita', snapshot diagnostico
+ * Tab Dati: backup/restore, saldo iniziale, export GDPR
  */
 
 import { useRef, useState } from "react";
@@ -27,6 +24,8 @@ import {
   Save,
   ShieldCheck,
   CheckCircle2,
+  Monitor,
+  HardDriveDownload,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -40,6 +39,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -86,6 +86,60 @@ function formatBytes(bytes: number): string {
 
 export default function ImpostazioniPage() {
   const { revealClass, revealStyle } = usePageReveal();
+
+  return (
+    <div className="space-y-6">
+      {/* ── Header ── */}
+      <div data-guide="impostazioni-header" className={revealClass(0, "flex items-center gap-3")} style={revealStyle(0)}>
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-900/40 dark:to-slate-800/30">
+          <Settings className="h-5 w-5 text-slate-600 dark:text-slate-400" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Impostazioni</h1>
+          <p className="text-sm text-muted-foreground">
+            Sistema, backup e configurazione
+          </p>
+        </div>
+      </div>
+
+      {/* ── Tabs ── */}
+      <Tabs defaultValue="sistema" className={revealClass(30)} style={revealStyle(30)}>
+        <TabsList className="w-full overflow-x-auto">
+          <TabsTrigger value="sistema" className="gap-1.5">
+            <Monitor className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Sistema</span>
+          </TabsTrigger>
+          <TabsTrigger value="dati" className="gap-1.5">
+            <HardDriveDownload className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Dati</span>
+          </TabsTrigger>
+        </TabsList>
+
+        {/* ════ Tab Sistema ════ */}
+        <TabsContent value="sistema" className="mt-4 space-y-6">
+          <SystemStatusSection />
+          <div id="connettivita" className="scroll-mt-24">
+            <ConnectivityStatusSection />
+          </div>
+          <SupportSnapshotSection />
+        </TabsContent>
+
+        {/* ════ Tab Dati ════ */}
+        <TabsContent value="dati" className="mt-4 space-y-6">
+          <SaldoInizialeSection />
+          <BackupSection />
+          <ExportSection />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════
+// Backup Database
+// ════════════════════════════════════════════════════════════
+
+function BackupSection() {
   const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
   const [restoreFilename, setRestoreFilename] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -95,8 +149,6 @@ export default function ImpostazioniPage() {
   const restoreBackup = useRestoreBackup();
   const verifyBackup = useVerifyBackup();
 
-  // ── Handlers ──
-
   const handleRestoreFromList = (filename: string) => {
     setRestoreFilename(filename);
     setRestoreDialogOpen(true);
@@ -105,8 +157,6 @@ export default function ImpostazioniPage() {
   const confirmRestoreFromList = async () => {
     if (!restoreFilename) return;
     setRestoreDialogOpen(false);
-
-    // Scarica il backup come blob e re-invia a /restore
     const { data } = await (await import("@/lib/api-client")).default.get(
       `/backup/download/${restoreFilename}`,
       { responseType: "blob" }
@@ -125,48 +175,12 @@ export default function ImpostazioniPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     restoreBackup.mutate(file);
-    // Reset input per permettere re-upload dello stesso file
     e.target.value = "";
   };
 
   return (
-    <div className="space-y-6">
-      {/* ── Header ── */}
-      <div data-guide="impostazioni-header" className={revealClass(0, "flex items-center gap-3")} style={revealStyle(0)}>
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-900/30">
-          <Settings className="h-5 w-5 text-slate-600 dark:text-slate-400" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Impostazioni</h1>
-          <p className="text-sm text-muted-foreground">
-            Gestione backup, dati e configurazione
-          </p>
-        </div>
-      </div>
-
-      <div className={revealClass(25)} style={revealStyle(25)}>
-        <SystemStatusSection />
-      </div>
-
-      <div
-        id="connettivita"
-        className={revealClass(50, "scroll-mt-24")}
-        style={revealStyle(50)}
-      >
-        <ConnectivityStatusSection />
-      </div>
-
-      <div className={revealClass(75)} style={revealStyle(75)}>
-        <SupportSnapshotSection />
-      </div>
-
-      {/* ── Sezione Saldo Iniziale ── */}
-      <div className={revealClass(100)} style={revealStyle(100)}>
-        <SaldoInizialeSection />
-      </div>
-
-      {/* ── Sezione Backup ── */}
-      <Card className={revealClass(150)} style={revealStyle(150)}>
+    <>
+      <Card>
         <CardHeader>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2">
@@ -174,8 +188,7 @@ export default function ImpostazioniPage() {
               <div>
                 <CardTitle>Backup Database</CardTitle>
                 <CardDescription>
-                  Crea copie di sicurezza del database e ripristina da backup
-                  precedenti
+                  Crea copie di sicurezza e ripristina da backup precedenti
                 </CardDescription>
               </div>
             </div>
@@ -203,7 +216,6 @@ export default function ImpostazioniPage() {
           </div>
         </CardHeader>
         <CardContent>
-          {/* Input file nascosto per restore da file */}
           <input
             ref={fileInputRef}
             type="file"
@@ -212,147 +224,85 @@ export default function ImpostazioniPage() {
             onChange={onFileSelected}
           />
 
-          {/* Loading */}
-          {isLoading && (
+          {isLoading ? (
             <div className="space-y-3">
               {Array.from({ length: 3 }).map((_, i) => (
                 <Skeleton key={i} className="h-12 w-full" />
               ))}
             </div>
-          )}
+          ) : null}
 
-          {/* Errore */}
-          {isError && (
+          {isError ? (
             <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
-              <p className="text-destructive">
-                Errore nel caricamento dei backup.
-              </p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-3"
-                onClick={() => refetch()}
-              >
+              <p className="text-destructive">Errore nel caricamento dei backup.</p>
+              <Button variant="outline" size="sm" className="mt-3" onClick={() => refetch()}>
                 Riprova
               </Button>
             </div>
-          )}
+          ) : null}
 
-          {/* Lista backup */}
-          {backups && backups.length === 0 && (
+          {backups && backups.length === 0 ? (
             <div className="py-8 text-center text-muted-foreground">
               <Database className="mx-auto mb-3 h-10 w-10 opacity-30" />
               <p>Nessun backup disponibile</p>
-              <p className="text-sm">
-                Clicca &quot;Crea Backup&quot; per creare il primo
-              </p>
+              <p className="text-sm">Clicca &quot;Crea Backup&quot; per creare il primo</p>
             </div>
-          )}
+          ) : null}
 
-          {backups && backups.length > 0 && (
+          {backups && backups.length > 0 ? (
             <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>File</TableHead>
-                  <TableHead className="hidden sm:table-cell">Dimensione</TableHead>
-                  <TableHead className="hidden sm:table-cell">Data</TableHead>
-                  <TableHead className="hidden md:table-cell">Checksum</TableHead>
-                  <TableHead className="text-right">Azioni</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {backups.map((backup) => (
-                  <TableRow key={backup.filename} className="transition-colors hover:bg-muted/50">
-                    <TableCell className="font-mono text-sm truncate max-w-[180px]">
-                      {backup.filename}
-                    </TableCell>
-                    <TableCell className="hidden sm:table-cell">{formatBytes(backup.size_bytes)}</TableCell>
-                    <TableCell className="hidden sm:table-cell">{formatDateTime(backup.created_at)}</TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      {backup.checksum ? (
-                        <span className="inline-flex items-center gap-1 text-xs font-mono text-emerald-600 dark:text-emerald-400">
-                          <CheckCircle2 className="h-3.5 w-3.5" />
-                          {backup.checksum.slice(0, 12)}...
-                        </span>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => verifyBackup.mutate(backup.filename)}
-                          disabled={verifyBackup.isPending}
-                          title="Verifica integrita'"
-                        >
-                          <ShieldCheck className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => downloadBackup(backup.filename)}
-                          title="Scarica"
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() =>
-                            handleRestoreFromList(backup.filename)
-                          }
-                          disabled={restoreBackup.isPending}
-                          title="Ripristina"
-                        >
-                          <RefreshCw className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>File</TableHead>
+                    <TableHead className="hidden sm:table-cell">Dimensione</TableHead>
+                    <TableHead className="hidden sm:table-cell">Data</TableHead>
+                    <TableHead className="hidden md:table-cell">Checksum</TableHead>
+                    <TableHead className="text-right">Azioni</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {backups.map((backup) => (
+                    <TableRow key={backup.filename} className="transition-colors hover:bg-muted/50">
+                      <TableCell className="max-w-[180px] truncate font-mono text-sm">
+                        {backup.filename}
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell">{formatBytes(backup.size_bytes)}</TableCell>
+                      <TableCell className="hidden sm:table-cell">{formatDateTime(backup.created_at)}</TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        {backup.checksum ? (
+                          <span className="inline-flex items-center gap-1 font-mono text-xs text-emerald-600 dark:text-emerald-400">
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            {backup.checksum.slice(0, 12)}...
+                          </span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1">
+                          <Button variant="ghost" size="sm" onClick={() => verifyBackup.mutate(backup.filename)} disabled={verifyBackup.isPending} title="Verifica integrita'">
+                            <ShieldCheck className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => downloadBackup(backup.filename)} title="Scarica">
+                            <Download className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => handleRestoreFromList(backup.filename)} disabled={restoreBackup.isPending} title="Ripristina">
+                            <RefreshCw className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
-          )}
+          ) : null}
         </CardContent>
       </Card>
 
-      {/* ── Sezione Export ── */}
-      <Card className={revealClass(200)} style={revealStyle(200)}>
-        <CardHeader>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-2">
-              <FileJson className="h-5 w-5 text-green-600" />
-              <div>
-                <CardTitle>Export Dati</CardTitle>
-                <CardDescription>
-                  Scarica tutti i tuoi dati in formato JSON (GDPR / portabilita&apos;)
-                </CardDescription>
-              </div>
-            </div>
-            <Button variant="outline" size="sm" onClick={exportTrainerData}>
-              <Download className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Esporta JSON</span>
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            L&apos;export include tutti i tuoi dati: clienti, contratti, rate, eventi, movimenti,
-            spese ricorrenti, schede allenamento, misurazioni, obiettivi e audit log.
-            I record eliminati non vengono inclusi.
-          </p>
-        </CardContent>
-      </Card>
-
-      {/* ── Dialog conferma restore ── */}
-      <AlertDialog
-        open={restoreDialogOpen}
-        onOpenChange={setRestoreDialogOpen}
-      >
+      {/* Dialog conferma restore */}
+      <AlertDialog open={restoreDialogOpen} onOpenChange={setRestoreDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
@@ -363,12 +313,9 @@ export default function ImpostazioniPage() {
               Il database corrente verra&apos; sovrascritto con{" "}
               <span className="font-mono font-medium">{restoreFilename}</span>.
               <br />
-              Un backup di sicurezza verra&apos; creato automaticamente prima del
-              ripristino.
+              Un backup di sicurezza verra&apos; creato automaticamente prima del ripristino.
               <br />
-              <strong>
-                Dopo il ripristino sara&apos; necessario riavviare il server.
-              </strong>
+              <strong>Dopo il ripristino sara&apos; necessario riavviare il server.</strong>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -379,12 +326,47 @@ export default function ImpostazioniPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </>
   );
 }
 
 // ════════════════════════════════════════════════════════════
-// Saldo Iniziale di Cassa — configurazione
+// Export Dati
+// ════════════════════════════════════════════════════════════
+
+function ExportSection() {
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-2">
+            <FileJson className="h-5 w-5 text-green-600" />
+            <div>
+              <CardTitle>Export Dati</CardTitle>
+              <CardDescription>
+                Scarica tutti i tuoi dati in formato JSON (GDPR / portabilita&apos;)
+              </CardDescription>
+            </div>
+          </div>
+          <Button variant="outline" size="sm" onClick={exportTrainerData}>
+            <Download className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Esporta JSON</span>
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-muted-foreground">
+          L&apos;export include tutti i tuoi dati: clienti, contratti, rate, eventi, movimenti,
+          spese ricorrenti, schede allenamento, misurazioni, obiettivi e audit log.
+          I record eliminati non vengono inclusi.
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ════════════════════════════════════════════════════════════
+// Saldo Iniziale di Cassa
 // ════════════════════════════════════════════════════════════
 
 function SaldoInizialeSection() {
@@ -429,13 +411,8 @@ function SaldoInizialeSection() {
   if (isLoading) {
     return (
       <Card>
-        <CardHeader>
-          <Skeleton className="h-6 w-48" />
-          <Skeleton className="h-4 w-72" />
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-10 w-full" />
-        </CardContent>
+        <CardHeader><Skeleton className="h-6 w-48" /><Skeleton className="h-4 w-72" /></CardHeader>
+        <CardContent><Skeleton className="h-10 w-full" /></CardContent>
       </Card>
     );
   }
@@ -448,15 +425,13 @@ function SaldoInizialeSection() {
           <div>
             <CardTitle>Saldo Iniziale di Cassa</CardTitle>
             <CardDescription>
-              Inserisci il saldo del tuo conto all&apos;inizio dell&apos;utilizzo del programma.
-              Tutti i saldi verranno calcolati a partire da questo valore.
+              Saldo del conto all&apos;inizio dell&apos;utilizzo. Tutti i calcoli partono da qui.
             </CardDescription>
           </div>
         </div>
       </CardHeader>
       <CardContent>
         <div className="grid gap-4 sm:grid-cols-2">
-          {/* Importo */}
           <div className="space-y-2">
             <Label htmlFor="saldo-iniziale">Importo (&euro;)</Label>
             <Input
@@ -468,8 +443,6 @@ function SaldoInizialeSection() {
               onChange={(e) => setImportoDraft(e.target.value)}
             />
           </div>
-
-          {/* Data */}
           <div className="space-y-2">
             <Label htmlFor="data-saldo">Data di riferimento (opzionale)</Label>
             <div className="relative">
@@ -489,29 +462,20 @@ function SaldoInizialeSection() {
         </div>
 
         <div className="mt-4 flex items-center gap-3">
-          <Button
-            onClick={handleSave}
-            disabled={updateSaldo.isPending || !isDirty}
-            size="sm"
-          >
+          <Button onClick={handleSave} disabled={updateSaldo.isPending || !isDirty} size="sm">
             <Save className="mr-2 h-4 w-4" />
             {updateSaldo.isPending ? "Salvataggio..." : "Salva"}
           </Button>
-          {saldoData && saldoData.saldo_iniziale_cassa !== 0 && (
+          {saldoData && saldoData.saldo_iniziale_cassa !== 0 ? (
             <p className="text-xs text-muted-foreground">
               Valore attuale: <span className="font-semibold tabular-nums">{formatCurrency(saldoData.saldo_iniziale_cassa)}</span>
-              {saldoData.data_saldo_iniziale && (
+              {saldoData.data_saldo_iniziale ? (
                 <> dal {new Date(saldoData.data_saldo_iniziale + "T00:00:00").toLocaleDateString("it-IT")}</>
-              )}
+              ) : null}
             </p>
-          )}
+          ) : null}
         </div>
       </CardContent>
     </Card>
   );
 }
-
-
-
-
-
