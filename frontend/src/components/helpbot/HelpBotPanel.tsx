@@ -181,7 +181,7 @@ function PanelHeader({ title, subtitle, onBack, onExtra, extraIcon: ExtraIcon, o
             </button>
           ) : (
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/15 backdrop-blur-sm">
-              <Sparkles className="h-3.5 w-3.5 text-white" />
+              <Compass className="h-3.5 w-3.5 text-white" />
             </div>
           )}
           <div>
@@ -251,7 +251,7 @@ function ChatView({ messages, isTyping, currentChapter, onClose, onAction, onSea
   return (
     <>
       <PanelHeader
-        title="Assistente"
+        title="Bussola"
         subtitle={currentChapter?.title}
         onExtra={onBrowseChapters}
         extraIcon={BookOpen}
@@ -515,7 +515,7 @@ export function HelpBotPanel(props: HelpBotPanelProps) {
     return (
       <Sheet open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
         <SheetContent side="bottom" className="h-[75vh] p-0">
-          <SheetTitle className="sr-only">Assistente FitManager</SheetTitle>
+          <SheetTitle className="sr-only">Bussola FitManager</SheetTitle>
           {content}
         </SheetContent>
       </Sheet>
@@ -527,7 +527,7 @@ export function HelpBotPanel(props: HelpBotPanelProps) {
     <div
       className="helpbot-panel fixed bottom-20 right-6 z-[9998] flex h-[540px] w-[340px] flex-col overflow-hidden rounded-2xl border border-border/50 bg-card shadow-2xl shadow-teal-900/10 animate-in fade-in-0 slide-in-from-bottom-3 duration-300"
       role="dialog"
-      aria-label="Assistente FitManager"
+      aria-label="Bussola FitManager"
     >
       {content}
     </div>,
