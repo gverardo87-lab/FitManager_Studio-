@@ -14,7 +14,7 @@ import {
   X, Send, Compass, ArrowRight, ArrowLeft, ChevronRight, BookOpen,
   UserPlus, HeartPulse, FileText, Calendar, Wallet, Dumbbell,
   ClipboardList, Activity, Gauge, RefreshCw, Shield, LayoutDashboard,
-  HelpCircle, Crosshair,
+  HelpCircle, Crosshair, Search, Sparkles,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -57,11 +57,11 @@ interface HelpBotPanelProps {
 
 function TypingIndicator() {
   return (
-    <div className="flex items-center gap-1 px-3 py-2">
+    <div className="helpbot-msg-enter flex items-center gap-1.5 px-3 py-2">
       <div className="flex gap-1">
-        <span className="helpbot-typing-dot h-1.5 w-1.5 rounded-full bg-muted-foreground/50" />
-        <span className="helpbot-typing-dot h-1.5 w-1.5 rounded-full bg-muted-foreground/50 [animation-delay:150ms]" />
-        <span className="helpbot-typing-dot h-1.5 w-1.5 rounded-full bg-muted-foreground/50 [animation-delay:300ms]" />
+        <span className="helpbot-typing-dot h-1.5 w-1.5 rounded-full bg-teal-500/60" />
+        <span className="helpbot-typing-dot h-1.5 w-1.5 rounded-full bg-teal-500/60 [animation-delay:150ms]" />
+        <span className="helpbot-typing-dot h-1.5 w-1.5 rounded-full bg-teal-500/60 [animation-delay:300ms]" />
       </div>
     </div>
   );
@@ -73,10 +73,12 @@ function MessageBubble({ message, onAction }: { message: BotMessage; onAction: (
   const isBot = message.sender === "bot";
 
   return (
-    <div className={`flex ${isBot ? "justify-start" : "justify-end"} mb-2`}>
+    <div className={`helpbot-msg-enter flex ${isBot ? "justify-start" : "justify-end"} mb-2`}>
       <div
-        className={`max-w-[85%] rounded-xl px-3 py-2 text-sm leading-relaxed ${
-          isBot ? "bg-muted text-foreground" : "bg-primary text-primary-foreground"
+        className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed ${
+          isBot
+            ? "rounded-tl-md bg-gradient-to-br from-muted to-muted/70 text-foreground"
+            : "rounded-tr-md bg-gradient-to-br from-teal-600 to-emerald-700 text-white"
         }`}
       >
         {message.text.split("\n").map((line, i) => (
@@ -88,13 +90,13 @@ function MessageBubble({ message, onAction }: { message: BotMessage; onAction: (
         ))}
 
         {message.actions && message.actions.length > 0 ? (
-          <div className="mt-2 flex flex-wrap gap-1.5">
+          <div className="mt-2.5 flex flex-wrap gap-1.5">
             {message.actions.map((action) => (
               <button
                 key={action.label}
                 type="button"
                 onClick={() => onAction(action)}
-                className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-2.5 py-1 text-xs font-medium text-foreground transition-colors hover:bg-accent"
+                className="inline-flex items-center gap-1 rounded-lg border border-white/20 bg-white/10 px-2.5 py-1 text-xs font-medium text-inherit backdrop-blur-sm transition-colors hover:bg-white/20"
               >
                 {action.label}
                 <ArrowRight className="h-3 w-3" />
@@ -110,34 +112,104 @@ function MessageBubble({ message, onAction }: { message: BotMessage; onAction: (
 // ── Chapter Action Card ──
 
 function ActionCard({ action, index, onAction }: { action: ChapterAction; index: number; onAction: (a: BotAction) => void }) {
+  const isSpotlight = action.action?.type === "spotlight";
+
   return (
-    <div className="group rounded-lg border border-border bg-background p-3 transition-colors hover:bg-accent/50">
+    <div className={`helpbot-msg-enter group rounded-xl border p-3 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm ${
+      isSpotlight
+        ? "border-teal-200/60 bg-gradient-to-br from-teal-50/40 to-white hover:border-teal-300/80 dark:border-teal-800/40 dark:from-teal-950/20 dark:to-zinc-900"
+        : "border-border bg-background hover:bg-accent/50"
+    }`} style={{ animationDelay: `${index * 40}ms` }}>
       <div className="flex items-start gap-2.5">
-        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">
+        <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${
+          isSpotlight
+            ? "bg-teal-100 text-teal-700 dark:bg-teal-900/50 dark:text-teal-300"
+            : "bg-primary/10 text-primary"
+        }`}>
           {index + 1}
         </span>
         <div className="min-w-0 flex-1">
-          <h4 className="text-sm font-medium leading-tight">{action.title}</h4>
+          <h4 className="text-[13px] font-medium leading-tight">{action.title}</h4>
           <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{action.description}</p>
           {action.action ? (
             <button
               type="button"
               onClick={() => onAction(action.action!)}
-              className={`mt-1.5 inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium transition-colors ${
-                action.action.type === "spotlight"
-                  ? "bg-primary/10 text-primary hover:bg-primary/20"
-                  : "text-primary hover:text-primary/80"
+              className={`mt-2 inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium transition-all ${
+                isSpotlight
+                  ? "bg-teal-600 text-white shadow-sm hover:bg-teal-700"
+                  : "text-primary hover:bg-primary/10"
               }`}
             >
-              {action.action.type === "spotlight" ? (
+              {isSpotlight ? (
                 <Crosshair className="h-3 w-3" />
-              ) : null}
-              {action.action.label}
-              {action.action.type !== "spotlight" ? (
+              ) : (
                 <ArrowRight className="h-3 w-3" />
-              ) : null}
+              )}
+              {action.action.label}
             </button>
           ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Panel Header ──
+
+function PanelHeader({ title, subtitle, onBack, onExtra, extraIcon: ExtraIcon, onClose }: {
+  title: string;
+  subtitle?: string;
+  onBack?: () => void;
+  onExtra?: () => void;
+  extraIcon?: React.ComponentType<{ className?: string }>;
+  onClose: () => void;
+}) {
+  return (
+    <div className="relative overflow-hidden border-b bg-gradient-to-r from-teal-600 via-teal-700 to-emerald-800 px-4 py-3">
+      <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-white/5 blur-2xl" />
+      <div className="relative flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {onBack ? (
+            <button
+              type="button"
+              onClick={onBack}
+              className="rounded-md p-1 text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+              aria-label="Indietro"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </button>
+          ) : (
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/15 backdrop-blur-sm">
+              <Sparkles className="h-3.5 w-3.5 text-white" />
+            </div>
+          )}
+          <div>
+            <h2 className="text-sm font-semibold text-white">{title}</h2>
+            {subtitle ? (
+              <p className="text-[10px] text-white/60">{subtitle}</p>
+            ) : null}
+          </div>
+        </div>
+        <div className="flex items-center gap-0.5">
+          {onExtra && ExtraIcon ? (
+            <button
+              type="button"
+              onClick={onExtra}
+              className="rounded-md p-1.5 text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+              aria-label="Esplora capitoli"
+            >
+              <ExtraIcon className="h-4 w-4" />
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md p-1.5 text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+            aria-label="Chiudi"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
       </div>
     </div>
@@ -178,52 +250,29 @@ function ChatView({ messages, isTyping, currentChapter, onClose, onAction, onSea
 
   return (
     <>
-      {/* Header */}
-      <div className="flex items-center justify-between border-b px-4 py-3">
-        <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
-            <Compass className="h-4 w-4 text-primary" />
-          </div>
-          <div>
-            <h2 className="text-sm font-semibold">Assistente</h2>
-            {currentChapter ? (
-              <p className="text-[10px] text-muted-foreground">{currentChapter.title}</p>
-            ) : null}
-          </div>
-        </div>
-        <div className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={onBrowseChapters}
-            className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            aria-label="Esplora capitoli"
-            title="Esplora capitoli"
-          >
-            <BookOpen className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            aria-label="Chiudi assistente"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
+      <PanelHeader
+        title="Assistente"
+        subtitle={currentChapter?.title}
+        onExtra={onBrowseChapters}
+        extraIcon={BookOpen}
+        onClose={onClose}
+      />
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-3">
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <Compass className="mb-2 h-8 w-8 text-muted-foreground/40" />
-            <p className="text-sm text-muted-foreground">
-              Cerca nelle FAQ o esplora i capitoli della guida.
+          <div className="flex flex-col items-center justify-center py-10 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-100 to-emerald-100 dark:from-teal-900/40 dark:to-emerald-900/30">
+              <Compass className="h-6 w-6 text-teal-600 dark:text-teal-400" />
+            </div>
+            <p className="mt-3 text-sm font-medium text-foreground">Come posso aiutarti?</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Cerca nelle FAQ o esplora i capitoli della guida
             </p>
             <button
               type="button"
               onClick={onBrowseChapters}
-              className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80"
+              className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-teal-700"
             >
               <BookOpen className="h-3.5 w-3.5" />
               Esplora i 12 capitoli
@@ -239,18 +288,21 @@ function ChatView({ messages, isTyping, currentChapter, onClose, onAction, onSea
       </div>
 
       {/* Input bar */}
-      <form onSubmit={handleSubmit} className="border-t px-3 py-2">
+      <form onSubmit={handleSubmit} className="border-t bg-muted/30 px-3 py-2.5">
         <div className="flex items-center gap-2">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Cerca nelle FAQ..."
-            className="flex-1 rounded-lg border border-input bg-background px-3 py-1.5 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:ring-1 focus:ring-ring"
-          />
-          <Button type="submit" size="icon" variant="ghost" className="h-8 w-8 shrink-0">
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/50" />
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Cerca nelle FAQ..."
+              className="w-full rounded-lg border border-input bg-background py-1.5 pl-8 pr-3 text-sm outline-none transition-colors placeholder:text-muted-foreground/60 focus:ring-1 focus:ring-teal-500/50"
+            />
+          </div>
+          <Button type="submit" size="icon" variant="ghost" className="h-8 w-8 shrink-0 text-teal-600 hover:bg-teal-50 hover:text-teal-700 dark:hover:bg-teal-950/50">
             <Send className="h-4 w-4" />
-            <span className="sr-only">Invia</span>
+            <span className="sr-only">Cerca</span>
           </Button>
         </div>
       </form>
@@ -269,33 +321,17 @@ function ChaptersView({ chapters, currentChapter, onOpenChapter, onBack, onClose
 }) {
   return (
     <>
-      {/* Header */}
-      <div className="flex items-center justify-between border-b px-4 py-3">
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={onBack}
-            className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            aria-label="Torna alla chat"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </button>
-          <h2 className="text-sm font-semibold">Guida Completa</h2>
-        </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          aria-label="Chiudi"
-        >
-          <X className="h-4 w-4" />
-        </button>
-      </div>
+      <PanelHeader
+        title="Guida Completa"
+        subtitle="12 capitoli"
+        onBack={onBack}
+        onClose={onClose}
+      />
 
       {/* Chapter list */}
       <div className="flex-1 overflow-y-auto px-2 py-2">
         <p className="px-2 pb-2 text-[11px] text-muted-foreground">
-          12 capitoli — dal primo cliente al monitoraggio progressi
+          Dal primo cliente al monitoraggio progressi
         </p>
         {chapters.map((ch, i) => {
           const isCurrent = currentChapter?.id === ch.id;
@@ -304,25 +340,30 @@ function ChaptersView({ chapters, currentChapter, onOpenChapter, onBack, onClose
               key={ch.id}
               type="button"
               onClick={() => onOpenChapter(ch.id)}
-              className={`mb-1 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors hover:bg-accent ${
-                isCurrent ? "bg-primary/5 ring-1 ring-primary/20" : ""
+              className={`helpbot-msg-enter mb-1 flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2.5 text-left transition-all duration-200 hover:bg-accent ${
+                isCurrent
+                  ? "border-l-2 border-l-teal-500 bg-gradient-to-r from-teal-50/80 to-transparent dark:from-teal-950/30"
+                  : ""
               }`}
+              style={{ animationDelay: `${i * 30}ms` }}
             >
-              <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold ${
-                isCurrent ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"
+              <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold transition-colors ${
+                isCurrent
+                  ? "bg-teal-600 text-white shadow-sm"
+                  : "bg-muted text-muted-foreground group-hover:bg-primary/10"
               }`}>
                 {i + 1}
               </span>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
-                  <ChapterIcon name={ch.icon} className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span className="text-sm font-medium">{ch.title}</span>
+                  <ChapterIcon name={ch.icon} className={`h-3.5 w-3.5 ${isCurrent ? "text-teal-600 dark:text-teal-400" : "text-muted-foreground"}`} />
+                  <span className={`text-sm font-medium ${isCurrent ? "text-teal-700 dark:text-teal-300" : ""}`}>{ch.title}</span>
                 </div>
                 <p className="truncate text-[11px] text-muted-foreground">
-                  {ch.actions.length} azioni · {ch.faqs.length > 0 ? `${ch.faqs.length} FAQ` : ""}
+                  {ch.actions.length} azioni{ch.faqs.length > 0 ? ` · ${ch.faqs.length} FAQ` : ""}
                 </p>
               </div>
-              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/50" />
+              <ChevronRight className={`h-4 w-4 shrink-0 transition-transform ${isCurrent ? "text-teal-500" : "text-muted-foreground/40"}`} />
             </button>
           );
         })}
@@ -343,40 +384,22 @@ function ChapterDetailView({ chapter, onAction, onBack, onClose }: {
 
   return (
     <>
-      {/* Header with breadcrumb */}
-      <div className="border-b px-4 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={onBack}
-              className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              aria-label="Torna ai capitoli"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </button>
-            <ChapterIcon name={chapter.icon} className="h-4 w-4 text-primary" />
-            <h2 className="text-sm font-semibold">{chapter.title}</h2>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            aria-label="Chiudi"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-        <p className="mt-1.5 pl-7 text-xs leading-relaxed text-muted-foreground">{chapter.intro}</p>
+      <PanelHeader
+        title={chapter.title}
+        onBack={onBack}
+        onClose={onClose}
+      />
 
-        {/* Tabs */}
-        <div className="mt-2 flex gap-1 pl-7">
+      {/* Intro + Tabs */}
+      <div className="border-b bg-muted/20 px-4 py-3">
+        <p className="text-xs leading-relaxed text-muted-foreground">{chapter.intro}</p>
+        <div className="mt-2.5 flex gap-1">
           <button
             type="button"
             onClick={() => setActiveTab("actions")}
-            className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+            className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-colors ${
               activeTab === "actions"
-                ? "bg-primary/10 text-primary"
+                ? "bg-teal-600 text-white shadow-sm"
                 : "text-muted-foreground hover:bg-muted"
             }`}
           >
@@ -386,9 +409,9 @@ function ChapterDetailView({ chapter, onAction, onBack, onClose }: {
             <button
               type="button"
               onClick={() => setActiveTab("faq")}
-              className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+              className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-colors ${
                 activeTab === "faq"
-                  ? "bg-primary/10 text-primary"
+                  ? "bg-teal-600 text-white shadow-sm"
                   : "text-muted-foreground hover:bg-muted"
               }`}
             >
@@ -399,7 +422,7 @@ function ChapterDetailView({ chapter, onAction, onBack, onClose }: {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-3 py-2">
+      <div className="flex-1 overflow-y-auto px-3 py-2.5">
         {activeTab === "actions" ? (
           <div className="space-y-2">
             {chapter.actions.map((action, i) => (
@@ -411,21 +434,21 @@ function ChapterDetailView({ chapter, onAction, onBack, onClose }: {
               <button
                 type="button"
                 onClick={() => onAction({ label: "Tour", type: "mini-tour", payload: chapter.routePattern })}
-                className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-primary/30 bg-primary/5 px-3 py-2 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
+                className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-teal-400/40 bg-gradient-to-r from-teal-50/50 to-emerald-50/30 px-3 py-2.5 text-xs font-medium text-teal-700 transition-all hover:border-teal-400/70 hover:shadow-sm dark:from-teal-950/20 dark:to-emerald-950/10 dark:text-teal-300"
               >
                 <Compass className="h-3.5 w-3.5" />
-                Lancia tour guidato per {chapter.title}
+                Tour guidato — {chapter.title}
               </button>
             ) : null}
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {chapter.faqs.map((faq, i) => (
-              <div key={i} className="rounded-lg border border-border bg-background p-3">
+              <div key={i} className="helpbot-msg-enter rounded-xl border border-border bg-background p-3" style={{ animationDelay: `${i * 50}ms` }}>
                 <div className="flex items-start gap-2">
-                  <HelpCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+                  <HelpCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-teal-600" />
                   <div>
-                    <h4 className="text-sm font-medium">{faq.question}</h4>
+                    <h4 className="text-[13px] font-medium">{faq.question}</h4>
                     <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{faq.answer}</p>
                   </div>
                 </div>
@@ -502,7 +525,7 @@ export function HelpBotPanel(props: HelpBotPanelProps) {
   // Desktop: fixed panel
   return createPortal(
     <div
-      className="helpbot-panel fixed bottom-20 right-6 z-[9998] flex h-[520px] w-80 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-xl animate-in fade-in-0 slide-in-from-bottom-2 duration-200"
+      className="helpbot-panel fixed bottom-20 right-6 z-[9998] flex h-[540px] w-[340px] flex-col overflow-hidden rounded-2xl border border-border/50 bg-card shadow-2xl shadow-teal-900/10 animate-in fade-in-0 slide-in-from-bottom-3 duration-300"
       role="dialog"
       aria-label="Assistente FitManager"
     >
