@@ -22,7 +22,7 @@ import {
 } from "@/lib/helpbot-data";
 import type { Chapter } from "@/lib/helpbot-data";
 import type { BotAction, BotMessage, SpotlightTarget } from "@/lib/helpbot-types";
-import type { ContractListResponse } from "@/types/api";
+import type { ClientEnrichedListResponse, ContractListResponse } from "@/types/api";
 import { GUIDE_FAQ } from "@/lib/guide-tours";
 
 // ── Hook options ──
@@ -50,19 +50,23 @@ function resolveDynamicNavigateTo(
 ): SpotlightTarget {
   if (!spot.navigateTo?.includes(":first")) return spot;
 
-  const contracts = queryClient.getQueryData<ContractListResponse>(["contracts"]);
-  const firstId = contracts?.items?.[0]?.id;
-
-  if (!firstId) {
-    // Cache vuota: fallback alla lista (spotlight non trovera' il target
-    // della detail page, ma almeno naviga senza errori)
-    return { ...spot, navigateTo: "/contratti" };
+  // Risolvi :first per contratti
+  if (spot.navigateTo.startsWith("/contratti")) {
+    const contracts = queryClient.getQueryData<ContractListResponse>(["contracts"]);
+    const firstId = contracts?.items?.[0]?.id;
+    if (!firstId) return { ...spot, navigateTo: "/contratti" };
+    return { ...spot, navigateTo: spot.navigateTo.replace(":first", String(firstId)) };
   }
 
-  return {
-    ...spot,
-    navigateTo: spot.navigateTo.replace(":first", String(firstId)),
-  };
+  // Risolvi :first per clienti (profilo)
+  if (spot.navigateTo.startsWith("/clienti")) {
+    const clients = queryClient.getQueryData<ClientEnrichedListResponse>(["clients"]);
+    const firstId = clients?.items?.[0]?.id;
+    if (!firstId) return { ...spot, navigateTo: "/clienti" };
+    return { ...spot, navigateTo: spot.navigateTo.replace(":first", String(firstId)) };
+  }
+
+  return spot;
 }
 
 // ── Views ──

@@ -142,6 +142,7 @@ export const CHAPTERS: Chapter[] = [
           title: "Avatar Cliente",
           description: "5 box interattivi: Clinica, Contratto, Scheda, Sedute e Corpo. Clicca ciascuno per scorrere alla tab corrispondente. Il ring a sinistra e' la prontezza complessiva (0-100).",
           placement: "bottom",
+          navigateTo: "/clienti/:first",
         },
       },
       {
@@ -154,6 +155,7 @@ export const CHAPTERS: Chapter[] = [
           title: "5 Passi Progressivi",
           description: "L'ordine giusto: (1) Contratto, (2) Anamnesi, (3) Misurazioni, (4) Scheda, (5) Prima sessione. Ogni passo ha la sua CTA e si completa automaticamente.",
           placement: "bottom",
+          navigateTo: "/clienti/:first",
         },
       },
     ],
@@ -372,6 +374,7 @@ export const CHAPTERS: Chapter[] = [
           title: "Anamnesi 6 Step",
           description: "Dalla checklist onboarding, clicca il passo Anamnesi per aprire il questionario strutturato. 6 sezioni: Stile di Vita, Obiettivo, Esperienza, Salute, Alimentazione e Logistica.",
           placement: "bottom",
+          navigateTo: "/clienti/:first",
         },
       },
       {
@@ -384,6 +387,7 @@ export const CHAPTERS: Chapter[] = [
           title: "Misurazioni",
           description: "Dalla checklist onboarding, clicca il passo Misurazioni per registrare peso, composizione corporea e circonferenze. I range OMS/ACSM evidenziano valori fuori norma.",
           placement: "bottom",
+          navigateTo: "/clienti/:first",
         },
       },
       {
@@ -408,6 +412,7 @@ export const CHAPTERS: Chapter[] = [
           title: "Readiness Cliente",
           description: "Il ReadinessRing a sinistra mostra il punteggio complessivo (0-100). I 5 box interattivi dettagliano ogni dimensione: Clinica, Contratto, Scheda, Sedute e Corpo.",
           placement: "bottom",
+          navigateTo: "/clienti/:first",
         },
       },
     ],
