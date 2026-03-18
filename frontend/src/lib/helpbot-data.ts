@@ -174,7 +174,124 @@ export const CHAPTERS: Chapter[] = [
     miniTourSteps: [1, 2, 3],
   },
 
-  // ── 2. PROFILO & ANAMNESI ──
+  // ── 2. GESTISCI CONTRATTI ──
+  // Spostato PRIMA dell'anamnesi: senza contratto non c'e' copertura assicurativa.
+  {
+    id: "gestisci-contratti",
+    title: "Gestisci Contratti",
+    icon: "FileText",
+    routePattern: "/contratti",
+    intro: "Il contratto e' il primo passo dopo la registrazione. Senza contratto attivo non c'e' copertura assicurativa e non puoi prenotare sedute PT.",
+    actions: [
+      {
+        id: "crea-contratto",
+        title: "Crea un nuovo contratto",
+        description: "Seleziona cliente, tipo pacchetto (PT, sala, corso), prezzo, durata e crediti sessione. Il contratto attiva la copertura assicurativa.",
+        action: { label: "Mostrami", type: "spotlight", payload: "crea-contratto" },
+        spotlight: {
+          target: "contratti-new-button",
+          title: "Nuovo Contratto",
+          description: "Clicca qui per creare un contratto. Seleziona cliente, tipo pacchetto, prezzo, durata e crediti. Il contratto attiva la copertura assicurativa.",
+          placement: "bottom",
+          navigateTo: "/contratti",
+        },
+      },
+      {
+        id: "genera-rate",
+        title: "Genera il piano rateale",
+        description: "Rate mensili automatiche con un click, oppure aggiungi rate manuali. Ogni rata ha data scadenza, importo e stato (pendente, parziale, saldata).",
+        action: { label: "Mostrami", type: "spotlight", payload: "genera-rate" },
+        spotlight: {
+          target: "contratti-table-first-row",
+          title: "Piano Rateale",
+          description: "Apri il dettaglio contratto cliccando qui. Nella sezione Rate trovi il bottone \"Genera Piano\" per creare rate mensili automatiche.",
+          placement: "bottom",
+          navigateTo: "/contratti",
+        },
+      },
+      {
+        id: "registra-pagamento",
+        title: "Registra un pagamento",
+        description: "Dal dettaglio contratto, clicca \"Paga\" sulla rata. Importo completo o parziale, con metodo selezionabile (contanti, POS, bonifico). Il saldo Cassa si aggiorna automaticamente.",
+        action: { label: "Mostrami", type: "spotlight", payload: "registra-pagamento" },
+        spotlight: {
+          target: "contratti-table-first-row",
+          title: "Pagamento Rate",
+          description: "Apri il contratto per accedere al piano rate. Clicca \"Paga\" su una rata per registrare il pagamento (completo o parziale).",
+          placement: "bottom",
+          navigateTo: "/contratti",
+        },
+      },
+      {
+        id: "rinnova-contratto",
+        title: "Rinnova un contratto",
+        description: "Dalla pagina Rinnovi & Incassi, clicca \"Rinnova\" su un contratto in scadenza. Il nuovo contratto si crea linkato all'originale con tipo, crediti e prezzo pre-compilati.",
+        action: { label: "Vai a Rinnovi", type: "navigate", payload: "/rinnovi-incassi" },
+      },
+      {
+        id: "modifica-contratto",
+        title: "Modifica un contratto",
+        description: "Dal dettaglio contratto puoi modificare prezzo, durata, crediti e note. Le rate gia' pagate restano intatte.",
+        action: { label: "Mostrami", type: "spotlight", payload: "modifica-contratto" },
+        spotlight: {
+          target: "contratti-table-first-row",
+          title: "Modifica Contratto",
+          description: "Clicca un contratto per aprirne il dettaglio. Il bottone \"Modifica\" ti permette di aggiornare prezzo, durata, crediti e note.",
+          placement: "bottom",
+          navigateTo: "/contratti",
+        },
+      },
+      {
+        id: "crediti-agenda",
+        title: "Crediti e agenda",
+        description: "Ogni sessione PT completata in agenda scala automaticamente un credito dal contratto collegato. Quando i crediti e il saldo sono esauriti, il contratto si chiude da solo.",
+        action: { label: "Vai all'Agenda", type: "navigate", payload: "/agenda" },
+      },
+      {
+        id: "monitora-badge",
+        title: "Leggi i badge di stato",
+        description: "7 livelli di priorita' visiva: Chiuso (grigio), Insolvente (rosso pieno), Rate in Ritardo (rosso chiaro), Scaduto (ambra), Saldato (verde), In Corso (blu) e Nessuna Rata (grigio chiaro).",
+        action: { label: "Mostrami", type: "spotlight", payload: "monitora-badge" },
+        spotlight: {
+          target: "contratti-table-first-row",
+          title: "Badge di Stato",
+          description: "La colonna Rate mostra il badge colorato. 7 livelli: da Insolvente (rosso) a Saldato (verde). Colori e icone cambiano automaticamente in base a pagamenti e scadenze.",
+          placement: "bottom",
+          navigateTo: "/contratti",
+        },
+      },
+      {
+        id: "vedi-kpi-finanziari",
+        title: "Controlla i KPI finanziari",
+        description: "4 card in alto: Contratti Attivi, Fatturato Totale, Incassato e Clienti con Rate Scadute. Aggiornamento in tempo reale.",
+        action: { label: "Mostrami", type: "spotlight", payload: "vedi-kpi-finanziari" },
+        spotlight: {
+          target: "contratti-kpi",
+          title: "KPI Finanziari",
+          description: "4 card con i numeri chiave: quanti contratti attivi, fatturato totale, quanto incassato e quanti clienti hanno rate scadute.",
+          placement: "bottom",
+          navigateTo: "/contratti",
+        },
+      },
+    ],
+    faqs: [
+      {
+        question: "Come registro un pagamento?",
+        answer: "Vai in Contratti, apri il dettaglio, scorri alle rate. Clicca \"Paga\" sulla rata. Puoi pagare l'intero o un parziale. Il saldo Cassa si aggiorna automaticamente.",
+      },
+      {
+        question: "Perche' il contratto deve venire prima dell'anamnesi?",
+        answer: "Senza contratto attivo non c'e' copertura assicurativa per le sedute. Il contratto definisce il pacchetto, i crediti e il piano pagamento — e' la base di tutto.",
+      },
+      {
+        question: "I crediti si scalano automaticamente?",
+        answer: "Si. Ogni sessione PT completata in agenda scala un credito dal contratto. Quando crediti e saldo sono esauriti, il contratto si chiude automaticamente.",
+      },
+    ],
+    miniTourSteps: [4, 5, 6],
+  },
+
+  // ── 3. PROFILO & ANAMNESI ──
   {
     id: "profilo-anamnesi",
     title: "Profilo & Anamnesi",
@@ -219,50 +336,6 @@ export const CHAPTERS: Chapter[] = [
       },
     ],
     miniTourSteps: [],
-  },
-
-  // ── 3. GESTISCI CONTRATTI ──
-  {
-    id: "gestisci-contratti",
-    title: "Gestisci Contratti",
-    icon: "FileText",
-    routePattern: "/contratti",
-    intro: "Ogni contratto definisce il pacchetto del cliente: tipo, prezzo, durata, crediti sessione e piano rateale.",
-    actions: [
-      {
-        id: "crea-contratto",
-        title: "Crea un contratto",
-        description: "Seleziona cliente, tipo pacchetto (PT, sala, corso), prezzo, durata e crediti. Il piano rate si genera con un click.",
-        action: { label: "Crea Contratto", type: "navigate", payload: "/contratti" },
-      },
-      {
-        id: "genera-rate",
-        title: "Genera il piano rate",
-        description: "Rate mensili automatiche o manuali. Ogni rata ha data scadenza, importo e stato (pendente, parziale, saldata).",
-      },
-      {
-        id: "registra-pagamento",
-        title: "Registra un pagamento",
-        description: "Apri il dettaglio contratto, scorri alle rate e clicca Paga. Supporta pagamenti parziali e diversi metodi.",
-      },
-      {
-        id: "monitora-badge",
-        title: "Leggi i badge di stato",
-        description: "7 livelli di priorita': Chiuso, Insolvente, Rate in Ritardo, Scaduto, Saldato, In Corso e Nessuna Rata. Colori e icone cambiano automaticamente.",
-      },
-      {
-        id: "vedi-kpi-finanziari",
-        title: "Controlla i KPI finanziari",
-        description: "4 card in alto: Contratti Attivi, Fatturato Totale, Incassato e Clienti con Rate Scadute.",
-      },
-    ],
-    faqs: [
-      {
-        question: "Come registro un pagamento?",
-        answer: "Vai in Contratti, apri il dettaglio, scorri alle rate. Clicca \"Paga\" sulla rata. Puoi pagare l'intero o un parziale. Il saldo Cassa si aggiorna automaticamente.",
-      },
-    ],
-    miniTourSteps: [4, 5, 6],
   },
 
   // ── 4. PIANIFICA AGENDA ──

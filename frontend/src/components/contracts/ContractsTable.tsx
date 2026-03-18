@@ -197,8 +197,8 @@ export function ContractsTable({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((contract) => (
-                <TableRow key={contract.id} className="transition-colors hover:bg-muted/50">
+              {filtered.map((contract, i) => (
+                <TableRow key={contract.id} {...(i === 0 ? { "data-guide": "contratti-table-first-row" } : {})} className="transition-colors hover:bg-muted/50">
                   {/* ── Cliente (link a scheda contratto) ── */}
                   <TableCell className="font-medium">
                     <Link href={`/contratti/${contract.id}`} className="hover:underline">
