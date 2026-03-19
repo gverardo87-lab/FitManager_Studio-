@@ -38,7 +38,7 @@ from api.config import (
     DATABASE_URL,
     NUTRITION_DATABASE_URL,
 )
-from api.database import create_catalog_tables, create_db_and_tables, create_nutrition_tables, engine
+from api.database import create_catalog_tables, create_db_and_tables, create_nutrition_tables, engine, catalog_engine
 from api.logging_config import configure_app_logging
 from api.seed_exercises import seed_builtin_exercises, seed_exercise_media, seed_exercise_relations
 from api.services.license import check_license
@@ -216,12 +216,13 @@ async def lifespan(app: FastAPI):
     create_nutrition_tables()
     logger.info(f"  NUTRITION_DB = {nutrition_path}")
 
-    # ── 4. Seed esercizi builtin + relazioni (idempotente) ──
+    # ── 4. Seed esercizi builtin + relazioni in CATALOG DB (idempotente) ──
+    # Pattern identico a nutrition.db: catalogo scientifico separato da crm.db
     from sqlmodel import Session as SyncSession
-    with SyncSession(engine) as session:
-        seed_builtin_exercises(session)
-        seed_exercise_relations(session)
-        seed_exercise_media(session)
+    with SyncSession(catalog_engine) as catalog_seed_session:
+        seed_builtin_exercises(catalog_seed_session)
+        seed_exercise_relations(catalog_seed_session)
+        seed_exercise_media(catalog_seed_session)
 
     # ── 5. Integrity check ──
     _integrity_check_on_startup(DATABASE_URL, CATALOG_DATABASE_URL)

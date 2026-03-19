@@ -91,8 +91,15 @@ if NUTRITION_DATABASE_URL.startswith("sqlite"):
 
 # --- Table creation ---
 
-# Tabelle catalog (tassonomia scientifica)
+# Tabelle catalog (catalogo scientifico esercizi + tassonomia)
+# Queste tabelle vivono in catalog.db (read-only, shipped con installer).
+# Pattern identico a nutrition.db: catalogo separato, cross-DB ref da crm.db.
 CATALOG_TABLE_NAMES = frozenset({
+    # Esercizi builtin + relazioni
+    "esercizi",
+    "esercizi_relazioni",
+    "esercizi_media",
+    # Tassonomia scientifica
     "muscoli",
     "esercizi_muscoli",
     "articolazioni",
@@ -116,13 +123,19 @@ NUTRITION_TABLE_NAMES = frozenset({
 
 def create_db_and_tables() -> None:
     """
-    Crea le tabelle BUSINESS nel database principale (data.db).
+    Crea le tabelle BUSINESS nel database principale (crm.db).
 
+    ESCLUDE tabelle catalog e nutrition (vivono nei rispettivi DB).
     Usa CREATE TABLE IF NOT EXISTS: sicuro da chiamare piu' volte.
     NON sovrascrive tabelle esistenti, NON aggiunge colonne mancanti
     (per quello servono migrazioni esplicite).
     """
-    SQLModel.metadata.create_all(engine)
+    _excluded = CATALOG_TABLE_NAMES | NUTRITION_TABLE_NAMES
+    business_tables = [
+        t for t in SQLModel.metadata.sorted_tables
+        if t.name not in _excluded
+    ]
+    SQLModel.metadata.create_all(engine, tables=business_tables)
 
 
 def create_catalog_tables() -> None:

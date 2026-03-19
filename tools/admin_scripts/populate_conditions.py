@@ -15,7 +15,7 @@ Zero Ollama. 100% deterministico e replicabile.
 
 Idempotente: pulisce e rigenera ad ogni esecuzione.
 Eseguire dalla root:
-  python -m tools.admin_scripts.populate_conditions [--db dev|prod|both] [--dry-run]
+  python -m tools.admin_scripts.populate_conditions [--db data/catalog.db] [--dry-run]
 """
 
 import argparse
@@ -856,26 +856,21 @@ def process_db(db_path: str, dry_run: bool = False) -> dict:
 
 def main():
     parser = argparse.ArgumentParser(description="Popola esercizi_condizioni (deterministico)")
-    parser.add_argument("--db", choices=["dev", "prod", "both"], default="both")
+    parser.add_argument("--db", default=os.path.join(BASE_DIR, "catalog.db"),
+                        help="Path to catalog.db (default: data/catalog.db)")
     parser.add_argument("--dry-run", action="store_true", help="Simula senza scrivere")
     args = parser.parse_args()
 
-    dbs = []
-    if args.db in ("dev", "both"):
-        dbs.append(("DEV", os.path.join(BASE_DIR, "crm_dev.db")))
-    if args.db in ("prod", "both"):
-        dbs.append(("PROD", os.path.join(BASE_DIR, "crm.db")))
-
-    for label, path in dbs:
-        if not os.path.exists(path):
-            print(f"  SKIP {label}: {path} non trovato")
-            continue
-        print(f"\n=== {label} ({path}) ===")
-        stats = process_db(path, dry_run=args.dry_run)
-        mode = "DRY RUN" if args.dry_run else "SCRITTO"
-        print(f"  Esercizi processati: {stats['exercises']}")
-        print(f"  Esercizi con condizioni: {stats['exercises_with_conditions']}")
-        print(f"  Mapping totali: {stats['mappings']} [{mode}]")
+    path = args.db
+    if not os.path.exists(path):
+        print(f"  SKIP: {path} non trovato")
+        return
+    print(f"\n=== CATALOG ({path}) ===")
+    stats = process_db(path, dry_run=args.dry_run)
+    mode = "DRY RUN" if args.dry_run else "SCRITTO"
+    print(f"  Esercizi processati: {stats['exercises']}")
+    print(f"  Esercizi con condizioni: {stats['exercises_with_conditions']}")
+    print(f"  Mapping totali: {stats['mappings']} [{mode}]")
 
 
 if __name__ == "__main__":

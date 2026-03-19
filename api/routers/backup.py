@@ -39,8 +39,7 @@ from api.models.audit_log import AuditLog
 from api.models.client import Client
 from api.models.contract import Contract
 from api.models.event import Event
-from api.models.exercise import Exercise
-from api.models.exercise_media import ExerciseMedia
+# Exercise/ExerciseMedia: migrati a catalog.db (globali, non piu' in crm.db export)
 from api.models.goal import ClientGoal
 from api.models.measurement import ClientMeasurement, MeasurementValue
 from api.models.movement import CashMovement
@@ -611,23 +610,10 @@ def export_trainer_data(
         select(Todo).where(Todo.trainer_id == tid, Todo.deleted_at == None)  # noqa: E711
     ).all()
 
-    # ── 16. Esercizi custom (solo trainer, no builtin) ──
-    custom_exercises = session.exec(
-        select(Exercise).where(
-            Exercise.trainer_id == tid,
-            Exercise.deleted_at == None,  # noqa: E711
-        )
-    ).all()
-    custom_exercise_ids = [e.id for e in custom_exercises]
-
-    # ── 16b. Media esercizi custom ──
+    # ── 16. Esercizi custom (skipped — esercizi migrati a catalog.db, globali) ──
+    # Custom exercises saranno in tabella separata su crm.db (futuro).
+    custom_exercises: list = []
     custom_media: list = []
-    if custom_exercise_ids:
-        custom_media = session.exec(
-            select(ExerciseMedia).where(
-                ExerciseMedia.exercise_id.in_(custom_exercise_ids),  # type: ignore[union-attr]
-            )
-        ).all()
 
     # ── 17. Audit log (immutabile, completo) ──
     audit = session.exec(

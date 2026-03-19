@@ -8,10 +8,9 @@ Deterministic rule-based assignment:
 
 Idempotent: re-running overwrites previous values.
 Usage:
-    python -m tools.admin_scripts.populate_demand --db dev
-    python -m tools.admin_scripts.populate_demand --db prod
-    python -m tools.admin_scripts.populate_demand --db both
-    python -m tools.admin_scripts.populate_demand --db both --dry-run
+    python -m tools.admin_scripts.populate_demand
+    python -m tools.admin_scripts.populate_demand --db data/catalog.db
+    python -m tools.admin_scripts.populate_demand --dry-run
 """
 
 import argparse
@@ -310,18 +309,12 @@ def populate_demand(db_path: str, dry_run: bool = False) -> dict[str, int]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Populate exercise demand vectors")
-    parser.add_argument("--db", choices=["dev", "prod", "both"], default="both")
+    parser.add_argument("--db", default=str(DATA_DIR / "catalog.db"),
+                        help="Path to catalog.db (default: data/catalog.db)")
     parser.add_argument("--dry-run", action="store_true", help="Preview without writing")
     args = parser.parse_args()
 
-    targets: list[str] = []
-    if args.db in ("prod", "both"):
-        targets.append(str(DATA_DIR / "crm.db"))
-    if args.db in ("dev", "both"):
-        targets.append(str(DATA_DIR / "crm_dev.db"))
-
-    for db_path in targets:
-        populate_demand(db_path, dry_run=args.dry_run)
+    populate_demand(args.db, dry_run=args.dry_run)
 
 
 if __name__ == "__main__":

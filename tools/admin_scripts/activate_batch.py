@@ -10,14 +10,14 @@ Fasi:
   5. VERIFY   — Quality gate sui nuovi attivi
 
 Dopo l'esecuzione, lanciare la pipeline deterministica esterna:
-  python -m tools.admin_scripts.populate_taxonomy --db both
-  python -m tools.admin_scripts.populate_conditions --db both
-  python -m tools.admin_scripts.populate_exercise_relations --db both
-  python -m tools.admin_scripts.fill_subset_gaps --db both
-  python -m tools.admin_scripts.verify_exercise_quality --db both
+  python -m tools.admin_scripts.populate_taxonomy
+  python -m tools.admin_scripts.populate_conditions
+  python -m tools.admin_scripts.populate_exercise_relations
+  python -m tools.admin_scripts.fill_subset_gaps
+  python -m tools.admin_scripts.verify_exercise_quality
 
 Eseguire dalla root:
-  python -m tools.admin_scripts.activate_batch [--db dev|prod|both] [--dry-run] [--batch-size 50]
+  python -m tools.admin_scripts.activate_batch [--db data/catalog.db] [--dry-run] [--batch-size 50]
 """
 
 import argparse
@@ -81,13 +81,8 @@ PHOTO_OPTIONAL_CATEGORIES = {"avviamento", "mobilita", "stretching", "cardio"}
 # ================================================================
 
 def get_db_paths(db_arg: str) -> list[str]:
-    """Resolve DB paths from CLI argument."""
-    paths = []
-    if db_arg in ("dev", "both"):
-        paths.append(os.path.join(BASE_DIR, "crm_dev.db"))
-    if db_arg in ("prod", "both"):
-        paths.append(os.path.join(BASE_DIR, "crm.db"))
-    return paths
+    """Resolve DB path from CLI argument. Returns single-element list for catalog.db."""
+    return [db_arg]
 
 
 def has_photos(exercise_id: int) -> bool:
@@ -776,7 +771,8 @@ def main():
     parser = argparse.ArgumentParser(
         description="Orchestratore attivazione batch esercizi (Foto-First)"
     )
-    parser.add_argument("--db", choices=["dev", "prod", "both"], default="both")
+    parser.add_argument("--db", default=os.path.join(BASE_DIR, "catalog.db"),
+                        help="Path to catalog.db (default: data/catalog.db)")
     parser.add_argument("--dry-run", action="store_true",
                         help="Audit + select senza modifiche")
     parser.add_argument("--batch-size", type=int, default=50,
@@ -923,11 +919,11 @@ def main():
     print(f"\n{'=' * 60}")
     print("  PROSSIMI PASSI:")
     print("  Eseguire la pipeline deterministica:")
-    print("    python -m tools.admin_scripts.populate_taxonomy --db both")
-    print("    python -m tools.admin_scripts.populate_conditions --db both")
-    print("    python -m tools.admin_scripts.populate_exercise_relations --db both")
-    print("    python -m tools.admin_scripts.fill_subset_gaps --db both")
-    print("    python -m tools.admin_scripts.verify_exercise_quality --db both")
+    print("    python -m tools.admin_scripts.populate_taxonomy")
+    print("    python -m tools.admin_scripts.populate_conditions")
+    print("    python -m tools.admin_scripts.populate_exercise_relations")
+    print("    python -m tools.admin_scripts.fill_subset_gaps")
+    print("    python -m tools.admin_scripts.verify_exercise_quality")
     print("=" * 60)
 
 

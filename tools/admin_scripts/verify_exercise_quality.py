@@ -10,7 +10,7 @@ Audit completo del database esercizi per verificare:
   - Cross-reference controindicazioni con contraindication-engine
 
 Eseguire dalla root:
-  python -m tools.admin_scripts.verify_exercise_quality [--db dev|prod|both] [--verbose]
+  python -m tools.admin_scripts.verify_exercise_quality [--db data/catalog.db] [--verbose]
 """
 
 import argparse
@@ -261,20 +261,14 @@ def audit_db(db_path: str, verbose: bool = False) -> dict:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Exercise quality audit (Phase 5)")
-    parser.add_argument("--db", choices=["dev", "prod", "both"], default="both")
+    parser.add_argument("--db", default=os.path.join(BASE_DIR, "catalog.db"),
+                        help="Path to catalog.db (default: data/catalog.db)")
     parser.add_argument("--verbose", action="store_true", help="Show per-exercise issues")
     args = parser.parse_args()
 
     print("Exercise Quality Audit — Phase 5")
     print("=" * 60)
 
-    dbs = []
-    if args.db in ("dev", "both"):
-        dbs.append(os.path.join(BASE_DIR, "crm_dev.db"))
-    if args.db in ("prod", "both"):
-        dbs.append(os.path.join(BASE_DIR, "crm.db"))
-
-    for db_path in dbs:
-        audit_db(db_path, verbose=args.verbose)
+    audit_db(args.db, verbose=args.verbose)
 
     print("\nDone.")

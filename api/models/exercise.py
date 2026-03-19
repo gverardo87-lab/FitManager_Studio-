@@ -1,16 +1,17 @@
 # api/models/exercise.py
 """
-Modello Exercise — mappa la tabella 'esercizi'.
+Modello Exercise — mappa la tabella 'esercizi' in catalog.db.
 
-Dual ownership:
-- trainer_id = NULL → esercizio builtin (seed), visibile a tutti, non modificabile
-- trainer_id = X → esercizio custom del trainer, CRUD completo
+Catalogo scientifico read-only (shipped con installer).
+Nessun trainer_id: gli esercizi builtin sono globali.
+Esercizi custom del trainer saranno in tabella separata su crm.db (futuro).
 
 Campi JSON (muscoli, coaching_cues, errori_comuni, controindicazioni)
 serializzati come TEXT e deserializzati nello schema Pydantic.
 
-v2: campi ricchi per scheda professionale (anatomia, biomeccanica,
-esecuzione, coaching, media).
+v3: migrato da crm.db a catalog.db per separazione architetturale.
+    crm.db contiene solo dati business sacri del trainer.
+    catalog.db contiene catalogo scientifico read-only (come nutrition.db).
 """
 
 from datetime import datetime, timezone
@@ -22,7 +23,6 @@ class Exercise(SQLModel, table=True):
     __tablename__ = "esercizi"
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    trainer_id: Optional[int] = Field(default=None, foreign_key="trainers.id", index=True)
 
     # Identita'
     nome: str = Field(index=True)

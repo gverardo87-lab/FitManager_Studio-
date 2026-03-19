@@ -8,7 +8,7 @@ Per i ~118 esercizi con in_subset=1:
 
 Idempotente: pulisce e rigenera i mapping ad ogni esecuzione.
 Eseguire dalla root:
-  python -m tools.admin_scripts.populate_taxonomy [--db dev|prod|both]
+  python -m tools.admin_scripts.populate_taxonomy [--db data/catalog.db]
 """
 
 import argparse
@@ -582,27 +582,20 @@ def verify(db_path: str) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Populate taxonomy mappings for subset")
-    parser.add_argument("--db", choices=["dev", "prod", "both"], default="both",
-                        help="Which database to process")
+    parser.add_argument("--db", default=os.path.join(BASE_DIR, "catalog.db"),
+                        help="Path to catalog.db (default: data/catalog.db)")
     args = parser.parse_args()
 
-    print("Taxonomy Population — Subset Only")
+    print("Taxonomy Population — Subset Only (catalog.db)")
     print("=" * 60)
 
-    dbs = []
-    if args.db in ("dev", "both"):
-        dbs.append(os.path.join(BASE_DIR, "crm_dev.db"))
-    if args.db in ("prod", "both"):
-        dbs.append(os.path.join(BASE_DIR, "crm.db"))
-
-    for db_path in dbs:
-        populate_db(db_path)
+    db_path = args.db
+    populate_db(db_path)
 
     print(f"\n{'=' * 60}")
     print("  VERIFICATION")
     print("=" * 60)
 
-    for db_path in dbs:
-        verify(db_path)
+    verify(db_path)
 
     print("\nDone.")

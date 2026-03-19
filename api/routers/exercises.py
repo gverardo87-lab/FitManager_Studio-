@@ -1,33 +1,27 @@
 # api/routers/exercises.py
 """
-CRUD + filtri per archivio esercizi.
-v2: contenuto ricco, media upload, relazioni progressione/regressione.
+Catalogo esercizi — read-only da catalog.db + tassonomia scientifica.
 
-Dual ownership:
-- Builtin (trainer_id=NULL): visibili a tutti, NON modificabili/eliminabili
-- Custom (trainer_id=X): CRUD completo per il trainer proprietario
+v3: esercizi builtin migrati in catalog.db (read-only, shipped con installer).
+    Pattern identico a nutrition.db: catalogo separato da crm.db.
+    Esercizi custom del trainer in crm.db = feature futura.
 
-Bouncer adattato: WHERE (trainer_id = ? OR trainer_id IS NULL) AND deleted_at IS NULL
+Tutte le query esercizi usano catalog_session (catalog.db).
 """
 
 import json
 import logging
-import uuid
-from datetime import datetime, timezone
-from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, status
 from sqlmodel import Session, select, func, or_
 
-from api.config import DATA_DIR
 from api.dependencies import get_current_trainer
 from api.database import get_catalog_session, get_session
 from api.models.exercise import Exercise
 from api.models.exercise_media import ExerciseMedia
 from api.models.exercise_relation import ExerciseRelation
 from api.models.trainer import Trainer
-from api.routers._audit import log_audit
 from api.models.muscle import Muscle, ExerciseMuscle
 from api.models.joint import Joint, ExerciseJoint
 from api.models.medical_condition import MedicalCondition, ExerciseCondition
@@ -48,26 +42,21 @@ logger = logging.getLogger("fitmanager.api")
 
 router = APIRouter(prefix="/exercises", tags=["exercises"])
 
-# Media storage root — usa DATA_DIR da config (gestisce PyInstaller frozen)
-MEDIA_ROOT = DATA_DIR / "media" / "exercises"
-ALLOWED_CONTENT_TYPES = {
-    "image/jpeg", "image/png", "image/webp",
-    "video/mp4", "video/quicktime",
-}
-MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB
+
+# NOTE: media upload disabilitato (catalog.db e' read-only).
+# Media builtin gestiti via seed_exercise_media.json.
 
 
 # ═══════════════════════════════════════════════════════════════
 # HELPERS
 # ═══════════════════════════════════════════════════════════════
 
-def _bouncer_exercise(session: Session, exercise_id: int, trainer_id: int) -> Exercise:
-    """Trova esercizio: (trainer_id match) OR (builtin). 404 se non trovato."""
-    exercise = session.exec(
+def _bouncer_exercise(catalog_session: Session, exercise_id: int) -> Exercise:
+    """Trova esercizio builtin in catalog.db. 404 se non trovato."""
+    exercise = catalog_session.exec(
         select(Exercise).where(
             Exercise.id == exercise_id,
             Exercise.deleted_at == None,  # noqa: E711
-            or_(Exercise.trainer_id == trainer_id, Exercise.trainer_id == None),  # noqa: E711
         )
     ).first()
     if not exercise:
@@ -106,8 +95,8 @@ def _to_response(
     return resp
 
 
-def _get_media(session: Session, exercise_id: int) -> list[ExerciseMedia]:
-    return list(session.exec(
+def _get_media(catalog_session: Session, exercise_id: int) -> list[ExerciseMedia]:
+    return list(catalog_session.exec(
         select(ExerciseMedia)
         .where(ExerciseMedia.exercise_id == exercise_id)
         .order_by(ExerciseMedia.ordine, ExerciseMedia.id)
@@ -159,8 +148,8 @@ def _get_taxonomy_conditions(catalog_session: Session, exercise_id: int) -> list
     ]
 
 
-def _get_relazioni(session: Session, exercise_id: int) -> list[ExerciseRelationResponse]:
-    rows = session.exec(
+def _get_relazioni(catalog_session: Session, exercise_id: int) -> list[ExerciseRelationResponse]:
+    rows = catalog_session.exec(
         select(ExerciseRelation, Exercise)
         .join(Exercise, ExerciseRelation.related_exercise_id == Exercise.id)
         .where(
@@ -262,10 +251,10 @@ def _validate_exercise(exercise: Exercise) -> list[str]:
 @router.get("/archive-stats")
 def get_archive_stats(
     trainer: Trainer = Depends(get_current_trainer),
-    session: Session = Depends(get_session),
+    catalog_session: Session = Depends(get_catalog_session),
 ):
     """Statistiche esercizi archiviati (in_subset=False). Solo informativo."""
-    rows = session.exec(
+    rows = catalog_session.exec(
         select(Exercise.categoria, func.count(Exercise.id))
         .where(
             Exercise.in_subset == False,  # noqa: E712
@@ -274,7 +263,7 @@ def get_archive_stats(
         .group_by(Exercise.categoria)
     ).all()
     by_categoria = {cat: count for cat, count in rows}
-    active_count = session.exec(
+    active_count = catalog_session.exec(
         select(func.count(Exercise.id)).where(
             Exercise.in_subset == True,  # noqa: E712
             Exercise.deleted_at == None,  # noqa: E711
@@ -315,7 +304,7 @@ def get_safety_map(
 @router.get("", response_model=ExerciseListResponse)
 def list_exercises(
     trainer: Trainer = Depends(get_current_trainer),
-    session: Session = Depends(get_session),
+    catalog_session: Session = Depends(get_catalog_session),
     search: Optional[str] = Query(None, description="Ricerca per nome"),
     categoria: Optional[str] = Query(None),
     attrezzatura: Optional[str] = Query(None),
@@ -325,14 +314,12 @@ def list_exercises(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=1200, ge=1, le=2000),
 ):
-    """Lista esercizi con filtri. Include builtin + custom del trainer.
+    """Lista esercizi dal catalogo scientifico (catalog.db).
     Database attivo: solo esercizi con in_subset=True sono visibili.
-    I 966 esercizi archiviati (in_subset=False) restano nel DB per reinserimento futuro.
     """
     query = select(Exercise).where(
         Exercise.deleted_at == None,  # noqa: E711
-        or_(Exercise.trainer_id == trainer.id, Exercise.trainer_id == None),  # noqa: E711
-        Exercise.in_subset == True,  # noqa: E712 — database attivo (118 esercizi)
+        Exercise.in_subset == True,  # noqa: E712
     )
 
     if search:
@@ -352,10 +339,10 @@ def list_exercises(
         query = query.where(Exercise.muscoli_primari.ilike(f'%"{muscolo}"%'))
 
     count_query = select(func.count()).select_from(query.subquery())
-    total = session.exec(count_query).one()
+    total = catalog_session.exec(count_query).one()
 
     offset = (page - 1) * page_size
-    exercises = session.exec(
+    exercises = catalog_session.exec(
         query.order_by(Exercise.nome).offset(offset).limit(page_size)
     ).all()
 
@@ -363,7 +350,7 @@ def list_exercises(
     exercise_ids = [e.id for e in exercises if e.id is not None]
     thumbnail_map: dict[int, str] = {}
     if exercise_ids:
-        all_media = session.exec(
+        all_media = catalog_session.exec(
             select(ExerciseMedia)
             .where(
                 ExerciseMedia.exercise_id.in_(exercise_ids),
@@ -374,7 +361,6 @@ def list_exercises(
         for m in all_media:
             eid = m.exercise_id
             if eid in thumbnail_map:
-                # Prefer fdb:exec_start over existing
                 if m.descrizione and "exec_start" in m.descrizione:
                     thumbnail_map[eid] = m.url
             else:
@@ -399,13 +385,14 @@ def list_exercises(
 def get_exercise(
     exercise_id: int,
     trainer: Trainer = Depends(get_current_trainer),
-    session: Session = Depends(get_session),
     catalog_session: Session = Depends(get_catalog_session),
 ):
-    """Singolo esercizio per ID — enriched con media, relazioni e tassonomia."""
-    exercise = _bouncer_exercise(session, exercise_id, trainer.id)
-    media = _get_media(session, exercise_id)
-    relazioni = _get_relazioni(session, exercise_id)
+    """Singolo esercizio per ID — enriched con media, relazioni e tassonomia.
+    Tutto da catalog.db (esercizi + tassonomia nella stessa sessione).
+    """
+    exercise = _bouncer_exercise(catalog_session, exercise_id)
+    media = _get_media(catalog_session, exercise_id)
+    relazioni = _get_relazioni(catalog_session, exercise_id)
     muscoli = _get_taxonomy_muscles(catalog_session, exercise_id)
     joints = _get_taxonomy_joints(catalog_session, exercise_id)
     conditions = _get_taxonomy_conditions(catalog_session, exercise_id)
@@ -422,43 +409,13 @@ def get_exercise(
 def create_exercise(
     data: ExerciseCreate,
     trainer: Trainer = Depends(get_current_trainer),
-    session: Session = Depends(get_session),
 ):
-    """Crea esercizio custom. trainer_id iniettato da JWT."""
-    exercise = Exercise(
-        trainer_id=trainer.id,
-        nome=data.nome,
-        nome_en=data.nome_en,
-        categoria=data.categoria,
-        pattern_movimento=data.pattern_movimento,
-        force_type=data.force_type,
-        lateral_pattern=data.lateral_pattern,
-        muscoli_primari=json.dumps(data.muscoli_primari, ensure_ascii=False),
-        muscoli_secondari=json.dumps(data.muscoli_secondari or [], ensure_ascii=False),
-        attrezzatura=data.attrezzatura,
-        difficolta=data.difficolta,
-        rep_range_forza=data.rep_range_forza,
-        rep_range_ipertrofia=data.rep_range_ipertrofia,
-        rep_range_resistenza=data.rep_range_resistenza,
-        ore_recupero=data.ore_recupero,
-        descrizione_anatomica=data.descrizione_anatomica,
-        descrizione_biomeccanica=data.descrizione_biomeccanica,
-        setup=data.setup,
-        esecuzione=data.esecuzione,
-        respirazione=data.respirazione,
-        tempo_consigliato=data.tempo_consigliato,
-        coaching_cues=json.dumps(data.coaching_cues or [], ensure_ascii=False),
-        errori_comuni=json.dumps(data.errori_comuni or [], ensure_ascii=False),
-        note_sicurezza=data.note_sicurezza,
-        controindicazioni=json.dumps(data.controindicazioni or [], ensure_ascii=False),
-        is_builtin=False,
+    """Esercizi custom — feature futura. Catalogo builtin e' read-only."""
+    raise HTTPException(
+        status.HTTP_501_NOT_IMPLEMENTED,
+        "Creazione esercizi custom non ancora disponibile. "
+        "Il catalogo scientifico contiene 500 esercizi builtin.",
     )
-    session.add(exercise)
-    session.flush()
-    log_audit(session, "exercise", exercise.id, "CREATE", trainer.id)
-    session.commit()
-    session.refresh(exercise)
-    return _to_response(exercise)
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -470,31 +427,12 @@ def update_exercise(
     exercise_id: int,
     data: ExerciseUpdate,
     trainer: Trainer = Depends(get_current_trainer),
-    session: Session = Depends(get_session),
 ):
-    """Aggiorna esercizio (builtin o custom). Il trainer ha pieno controllo."""
-    exercise = _bouncer_exercise(session, exercise_id, trainer.id)
-    _guard_custom(exercise)
-
-    update_data = data.model_dump(exclude_unset=True)
-    changes: dict = {}
-
-    for field, value in update_data.items():
-        old_val = getattr(exercise, field)
-        new_val = _serialize_field(field, value)
-
-        if new_val != old_val:
-            changes[field] = {"old": old_val, "new": new_val}
-        setattr(exercise, field, new_val)
-
-    log_audit(session, "exercise", exercise.id, "UPDATE", trainer.id, changes or None)
-    session.add(exercise)
-    session.commit()
-    session.refresh(exercise)
-
-    resp = _to_response(exercise)
-    resp.suggerimenti = _validate_exercise(exercise)
-    return resp
+    """Modifica esercizi custom — feature futura. Catalogo builtin e' read-only."""
+    raise HTTPException(
+        status.HTTP_501_NOT_IMPLEMENTED,
+        "Modifica esercizi non ancora disponibile. Il catalogo scientifico e' read-only.",
+    )
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -505,16 +443,12 @@ def update_exercise(
 def delete_exercise(
     exercise_id: int,
     trainer: Trainer = Depends(get_current_trainer),
-    session: Session = Depends(get_session),
 ):
-    """Soft-delete esercizio custom. Blocca su builtin."""
-    exercise = _bouncer_exercise(session, exercise_id, trainer.id)
-    _guard_custom(exercise)
-
-    exercise.deleted_at = datetime.now(timezone.utc)
-    session.add(exercise)
-    log_audit(session, "exercise", exercise.id, "DELETE", trainer.id)
-    session.commit()
+    """Eliminazione esercizi custom — feature futura. Catalogo builtin e' read-only."""
+    raise HTTPException(
+        status.HTTP_501_NOT_IMPLEMENTED,
+        "Eliminazione esercizi non ancora disponibile. Il catalogo scientifico e' read-only.",
+    )
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -526,59 +460,12 @@ def upload_exercise_media(
     exercise_id: int,
     file: UploadFile,
     trainer: Trainer = Depends(get_current_trainer),
-    session: Session = Depends(get_session),
 ):
-    """Upload immagine/video per esercizio custom."""
-    exercise = _bouncer_exercise(session, exercise_id, trainer.id)
-    _guard_custom(exercise)
-
-    # Validazione content-type
-    if file.content_type not in ALLOWED_CONTENT_TYPES:
-        raise HTTPException(
-            status.HTTP_400_BAD_REQUEST,
-            f"Tipo file non consentito. Accettati: JPEG, PNG, WebP, MP4",
-        )
-
-    # Leggi contenuto e verifica dimensione
-    content = file.file.read()
-    if len(content) > MAX_FILE_SIZE:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "File troppo grande (max 50 MB)")
-
-    # Determina tipo e estensione
-    tipo = "video" if file.content_type.startswith("video/") else "image"
-    ext_map = {
-        "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp",
-        "video/mp4": "mp4", "video/quicktime": "mov",
-    }
-    ext = ext_map.get(file.content_type, "bin")
-
-    # Salva su disco
-    media_dir = MEDIA_ROOT / str(exercise_id)
-    media_dir.mkdir(parents=True, exist_ok=True)
-    filename = f"{uuid.uuid4().hex[:12]}.{ext}"
-    filepath = media_dir / filename
-    filepath.write_bytes(content)
-
-    # Conta media esistenti per ordine
-    existing_count = session.exec(
-        select(func.count(ExerciseMedia.id))
-        .where(ExerciseMedia.exercise_id == exercise_id)
-    ).one()
-
-    # Crea record DB
-    media = ExerciseMedia(
-        exercise_id=exercise_id,
-        trainer_id=trainer.id,
-        tipo=tipo,
-        url=f"/media/exercises/{exercise_id}/{filename}",
-        ordine=existing_count,
-        descrizione=file.filename,
+    """Upload media — feature futura. Catalogo builtin e' read-only."""
+    raise HTTPException(
+        status.HTTP_501_NOT_IMPLEMENTED,
+        "Upload media non disponibile. Il catalogo scientifico e' read-only.",
     )
-    session.add(media)
-    log_audit(session, "exercise_media", exercise_id, "UPLOAD", trainer.id, {"file": filename})
-    session.commit()
-    session.refresh(media)
-    return ExerciseMediaResponse.model_validate(media)
 
 
 @router.delete("/{exercise_id}/media/{media_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -586,29 +473,12 @@ def delete_exercise_media(
     exercise_id: int,
     media_id: int,
     trainer: Trainer = Depends(get_current_trainer),
-    session: Session = Depends(get_session),
 ):
-    """Elimina media di un esercizio custom."""
-    exercise = _bouncer_exercise(session, exercise_id, trainer.id)
-    _guard_custom(exercise)
-
-    media = session.exec(
-        select(ExerciseMedia).where(
-            ExerciseMedia.id == media_id,
-            ExerciseMedia.exercise_id == exercise_id,
-        )
-    ).first()
-    if not media:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Media non trovato")
-
-    # Rimuovi file da disco (best-effort)
-    file_path = MEDIA_ROOT / str(exercise_id) / Path(media.url).name
-    if file_path.exists():
-        file_path.unlink()
-
-    session.delete(media)
-    log_audit(session, "exercise_media", exercise_id, "DELETE_MEDIA", trainer.id, {"media_id": media_id})
-    session.commit()
+    """Elimina media — feature futura. Catalogo builtin e' read-only."""
+    raise HTTPException(
+        status.HTTP_501_NOT_IMPLEMENTED,
+        "Eliminazione media non disponibile. Il catalogo scientifico e' read-only.",
+    )
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -619,11 +489,11 @@ def delete_exercise_media(
 def get_exercise_relations(
     exercise_id: int,
     trainer: Trainer = Depends(get_current_trainer),
-    session: Session = Depends(get_session),
+    catalog_session: Session = Depends(get_catalog_session),
 ):
     """Relazioni di un esercizio (progressioni/regressioni/varianti). Endpoint leggero."""
-    _bouncer_exercise(session, exercise_id, trainer.id)
-    return _get_relazioni(session, exercise_id)
+    _bouncer_exercise(catalog_session, exercise_id)
+    return _get_relazioni(catalog_session, exercise_id)
 
 
 @router.post("/{exercise_id}/relations", response_model=ExerciseRelationResponse, status_code=status.HTTP_201_CREATED)
@@ -631,42 +501,11 @@ def create_exercise_relation(
     exercise_id: int,
     data: ExerciseRelationCreate,
     trainer: Trainer = Depends(get_current_trainer),
-    session: Session = Depends(get_session),
 ):
-    """Crea relazione tra esercizi (progressione/regressione/variante)."""
-    _bouncer_exercise(session, exercise_id, trainer.id)
-
-    # Verifica che l'esercizio correlato esista
-    related = _bouncer_exercise(session, data.related_exercise_id, trainer.id)
-
-    # Verifica duplicato
-    existing = session.exec(
-        select(ExerciseRelation).where(
-            ExerciseRelation.exercise_id == exercise_id,
-            ExerciseRelation.related_exercise_id == data.related_exercise_id,
-            ExerciseRelation.tipo_relazione == data.tipo_relazione,
-        )
-    ).first()
-    if existing:
-        raise HTTPException(status.HTTP_409_CONFLICT, "Relazione gia' esistente")
-
-    relation = ExerciseRelation(
-        exercise_id=exercise_id,
-        related_exercise_id=data.related_exercise_id,
-        tipo_relazione=data.tipo_relazione,
-    )
-    session.add(relation)
-    log_audit(session, "exercise_relation", exercise_id, "CREATE_RELATION", trainer.id, {
-        "related_id": data.related_exercise_id, "tipo": data.tipo_relazione,
-    })
-    session.commit()
-    session.refresh(relation)
-
-    return ExerciseRelationResponse(
-        id=relation.id,
-        related_exercise_id=relation.related_exercise_id,
-        related_exercise_nome=related.nome,
-        tipo_relazione=relation.tipo_relazione,
+    """Creazione relazioni — feature futura. Catalogo builtin e' read-only."""
+    raise HTTPException(
+        status.HTTP_501_NOT_IMPLEMENTED,
+        "Creazione relazioni non disponibile. Il catalogo scientifico e' read-only.",
     )
 
 
@@ -675,22 +514,9 @@ def delete_exercise_relation(
     exercise_id: int,
     relation_id: int,
     trainer: Trainer = Depends(get_current_trainer),
-    session: Session = Depends(get_session),
 ):
-    """Elimina relazione tra esercizi."""
-    _bouncer_exercise(session, exercise_id, trainer.id)
-
-    relation = session.exec(
-        select(ExerciseRelation).where(
-            ExerciseRelation.id == relation_id,
-            ExerciseRelation.exercise_id == exercise_id,
-        )
-    ).first()
-    if not relation:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Relazione non trovata")
-
-    session.delete(relation)
-    log_audit(session, "exercise_relation", exercise_id, "DELETE_RELATION", trainer.id, {
-        "relation_id": relation_id,
-    })
-    session.commit()
+    """Eliminazione relazioni — feature futura. Catalogo builtin e' read-only."""
+    raise HTTPException(
+        status.HTTP_501_NOT_IMPLEMENTED,
+        "Eliminazione relazioni non disponibile. Il catalogo scientifico e' read-only.",
+    )

@@ -56,16 +56,16 @@ def _parse_muscles(raw_value: str | None) -> tuple[str, ...]:
     return tuple(items)
 
 
-def load_rankable_exercises(session: Session, trainer_id: int) -> list[RankableExercise]:
-    """Carica gli esercizi builtin + custom del trainer, senza leak multi-tenant."""
+def load_rankable_exercises(catalog_session: Session) -> list[RankableExercise]:
+    """Carica gli esercizi attivi dal catalogo globale (catalog.db)."""
     statement = (
         select(Exercise)
         .where(Exercise.deleted_at.is_(None))
         .where(Exercise.in_subset.is_(True))
-        .where((Exercise.is_builtin.is_(True)) | (Exercise.trainer_id == trainer_id))
+        .where(Exercise.is_builtin.is_(True))
         .order_by(Exercise.nome)
     )
-    exercises = session.exec(statement).all()
+    exercises = catalog_session.exec(statement).all()
     return [
         RankableExercise(
             id=exercise.id,

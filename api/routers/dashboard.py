@@ -14,7 +14,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy import bindparam
 from sqlmodel import Session, select, func, text
 
-from api.database import get_session
+from api.database import get_catalog_session, get_session
 from api.dependencies import get_current_trainer
 from api.models.trainer import Trainer
 from api.models.client import Client
@@ -45,6 +45,7 @@ router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 def get_dashboard_summary(
     trainer: Trainer = Depends(get_current_trainer),
     session: Session = Depends(get_session),
+    catalog_session: Session = Depends(get_catalog_session),
 ):
     """
     KPI aggregati per la dashboard del trainer.
@@ -133,8 +134,8 @@ def get_dashboard_summary(
     # 6. Saldo di cassa attuale (computed on read)
     saldo_attuale = _compute_saldo(session, trainer, as_of=today)
 
-    # 7. Esercizi attivi (in_subset=True)
-    exercise_count = session.exec(
+    # 7. Esercizi attivi (in_subset=True) — catalog.db
+    exercise_count = catalog_session.exec(
         select(func.count(Exercise.id)).where(
             Exercise.in_subset == True,
             Exercise.deleted_at == None,

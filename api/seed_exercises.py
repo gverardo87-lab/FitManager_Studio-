@@ -1,16 +1,17 @@
 # api/seed_exercises.py
 """
-Seed esercizi builtin + relazioni + media nel database.
+Seed esercizi builtin + relazioni + media in catalog.db.
 
 Chiamato al startup dell'API (lifespan). Se la tabella esercizi contiene
 gia' record builtin, il seed viene skippato (idempotente).
 
-Legge da data/exercises/:
-- seed_exercises.json — 311 esercizi attivi (in_subset=1) con ID preservati
-- seed_exercise_relations.json — 426 relazioni (progressioni/regressioni/varianti)
-- seed_exercise_media.json — 494 media (foto inizio/fine movimento)
+Architettura: esercizi builtin vivono in catalog.db (read-only, shipped con installer).
+Pattern identico a nutrition.db: catalogo separato da crm.db (business).
 
-Gli esercizi archiviati (~750) verranno reinseriti gradualmente via activate_batch.py.
+Legge da data/exercises/:
+- seed_exercises.json — 500 esercizi attivi con ID preservati
+- seed_exercise_relations.json — 940 relazioni (progressioni/regressioni/varianti)
+- seed_exercise_media.json — 1788 media (foto inizio/fine movimento)
 """
 
 import json
@@ -50,7 +51,6 @@ def seed_builtin_exercises(session: Session) -> int:
     for ex in exercises_data:
         exercise = Exercise(
             id=ex.get("id"),  # preserva ID originali per FK relazioni
-            trainer_id=None,
             nome=ex["nome"],
             nome_en=ex.get("nome_en"),
             categoria=ex["categoria"],
@@ -90,7 +90,7 @@ def seed_builtin_exercises(session: Session) -> int:
     return inserted
 
 
-RELATIONS_SEED_FILE = DATA_DIR / "exercises" / "seed_exercise_relations.json"
+RELATIONS_SEED_FILE = DATA_DIR / "exercises" / "seed_exercise_progressions.json"
 
 
 def seed_exercise_relations(session: Session) -> int:
@@ -182,7 +182,6 @@ def seed_exercise_media(session: Session) -> int:
         if m["exercise_id"] in existing_ids:
             session.add(ExerciseMedia(
                 exercise_id=m["exercise_id"],
-                trainer_id=None,  # builtin
                 tipo=m["tipo"],
                 url=m["url"],
                 ordine=m["ordine"],

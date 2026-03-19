@@ -111,7 +111,7 @@ def build_plan_package(
         context.scientific_profile.livello_scientifico,
     )
     canonical_plan = _build_canonical_plan(template_plan)
-    exercises = load_rankable_exercises(session, trainer.id)
+    exercises = load_rankable_exercises(catalog_session)
     exercise_lookup = {exercise.id: exercise for exercise in exercises}
 
     safety_entries = context.safety_map.entries if context.safety_map is not None else {}

@@ -11,7 +11,7 @@ Lo script genera automaticamente relazioni bidirezionali:
 
 Idempotente (cancella e rigenera), dual-DB, dry-run obbligatorio prima dell'applicazione.
 Eseguire dalla root:
-  python -m tools.admin_scripts.populate_exercise_relations [--db dev|prod|both] [--dry-run]
+  python -m tools.admin_scripts.populate_exercise_relations [--db data/catalog.db] [--dry-run]
 
 Ultimo aggiornamento catene: 2026-03-19 (500 esercizi attivi).
 """
@@ -1053,8 +1053,8 @@ if __name__ == "__main__":
         description="Popola progressioni/regressioni/varianti per subset curato"
     )
     parser.add_argument(
-        "--db", choices=["dev", "prod", "both"], default="both",
-        help="Quale database processare"
+        "--db", default=os.path.join(BASE_DIR, "catalog.db"),
+        help="Path to catalog.db (default: data/catalog.db)"
     )
     parser.add_argument(
         "--dry-run", action="store_true",
@@ -1065,13 +1065,6 @@ if __name__ == "__main__":
     print("Populate Exercise Relations")
     print("=" * 70)
 
-    dbs: list[str] = []
-    if args.db in ("dev", "both"):
-        dbs.append(os.path.join(BASE_DIR, "crm_dev.db"))
-    if args.db in ("prod", "both"):
-        dbs.append(os.path.join(BASE_DIR, "crm.db"))
-
-    for db_path in dbs:
-        populate_relations(db_path, dry_run=args.dry_run)
+    populate_relations(args.db, dry_run=args.dry_run)
 
     print("\nDone.")

@@ -2,6 +2,12 @@
 """
 build_catalog.py — Costruisce catalog.db dalle tabelle tassonomiche del DB sorgente.
 
+NOTE: After the catalog migration, catalog.db IS the primary source for exercises
+and taxonomy. This script is now only needed for the initial build or to rebuild
+catalog.db from scratch. All population scripts (populate_taxonomy, populate_conditions,
+populate_demand, populate_exercise_relations, fill_subset_gaps, activate_batch) now
+write directly to catalog.db.
+
 Estrae le 7 tabelle catalog dal DB monolitico (crm.db o crm_dev.db)
 e le copia in un catalog.db pulito e autonomo.
 

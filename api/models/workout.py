@@ -88,7 +88,9 @@ class WorkoutExercise(SQLModel, table=True):
     # Se NULL → esercizio "straight" nella sessione
     # Se set → esercizio dentro un blocco (blocchi_sessione)
     id_blocco: Optional[int] = Field(default=None, foreign_key="blocchi_sessione.id")
-    id_esercizio: int = Field(foreign_key="esercizi.id")
+    # Cross-DB ref a catalog.db (no FK constraint, come componenti_pasto.alimento_id)
+    # Integrity verificata a livello applicativo nel router
+    id_esercizio: int = Field(index=True)
     # ordine: posizione nella sessione (esercizi straight) o nel blocco (esercizi in blocco)
     ordine: int
     # posizione_nel_blocco: ordine dentro il blocco (None per esercizi straight)

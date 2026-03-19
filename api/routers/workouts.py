@@ -15,7 +15,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session, select, func
 
-from api.database import get_session
+from api.database import get_catalog_session, get_session
 from api.dependencies import get_current_trainer
 from api.models.trainer import Trainer
 from api.models.client import Client
@@ -70,15 +70,14 @@ def _check_client_ownership(session: Session, client_id: int, trainer_id: int) -
         )
 
 
-def _validate_exercise_ids(session: Session, exercise_ids: set[int], trainer_id: int) -> None:
-    """Verifica che tutti gli id_esercizio esistano e siano accessibili."""
+def _validate_exercise_ids(catalog_session: Session, exercise_ids: set[int]) -> None:
+    """Verifica che tutti gli id_esercizio esistano nel catalogo."""
     if not exercise_ids:
         return
-    existing = session.exec(
+    existing = catalog_session.exec(
         select(Exercise.id).where(
             Exercise.id.in_(exercise_ids),
             Exercise.deleted_at == None,  # noqa: E711
-            (Exercise.trainer_id == None) | (Exercise.trainer_id == trainer_id),  # noqa: E711
         )
     ).all()
     found = set(existing)
@@ -116,11 +115,16 @@ def _build_plan_response(
     session: Session,
     plan: WorkoutPlan,
     client_map: dict[int, Client] | None = None,
+    catalog_session: Session | None = None,
 ) -> WorkoutPlanResponse:
     """
     Costruisce WorkoutPlanResponse con sessioni + esercizi + blocchi enriched.
     Query batch: plan → sessioni → blocchi → esercizi → JOIN esercizi catalogo.
+
+    catalog_session: sessione catalog.db per lookup esercizi. Se None, usa session (legacy).
     """
+    cat = catalog_session or session
+
     # 1. Sessioni della scheda
     sessions = session.exec(
         select(WorkoutSession)
@@ -156,7 +160,7 @@ def _build_plan_response(
     exercise_ref_ids = list({e.id_esercizio for e in all_exercises})
     exercise_map: dict[int, Exercise] = {}
     if exercise_ref_ids:
-        refs = session.exec(
+        refs = cat.exec(
             select(Exercise).where(Exercise.id.in_(exercise_ref_ids))
         ).all()
         exercise_map = {r.id: r for r in refs}
@@ -378,12 +382,13 @@ def create_workout(
     data: WorkoutPlanCreate,
     trainer: Trainer = Depends(get_current_trainer),
     session: Session = Depends(get_session),
+    catalog_session: Session = Depends(get_catalog_session),
 ):
     """Crea scheda allenamento completa in una transazione."""
     if data.id_cliente is not None:
         _check_client_ownership(session, data.id_cliente, trainer.id)
 
-    _validate_exercise_ids(session, _collect_exercise_ids(data.sessioni), trainer.id)
+    _validate_exercise_ids(catalog_session, _collect_exercise_ids(data.sessioni))
 
     now = datetime.now(timezone.utc).isoformat()
 
@@ -408,7 +413,7 @@ def create_workout(
     session.commit()
     session.refresh(plan)
 
-    return _build_plan_response(session, plan)
+    return _build_plan_response(session, plan, catalog_session=catalog_session)
 
 
 # ════════════════════════════════════════════════════════════
@@ -419,6 +424,7 @@ def create_workout(
 def list_workouts(
     trainer: Trainer = Depends(get_current_trainer),
     session: Session = Depends(get_session),
+    catalog_session: Session = Depends(get_catalog_session),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=50, ge=1, le=200),
     id_cliente: Optional[int] = Query(default=None),
@@ -456,7 +462,7 @@ def list_workouts(
         clients = session.exec(select(Client).where(Client.id.in_(client_ids))).all()
         client_map = {c.id: c for c in clients}
 
-    items = [_build_plan_response(session, p, client_map) for p in plans]
+    items = [_build_plan_response(session, p, client_map, catalog_session=catalog_session) for p in plans]
 
     return WorkoutPlanListResponse(items=items, total=total, page=page, page_size=page_size)
 
@@ -470,10 +476,11 @@ def get_workout(
     workout_id: int,
     trainer: Trainer = Depends(get_current_trainer),
     session: Session = Depends(get_session),
+    catalog_session: Session = Depends(get_catalog_session),
 ):
     """Dettaglio scheda con sessioni + esercizi + blocchi enriched."""
     plan = _bouncer_workout(session, workout_id, trainer.id)
-    return _build_plan_response(session, plan)
+    return _build_plan_response(session, plan, catalog_session=catalog_session)
 
 
 # ════════════════════════════════════════════════════════════
@@ -486,13 +493,14 @@ def update_workout(
     data: WorkoutPlanUpdate,
     trainer: Trainer = Depends(get_current_trainer),
     session: Session = Depends(get_session),
+    catalog_session: Session = Depends(get_catalog_session),
 ):
     """Aggiorna metadati scheda (nome, obiettivo, livello, note, durata)."""
     plan = _bouncer_workout(session, workout_id, trainer.id)
 
     update_data = data.model_dump(exclude_unset=True)
     if not update_data:
-        return _build_plan_response(session, plan)
+        return _build_plan_response(session, plan, catalog_session=catalog_session)
 
     if "id_cliente" in update_data and update_data["id_cliente"] is not None:
         _check_client_ownership(session, update_data["id_cliente"], trainer.id)
@@ -525,7 +533,7 @@ def update_workout(
     session.commit()
     session.refresh(plan)
 
-    return _build_plan_response(session, plan)
+    return _build_plan_response(session, plan, catalog_session=catalog_session)
 
 
 # ════════════════════════════════════════════════════════════
@@ -538,6 +546,7 @@ def replace_sessions(
     sessions: list[WorkoutSessionInput],
     trainer: Trainer = Depends(get_current_trainer),
     session: Session = Depends(get_session),
+    catalog_session: Session = Depends(get_catalog_session),
 ):
     """
     Full-replace sessioni + blocchi + esercizi.
@@ -551,7 +560,7 @@ def replace_sessions(
             detail="Almeno una sessione richiesta",
         )
 
-    _validate_exercise_ids(session, _collect_exercise_ids(sessions), trainer.id)
+    _validate_exercise_ids(catalog_session, _collect_exercise_ids(sessions))
 
     # DELETE: esercizi → blocchi → sessioni (ordine FK corretto)
     old_sessions = session.exec(
@@ -569,7 +578,7 @@ def replace_sessions(
     session.commit()
     session.refresh(plan)
 
-    return _build_plan_response(session, plan)
+    return _build_plan_response(session, plan, catalog_session=catalog_session)
 
 
 # ════════════════════════════════════════════════════════════
@@ -601,6 +610,7 @@ def duplicate_workout(
     id_cliente: Optional[int] = Query(default=None, description="Assegna copia a altro cliente"),
     trainer: Trainer = Depends(get_current_trainer),
     session: Session = Depends(get_session),
+    catalog_session: Session = Depends(get_catalog_session),
 ):
     """Duplica scheda (per nuovo cliente o nuova settimana). Copia plan + sessioni + blocchi + esercizi."""
     source = _bouncer_workout(session, workout_id, trainer.id)
@@ -730,4 +740,4 @@ def duplicate_workout(
     session.commit()
     session.refresh(new_plan)
 
-    return _build_plan_response(session, new_plan)
+    return _build_plan_response(session, new_plan, catalog_session=catalog_session)
