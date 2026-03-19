@@ -22,6 +22,8 @@ import {
   Wheat,
   CookingPot,
   Droplets,
+  ChevronDown,
+  FlaskConical,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -160,6 +162,184 @@ function MacroPill({
   );
 }
 
+// ── Nutrition label (micro detail) ────────────────────────────────────────
+
+interface NutrientRow {
+  label: string;
+  value: number | null | undefined;
+  unit: string;
+}
+
+const MINERAL_ROWS: { key: string; label: string; unit: string }[] = [
+  { key: "calcio_mg", label: "Calcio", unit: "mg" },
+  { key: "ferro_mg", label: "Ferro", unit: "mg" },
+  { key: "zinco_mg", label: "Zinco", unit: "mg" },
+  { key: "magnesio_mg", label: "Magnesio", unit: "mg" },
+  { key: "fosforo_mg", label: "Fosforo", unit: "mg" },
+  { key: "potassio_mg", label: "Potassio", unit: "mg" },
+  { key: "selenio_ug", label: "Selenio", unit: "\u00b5g" },
+];
+
+const VITAMIN_ROWS: { key: string; label: string; unit: string }[] = [
+  { key: "vitamina_a_ug", label: "Vitamina A", unit: "\u00b5g RE" },
+  { key: "vitamina_d_ug", label: "Vitamina D", unit: "\u00b5g" },
+  { key: "vitamina_e_mg", label: "Vitamina E", unit: "mg" },
+  { key: "vitamina_c_mg", label: "Vitamina C", unit: "mg" },
+  { key: "vitamina_b1_mg", label: "Tiamina (B1)", unit: "mg" },
+  { key: "vitamina_b2_mg", label: "Riboflavina (B2)", unit: "mg" },
+  { key: "vitamina_b3_mg", label: "Niacina (B3)", unit: "mg" },
+  { key: "vitamina_b6_mg", label: "Vitamina B6", unit: "mg" },
+  { key: "vitamina_b9_ug", label: "Folato (B9)", unit: "\u00b5g" },
+  { key: "vitamina_b12_ug", label: "Vitamina B12", unit: "\u00b5g" },
+];
+
+function NutrientTable({
+  rows,
+  food,
+  title,
+}: {
+  rows: { key: string; label: string; unit: string }[];
+  food: Food;
+  title: string;
+}) {
+  const hasAny = rows.some(
+    (r) => (food as unknown as Record<string, unknown>)[r.key] != null,
+  );
+  if (!hasAny) return null;
+
+  return (
+    <div>
+      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1.5">
+        {title}
+      </p>
+      <div className="space-y-0">
+        {rows.map((r) => {
+          const val = (food as unknown as Record<string, unknown>)[r.key] as
+            | number
+            | null
+            | undefined;
+          if (val == null) return null;
+          return (
+            <div
+              key={r.key}
+              className="flex items-center justify-between py-[3px] border-b border-border/20 last:border-0"
+            >
+              <span className="text-[11px] text-muted-foreground">
+                {r.label}
+              </span>
+              <span className="text-[11px] font-medium tabular-nums">
+                {val < 1 ? val.toFixed(2) : val < 10 ? val.toFixed(1) : Math.round(val)}{" "}
+                <span className="text-muted-foreground/50">{r.unit}</span>
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function NutritionLabel({
+  food,
+  isOpen,
+  onToggle,
+}: {
+  food: Food;
+  isOpen: boolean;
+  onToggle: () => void;
+}) {
+  const hasMicro = food.calcio_mg != null || food.vitamina_c_mg != null;
+
+  return (
+    <div className="mx-6">
+      <button
+        onClick={onToggle}
+        className="flex w-full items-center justify-between py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <span className="flex items-center gap-1.5">
+          <FlaskConical className="h-3 w-3" />
+          Scheda nutrizionale
+          {!hasMicro && (
+            <span className="text-[10px] font-normal normal-case tracking-normal text-muted-foreground/40">
+              (non disponibile)
+            </span>
+          )}
+        </span>
+        <ChevronDown
+          className={`h-3.5 w-3.5 transition-transform duration-200 ${
+            isOpen ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+      {isOpen && hasMicro && (
+        <div className="pb-4 space-y-3">
+          {/* Macro dettaglio */}
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1.5">
+              Macronutrienti
+            </p>
+            <div className="space-y-0">
+              {[
+                { label: "Energia", val: food.energia_kcal, unit: "kcal" },
+                { label: "Proteine", val: food.proteine_g, unit: "g" },
+                { label: "Carboidrati", val: food.carboidrati_g, unit: "g" },
+                {
+                  label: "  di cui zuccheri",
+                  val: food.di_cui_zuccheri_g,
+                  unit: "g",
+                },
+                { label: "Grassi", val: food.grassi_g, unit: "g" },
+                {
+                  label: "  di cui saturi",
+                  val: food.di_cui_saturi_g,
+                  unit: "g",
+                },
+                { label: "Fibra", val: food.fibra_g, unit: "g" },
+              ].map(
+                (r) =>
+                  r.val != null && (
+                    <div
+                      key={r.label}
+                      className={`flex items-center justify-between py-[3px] border-b border-border/20 last:border-0 ${
+                        r.label.startsWith("  ")
+                          ? "pl-3 text-muted-foreground/70"
+                          : ""
+                      }`}
+                    >
+                      <span className="text-[11px] text-muted-foreground">
+                        {r.label.trim()}
+                      </span>
+                      <span className="text-[11px] font-medium tabular-nums">
+                        {r.val < 1
+                          ? r.val.toFixed(2)
+                          : r.val < 10
+                            ? r.val.toFixed(1)
+                            : Math.round(r.val)}{" "}
+                        <span className="text-muted-foreground/50">
+                          {r.unit}
+                        </span>
+                      </span>
+                    </div>
+                  ),
+              )}
+            </div>
+          </div>
+          <NutrientTable rows={MINERAL_ROWS} food={food} title="Minerali" />
+          <NutrientTable rows={VITAMIN_ROWS} food={food} title="Vitamine" />
+          <p className="text-[9px] text-muted-foreground/30 text-right">
+            Valori per 100g · Fonte: {food.source === "crea" ? "CREA 2019" : food.source === "usda" ? "USDA FDC" : food.source}
+          </p>
+        </div>
+      )}
+      {isOpen && !hasMicro && (
+        <p className="pb-3 text-[11px] text-muted-foreground/40">
+          Micronutrienti non ancora disponibili per questo alimento.
+        </p>
+      )}
+    </div>
+  );
+}
+
 // ── Props ─────────────────────────────────────────────────────────────────
 
 interface FoodSearchSidebarProps {
@@ -187,6 +367,7 @@ export function FoodSearchSidebar({
   const [quantita, setQuantita] = useState<string>("100");
   const [addedCount, setAddedCount] = useState(0);
   const [activeTabIdx, setActiveTabIdx] = useState(0);
+  const [nutritionLabelOpen, setNutritionLabelOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
   const addComponent = useAddComponent();
@@ -237,6 +418,7 @@ export function FoodSearchSidebar({
   const handleSelect = (food: Food) => {
     setSelectedFood(food);
     setQuantita("100");
+    setNutritionLabelOpen(false);
   };
 
   const handleAdd = async () => {
@@ -460,6 +642,15 @@ export function FoodSearchSidebar({
                   <p className="text-[10px] text-muted-foreground/40 mt-1.5">
                     valori per 100g
                   </p>
+                </div>
+
+                {/* Scheda nutrizionale (collapsible) */}
+                <div className="border-t border-border/40">
+                  <NutritionLabel
+                    food={selectedFood}
+                    isOpen={nutritionLabelOpen}
+                    onToggle={() => setNutritionLabelOpen((v) => !v)}
+                  />
                 </div>
 
                 {/* Divider */}
