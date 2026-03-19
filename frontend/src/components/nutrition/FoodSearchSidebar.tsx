@@ -92,6 +92,7 @@ function FoodRow({
   return (
     <button
       onClick={onSelect}
+      aria-selected={isSelected}
       className={`group w-full flex items-center justify-between gap-3 px-5 py-3 text-left transition-all duration-150 border-b border-border/30 ${
         isSelected
           ? "bg-teal-50/70 dark:bg-teal-950/20 border-l-2 border-l-teal-500"
@@ -304,7 +305,7 @@ export function FoodSearchSidebar({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[1100px] h-[82vh] flex flex-col gap-0 p-0 overflow-hidden rounded-2xl">
+      <DialogContent className="sm:max-w-[1100px] h-[82vh] flex flex-col gap-0 p-0 overflow-hidden rounded-2xl overscroll-contain">
         {/* ── Header ── */}
         <DialogHeader className="px-6 pt-5 pb-0 shrink-0">
           <div className="flex items-center justify-between">
@@ -329,7 +330,9 @@ export function FoodSearchSidebar({
             <Search className="absolute left-3.5 top-3 h-4 w-4 text-muted-foreground/60" />
             <Input
               ref={searchRef}
-              placeholder="Cerca per nome..."
+              placeholder="Cerca per nome…"
+              aria-label="Cerca alimento per nome"
+              autoComplete="off"
               className="pl-10 h-10 text-sm rounded-xl bg-muted/40 border-0 focus-visible:ring-1 focus-visible:ring-teal-500/40"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -339,13 +342,15 @@ export function FoodSearchSidebar({
 
         {/* ── Category tabs ── */}
         <div className="px-6 pb-4 shrink-0">
-          <div className="flex gap-1.5">
+          <div className="flex gap-1.5" role="tablist" aria-label="Categorie alimentari">
             {CATEGORY_TABS.map((tab, idx) => {
               const Icon = tab.icon;
               const isActive = activeTabIdx === idx;
               return (
                 <button
                   key={tab.label}
+                  role="tab"
+                  aria-selected={isActive}
                   onClick={() => setActiveTabIdx(idx)}
                   className={`flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-[13px] font-medium transition-all duration-150 ${
                     isActive
@@ -354,7 +359,7 @@ export function FoodSearchSidebar({
                   }`}
                 >
                   <Icon className={`h-3.5 w-3.5 ${isActive ? "text-white/80" : "text-muted-foreground/60"}`} />
-                  <span className="hidden sm:inline">{tab.label}</span>
+                  {tab.label}
                 </button>
               );
             })}
@@ -462,13 +467,15 @@ export function FoodSearchSidebar({
 
                 {/* Quantity section */}
                 <div className="px-6 py-5 space-y-3">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Quantita (grammi)
+                  <label htmlFor="food-qty-input" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Quantità (grammi)
                   </label>
                   <Input
+                    id="food-qty-input"
                     type="number"
                     min={1}
                     max={2000}
+                    autoComplete="off"
                     autoFocus
                     value={quantita}
                     onChange={(e) => setQuantita(e.target.value)}
