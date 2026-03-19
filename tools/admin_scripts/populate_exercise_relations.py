@@ -13,7 +13,7 @@ Idempotente (cancella e rigenera), dual-DB, dry-run obbligatorio prima dell'appl
 Eseguire dalla root:
   python -m tools.admin_scripts.populate_exercise_relations [--db dev|prod|both] [--dry-run]
 
-Ultimo aggiornamento catene: 2026-03-01 (280+ esercizi attivi).
+Ultimo aggiornamento catene: 2026-03-19 (500 esercizi attivi).
 """
 
 import argparse
@@ -431,6 +431,354 @@ PROGRESSION_CHAINS: list[tuple[str, list[int]]] = [
         # Trazioni Assistite -> Trazioni -> Salita alla Corda
         [92, 83, 849],
     ),
+
+    # ══════════════════════════════════════════════
+    # BATCH 500 — nuove catene (2026-03-19)
+    # ══════════════════════════════════════════════
+
+    # ── ADDUTTORI ──
+    (
+        "Adduttori — isolation",
+        # Ball Squeeze -> Adduzione Elastico -> Adduzione Laterale a Terra
+        # -> Macchina Adduttori -> Adduttori Femorali
+        [226, 222, 227, 220, 1036],
+    ),
+
+    # ── CALF RAISE ──
+    (
+        "Calf raise — isolation",
+        # Sollevamenti Plantari Banda -> Calf Raise Smith -> Sollevamento Polpaccio Seduto
+        [451, 943, 867],
+    ),
+
+    # ── CORE bodyweight ──
+    (
+        "Core — bodyweight progressione",
+        # TVA Activation -> Bird Dog -> Crunch Declinato -> Crunch a Gambe Tese
+        # -> Crunch laterale -> Leg Pull-In Seduto -> Hollow Body -> V-ups -> Stir the Pot
+        [1090, 130, 506, 638, 899, 874, 131, 126, 264],
+    ),
+    (
+        "Core — piegamenti/ginocchio",
+        # Piegamenti a Ginocchio -> Panca Piana Rematore Gambe -> Piegamenti Declinati
+        [548, 562, 505],
+    ),
+    (
+        "Core — crunch isolation",
+        # Crunch 493 -> Crunch 921 -> Crunch a sedere -> Crunch su Palla 553
+        # -> Crunch su Palla 492 -> Crunch con Manubri -> Crunch Obliqui
+        # -> Crunch Obliqui a Terra -> Crunch Declinato Obliquo
+        # -> Crunch con Elastico -> Crunch Inversi Cavo -> Dead Bug con Peso
+        [493, 921, 639, 553, 492, 1063, 740, 741, 504, 1066, 441, 263],
+    ),
+    (
+        "Core — crunch cavo/palla",
+        # Crunch a Braccia Alzate -> Crunch su Cavo Seduto -> Crunch alla Corda
+        [491, 444, 850],
+    ),
+    (
+        "Core — gambe appese",
+        # Elevazioni Gambe Panca -> Crunch Invertito -> Sollevamento Ginocchia Parallele
+        # -> Crunch sospeso inverso
+        [563, 835, 659, 1029],
+    ),
+    (
+        "Core — isometrico collo",
+        # Esercizio Isometrico Collo
+        # -> Toccate Alternate Tallone
+        [635, 356],
+    ),
+    (
+        "Core — hip thrust smith",
+        # Hip Thrust Smith Machine -> Alzate Laterali Cavo Un Braccio
+        [937, 746],
+    ),
+
+    # ── CORE cardio ──
+    (
+        "Core — cardio beg->int->adv",
+        # Bear Crawl -> Camminata Tappeto -> Corsa/Camminata sentieri
+        # -> Nordic Walking -> Marcia ad Alta Ginocchia
+        # -> Pattinaggio -> Tappeto Corsa -> Circuit Cardio AMRAP
+        [286, 1059, 1040, 1097, 1095, 923, 968, 1104],
+    ),
+
+    # ── CURL bicipiti ──
+    (
+        "Curl — bicipiti cavo/inclinato",
+        # Curl Bicipiti Cavo in Piedi -> Curl Inclinato Manubri su Panca
+        # -> Curl Bicipiti Inclinato 621 -> Curl Bicipiti Inclinato 990
+        # -> Curl Inclinato a Terra -> Curl a Cavo Sdraiato -> Curl Panca Scott
+        [973, 564, 621, 990, 533, 703, 833],
+    ),
+    (
+        "Curl — polsi",
+        # Curl Polsi Manubri Seduto -> Curl Polsi Inverso su Panca -> Curl Inversivo al Cavo
+        [872, 786, 834],
+    ),
+
+    # ── EXTENSION TRICIPITI ──
+    (
+        "Tricipiti — cavo/banda",
+        # Estensione Tricipiti Banda -> Estensione Cavo Basso
+        # -> Estensione Un Braccio Cavo -> Estensione Manubrio Un Braccio
+        # -> Estensione Seduto Due Braccia
+        [952, 696, 995, 531, 864],
+    ),
+
+    # ── HINGE nuovi ──
+    (
+        "Hinge — accessori glutei",
+        # Kickback Glutei -> Ponte Palla Medicale -> Sollevamento Ipo Banda
+        # -> Estensione Ipo Elastici -> Good Morning Banda -> Good Morning BB
+        # -> Stacco Smith Machine -> Stacco Rumeno Manubri -> Stacco Rumeno Mono KB
+        [588, 792, 606, 604, 380, 1015, 944, 1014, 649],
+    ),
+    (
+        "Hinge — isolation lombare",
+        # Iperestensioni -> Sollevamento Glutei
+        [610, 430],
+    ),
+    (
+        "Hinge — hip thrust compound",
+        # Hip Thrust BB -> Hip Thrust Unilaterale
+        [21, 33],
+    ),
+    (
+        "Hinge — drill esplosivita'",
+        # Drill Accelerazione Muro -> Calci Flutter
+        [690, 567],
+    ),
+
+    # ── HIP THRUST isolation ──
+    (
+        "Hip thrust — glutei isolation",
+        # Fire Hydrant -> Glute Bridge Elastico -> Monster Walk Elastico
+        # -> Ponte Gluteo Gamba Singola -> Kickback Un Gambo Cavo
+        [1087, 1093, 1086, 919, 765],
+    ),
+
+    # ── LATERAL RAISE ──
+    (
+        "Lateral raise — spalle isolation",
+        # Elevazioni Laterali Banda -> Alzate Laterali Manubri -> Alzate Laterali a Cavo
+        # -> Alzate Laterali Un Braccio Cavo -> Alzate Laterali Un Braccio Declinate
+        # -> Elevazioni Laterali Un Braccio a Terra -> Elevazioni Frontali
+        # -> Alzate Frontali Inclinati -> Alzate frontali BB
+        [675, 536, 994, 746, 528, 526, 581, 524, 985],
+    ),
+
+    # ── LEG CURL ──
+    (
+        "Leg curl — ischiocrurale macchine",
+        # Curl Gambe Seduto -> Curl Gambe Sdraiati -> Curl Gambe in Piedi
+        [859, 715, 992],
+    ),
+
+    # ── LEG EXTENSION ──
+    (
+        "Leg extension — quadricipiti",
+        # Estensione Gambe -> Estensione Gambe Unilaterale
+        [13, 915],
+    ),
+
+    # ── MOBILITA' ──
+    (
+        "Mobilita' — colonna toracica",
+        # Chin Tuck -> Wall Angel -> Wall Slide -> Foam Roller Thoracic
+        # -> Rotazioni Toraciche -> Open Book -> Quadruped Thoracic Rotation
+        # -> T-Spine Rotation Foam Roller
+        [1089, 1088, 341, 1092, 201, 207, 342, 339],
+    ),
+    (
+        "Mobilita' — anca",
+        # CARs Anca -> Cerchi d'Anca -> Rocking Hip Flexor
+        # -> Squat Mobility Flow -> Goblet Squat Hold
+        # -> Deep Squat Hold -> 90/90 Anca -> Pigeon Pose Dinamico
+        [332, 198, 340, 338, 344, 208, 202, 336],
+    ),
+    (
+        "Mobilita' — spalla/overhead",
+        # CARs Spalla -> Shoulder Dislocates -> CARs Cervicale
+        # -> Mobilita' Overhead Bastone -> Bretzel Stretch
+        [331, 200, 333, 337, 334],
+    ),
+    (
+        "Mobilita' — lower body",
+        # Mobilita' Caviglie -> Mobilita' Polsi -> Couch Stretch
+        # -> Jefferson Curl Mobilita' -> Scorpion Stretch
+        # -> Spiderman Stretch -> World's Greatest Stretch
+        # -> Squat to Stand -> Downward Dog to Cobra Flow
+        [199, 205, 343, 335, 206, 209, 203, 204, 345],
+    ),
+
+    # ── PULL_H nuovi ──
+    (
+        "Pull orizzontale — rematori nuovi",
+        # Remata Elastico -> Rematore Invertito Fasce -> Rematore sospeso
+        # -> Rematore Inclinato Manubrio -> Rematore Alto Ginocchia
+        [155, 631, 1030, 523, 665],
+    ),
+    (
+        "Pull orizzontale — cardio nuoto",
+        # Nuoto a Crawl Lento -> Nuoto -> Vogatore Intervalli
+        [1098, 170, 1102],
+    ),
+    (
+        "Pull orizzontale — lancio",
+        # Lancio Medicine Ball -> Passata Palle Mediche al Petto
+        [727, 725],
+    ),
+
+    # ── PULL_V nuovi ──
+    (
+        "Pull verticale — cavo/trazioni nuove",
+        # Trazioni alla Cavo Braccio Dritto -> Trazioni al Cavo Sottomano
+        # -> Trazioni alla V-Bar -> Trazioni Negative
+        [851, 1051, 1057, 248],
+    ),
+
+    # ── PUSH_H nuovi ──
+    (
+        "Push orizzontale — cavi/elastici",
+        # Croci con Elastici -> Chest Press Cavi -> Push-up Inclinato
+        [488, 431, 622],
+    ),
+    (
+        "Push orizzontale — croci isolation nuove",
+        # Croci al Cavo -> Croci Cavi Bassi -> Croci Un Braccio Cavo
+        # -> Croci posteriori -> Croci su Panca Piana -> Croci al Corpo -> Svend Press
+        [436, 695, 908, 836, 561, 417, 53],
+    ),
+
+    # ── PUSH_V nuovi ──
+    (
+        "Push verticale — press/croci",
+        # Croci 490 -> Press Overhead Elastico -> Push da Posizione -> Battle Rope
+        [490, 156, 827, 281],
+    ),
+
+    # ── ROTATION ──
+    (
+        "Rotation — progressione completa",
+        # Crunch Bicicletta -> Rotazione Esterna Banda -> Rotazione Esterna
+        # -> Rotazione Esterna Cavo -> Rotazione Interna Banda
+        # -> Rotazione Interna Cavo -> Pallof Press Cavo
+        # -> Pallof Press Rotazione -> Torsioni Cavi
+        # -> Flip Cavo -> Taglio Cavo -> Sollevamento Cavo
+        # -> Twist Palla Medica -> Rematore Un Braccio
+        [129, 557, 556, 558, 630, 435, 236, 785, 443, 437, 978, 977, 726, 955],
+    ),
+
+    # ── SQUAT nuovi ──
+    (
+        "Squat — bodyweight progression",
+        # Squat su sedia -> Squat a Gamba Singola -> Squat con Manubri
+        # -> Squat con Elastici -> Plie' Squat Manubrio
+        # -> Affondi con Manubri -> Affondo Camminato -> Affondo Indietro Manubri
+        # -> Affondo Inclinato -> Step Up Manubri
+        # -> Alzata Turca KB Affondo -> Cossack Squat
+        [463, 912, 540, 967, 798, 525, 419, 535, 550, 542, 655, 224],
+    ),
+    (
+        "Squat — step/equilibrio",
+        # Tavola Equilibrio -> Step-up Sollevamento Ginocchio
+        # -> Calcio al Gluteo Gamba Singola -> Progressione Salti Un Gambo
+        [377, 1011, 918, 913],
+    ),
+    (
+        "Squat — polpacci bodyweight",
+        # Calf Raises a Gambe Unite -> Panca Piana Veloce
+        [516, 402],
+    ),
+    (
+        "Squat — cardio beg->adv",
+        # Corsa -> Ciclismo -> Ellittica -> Scalatore -> Assault Bike
+        # -> Jumping Jacks -> Lateral Shuffle -> Step Aerobics
+        # -> Camminata Acqua -> Burpees -> Burpee Salto -> Shuttle Run
+        # -> HIIT Sprint Tappeto -> Tabata Assault Bike -> Fartlek
+        [159, 160, 169, 168, 167, 1094, 1100, 1096, 1099, 165, 285, 287,
+         1101, 1103, 1105],
+    ),
+    (
+        "Squat — slitta",
+        # Traino Sled Cintura
+        # (collegato come progression dalla Corsa)
+        [924],
+    ),
+
+    # ── STRETCH nuovi ──
+    (
+        "Stretch — femorali/adduttori",
+        # Stretching Femorali -> Stretching Femorali Fascia
+        # -> Allungamento Flessori Anca/Quad -> Allungamento interno coscia
+        # -> Stretching Adduttori Farfalla -> Stretching Adduttori in Piedi
+        # -> Frog Stretch -> 90/90 Hip Stretch
+        [187, 329, 629, 628, 193, 325, 330, 1091],
+    ),
+    (
+        "Stretch — glutei/piriforme",
+        # Stretching Glutei Piriforme -> Stretching Piriforme Supino
+        # -> Stretching IT Band -> Stretching Flessori Anca
+        [194, 323, 321, 195],
+    ),
+    (
+        "Stretch — schiena/lombare",
+        # Stretching Dorsali Child's Pose -> Curl lombare
+        # -> Stretching Quadrato Lombi -> Stretching Gran Dorsale Laterale
+        # -> Abbraccio Ginocchia Petto -> Tilt Bacino in Piedi
+        [190, 699, 326, 324, 608, 1004],
+    ),
+    (
+        "Stretch — polpacci/tibiale",
+        # Stretching Polpacci -> Stretching Polpaccio al Muro -> Stretching Soleo Seduto
+        # -> Allungamento Tibiale Posteriore
+        [188, 319, 320, 801],
+    ),
+    (
+        "Stretch — upper body",
+        # Stretching Collo Laterale -> Stretching Trapezio Superiore
+        # -> Stretching Spalle Cross-Body -> Stretching Pettorali Porta
+        # -> Stretching Bicipite al Muro -> Stretching Tricipiti
+        # -> Stretching Avambracci Flessori -> Stretching Avambracci Estensori
+        [197, 318, 191, 189, 322, 192, 316, 317],
+    ),
+    (
+        "Stretch — quadricipiti",
+        # Stretching Quadricipiti -> Allungamento Flessori Anca/Quadricipiti
+        [186, 629],
+    ),
+    (
+        "Stretch — auto-massaggio",
+        # Auto-Massaggio ITL -> Auto-Massaggio Piriforme
+        [613, 794],
+    ),
+
+    # ── WARMUP / AVVIAMENTO ──
+    (
+        "Warmup — cardio leggero",
+        # Corsa Leggera -> Jumping Jacks -> Skip Sul Posto -> Calci Indietro
+        # -> Cyclette Leggera
+        [175, 176, 177, 178, 315],
+    ),
+    (
+        "Warmup — mobilita' articolare",
+        # Cerchi Braccia -> Arm Circles Dinamici -> Rotazioni Tronco
+        # -> Ginocchia al Petto Alternato -> Scapular Push-Up
+        [179, 307, 180, 185, 314],
+    ),
+    (
+        "Warmup — attivazione lower body",
+        # Squat Bodyweight -> Affondi Camminata BW -> Glute Bridge Attivazione
+        # -> Clamshell Elastico -> Band Walk Laterale
+        [184, 181, 301, 302, 304],
+    ),
+    (
+        "Warmup — dinamico avanzato",
+        # Lateral Shuffle -> A-Skip -> Karaoke/Carioca
+        # -> Toy Soldier March -> Crab Walk
+        [310, 311, 312, 309, 306],
+    ),
 ]
 
 # ================================================================
@@ -489,6 +837,32 @@ VARIATION_PAIRS: list[tuple[int, int, str]] = [
     (148, 77, "Remata TRX <-> Rematore Inverso"),
     (150, 5, "Squat TRX <-> Squat a Corpo Libero"),
     (196, 1085, "Cat-Cow Stretching <-> Cat-Cow Avviamento"),
+    # Batch 500 — varianti nuove
+    (493, 921, "Crunch #493 <-> Crunch #921"),
+    (553, 492, "Crunch su Palla #553 <-> Crunch su Palla #492"),
+    (621, 990, "Curl Bicipiti Inclinato #621 <-> #990"),
+    (536, 994, "Alzate Laterali Manubri <-> Cavo"),
+    (675, 536, "Elevazioni Laterali Banda <-> Alzate Laterali Manubri"),
+    (556, 558, "Rotazione Esterna Manubrio <-> Cavo"),
+    (557, 630, "Rotazione Esterna Banda <-> Rotazione Interna Banda"),
+    (715, 859, "Curl Gambe Sdraiati <-> Curl Gambe Seduto"),
+    (188, 319, "Stretching Polpacci <-> Stretching Polpaccio al Muro"),
+    (187, 329, "Stretching Femorali <-> Femorali con Fascia"),
+    (193, 325, "Stretching Adduttori Farfalla <-> in Piedi"),
+    (194, 323, "Stretching Glutei Piriforme <-> Piriforme Supino"),
+    (316, 317, "Stretching Avambracci Flessori <-> Estensori"),
+    (1088, 341, "Wall Angel <-> Wall Slide"),
+    (1087, 1093, "Fire Hydrant <-> Glute Bridge Elastico"),
+    (613, 794, "Auto-Massaggio ITL <-> Auto-Massaggio Piriforme"),
+    (175, 176, "Corsa Leggera <-> Jumping Jacks (warmup)"),
+    (431, 622, "Chest Press Cavi <-> Push-up Inclinato"),
+    (170, 1098, "Nuoto <-> Nuoto a Crawl Lento"),
+    (159, 160, "Corsa <-> Ciclismo"),
+    (169, 167, "Ellittica <-> Assault Bike"),
+    (161, 1102, "Vogatore <-> Vogatore Intervalli"),
+    (233, 116, "Dead Hang <-> Farmer Walk"),
+    (237, 236, "Pallof Press Elastico <-> Pallof Press Cavo"),
+    (924, 166, "Traino Sled Cintura <-> Spinta Slitta"),
 ]
 
 # ================================================================
