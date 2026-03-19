@@ -61,7 +61,6 @@ from api.schemas.nutrition import (
     MealComponentCreate,
     MealComponentDetail,
     MealComponentUpdate,
-    MealTemplateCreate,
     MealTemplateDetail,
     NutritionPlanCreate,
     NutritionPlanDetail,
@@ -262,7 +261,7 @@ def get_food_categories(
 def search_foods(
     q: Optional[str] = Query(None, description="Ricerca per nome (min 2 caratteri)"),
     categoria_id: Optional[int] = Query(None),
-    limit: int = Query(50, ge=1, le=200),
+    limit: int = Query(50, ge=1, le=1000),
     offset: int = Query(0, ge=0),
     trainer: Trainer = Depends(get_current_trainer),
     nutrition_session: Session = Depends(get_nutrition_session),

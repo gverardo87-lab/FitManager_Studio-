@@ -69,7 +69,7 @@ export function useFoods(q?: string, categoriaId?: number) {
   return useQuery<Food[]>({
     queryKey: ["nutrition-foods", { q, categoriaId }],
     queryFn: async () => {
-      const params = new URLSearchParams({ limit: "50" });
+      const params = new URLSearchParams({ limit: "1000" });
       if (q && q.length >= 2) params.set("q", q);
       if (categoriaId != null) params.set("categoria_id", String(categoriaId));
       const { data } = await apiClient.get<Food[]>(`/nutrition/foods?${params}`);
