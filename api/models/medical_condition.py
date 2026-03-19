@@ -27,7 +27,8 @@ class ExerciseCondition(SQLModel, table=True):
     __tablename__ = "esercizi_condizioni"
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    id_esercizio: int = Field(foreign_key="esercizi.id", index=True)
-    id_condizione: int = Field(foreign_key="condizioni_mediche.id", index=True)
+    # Catalog-only refs (no FK per evitare conflitti con Alembic crm.db)
+    id_esercizio: int = Field(index=True)
+    id_condizione: int = Field(index=True)
     severita: str                           # avoid, caution, modify
     nota: Optional[str] = None              # nota specifica: perche'/come adattare

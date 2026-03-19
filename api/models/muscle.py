@@ -26,7 +26,8 @@ class ExerciseMuscle(SQLModel, table=True):
     __tablename__ = "esercizi_muscoli"
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    id_esercizio: int = Field(foreign_key="esercizi.id", index=True)
-    id_muscolo: int = Field(foreign_key="muscoli.id", index=True)
+    # Catalog-only refs (no FK per evitare conflitti con Alembic crm.db)
+    id_esercizio: int = Field(index=True)
+    id_muscolo: int = Field(index=True)
     ruolo: str                              # primary, secondary, stabilizer
     attivazione: Optional[int] = None       # 0-100 percentuale attivazione (opzionale)

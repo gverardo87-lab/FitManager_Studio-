@@ -16,6 +16,8 @@ class ExerciseRelation(SQLModel, table=True):
     __tablename__ = "esercizi_relazioni"
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    exercise_id: int = Field(foreign_key="esercizi.id", index=True)
-    related_exercise_id: int = Field(foreign_key="esercizi.id", index=True)
+    # Intra-catalog refs (tutte le tabelle in catalog.db, no FK per evitare
+    # conflitti con Alembic che gestisce solo crm.db)
+    exercise_id: int = Field(index=True)
+    related_exercise_id: int = Field(index=True)
     tipo_relazione: str  # "progression" | "regression" | "variation"

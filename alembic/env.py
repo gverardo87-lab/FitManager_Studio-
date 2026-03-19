@@ -1,7 +1,9 @@
 """
-Alembic env.py — configurazione migrazioni database.
+Alembic env.py — migrazioni per crm.db (SOLO tabelle business).
 
-Importa tutti i modelli SQLModel per il supporto autogenerate.
+ESCLUDE tabelle catalog (catalog.db) e nutrition (nutrition.db).
+Quei DB non sono gestiti da Alembic: catalog.db e' costruito da
+build_catalog.py + seed ORM, nutrition.db ha il suo alembic_nutrition.ini.
 
 DATABASE_URL priority:
   1. Variabile d'ambiente DATABASE_URL (per dual-DB dev/prod)
@@ -25,6 +27,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from api.models import *  # noqa: F401, F403
 from sqlmodel import SQLModel
+from api.database import CATALOG_TABLE_NAMES, NUTRITION_TABLE_NAMES
 
 # Alembic Config object
 config = context.config
@@ -38,8 +41,18 @@ if database_url:
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# MetaData per autogenerate
+# MetaData per autogenerate — filtrato alle sole tabelle business
 target_metadata = SQLModel.metadata
+
+# Tabelle da escludere: catalog.db + nutrition.db
+_EXCLUDED_TABLE_NAMES = CATALOG_TABLE_NAMES | NUTRITION_TABLE_NAMES
+
+
+def include_name(name, type_, parent_names):
+    """Filtra: includi SOLO tabelle business (escludi catalog + nutrition)."""
+    if type_ == "table":
+        return name not in _EXCLUDED_TABLE_NAMES
+    return True
 
 
 def run_migrations_offline() -> None:
@@ -50,6 +63,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        include_name=include_name,
     )
 
     with context.begin_transaction():
@@ -69,6 +83,7 @@ def run_migrations_online() -> None:
             connection=connection,
             target_metadata=target_metadata,
             render_as_batch=True,  # SQLite non supporta ALTER TABLE complessi
+            include_name=include_name,
         )
 
         with context.begin_transaction():

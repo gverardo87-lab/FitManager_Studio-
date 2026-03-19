@@ -17,7 +17,8 @@ class ExerciseMedia(SQLModel, table=True):
     __tablename__ = "esercizi_media"
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    exercise_id: int = Field(foreign_key="esercizi.id", index=True)
+    # Intra-catalog FK (esercizi e esercizi_media sono entrambi in catalog.db)
+    exercise_id: int = Field(index=True)
     tipo: str                  # "image" | "video"
     url: str                   # path relativo: /media/exercises/42/img_001.jpg
     ordine: int = Field(default=0)
