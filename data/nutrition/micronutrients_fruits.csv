@@ -1,0 +1,61 @@
+id,nome,calcio_mg,ferro_mg,zinco_mg,magnesio_mg,fosforo_mg,potassio_mg,selenio_ug,vitamina_a_ug,vitamina_d_ug,vitamina_e_mg,vitamina_c_mg,vitamina_b1_mg,vitamina_b2_mg,vitamina_b3_mg,vitamina_b6_mg,vitamina_b9_ug,vitamina_b12_ug,confidence,source_detail
+379,Albicocche secche,55,2.7,0.4,32,71,1162,2.2,180,0,4.33,1,0.02,0.07,2.6,0.14,10,0,high,USDA FDC
+706,Ananas essiccato,25,0.5,0.1,20,10,150,0.1,3,0,0.02,15,0.08,0.03,0.4,0.11,10,0,medium,USDA FDC dried pineapple
+839,"Bacche di acai (polvere, 100%)",260,4.4,0.7,174,124,535,0,6,0,0,0,0.11,0.14,0.4,0.09,0,0,medium,USDA FDC acai powder
+841,Bacche di aronia (chokeberry),30,0.6,0.5,16,23,162,0.4,6,0,1.2,21,0.02,0.02,0.3,0.03,25,0,medium,USDA FDC chokeberry
+840,"Bacche di goji, essiccate",190,6.8,2.0,112,203,1132,50,1341,0,0,48.4,0.15,1.3,4.3,0.75,0,0,high,USDA FDC goji dried
+703,"Banana plantano, cotta",3,0.6,0.1,37,34,499,1.5,56,0,0.14,18.4,0.05,0.05,0.7,0.3,22,0,high,USDA FDC plantain cooked
+391,"Banana, essiccata (chip)",22,1.2,0.5,108,74,1491,3.9,4,0,0.3,7,0.18,0.24,2.8,0.44,14,0,high,USDA FDC banana chips
+698,Carambola (star fruit),3,0.1,0.1,10,12,133,0.6,1,0,0.15,34.4,0.01,0.02,0.4,0.02,12,0,high,USDA FDC starfruit
+922,Carambola (starfruit) essiccata,3,0.1,0.1,10,12,133,0.6,1,0,0.15,34.4,0.01,0.02,0.4,0.02,12,0,high,USDA FDC starfruit
+386,"Cedro, fresco",34,0.4,0.1,8,16,123,0.4,1,0,0.15,38,0.04,0.02,0.2,0.06,11,0,high,CREA 2019
+363,"Ciliegia, fresca",13,0.4,0.1,11,21,222,0,3,0,0.07,7,0.03,0.03,0.2,0.05,4,0,high,CREA 2019
+385,"Clementina, fresca",30,0.1,0.1,11,21,130,0.1,12,0,0.2,48.8,0.09,0.03,0.4,0.06,24,0,high,CREA 2019
+377,"Cocco, polpa fresca",14,2.4,1.1,32,113,356,10.1,0,0,0.24,3.3,0.07,0.02,0.5,0.05,26,0,high,USDA FDC coconut
+695,Cocomero (anguria) a fette,7,0.2,0.1,10,11,112,0.4,28,0,0.05,8.1,0.03,0.02,0.2,0.05,3,0,high,CREA 2019
+838,"Corbezzolo, fresco",30,0.5,0.1,10,20,180,0.3,5,0,0.3,15,0.03,0.03,0.3,0.05,10,0,medium,CREA 2019 stima
+381,Datteri secchi,64,0.9,0.4,54,62,696,3,7,0,0.05,0,0.05,0.07,1.6,0.25,15,0,high,USDA FDC
+380,Fichi secchi,162,2.0,0.5,68,67,680,0.6,0,0,0.35,1.2,0.09,0.08,0.6,0.11,9,0,high,CREA 2019
+837,"Fico d'India (ficodindia), polpa",35,0.4,0.2,17,14,232,0.2,7,0,0.11,2,0.06,0.05,0.4,0.11,6,0,high,CREA 2019
+364,"Fico, fresco",35,0.4,0.2,17,14,232,0.2,7,0,0.11,2,0.06,0.05,0.4,0.11,6,0,high,CREA 2019
+705,"Fragoline di bosco, fresche",26,0.7,0.2,13,24,160,0.4,1,0,0.29,58,0.02,0.02,0.4,0.05,24,0,medium,CREA 2019 fragola
+921,Giuggiola fresca tipo cinese,21,0.5,0.1,10,23,250,0,2,0,0,69,0.02,0.04,0.9,0.08,0,0,high,CREA 2019
+376,"Giuggiola, fresca",21,0.5,0.1,10,23,250,0,2,0,0,69,0.02,0.04,0.9,0.08,0,0,high,CREA 2019
+700,Giuggiole secche,79,1.8,0.3,37,100,531,0,2,0,0,13,0.05,0.04,0.9,0.15,0,0,high,USDA FDC dried jujube
+389,"Guava, fresca",18,0.3,0.2,22,40,417,0.6,31,0,0.73,228,0.07,0.04,1.1,0.11,49,0,high,USDA FDC
+374,"Kaki (cachi), fresco",8,0.2,0.1,9,17,161,0.6,81,0,0.73,7.5,0.03,0.02,0.1,0.1,8,0,high,CREA 2019
+919,Kaki essiccato (hoshigaki),8,0.2,0.1,9,17,161,0.6,81,0,0.73,7.5,0.03,0.02,0.1,0.1,8,0,high,CREA 2019
+702,"Kiwi giallo (golden), sbucciato",20,0.2,0.1,12,29,315,0.4,2,0,1.4,161,0,0.07,0.3,0.08,31,0,high,USDA FDC gold kiwi
+701,"Kiwi verde, sbucciato",34,0.3,0.1,17,34,312,0.2,4,0,1.46,92.7,0.03,0.03,0.3,0.06,25,0,high,CREA 2019 kiwi
+366,"Lamponi, freschi",25,0.7,0.4,22,29,151,0.2,2,0,0.87,26.2,0.03,0.04,0.6,0.06,21,0,high,USDA FDC
+384,"Lime, fresco",33,0.6,0.1,6,18,102,0.4,2,0,0.22,29.1,0.03,0.02,0.2,0.04,8,0,high,USDA FDC
+918,Litchi essiccato,33,1.7,0.3,42,150,658,1.1,0,0,0.5,183,0.05,0.21,3.0,0.17,25,0,high,USDA FDC dried lychee
+388,"Lychee, fresco",5,0.3,0.1,10,31,171,0.6,0,0,0.07,71.5,0.01,0.07,0.6,0.1,14,0,high,USDA FDC
+707,Mango essiccato,11,0.2,0.1,10,14,168,0.6,54,0,0.9,36.4,0.03,0.04,0.7,0.12,43,0,high,USDA FDC
+371,"Mango, fresco",11,0.2,0.1,10,14,168,0.6,54,0,0.9,36.4,0.03,0.04,0.7,0.12,43,0,high,USDA FDC
+390,Maracuja (frutto della passione),12,1.6,0.1,29,68,348,0.6,64,0,0.02,30,0,0.13,1.5,0.1,14,0,high,USDA FDC passion fruit
+699,"Mela cotogna, cruda",11,0.7,0.04,8,17,197,0.6,2,0,0.55,15,0.02,0.03,0.2,0.04,3,0,high,CREA 2019
+842,"Mela rossa (Fuji), fresca",6,0.1,0.04,5,11,107,0,3,0,0.18,4.6,0.02,0.03,0.1,0.04,3,0,high,USDA FDC apple
+843,"Mela verde (Granny Smith), fresca",6,0.1,0.04,5,11,107,0,3,0,0.18,4.6,0.02,0.03,0.1,0.04,3,0,high,USDA FDC apple
+373,"Melograno, semi (arilli)",10,0.3,0.4,12,36,236,0.5,0,0,0.6,10.2,0.07,0.05,0.3,0.08,38,0,high,USDA FDC pomegranate
+387,"Melograno, succo fresco",11,0.1,0.1,7,11,214,0.3,0,0,0.38,0.1,0.02,0.01,0.2,0.04,24,0,high,USDA FDC pomegranate juice
+696,"Melone cantalupo, polpa",9,0.2,0.2,12,15,267,0.4,169,0,0.05,36.7,0.04,0.02,0.7,0.07,21,0,high,CREA 2019
+383,"Mirtilli rossi (cranberries), freschi",8,0.3,0.1,6,13,85,0.1,3,0,1.2,13.3,0.01,0.02,0.1,0.06,1,0,high,USDA FDC cranberries
+697,"Mora di gelso, fresca",39,1.9,0.1,18,38,194,0.6,1,0,0.87,36.4,0.03,0.1,0.6,0.05,6,0,high,USDA FDC mulberry
+367,"More, fresche",29,0.6,0.5,20,22,162,0.4,11,0,1.17,21,0.02,0.03,0.6,0.03,25,0,high,USDA FDC blackberry
+375,"Nespola, fresca",16,0.3,0.1,13,27,266,0.6,76,0,0.89,1,0.02,0.02,0.2,0.1,14,0,high,CREA 2019
+694,"Nettarina (pesca noce), fresca",6,0.3,0.2,9,26,201,0,17,0,0.77,5.4,0.03,0.03,1.1,0.03,5,0,high,CREA 2019
+708,Papaya essiccata,20,0.3,0.1,21,10,182,0.6,47,0,0.3,60.9,0.02,0.03,0.4,0.04,37,0,high,USDA FDC
+372,"Papaya, fresca",20,0.3,0.1,21,10,182,0.6,47,0,0.3,60.9,0.02,0.03,0.4,0.04,37,0,high,USDA FDC
+844,"Pera Williams, fresca",9,0.2,0.1,7,12,116,0.1,1,0,0.12,4.3,0.01,0.03,0.2,0.03,7,0,high,CREA 2019 pera
+704,"Pera abate, fresca",9,0.2,0.1,7,12,116,0.1,1,0,0.12,4.3,0.01,0.03,0.2,0.03,7,0,medium,CREA 2019 pera
+845,"Pesca bianca, fresca",6,0.3,0.2,9,20,190,0.1,16,0,0.73,6.6,0.02,0.03,0.8,0.03,4,0,high,CREA 2019 pesca
+846,"Pesca tabacchiera, fresca",6,0.3,0.2,9,20,190,0.1,16,0,0.73,6.6,0.02,0.03,0.8,0.03,4,0,medium,CREA 2019 pesca
+693,"Pompelmo rosa, fresco",22,0.1,0.1,9,18,135,0.1,46,0,0.13,31.2,0.04,0.02,0.2,0.04,13,0,high,USDA FDC
+378,Prugne secche (senza nocciolo),43,0.9,0.4,41,69,732,0.3,39,0,0.43,0.6,0.05,0.19,1.9,0.21,4,0,high,USDA FDC
+920,"Ribes nero (succo, senza zucchero)",55,1.5,0.3,24,59,322,0,12,0,1.0,181,0.05,0.05,0.3,0.07,0,0,high,CREA 2019
+369,"Ribes nero, fresco",55,1.5,0.3,24,59,322,0,12,0,1.0,181,0.05,0.05,0.3,0.07,0,0,high,CREA 2019
+368,"Ribes rosso, fresco",33,1.0,0.2,13,44,275,0.6,2,0,0.1,41,0.04,0.03,0.1,0.07,8,0,high,CREA 2019
+365,"Susina (prugna), fresca",6,0.2,0.1,7,16,157,0,17,0,0.26,9.5,0.03,0.03,0.4,0.03,5,0,high,CREA 2019
+370,Uva spina (gooseberry),25,0.3,0.1,10,27,198,0.6,15,0,0.37,27.7,0.04,0.03,0.3,0.08,6,0,high,CREA 2019
+382,Uvetta sultanina,50,1.9,0.3,32,101,749,0.7,0,0,0.12,2.3,0.11,0.08,0.8,0.17,5,0,high,CREA 2019
