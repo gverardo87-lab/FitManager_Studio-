@@ -1,7 +1,32 @@
 {
   "permissions": {
     "allow": [
-      "Bash(bash tools/scripts/check-all.sh)"
+      "Bash(bash tools/scripts/check-all.sh)",
+      "Bash(ruff check *)",
+      "Bash(ruff format *)",
+      "Bash(python -m pytest *)",
+      "Bash(python -m tools.admin_scripts.*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git add *)",
+      "Bash(wc *)",
+      "Bash(curl *)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python -c \"import sys,json,subprocess,os; d=json.load(sys.stdin); f=d.get('tool_input',{}).get('file_path',''); ruff=os.path.join('C:/Users/gvera/Projects/FitManager_AI_Studio','venv','Scripts','ruff.exe'); subprocess.run([ruff,'check','--fix',f],capture_output=True) if f.endswith('.py') else None\" 2>/dev/null || true",
+            "timeout": 10,
+            "statusMessage": "Ruff auto-fix..."
+          }
+        ]
+      }
     ]
   }
 }
