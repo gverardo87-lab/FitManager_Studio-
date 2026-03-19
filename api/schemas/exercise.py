@@ -248,13 +248,24 @@ class ExerciseUpdate(BaseModel):
 # ═══════════════════════════════════════════════════════════════
 
 def _parse_json_list(v: Any) -> list:
-    """Parse JSON string → list, passthrough if already list."""
+    """Parse JSON string → list, passthrough if already list.
+    Gestisce anche double-encoded JSON (stringa che parsa a stringa).
+    """
     if isinstance(v, list):
         return v
     if isinstance(v, str):
         try:
             parsed = json.loads(v)
-            return parsed if isinstance(parsed, list) else []
+            if isinstance(parsed, list):
+                return parsed
+            # Double-encoded: la stringa parsata e' a sua volta una stringa JSON
+            if isinstance(parsed, str):
+                try:
+                    inner = json.loads(parsed)
+                    return inner if isinstance(inner, list) else []
+                except (json.JSONDecodeError, TypeError):
+                    return []
+            return []
         except (json.JSONDecodeError, TypeError):
             return []
     return []
