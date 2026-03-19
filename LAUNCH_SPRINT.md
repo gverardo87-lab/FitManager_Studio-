@@ -10,7 +10,7 @@ Obiettivo: **prodotto vendibile entro fine settimana**
 
 | Area | Stato attuale | Obiettivo | Gap |
 |------|--------------|-----------|-----|
-| Esercizi (catalog) | 439 attivi / 1111 totali | 500 attivi | +61 da archivio |
+| Esercizi (catalog) | ✅ 500 attivi / 1111 totali | 500 attivi | Completato |
 | Alimenti (nutrition) | 226 attivi | 500 attivi | +274 nuovi |
 | Piani LARN | Donna under 30 attiva | 3 fasce eta' × 2-3 livelli attivita' | +7 profili |
 | Pagina rinnovi-incassi | 340 LOC, funzionale ma grafica base | CRM-grade come cassa | Redesign UI |
