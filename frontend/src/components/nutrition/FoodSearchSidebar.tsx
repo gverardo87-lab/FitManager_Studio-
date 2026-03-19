@@ -12,7 +12,7 @@
  */
 
 import { useState, useEffect, useRef } from "react";
-import { Search, Loader2, Plus, ArrowLeft, Utensils, Check, X } from "lucide-react";
+import { Search, Loader2, Plus, ArrowLeft, Utensils, Check, X, ChevronDown, ChevronUp, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -55,6 +55,7 @@ export function FoodSearchSidebar({
   const [quantita, setQuantita] = useState<string>("100");
   const [addedCount, setAddedCount] = useState(0);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | undefined>(undefined);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
   const addComponent = useAddComponent();
@@ -192,39 +193,58 @@ export function FoodSearchSidebar({
                 />
               </div>
 
-              {/* Filtro categorie */}
-              <div className="flex flex-wrap gap-1.5">
+              {/* Filtro categorie — collapsabile */}
+              <div>
                 <button
-                  onClick={() => setSelectedCategoryId(undefined)}
-                  className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
-                    selectedCategoryId === undefined
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground hover:bg-muted/80"
-                  }`}
+                  onClick={() => setFiltersOpen((v) => !v)}
+                  className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:bg-muted/50 transition-colors"
                 >
-                  Tutte
+                  <span className="flex items-center gap-1.5">
+                    <Filter className="h-3 w-3" />
+                    Categorie
+                    {selectedCategoryId !== undefined && (
+                      <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold text-primary-foreground leading-none">
+                        1
+                      </span>
+                    )}
+                  </span>
+                  {filtersOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
                 </button>
-                {categories.map((cat) => (
-                  <button
-                    key={cat.id}
-                    onClick={() =>
-                      setSelectedCategoryId(
-                        selectedCategoryId === cat.id ? undefined : cat.id,
-                      )
-                    }
-                    className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
-                      selectedCategoryId === cat.id
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-muted-foreground hover:bg-muted/80"
-                    }`}
-                  >
-                    {cat.nome}
-                  </button>
-                ))}
+                {filtersOpen && (
+                  <div className="flex flex-wrap gap-1.5 pt-2 pb-1">
+                    <button
+                      onClick={() => setSelectedCategoryId(undefined)}
+                      className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
+                        selectedCategoryId === undefined
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground hover:bg-muted/80"
+                      }`}
+                    >
+                      Tutte
+                    </button>
+                    {categories.map((cat) => (
+                      <button
+                        key={cat.id}
+                        onClick={() =>
+                          setSelectedCategoryId(
+                            selectedCategoryId === cat.id ? undefined : cat.id,
+                          )
+                        }
+                        className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
+                          selectedCategoryId === cat.id
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground hover:bg-muted/80"
+                        }`}
+                      >
+                        {cat.nome}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Lista risultati */}
-              <ScrollArea className="flex-1 min-h-0 h-[380px]">
+              <ScrollArea className="flex-1 min-h-0">
                 {isLoading && (
                   <div className="flex items-center justify-center py-12">
                     <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
