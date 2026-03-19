@@ -1,0 +1,20 @@
+# Archive — historical specs, not operational
+# Claude Code deve ignorare questi file per performance e focus
+docs/archive/specs/
+
+# Build artifacts
+dist/
+.next/
+.next-dev/
+__pycache__/
+
+# Dependencies (Claude Code li ignora già, ma esplicito per chiarezza)
+venv/
+node_modules/
+frontend/node_modules/
+
+# Data runtime (non codice)
+data/logs/
+data/media/
+*.db-wal
+*.db-shm

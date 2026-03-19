@@ -21,6 +21,14 @@ Esempio:
 - superseded
 - deprecated
 
+## Indice ADR
+
+| ADR | Data | Stato | Decisione |
+|-----|------|-------|-----------|
+| [ADR-001](ADR-001-single-source-of-truth-scientifica.md) | 2026-03-07 | Accettata | Backend = SSoT per dati scientifici |
+| [ADR-002](ADR-2026-03-09-operational-workspace-case-engine.md) | 2026-03-09 | Accettata | Workspace "Oggi" ranking + dominance matrix |
+| [ADR-003](ADR-003-separazione-architetturale-3-database.md) | 2026-03-19 | Accettata | Separazione 3 DB: crm.db sacro, catalog.db + nutrition.db read-only |
+
 ## Flusso
 
 1. Copia `ADR_TEMPLATE.md`.
