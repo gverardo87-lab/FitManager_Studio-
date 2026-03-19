@@ -24,7 +24,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { toast } from "sonner";
-import { useFoods, useAddComponent, useDeleteComponent, useFoodDetail } from "@/hooks/useNutrition";
+import { useFoods, useAddComponent, useDeleteComponent, useFoodDetail, useNutritionCategories } from "@/hooks/useNutrition";
 import type { Food } from "@/types/api";
 
 // ── Props ─────────────────────────────────────────────────────────────────
@@ -54,11 +54,16 @@ export function FoodSearchSidebar({
   const [selectedFood, setSelectedFood] = useState<Food | null>(null);
   const [quantita, setQuantita] = useState<string>("100");
   const [addedCount, setAddedCount] = useState(0);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | undefined>(undefined);
   const searchRef = useRef<HTMLInputElement>(null);
 
   const addComponent = useAddComponent();
   const deleteComponent = useDeleteComponent();
-  const { data: foods = [], isLoading } = useFoods(debouncedQuery || undefined);
+  const { data: categories = [] } = useNutritionCategories();
+  const { data: foods = [], isLoading } = useFoods(
+    debouncedQuery || undefined,
+    selectedCategoryId,
+  );
   const { data: foodDetail } = useFoodDetail(selectedFood?.id ?? null);
 
   // Debounce ricerca 400ms
@@ -74,6 +79,7 @@ export function FoodSearchSidebar({
     setSelectedFood(null);
     setQuantita("100");
     setAddedCount(0);
+    setSelectedCategoryId(undefined);
   }, [mealId]);
 
   // Autofocus sull'input all'apertura
@@ -186,19 +192,50 @@ export function FoodSearchSidebar({
                 />
               </div>
 
+              {/* Filtro categorie */}
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  onClick={() => setSelectedCategoryId(undefined)}
+                  className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
+                    selectedCategoryId === undefined
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground hover:bg-muted/80"
+                  }`}
+                >
+                  Tutte
+                </button>
+                {categories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() =>
+                      setSelectedCategoryId(
+                        selectedCategoryId === cat.id ? undefined : cat.id,
+                      )
+                    }
+                    className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
+                      selectedCategoryId === cat.id
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    }`}
+                  >
+                    {cat.nome}
+                  </button>
+                ))}
+              </div>
+
               {/* Lista risultati */}
-              <ScrollArea className="flex-1 min-h-0 h-[460px]">
+              <ScrollArea className="flex-1 min-h-0 h-[380px]">
                 {isLoading && (
                   <div className="flex items-center justify-center py-12">
                     <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                   </div>
                 )}
-                {!isLoading && query.length < 2 && (
+                {!isLoading && query.length < 2 && selectedCategoryId === undefined && (
                   <p className="py-12 text-center text-sm text-muted-foreground">
-                    Digita almeno 2 caratteri
+                    Digita almeno 2 caratteri o seleziona una categoria
                   </p>
                 )}
-                {!isLoading && query.length >= 2 && foods.length === 0 && (
+                {!isLoading && (query.length >= 2 || selectedCategoryId !== undefined) && foods.length === 0 && (
                   <p className="py-12 text-center text-sm text-muted-foreground">
                     Nessun alimento trovato
                   </p>

@@ -75,7 +75,7 @@ export function useFoods(q?: string, categoriaId?: number) {
       const { data } = await apiClient.get<Food[]>(`/nutrition/foods?${params}`);
       return data;
     },
-    enabled: !q || q.length >= 2,
+    enabled: categoriaId != null || !q || q.length >= 2,
     staleTime: 2 * 60 * 1000,
   });
 }
