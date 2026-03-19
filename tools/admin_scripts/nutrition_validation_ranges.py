@@ -34,8 +34,8 @@ MINERAL_RANGES = {
 # ══════════════════════════════════════════════════════════════
 
 VITAMIN_RANGES = {
-    "vitamina_a_ug":    (0, 20000),  # max: fegato bovino ~16500 (retinolo eq.)
-    "vitamina_d_ug":    (0, 50),     # max: olio fegato merluzzo ~250 (outlier), pesce ~25
+    "vitamina_a_ug":    (0, 35000),  # max: olio fegato merluzzo ~30000, fegato vitello ~21600
+    "vitamina_d_ug":    (0, 260),    # max: olio fegato merluzzo ~250, pesce grasso ~25
     "vitamina_e_mg":    (0, 100),    # max: olio germe grano ~87, oli vegetali ~50
     "vitamina_c_mg":    (0, 250),    # max: peperoncino ~229, ribes nero ~200
     "vitamina_b1_mg":   (0, 5),      # max: lievito birra ~4.5, germe grano ~2

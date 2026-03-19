@@ -1,0 +1,174 @@
+id,nome,calcio_mg,ferro_mg,zinco_mg,magnesio_mg,fosforo_mg,potassio_mg,selenio_ug,vitamina_a_ug,vitamina_d_ug,vitamina_e_mg,vitamina_c_mg,vitamina_b1_mg,vitamina_b2_mg,vitamina_b3_mg,vitamina_b6_mg,vitamina_b9_ug,vitamina_b12_ug,confidence,source_detail
+936,Acciughe in pasta (tubo),200,4.0,1.5,50,220,500,60.0,18,10.0,0.9,0,0.07,0.3,17.0,0.12,9,5.5,medium,USDA anchovy paste
+750,Acciughe sotto sale (lavate),232,4.6,1.7,60,252,544,68.1,20,11.0,1.0,0,0.08,0.36,19.9,0.14,10,6.2,high,USDA FDC anchovy canned
+432,"Agnello, coscia cruda",10,1.6,3.5,22,188,310,10.5,0,0.1,0.2,0,0.1,0.22,5.7,0.3,16,2.6,high,CREA 2019 agnello coscia
+727,"Agnello, coscio cotto al forno",12,2.0,4.2,24,210,290,12.0,0,0.1,0.2,0,0.08,0.25,5.5,0.25,14,2.8,high,USDA FDC lamb leg roasted
+433,"Agnello, costolette crude",14,1.5,3.0,20,170,280,9.0,0,0.1,0.1,0,0.09,0.2,5.0,0.28,14,2.5,high,CREA 2019 agnello costolette
+927,"Agnello, macinato cotto",16,2.0,4.1,22,195,275,12.0,0,0.1,0.2,0,0.08,0.24,5.3,0.25,13,3.0,high,USDA FDC ground lamb cooked
+434,"Agnello, macinato crudo",13,1.6,3.4,20,175,290,10.0,0,0.1,0.2,0,0.1,0.21,5.2,0.3,15,2.7,high,USDA FDC ground lamb
+505,"Albume d'uovo, cotto",7,0.1,0.01,11,15,163,20.0,0,0,0,0,0.0,0.44,0.1,0.01,4,0.1,high,USDA FDC egg white cooked
+416,"Ali di pollo, cotte al forno",15,1.3,1.8,20,158,177,22.0,30,0.2,0.3,0,0.05,0.14,6.5,0.35,4,0.28,high,USDA FDC chicken wing baked
+466,"Alici (acciughe), crude",148,2.5,1.7,41,174,383,36.5,15,11.0,1.0,0,0.06,0.26,14.0,0.14,9,6.2,high,CREA 2019 acciughe
+719,"Anatra, coscia cotta",12,2.7,2.0,18,190,250,16.0,20,0.5,0.6,2,0.28,0.4,4.8,0.28,10,2.8,high,USDA FDC duck leg cooked
+931,"Anatra, petto cotto al forno",12,4.0,2.2,20,220,260,16.5,20,0.5,0.6,2,0.3,0.5,5.5,0.3,11,3.2,medium,USDA FDC duck breast cooked
+718,"Anatra, petto crudo (senza pelle)",10,3.5,1.8,19,203,271,14.0,24,0.5,0.7,2.8,0.36,0.45,5.3,0.34,13,3.0,high,USDA FDC duck breast raw
+935,Anguilla affumicata,22,0.6,1.8,22,230,260,7.0,1100,20.0,3.5,1,0.12,0.04,3.0,0.07,12,2.8,medium,CREA anguilla cotta
+748,"Anguilla di fiume, cruda",20,0.5,1.6,20,216,272,6.5,1043,23.3,4.0,1.8,0.15,0.04,3.5,0.08,15,3.0,high,CREA 2019 anguilla
+496,"Aragosta, cotta",96,0.4,2.8,43,185,352,73.1,2,0,1.0,0,0.02,0.05,1.4,0.1,11,1.4,high,USDA FDC lobster cooked
+866,Baccalà alla vicentina (piatto cotto),30,0.7,0.5,28,180,280,30.0,10,0.8,0.5,1,0.07,0.06,2.0,0.2,6,1.0,low,USDA FDC salt cod dish
+729,"Bisonte (bufalo americano), macinato crudo",10,2.8,4.6,22,190,328,25.0,0,0.1,0.3,0,0.05,0.2,5.0,0.4,7,2.7,high,USDA FDC bison ground
+751,Bottarga di muggine,40,2.0,1.5,55,350,420,50.0,100,5.0,3.0,0,0.15,0.3,5.0,0.2,15,10.0,medium,USDA FDC mullet roe
+938,Branzino al cartoccio (cotto),20,0.5,0.5,32,210,290,40.0,40,2.8,0.5,0,0.08,0.1,1.8,0.25,12,3.5,medium,CREA branzino cotto
+473,"Branzino, crudo",18,0.5,0.4,30,194,307,36.5,45,3.0,0.6,0,0.1,0.12,2.0,0.3,15,3.8,high,CREA 2019 branzino
+458,Bresaola della Valtellina IGP,12,2.8,4.3,21,260,505,10.0,0,0.1,0.4,0,0.08,0.2,6.0,0.35,5,2.3,high,CREA 2019 bresaola
+488,"Calamari, cotti",32,0.7,1.5,33,213,237,44.8,9,0,1.2,4.2,0.02,0.41,2.2,0.05,5,1.3,high,USDA FDC squid cooked
+494,"Capesante, crude",24,0.4,0.9,22,334,205,12.8,2,0,0.5,0,0.01,0.02,0.7,0.07,16,1.4,high,USDA FDC scallop raw
+728,"Capretto, carne cruda",13,2.8,4.0,23,180,385,8.8,0,0.1,0.2,0,0.1,0.49,3.8,0.4,6,1.1,high,USDA FDC goat raw
+747,"Carpa, cruda",41,1.2,1.5,29,415,333,12.6,9,1.0,0.5,1.6,0.12,0.05,1.6,0.19,15,1.5,high,USDA FDC carp
+435,"Cervo (capriolo), carne cruda",5,3.4,2.1,23,202,330,10.3,0,0,0.2,0,0.25,0.48,6.4,0.37,4,5.7,high,USDA FDC venison raw
+930,"Cervo, coscia cotta",7,3.9,2.5,25,225,310,12.0,0,0,0.2,0,0.2,0.55,6.0,0.32,4,6.3,medium,USDA FDC venison cooked
+871,Ceviche di branzino (piatto crudo),18,0.5,0.4,30,194,307,36.5,45,3.0,0.6,5,0.1,0.12,2.0,0.3,15,3.8,medium,CREA branzino + lime
+741,Chorizo (salame spagnolo),11,1.6,2.8,18,200,340,16.0,60,0.5,0.3,0,0.35,0.2,4.8,0.32,3,1.1,high,USDA FDC chorizo
+436,"Cinghiale, carne cruda",12,3.3,2.4,22,190,330,9.0,0,0,0.2,0,0.39,0.5,4.0,0.4,5,4.0,high,USDA FDC wild boar
+929,"Coniglio, dorso cotto",18,1.6,1.8,22,230,330,15.0,0,0.1,0.2,0,0.04,0.14,7.2,0.32,8,7.2,high,CREA 2019 coniglio cotto
+449,Coppa (capocollo),8,1.1,2.0,15,170,320,15.0,0,0.4,0.2,0,0.45,0.15,4.5,0.3,2,0.8,high,CREA 2019 coppa
+933,Coppa di testa,10,0.9,1.5,10,100,150,12.0,0,0.3,0.1,0,0.2,0.1,2.5,0.12,2,0.6,medium,USDA FDC head cheese
+417,"Cosce di pollo, crude",11,0.9,1.8,23,173,229,15.7,18,0.2,0.2,0,0.08,0.16,5.6,0.35,6,0.35,high,CREA 2019 coscia pollo
+419,"Coscia di tacchino, cotta",22,1.6,3.6,24,195,260,30.0,8,0.3,0.2,0,0.05,0.2,4.5,0.35,8,1.4,high,USDA FDC turkey leg cooked
+465,Cotechino (prodotto cotto),14,1.2,2.0,11,120,180,12.0,0,0.3,0.1,0,0.15,0.12,2.8,0.12,2,0.6,high,CREA 2019 cotechino
+492,"Cozze (mitili), cotte",33,6.7,2.7,37,285,268,89.6,91,0,0.7,12,0.16,0.42,3.0,0.1,76,24.0,high,USDA FDC mussel cooked
+460,Culatello di Zibello DOP,8,1.3,2.2,19,230,380,20.0,0,0.3,0.2,0,0.53,0.17,5.3,0.42,3,1.0,medium,CREA prosciutto crudo
+444,"Cuore di manzo, crudo",7,4.3,1.7,21,212,287,21.8,0,0.1,0.2,2,0.24,0.91,7.5,0.28,3,8.6,high,USDA FDC beef heart
+474,"Dentice, crudo",22,0.4,0.5,30,200,350,36.0,30,3.0,0.5,0,0.09,0.07,3.5,0.4,10,2.0,high,CREA 2019 dentice
+721,"Fagiano, petto crudo",12,1.2,0.8,22,230,260,14.0,15,0.3,0.2,4,0.1,0.15,6.5,0.45,6,1.0,high,USDA FDC pheasant breast
+443,"Fegato di vitello, crudo",8,7.9,8.4,19,358,330,17.4,16500,0.5,0.6,30,0.17,2.72,14.7,0.8,290,110.0,high,CREA 2019 fegato vitello
+740,Finocchiona (salame al finocchio),10,1.4,2.6,17,195,330,15.0,0,0.4,0.2,0,0.33,0.17,4.5,0.28,2,1.0,medium,CREA salame
+461,Fiocchetto (prosciutto magro),8,1.4,2.3,20,240,390,22.0,0,0.3,0.2,0,0.55,0.18,5.5,0.45,3,1.1,medium,CREA prosciutto crudo magro
+506,"Frittata base (uovo+latte), cotta",66,1.8,1.2,13,200,150,31.0,160,1.8,1.3,0,0.06,0.44,0.1,0.14,47,1.0,high,USDA FDC omelette
+761,Frittata proteica (2 uova+albume),45,1.3,0.8,12,170,160,28.0,110,1.4,1.0,0,0.04,0.44,0.1,0.1,35,0.7,medium,stima frittata proteica
+485,"Gamberi (scampi), crudi",52,0.2,1.1,37,205,259,38.0,2,0,1.5,2,0.03,0.03,2.5,0.1,3,1.1,high,CREA 2019 gamberi
+486,"Gamberi tigre, crudi",54,0.3,1.3,35,220,264,40.0,2,0,1.5,2,0.03,0.03,2.6,0.1,3,1.2,high,USDA FDC tiger shrimp
+487,"Gamberoni, cotti",60,0.3,1.4,37,230,250,42.0,2,0,1.5,1.5,0.02,0.03,2.5,0.08,3,1.3,high,USDA FDC shrimp cooked
+497,"Granchio, cotto",91,0.7,3.8,49,175,259,37.4,2,0,1.5,3,0.07,0.04,2.6,0.15,44,9.0,high,USDA FDC crab cooked
+754,"Grongo, crudo",20,0.5,0.4,25,200,290,30.0,25,2.0,0.5,0,0.06,0.06,2.5,0.2,8,1.5,medium,USDA FDC conger eel
+464,Guanciale (cured pork cheek),4,0.5,1.3,8,100,180,12.0,8,0.5,0.2,0,0.3,0.08,2.5,0.15,2,0.5,medium,CREA pancetta adattato
+472,"Halibut, crudo",7,0.2,0.4,23,236,435,36.5,14,4.7,0.6,0,0.05,0.03,6.4,0.55,12,1.0,high,USDA FDC halibut
+854,Hamburger di manzo (80% magro),18,2.3,5.4,20,175,270,18.0,0,0.1,0.3,0,0.04,0.16,4.8,0.33,7,2.5,high,USDA FDC beef patty 80/20
+855,Hamburger di pollo (grigliato),14,1.2,1.5,24,190,230,22.0,8,0.1,0.3,0,0.06,0.12,7.0,0.4,5,0.3,medium,USDA FDC chicken burger
+742,Jamón ibérico (prosciutto iberico),8,1.3,2.2,19,230,380,21.0,0,0.3,0.2,0,0.52,0.18,5.3,0.43,3,1.0,medium,USDA FDC Iberian ham
+463,Lardo di Colonnata IGP,2,0.2,0.4,2,30,50,5.0,0,0.3,0.1,0,0.05,0.02,0.5,0.03,0,0.1,high,CREA 2019 lardo
+459,Lonza di maiale stagionata,7,1.0,2.0,22,220,360,28.0,0,0.4,0.2,0,0.7,0.2,5.0,0.42,3,0.9,medium,CREA lonza stagionata
+746,"Luccio, crudo",57,0.6,0.7,28,200,259,12.6,17,2.0,0.3,3.6,0.06,0.06,2.4,0.12,15,2.0,high,USDA FDC pike
+730,"Maiale, arrosto al forno cotto",10,1.1,2.6,24,230,340,38.0,2,0.6,0.2,0,0.65,0.25,5.5,0.42,4,0.8,high,USDA FDC pork loin roast
+430,"Maiale, bistecca cruda",7,0.9,2.0,23,210,360,33.0,2,0.5,0.2,0,0.8,0.22,5.0,0.46,5,0.7,high,CREA 2019 maiale bistecca
+431,"Maiale, costolette cotte",20,1.0,2.5,22,200,310,35.0,2,0.6,0.2,0,0.6,0.25,5.2,0.4,4,0.7,high,USDA FDC pork chop cooked
+429,"Maiale, pancetta tesa cruda",5,0.7,1.6,12,130,220,16.0,9,0.6,0.2,0,0.4,0.1,3.5,0.2,3,0.5,high,CREA 2019 pancetta
+731,"Maiale, salsiccia fresca cruda",9,1.0,2.2,16,150,260,20.0,3,0.4,0.2,0,0.5,0.15,3.8,0.25,3,0.6,high,CREA 2019 salsiccia maiale
+428,"Maiale, spalla cruda",8,1.1,2.8,18,170,300,25.0,2,0.5,0.2,0,0.65,0.2,4.2,0.35,4,0.6,high,CREA 2019 maiale spalla
+423,"Manzo macinato 10% grassi, crudo",12,2.3,5.2,21,188,315,17.8,0,0.1,0.3,0,0.04,0.16,5.3,0.35,7,2.5,high,USDA FDC ground beef 90/10
+424,"Manzo macinato 15% grassi, crudo",11,2.1,4.8,19,172,295,16.5,0,0.1,0.3,0,0.04,0.15,4.9,0.34,7,2.4,high,USDA FDC ground beef 85/15
+425,"Manzo macinato, cotto",14,2.7,6.2,22,210,315,21.0,0,0.1,0.3,0,0.04,0.18,5.7,0.35,8,2.8,high,USDA FDC ground beef cooked
+421,"Manzo, bistecca di costata cruda",8,1.9,4.5,20,175,300,16.0,0,0.1,0.3,0,0.06,0.14,4.8,0.5,8,2.3,high,CREA 2019 costata manzo
+442,"Manzo, carpaccio (crudo affettato)",6,2.3,4.5,22,200,340,19.0,0,0.1,0.4,0,0.07,0.15,5.5,0.55,9,2.6,high,CREA 2019 manzo crudo
+420,"Manzo, controfiletto crudo",6,2.1,4.1,22,197,330,18.5,0,0.1,0.4,0,0.07,0.15,5.4,0.55,9,2.5,high,CREA 2019 manzo controfiletto
+724,"Manzo, fianco (flank steak), crudo",7,2.0,4.3,23,200,345,18.0,0,0.1,0.3,0,0.07,0.16,5.8,0.5,9,2.4,high,USDA FDC flank steak
+725,"Manzo, girello (topside), crudo",5,2.2,4.0,24,210,355,20.0,0,0.1,0.3,0,0.08,0.15,6.0,0.55,10,2.6,high,USDA FDC beef top round
+422,"Manzo, roast beef cotto",8,2.6,5.0,23,210,320,26.0,0,0.1,0.3,0,0.05,0.2,5.5,0.45,8,2.9,high,CREA 2019 roast beef
+732,"Manzo, stinco cotto in umido",16,3.0,6.5,20,190,280,22.0,0,0.1,0.2,0,0.04,0.22,4.5,0.3,7,3.0,high,USDA FDC beef shank braised
+864,"Mazzancolle (gamberi grandi), cotte",60,0.3,1.4,37,230,250,42.0,2,0,1.5,1.5,0.02,0.03,2.5,0.08,3,1.3,medium,USDA FDC large shrimp cooked
+939,Mazzancolle al vapore,60,0.3,1.4,37,230,250,42.0,2,0,1.5,1.5,0.02,0.03,2.5,0.08,3,1.3,medium,USDA FDC shrimp steamed
+484,Merluzzo (baccalà salato e ammollato),15,0.5,0.5,30,190,300,28.0,10,0.8,0.6,1,0.07,0.06,2.3,0.22,6,0.9,high,CREA 2019 baccala ammollato
+471,"Merluzzo, cotto al vapore",18,0.4,0.5,32,203,328,33.1,12,0.9,0.7,1,0.08,0.06,2.5,0.24,7,1.0,high,CREA 2019 merluzzo cotto
+745,"Mormora (sparo), cruda",25,0.5,0.5,28,210,330,35.0,20,2.5,0.5,0,0.08,0.07,2.8,0.3,10,2.0,medium,CREA sparidae generico
+737,Mortadella di Bologna IGP,11,1.5,1.6,12,130,260,14.0,0,0.3,0.1,0,0.15,0.12,3.0,0.15,2,0.8,high,CREA 2019 mortadella
+454,Nduja calabrese,8,1.2,2.0,13,140,250,12.0,120,0.4,1.8,0,0.3,0.14,3.5,0.22,2,0.8,medium,USDA FDC nduja
+720,"Oca, petto crudo",13,2.6,1.8,20,210,280,16.0,12,0.5,0.7,4.3,0.13,0.38,4.3,0.55,31,2.0,high,USDA FDC goose raw
+502,Olio di fegato di merluzzo,0,0,0,0,0,0,0,30000,250.0,20.0,0,0,0,0,0,0,0,high,USDA FDC cod liver oil
+480,"Orata, cotta",28,0.5,0.5,28,220,350,37.0,12,3.0,0.6,0,0.08,0.07,3.0,0.3,8,1.8,high,CREA 2019 orata cotta
+493,"Ostrica, cruda",44,5.1,16.6,47,135,168,77.0,81,0.8,0.9,3.7,0.07,0.23,1.6,0.05,10,16.0,high,USDA FDC oyster raw
+870,Ostriche gratinate al forno,48,5.5,18.0,50,145,160,80.0,75,0.7,0.8,2.5,0.06,0.22,1.5,0.05,9,15.0,medium,USDA oyster cooked
+475,"Pagello, crudo",25,0.5,0.4,28,210,320,35.0,15,2.5,0.5,0,0.08,0.07,2.8,0.35,10,2.0,high,CREA 2019 pagello
+450,Pancetta affumicata (bacon),5,0.7,1.8,15,200,220,25.0,11,0.6,0.2,0,0.35,0.1,4.8,0.22,2,0.6,high,USDA FDC bacon
+451,Pancetta tesa (non affumicata),5,0.7,1.6,12,130,220,16.0,9,0.6,0.2,0,0.4,0.1,3.5,0.2,3,0.5,high,CREA 2019 pancetta tesa
+501,"Pangasio, filetto crudo",8,0.3,0.3,20,150,280,12.0,5,2.0,0.3,0,0.04,0.05,2.5,0.15,8,1.5,medium,USDA FDC pangasius
+749,"Pesce gatto (siluro), crudo",9,0.3,0.5,23,209,358,12.6,15,2.0,0.3,0.7,0.21,0.07,1.9,0.12,10,2.4,high,USDA FDC catfish
+499,"Pesce persico, filetto crudo",80,0.5,0.6,25,200,290,12.6,10,1.0,0.5,1.5,0.07,0.07,1.5,0.12,5,2.0,high,USDA FDC perch
+863,"Petto di pollo arrosto (affettato, packed)",7,0.5,0.7,25,210,260,24.0,3,0.1,0.2,0,0.04,0.08,10.0,0.5,4,0.3,high,USDA FDC deli chicken breast
+440,"Petto di pollo, affettato cotto",14,0.9,0.9,28,220,248,26.0,5,0.1,0.3,0,0.05,0.1,11.8,0.5,4,0.32,high,CREA 2019 petto pollo
+439,"Petto di pollo, cotto in padella",15,1.0,1.0,29,228,256,27.6,6,0.1,0.3,0,0.06,0.11,12.4,0.54,4,0.34,high,CREA 2019 petto pollo cotto
+462,Petto di tacchino affumicato,8,0.6,1.3,23,220,280,22.0,3,0.3,0.1,0,0.04,0.1,6.5,0.45,5,0.8,high,USDA FDC smoked turkey breast
+418,"Petto di tacchino, macinato",13,1.1,2.2,27,210,290,22.4,5,0.4,0.1,0,0.06,0.13,7.5,0.6,8,1.0,high,USDA FDC ground turkey breast
+852,Pollo in scatola (al naturale),14,1.0,1.6,22,180,200,22.0,10,0.1,0.2,0,0.04,0.12,7.5,0.3,5,0.25,medium,USDA FDC canned chicken
+415,"Pollo intero, arrosto (senza pelle)",15,1.3,2.4,25,200,243,27.6,16,0.2,0.3,0,0.06,0.18,8.5,0.45,7,0.34,high,CREA 2019 pollo arrosto
+858,Pollo tikka masala (piatto indiano),30,1.2,1.5,25,170,220,18.0,40,0.2,0.5,1,0.08,0.15,5.0,0.25,8,0.25,low,USDA FDC chicken tikka masala
+717,"Pollo, arrosto con pelle",15,1.2,2.0,23,182,229,25.0,47,0.2,0.3,0,0.06,0.17,7.8,0.4,6,0.3,high,CREA 2019 pollo con pelle
+733,"Pollo, petto marinato alla griglia",14,1.0,1.0,28,222,250,27.0,6,0.1,0.3,0,0.05,0.1,11.5,0.5,4,0.32,medium,CREA petto pollo cotto
+438,"Pollo, stinco cotto",14,1.3,2.8,22,175,220,23.5,20,0.2,0.3,0,0.06,0.19,6.2,0.3,6,0.3,high,USDA FDC chicken drumstick cooked
+856,Polpette di carne al sugo (cotte),22,2.0,4.0,18,160,250,15.0,15,0.1,0.5,2,0.06,0.15,4.5,0.25,8,2.0,low,USDA FDC meatball cooked
+489,"Polpo, crudo",53,5.3,1.7,30,186,350,44.8,45,0,1.2,0,0.03,0.04,2.1,0.36,16,20.0,high,USDA FDC octopus raw
+758,"Polpo, in umido",55,5.8,1.9,32,200,330,48.0,42,0,1.0,0,0.02,0.04,1.9,0.3,14,18.0,medium,USDA FDC octopus cooked
+736,Porchetta (arrosto di maiale),10,1.0,2.2,18,200,300,30.0,2,0.5,0.2,0,0.55,0.22,5.0,0.35,3,0.8,medium,CREA maiale arrosto
+448,Prosciutto cotto al forno,7,0.7,1.8,17,240,300,18.0,0,0.3,0.1,0,0.6,0.15,5.0,0.3,2,0.8,high,CREA 2019 prosciutto cotto
+447,Prosciutto cotto alta qualità,7,0.7,1.8,17,240,300,18.0,0,0.3,0.1,0,0.6,0.15,5.0,0.3,2,0.8,high,CREA 2019 prosciutto cotto
+446,Prosciutto crudo DOP (con grasso),7,1.3,2.1,18,220,370,20.0,0,0.3,0.2,0,0.5,0.17,5.0,0.4,3,1.0,high,CREA 2019 prosciutto crudo
+859,Prosciutto crudo magro affettato (packed),8,1.4,2.3,20,240,390,22.0,0,0.3,0.2,0,0.55,0.18,5.5,0.45,3,1.1,high,CREA 2019 prosciutto crudo magro
+743,Prosciutto di Norcia,8,1.3,2.2,19,230,380,21.0,0,0.3,0.2,0,0.52,0.17,5.2,0.43,3,1.0,medium,CREA prosciutto crudo
+457,"Prosciutto di Parma DOP, magro",8,1.4,2.3,20,240,390,22.0,0,0.3,0.2,0,0.55,0.18,5.5,0.45,3,1.1,high,CREA 2019 prosciutto Parma
+739,Prosciutto di San Daniele DOP,8,1.4,2.2,19,235,385,21.0,0,0.3,0.2,0,0.53,0.18,5.3,0.44,3,1.0,medium,CREA prosciutto crudo
+722,"Quaglia, intera cotta",13,4.5,2.7,22,275,216,17.4,70,0.3,0.6,3,0.22,0.42,7.5,0.5,8,0.5,high,USDA FDC quail cooked
+753,"Rana pescatrice (coda di rospo), cruda",10,0.4,0.4,21,200,320,36.0,12,1.0,0.4,0,0.02,0.04,2.1,0.24,7,1.0,high,USDA FDC monkfish
+445,"Rene di manzo, crudo",13,4.6,1.9,17,257,262,141,354,0,0.3,9.4,0.36,2.84,8.0,0.67,98,27.5,high,USDA FDC beef kidney
+495,"Riccio di mare (uni), crudo",10,1.0,1.5,28,150,220,25.0,72,0,0.8,2,0.1,0.25,1.0,0.1,50,5.0,medium,USDA FDC sea urchin
+478,"Rombo, crudo",23,0.3,0.2,25,160,238,36.0,10,2.0,0.5,0,0.06,0.1,2.2,0.2,10,1.5,high,USDA FDC turbot
+452,Salame Felino,10,1.5,2.8,18,200,340,16.0,0,0.4,0.2,0,0.35,0.18,4.8,0.3,2,1.0,high,CREA 2019 salame
+453,Salame Napoli,10,1.4,2.6,17,195,330,15.0,0,0.4,0.2,0,0.33,0.17,4.5,0.28,2,1.0,medium,CREA 2019 salame
+738,Salame di Varzi DOP,10,1.5,2.7,17,200,335,15.0,0,0.4,0.2,0,0.34,0.17,4.6,0.29,2,1.0,medium,CREA 2019 salame
+861,Salamella (salsiccia tipo mantovana),9,1.0,2.2,16,150,260,20.0,3,0.4,0.2,0,0.5,0.15,3.8,0.25,3,0.6,medium,CREA salsiccia maiale
+468,Salmone affumicato,11,0.9,0.3,18,164,175,32.4,26,11.0,1.8,0,0.02,0.1,4.7,0.28,2,3.3,high,CREA 2019 salmone affumicato
+755,"Salmone coho, crudo",12,0.6,0.4,28,262,394,36.5,10,9.0,1.3,1,0.1,0.12,7.5,0.56,10,4.5,high,USDA FDC coho salmon
+503,Salmone in scatola (al naturale),240,0.7,0.8,29,326,277,36.5,40,14.1,2.0,0,0.02,0.16,6.6,0.3,12,4.0,high,USDA FDC canned salmon w/bone
+937,Salmone teriyaki al forno,12,0.7,0.5,28,250,360,38.0,12,11.0,1.5,0,0.08,0.12,7.0,0.5,8,4.2,medium,USDA salmon cooked
+934,Salsiccia di pollo e tacchino,12,0.8,1.5,18,160,230,18.0,5,0.2,0.2,0,0.06,0.12,5.5,0.35,5,0.7,medium,USDA FDC chicken sausage
+860,Salume di cinghiale,10,2.0,2.5,18,190,330,12.0,0,0.3,0.2,0,0.35,0.25,4.0,0.3,3,2.0,low,stima salame cinghiale
+481,"Sarde, crude",60,1.8,1.3,39,270,397,52.7,13,11.0,0.8,0,0.07,0.23,5.2,0.16,8,8.9,high,CREA 2019 sarde
+868,Sardine grigliate,65,2.0,1.4,40,290,380,54.0,15,10.0,0.8,0,0.06,0.2,5.0,0.14,7,8.5,medium,CREA sarde cotte
+482,Sardine in scatola al naturale,382,2.9,1.3,39,490,397,52.7,32,4.8,2.0,0,0.08,0.23,5.2,0.17,10,8.9,high,USDA FDC sardine canned water
+483,"Sardine in scatola all'olio, scolate",382,2.9,1.3,39,490,397,52.7,32,4.8,2.0,0,0.08,0.23,5.2,0.17,10,8.9,high,USDA FDC sardine canned oil
+857,Scaloppina di vitello al marsala,12,1.2,3.0,24,220,330,11.0,0,0.1,0.3,1,0.05,0.22,7.0,0.38,10,1.4,medium,CREA vitello cotto
+865,Scampi fritti (impanati),55,0.5,1.2,30,190,200,32.0,5,0,1.0,1,0.08,0.05,2.5,0.08,5,1.0,low,USDA FDC fried shrimp
+490,"Seppie, crude",90,6.0,1.7,30,350,354,44.8,100,0,1.2,3.0,0.01,0.73,1.7,0.14,16,5.4,high,CREA 2019 seppie
+869,Sgombro in scatola al naturale,241,1.4,0.8,33,236,297,44.1,48,7.3,1.5,0,0.08,0.25,6.3,0.35,2,8.7,high,USDA FDC canned mackerel
+467,"Sgombro, cotto al forno",15,1.6,0.6,33,240,401,44.1,50,16.1,1.5,0.4,0.1,0.31,9.1,0.4,1,19.0,high,USDA FDC mackerel cooked
+477,"Sogliola, cruda",21,0.4,0.4,32,220,280,32.7,10,1.0,0.5,0,0.08,0.1,2.4,0.2,12,1.3,high,CREA 2019 sogliola
+735,Soppressata calabrese,10,1.5,2.7,17,195,330,15.0,0,0.4,0.2,0,0.33,0.16,4.5,0.28,2,1.0,medium,CREA salame
+744,Spianata romana piccante,10,1.5,2.7,17,195,330,15.0,0,0.4,0.2,0,0.33,0.17,4.5,0.28,2,1.0,medium,CREA salame
+479,"Spigola (branzino), cotta",20,0.5,0.5,32,210,290,40.0,40,2.8,0.5,0,0.08,0.1,1.8,0.25,12,3.5,high,CREA 2019 spigola cotta
+498,"Storione, crudo",13,0.7,0.4,35,211,284,12.6,210,0,0.5,0,0.07,0.07,8.0,0.2,15,2.0,high,USDA FDC sturgeon
+928,"Struzzo, filetto cotto",9,3.7,4.2,24,235,300,12.0,0,0.1,0.3,0,0.17,0.3,4.2,0.4,5,5.8,medium,USDA FDC ostrich cooked
+437,"Struzzo, filetto crudo",7,3.2,3.6,22,210,320,10.0,0,0.1,0.3,0,0.2,0.25,4.0,0.43,6,5.3,high,USDA FDC ostrich raw
+757,Surimi (bastoncini di granchio),9,0.2,0.3,37,282,76,17.0,17,0,0.2,0,0.02,0.02,0.2,0.03,2,1.5,high,USDA FDC surimi
+441,"Tacchino, macinato cotto",21,1.5,3.3,23,200,270,28.0,6,0.3,0.2,0,0.04,0.18,6.0,0.4,7,1.2,high,USDA FDC ground turkey cooked
+723,"Tacchino, petto macinato crudo",11,0.8,1.8,28,220,310,24.0,3,0.4,0.1,0,0.06,0.11,8.5,0.65,9,1.1,high,USDA FDC turkey breast raw
+932,Testa in cassetta (headcheese),10,0.9,1.5,10,100,150,12.0,0,0.3,0.1,0,0.2,0.1,2.5,0.12,2,0.6,medium,USDA FDC head cheese
+500,"Tilapia, cruda",10,0.6,0.3,27,170,302,54.4,0,3.1,0.4,0,0.04,0.06,3.9,0.16,24,1.6,high,USDA FDC tilapia
+470,"Tonno fresco, cotto",4,1.3,0.8,55,278,323,90.6,650,7.2,1.0,0,0.2,0.23,10.1,0.46,2,10.9,high,USDA FDC tuna cooked
+469,"Tonno fresco, crudo",16,1.0,0.6,50,254,444,36.5,655,7.2,1.0,0,0.24,0.25,8.7,0.46,2,9.4,high,CREA 2019 tonno fresco
+867,Tonno in scatola al naturale (sgocciolato),11,1.1,0.7,29,217,237,70.6,18,1.7,0.5,0,0.02,0.09,13.3,0.42,4,2.9,high,USDA FDC canned tuna water
+752,"Tonno rosso (bluefin), crudo",8,1.3,0.6,50,254,252,36.5,655,7.2,1.0,0,0.24,0.25,8.7,0.46,2,9.4,high,USDA FDC bluefin tuna
+853,Tonno-pollo proteico (piatto mix),12,1.3,1.5,28,210,280,30.0,8,0.5,0.4,0,0.06,0.12,9.0,0.45,5,1.5,low,stima media tonno+pollo
+759,"Totano, crudo",31,0.6,1.5,33,220,246,44.8,10,0,1.2,4,0.02,0.4,2.2,0.06,5,1.3,high,USDA FDC flying squid
+476,"Triglia, cruda",40,0.6,0.5,35,230,350,38.0,25,2.5,0.5,0,0.09,0.06,3.2,0.35,12,2.5,high,CREA 2019 triglia
+756,"Trota iridea, cotta",67,0.4,0.5,28,253,390,12.6,19,3.9,1.0,1,0.12,0.11,5.4,0.36,16,7.8,high,USDA FDC rainbow trout cooked
+509,"Uovo di anatra, crudo",64,3.8,1.4,17,220,222,36.4,194,1.7,1.3,0,0.16,0.4,0.2,0.25,80,5.4,high,USDA FDC duck egg
+504,"Uovo di quaglia, crudo",64,3.7,1.5,13,226,132,32.0,156,1.4,1.1,0,0.13,0.79,0.2,0.15,66,1.6,high,USDA FDC quail egg
+760,"Uovo di struzzo, crudo",58,3.0,1.3,14,198,180,28.0,170,1.5,1.1,0,0.1,0.45,0.2,0.15,60,2.5,medium,stima proporzionale uovo
+507,Uovo in camicia (poché),56,1.8,1.1,12,172,138,31.6,149,2.0,1.0,0,0.03,0.51,0.1,0.12,44,1.1,high,USDA FDC poached egg
+508,"Uovo intero, strapazzato (con latte)",66,1.6,1.1,12,190,145,25.6,165,1.8,1.3,0,0.06,0.41,0.1,0.14,43,0.9,high,USDA FDC scrambled egg
+426,"Vitello, cosciotto crudo",10,1.0,2.6,24,210,350,10.0,0,0.1,0.3,0,0.06,0.22,7.0,0.45,12,1.4,high,CREA 2019 vitello cosciotto
+734,"Vitello, fegato cotto in padella",9,8.8,9.5,20,380,310,20.0,21600,0.5,0.6,23,0.14,3.4,16.0,0.85,250,95.0,high,USDA FDC veal liver cooked
+726,"Vitello, fettina al limone (cotta)",12,1.2,3.0,25,225,340,12.0,0,0.1,0.3,2,0.05,0.24,7.5,0.4,10,1.5,medium,CREA vitello cotto
+427,"Vitello, ossobuco crudo",13,1.2,3.2,20,180,300,9.0,0,0.1,0.2,0,0.05,0.2,5.5,0.35,10,1.3,high,CREA 2019 vitello ossobuco
+491,"Vongole (lupini di mare), cotte",65,28.0,2.3,15,338,534,64.2,171,0,0,22,0.15,0.43,3.0,0.1,28,98.9,high,USDA FDC clam cooked
+456,Wurstel di maiale,7,1.1,1.8,12,140,200,15.0,0,0.4,0.1,0,0.25,0.1,2.8,0.12,2,0.6,high,CREA 2019 wurstel
+455,Wurstel di pollo,43,0.8,0.8,10,110,130,12.0,0,0.3,0.1,0,0.05,0.07,3.5,0.15,3,0.5,high,USDA FDC chicken frankfurter
+862,Zampone di Modena IGP (cotto),14,1.2,2.0,11,120,180,12.0,0,0.3,0.1,0,0.15,0.12,2.8,0.12,2,0.6,medium,CREA cotechino
