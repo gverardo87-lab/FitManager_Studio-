@@ -182,45 +182,43 @@ export function FoodSearchSidebar({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl h-[80vh] flex flex-col gap-0 p-0 overflow-hidden">
-        {/* Header */}
-        <DialogHeader className="px-6 pt-5 pb-4 border-b shrink-0">
-          <div className="flex items-center gap-3">
-            <DialogTitle className="flex-1 flex items-center gap-2 text-lg">
-              <Utensils className="h-5 w-5 text-teal-600 shrink-0" />
+      <DialogContent className="max-w-5xl h-[85vh] flex flex-col gap-0 p-0 overflow-hidden">
+        {/* Header compatto */}
+        <div className="flex items-center justify-between px-6 py-4 border-b shrink-0">
+          <DialogHeader className="p-0 space-y-0">
+            <DialogTitle className="flex items-center gap-2.5 text-base font-semibold">
+              <Utensils className="h-4.5 w-4.5 text-teal-600 shrink-0" />
               {headerTitle}
             </DialogTitle>
-            {addedCount > 0 && (
-              <span className="flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-700">
-                <Check className="h-3.5 w-3.5" />
-                {addedCount} {addedCount === 1 ? "aggiunto" : "aggiunti"}
-              </span>
-            )}
-          </div>
-        </DialogHeader>
+          </DialogHeader>
+          {addedCount > 0 && (
+            <span className="flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-semibold text-emerald-700">
+              <Check className="h-3 w-3" />
+              {addedCount} {addedCount === 1 ? "aggiunto" : "aggiunti"}
+            </span>
+          )}
+        </div>
 
-        {/* Search + Tab bar */}
-        <div className="px-6 pt-4 pb-3 space-y-3 shrink-0 border-b bg-muted/20">
-          {/* Search input */}
-          <div className="relative">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+        {/* Search bar + tabs — riga unica */}
+        <div className="flex items-center gap-4 px-6 py-3 border-b bg-muted/10 shrink-0">
+          <div className="relative w-72 shrink-0">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               ref={searchRef}
-              placeholder="Cerca per nome (es. riso, pollo, yogurt...)"
-              className="pl-9 h-11 text-base bg-background"
+              placeholder="Cerca alimento..."
+              className="pl-9 h-9 text-sm bg-background"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
           </div>
-          {/* Category tabs */}
-          <div className="flex gap-1 overflow-x-auto pb-0.5">
+          <div className="flex items-center gap-0.5 min-w-0">
             {CATEGORY_TABS.map((tab, idx) => (
               <button
                 key={tab.label}
                 onClick={() => setActiveTabIdx(idx)}
-                className={`whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
+                className={`whitespace-nowrap px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
                   activeTabIdx === idx
-                    ? "bg-primary text-primary-foreground shadow-sm"
+                    ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 }`}
               >
@@ -230,89 +228,92 @@ export function FoodSearchSidebar({
           </div>
         </div>
 
-        {/* Body: split panel */}
+        {/* Body: split 60/40 */}
         <div className="flex-1 flex min-h-0">
-          {/* LEFT: risultati */}
-          <div className="flex-1 min-w-0 border-r">
-            <ScrollArea className="h-full">
-              {isLoading && (
-                <div className="flex items-center justify-center py-16">
-                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                </div>
-              )}
-              {!isLoading && !hasQuery && (
-                <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-                  <Search className="h-8 w-8 mb-3 opacity-30" />
-                  <p className="text-sm">Cerca per nome o seleziona una categoria</p>
-                </div>
-              )}
-              {!isLoading && hasQuery && foods.length === 0 && (
-                <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-                  <p className="text-sm">Nessun alimento trovato</p>
-                </div>
-              )}
-              <div className="divide-y">
-                {foods.map((food) => (
-                  <button
-                    key={food.id}
-                    onClick={() => handleSelect(food)}
-                    className={`w-full px-5 py-3 text-left transition-colors hover:bg-accent ${
-                      selectedFood?.id === food.id ? "bg-accent" : ""
-                    }`}
-                  >
-                    <div className="font-semibold text-sm leading-tight">{food.nome}</div>
-                    <div className="mt-1 flex items-center gap-2 text-xs">
-                      {food.categoria_nome && (
-                        <span className="text-muted-foreground/60 font-medium">
-                          {food.categoria_nome}
-                        </span>
-                      )}
-                      <span className="text-muted-foreground tabular-nums">
-                        {Math.round(food.energia_kcal)} kcal
-                      </span>
-                      <span className="text-blue-600 tabular-nums">P{food.proteine_g}</span>
-                      <span className="text-amber-600 tabular-nums">C{food.carboidrati_g}</span>
-                      <span className="text-rose-500 tabular-nums">G{food.grassi_g}</span>
-                    </div>
-                  </button>
-                ))}
+          {/* LEFT: lista risultati (60%) */}
+          <ScrollArea className="w-[60%] shrink-0 border-r">
+            {isLoading && (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
               </div>
-            </ScrollArea>
-          </div>
+            )}
+            {!isLoading && !hasQuery && (
+              <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+                <Search className="h-7 w-7 mb-2 opacity-20" />
+                <p className="text-sm">Cerca per nome o seleziona una categoria</p>
+              </div>
+            )}
+            {!isLoading && hasQuery && foods.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+                <p className="text-sm">Nessun alimento trovato</p>
+              </div>
+            )}
+            {foods.map((food) => (
+              <button
+                key={food.id}
+                onClick={() => handleSelect(food)}
+                className={`w-full flex items-baseline justify-between gap-3 px-5 py-2.5 text-left transition-colors border-b border-border/40 hover:bg-accent/50 ${
+                  selectedFood?.id === food.id ? "bg-accent" : ""
+                }`}
+              >
+                <div className="min-w-0">
+                  <div className="font-medium text-sm truncate">{food.nome}</div>
+                  {food.categoria_nome && (
+                    <div className="text-[11px] text-muted-foreground/50 mt-0.5">{food.categoria_nome}</div>
+                  )}
+                </div>
+                <div className="flex items-center gap-2.5 text-xs tabular-nums shrink-0">
+                  <span className="font-semibold w-12 text-right">{Math.round(food.energia_kcal)}</span>
+                  <span className="text-blue-600 w-8 text-right">P{food.proteine_g}</span>
+                  <span className="text-amber-600 w-8 text-right">C{food.carboidrati_g}</span>
+                  <span className="text-rose-500 w-8 text-right">G{food.grassi_g}</span>
+                </div>
+              </button>
+            ))}
+          </ScrollArea>
 
-          {/* RIGHT: dettaglio + grammi */}
-          <div className="w-[340px] shrink-0 flex flex-col">
+          {/* RIGHT: dettaglio + grammi (40%) */}
+          <div className="w-[40%] shrink-0 flex flex-col bg-muted/5">
             {!selectedFood ? (
-              <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground px-6">
-                <ArrowLeft className="h-6 w-6 mb-3 opacity-30" />
-                <p className="text-sm text-center">
+              <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground/40 px-8">
+                <Utensils className="h-10 w-10 mb-3" />
+                <p className="text-sm text-center text-muted-foreground/60">
                   Seleziona un alimento dalla lista
                 </p>
               </div>
             ) : (
-              <div className="flex-1 flex flex-col p-5 gap-5 overflow-y-auto">
-                {/* Nome + macro base */}
-                <div>
-                  <h3 className="text-base font-bold leading-tight">{selectedFood.nome}</h3>
+              <div className="flex-1 flex flex-col overflow-y-auto">
+                {/* Card alimento */}
+                <div className="px-6 pt-6 pb-4">
+                  <h3 className="text-lg font-bold leading-snug">{selectedFood.nome}</h3>
                   {selectedFood.categoria_nome && (
-                    <p className="text-sm text-muted-foreground mt-0.5">{selectedFood.categoria_nome}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{selectedFood.categoria_nome}</p>
                   )}
-                  <div className="mt-2 flex items-center gap-2 text-sm">
-                    <span className="tabular-nums font-medium">{Math.round(selectedFood.energia_kcal)} kcal</span>
-                    <span className="text-muted-foreground/30">·</span>
-                    <span className="text-blue-600 tabular-nums font-medium">P{selectedFood.proteine_g}g</span>
-                    <span className="text-muted-foreground/30">·</span>
-                    <span className="text-amber-600 tabular-nums font-medium">C{selectedFood.carboidrati_g}g</span>
-                    <span className="text-muted-foreground/30">·</span>
-                    <span className="text-rose-500 tabular-nums font-medium">G{selectedFood.grassi_g}g</span>
-                    <span className="text-xs text-muted-foreground/40">/ 100g</span>
+                  <div className="mt-3 grid grid-cols-4 gap-1 text-center rounded-lg bg-muted/30 py-2.5 px-2">
+                    <div>
+                      <div className="text-sm font-bold tabular-nums">{Math.round(selectedFood.energia_kcal)}</div>
+                      <div className="text-[10px] text-muted-foreground">kcal</div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-bold tabular-nums text-blue-600">{selectedFood.proteine_g}g</div>
+                      <div className="text-[10px] text-muted-foreground">Prot</div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-bold tabular-nums text-amber-600">{selectedFood.carboidrati_g}g</div>
+                      <div className="text-[10px] text-muted-foreground">Carb</div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-bold tabular-nums text-rose-500">{selectedFood.grassi_g}g</div>
+                      <div className="text-[10px] text-muted-foreground">Grassi</div>
+                    </div>
                   </div>
+                  <p className="text-[10px] text-muted-foreground/50 text-right mt-1">per 100g</p>
                 </div>
 
                 <Separator />
 
                 {/* Quantità */}
-                <div className="space-y-2">
+                <div className="px-6 py-4 space-y-3">
                   <label className="text-sm font-semibold">Quantità (grammi)</label>
                   <Input
                     type="number"
@@ -321,7 +322,7 @@ export function FoodSearchSidebar({
                     autoFocus
                     value={quantita}
                     onChange={(e) => setQuantita(e.target.value)}
-                    className="text-right tabular-nums h-11 text-base font-semibold"
+                    className="text-right tabular-nums h-10 text-base font-semibold"
                   />
                   <div className="flex flex-wrap gap-1.5">
                     {(foodDetail?.porzioni?.length
@@ -330,10 +331,10 @@ export function FoodSearchSidebar({
                           label: `${p.nome} (${p.grammi}g)`,
                           grams: p.grammi,
                         }))
-                      : [30, 50, 80, 100, 150, 200].map((g) => ({
-                          key: String(g),
-                          label: `${g}g`,
-                          grams: g,
+                      : [30, 50, 80, 100, 150, 200].map((g_val) => ({
+                          key: String(g_val),
+                          label: `${g_val}g`,
+                          grams: g_val,
                         }))
                     ).map((item) => (
                       <button
@@ -352,52 +353,56 @@ export function FoodSearchSidebar({
                   </div>
                 </div>
 
-                {/* Macro scalate */}
+                {/* Macro scalate — risultato */}
                 {scaledMacro && (
-                  <div className="rounded-lg bg-muted/40 px-4 py-4">
-                    <p className="text-xs font-semibold text-muted-foreground mb-2.5 uppercase tracking-wider">
-                      Per {quantita}g
-                    </p>
-                    <div className="grid grid-cols-4 gap-2 text-center">
-                      <div>
-                        <div className="text-lg font-bold tabular-nums">{scaledMacro.kcal}</div>
-                        <div className="text-[10px] text-muted-foreground mt-0.5">kcal</div>
-                      </div>
-                      <div>
-                        <div className="text-lg font-bold tabular-nums text-blue-600">{scaledMacro.p}g</div>
-                        <div className="text-[10px] text-muted-foreground mt-0.5">Proteine</div>
-                      </div>
-                      <div>
-                        <div className="text-lg font-bold tabular-nums text-amber-600">{scaledMacro.c}g</div>
-                        <div className="text-[10px] text-muted-foreground mt-0.5">Carboidrati</div>
-                      </div>
-                      <div>
-                        <div className="text-lg font-bold tabular-nums text-rose-500">{scaledMacro.g}g</div>
-                        <div className="text-[10px] text-muted-foreground mt-0.5">Grassi</div>
+                  <div className="px-6 pb-4">
+                    <div className="rounded-xl border bg-gradient-to-br from-teal-50/80 to-emerald-50/40 dark:from-teal-950/30 dark:to-emerald-950/20 p-4">
+                      <p className="text-[11px] font-semibold text-muted-foreground mb-2 uppercase tracking-wider">
+                        Per {quantita}g
+                      </p>
+                      <div className="grid grid-cols-4 gap-1 text-center">
+                        <div>
+                          <div className="text-xl font-bold tabular-nums">{scaledMacro.kcal}</div>
+                          <div className="text-[10px] text-muted-foreground">kcal</div>
+                        </div>
+                        <div>
+                          <div className="text-xl font-bold tabular-nums text-blue-600">{scaledMacro.p}g</div>
+                          <div className="text-[10px] text-muted-foreground">Prot</div>
+                        </div>
+                        <div>
+                          <div className="text-xl font-bold tabular-nums text-amber-600">{scaledMacro.c}g</div>
+                          <div className="text-[10px] text-muted-foreground">Carb</div>
+                        </div>
+                        <div>
+                          <div className="text-xl font-bold tabular-nums text-rose-500">{scaledMacro.g}g</div>
+                          <div className="text-[10px] text-muted-foreground">Grassi</div>
+                        </div>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* CTA */}
-                <Button
-                  className="w-full h-11 text-base mt-auto"
-                  onClick={handleAdd}
-                  disabled={
-                    addComponent.isPending ||
-                    deleteComponent.isPending ||
-                    !quantita ||
-                    parseFloat(quantita) <= 0 ||
-                    mealId === null
-                  }
-                >
-                  {addComponent.isPending || deleteComponent.isPending ? (
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  ) : (
-                    <Plus className="mr-2 h-5 w-5" />
-                  )}
-                  {replaceCompId != null ? "Sostituisci" : "Aggiungi al pasto"}
-                </Button>
+                {/* CTA fisso in fondo */}
+                <div className="mt-auto px-6 py-4 border-t bg-background">
+                  <Button
+                    className="w-full h-10"
+                    onClick={handleAdd}
+                    disabled={
+                      addComponent.isPending ||
+                      deleteComponent.isPending ||
+                      !quantita ||
+                      parseFloat(quantita) <= 0 ||
+                      mealId === null
+                    }
+                  >
+                    {addComponent.isPending || deleteComponent.isPending ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Plus className="mr-2 h-4 w-4" />
+                    )}
+                    {replaceCompId != null ? "Sostituisci" : "Aggiungi al pasto"}
+                  </Button>
+                </div>
               </div>
             )}
           </div>
