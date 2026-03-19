@@ -28,9 +28,9 @@ Distribuzione: PyInstaller + Next.js standalone + Inno Setup (Windows installer)
         (business)  (tassonomia) (alimenti CREA)
 ```
 
-- **crm.db**: 22 tabelle business (clienti, contratti, workout, piani alimentari). Tenant-isolated via `trainer_id`.
-- **catalog.db**: 7 tabelle tassonomia scientifica (muscoli, articolazioni, condizioni). Read-only, condiviso.
-- **nutrition.db**: 8 tabelle catalogo alimenti (CREA 2019 + USDA). Read-only, condiviso. 226 alimenti attivi.
+- **crm.db**: 33 tabelle business (clienti, contratti, workout, piani alimentari). Tenant-isolated via `trainer_id`. SACRO — dati del trainer, backup/restore.
+- **catalog.db**: 10 tabelle catalogo scientifico (500 esercizi builtin + tassonomia muscoli/articolazioni/condizioni + relazioni + media). Read-only, shipped con installer. Zero `trainer_id`.
+- **nutrition.db**: 8 tabelle catalogo alimenti (CREA 2019 + USDA). Read-only, shipped con installer. 226 alimenti attivi.
 - **Dual env**: prod (porta 8000/3000, crm.db) + dev (porta 8001/3001, crm_dev.db).
 - **Formula porte**: `frontend_port - 3000 + 8000 = backend_port`.
 
@@ -42,7 +42,7 @@ Distribuzione: PyInstaller + Next.js standalone + Inno Setup (Windows installer)
 cd frontend && npm run dev                                         # frontend dev (porta 3001)
 
 # --- Test ---
-./venv/Scripts/python -m pytest tests/ -v                          # 298 test backend
+./venv/Scripts/python -m pytest tests/ -v                          # 323 test backend
 cd frontend && npm test                                            # 69 vitest (data protection)
 
 # --- Quality gate (obbligatorio prima di commit) ---
@@ -53,8 +53,9 @@ bash tools/scripts/check-all.sh                                    # ruff check 
 cd frontend && npx next build                                      # frontend build (zero errori TS)
 
 # --- Migrazioni ---
-./venv/Scripts/alembic upgrade head                                # crm.db
-./venv/Scripts/alembic -c alembic_nutrition.ini upgrade head       # nutrition.db
+./venv/Scripts/alembic upgrade head                                # crm.db (SOLO business, esclude catalog+nutrition)
+./venv/Scripts/alembic -c alembic_nutrition.ini upgrade head       # nutrition.db (SOLO alimenti)
+# catalog.db NON ha Alembic — costruito da seed ORM + script popolazione
 
 # --- Utility ---
 bash tools/scripts/kill-port.sh 8001                               # kill zombie uvicorn
@@ -69,15 +70,23 @@ python -m tools.admin_scripts.generate_license sign \              # firma licen
 python -m tools.admin_scripts.generate_license verify data/license.key  # verifica licenza
 ```
 
-## 3 database — 3 session factory
+## 3 database — 3 session factory — separazione architetturale
 
 ```python
-from api.database import get_session            # crm.db (business, tenant-isolated)
-from api.database import get_catalog_session    # catalog.db (tassonomia, read-only)
-from api.database import get_nutrition_session  # nutrition.db (alimenti, read-only)
+from api.database import get_session            # crm.db (business, tenant-isolated) — SACRO
+from api.database import get_catalog_session    # catalog.db (esercizi + tassonomia, read-only)
+from api.database import get_nutrition_session  # nutrition.db (alimenti + template, read-only)
 ```
 
 Tutte con PRAGMA: `journal_mode=WAL`, `foreign_keys=ON`, `busy_timeout=5000`.
+
+**Principio architetturale (ADR 2026-03-19)**:
+- catalog.db e nutrition.db sono cataloghi scientifici READ-ONLY, shipped con installer.
+- crm.db contiene SOLO dati business del trainer. Zero tabelle catalog/nutrition duplicate.
+- Cross-DB ref via ID senza FK constraint (application-level integrity, come `componenti_pasto.alimento_id`).
+- Alembic gestisce SOLO crm.db (con `include_name` che esclude catalog+nutrition).
+- catalog.db NON ha Alembic: costruito da ORM seed + script popolazione offline.
+- `create_db_and_tables()` esclude `CATALOG_TABLE_NAMES | NUTRITION_TABLE_NAMES`.
 
 ## Regole non negoziabili
 
@@ -111,7 +120,7 @@ Tutte con PRAGMA: `journal_mode=WAL`, `foreign_keys=ON`, `busy_timeout=5000`.
 ### Cross-layer
 - **`extra: "forbid"` su Pydantic**: un campo typo nel payload = 422 silenzioso. Dopo refactor payload, verificare sempre nomi campo vs schema.
 - **Proxy Next.js intercetta PRIMA dei rewrite**: `/api` in `PUBLIC_ROUTES` (auth JWT gestita dal backend).
-- **Seed data**: 344 esercizi JSON + 426 relazioni + 494 media in `data/exercises/`, seed idempotente al startup.
+- **Seed data**: 500 esercizi + 940 relazioni + 1788 media in `data/exercises/`, seed idempotente al startup in catalog.db.
 - **Licenza con hardware binding**: JWT RS256 con `machine_id` (SHA-256 di CPU+Board+BIOS via PowerShell). Generazione via CLI (`tools/admin_scripts/generate_license.py`). Flusso completo in `docs/LICENSE_ACTIVATION.md`. `/licenza` NON e' in `AUTH_ONLY_PAGES` (il trainer loggato senza licenza deve vederla).
 
 ## Motori scientifici

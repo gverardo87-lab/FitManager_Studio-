@@ -13,10 +13,10 @@ A fine task: verifiche reali e note sui rischi residui.
 api/
 ├── main.py              App factory, CORS, lifespan (backup+seed+integrity), runtime logging, router mount
 ├── config.py            DATABASE_URL (env/port-auto), CATALOG_DATABASE_URL, JWT_SECRET, DATA_DIR (sys.frozen-aware), log env
-├── database.py          Dual engine (business + catalog) + session factories
+├── database.py          Tri-engine (business + catalog + nutrition) + session factories + CATALOG/NUTRITION_TABLE_NAMES
 ├── logging_config.py    Bootstrap logging locale (`data/logs/fitmanager.log`, rotazione idempotente)
 ├── dependencies.py      get_current_trainer() → JWT validation
-├── seed_exercises.py    Seed builtin: 311 esercizi + 426 relazioni + 494 media (idempotente, FK guard)
+├── seed_exercises.py    Seed builtin in catalog.db: 500 esercizi + 940 relazioni + 1788 media (idempotente, FK guard)
 ├── auth/
 │   ├── router.py        POST /login, /register, /setup/status, /setup/create
 │   ├── service.py       bcrypt hash, JWT create/validate
@@ -29,16 +29,16 @@ api/
 │   ├── event.py         agenda
 │   ├── movement.py      movimenti_cassa (ledger)
 │   ├── recurring_expense.py  spese_ricorrenti
-│   ├── exercise.py      esercizi (builtin + custom, in_subset flag)
-│   ├── exercise_media.py esercizi_media (foto start/end)
-│   ├── exercise_relation.py esercizi_relazioni (progressione/regressione/variante)
+│   ├── exercise.py      esercizi → catalog.db (builtin, no trainer_id, read-only)
+│   ├── exercise_media.py esercizi_media → catalog.db (foto start/end builtin)
+│   ├── exercise_relation.py esercizi_relazioni → catalog.db (progressione/regressione/variante)
 │   ├── workout.py       schede_allenamento + sessioni_scheda + esercizi_sessione + blocchi
 │   ├── workout_log.py   allenamenti_eseguiti (monitoraggio compliance)
 │   ├── measurement.py   misurazioni + valori_misurazione
 │   ├── goal.py          obiettivi_cliente
-│   ├── muscle.py        muscoli + esercizi_muscoli (catalog junction)
-│   ├── joint.py         articolazioni + esercizi_articolazioni (catalog junction)
-│   ├── medical_condition.py condizioni_mediche + esercizi_condizioni (catalog junction)
+│   ├── muscle.py        muscoli + esercizi_muscoli → catalog.db (no FK, application-level integrity)
+│   ├── joint.py         articolazioni + esercizi_articolazioni → catalog.db (no FK)
+│   ├── medical_condition.py condizioni_mediche + esercizi_condizioni → catalog.db (no FK)
 │   ├── audit_log.py     audit_log (timeline modifiche)
 │   ├── todo.py          todos (trainer-owned)
 │   └── share_token.py   share_tokens (UUID4 monouso per portale pubblico anamnesi)
@@ -50,7 +50,7 @@ api/
 │   ├── clients.py       CRUD clienti
 │   ├── contracts.py     CRUD contratti + batch fetch enriched + renew (rinnovo_di FK chain)
 │   ├── dashboard.py     KPI + alerts + clinical readiness + inline resolution (8 GET, ~980 LOC)
-│   ├── exercises.py     CRUD esercizi + safety-map + tassonomia (dual session)
+│   ├── exercises.py     Catalogo esercizi read-only da catalog.db + safety-map (catalog_session)
 │   ├── goals.py         CRUD obiettivi + progress tracking (dual session)
 │   ├── measurements.py  CRUD misurazioni + valori (dual session)
 │   ├── movements.py     Ledger + pending/confirm + forecast + saldo + audit-log

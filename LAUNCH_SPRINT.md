@@ -10,7 +10,8 @@ Obiettivo: **prodotto vendibile entro fine settimana**
 
 | Area | Stato attuale | Obiettivo | Gap |
 |------|--------------|-----------|-----|
-| Esercizi (catalog) | ✅ 500 attivi / 1111 totali | 500 attivi | Completato |
+| Esercizi (catalog.db) | ✅ 500 attivi, 940 relazioni, 100% campi | 500 attivi | Completato |
+| Separazione arch. 3 DB | ✅ crm.db 33 tab, catalog.db 10 tab, nutrition.db 8 tab | DB indipendenti | Completato |
 | Alimenti (nutrition) | 226 attivi | 500 attivi | +274 nuovi |
 | Piani LARN | Donna under 30 attiva | 3 fasce eta' × 2-3 livelli attivita' | +7 profili |
 | Pagina rinnovi-incassi | 340 LOC, funzionale ma grafica base | CRM-grade come cassa | Redesign UI |
@@ -152,8 +153,12 @@ Target: da 19 a ~25-28 passi, coprendo tutte le pagine navigabili.
 
 ## Vincoli
 
-- **Schema sync garantito**: ogni modifica DB passa da schema_sync al startup
-- **catalog.db e nutrition.db sono read-only**: shippati con l'installer, mai modificati dall'utente
+- **Separazione 3 DB**: crm.db (33 tab business) | catalog.db (10 tab esercizi+tassonomia) | nutrition.db (8 tab alimenti)
+- **crm.db SACRO**: solo dati business del trainer. Zero tabelle catalog/nutrition duplicate. Backup/restore protetto.
+- **catalog.db e nutrition.db read-only**: shipped con installer, mai modificati dall'utente. Aggiornati con upgrade.
+- **Alembic solo crm.db**: `include_name()` esclude catalog+nutrition. `alembic upgrade head` safe.
+- **Cross-DB ref senza FK**: `esercizi_sessione.id_esercizio` → catalog.db (application-level integrity)
+- **Schema sync garantito**: ogni modifica DB passa da schema_sync al startup (esclude catalog+nutrition)
 - **Backup Chiara safe**: restore da v1.10.1 → schema_sync aggiunge colonne → zero crash
 - **check-all.sh obbligatorio**: ruff + next build prima di ogni commit
 - **Ollama necessario**: per enrich esercizi (gemma2:9b)
