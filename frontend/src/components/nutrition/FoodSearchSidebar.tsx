@@ -369,8 +369,8 @@ export function FoodSearchSidebar({
         {/* ── Body: split panel ── */}
         <div className="flex-1 flex min-h-0 border-t">
           {/* LEFT: food list (62%) */}
-          <div className="w-[62%] shrink-0 flex flex-col min-h-0 border-r">
-            <ScrollArea className="flex-1">
+          <div className="w-[62%] shrink-0 min-h-0 overflow-hidden border-r">
+            <ScrollArea className="h-full">
               <ListHeader />
               {isLoading && (
                 <div className="flex items-center justify-center py-24">
