@@ -48,6 +48,15 @@ def seed_builtin_exercises(session: Session) -> int:
     with open(SEED_FILE, "r", encoding="utf-8") as f:
         exercises_data = json.load(f)
 
+    def _json_field(val):
+        """Converte in JSON string evitando double-encode.
+        Se val e' gia' una stringa JSON, la ritorna cosi'. Se e' list/dict, la serializza."""
+        if val is None:
+            return None
+        if isinstance(val, str):
+            return val  # gia' serializzato (export da sqlite3 row)
+        return json.dumps(val, ensure_ascii=False)
+
     for ex in exercises_data:
         exercise = Exercise(
             id=ex.get("id"),  # preserva ID originali per FK relazioni
@@ -55,15 +64,15 @@ def seed_builtin_exercises(session: Session) -> int:
             nome_en=ex.get("nome_en"),
             categoria=ex["categoria"],
             pattern_movimento=ex["pattern_movimento"],
-            muscoli_primari=json.dumps(ex["muscoli_primari"], ensure_ascii=False),
-            muscoli_secondari=json.dumps(ex.get("muscoli_secondari", []), ensure_ascii=False),
+            muscoli_primari=_json_field(ex["muscoli_primari"]),
+            muscoli_secondari=_json_field(ex.get("muscoli_secondari", "[]")),
             attrezzatura=ex["attrezzatura"],
             difficolta=ex["difficolta"],
             rep_range_forza=ex.get("rep_range_forza"),
             rep_range_ipertrofia=ex.get("rep_range_ipertrofia"),
             rep_range_resistenza=ex.get("rep_range_resistenza"),
             ore_recupero=ex.get("ore_recupero", 48),
-            controindicazioni=json.dumps(ex.get("controindicazioni", []), ensure_ascii=False),
+            controindicazioni=_json_field(ex.get("controindicazioni", "[]")),
             is_builtin=True,
             # Campi v2: tassonomia e biomeccanica
             in_subset=ex.get("in_subset", False),
@@ -79,8 +88,8 @@ def seed_builtin_exercises(session: Session) -> int:
             setup=ex.get("setup"),
             esecuzione=ex.get("esecuzione"),
             respirazione=ex.get("respirazione"),
-            coaching_cues=json.dumps(ex["coaching_cues"], ensure_ascii=False) if ex.get("coaching_cues") else None,
-            errori_comuni=json.dumps(ex["errori_comuni"], ensure_ascii=False) if ex.get("errori_comuni") else None,
+            coaching_cues=_json_field(ex.get("coaching_cues")),
+            errori_comuni=_json_field(ex.get("errori_comuni")),
         )
         session.add(exercise)
 
