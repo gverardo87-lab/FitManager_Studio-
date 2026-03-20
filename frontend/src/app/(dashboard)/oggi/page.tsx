@@ -129,7 +129,7 @@ export default function OggiWorkspacePage() {
 
   if (prepQuery.isLoading || (!prep && !prepQuery.isError)) {
     return (
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-7">
         <OggiHeroSkeleton />
         {todayQuery.isError && (
           <div className={surfaceRoleClassName({ role: "context", tone: "amber" }, "px-4 py-3")}>
@@ -138,9 +138,9 @@ export default function OggiWorkspacePage() {
             </p>
           </div>
         )}
-        <div className="grid gap-5 lg:grid-cols-[minmax(340px,0.84fr)_minmax(0,1.16fr)]">
-          <Skeleton className="h-[520px] rounded-2xl" />
-          <Skeleton className="h-[520px] rounded-2xl" />
+        <div className="grid gap-6 md:grid-cols-[minmax(300px,0.38fr)_minmax(0,0.62fr)]">
+          <Skeleton className="h-[480px] rounded-2xl" />
+          <Skeleton className="h-[540px] rounded-2xl" />
         </div>
       </div>
     );
@@ -178,7 +178,7 @@ export default function OggiWorkspacePage() {
   const safePrep = prep!;
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-7">
       {/* Hero — enterprise command bar */}
       <div className={revealClass(0)} style={revealStyle(0)}>
         <OggiHero
@@ -210,24 +210,24 @@ export default function OggiWorkspacePage() {
       <div
         className={cn(
           revealClass(18),
-          "grid gap-5 lg:grid-cols-[minmax(340px,0.84fr)_minmax(0,1.16fr)] lg:items-start",
+          "grid gap-6 md:grid-cols-[minmax(300px,0.38fr)_minmax(0,0.62fr)] md:items-start",
         )}
         style={revealStyle(18)}
       >
         {/* Mobile: CommandCenter prima (order-1), Timeline dopo (order-2) */}
         {/* Desktop: Timeline a sinistra (lg:order-1), CommandCenter a destra (lg:order-2) */}
-        <div className="order-2 lg:order-1">
+        <div className="order-2 md:order-1">
           <OggiTimeline
-            className="lg:max-h-[calc(100vh-13.5rem)] lg:overflow-y-auto lg:pr-1"
+            className="md:max-h-[calc(100dvh-12rem)] md:overflow-y-auto md:pr-1"
             sessions={orderedSessions}
             selectedEventId={effectiveSelectedId}
             onSelect={setSelectedEventId}
             avatarMap={avatarMap}
           />
         </div>
-        <div className="order-1 lg:order-2">
+        <div className="order-1 md:order-2">
           <OggiCommandCenter
-            className="lg:max-h-[calc(100vh-13.5rem)] lg:overflow-y-auto lg:pr-1"
+            className="md:max-h-[calc(100dvh-12rem)] md:overflow-y-auto md:pr-1"
             session={selectedSession}
             status={selectedStatus}
             avatar={selectedSession?.client_id ? avatarMap.get(selectedSession.client_id) ?? null : null}

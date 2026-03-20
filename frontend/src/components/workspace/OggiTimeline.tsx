@@ -142,7 +142,7 @@ function SessionItem({
       aria-label={`${name} — ${TIME_FMT.format(new Date(session.starts_at))} — ${meta.srLabel}${semaphoreSr}`}
       style={{ animationDelay: `${staggerIndex * 50}ms` }}
       className={cn(
-        "oggi-session-card oggi-stagger-card group relative min-w-0 w-full rounded-xl px-3.5 py-3 text-left",
+        "oggi-session-card oggi-stagger-card group relative min-w-0 w-full rounded-xl px-4 py-3 text-left",
         selected
           ? cn(
               surfaceRoleClassName({ role: "signal", tone: "neutral", interactive: true }),
@@ -307,7 +307,7 @@ export function OggiTimeline({
             groups.push(
               <div key="attention" className="space-y-2">
                 <GroupLabel label="Da sbloccare" count={attention.length} tone="red" />
-                <div className="oggi-timeline-connector space-y-1 pl-2">
+                <div className="oggi-timeline-connector space-y-1 pl-2.5">
                   {attention.map((s) => (
                     <SessionItem
                       key={s.event_id}
@@ -328,7 +328,7 @@ export function OggiTimeline({
             groups.push(
               <div key="prepared" className="space-y-2">
                 <GroupLabel label="In linea" count={prepared.length} tone="teal" />
-                <div className="oggi-timeline-connector space-y-1 pl-2">
+                <div className="oggi-timeline-connector space-y-1 pl-2.5">
                   {prepared.map((s) => (
                     <SessionItem
                       key={s.event_id}
@@ -349,7 +349,7 @@ export function OggiTimeline({
             groups.push(
               <div key="internal" className="space-y-2">
                 <GroupLabel label="Interni" count={internal.length} tone="neutral" />
-                <div className="oggi-timeline-connector space-y-1 pl-2">
+                <div className="oggi-timeline-connector space-y-1 pl-2.5">
                   {internal.map((s) => (
                     <SessionItem
                       key={s.event_id}

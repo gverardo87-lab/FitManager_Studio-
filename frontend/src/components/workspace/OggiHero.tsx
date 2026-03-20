@@ -165,10 +165,10 @@ export function OggiHero({
       <div
         className={surfaceRoleClassName(
           { role: "page", tone: "neutral" },
-          "oggi-command-bar px-6 py-8 sm:px-10 sm:py-10",
+          "oggi-command-bar px-6 py-6 sm:px-10 sm:py-8",
         )}
       >
-        <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 flex-1">
             {/* Heading — semantically correct h1 for the page */}
             <h1 className="oggi-section-label flex items-center gap-2 text-[11px] font-bold uppercase text-muted-foreground/60">
@@ -194,19 +194,19 @@ export function OggiHero({
             </div>
 
             {/* Row 2: Briefing lead — operational action with breathing room */}
-            <div className="oggi-hero-divider mt-6" aria-hidden="true" />
-            <p className="mt-5 max-w-xl text-base font-bold leading-relaxed text-foreground sm:text-lg">
+            <div className="oggi-hero-divider mt-5" aria-hidden="true" />
+            <p className="mt-4 max-w-xl text-base font-bold leading-relaxed text-foreground sm:text-lg">
               {lead}
             </p>
             {detail ? (
-              <p className="mt-1.5 max-w-lg text-[13px] leading-relaxed text-muted-foreground/70">
+              <p className="mt-1 max-w-lg text-[13px] leading-relaxed text-muted-foreground/70">
                 {detail}
               </p>
             ) : null}
           </div>
 
-          {/* KPI stat block — enterprise gradient numbers */}
-          <div className="flex shrink-0 items-center gap-6 sm:flex-col sm:items-end sm:gap-6">
+          {/* KPI stat island — enterprise gradient numbers */}
+          <div className="flex shrink-0 items-center gap-5 rounded-2xl border border-border/40 bg-background/40 px-5 py-4 backdrop-blur-sm sm:flex-col sm:items-end sm:gap-5 sm:px-6 sm:py-5">
             {/* Total sessions */}
             <div className="text-right">
               <p className={cn("text-[2rem] font-black tabular-nums leading-none tracking-tight sm:text-[2.4rem]", "oggi-kpi-value")}>
@@ -219,7 +219,7 @@ export function OggiHero({
 
             {/* Attention / Ready — conditional KPI, quiet foreground */}
             {attentionCount > 0 ? (
-              <div className="text-right">
+              <div className="text-right sm:border-t sm:border-border/30 sm:pt-4">
                 <p className="oggi-kpi-value text-[2rem] font-black tabular-nums leading-none tracking-tight sm:text-[2.4rem]">
                   {attentionCount}
                 </p>
@@ -229,7 +229,7 @@ export function OggiHero({
                 </p>
               </div>
             ) : readyCount > 0 ? (
-              <div className="text-right">
+              <div className="text-right sm:border-t sm:border-border/30 sm:pt-4">
                 <p className="oggi-kpi-value text-[2rem] font-black tabular-nums leading-none tracking-tight sm:text-[2.4rem]">
                   {readyCount}
                 </p>
@@ -251,11 +251,11 @@ export function OggiHeroSkeleton({ className }: { className?: string }) {
     <div
       className={surfaceRoleClassName(
         { role: "page", tone: "neutral" },
-        cn("oggi-command-bar px-6 py-8 sm:px-10 sm:py-10", className),
+        cn("oggi-command-bar px-6 py-6 sm:px-10 sm:py-8", className),
       )}
     >
-      <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0 flex-1 space-y-4">
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0 flex-1 space-y-3.5">
           <div className="h-3 w-40 rounded bg-muted/40" />
           <div className="flex items-center gap-6">
             <div className="h-[101px] w-[101px] rounded-[25px] bg-muted/20 sm:h-[116px] sm:w-[116px] sm:rounded-[29px]" />
@@ -265,19 +265,21 @@ export function OggiHeroSkeleton({ className }: { className?: string }) {
             </div>
           </div>
           <div className="h-[1.5px] w-12 rounded bg-muted/30" />
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <div className="h-5 w-80 rounded bg-muted/30" />
             <div className="h-3.5 w-64 rounded bg-muted/20" />
           </div>
         </div>
-        <div className="flex items-center gap-6 sm:flex-col sm:items-end sm:gap-6">
-          <div className="space-y-1.5 text-right">
-            <div className="ml-auto h-8 w-12 rounded-lg bg-muted/30" />
-            <div className="ml-auto h-2.5 w-14 rounded bg-muted/20" />
-          </div>
-          <div className="space-y-1.5 text-right">
-            <div className="ml-auto h-8 w-8 rounded-lg bg-muted/25" />
-            <div className="ml-auto h-2.5 w-16 rounded bg-muted/20" />
+        <div className="rounded-2xl border border-border/30 bg-muted/10 px-5 py-4 sm:px-6 sm:py-5">
+          <div className="flex items-center gap-5 sm:flex-col sm:items-end sm:gap-4">
+            <div className="space-y-1.5 text-right">
+              <div className="ml-auto h-8 w-12 rounded-lg bg-muted/30" />
+              <div className="ml-auto h-2.5 w-14 rounded bg-muted/20" />
+            </div>
+            <div className="space-y-1.5 text-right sm:border-t sm:border-border/20 sm:pt-3.5">
+              <div className="ml-auto h-8 w-8 rounded-lg bg-muted/25" />
+              <div className="ml-auto h-2.5 w-16 rounded bg-muted/20" />
+            </div>
           </div>
         </div>
       </div>
