@@ -346,12 +346,10 @@ function NutritionLabel({
 function RecipeSection({ foodDetail }: { foodDetail: FoodDetail | undefined }) {
   if (!foodDetail?.ricetta?.length) return null;
 
-  const totalG = foodDetail.ricetta.reduce((s, r) => s + r.quantita_g, 0);
-
   return (
     <div className="mx-6 py-3">
       <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-2">
-        Composizione per 1 porzione ({Math.round(totalG)}g)
+        Ingredienti per la preparazione
       </p>
       <div className="space-y-0">
         {foodDetail.ricetta.map((ing) => (
@@ -369,42 +367,14 @@ function RecipeSection({ foodDetail }: { foodDetail: FoodDetail | undefined }) {
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-0 text-[11px] tabular-nums shrink-0 ml-2">
-              <span className="w-[40px] text-right font-medium text-foreground/60">
-                {ing.quantita_g}g
-              </span>
-              <span className="w-[36px] text-right text-blue-500/70">
-                {Math.round((ing.proteine_g * ing.quantita_g) / 100 * 10) / 10}
-              </span>
-              <span className="w-[36px] text-right text-amber-500/70">
-                {Math.round((ing.carboidrati_g * ing.quantita_g) / 100 * 10) / 10}
-              </span>
-              <span className="w-[36px] text-right text-rose-400/70">
-                {Math.round((ing.grassi_g * ing.quantita_g) / 100 * 10) / 10}
-              </span>
-            </div>
+            <span className="text-[11px] tabular-nums font-medium text-foreground/60 shrink-0 ml-2">
+              {ing.quantita_g}g
+            </span>
           </div>
         ))}
       </div>
-      <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-border/40">
-        <span className="text-[10px] font-medium text-muted-foreground/50">
-          Totale ingredienti
-        </span>
-        <div className="flex items-center gap-0 text-[10px] tabular-nums font-semibold">
-          <span className="w-[40px] text-right text-foreground/50">{Math.round(totalG)}g</span>
-          <span className="w-[36px] text-right text-blue-600/60">
-            P
-          </span>
-          <span className="w-[36px] text-right text-amber-600/60">
-            C
-          </span>
-          <span className="w-[36px] text-right text-rose-500/60">
-            G
-          </span>
-        </div>
-      </div>
-      <p className="text-[9px] text-muted-foreground/30 mt-1">
-        Macro per 100g da fonte CREA/USDA (non calcolati dalla ricetta)
+      <p className="text-[9px] text-muted-foreground/30 mt-1.5">
+        Valori nutrizionali per 100g di piatto finito da fonte CREA/USDA
       </p>
     </div>
   );
