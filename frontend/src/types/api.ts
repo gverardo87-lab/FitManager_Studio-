@@ -3041,8 +3041,20 @@ export interface Food {
   is_active: boolean;
 }
 
+export interface RecipeIngredient {
+  ingrediente_id: number;
+  ingrediente_nome: string;
+  quantita_g: number;
+  note: string | null;
+  energia_kcal: number;
+  proteine_g: number;
+  carboidrati_g: number;
+  grassi_g: number;
+}
+
 export interface FoodDetail extends Food {
   porzioni: StandardPortion[];
+  ricetta: RecipeIngredient[];
 }
 
 export interface StandardPortion {

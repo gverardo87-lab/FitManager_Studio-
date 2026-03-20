@@ -82,9 +82,23 @@ class FoodResponse(BaseModel):
     is_active: bool
 
 
+class RecipeIngredientResponse(BaseModel):
+    """Ingrediente di una ricetta pietanza."""
+    ingrediente_id: int
+    ingrediente_nome: str
+    quantita_g: float
+    note: Optional[str] = None
+    # Macro dell'ingrediente per 100g (per drill-down)
+    energia_kcal: float
+    proteine_g: float
+    carboidrati_g: float
+    grassi_g: float
+
+
 class FoodDetailResponse(FoodResponse):
-    """Alimento + porzioni standard."""
+    """Alimento + porzioni standard + ricetta (se pietanza)."""
     porzioni: list["StandardPortionResponse"] = []
+    ricetta: list[RecipeIngredientResponse] = []
 
 
 class StandardPortionResponse(BaseModel):

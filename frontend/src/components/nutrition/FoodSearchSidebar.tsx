@@ -42,7 +42,7 @@ import {
   useFoodDetail,
   useNutritionCategories,
 } from "@/hooks/useNutrition";
-import type { Food } from "@/types/api";
+import type { Food, FoodDetail } from "@/types/api";
 
 // ── Category tabs ────────────────────────────────────────────────────────
 
@@ -337,6 +337,75 @@ function NutritionLabel({
           Micronutrienti non ancora disponibili per questo alimento.
         </p>
       )}
+    </div>
+  );
+}
+
+// ── Recipe composition (pietanze) ─────────────────────────────────────────
+
+function RecipeSection({ foodDetail }: { foodDetail: FoodDetail | undefined }) {
+  if (!foodDetail?.ricetta?.length) return null;
+
+  const totalG = foodDetail.ricetta.reduce((s, r) => s + r.quantita_g, 0);
+
+  return (
+    <div className="mx-6 py-3">
+      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-2">
+        Composizione per 1 porzione ({Math.round(totalG)}g)
+      </p>
+      <div className="space-y-0">
+        {foodDetail.ricetta.map((ing) => (
+          <div
+            key={ing.ingrediente_id}
+            className="flex items-center justify-between py-[5px] border-b border-border/20 last:border-0"
+          >
+            <div className="min-w-0 flex-1">
+              <span className="text-[12px] font-medium text-foreground/80 leading-tight">
+                {ing.ingrediente_nome}
+              </span>
+              {ing.note && (
+                <span className="ml-1 text-[10px] text-muted-foreground/50">
+                  ({ing.note})
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-0 text-[11px] tabular-nums shrink-0 ml-2">
+              <span className="w-[40px] text-right font-medium text-foreground/60">
+                {ing.quantita_g}g
+              </span>
+              <span className="w-[36px] text-right text-blue-500/70">
+                {Math.round((ing.proteine_g * ing.quantita_g) / 100 * 10) / 10}
+              </span>
+              <span className="w-[36px] text-right text-amber-500/70">
+                {Math.round((ing.carboidrati_g * ing.quantita_g) / 100 * 10) / 10}
+              </span>
+              <span className="w-[36px] text-right text-rose-400/70">
+                {Math.round((ing.grassi_g * ing.quantita_g) / 100 * 10) / 10}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-border/40">
+        <span className="text-[10px] font-medium text-muted-foreground/50">
+          Totale ingredienti
+        </span>
+        <div className="flex items-center gap-0 text-[10px] tabular-nums font-semibold">
+          <span className="w-[40px] text-right text-foreground/50">{Math.round(totalG)}g</span>
+          <span className="w-[36px] text-right text-blue-600/60">
+            P
+          </span>
+          <span className="w-[36px] text-right text-amber-600/60">
+            C
+          </span>
+          <span className="w-[36px] text-right text-rose-500/60">
+            G
+          </span>
+        </div>
+      </div>
+      <p className="text-[9px] text-muted-foreground/30 mt-1">
+        Macro per 100g da fonte CREA/USDA (non calcolati dalla ricetta)
+      </p>
     </div>
   );
 }
@@ -648,6 +717,13 @@ export function FoodSearchSidebar({
                     valori per 100g
                   </p>
                 </div>
+
+                {/* Composizione ricetta (solo pietanze) */}
+                {foodDetail?.ricetta && foodDetail.ricetta.length > 0 && (
+                  <div className="border-t border-border/40">
+                    <RecipeSection foodDetail={foodDetail} />
+                  </div>
+                )}
 
                 {/* Scheda nutrizionale (collapsible) */}
                 <div className="border-t border-border/40">

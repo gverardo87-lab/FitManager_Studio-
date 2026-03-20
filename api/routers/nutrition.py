@@ -320,9 +320,33 @@ def get_food_detail(
         select(StandardPortion).where(StandardPortion.alimento_id == food_id)
     ).all()
 
+    # Ricetta: composizione ingredienti (solo per pietanze)
+    from api.models.nutrition import DishRecipe
+    from api.schemas.nutrition import RecipeIngredientResponse
+
+    ricetta_items: list[RecipeIngredientResponse] = []
+    if food.food_type == "pietanza":
+        recipe_rows = nutrition_session.exec(
+            select(DishRecipe, Food)
+            .join(Food, DishRecipe.ingrediente_id == Food.id)
+            .where(DishRecipe.pietanza_id == food_id)
+        ).all()
+        for dr, ingr in recipe_rows:
+            ricetta_items.append(RecipeIngredientResponse(
+                ingrediente_id=ingr.id,
+                ingrediente_nome=ingr.nome,
+                quantita_g=dr.quantita_g,
+                note=dr.note,
+                energia_kcal=ingr.energia_kcal,
+                proteine_g=ingr.proteine_g,
+                carboidrati_g=ingr.carboidrati_g,
+                grassi_g=ingr.grassi_g,
+            ))
+
     resp = FoodDetailResponse.model_validate(food)
     resp.categoria_nome = cat.nome
     resp.porzioni = [StandardPortionResponse.model_validate(p) for p in porzioni]
+    resp.ricetta = ricetta_items
     return resp
 
 
