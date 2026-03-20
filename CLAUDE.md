@@ -28,9 +28,9 @@ Distribuzione: PyInstaller + Next.js standalone + Inno Setup (Windows installer)
         (business)  (tassonomia) (alimenti CREA)
 ```
 
-- **crm.db**: 33 tabelle business (clienti, contratti, workout, piani alimentari). Tenant-isolated via `trainer_id`. SACRO — dati del trainer, backup/restore.
+- **crm.db**: 25 tabelle business (clienti, contratti, workout, piani alimentari). Tenant-isolated via `trainer_id`. SACRO — dati del trainer, backup/restore.
 - **catalog.db**: 10 tabelle catalogo scientifico (500 esercizi builtin + tassonomia muscoli/articolazioni/condizioni + relazioni + media). Read-only, shipped con installer. Zero `trainer_id`.
-- **nutrition.db**: 8 tabelle catalogo alimenti (CREA 2019 + USDA). Read-only, shipped con installer. 226 alimenti attivi.
+- **nutrition.db**: 8 tabelle catalogo alimenti (CREA 2019 + USDA). Read-only, shipped con installer. 880 alimenti attivi, 210 ricette pietanze, 12 template dieta.
 - **Dual env**: prod (porta 8000/3000, crm.db) + dev (porta 8001/3001, crm_dev.db).
 - **Formula porte**: `frontend_port - 3000 + 8000 = backend_port`.
 
@@ -42,7 +42,7 @@ Distribuzione: PyInstaller + Next.js standalone + Inno Setup (Windows installer)
 cd frontend && npm run dev                                         # frontend dev (porta 3001)
 
 # --- Test ---
-./venv/Scripts/python -m pytest tests/ -v                          # 323 test backend
+./venv/Scripts/python -m pytest tests/ -v                          # 324 test backend
 cd frontend && npm test                                            # 69 vitest (data protection)
 
 # --- Quality gate (obbligatorio prima di commit) ---
