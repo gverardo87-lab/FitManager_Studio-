@@ -142,13 +142,13 @@ export function OggiHero({
   internalCount: _internalCount,
   focusSession,
   focusStatus,
-  lastUpdatedAt,
+  lastUpdatedAt: _lastUpdatedAt,
   isRefreshing: _isRefreshing = false,
   className,
 }: OggiHeroProps) {
   const now = getReferenceDate(prep.current_time);
   const nowMs = now.getTime();
-  const { tone, lead, detail } = getFocusBrief({
+  const { lead, detail } = getFocusBrief({
     prep,
     focusSession,
     focusStatus,
@@ -158,33 +158,24 @@ export function OggiHero({
   const nextSession = [...prep.sessions, ...prep.non_client_events]
     .filter((s) => new Date(s.starts_at).getTime() > nowMs)
     .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime())[0] ?? null;
-  const _syncLabel = lastUpdatedAt ? TIME_FMT.format(getReferenceDate(lastUpdatedAt)) : null;
 
-  const leadColor =
-    tone === "red"
-      ? "text-red-700 dark:text-red-300"
-      : tone === "amber"
-        ? "text-amber-700 dark:text-amber-300"
-        : tone === "teal"
-          ? "text-emerald-700 dark:text-emerald-300"
-          : "text-foreground";
 
   return (
-    <section aria-label="Riepilogo giornata" className={cn("oggi-hero-mesh", className)}>
+    <section aria-label="Preparazione sedute di oggi" className={cn("oggi-hero-mesh", className)}>
       <div
         className={surfaceRoleClassName(
           { role: "page", tone: "neutral" },
           "oggi-command-bar px-6 py-8 sm:px-10 sm:py-10",
         )}
       >
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 flex-1">
-            {/* Breadcrumb — Practice Better style */}
-            <p className="flex items-center gap-2 text-sm font-bold uppercase tracking-[0.18em] text-muted-foreground/60">
+            {/* Heading — semantically correct h1 for the page */}
+            <h1 className="oggi-section-label flex items-center gap-2 text-[11px] font-bold uppercase text-muted-foreground/60">
               <span>Oggi</span>
-              <span className="text-primary/40">|</span>
+              <span className="text-primary/40" aria-hidden="true">|</span>
               <span className="text-primary/70">Preparazione sedute</span>
-            </p>
+            </h1>
 
             {/* Row 1: Clock + Greeting + Date */}
             <div className="mt-5 flex items-center gap-6 sm:mt-6">
@@ -193,58 +184,61 @@ export function OggiHero({
                 nextSessionName={nextSession?.client_name ?? nextSession?.event_title}
               />
               <div className="min-w-0">
-                <h1 className="oggi-title-gradient pb-1 text-[1.9rem] font-black leading-[1.25] tracking-tight sm:text-[2.3rem]">
+                <p className="oggi-title-gradient pb-1 text-[1.9rem] font-black leading-[1.25] tracking-tight sm:text-[2.3rem]" aria-hidden="true">
                   {getGreeting()}
-                </h1>
+                </p>
                 <p className="mt-1.5 text-base font-medium capitalize text-foreground/50 sm:text-lg">
                   {DATE_FMT.format(now)}
                 </p>
               </div>
             </div>
 
-            {/* Row 2: Briefing lead — azione operativa con respiro */}
-            <div className="oggi-hero-divider mt-6" />
-            <p className={cn("mt-5 max-w-xl text-base font-bold leading-relaxed transition-colors duration-300 sm:text-lg", leadColor)}>
+            {/* Row 2: Briefing lead — operational action with breathing room */}
+            <div className="oggi-hero-divider mt-6" aria-hidden="true" />
+            <p className="mt-5 max-w-xl text-base font-bold leading-relaxed text-foreground sm:text-lg">
               {lead}
             </p>
+            {detail ? (
+              <p className="mt-1.5 max-w-lg text-[13px] leading-relaxed text-muted-foreground/70">
+                {detail}
+              </p>
+            ) : null}
           </div>
 
-          <div className="flex shrink-0 flex-wrap items-center gap-2.5 sm:flex-col sm:items-end sm:gap-1">
-            {/* KPI stat block — numeri prominenti */}
-            <div className="flex items-center gap-3 sm:flex-col sm:items-end sm:gap-5">
-              {/* Sedute totali */}
-              <div className="text-right">
-                <p className="text-[1.75rem] font-black tabular-nums leading-none tracking-tight text-foreground sm:text-[2rem]">
-                  {prep.total_sessions}
-                </p>
-                <p className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground/60">
-                  {prep.total_sessions === 1 ? "seduta" : "sedute"}
-                </p>
-              </div>
-
-              {/* Attenzione / Pronte */}
-              {attentionCount > 0 ? (
-                <div className="text-right">
-                  <p className="text-[1.75rem] font-black tabular-nums leading-none tracking-tight text-red-600 dark:text-red-400 sm:text-[2rem]">
-                    {attentionCount}
-                  </p>
-                  <p className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-red-600/70 dark:text-red-400/70">
-                    da verificare
-                  </p>
-                </div>
-              ) : readyCount > 0 ? (
-                <div className="text-right">
-                  <p className="text-[1.75rem] font-black tabular-nums leading-none tracking-tight text-emerald-600 dark:text-emerald-400 sm:text-[2rem]">
-                    {readyCount}
-                  </p>
-                  <p className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-emerald-600/70 dark:text-emerald-400/70">
-                    {readyCount === 1 ? "pronta" : "pronte"}
-                  </p>
-                </div>
-              ) : null}
+          {/* KPI stat block — enterprise gradient numbers */}
+          <div className="flex shrink-0 items-center gap-6 sm:flex-col sm:items-end sm:gap-6">
+            {/* Total sessions */}
+            <div className="text-right">
+              <p className={cn("text-[2rem] font-black tabular-nums leading-none tracking-tight sm:text-[2.4rem]", "oggi-kpi-value")}>
+                {prep.total_sessions}
+              </p>
+              <p className="mt-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground/60">
+                {prep.total_sessions === 1 ? "seduta" : "sedute"}
+              </p>
             </div>
 
-            {/* Meta chips rimossi — interni visibili nella timeline, sync non necessario qui */}
+            {/* Attention / Ready — conditional KPI, quiet foreground */}
+            {attentionCount > 0 ? (
+              <div className="text-right">
+                <p className="oggi-kpi-value text-[2rem] font-black tabular-nums leading-none tracking-tight sm:text-[2.4rem]">
+                  {attentionCount}
+                </p>
+                <p className="mt-1.5 flex items-center justify-end gap-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground/60">
+                  <span className="h-1.5 w-1.5 rounded-full bg-red-500" aria-hidden="true" />
+                  da verificare
+                </p>
+              </div>
+            ) : readyCount > 0 ? (
+              <div className="text-right">
+                <p className="oggi-kpi-value text-[2rem] font-black tabular-nums leading-none tracking-tight sm:text-[2.4rem]">
+                  {readyCount}
+                </p>
+                <p className="mt-1.5 flex items-center justify-end gap-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground/60">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
+                  {readyCount === 1 ? "pronta" : "pronte"}
+                </p>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
@@ -260,7 +254,7 @@ export function OggiHeroSkeleton({ className }: { className?: string }) {
         cn("oggi-command-bar px-6 py-8 sm:px-10 sm:py-10", className),
       )}
     >
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0 flex-1 space-y-4">
           <div className="h-3 w-40 rounded bg-muted/40" />
           <div className="flex items-center gap-6">
@@ -271,12 +265,20 @@ export function OggiHeroSkeleton({ className }: { className?: string }) {
             </div>
           </div>
           <div className="h-[1.5px] w-12 rounded bg-muted/30" />
-          <div className="h-5 w-80 rounded bg-muted/30" />
+          <div className="space-y-2">
+            <div className="h-5 w-80 rounded bg-muted/30" />
+            <div className="h-3.5 w-64 rounded bg-muted/20" />
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2 sm:flex-col sm:items-end sm:gap-2.5">
-          <div className="h-7 w-20 rounded-full bg-muted/35" />
-          <div className="h-7 w-24 rounded-full bg-muted/30" />
-          <div className="h-6 w-16 rounded-full bg-muted/25" />
+        <div className="flex items-center gap-6 sm:flex-col sm:items-end sm:gap-6">
+          <div className="space-y-1.5 text-right">
+            <div className="ml-auto h-8 w-12 rounded-lg bg-muted/30" />
+            <div className="ml-auto h-2.5 w-14 rounded bg-muted/20" />
+          </div>
+          <div className="space-y-1.5 text-right">
+            <div className="ml-auto h-8 w-8 rounded-lg bg-muted/25" />
+            <div className="ml-auto h-2.5 w-16 rounded bg-muted/20" />
+          </div>
         </div>
       </div>
     </div>

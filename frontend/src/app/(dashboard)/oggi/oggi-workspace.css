@@ -1,4 +1,9 @@
 @layer components {
+  /* ═══════════════════════════════════════════════════════════════════
+     OGGI WORKSPACE — Enterprise Design System
+     Layered depth, semantic glow, glass morphism, spatial animations.
+     ═══════════════════════════════════════════════════════════════════ */
+
   /* ── Lift interaction (hover elevate) ── */
 
   .oggi-lift {
@@ -81,7 +86,7 @@
   .oggi-command-bar {
     position: relative;
     overflow: hidden;
-    border-color: color-mix(in oklch, var(--border) 78%, var(--primary) 22%);
+    border-color: color-mix(in oklch, var(--border) 68%, var(--primary) 32%);
     background:
       radial-gradient(ellipse 60% 80% at 95% 10%, oklch(0.94 0.03 170 / 0.55), transparent 50%),
       radial-gradient(ellipse 50% 60% at 5% 90%, oklch(0.96 0.015 200 / 0.30), transparent 50%),
@@ -108,13 +113,13 @@
     position: absolute;
     inset: 0;
     pointer-events: none;
-    opacity: 0.025;
+    opacity: 0.022;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     background-size: 128px 128px;
   }
 
   .dark .oggi-command-bar {
-    border-color: color-mix(in oklch, var(--border) 68%, var(--primary) 32%);
+    border-color: color-mix(in oklch, var(--border) 58%, var(--primary) 42%);
     background:
       radial-gradient(ellipse 60% 80% at 95% 10%, oklch(0.26 0.04 170 / 0.30), transparent 50%),
       radial-gradient(ellipse 50% 60% at 5% 90%, oklch(0.20 0.025 200 / 0.20), transparent 50%),
@@ -154,7 +159,7 @@
   .oggi-dossier-shell {
     position: relative;
     overflow: hidden;
-    border-color: color-mix(in oklch, var(--border) 78%, var(--primary) 22%);
+    border-color: color-mix(in oklch, var(--border) 68%, var(--primary) 32%);
     background:
       radial-gradient(ellipse 55% 65% at 92% 8%, oklch(0.95 0.02 170 / 0.45), transparent 50%),
       linear-gradient(
@@ -180,13 +185,13 @@
     position: absolute;
     inset: 0;
     pointer-events: none;
-    opacity: 0.02;
+    opacity: 0.018;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     background-size: 128px 128px;
   }
 
   .dark .oggi-dossier-shell {
-    border-color: color-mix(in oklch, var(--border) 70%, var(--primary) 30%);
+    border-color: color-mix(in oklch, var(--border) 60%, var(--primary) 40%);
     background:
       radial-gradient(ellipse 55% 65% at 92% 8%, oklch(0.26 0.035 170 / 0.20), transparent 50%),
       linear-gradient(
@@ -501,6 +506,11 @@
 
   /* ── Refined scrollbar for timeline/dossier columns ── */
 
+  .oggi-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklch, var(--foreground) 12%, transparent) transparent;
+  }
+
   .oggi-scrollbar::-webkit-scrollbar {
     width: 4px;
   }
@@ -516,6 +526,10 @@
 
   .oggi-scrollbar::-webkit-scrollbar-thumb:hover {
     background: color-mix(in oklch, var(--foreground) 22%, transparent);
+  }
+
+  .dark .oggi-scrollbar {
+    scrollbar-color: color-mix(in oklch, var(--foreground) 16%, transparent) transparent;
   }
 
   .dark .oggi-scrollbar::-webkit-scrollbar-thumb {
@@ -550,6 +564,174 @@
 
   .oggi-clear-dot {
     animation: oggi-clear-breathe 3s ease-in-out infinite;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     ENTERPRISE ADDITIONS — Pro++ layer
+     ═══════════════════════════════════════════════════════════════════ */
+
+  /* ── KPI stat block — enterprise number display ── */
+
+  .oggi-kpi-value {
+    background: linear-gradient(180deg, oklch(0.18 0.01 200), oklch(0.32 0.02 200));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .dark .oggi-kpi-value {
+    background: linear-gradient(180deg, oklch(0.96 0.02 200), oklch(0.78 0.03 200));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .oggi-kpi-value-red {
+    background: linear-gradient(180deg, oklch(0.48 0.18 25), oklch(0.55 0.16 30));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .dark .oggi-kpi-value-red {
+    background: linear-gradient(180deg, oklch(0.75 0.14 25), oklch(0.68 0.12 30));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .oggi-kpi-value-green {
+    background: linear-gradient(180deg, oklch(0.42 0.12 160), oklch(0.50 0.10 165));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .dark .oggi-kpi-value-green {
+    background: linear-gradient(180deg, oklch(0.78 0.12 160), oklch(0.68 0.10 165));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ── Timeline group header — ruled separator ── */
+
+  .oggi-group-rule {
+    position: relative;
+  }
+
+  .oggi-group-rule::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, var(--border), transparent 80%);
+    opacity: 0.4;
+  }
+
+  /* ── Stat chip grid — enterprise micro-card ── */
+
+  .oggi-stat-chip {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .oggi-stat-chip::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      145deg,
+      oklch(1 0 0 / 0.06),
+      transparent 50%
+    );
+  }
+
+  .dark .oggi-stat-chip::before {
+    background: linear-gradient(
+      145deg,
+      oklch(1 0 0 / 0.03),
+      transparent 50%
+    );
+  }
+
+  /* ── Alert block — enterprise signal card ── */
+
+  .oggi-alert-block {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .oggi-alert-block::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 3px;
+    border-radius: 0 2px 2px 0;
+  }
+
+  .oggi-alert-block[data-severity="critical"]::before {
+    background: linear-gradient(180deg, oklch(0.55 0.20 25), oklch(0.50 0.16 30));
+  }
+
+  .oggi-alert-block[data-severity="warning"]::before {
+    background: linear-gradient(180deg, oklch(0.72 0.16 70), oklch(0.68 0.12 75));
+  }
+
+  .oggi-alert-block[data-severity="clear"]::before {
+    background: linear-gradient(180deg, oklch(0.65 0.16 155), oklch(0.60 0.12 160));
+  }
+
+  /* ── Action bar — enterprise button row ── */
+
+  .oggi-action-bar {
+    position: relative;
+    padding-top: 1rem;
+  }
+
+  .oggi-action-bar::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, var(--border), color-mix(in oklch, var(--border) 30%, transparent) 60%, transparent);
+    opacity: 0.5;
+  }
+
+  /* ── Section label — enterprise uppercase ── */
+
+  .oggi-section-label {
+    letter-spacing: 0.18em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Briefing prose — enterprise narrative block ── */
+
+  .oggi-briefing {
+    position: relative;
+    padding-left: 0.75rem;
+  }
+
+  .oggi-briefing::before {
+    content: "";
+    position: absolute;
+    top: 0.25rem;
+    left: 0;
+    bottom: 0.25rem;
+    width: 2px;
+    border-radius: 1px;
+    background: linear-gradient(180deg, oklch(0.65 0.10 170 / 0.4), oklch(0.65 0.10 170 / 0.08));
+  }
+
+  .dark .oggi-briefing::before {
+    background: linear-gradient(180deg, oklch(0.55 0.08 170 / 0.5), oklch(0.55 0.08 170 / 0.1));
   }
 
   /* ── Reduced motion: disable non-essential animations ── */

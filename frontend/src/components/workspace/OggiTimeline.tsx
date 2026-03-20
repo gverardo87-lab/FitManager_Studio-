@@ -16,23 +16,28 @@ export type PreFlightStatus = "ready" | "incomplete" | "risk" | "blocked" | "no_
 
 export const PREFLIGHT_META: Record<
   PreFlightStatus,
-  { label: string; dot: string; color: string }
+  { label: string; dot: string; color: string; srLabel: string }
 > = {
-  ready:      { label: "Pronta",     dot: "bg-emerald-500",                    color: "text-emerald-700 dark:text-emerald-300" },
-  incomplete: { label: "Incompleta", dot: "bg-amber-500",                     color: "text-amber-700 dark:text-amber-300" },
-  risk:       { label: "Rischio",    dot: "bg-red-500",                        color: "text-red-700 dark:text-red-300" },
-  blocked:    { label: "Bloccata",   dot: "bg-red-600",                        color: "text-red-800 dark:text-red-200" },
-  no_client:  { label: "Interno",    dot: "bg-stone-300 dark:bg-zinc-600",     color: "text-muted-foreground" },
+  ready:      { label: "Pronta",     dot: "bg-emerald-500",                    color: "text-emerald-700 dark:text-emerald-300", srLabel: "pronta" },
+  incomplete: { label: "Incompleta", dot: "bg-amber-500",                     color: "text-amber-700 dark:text-amber-300", srLabel: "incompleta" },
+  risk:       { label: "Rischio",    dot: "bg-red-500",                        color: "text-red-700 dark:text-red-300", srLabel: "rischio clinico" },
+  blocked:    { label: "Bloccata",   dot: "bg-red-600",                        color: "text-red-800 dark:text-red-200", srLabel: "bloccata" },
+  no_client:  { label: "Interno",    dot: "bg-stone-300 dark:bg-zinc-600",     color: "text-muted-foreground", srLabel: "interno" },
 };
 
 const TIME_FMT = new Intl.DateTimeFormat("it-IT", { hour: "2-digit", minute: "2-digit" });
 
-function getPreflightTone(status: PreFlightStatus): SurfaceTone {
-  if (status === "ready") return "teal";
-  if (status === "incomplete") return "amber";
-  if (status === "risk" || status === "blocked") return "red";
-  return "neutral";
-}
+const SEMAPHORE_DOT: Record<string, string> = {
+  green: "bg-emerald-500",
+  amber: "bg-amber-500",
+  red: "bg-red-500",
+};
+
+const SEMAPHORE_SR_LABEL: Record<string, string> = {
+  green: "ok",
+  amber: "attenzione",
+  red: "critico",
+};
 
 export function getPreFlightStatus(session: SessionPrepItem): PreFlightStatus {
   if (!session.client_id) return "no_client";
@@ -105,12 +110,6 @@ function buildNarrativeSubline(avatar: ClientAvatar, session: SessionPrepItem, s
 
 // ── Session Card ──────────────────────────────────────────────────
 
-const SEMAPHORE_DOT: Record<string, string> = {
-  green: "bg-emerald-500",
-  amber: "bg-amber-500",
-  red: "bg-red-500",
-};
-
 function SessionItem({
   session,
   status,
@@ -125,34 +124,39 @@ function SessionItem({
   avatar?: ClientAvatar | null;
 }) {
   const meta = PREFLIGHT_META[status];
-  const tone = getPreflightTone(status);
   const name = session.client_name ?? session.event_title ?? session.category;
   const subline = getSessionSubline(session, status, avatar);
+
+  // Build accessible semaphore summary
+  const semaphoreSr = avatar
+    ? ` — clinica ${SEMAPHORE_SR_LABEL[avatar.clinical.status]}, contratto ${SEMAPHORE_SR_LABEL[avatar.contract.status]}, allenamento ${SEMAPHORE_SR_LABEL[avatar.training.status]}, corpo ${SEMAPHORE_SR_LABEL[avatar.body_goals.status]}`
+    : "";
 
   return (
     <button
       type="button"
       onClick={onSelect}
       aria-selected={selected}
-      aria-label={`${name} — ${TIME_FMT.format(new Date(session.starts_at))} — ${meta.label}`}
+      aria-label={`${name} — ${TIME_FMT.format(new Date(session.starts_at))} — ${meta.srLabel}${semaphoreSr}`}
       className={cn(
         "oggi-session-card group relative min-w-0 w-full rounded-xl px-3.5 py-3 text-left",
         selected
           ? cn(
-              surfaceRoleClassName({ role: "signal", tone, interactive: true }),
-              `oggi-glow-${tone}`,
+              surfaceRoleClassName({ role: "signal", tone: "neutral", interactive: true }),
+              "oggi-glow-neutral",
               "oggi-session-card-selected",
             )
           : "border border-transparent hover:border-border/60 hover:bg-accent/40",
       )}
     >
-      {/* Barra status sinistra */}
+      {/* Status bar — left accent */}
       <span
         className={cn(
           "absolute inset-y-3 left-0 w-[3px] rounded-r-full transition-all duration-300",
           meta.dot,
           selected ? "opacity-100" : "opacity-30 group-hover:opacity-60",
         )}
+        aria-hidden="true"
       />
 
       <div className="flex items-start justify-between gap-3">
@@ -160,7 +164,7 @@ function SessionItem({
           <div className="flex items-center gap-2">
             <span
               className={surfaceChipClassName(
-                { tone: selected ? tone : "neutral" },
+                { tone: "neutral" },
                 "shrink-0 px-2 py-0.5 text-[11px] font-bold tabular-nums",
               )}
             >
@@ -169,12 +173,13 @@ function SessionItem({
             <p className="truncate text-sm font-bold text-foreground">{name}</p>
           </div>
           <p className="mt-1 truncate pl-1 text-[11px] text-muted-foreground/80">{subline}</p>
+          {/* Semaphore dots — with accessible labels */}
           {avatar ? (
-            <div className="mt-1.5 flex items-center gap-1 pl-1" aria-label="Stato dimensioni cliente">
-              <span className={cn("h-1.5 w-1.5 rounded-full", SEMAPHORE_DOT[avatar.clinical.status])} title="Clinica" />
-              <span className={cn("h-1.5 w-1.5 rounded-full", SEMAPHORE_DOT[avatar.contract.status])} title="Contratto" />
-              <span className={cn("h-1.5 w-1.5 rounded-full", SEMAPHORE_DOT[avatar.training.status])} title="Allenamento" />
-              <span className={cn("h-1.5 w-1.5 rounded-full", SEMAPHORE_DOT[avatar.body_goals.status])} title="Corpo" />
+            <div className="mt-1.5 flex items-center gap-1.5 pl-1" aria-hidden="true">
+              <span className={cn("h-1.5 w-1.5 rounded-full", SEMAPHORE_DOT[avatar.clinical.status])} title={`Clinica: ${SEMAPHORE_SR_LABEL[avatar.clinical.status]}`} />
+              <span className={cn("h-1.5 w-1.5 rounded-full", SEMAPHORE_DOT[avatar.contract.status])} title={`Contratto: ${SEMAPHORE_SR_LABEL[avatar.contract.status]}`} />
+              <span className={cn("h-1.5 w-1.5 rounded-full", SEMAPHORE_DOT[avatar.training.status])} title={`Allenamento: ${SEMAPHORE_SR_LABEL[avatar.training.status]}`} />
+              <span className={cn("h-1.5 w-1.5 rounded-full", SEMAPHORE_DOT[avatar.body_goals.status])} title={`Corpo: ${SEMAPHORE_SR_LABEL[avatar.body_goals.status]}`} />
             </div>
           ) : null}
         </div>
@@ -182,7 +187,7 @@ function SessionItem({
         <span
           className={cn(
             "shrink-0 text-[10px] font-bold uppercase tracking-[0.12em] transition-colors duration-200",
-            selected ? meta.color : "text-muted-foreground/60 group-hover:text-muted-foreground",
+            selected ? "text-foreground/70" : "text-muted-foreground/50 group-hover:text-muted-foreground/70",
           )}
         >
           {selected ? "Focus" : meta.label}
@@ -205,21 +210,15 @@ function GroupLabel({
 }) {
   const dotClass =
     tone === "red" ? "bg-red-500" : tone === "teal" ? "bg-emerald-500" : "bg-stone-300 dark:bg-zinc-600";
-  const textClass =
-    tone === "red"
-      ? "text-red-700 dark:text-red-400"
-      : tone === "teal"
-        ? "text-emerald-700 dark:text-emerald-400"
-        : "text-muted-foreground";
 
   return (
-    <div className="flex items-center gap-2 px-1 pb-1">
-      <span className={cn("h-2 w-2 shrink-0 rounded-full", dotClass, tone === "red" && "oggi-status-beat")} />
-      <p className={cn("text-[11px] font-bold uppercase tracking-[0.16em]", textClass)}>{label}</p>
-      <span className="h-px flex-1 bg-border/40" />
+    <div className="oggi-group-rule flex items-center gap-2 px-1 pb-2">
+      <span className={cn("h-2 w-2 shrink-0 rounded-full", dotClass, tone === "red" && "oggi-status-beat")} aria-hidden="true" />
+      <p className="oggi-section-label text-[11px] font-bold uppercase text-muted-foreground">{label}</p>
+      <span className="h-px flex-1 bg-border/40" aria-hidden="true" />
       <span
         className={surfaceChipClassName(
-          { tone },
+          { tone: "neutral" },
           "px-2 py-0.5 text-[10px] font-bold tabular-nums",
         )}
       >
@@ -251,7 +250,7 @@ export function OggiTimeline({
       <div
         className={surfaceRoleClassName(
           { role: "page", tone: "neutral" },
-          cn("oggi-rail-shell flex flex-col items-center justify-center px-8 py-14 text-center", className),
+          cn("oggi-rail-shell flex flex-col items-center justify-center px-8 py-16 text-center", className),
         )}
       >
         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted/40">
@@ -295,8 +294,8 @@ export function OggiTimeline({
         </span>
       </div>
 
-      {/* Gruppi */}
-      <div className="space-y-6">
+      {/* Groups */}
+      <div className="space-y-7" role="listbox" aria-label="Sedute">
         {attention.length > 0 && (
           <div className="space-y-2">
             <GroupLabel label="Da sbloccare" count={attention.length} tone="red" />

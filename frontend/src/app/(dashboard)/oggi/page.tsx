@@ -129,7 +129,7 @@ export default function OggiWorkspacePage() {
 
   if (prepQuery.isLoading || (!prep && !prepQuery.isError)) {
     return (
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-5">
         <OggiHeroSkeleton />
         {todayQuery.isError && (
           <div className={surfaceRoleClassName({ role: "context", tone: "amber" }, "px-4 py-3")}>
@@ -138,9 +138,9 @@ export default function OggiWorkspacePage() {
             </p>
           </div>
         )}
-        <div className="grid gap-4 lg:grid-cols-[minmax(340px,0.84fr)_minmax(0,1.16fr)]">
-          <Skeleton className="h-[480px] rounded-2xl" />
-          <Skeleton className="h-[480px] rounded-2xl" />
+        <div className="grid gap-5 lg:grid-cols-[minmax(340px,0.84fr)_minmax(0,1.16fr)]">
+          <Skeleton className="h-[520px] rounded-2xl" />
+          <Skeleton className="h-[520px] rounded-2xl" />
         </div>
       </div>
     );
@@ -178,8 +178,8 @@ export default function OggiWorkspacePage() {
   const safePrep = prep!;
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* Hero compatto — strip singola riga */}
+    <div className="flex flex-col gap-5">
+      {/* Hero — enterprise command bar */}
       <div className={revealClass(0)} style={revealStyle(0)}>
         <OggiHero
           prep={safePrep}
@@ -193,7 +193,7 @@ export default function OggiWorkspacePage() {
         />
       </div>
 
-      {todayQuery.isError && (
+      {todayQuery.isError ? (
         <div className={revealClass(12)} style={revealStyle(12)}>
           <div className={surfaceRoleClassName({ role: "context", tone: "amber" }, "px-4 py-3")}>
             <p className="text-xs font-semibold text-amber-800 dark:text-amber-300">
@@ -204,13 +204,13 @@ export default function OggiWorkspacePage() {
             </p>
           </div>
         </div>
-      )}
+      ) : null}
 
       {/* Cockpit 2 colonne: timeline (sinistra) | focus seduta (destra) */}
       <div
         className={cn(
           revealClass(18),
-          "grid gap-4 lg:grid-cols-[minmax(340px,0.84fr)_minmax(0,1.16fr)] lg:items-start",
+          "grid gap-5 lg:grid-cols-[minmax(340px,0.84fr)_minmax(0,1.16fr)] lg:items-start",
         )}
         style={revealStyle(18)}
       >
