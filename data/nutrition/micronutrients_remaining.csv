@@ -1,0 +1,189 @@
+id,nome,calcio_mg,ferro_mg,zinco_mg,magnesio_mg,fosforo_mg,potassio_mg,selenio_ug,vitamina_a_ug,vitamina_d_ug,vitamina_e_mg,vitamina_c_mg,vitamina_b1_mg,vitamina_b2_mg,vitamina_b3_mg,vitamina_b6_mg,vitamina_b9_ug,vitamina_b12_ug,confidence,source_detail
+392,Noci pecan,70,2.5,4.5,121,277,410,3.8,3,0,1.4,1.1,0.66,0.13,1.2,0.21,22,0,high,USDA FDC pecan
+393,Noci del Brasile,160,2.4,4.1,376,725,659,1917,0,0,5.7,0.7,0.62,0.04,0.3,0.1,22,0,high,USDA FDC brazil nut
+394,Noci macadamia,85,3.7,1.3,130,188,368,3.6,0,0,0.54,1.2,1.2,0.16,2.5,0.27,11,0,high,USDA FDC macadamia
+395,Noci di acagiù (anacardi) tostate,37,6.7,5.8,292,593,660,20,0,0,0.9,0.5,0.42,0.06,1.1,0.42,25,0,high,USDA FDC cashew roasted
+396,Mandorle tostate (non salate),266,3.7,3.1,270,484,713,4.1,0,0,25.6,0,0.21,1.01,3.6,0.14,44,0,high,USDA FDC almond roasted
+397,Nocciole tostate,114,4.7,2.5,163,310,680,2.4,1,0,15.0,3.8,0.64,0.11,1.8,0.56,113,0,high,USDA FDC hazelnut roasted
+398,Pistacchi tostati (salati),107,3.9,2.2,121,490,1025,7.0,26,0,2.3,5.6,0.87,0.16,1.3,1.7,51,0,high,USDA FDC pistachio roasted salted
+399,Arachidi crude,92,4.6,3.3,168,376,705,7.2,0,0,8.3,0,0.64,0.14,12.1,0.35,240,0,high,USDA FDC peanut raw
+400,Semi di sesamo,975,14.6,7.8,351,629,468,34.4,0,0,0.25,0,0.79,0.25,4.5,0.79,97,0,high,USDA FDC sesame
+401,Semi di canapa (sgusciati),70,7.9,9.9,700,1650,1200,0,1,0,0.8,0.5,1.28,0.29,9.2,0.6,110,0,high,USDA FDC hemp seed hulled
+402,Tahini (pasta di sesamo),426,8.9,4.6,95,732,414,34.4,1,0,0.25,0,1.22,0.47,5.5,0.15,98,0,high,USDA FDC tahini
+403,Burro di arachidi (naturale),43,1.7,2.8,168,358,649,4.1,0,0,9.1,0,0.15,0.1,13.4,0.44,87,0,high,USDA FDC peanut butter
+404,Burro di mandorle,347,3.3,3.3,279,508,748,2.4,0,0,24.2,0,0.04,0.94,3.1,0.1,53,0,high,USDA FDC almond butter
+405,Cocco rapé essiccato (non zuccherato),14,3.3,2.0,90,160,543,18.5,0,0,0.44,1.5,0.06,0.02,0.5,0.3,9,0,high,USDA FDC coconut dried
+406,Semi di papavero,1438,9.8,7.9,347,870,719,13.5,0,0,1.77,1,0.85,0.1,0.9,0.25,82,0,high,USDA FDC poppy seed
+407,Semi di cañamo macinati,70,7.9,9.9,700,1650,1200,0,1,0,0.8,0.5,1.28,0.29,9.2,0.6,110,0,high,USDA FDC hemp seed ground
+408,Pinoli,16,5.5,6.4,251,575,597,0.7,1,0,9.3,0.8,0.36,0.23,4.4,0.09,34,0,high,USDA FDC pine nut
+409,"Castagne, fresche",27,1.0,0.5,32,93,518,1.2,1,0,0.5,43,0.24,0.17,1.1,0.38,62,0,high,CREA 2019 castagna
+410,Castagne secche,56,3.0,0.9,74,200,990,2.5,2,0,1.0,10,0.3,0.3,2.4,0.5,80,0,high,CREA 2019 castagna secca
+411,"Semi di girasole, tostati",78,6.8,5.3,129,660,645,53,3,0,35.2,1.4,1.48,0.36,8.3,1.35,227,0,high,USDA FDC sunflower roasted
+412,"Semi di zucca, tostati",46,8.8,7.8,550,1233,809,9.4,1,0,2.2,1.8,0.27,0.15,4.99,0.14,58,0,high,USDA FDC pumpkin seed roasted
+413,"Noci, essiccate",98,2.9,3.1,158,346,441,4.9,1,0,0.7,1.3,0.34,0.15,1.1,0.54,98,0,high,USDA FDC walnut dried
+414,Arachidi tostate e salate,54,2.3,3.3,176,397,726,7.5,0,0,7.8,0,0.44,0.1,13.5,0.26,145,0,high,USDA FDC peanut roasted salted
+709,Noci di macadamia tostate (salate),70,2.7,1.3,118,198,363,3.6,0,0,0.54,0.7,0.71,0.1,2.5,0.28,11,0,high,USDA FDC macadamia roasted salted
+710,Arachidi bollite,55,2.2,3.3,65,134,180,7.5,0,0,3.0,0,0.15,0.06,5.3,0.07,40,0,high,USDA FDC peanut boiled
+711,Mix di frutta secca e semi,78,3.5,3.5,200,400,600,8,1,0,8.0,0.5,0.5,0.2,4.0,0.3,60,0,medium,stima media composita
+712,"Cocco, latte in polvere",6,1.5,0.8,46,100,325,6.3,0,0,0.2,1.0,0.03,0.02,0.8,0.03,16,0,medium,USDA FDC coconut milk powder
+713,Noci pecan tostate,70,2.5,4.5,121,277,410,3.8,3,0,1.4,1.1,0.66,0.13,1.2,0.21,22,0,high,USDA FDC pecan
+714,Semi di sesamo tostati,975,14.6,7.8,351,629,468,34.4,0,0,0.25,0,0.79,0.25,4.5,0.79,97,0,high,USDA FDC sesame
+715,Semi di lino tostati,255,5.7,4.3,392,642,813,25.4,0,0,0.31,0.6,1.64,0.16,3.1,0.47,87,0,high,USDA FDC flaxseed
+716,Burro di girasole,50,5.0,5.0,120,500,580,40,3,0,26.1,1.0,0.4,0.3,6.5,0.8,200,0,medium,USDA FDC sunflower butter
+847,Mandorle pelate e blanched,236,3.7,3.1,268,481,705,2.5,0,0,25.6,0,0.21,1.01,3.6,0.14,44,0,high,USDA FDC almond blanched
+848,Nocciole fresche (non tostate),114,4.7,2.4,163,290,680,2.4,1,0,15.0,6.3,0.64,0.11,1.8,0.56,113,0,high,USDA FDC hazelnut raw
+849,Farro soffiato,18,2.5,1.5,40,120,180,5,0,0,0.3,0,0.15,0.08,2.5,0.15,25,0,medium,CREA 2019 farro
+850,Riso soffiato,6,1.0,0.8,25,78,100,5,0,0,0.1,0,0.07,0.03,3.5,0.1,8,0,medium,CREA 2019 riso soffiato
+851,Mais soffiato (popcorn commercial),7,2.7,2.8,131,300,329,0,10,0,0.29,0,0.1,0.08,2.0,0.16,31,0,high,USDA FDC popcorn air-popped
+923,Fave di cacao tostate (cacao nibs),128,13.9,6.8,499,734,1524,14.3,0,0,0.1,0,0.08,0.24,1.9,0.12,32,0,high,USDA FDC cacao nibs
+924,Noci di Grenoble (noci francesi),98,2.9,3.1,158,346,441,4.9,1,0,0.7,1.3,0.34,0.15,1.1,0.54,98,0,high,USDA FDC walnut
+925,Arachidi con guscio (crude),92,4.6,3.3,168,376,705,7.2,0,0,8.3,0,0.64,0.14,12.1,0.35,240,0,high,USDA FDC peanut raw
+926,Mix di semi (chia+lino+zucca+girasole),200,7.5,6.0,400,800,700,20,0,0,5.0,0.5,0.8,0.2,5.0,0.5,90,0,medium,stima media 4 semi
+139,Olio di semi di girasole,0,0,0,0,0,0,0,0,0,41.1,0,0,0,0,0,0,0,high,USDA FDC sunflower oil
+140,Olio di cocco,0,0,0,0,0,0,0,0,0,0.09,0,0,0,0,0,0,0,high,USDA FDC coconut oil
+540,"Olio di oliva, raffinato",1,0.6,0,0,0,1,0,0,0,12.0,0,0,0,0,0,0,0,high,CREA 2019 olio oliva
+541,Olio di mais,0,0,0,0,0,0,0,0,0,14.3,0,0,0,0,0,0,0,high,USDA FDC corn oil
+542,Olio di soia,0,0,0,0,0,0,0,0,0,8.2,0,0,0,0,0,0,0,high,USDA FDC soybean oil
+543,Olio di arachide,0,0,0,0,0,0,0,0,0,15.7,0,0,0,0,0,0,0,high,USDA FDC peanut oil
+544,Olio di lino (semi di lino),0,0,0,0,0,0,0,0,0,0.47,0,0,0,0,0,0,0,high,USDA FDC linseed oil
+545,Olio di avocado,0,0,0,0,0,0,0,0,0,12.5,0,0,0,0,0,0,0,high,USDA FDC avocado oil
+546,Olio di sesamo,0,0,0,0,0,0,0,0,0,1.4,0,0,0,0,0,0,0,high,USDA FDC sesame oil
+547,Burro chiarificato (ghee),4,0,0.1,0,3,5,0,840,1.2,2.8,0,0,0.005,0,0,0,0.1,high,USDA FDC ghee
+548,Margarina vegetale (80% grassi),3,0,0,0,2,5,0,819,7.5,8.0,0,0.01,0.01,0.03,0,1,0.1,high,USDA FDC margarine
+549,Strutto di maiale,0,0,0,0,0,0,0.2,0,0.6,0.6,0,0,0,0,0,0,0,high,USDA FDC lard
+550,Aceto balsamico tradizionale,27,0.7,0.1,12,19,112,0,0,0,0,0,0.01,0.01,0.2,0.02,1,0,high,USDA FDC balsamic vinegar
+551,Aceto di mele (apple cider vinegar),7,0.2,0,5,8,73,0.1,0,0,0,0,0,0,0,0,0,0,high,USDA FDC apple cider vinegar
+552,Salsa worcestershire,52,4.6,0.3,18,39,800,0,0,0,0,0,0.02,0.07,0.8,0.05,5,0,high,USDA FDC worcestershire
+553,Salsa teriyaki,18,1.6,0.3,26,52,212,0.5,0,0,0,0,0.01,0.05,0.6,0.05,6,0,high,USDA FDC teriyaki
+554,Mostarda (gialla),58,1.5,0.6,49,108,152,33,5,0,0.36,1.5,0.18,0.06,0.6,0.07,7,0,high,USDA FDC mustard yellow
+555,Ketchup di pomodoro,15,0.4,0.2,13,25,315,0,12,0,1.5,4.1,0.02,0.04,1.4,0.16,9,0,high,USDA FDC ketchup
+556,Salsa di soia classica (shoyu),20,1.9,0.4,40,130,212,0.8,0,0,0,0,0.03,0.16,3.9,0.2,18,0,high,USDA FDC soy sauce
+557,Miso (pasta di soia fermentata),57,2.5,2.6,48,159,210,7,3,0,0.01,0,0.1,0.23,0.9,0.2,19,0.08,high,USDA FDC miso
+558,Salsa tahini allungata (hummus base),38,2.4,1.8,71,176,228,4.6,1,0,0.6,0,0.18,0.07,0.6,0.14,83,0,high,USDA FDC hummus
+559,Pesto genovese (basilico/olio/parmigiano),250,1.5,1.2,40,130,200,3,150,0,5.0,3,0.05,0.1,0.8,0.1,30,0.3,medium,stima composita
+560,Guacamole,12,0.5,0.6,29,52,485,0.4,7,0,2.1,10,0.07,0.13,1.7,0.26,81,0,high,USDA FDC guacamole
+561,Salsa tzatziki,80,0.2,0.4,10,70,140,2,15,0.1,0.1,2,0.02,0.1,0.2,0.04,8,0.2,medium,stima yogurt+cetriolo
+562,Maionese (commerciale),8,0.3,0.2,1,24,20,2,32,0,3.3,0,0.01,0.02,0,0.02,5,0.1,high,USDA FDC mayonnaise
+563,Salsa di panna (besciamella),110,0.2,0.4,10,80,130,2,100,0.3,0.2,0.5,0.03,0.14,0.1,0.04,5,0.3,medium,stima latte+burro+farina
+777,Salsa romesco (pomodoro/mandorle),50,1.0,0.6,30,60,250,2,40,0,4.0,5,0.05,0.06,1.0,0.1,15,0,medium,stima composita
+778,Salsa verde (prezzemolo/acciughe),60,2.0,0.3,15,25,200,1,200,0,2.0,30,0.05,0.08,0.5,0.08,50,0.5,medium,stima composita
+779,Salsa chimichurri,50,1.5,0.3,12,20,180,0.5,100,0,3.0,20,0.04,0.06,0.4,0.06,40,0,medium,stima composita
+780,"Salsa aglio, olio e peperoncino (condimento)",5,0.3,0.1,2,5,30,0,10,0,5.0,2,0.01,0.01,0.1,0.02,3,0,medium,stima olio+aglio
+781,Soffritto di cipolla-sedano-carota (base),30,0.4,0.2,10,25,200,0.5,300,0,1.5,8,0.04,0.04,0.5,0.1,15,0,medium,stima composita
+782,Aceto di lampone,10,0.3,0.05,5,8,60,0,0,0,0,0.5,0,0,0.1,0,0,0,low,stima da aceto vino
+877,Olio di ribes nero (omega-6),0,0,0,0,0,0,0,0,0,7.0,0,0,0,0,0,0,0,medium,USDA FDC blackcurrant seed oil
+878,Salsa di ostrica,25,0.5,0.2,10,20,60,0.3,0,0,0,0,0.01,0.02,0.3,0.02,3,0.1,medium,USDA FDC oyster sauce
+879,Olio di canapa,0,0,0,0,0,0,0,0,0,4.0,0,0,0,0,0,0,0,medium,USDA FDC hemp oil
+880,Salsa harissa (pasta di peperoncino),15,1.5,0.3,15,20,200,0.5,200,0,3.0,30,0.05,0.1,1.0,0.2,15,0,medium,USDA FDC harissa
+881,Aceto di riso (giapponese),4,0.1,0,3,4,18,0,0,0,0,0,0,0,0,0,0,0,high,USDA FDC rice vinegar
+945,Salsa di pomodoro fresco (bruschetta),11,0.5,0.2,11,24,237,0,42,0,1.0,13,0.04,0.02,0.6,0.08,15,0,high,USDA FDC tomato raw
+946,Crema di aceto balsamico,20,0.5,0.1,10,15,90,0,0,0,0,0,0.01,0.01,0.1,0.01,1,0,medium,stima da balsamico
+947,Senape di Digione,65,1.5,0.6,48,108,138,33,5,0,0.36,1.5,0.18,0.07,0.6,0.07,7,0,high,USDA FDC dijon mustard
+948,Salsa barbecue (classica),18,0.8,0.2,8,18,200,0.3,5,0,0.5,1.5,0.01,0.03,0.5,0.05,5,0,high,USDA FDC bbq sauce
+564,Zucchero di canna grezzo,85,1.9,0.2,29,22,346,1.2,0,0,0,0,0.01,0.01,0.1,0.03,1,0,high,USDA FDC brown sugar
+565,Zucchero a velo,1,0.01,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,high,USDA FDC powdered sugar
+566,Fruttosio cristallino,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,high,pure fructose
+567,Stevia (dolcificante in polvere),0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,high,stevia extract
+568,Eritritolo,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,high,erythritol
+569,Miele di acacia,6,0.4,0.2,2,4,52,0.8,0,0,0,0.5,0,0.04,0.1,0.02,2,0,high,CREA 2019 miele
+570,Miele di castagno,6,0.5,0.3,3,5,55,0.8,0,0,0,0.5,0,0.04,0.2,0.03,2,0,high,CREA 2019 miele
+571,Sciroppo di agave,1,0.1,0,1,1,4,0.2,0,0,0,0.5,0,0.01,0,0,0,0,high,USDA FDC agave syrup
+572,Sciroppo di riso (malto di riso),3,0.1,0,3,8,6,0,0,0,0,0,0,0,0.1,0,0,0,medium,USDA FDC rice syrup
+573,Cioccolato fondente 85%,73,11.9,3.3,228,308,715,6.8,2,0,0.59,0,0.03,0.06,1.1,0.04,12,0,high,USDA FDC dark choc 85%
+574,Cioccolato fondente 90%,73,13.1,3.5,252,340,750,8.3,2,0,0.6,0,0.03,0.06,1.2,0.04,14,0,high,USDA FDC dark choc 85% adj.
+575,Cioccolato bianco,199,0.2,0.7,12,176,286,4.5,30,0,1.2,0,0.05,0.28,0.1,0.03,5,0.4,high,USDA FDC white chocolate
+576,Cacao amaro in polvere,128,13.9,6.8,499,734,1524,14.3,0,0,0.1,0,0.08,0.24,1.9,0.12,32,0,high,USDA FDC cocoa powder
+577,Cacao solubile zuccherato,55,3.0,1.5,80,150,400,3,0,0,0.1,0,0.04,0.1,0.8,0.05,10,0,medium,stima cacao+zucchero 50/50
+578,Nutella (crema nocciole e cacao),114,3.4,1.4,64,100,407,4.2,0,0,5.4,0,0.07,0.08,1.0,0.1,15,0,high,USDA FDC hazelnut spread
+579,Marmellata di fragole,14,0.3,0.1,4,8,77,0.6,1,0,0.1,10,0.01,0.02,0.2,0.02,5,0,high,USDA FDC strawberry jam
+580,Marmellata di albicocche,16,0.4,0.1,5,10,100,0.5,10,0,0.3,5,0.01,0.02,0.3,0.02,5,0,high,USDA FDC apricot jam
+581,Confettura extra (70% frutta),16,0.3,0.1,5,10,100,0.5,5,0,0.2,8,0.01,0.02,0.2,0.02,5,0,medium,stima confettura alta frutta
+582,Gelato alla crema (artigianale),128,0.1,0.7,14,105,199,2,140,0.1,0.3,0.6,0.04,0.24,0.1,0.05,5,0.4,high,USDA FDC ice cream vanilla
+583,Gelato al cioccolato,109,0.7,0.6,29,107,249,2.5,80,0.1,0.3,0.3,0.04,0.17,0.4,0.04,6,0.3,high,USDA FDC ice cream chocolate
+584,Gelato alla frutta (sorbetto),5,0.2,0.1,4,5,50,0.2,5,0,0.1,5,0.01,0.01,0.1,0.01,3,0,high,USDA FDC sorbet
+585,Torta sponge (pan di spagna),62,1.4,0.5,10,92,81,10,100,0.5,0.5,0,0.1,0.15,0.9,0.04,20,0.3,high,USDA FDC sponge cake
+586,Crostata (base frolla + marmellata),40,1.2,0.4,10,60,80,5,50,0.2,0.5,2,0.08,0.08,0.8,0.03,15,0.1,medium,stima composita
+587,Tiramisù,80,0.8,0.6,12,100,120,5,200,0.4,0.4,0.5,0.03,0.2,0.3,0.05,15,0.4,medium,stima composita mascarpone+uovo
+588,Panna cotta,100,0.1,0.3,10,80,120,2,120,0.1,0.2,0.5,0.03,0.16,0.1,0.03,4,0.3,medium,stima panna+latte
+589,Budino di vaniglia (commerciale),88,0.1,0.4,10,75,130,2,50,0.2,0.1,0.5,0.03,0.15,0.1,0.03,4,0.3,medium,USDA FDC vanilla pudding
+590,Wafer alla vaniglia,25,1.5,0.4,10,40,60,3,10,0,0.5,0,0.08,0.06,0.8,0.02,10,0,medium,USDA FDC vanilla wafer
+591,Barretta ai cereali (media),50,4.0,1.5,40,120,200,5,0,0,3.0,0,0.2,0.15,2.0,0.2,40,0,medium,USDA FDC granola bar
+592,"Barretta proteica (media, 30% prot)",250,3.0,3.0,80,250,300,10,0,0,2.0,0,0.3,0.3,4.0,0.3,80,0.6,medium,stima media protein bar
+593,Pancakes (base classica),83,1.5,0.5,14,127,128,10,40,0.5,0.2,0,0.15,0.17,1.4,0.04,16,0.2,high,USDA FDC pancakes
+783,Colomba pasquale,55,1.2,0.6,15,90,110,8,100,0.5,0.8,0,0.1,0.12,1.0,0.05,18,0.2,medium,stima composita panettone-like
+784,Panettone milanese,55,1.2,0.6,15,90,110,8,100,0.5,0.8,0,0.1,0.12,1.0,0.05,18,0.2,medium,USDA FDC panettone
+785,Pandoro veronese,60,1.0,0.5,12,85,100,7,120,0.5,1.0,0,0.1,0.14,0.8,0.04,15,0.3,medium,stima composita
+786,Cantucci (biscotti di Prato),50,1.8,0.7,30,80,130,5,30,0.2,3.0,0,0.1,0.1,1.2,0.05,20,0.1,medium,stima mandorle+farina+uova
+787,Biscotti di avena e cioccolato,40,2.5,1.0,35,100,180,5,10,0,1.5,0,0.15,0.1,1.0,0.1,20,0,medium,stima composita
+788,Brownie al cioccolato,28,2.3,0.8,36,80,160,5,40,0.2,0.5,0,0.05,0.08,0.6,0.03,12,0.2,high,USDA FDC brownie
+789,Madeleine (pasticcino francese),40,1.0,0.4,8,70,70,8,80,0.4,0.5,0,0.08,0.1,0.7,0.03,12,0.2,medium,stima composita burro+uova+farina
+790,Crostino dolce con miele e ricotta,90,0.5,0.5,10,80,100,5,50,0.1,0.3,0,0.03,0.15,0.3,0.03,10,0.3,medium,stima composita
+791,Polenta dolce alla bergamasca,10,0.8,0.3,15,40,60,2,20,0.1,0.2,0,0.05,0.04,0.5,0.05,5,0.1,low,stima mais+zucchero+burro
+792,Chewing gum senza zucchero (1 pezzo),0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,high,negligible per piece
+793,Caramelle gommose (jelly candy),4,0.1,0,1,2,4,0,0,0,0,0,0,0,0,0,0,0,high,USDA FDC gummy candy
+794,Meringa secca,3,0.1,0,1,7,36,1,0,0,0,0,0,0.1,0,0,2,0,high,USDA FDC meringue
+795,Semifreddo al caffè,80,0.3,0.4,10,80,130,3,140,0.2,0.3,0,0.02,0.15,0.2,0.03,5,0.3,medium,stima panna+mascarpone+caffe
+796,Zabaione (zabaglione),40,1.2,0.6,5,80,70,10,100,0.5,0.5,0,0.04,0.2,0.1,0.07,30,0.5,medium,stima tuorli+zucchero+marsala
+882,Ciambelle glassate (donuts),53,1.5,0.5,15,80,90,8,20,0.1,0.5,0,0.15,0.12,1.5,0.03,18,0.1,high,USDA FDC donut glazed
+883,"Cheesecake (fetta, base biscotto)",60,0.5,0.4,8,70,100,5,150,0.2,0.3,0.5,0.03,0.15,0.2,0.04,10,0.3,medium,USDA FDC cheesecake
+884,Cioccolato fondente proteico (>25% prot),80,5.0,2.5,120,250,400,8,0,0,0.5,0,0.1,0.15,1.5,0.1,20,0.3,medium,stima dark choc+whey
+885,Granita al limone (senza latte),2,0.1,0,2,2,15,0,0,0,0,5,0,0,0,0.01,1,0,high,stima acqua+zucchero+limone
+886,Crema di marroni (crema di castagne),20,0.8,0.3,20,45,250,1,1,0,0.3,5,0.1,0.08,0.5,0.15,25,0,medium,USDA FDC chestnut puree
+949,Coppetta di gelato (2 palline tipo),110,0.3,0.5,15,90,170,2,100,0.1,0.2,0.5,0.03,0.18,0.2,0.04,5,0.3,medium,stima media gelato crema
+950,Bignè alla crema,50,0.8,0.4,8,65,70,6,80,0.3,0.3,0,0.06,0.12,0.6,0.03,12,0.2,medium,stima choux+crema pasticcera
+951,Sfogliatella napoletana,35,1.0,0.3,8,50,60,5,40,0.2,0.5,0,0.08,0.08,0.7,0.03,10,0.1,medium,stima sfoglia+ricotta
+952,Croissant integrale (whole wheat),30,2.0,0.8,25,90,120,10,80,0.2,0.8,0,0.18,0.12,1.8,0.05,22,0.1,medium,USDA FDC whole wheat croissant
+953,Torta di mele (classica),15,0.5,0.2,6,20,65,2,20,0.1,0.3,1.5,0.03,0.04,0.3,0.03,5,0.05,high,USDA FDC apple pie
+594,Acqua (naturale),3,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,high,CREA 2019 acqua minerale
+595,Acqua frizzante (gassata),3,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,high,CREA 2019 acqua minerale
+596,"Tè verde, infuso (senza zucchero)",0,0.02,0,1,1,8,0,0,0,0,0,0,0.01,0.1,0,5,0,high,USDA FDC green tea brewed
+597,"Tè nero, infuso (senza zucchero)",0,0.02,0,1,1,8,0,0,0,0,0,0,0.01,0.1,0,5,0,high,USDA FDC green tea brewed
+598,Caffè americano (lungo),2,0.01,0.02,3,3,49,0,0,0,0,0,0,0,0.5,0,1,0,high,USDA FDC espresso
+599,Caffè macchiato (con latte),2,0.01,0.02,3,3,49,0,0,0,0,0,0,0,0.5,0,1,0,high,USDA FDC espresso
+600,Cappuccino (con latte intero),60,0.05,0.2,8,46,80,1,25,0.05,0.04,0.5,0.02,0.08,0.3,0.02,3,0.2,high,USDA FDC cappuccino
+601,Succo di pomodoro (senza sale aggiunto),10,0.4,0.2,11,18,229,0.3,23,0,0.32,18.3,0.04,0.03,0.7,0.07,20,0,high,USDA FDC tomato juice
+602,"Succo di mela, senza zuccheri aggiunti",8,0.1,0,5,7,101,0.1,1,0,0.01,1,0.02,0.02,0.1,0.02,0,0,high,USDA FDC apple juice
+603,"Succo di carota, fresco",24,0.5,0.2,14,42,292,0.6,956,0,1.16,8.5,0.09,0.06,0.4,0.22,4,0,high,USDA FDC carrot juice
+604,"Succo di melograno, puro",11,0.1,0.1,7,11,214,0.3,0,0,0.38,0.1,0.02,0.01,0.2,0.04,24,0,high,USDA FDC pomegranate juice
+605,Bevanda isotonica (sport drink),5,0,0,3,6,12,0,0,0,0,0,0.01,0.02,0.1,0,0,0,high,USDA FDC gatorade
+606,Bevanda energetica (energy drink standard),12,0.1,0,1,5,4,0,0,0,0,0,0.3,1.5,16,0.4,5,5.0,high,USDA FDC energy drink
+607,Latte vegetale di riso (non zuccherato),118,0.2,0.1,5,29,27,1.5,0,1.0,0,0,0.03,0.01,0.4,0.03,2,0.6,high,USDA FDC rice milk
+608,Latte di soia non zuccherato,25,0.6,0.3,25,52,118,1.5,0,1.1,0,0,0.06,0.07,0.5,0.04,18,0.4,high,USDA FDC soy milk
+609,Latte di avena non zuccherato,120,0.3,0.1,5,30,40,1,0,1.0,0,0,0.1,0.1,0.3,0.03,3,0.4,high,USDA FDC oat milk
+610,Latte di mandorla non zuccherato,184,0.3,0.1,7,9,67,0,0,1.0,3.3,0,0,0,0.2,0,2,0,high,USDA FDC almond milk unsweetened
+611,Kombucha (fermentato base),2,0.1,0,2,2,24,0,0,0,0,1,0.01,0.01,0.1,0,5,0.04,medium,USDA FDC kombucha
+612,Birra (lager 5% alcol),4,0.02,0.01,6,14,27,0.6,0,0,0,0,0,0.03,0.5,0.05,6,0.02,high,USDA FDC beer
+613,Vino rosso secco (12%),8,0.5,0.1,12,23,127,0.2,0,0,0,0,0,0.03,0.2,0.06,1,0,high,USDA FDC red wine
+614,Vino bianco secco (12%),9,0.3,0.1,10,18,71,0.1,0,0,0,0,0,0.02,0.1,0.02,1,0,high,USDA FDC white wine
+615,Whey protein concentrate 80% (polvere),600,1.0,1.0,20,340,500,15,0,0,0,0,0.1,0.3,0.2,0.05,5,1.0,medium,USDA FDC whey protein
+616,Caseina miceallare (polvere),700,0.8,1.0,15,500,200,15,0,0,0,0,0.05,0.2,0.1,0.04,5,1.2,medium,USDA FDC casein powder
+617,Proteine dell'uovo in polvere,50,1.5,1.0,12,100,150,25,0,1.0,0.5,0,0.05,0.5,0.1,0.05,15,1.5,medium,USDA FDC egg white powder
+618,"Proteine vegetali (pisello+riso, polvere)",50,8.0,3.0,60,300,200,5,0,0,0,0,0.3,0.1,2.0,0.2,30,0,medium,stima pea+rice protein blend
+797,Tè matcha in polvere (1 cucchiaino),0,0.02,0,1,1,8,0,0,0,0,0,0,0.01,0.1,0,5,0,high,USDA FDC green tea brewed
+798,"Tè bianco, infuso",0,0.02,0,1,1,8,0,0,0,0,0,0,0.01,0.1,0,5,0,high,USDA FDC green tea brewed
+799,Tisana di camomilla,0,0.02,0,1,1,8,0,0,0,0,0,0,0.01,0.1,0,5,0,high,USDA FDC green tea brewed
+800,Tisana di zenzero e limone,0,0.02,0,1,1,8,0,0,0,0,0,0,0.01,0.1,0,5,0,high,USDA FDC green tea brewed
+801,"Latte proteico (1.5% grassi, 5% prot)",120,0.1,0.4,11,95,150,2,20,0.5,0.04,0.5,0.04,0.18,0.1,0.04,5,0.4,medium,stima latte+whey
+802,Frullato proteico base (latte+whey),140,0.2,0.5,15,120,200,3,15,0.3,0.05,0.5,0.05,0.2,0.2,0.04,5,0.5,medium,stima latte+whey shake
+803,"Succo di barbabietola, puro",16,0.8,0.3,23,25,325,0.7,2,0,0,5,0.03,0.04,0.3,0.07,109,0,high,USDA FDC beet juice
+804,"Succo di aloe vera (puro, senza zucchero)",8,0.2,0,3,1,30,0,0,0,0,3.5,0,0,0,0,0,0,medium,USDA FDC aloe juice
+805,Birra artigianale (IPA 6.5%),5,0.03,0.01,7,16,30,0.6,0,0,0,0,0,0.03,0.6,0.05,7,0.02,medium,stima da birra+extra malto
+806,Vino rosé secco (11%),8,0.4,0.1,10,20,90,0.1,0,0,0,0,0,0.02,0.1,0.03,1,0,high,USDA FDC rose wine
+807,Prosecco DOC,7,0.2,0.1,8,15,60,0.1,0,0,0,0,0,0.01,0.1,0.02,1,0,high,USDA FDC sparkling wine
+808,Sciroppo di proteine + frutta (meal prep),50,0.3,0.3,10,60,100,2,5,0,0.1,5,0.03,0.1,0.2,0.05,5,0.3,low,stima composita
+810,Nespresso (capsula espresso ristretto),2,0.01,0.02,3,3,49,0,0,0,0,0,0,0,0.5,0,1,0,high,USDA FDC espresso
+887,Latte di nocciole non zuccherato,120,0.3,0.1,6,10,50,0,0,1.0,1.5,0,0.02,0.02,0.2,0.02,2,0,medium,stima latte vegetale fortificato
+888,Succo di kiwi (100% frutto),20,0.2,0.1,12,20,200,0.2,3,0,1.0,60,0.02,0.03,0.3,0.05,18,0,medium,stima da kiwi fresco
+889,Smoothie verde (spinaci+mela+zenzero),40,1.0,0.3,25,20,180,0.3,200,0,0.5,15,0.04,0.06,0.3,0.07,50,0,medium,stima composita
+890,Acqua di cocco (100% naturale),24,0.3,0.1,25,20,250,1,0,0,0,2.4,0.03,0.06,0.1,0.03,3,0,high,USDA FDC coconut water
+891,Tisana di finocchio e anice,0,0.02,0,1,1,8,0,0,0,0,0,0,0.01,0.1,0,5,0,high,USDA FDC green tea brewed
+892,Tisana di orzo (caffe' d'orzo),0,0.02,0,1,1,8,0,0,0,0,0,0,0.01,0.1,0,5,0,high,USDA FDC green tea brewed
+893,Smoothie proteico (whey+banana+latte),80,0.3,0.4,20,80,250,3,10,0.2,0.1,4,0.04,0.12,0.4,0.15,10,0.4,medium,stima composita
+894,Red bull (energy drink 250ml/100ml),12,0.1,0,3,5,8,0,0,0,0,0,0.3,1.3,16,0.4,5,4.0,high,USDA FDC red bull
+895,"Succo di limone (puro, senza zucchero)",6,0.1,0.1,6,8,103,0.1,0,0,0.15,38.7,0.02,0.01,0.1,0.05,20,0,high,USDA FDC lemon juice
+896,Sprite / gassosa (100ml),2,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,high,USDA FDC lemon-lime soda
+897,Cola (100ml),2,0.04,0,1,10,2,0,0,0,0,0,0,0,0,0,0,0,high,USDA FDC cola
+954,Succo di uva nera (100%),11,0.3,0.1,10,14,104,0.1,1,0,0.05,0.1,0.02,0.02,0.1,0.03,3,0,high,USDA FDC grape juice
+955,Succo di pera (100%),8,0.3,0.1,5,8,70,0.1,0,0,0,2,0.01,0.01,0.2,0.02,3,0,high,USDA FDC pear juice
+956,Latte caldo con cacao (cioccolata calda),100,0.8,0.5,20,80,180,2,40,0.3,0.1,0.5,0.04,0.15,0.3,0.04,5,0.4,medium,stima latte+cacao
+957,Frullato di banana e mandorle,60,0.4,0.4,30,50,250,1,3,0,3.0,3,0.04,0.1,0.5,0.15,15,0,medium,stima composita

@@ -20,13 +20,13 @@ Per 100g di prodotto edibile.
 # ══════════════════════════════════════════════════════════════
 
 MINERAL_RANGES = {
-    "calcio_mg":    (0, 1300),   # max: parmigiano 1159mg, latte in polvere ~1200
+    "calcio_mg":    (0, 1500),   # max: semi papavero 1438mg, parmigiano 1159mg
     "ferro_mg":     (0, 50),     # max: fegato suino ~18, timo secco ~50 (spezie)
     "zinco_mg":     (0, 25),     # max: ostriche ~16, germe grano ~12
-    "magnesio_mg":  (0, 650),    # max: crusca frumento ~611 (USDA), semi zucca ~530
-    "fosforo_mg":   (0, 1500),   # max: crusca frumento ~1200, parmigiano ~700
+    "magnesio_mg":  (0, 750),    # max: semi canapa ~700, crusca frumento ~611
+    "fosforo_mg":   (0, 1700),   # max: semi canapa ~1650, crusca frumento ~1200
     "potassio_mg":  (0, 3500),   # max: pomodoro secco ~3427, concentrato ~2500, legumi secchi ~1700
-    "selenio_ug":   (0, 200),    # max: noci brasile ~1917 (outlier), pesce ~100
+    "selenio_ug":   (0, 2000),   # max: noci brasile ~1917 (outlier legittimo), pesce ~100
 }
 
 # ══════════════════════════════════════════════════════════════
