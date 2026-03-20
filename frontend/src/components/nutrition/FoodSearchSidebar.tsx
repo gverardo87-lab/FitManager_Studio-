@@ -50,6 +50,7 @@ interface CategoryTab {
   label: string;
   icon: typeof Utensils;
   categoryIds: number[];
+  foodType?: string;  // filter by food_type instead of/together with category
 }
 
 const CATEGORY_TABS: CategoryTab[] = [
@@ -58,7 +59,7 @@ const CATEGORY_TABS: CategoryTab[] = [
   { label: "Carne e pesce", icon: Beef, categoryIds: [8, 9, 10, 11] },
   { label: "Latticini", icon: Milk, categoryIds: [12] },
   { label: "Cereali e pane", icon: Wheat, categoryIds: [1, 2, 3, 4] },
-  { label: "Piatti pronti", icon: CookingPot, categoryIds: [16, 17, 18, 19, 20, 21] },
+  { label: "Piatti pronti", icon: CookingPot, categoryIds: [], foodType: "pietanza" },
   { label: "Altro", icon: Droplets, categoryIds: [13, 14, 15] },
 ];
 
@@ -374,23 +375,27 @@ export function FoodSearchSidebar({
   const deleteComponent = useDeleteComponent();
   useNutritionCategories(); // pre-warm cache
 
-  const activeCategoryIds = CATEGORY_TABS[activeTabIdx]?.categoryIds ?? [];
+  const activeTab = CATEGORY_TABS[activeTabIdx];
+  const activeCategoryIds = activeTab?.categoryIds ?? [];
+  const activeFoodType = activeTab?.foodType;
   const categoryIdParam =
     activeCategoryIds.length === 1 ? activeCategoryIds[0] : undefined;
 
   const { data: rawFoods = [], isLoading } = useFoods(
     debouncedQuery || undefined,
     categoryIdParam,
+    activeFoodType,
   );
 
   const foods = useMemo(() => {
+    if (activeFoodType) return rawFoods; // foodType filter handled by API
     if (activeCategoryIds.length <= 1) return rawFoods;
     const catSet = new Set(activeCategoryIds);
     return rawFoods.filter((f) => catSet.has(f.categoria_id));
-  }, [rawFoods, activeCategoryIds]);
+  }, [rawFoods, activeCategoryIds, activeFoodType]);
 
   const { data: foodDetail } = useFoodDetail(selectedFood?.id ?? null);
-  const hasQuery = debouncedQuery.length >= 2 || activeCategoryIds.length > 0;
+  const hasQuery = debouncedQuery.length >= 2 || activeCategoryIds.length > 0 || !!activeFoodType;
 
   // Debounce
   useEffect(() => {

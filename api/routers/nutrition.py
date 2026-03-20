@@ -261,6 +261,7 @@ def get_food_categories(
 def search_foods(
     q: Optional[str] = Query(None, description="Ricerca per nome (min 2 caratteri)"),
     categoria_id: Optional[int] = Query(None),
+    food_type: Optional[str] = Query(None, description="Filtra per food_type (ingrediente, pietanza, bevanda)"),
     limit: int = Query(50, ge=1, le=1000),
     offset: int = Query(0, ge=0),
     trainer: Trainer = Depends(get_current_trainer),
@@ -280,6 +281,8 @@ def search_foods(
         query = query.where(Food.nome.ilike(f"%{q}%"))
     if categoria_id is not None:
         query = query.where(Food.categoria_id == categoria_id)
+    if food_type is not None:
+        query = query.where(Food.food_type == food_type)
 
     query = query.order_by(Food.nome).offset(offset).limit(limit)
     rows = nutrition_session.exec(query).all()

@@ -65,17 +65,18 @@ export function useNutritionCategories() {
   });
 }
 
-export function useFoods(q?: string, categoriaId?: number) {
+export function useFoods(q?: string, categoriaId?: number, foodType?: string) {
   return useQuery<Food[]>({
-    queryKey: ["nutrition-foods", { q, categoriaId }],
+    queryKey: ["nutrition-foods", { q, categoriaId, foodType }],
     queryFn: async () => {
       const params = new URLSearchParams({ limit: "1000" });
       if (q && q.length >= 2) params.set("q", q);
       if (categoriaId != null) params.set("categoria_id", String(categoriaId));
+      if (foodType) params.set("food_type", foodType);
       const { data } = await apiClient.get<Food[]>(`/nutrition/foods?${params}`);
       return data;
     },
-    enabled: categoriaId != null || !q || q.length >= 2,
+    enabled: categoriaId != null || foodType != null || !q || q.length >= 2,
     staleTime: 2 * 60 * 1000,
   });
 }

@@ -65,9 +65,20 @@ function ComponentRow({
   return (
     <div className="flex items-center gap-3 py-2 px-1">
       <div className="flex-1 min-w-0">
-        <span className="text-base font-medium">
-          {comp.alimento_nome ?? `Alimento #${comp.alimento_id}`}
-        </span>
+        {onSwap ? (
+          <button
+            type="button"
+            onClick={onSwap}
+            className="text-base font-medium text-left hover:text-primary transition-colors cursor-pointer"
+            title="Clicca per sostituire"
+          >
+            {comp.alimento_nome ?? `Alimento #${comp.alimento_id}`}
+          </button>
+        ) : (
+          <span className="text-base font-medium">
+            {comp.alimento_nome ?? `Alimento #${comp.alimento_id}`}
+          </span>
+        )}
         <span className="ml-2 text-sm text-muted-foreground font-medium">{comp.quantita_g}g</span>
       </div>
       <span className="shrink-0 text-sm font-semibold tabular-nums text-foreground">
