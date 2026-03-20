@@ -1152,10 +1152,131 @@ def _verify_recipe(
         )
 
 
+# ---------------------------------------------------------------------------
+# Porzioni corrette per pietanze
+#
+# Alcune pietanze ereditano porzioni dall'ingrediente principale (es.
+# "risotto" con porzione "1 cucchiaio grattugiato" del parmigiano).
+# Questo dict corregge: rimuove porzioni sbagliate e inserisce quelle reali.
+#
+# Keyword porzioni da rimuovere su pietanze (tranne cat 13 salse):
+#   bicchiere, tazza, cucchiaio, cucchiaino, scaglia
+# ---------------------------------------------------------------------------
+
+_BAD_PORTION_KW = ["bicchiere", "tazza", "cucchiaio", "cucchiaino", "scaglia"]
+
+# Pietanze che restano senza porzioni dopo la pulizia → porzioni corrette
+PIETANZA_PORTIONS: dict[str, list[tuple[str, float]]] = {
+    # Cat 2 — Primi
+    "Risotto semplice (burro/parmigiano)": [("1 porzione", 200), ("1/2 porzione", 100)],
+    # Cat 3 — Pane
+    "Baguette francese": [("1 pezzo (25cm)", 150), ("1/2 baguette", 75)],
+    "Pane al latte": [("1 panino", 50), ("2 panini", 100)],
+    "Pane all'olio": [("1 fetta", 40), ("1 panino", 80)],
+    # Cat 8 — Carne
+    "Ali di pollo, cotte al forno": [("2 ali", 80), ("4 ali", 160)],
+    "Maiale, costolette cotte": [("1 costoletta", 150), ("2 costolette", 300)],
+    # Cat 10 — Pesce
+    "Ostriche gratinate al forno": [("3 ostriche", 90), ("6 ostriche", 180)],
+    "Sardine in scatola all'olio, scolate": [("1 scatoletta sgocciolata", 52), ("2 scatolette", 104)],
+    # Cat 11 — Uova
+    "Frittata base (uovo+latte), cotta": [("1 frittata (2 uova)", 130), ("1/2 frittata", 65)],
+    "Uovo intero, strapazzato (con latte)": [("1 porzione (2 uova)", 120), ("1 porzione (1 uovo)", 60)],
+    # Cat 13 — Salse (rimpiazzate con porzioni corrette)
+    "Pesto genovese (basilico/olio/parmigiano)": [("1 cucchiaio", 15), ("2 cucchiai", 30)],
+    "Guacamole": [("1 porzione", 50), ("2 porzioni", 100)],
+    # Cat 14 — Dolci
+    "Barretta ai cereali (media)": [("1 barretta", 35)],
+    "Barretta proteica (media, 30% prot)": [("1 barretta", 40)],
+    "Budino di vaniglia (commerciale)": [("1 vasetto", 125)],
+    "Cantucci (biscotti di Prato)": [("2 cantucci", 30), ("4 cantucci", 60)],
+    "Cheesecake (fetta, base biscotto)": [("1 fetta", 120)],
+    "Colomba pasquale": [("1 fetta", 80)],
+    "Coppetta di gelato (2 palline tipo)": [("1 coppetta (2 palline)", 100)],
+    "Crema di marroni (crema di castagne)": [("1 cucchiaio", 20), ("2 cucchiai", 40)],
+    "Crostata (base frolla + marmellata)": [("1 fetta", 80)],
+    "Gelato alla crema (artigianale)": [("1 pallina", 50), ("2 palline", 100)],
+    "Gelato alla frutta (sorbetto)": [("1 pallina", 50), ("2 palline", 100)],
+    "Granita al limone (senza latte)": [("1 bicchiere", 200)],
+    "Madeleine (pasticcino francese)": [("1 madeleine", 25), ("3 madeleine", 75)],
+    "Meringa secca": [("1 meringa", 20), ("3 meringhe", 60)],
+    "Pancakes (base classica)": [("1 pancake", 40), ("3 pancakes", 120)],
+    "Pandoro veronese": [("1 fetta", 80)],
+    "Panettone milanese": [("1 fetta", 80)],
+    "Panna cotta": [("1 panna cotta", 120)],
+    "Polenta dolce alla bergamasca": [("1 porzione", 150)],
+    "Sfogliatella napoletana": [("1 sfogliatella", 100)],
+    "Torta di mele (classica)": [("1 fetta", 120)],
+    "Torta sponge (pan di spagna)": [("1 fetta", 80)],
+    "Wafer alla vaniglia": [("1 porzione (3 wafer)", 30)],
+    "Zabaione (zabaglione)": [("1 porzione", 100)],
+    "Croissant integrale (whole wheat)": [("1 croissant", 50)],
+    "Ciambelle glassate (donuts)": [("1 donut", 60)],
+    "Gelato al cioccolato": [("1 pallina", 50), ("2 palline", 100)],
+}
+
+
+def fix_pietanza_portions(
+    session: Session,
+    *,
+    dry_run: bool = False,
+) -> tuple[int, int]:
+    """Rimuove porzioni sbagliate da pietanze e inserisce quelle corrette.
+
+    Returns: (removed, added)
+    """
+    from api.models.nutrition import StandardPortion
+
+    foods = session.exec(select(Food).where(Food.is_active == True)).all()
+    pietanza_ids = {f.id for f in foods if f.food_type == "pietanza"}
+    food_map = {f.nome: f for f in foods}
+    # Cat 13 (salse): cucchiaio e' legittimo
+    cat13_ids = {f.id for f in foods if f.categoria_id == 13}
+
+    all_portions = session.exec(
+        select(StandardPortion).where(StandardPortion.alimento_id.in_(list(pietanza_ids)))
+    ).all()
+
+    # 1. Rimuovi porzioni sospette (escluse salse cat 13)
+    removed = 0
+    remaining_good: dict[int, list[StandardPortion]] = {}
+    for por in all_portions:
+        is_bad = (
+            any(kw in por.nome.lower() for kw in _BAD_PORTION_KW)
+            and por.alimento_id not in cat13_ids
+        )
+        if is_bad:
+            if not dry_run:
+                session.delete(por)
+            removed += 1
+        else:
+            remaining_good.setdefault(por.alimento_id, []).append(por)
+
+    # 2. Aggiungi porzioni corrette dove mancano
+    added = 0
+    for nome, portions in PIETANZA_PORTIONS.items():
+        food = food_map.get(nome)
+        if not food:
+            continue
+        if food.id in remaining_good:
+            continue  # ha gia' porzioni buone
+        for por_nome, grammi in portions:
+            if not dry_run:
+                session.add(StandardPortion(alimento_id=food.id, nome=por_nome, grammi=grammi))
+            added += 1
+
+    if not dry_run:
+        session.commit()
+
+    return removed, added
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Popola ricette pietanze")
     parser.add_argument("--dry-run", action="store_true", help="Anteprima senza scrivere")
     parser.add_argument("--verify", action="store_true", help="Verifica macro vs CREA")
+    parser.add_argument("--fix-portions", action="store_true",
+                        help="Correggi porzioni sbagliate su pietanze")
     args = parser.parse_args()
 
     db_path = ROOT / "data" / "nutrition.db"
@@ -1175,6 +1296,11 @@ def main() -> None:
         for nome, status in sorted(results.items()):
             icon = "[OK]" if status.startswith("ok") else ("[--]" if "skip" in status else "[!!]")
             print(f"  {icon} {nome}: {status}")
+
+        # Fix porzioni se richiesto
+        if args.fix_portions:
+            removed, added = fix_pietanza_portions(session, dry_run=args.dry_run)
+            print(f"\nPortions fix: {removed} rimosse, {added} aggiunte")
 
 
 if __name__ == "__main__":
