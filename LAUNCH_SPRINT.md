@@ -12,7 +12,7 @@ Obiettivo: **prodotto vendibile entro fine settimana**
 |------|--------------|-----------|-----|
 | Esercizi (catalog.db) | ✅ 500 attivi, 940 relazioni, 100% campi | 500 attivi | Completato |
 | Separazione arch. 3 DB | ✅ crm.db 33 tab, catalog.db 10 tab, nutrition.db 8 tab | DB indipendenti | Completato |
-| Alimenti (nutrition) | 226 attivi | 500 attivi | +274 nuovi |
+| Alimenti (nutrition) | ✅ 957 attivi, 946 con micro CREA, 1788 porzioni | 500 attivi | Completato |
 | Piani LARN | Donna under 30 attiva | 3 fasce eta' × 2-3 livelli attivita' | +7 profili |
 | Pagina rinnovi-incassi | 340 LOC, funzionale ma grafica base | CRM-grade come cassa | Redesign UI |
 | Pagina impostazioni | 517 LOC, layout piatto | Organizzata per sezioni | Redesign UI |
