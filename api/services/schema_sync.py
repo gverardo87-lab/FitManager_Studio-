@@ -78,6 +78,67 @@ def _resolve_default(column: Any, sqlite_type: str) -> str:
     return "DEFAULT ''"
 
 
+def _fix_cross_db_fk(db_engine: Engine) -> list[str]:
+    """Rimuove FK residue cross-DB (esercizi_sessione → esercizi).
+
+    Background: esercizi_sessione.id_esercizio aveva FK verso esercizi(id),
+    ma esercizi vive in catalog.db. Con PRAGMA foreign_keys=ON SQLite
+    crashava al commit. Il modello Python ha gia' rimosso la FK (workout.py:91),
+    ma il DDL nel DB la manteneva. Questo fix ricrea la tabella senza la FK.
+    Idempotente: skip se la FK non c'e' piu'.
+    """
+    messages: list[str] = []
+    with db_engine.connect() as conn:
+        fks = conn.execute(text("PRAGMA foreign_key_list(esercizi_sessione)")).fetchall()
+        has_cross_db_fk = any(row[2] == "esercizi" for row in fks)
+        if not has_cross_db_fk:
+            return messages
+
+        logger.info("  schema_sync: fixing cross-DB FK on esercizi_sessione")
+        conn.execute(text("PRAGMA foreign_keys=OFF"))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS _esercizi_sessione_fixed (
+                id INTEGER NOT NULL PRIMARY KEY,
+                id_sessione INTEGER NOT NULL,
+                id_esercizio INTEGER NOT NULL,
+                ordine INTEGER NOT NULL,
+                serie INTEGER NOT NULL,
+                ripetizioni VARCHAR NOT NULL,
+                tempo_riposo_sec INTEGER NOT NULL,
+                tempo_esecuzione VARCHAR,
+                note VARCHAR,
+                carico_kg FLOAT,
+                id_blocco INTEGER,
+                posizione_nel_blocco INTEGER,
+                FOREIGN KEY(id_sessione) REFERENCES sessioni_scheda (id)
+            )
+        """))
+        conn.execute(text(
+            "INSERT OR IGNORE INTO _esercizi_sessione_fixed SELECT * FROM esercizi_sessione"
+        ))
+        conn.execute(text("DROP TABLE esercizi_sessione"))
+        conn.execute(text("ALTER TABLE _esercizi_sessione_fixed RENAME TO esercizi_sessione"))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_esercizi_sessione_id_esercizio "
+            "ON esercizi_sessione (id_esercizio)"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_esercizi_sessione_id_sessione "
+            "ON esercizi_sessione (id_sessione)"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_esercizi_sessione_id_blocco "
+            "ON esercizi_sessione (id_blocco)"
+        ))
+        conn.execute(text("PRAGMA foreign_keys=ON"))
+        conn.commit()
+        msg = "esercizi_sessione — removed cross-DB FK to esercizi (catalog.db)"
+        messages.append(msg)
+        logger.info("  schema_sync: %s", msg)
+
+    return messages
+
+
 def sync_schema(db_engine: Engine) -> list[str]:
     """
     Confronta modelli ORM vs DB reale e aggiunge colonne mancanti.
@@ -86,6 +147,10 @@ def sync_schema(db_engine: Engine) -> list[str]:
     Solo crm.db (business tables), mai catalog/nutrition.
     """
     messages: list[str] = []
+
+    # Fix legacy cross-DB FK constraints (idempotente)
+    messages.extend(_fix_cross_db_fk(db_engine))
+
     tables_checked = 0
     columns_added = 0
 
