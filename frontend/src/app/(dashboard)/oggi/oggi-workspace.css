@@ -734,6 +734,255 @@
     background: linear-gradient(180deg, oklch(0.55 0.08 170 / 0.5), oklch(0.55 0.08 170 / 0.1));
   }
 
+  /* ═══════════════════════════════════════════════════════════════════
+     WOW LAYER — Dimensional depth, spatial animation, liquid glass
+     ═══════════════════════════════════════════════════════════════════ */
+
+  /* ── 4-Level Elevation System ──
+     Hero=1, Timeline=2, CommandCenter=3, Ring=4 */
+
+  .oggi-elevation-2 {
+    box-shadow:
+      0 0 0 1px color-mix(in oklch, var(--border) 60%, transparent),
+      0 1px 2px color-mix(in oklch, var(--foreground) 3%, transparent),
+      0 4px 12px -4px color-mix(in oklch, var(--foreground) 6%, transparent),
+      0 12px 32px -12px color-mix(in oklch, var(--foreground) 8%, transparent);
+  }
+
+  .oggi-elevation-3 {
+    box-shadow:
+      0 0 0 1px color-mix(in oklch, var(--border) 50%, transparent),
+      0 1px 3px color-mix(in oklch, var(--foreground) 4%, transparent),
+      0 8px 24px -8px color-mix(in oklch, var(--foreground) 8%, transparent),
+      0 20px 48px -16px color-mix(in oklch, var(--foreground) 10%, transparent),
+      0 36px 64px -24px color-mix(in oklch, var(--foreground) 6%, transparent);
+  }
+
+  .dark .oggi-elevation-2 {
+    box-shadow:
+      0 0 0 1px color-mix(in oklch, var(--border) 50%, transparent),
+      0 1px 3px oklch(0 0 0 / 0.25),
+      0 4px 12px -4px oklch(0 0 0 / 0.3),
+      0 12px 32px -12px oklch(0 0 0 / 0.35);
+  }
+
+  .dark .oggi-elevation-3 {
+    box-shadow:
+      0 0 0 1px color-mix(in oklch, var(--border) 40%, transparent),
+      0 1px 3px oklch(0 0 0 / 0.3),
+      0 8px 24px -8px oklch(0 0 0 / 0.35),
+      0 20px 48px -16px oklch(0 0 0 / 0.4),
+      0 36px 64px -24px oklch(0 0 0 / 0.25);
+  }
+
+  /* ── Session card: dramatic hover with scale + elevation lift ── */
+
+  .oggi-session-card:hover {
+    transform: translateX(3px) scale(1.012);
+    box-shadow:
+      0 4px 16px -6px color-mix(in oklch, var(--foreground) 8%, transparent),
+      0 12px 32px -12px color-mix(in oklch, var(--foreground) 6%, transparent);
+  }
+
+  .dark .oggi-session-card:hover {
+    box-shadow:
+      0 4px 16px -6px oklch(0 0 0 / 0.35),
+      0 12px 32px -12px oklch(0 0 0 / 0.3);
+  }
+
+  .oggi-session-card:active {
+    transform: translateX(3px) scale(0.995);
+    transition-duration: 100ms;
+  }
+
+  /* ── Session card stagger entrance ── */
+
+  @keyframes oggi-card-enter {
+    from {
+      opacity: 0;
+      transform: translateY(12px) translateX(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) translateX(0);
+    }
+  }
+
+  .oggi-stagger-card {
+    animation: oggi-card-enter 400ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  /* ── SmartWatch luminous halo ── */
+
+  .oggi-smartwatch {
+    position: relative;
+  }
+
+  .oggi-smartwatch::before {
+    content: "";
+    position: absolute;
+    inset: -8px;
+    border-radius: 33px;
+    background: radial-gradient(
+      ellipse at center,
+      oklch(0.65 0.10 170 / 0.12),
+      transparent 70%
+    );
+    filter: blur(6px);
+    animation: oggi-watch-breathe 4s ease-in-out infinite;
+  }
+
+  .dark .oggi-smartwatch::before {
+    background: radial-gradient(
+      ellipse at center,
+      oklch(0.50 0.10 170 / 0.18),
+      transparent 70%
+    );
+  }
+
+  @media (min-width: 640px) {
+    .oggi-smartwatch::before {
+      inset: -10px;
+      border-radius: 39px;
+    }
+  }
+
+  @keyframes oggi-watch-breathe {
+    0%, 100% {
+      opacity: 0.5;
+      transform: scale(0.96);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  /* ── Timeline vertical connector ── */
+
+  .oggi-timeline-connector {
+    position: relative;
+  }
+
+  .oggi-timeline-connector::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 1.5px;
+    width: 1px;
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      color-mix(in oklch, var(--primary) 20%, var(--border)) 8%,
+      color-mix(in oklch, var(--primary) 20%, var(--border)) 92%,
+      transparent 100%
+    );
+  }
+
+  .dark .oggi-timeline-connector::before {
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      color-mix(in oklch, var(--primary) 30%, var(--border)) 8%,
+      color-mix(in oklch, var(--primary) 30%, var(--border)) 92%,
+      transparent 100%
+    );
+  }
+
+  /* ── Readiness ring animated stroke draw ── */
+
+  @keyframes oggi-ring-draw {
+    from {
+      stroke-dashoffset: var(--ring-circumference);
+    }
+    to {
+      stroke-dashoffset: var(--ring-target-offset);
+    }
+  }
+
+  .oggi-ring-animated {
+    animation: oggi-ring-draw 800ms cubic-bezier(0.34, 1.56, 0.64, 1) 200ms both;
+  }
+
+  /* ── CommandCenter floating glass — deeper elevation ── */
+
+  .oggi-dossier-float {
+    box-shadow:
+      0 0 0 1px color-mix(in oklch, var(--border) 50%, var(--primary) 10%),
+      0 1px 3px color-mix(in oklch, var(--foreground) 4%, transparent),
+      0 8px 24px -8px color-mix(in oklch, var(--primary) 6%, transparent),
+      0 20px 48px -16px color-mix(in oklch, var(--foreground) 8%, transparent),
+      0 40px 72px -28px color-mix(in oklch, var(--primary) 4%, transparent);
+    transition: box-shadow 400ms ease;
+  }
+
+  .dark .oggi-dossier-float {
+    box-shadow:
+      0 0 0 1px color-mix(in oklch, var(--border) 40%, var(--primary) 20%),
+      0 1px 3px oklch(0 0 0 / 0.3),
+      0 8px 24px -8px oklch(0 0 0 / 0.35),
+      0 20px 48px -16px oklch(0 0 0 / 0.35),
+      0 40px 72px -28px oklch(0 0 0 / 0.2);
+  }
+
+  .oggi-dossier-float:hover {
+    box-shadow:
+      0 0 0 1px color-mix(in oklch, var(--border) 40%, var(--primary) 16%),
+      0 1px 3px color-mix(in oklch, var(--foreground) 5%, transparent),
+      0 10px 28px -8px color-mix(in oklch, var(--primary) 8%, transparent),
+      0 24px 56px -16px color-mix(in oklch, var(--foreground) 10%, transparent),
+      0 48px 80px -28px color-mix(in oklch, var(--primary) 5%, transparent);
+  }
+
+  /* ── Luminous border on CommandCenter ── */
+
+  .oggi-luminous-border {
+    position: relative;
+  }
+
+  .oggi-luminous-border::after {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      160deg,
+      color-mix(in oklch, var(--primary) 30%, transparent),
+      transparent 40%,
+      transparent 60%,
+      color-mix(in oklch, var(--primary) 15%, transparent)
+    );
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    -webkit-mask-composite: xor;
+    pointer-events: none;
+    opacity: 0.6;
+    transition: opacity 400ms ease;
+    z-index: 1;
+  }
+
+  .oggi-luminous-border:hover::after {
+    opacity: 1;
+  }
+
+  .dark .oggi-luminous-border::after {
+    background: linear-gradient(
+      160deg,
+      color-mix(in oklch, var(--primary) 40%, transparent),
+      transparent 40%,
+      transparent 60%,
+      color-mix(in oklch, var(--primary) 20%, transparent)
+    );
+    opacity: 0.4;
+  }
+
+  .dark .oggi-luminous-border:hover::after {
+    opacity: 0.7;
+  }
+
   /* ── Reduced motion: disable non-essential animations ── */
 
   @media (prefers-reduced-motion: reduce) {
@@ -746,6 +995,18 @@
     .oggi-hero-divider,
     .oggi-dossier-enter .oggi-readiness-halo,
     .oggi-smartwatch-colon {
+      animation: none;
+    }
+
+    .oggi-stagger-card {
+      animation: none;
+    }
+
+    .oggi-smartwatch::before {
+      animation: none;
+    }
+
+    .oggi-ring-animated {
       animation: none;
     }
 

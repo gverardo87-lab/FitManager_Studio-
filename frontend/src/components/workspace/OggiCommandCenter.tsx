@@ -291,7 +291,7 @@ export function OggiCommandCenter({ session, status, avatar, className }: OggiCo
     : null;
 
   return (
-    <div className={cn(surfaceRoleClassName({ role: "hero", tone: "neutral" }, cn("oggi-dossier-shell oggi-scrollbar p-5 sm:p-6", className)), "oggi-lift oggi-dossier-enter", glowClass)}>
+    <div className={cn(surfaceRoleClassName({ role: "hero", tone: "neutral" }, cn("oggi-dossier-shell oggi-scrollbar p-5 sm:p-6", className)), "oggi-lift oggi-dossier-enter oggi-dossier-float oggi-luminous-border", glowClass)}>
       <div className="space-y-5" role="region" aria-label={`Focus seduta: ${session.client_name ?? "Slot"}`}>
 
         {/* HEADER: Ring + Nome + Status */}

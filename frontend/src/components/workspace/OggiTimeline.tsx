@@ -116,12 +116,14 @@ function SessionItem({
   selected,
   onSelect,
   avatar,
+  staggerIndex = 0,
 }: {
   session: SessionPrepItem;
   status: PreFlightStatus;
   selected: boolean;
   onSelect: () => void;
   avatar?: ClientAvatar | null;
+  staggerIndex?: number;
 }) {
   const meta = PREFLIGHT_META[status];
   const name = session.client_name ?? session.event_title ?? session.category;
@@ -138,8 +140,9 @@ function SessionItem({
       onClick={onSelect}
       aria-selected={selected}
       aria-label={`${name} — ${TIME_FMT.format(new Date(session.starts_at))} — ${meta.srLabel}${semaphoreSr}`}
+      style={{ animationDelay: `${staggerIndex * 50}ms` }}
       className={cn(
-        "oggi-session-card group relative min-w-0 w-full rounded-xl px-3.5 py-3 text-left",
+        "oggi-session-card oggi-stagger-card group relative min-w-0 w-full rounded-xl px-3.5 py-3 text-left",
         selected
           ? cn(
               surfaceRoleClassName({ role: "signal", tone: "neutral", interactive: true }),
@@ -277,7 +280,7 @@ export function OggiTimeline({
     <div
       className={surfaceRoleClassName(
         { role: "page", tone: "neutral" },
-        cn("oggi-rail-shell oggi-scrollbar overflow-x-hidden px-4 py-5 sm:px-5 sm:py-6", className),
+        cn("oggi-rail-shell oggi-scrollbar oggi-elevation-2 overflow-x-hidden px-4 py-5 sm:px-5 sm:py-6", className),
       )}
     >
       {/* Header */}
@@ -294,61 +297,77 @@ export function OggiTimeline({
         </span>
       </div>
 
-      {/* Groups */}
+      {/* Groups — stagger index runs continuously across groups */}
       <div className="space-y-7" role="listbox" aria-label="Sedute">
-        {attention.length > 0 && (
-          <div className="space-y-2">
-            <GroupLabel label="Da sbloccare" count={attention.length} tone="red" />
-            <div className="space-y-1">
-              {attention.map((s) => (
-                <SessionItem
-                  key={s.event_id}
-                  session={s}
-                  status={getPreFlightStatus(s)}
-                  selected={s.event_id === selectedEventId}
-                  onSelect={() => onSelect(s.event_id)}
-                  avatar={s.client_id ? avatarMap?.get(s.client_id) : null}
-                />
-              ))}
-            </div>
-          </div>
-        )}
+        {(() => {
+          let idx = 0;
+          const groups: React.ReactNode[] = [];
 
-        {prepared.length > 0 && (
-          <div className="space-y-2">
-            <GroupLabel label="In linea" count={prepared.length} tone="teal" />
-            <div className="space-y-1">
-              {prepared.map((s) => (
-                <SessionItem
-                  key={s.event_id}
-                  session={s}
-                  status={getPreFlightStatus(s)}
-                  selected={s.event_id === selectedEventId}
-                  onSelect={() => onSelect(s.event_id)}
-                  avatar={s.client_id ? avatarMap?.get(s.client_id) : null}
-                />
-              ))}
-            </div>
-          </div>
-        )}
+          if (attention.length > 0) {
+            groups.push(
+              <div key="attention" className="space-y-2">
+                <GroupLabel label="Da sbloccare" count={attention.length} tone="red" />
+                <div className="oggi-timeline-connector space-y-1 pl-2">
+                  {attention.map((s) => (
+                    <SessionItem
+                      key={s.event_id}
+                      session={s}
+                      status={getPreFlightStatus(s)}
+                      selected={s.event_id === selectedEventId}
+                      onSelect={() => onSelect(s.event_id)}
+                      avatar={s.client_id ? avatarMap?.get(s.client_id) : null}
+                      staggerIndex={idx++}
+                    />
+                  ))}
+                </div>
+              </div>,
+            );
+          }
 
-        {internal.length > 0 && (
-          <div className="space-y-2">
-            <GroupLabel label="Interni" count={internal.length} tone="neutral" />
-            <div className="space-y-1">
-              {internal.map((s) => (
-                <SessionItem
-                  key={s.event_id}
-                  session={s}
-                  status="no_client"
-                  selected={s.event_id === selectedEventId}
-                  onSelect={() => onSelect(s.event_id)}
-                  avatar={null}
-                />
-              ))}
-            </div>
-          </div>
-        )}
+          if (prepared.length > 0) {
+            groups.push(
+              <div key="prepared" className="space-y-2">
+                <GroupLabel label="In linea" count={prepared.length} tone="teal" />
+                <div className="oggi-timeline-connector space-y-1 pl-2">
+                  {prepared.map((s) => (
+                    <SessionItem
+                      key={s.event_id}
+                      session={s}
+                      status={getPreFlightStatus(s)}
+                      selected={s.event_id === selectedEventId}
+                      onSelect={() => onSelect(s.event_id)}
+                      avatar={s.client_id ? avatarMap?.get(s.client_id) : null}
+                      staggerIndex={idx++}
+                    />
+                  ))}
+                </div>
+              </div>,
+            );
+          }
+
+          if (internal.length > 0) {
+            groups.push(
+              <div key="internal" className="space-y-2">
+                <GroupLabel label="Interni" count={internal.length} tone="neutral" />
+                <div className="oggi-timeline-connector space-y-1 pl-2">
+                  {internal.map((s) => (
+                    <SessionItem
+                      key={s.event_id}
+                      session={s}
+                      status="no_client"
+                      selected={s.event_id === selectedEventId}
+                      onSelect={() => onSelect(s.event_id)}
+                      avatar={null}
+                      staggerIndex={idx++}
+                    />
+                  ))}
+                </div>
+              </div>,
+            );
+          }
+
+          return groups;
+        })()}
       </div>
     </div>
   );

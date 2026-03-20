@@ -29,8 +29,13 @@ export function ReadinessRing({ score, size = 54 }: ReadinessRingProps) {
           stroke={`oklch(${l} ${chroma} ${hue})`}
           strokeWidth={sw} strokeLinecap="round"
           strokeDasharray={circ} strokeDashoffset={offset}
-          className="transition-[stroke-dashoffset] duration-700 ease-out"
-          style={{ transformOrigin: "center", transform: "rotate(-90deg)" }}
+          className="oggi-ring-animated"
+          style={{
+            transformOrigin: "center",
+            transform: "rotate(-90deg)",
+            "--ring-circumference": circ,
+            "--ring-target-offset": offset,
+          } as React.CSSProperties}
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
