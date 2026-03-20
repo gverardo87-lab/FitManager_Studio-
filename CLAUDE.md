@@ -100,6 +100,7 @@ Tutte con PRAGMA: `journal_mode=WAL`, `foreign_keys=ON`, `busy_timeout=5000`.
 8. **Zero path assoluti hardcoded**: usare `DATA_DIR` da `api/config.py` (gestisce `sys.frozen`).
 9. **Italiano nativo**: UI, toast, placeholder in italiano. Codice in inglese.
 10. **SSoT scientifica**: backend = unica fonte dati scientifici. Frontend consuma via API, mai duplica costanti.
+11. **Cataloghi scientifici sacri**: catalog.db e nutrition.db contengono dati CREA 2019 costruiti incrementalmente. MAI `--reset`, `DROP`, `DELETE FROM` su questi DB senza backup preventivo (`cp file.db file.db.bak`). Il seed e' idempotente: usare SENZA `--reset`. `build_nutrition.py --reset` ha un safety gate che blocca se >200 alimenti (richiede `--force-reset` + crea backup automatico).
 
 ## Pattern critici
 

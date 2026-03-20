@@ -24,6 +24,7 @@ Note:
 """
 
 import argparse
+import os
 import sys
 from pathlib import Path
 
@@ -36,7 +37,7 @@ import json
 from api.config import NUTRITION_DATABASE_URL
 from api.database import create_nutrition_tables, nutrition_engine
 from api.models.nutrition import (
-    FoodCategory, Food, PlanTemplate, StandardPortion,
+    DishRecipe, FoodCategory, Food, PlanTemplate, StandardPortion,
     TemplatePlanComponent, TemplatePlanMeal,
 )
 from sqlmodel import Session, select
@@ -505,7 +506,7 @@ PORTIONS = [
 # ---------------------------------------------------------------------------
 
 
-def build_nutrition_db(dry_run: bool = False, reset: bool = False) -> None:
+def build_nutrition_db(dry_run: bool = False, reset: bool = False, force_reset: bool = False) -> None:
     """Costruisce e popola nutrition.db."""
     print(f"Nutrition DB: {NUTRITION_DATABASE_URL}")
 
@@ -513,11 +514,32 @@ def build_nutrition_db(dry_run: bool = False, reset: bool = False) -> None:
     print("  Tabelle create (o già esistenti).")
 
     if reset and not dry_run:
+        # ── Safety gate: protegge dati scientifici da cancellazione accidentale ──
+        with Session(nutrition_engine) as s:
+            n_foods = len(s.exec(select(Food)).all())
+        if n_foods > 200 and not force_reset:
+            print(f"\n  *** BLOCCATO: nutrition.db contiene {n_foods} alimenti.")
+            print("  I dati scientifici CREA 2019 NON sono riproducibili dal solo build.")
+            print("  Se vuoi DAVVERO cancellare tutto, usa: --force-reset")
+            print("  Alternativa sicura: esegui SENZA --reset (seed idempotente).\n")
+            sys.exit(1)
+
+        # Backup automatico prima di distruggere
+        import shutil
+        bak_path = os.path.join(
+            os.path.dirname(NUTRITION_DATABASE_URL.replace("sqlite:///", "")),
+            "nutrition.db.pre_reset.bak",
+        )
+        db_file = NUTRITION_DATABASE_URL.replace("sqlite:///", "")
+        shutil.copy2(db_file, bak_path)
+        print(f"  [BACKUP] {bak_path}")
+
         # Svuota tabelle in ordine inverso (FK)
         with Session(nutrition_engine) as s:
             s.exec(TemplatePlanComponent.__table__.delete())
             s.exec(TemplatePlanMeal.__table__.delete())
             s.exec(PlanTemplate.__table__.delete())
+            s.exec(DishRecipe.__table__.delete())
             s.exec(StandardPortion.__table__.delete())
             s.exec(Food.__table__.delete())
             s.exec(FoodCategory.__table__.delete())
@@ -667,7 +689,7 @@ def build_nutrition_db(dry_run: bool = False, reset: bool = False) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Template piani — 8 profili macro + 1 dieta completa (donna_under30_attiva)
+# Template piani — 12 profili macro + 8 diete complete donna
 # ---------------------------------------------------------------------------
 
 PLAN_TEMPLATES = [
@@ -794,6 +816,70 @@ PLAN_TEMPLATES = [
             "proteina elevata per preservare la massa muscolare. "
             "P 2.0g/kg, C 44% kcal, G 31% kcal. "
             "Particolare attenzione a calcio e vitamina D per salute ossea."
+        ),
+    },
+    {
+        "slug": "donna_30_50_sedentaria",
+        "nome": "Donna 30-50 — Sedentaria",
+        "descrizione": "Ufficio/famiglia, <2h attivita' fisica a settimana",
+        "tags": ["donna", "30_50", "sedentaria"],
+        "obiettivo_calorico": 1550,
+        "proteine_g_target": 110,
+        "carboidrati_g_target": 180,
+        "grassi_g_target": 50,
+        "note_cliniche": (
+            "Profilo sedentario femminile 30-50 anni. "
+            "Metabolismo basale in calo, deficit moderato per composizione corporea. "
+            "P 1.8g/kg (63kg), C 46% kcal, G 29% kcal. "
+            "Attenzione a ferro (ancora premenopausa) e calcio."
+        ),
+    },
+    {
+        "slug": "donna_30_50_sportiva",
+        "nome": "Donna 30-50 — Sportiva",
+        "descrizione": "Atleta o >5 sessioni intensive a settimana",
+        "tags": ["donna", "30_50", "sportiva"],
+        "obiettivo_calorico": 2100,
+        "proteine_g_target": 150,
+        "carboidrati_g_target": 250,
+        "grassi_g_target": 65,
+        "note_cliniche": (
+            "Profilo agonistico femminile 30-50 anni. "
+            "Apporto adeguato a sostenere allenamenti intensi e recupero. "
+            "P 2.4g/kg, C 48% kcal, G 28% kcal. 5-6 pasti. "
+            "Attenzione a RED-S, ferro e vitamina D. Pre/post-workout consigliati."
+        ),
+    },
+    {
+        "slug": "donna_over50_sedentaria",
+        "nome": "Donna over 50 — Sedentaria",
+        "descrizione": "Attivita' leggera, camminate, <2h a settimana",
+        "tags": ["donna", "over50", "sedentaria"],
+        "obiettivo_calorico": 1400,
+        "proteine_g_target": 105,
+        "carboidrati_g_target": 155,
+        "grassi_g_target": 48,
+        "note_cliniche": (
+            "Profilo sedentario femminile over 50 (post-menopausa). "
+            "Proteina elevata per contrastare sarcopenia (PRI LARN 1.1g/kg). "
+            "P 1.7g/kg, C 44% kcal, G 31% kcal. "
+            "Priorita': calcio (PRI 1200mg), vitamina D, omega-3 per salute ossea."
+        ),
+    },
+    {
+        "slug": "donna_over50_attiva",
+        "nome": "Donna over 50 — Attiva",
+        "descrizione": "3-4 sessioni allenamento a settimana",
+        "tags": ["donna", "over50", "attiva"],
+        "obiettivo_calorico": 1600,
+        "proteine_g_target": 120,
+        "carboidrati_g_target": 175,
+        "grassi_g_target": 52,
+        "note_cliniche": (
+            "Profilo attivo femminile over 50. "
+            "Proteina elevata anti-sarcopenia + carboidrati per sostenere l'attivita'. "
+            "P 1.9g/kg, C 44% kcal, G 29% kcal. "
+            "Calcio (PRI 1200mg), vitamina D e omega-3 prioritari."
         ),
     },
 ]
@@ -987,8 +1073,54 @@ DIETA_DONNA_ATTIVA = [
 ]
 
 
+# ---------------------------------------------------------------------------
+# Scaling diete: 7 profili donna derivati da DIETA_DONNA_ATTIVA (~1900 kcal)
+#
+# Fattore = target_kcal / 1900. Olio, semi e miele restano invariati.
+# Porzioni arrotondate a 5g per realismo. Min 10g per ogni alimento.
+# ---------------------------------------------------------------------------
+
+_FIXED_ITEMS = {
+    "Olio di oliva extravergine", "Semi di chia", "Semi di lino", "Miele",
+}
+
+
+def _adapt_diet(base: list, factor: float) -> list:
+    """Scala le quantita' di una dieta base per un fattore calorico.
+
+    Olio, semi e miele restano invariati (quantita' minime fisse).
+    Arrotondamento a 5g per porzioni realistiche.
+    """
+    result = []
+    for giorno, tipo_pasto, ordine, alimenti in base:
+        new_alimenti = []
+        for nome, grammi in alimenti:
+            if nome in _FIXED_ITEMS:
+                new_grammi = grammi
+            else:
+                new_grammi = round(grammi * factor / 5) * 5
+                new_grammi = max(new_grammi, 10)
+            new_alimenti.append((nome, new_grammi))
+        result.append((giorno, tipo_pasto, ordine, new_alimenti))
+    return result
+
+
+# Mapping slug → dieta settimanale completa (35 pasti × ~4 componenti)
+# donna_under30_attiva = base originale, le altre derivate per scaling
+TEMPLATE_DIETS: dict[str, list] = {
+    "donna_under30_attiva": DIETA_DONNA_ATTIVA,
+    "donna_under30_sedentaria": _adapt_diet(DIETA_DONNA_ATTIVA, 1500 / 1900),
+    "donna_under30_sportiva": _adapt_diet(DIETA_DONNA_ATTIVA, 2300 / 1900),
+    "donna_over30_mantenimento": _adapt_diet(DIETA_DONNA_ATTIVA, 1750 / 1900),
+    "donna_30_50_sedentaria": _adapt_diet(DIETA_DONNA_ATTIVA, 1550 / 1900),
+    "donna_30_50_sportiva": _adapt_diet(DIETA_DONNA_ATTIVA, 2100 / 1900),
+    "donna_over50_sedentaria": _adapt_diet(DIETA_DONNA_ATTIVA, 1400 / 1900),
+    "donna_over50_attiva": _adapt_diet(DIETA_DONNA_ATTIVA, 1600 / 1900),
+}
+
+
 def _seed_templates(session: Session, food_id_map: dict[str, int], dry_run: bool) -> None:
-    """Seed template piani + dieta completa donna_under30_attiva."""
+    """Seed template piani + diete complete donna (8 profili)."""
     inserted_templates = 0
     inserted_meals = 0
     inserted_components = 0
@@ -1018,9 +1150,10 @@ def _seed_templates(session: Session, food_id_map: dict[str, int], dry_run: bool
         session.flush()
         inserted_templates += 1
 
-        # Seed dieta completa solo per donna_under30_attiva
-        if tmpl_data["slug"] == "donna_under30_attiva":
-            for giorno, tipo_pasto, ordine, alimenti in DIETA_DONNA_ATTIVA:
+        # Seed dieta completa se disponibile in TEMPLATE_DIETS
+        diet_data = TEMPLATE_DIETS.get(tmpl_data["slug"])
+        if diet_data:
+            for giorno, tipo_pasto, ordine, alimenti in diet_data:
                 meal = TemplatePlanMeal(
                     template_id=tmpl.id,
                     giorno_settimana=giorno,
@@ -1089,5 +1222,10 @@ if __name__ == "__main__":
         action="store_true",
         help="Svuota le tabelle prima di reinserire (ricostruzione completa)",
     )
+    parser.add_argument(
+        "--force-reset",
+        action="store_true",
+        help="Bypassa il safety gate su --reset (DISTRUTTIVO — crea backup automatico)",
+    )
     args = parser.parse_args()
-    build_nutrition_db(dry_run=args.dry_run, reset=args.reset)
+    build_nutrition_db(dry_run=args.dry_run, reset=args.reset, force_reset=args.force_reset)

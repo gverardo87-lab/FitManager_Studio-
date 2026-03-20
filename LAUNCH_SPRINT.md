@@ -12,8 +12,8 @@ Obiettivo: **prodotto vendibile entro fine settimana**
 |------|--------------|-----------|-----|
 | Esercizi (catalog.db) | ✅ 500 attivi, 940 relazioni, 100% campi | 500 attivi | Completato |
 | Separazione arch. 3 DB | ✅ crm.db 33 tab, catalog.db 10 tab, nutrition.db 8 tab | DB indipendenti | Completato |
-| Alimenti (nutrition) | ✅ 957 attivi, 946 con micro CREA, 1788 porzioni | 500 attivi | Completato |
-| Piani LARN | Donna under 30 attiva | 3 fasce eta' × 2-3 livelli attivita' | +7 profili |
+| Alimenti (nutrition) | ✅ 880 attivi, 878 con micro CREA, 1644 porzioni | 500 attivi | Completato (recovery post-reset) |
+| Piani LARN | ✅ 8 diete donna complete (12 template totali) | 3 fasce eta' × 2-3 livelli attivita' | Completato |
 | Pagina rinnovi-incassi | 340 LOC, funzionale ma grafica base | CRM-grade come cassa | Redesign UI |
 | Pagina impostazioni | 517 LOC, layout piatto | Organizzata per sezioni | Redesign UI |
 | Spotlight helper | 19 passi, 9 pagine coperte | Copertura completa | +pagine mancanti |
@@ -57,28 +57,20 @@ Categorie da rinforzare:
 
 ### 1C. Piani LARN: +7 profili donna (3 fasce eta' × livelli attivita')
 
-Profilo gia' implementato:
-- ✅ Donna under 30 attiva
-
-Profili da aggiungere (8 combinazioni, 7 nuove):
+✅ **Completato** — 12 template (4 uomo header + 8 donna con dieta completa).
 
 | Fascia eta' | Sedentaria (PAL 1.4) | Attiva (PAL 1.6) | Sportiva (PAL 1.75+) |
 |-------------|---------------------|-------------------|---------------------|
-| Under 30 (18-29) | Da fare | ✅ Esistente | Da fare |
-| 30-50 (30-59) | Da fare | Da fare | Da fare |
-| Over 50 (50-74) | Da fare | Da fare | — |
-
-Note:
-- Over 50 sportiva esclusa (target troppo specifico per il lancio)
-- Under 30 sportiva inclusa (target palestre/crossfit)
+| Under 30 (18-29) | ✅ 1500 kcal | ✅ 1900 kcal (base) | ✅ 2300 kcal |
+| 30-50 (30-59) | ✅ 1550 kcal | ✅ 1750 kcal | ✅ 2100 kcal |
+| Over 50 (50-74) | ✅ 1400 kcal | ✅ 1600 kcal | — |
 
 Implementazione:
-- Le tabelle LARN per tutte le fasce eta' F esistono gia' in `larn_tables.py`
-- Manca il calcolo automatico BMR + PAL → target_kcal
-- Aggiungere enum `ActivityLevel` (sedentaria/attiva/sportiva)
-- `ClientProfile.activity_level` → moltiplicatore PAL
-- `auto_target_kcal(profile) → int` che calcola BMR Mifflin-St Jeor × PAL
-- PAL riferimento LARN 2014: sedentaria 1.40, attiva 1.60, sportiva 1.75
+- Dieta base: `donna_under30_attiva` (35 pasti, ~140 componenti, handcrafted)
+- 7 varianti generate con `_adapt_diet(base, factor)` in `build_nutrition.py`
+- Factor = target_kcal / 1900. Olio/semi/miele invariati, porzioni arrotondate a 5g
+- 4 template uomo solo header (senza dieta completa per il lancio)
+- Calcolo BMR automatico da profilo cliente: rimandato a post-lancio
 
 ---
 

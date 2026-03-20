@@ -1,0 +1,7281 @@
+[
+  {
+    "id": 227,
+    "nome": "Frumento tenero, farina 00",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 228,
+    "nome": "Frumento tenero, farina integrale",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 229,
+    "nome": "Frumento duro, semola",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 230,
+    "nome": "Segale, farina integrale",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 231,
+    "nome": "Miglio, crudo",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 232,
+    "nome": "Amaranto, crudo",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 233,
+    "nome": "Triticale, crudo",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 234,
+    "nome": "Kamut (grano khorasan), crudo",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 235,
+    "nome": "Teff, crudo",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 236,
+    "nome": "Sorgo, crudo",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 237,
+    "nome": "Crusca di frumento",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 238,
+    "nome": "Crusca d'avena",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 239,
+    "nome": "Germe di grano",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 240,
+    "nome": "Farina di ceci",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 241,
+    "nome": "Farina di mandorle",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 242,
+    "nome": "Farina di cocco",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 243,
+    "nome": "Farina di riso",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 244,
+    "nome": "Farina di mais (maizena)",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 245,
+    "nome": "Farina di castagne",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 246,
+    "nome": "Fiocchi di orzo",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 247,
+    "nome": "Fiocchi di segale",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 248,
+    "nome": "Fiocchi di farro",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 249,
+    "nome": "Riso basmati, crudo",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 250,
+    "nome": "Riso parboiled, crudo",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 251,
+    "nome": "Riso venere, crudo",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 252,
+    "nome": "Riso arborio, crudo",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 253,
+    "nome": "Pasta all'uovo, secca",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 254,
+    "nome": "Pasta all'uovo, cotta",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 255,
+    "nome": "Gnocchi di patate, cotti",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 256,
+    "nome": "Riso basmati, cotto",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 257,
+    "nome": "Orzo perlato, cotto",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 258,
+    "nome": "Miglio, cotto",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 259,
+    "nome": "Bulgur, cotto",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 260,
+    "nome": "Avena, cotta (porridge)",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 261,
+    "nome": "Riso venere, cotto",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 262,
+    "nome": "Pasta di riso, cotta",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 263,
+    "nome": "Pasta di farro, cotta",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 264,
+    "nome": "Pasta di legumi (ceci/lenticchie), cotta",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 265,
+    "nome": "Grano saraceno, cotto",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 266,
+    "nome": "Amaranto, cotto",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 267,
+    "nome": "Risotto semplice (burro/parmigiano)",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 268,
+    "nome": "Pane ciabatta",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 269,
+    "nome": "Pane di Altamura (semola)",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 270,
+    "nome": "Pane al latte",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 271,
+    "nome": "Pane in cassetta (toast)",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 272,
+    "nome": "Pane azzimo (matza)",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 273,
+    "nome": "Grissini torinesi",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 274,
+    "nome": "Crackers integrali",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 275,
+    "nome": "Fette biscottate classiche",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 276,
+    "nome": "Piadina romagnola",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 277,
+    "nome": "Tortilla di frumento",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 278,
+    "nome": "Tortilla di mais",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 279,
+    "nome": "Pancarré di segale",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 280,
+    "nome": "Biscotti secchi (tipo digestive)",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 281,
+    "nome": "Biscotti frollini classici",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 282,
+    "nome": "Fette biscottate senza glutine",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 283,
+    "nome": "Pane senza glutine",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 284,
+    "nome": "Cracker di riso (gallette mini)",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 285,
+    "nome": "Taralli pugliesi",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 286,
+    "nome": "Cornetto (brioche vuoto)",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 287,
+    "nome": "Muesli senza zucchero aggiunto",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 288,
+    "nome": "Granola tostata",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 289,
+    "nome": "Fagioli neri, cotti",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 290,
+    "nome": "Fagioli di soia (edamame sgranati, crudi)",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 291,
+    "nome": "Lenticchie rosse, cotte",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 292,
+    "nome": "Lenticchie verdi, cotte",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 293,
+    "nome": "Piselli freschi, crudi",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 294,
+    "nome": "Fagioli cannellini, secchi",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 295,
+    "nome": "Ceci, secchi tostati (snack)",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 296,
+    "nome": "Lupini, lessati",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 297,
+    "nome": "Fagioli azuki, cotti",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 298,
+    "nome": "Fagioli di Spagna, cotti",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 299,
+    "nome": "Cicerchie, cotte",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 300,
+    "nome": "Piselli secchi, cotti",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 301,
+    "nome": "Fagioli mung, cotti",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 302,
+    "nome": "Soia, farina sgrassata",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 303,
+    "nome": "Tempeh (soia fermentata)",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 304,
+    "nome": "Tofu, compatto (firm)",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 305,
+    "nome": "Tofu, morbido (silken)",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 306,
+    "nome": "Hummus (crema di ceci)",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 307,
+    "nome": "Aglio, fresco",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 308,
+    "nome": "Zucca (delica/butternut), cruda",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 309,
+    "nome": "Zucca, cotta al vapore",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 310,
+    "nome": "Patate, crude",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 311,
+    "nome": "Patate, cotte al forno",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 312,
+    "nome": "Patate dolci (batata), crude",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 313,
+    "nome": "Patate dolci, cotte",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 314,
+    "nome": "Topinambur, crudo",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 315,
+    "nome": "Barbabietola rossa, cruda",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 316,
+    "nome": "Barbabietola, cotta",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 317,
+    "nome": "Cavolo broccolo (broccoletto)",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 318,
+    "nome": "Cavolfiore, crudo",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 319,
+    "nome": "Cavolo di Bruxelles, crudo",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 320,
+    "nome": "Cavolo di Bruxelles, cotto",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 321,
+    "nome": "Cicoria, cruda",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 322,
+    "nome": "Catalogna (puntarelle)",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 323,
+    "nome": "Portulaca, cruda",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 324,
+    "nome": "Pak choi (bok choy), crudo",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 325,
+    "nome": "Lattuga romana",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 326,
+    "nome": "Valerianella (songino)",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 327,
+    "nome": "Spinaci, cotti",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 328,
+    "nome": "Bietola, cotta",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 329,
+    "nome": "Indivia belga (witloof)",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 330,
+    "nome": "Cipolla rossa",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 331,
+    "nome": "Cipollotto (scalogno)",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 332,
+    "nome": "Porro, crudo",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 333,
+    "nome": "Peperone giallo, crudo",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 334,
+    "nome": "Peperone verde, crudo",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 335,
+    "nome": "Peperoncino rosso, fresco",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 336,
+    "nome": "Pomodori ciliegino",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 337,
+    "nome": "Pomodori pelati (in scatola)",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 338,
+    "nome": "Zucchine, cotte a vapore",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 339,
+    "nome": "Melanzane, grigliate",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 340,
+    "nome": "Funghi porcini, crudi",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 341,
+    "nome": "Funghi shiitake, crudi",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 342,
+    "nome": "Funghi pleurotus (ostrica)",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 343,
+    "nome": "Ravanelli, crudi",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 344,
+    "nome": "Rape, crude",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 345,
+    "nome": "Daikon (ravanello giapponese)",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 346,
+    "nome": "Sedano rapa, crudo",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 347,
+    "nome": "Pastinaca, cruda",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 348,
+    "nome": "Asparagi, cotti",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 349,
+    "nome": "Finocchio, cotto",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 350,
+    "nome": "Piselli in scatola, sgocciolati",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 351,
+    "nome": "Mais dolce, chicchi cotti",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 352,
+    "nome": "Germogli di soia",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 353,
+    "nome": "Germogli di pisello",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 354,
+    "nome": "Crescione (watercress)",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 355,
+    "nome": "Prezzemolo, fresco",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 356,
+    "nome": "Basilico, fresco",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 357,
+    "nome": "Spinaci baby, crudi",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 358,
+    "nome": "Cavolo cappuccio, cotto",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 359,
+    "nome": "Cime di rapa",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 360,
+    "nome": "Tarassaco (dente di leone)",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 361,
+    "nome": "Olive nere (in salamoia)",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 362,
+    "nome": "Olive verdi (in salamoia)",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 363,
+    "nome": "Ciliegia, fresca",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 364,
+    "nome": "Fico, fresco",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 365,
+    "nome": "Susina (prugna), fresca",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 366,
+    "nome": "Lamponi, freschi",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 367,
+    "nome": "More, fresche",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 368,
+    "nome": "Ribes rosso, fresco",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 369,
+    "nome": "Ribes nero, fresco",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 370,
+    "nome": "Uva spina (gooseberry)",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 371,
+    "nome": "Mango, fresco",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 372,
+    "nome": "Papaya, fresca",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 373,
+    "nome": "Melograno, semi (arilli)",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 374,
+    "nome": "Kaki (cachi), fresco",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 375,
+    "nome": "Nespola, fresca",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 376,
+    "nome": "Giuggiola, fresca",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 377,
+    "nome": "Cocco, polpa fresca",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 378,
+    "nome": "Prugne secche (senza nocciolo)",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 379,
+    "nome": "Albicocche secche",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 380,
+    "nome": "Fichi secchi",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 381,
+    "nome": "Datteri secchi",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 382,
+    "nome": "Uvetta sultanina",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 383,
+    "nome": "Mirtilli rossi (cranberries), freschi",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 384,
+    "nome": "Lime, fresco",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 385,
+    "nome": "Clementina, fresca",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 386,
+    "nome": "Cedro, fresco",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 387,
+    "nome": "Melograno, succo fresco",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 388,
+    "nome": "Lychee, fresco",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 389,
+    "nome": "Guava, fresca",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 390,
+    "nome": "Maracuja (frutto della passione)",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 391,
+    "nome": "Banana, essiccata (chip)",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 392,
+    "nome": "Noci pecan",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 393,
+    "nome": "Noci del Brasile",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 394,
+    "nome": "Noci macadamia",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 395,
+    "nome": "Noci di acagiù (anacardi) tostate",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 396,
+    "nome": "Mandorle tostate (non salate)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 397,
+    "nome": "Nocciole tostate",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 398,
+    "nome": "Pistacchi tostati (salati)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 399,
+    "nome": "Arachidi crude",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 400,
+    "nome": "Semi di sesamo",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 401,
+    "nome": "Semi di canapa (sgusciati)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 402,
+    "nome": "Tahini (pasta di sesamo)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 403,
+    "nome": "Burro di arachidi (naturale)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 404,
+    "nome": "Burro di mandorle",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 405,
+    "nome": "Cocco rapé essiccato (non zuccherato)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 406,
+    "nome": "Semi di papavero",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 407,
+    "nome": "Semi di cañamo macinati",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 408,
+    "nome": "Pinoli",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 409,
+    "nome": "Castagne, fresche",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 410,
+    "nome": "Castagne secche",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 411,
+    "nome": "Semi di girasole, tostati",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 412,
+    "nome": "Semi di zucca, tostati",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 413,
+    "nome": "Noci, essiccate",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 414,
+    "nome": "Arachidi tostate e salate",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 415,
+    "nome": "Pollo intero, arrosto (senza pelle)",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 416,
+    "nome": "Ali di pollo, cotte al forno",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 417,
+    "nome": "Cosce di pollo, crude",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 418,
+    "nome": "Petto di tacchino, macinato",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 419,
+    "nome": "Coscia di tacchino, cotta",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 420,
+    "nome": "Manzo, controfiletto crudo",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 421,
+    "nome": "Manzo, bistecca di costata cruda",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 422,
+    "nome": "Manzo, roast beef cotto",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 423,
+    "nome": "Manzo macinato 10% grassi, crudo",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 424,
+    "nome": "Manzo macinato 15% grassi, crudo",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 425,
+    "nome": "Manzo macinato, cotto",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 426,
+    "nome": "Vitello, cosciotto crudo",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 427,
+    "nome": "Vitello, ossobuco crudo",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 428,
+    "nome": "Maiale, spalla cruda",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 429,
+    "nome": "Maiale, pancetta tesa cruda",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 430,
+    "nome": "Maiale, bistecca cruda",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 431,
+    "nome": "Maiale, costolette cotte",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 432,
+    "nome": "Agnello, coscia cruda",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 433,
+    "nome": "Agnello, costolette crude",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 434,
+    "nome": "Agnello, macinato crudo",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 435,
+    "nome": "Cervo (capriolo), carne cruda",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 436,
+    "nome": "Cinghiale, carne cruda",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 437,
+    "nome": "Struzzo, filetto crudo",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 438,
+    "nome": "Pollo, stinco cotto",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 439,
+    "nome": "Petto di pollo, cotto in padella",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 440,
+    "nome": "Petto di pollo, affettato cotto",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 441,
+    "nome": "Tacchino, macinato cotto",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 442,
+    "nome": "Manzo, carpaccio (crudo affettato)",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 443,
+    "nome": "Fegato di vitello, crudo",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 444,
+    "nome": "Cuore di manzo, crudo",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 445,
+    "nome": "Rene di manzo, crudo",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 446,
+    "nome": "Prosciutto crudo DOP (con grasso)",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 447,
+    "nome": "Prosciutto cotto alta qualità",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 448,
+    "nome": "Prosciutto cotto al forno",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 449,
+    "nome": "Coppa (capocollo)",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 450,
+    "nome": "Pancetta affumicata (bacon)",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 451,
+    "nome": "Pancetta tesa (non affumicata)",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 452,
+    "nome": "Salame Felino",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 453,
+    "nome": "Salame Napoli",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 454,
+    "nome": "Nduja calabrese",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 455,
+    "nome": "Wurstel di pollo",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 456,
+    "nome": "Wurstel di maiale",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 457,
+    "nome": "Prosciutto di Parma DOP, magro",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 458,
+    "nome": "Bresaola della Valtellina IGP",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 459,
+    "nome": "Lonza di maiale stagionata",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 460,
+    "nome": "Culatello di Zibello DOP",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 461,
+    "nome": "Fiocchetto (prosciutto magro)",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 462,
+    "nome": "Petto di tacchino affumicato",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 463,
+    "nome": "Lardo di Colonnata IGP",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 464,
+    "nome": "Guanciale (cured pork cheek)",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 465,
+    "nome": "Cotechino (prodotto cotto)",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 466,
+    "nome": "Alici (acciughe), crude",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 467,
+    "nome": "Sgombro, cotto al forno",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 468,
+    "nome": "Salmone affumicato",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 469,
+    "nome": "Tonno fresco, crudo",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 470,
+    "nome": "Tonno fresco, cotto",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 471,
+    "nome": "Merluzzo, cotto al vapore",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 472,
+    "nome": "Halibut, crudo",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 473,
+    "nome": "Branzino, crudo",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 474,
+    "nome": "Dentice, crudo",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 475,
+    "nome": "Pagello, crudo",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 476,
+    "nome": "Triglia, cruda",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 477,
+    "nome": "Sogliola, cruda",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 478,
+    "nome": "Rombo, crudo",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 479,
+    "nome": "Spigola (branzino), cotta",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 480,
+    "nome": "Orata, cotta",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 481,
+    "nome": "Sarde, crude",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 482,
+    "nome": "Sardine in scatola al naturale",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 483,
+    "nome": "Sardine in scatola all'olio, scolate",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 484,
+    "nome": "Merluzzo (baccalà salato e ammollato)",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 485,
+    "nome": "Gamberi (scampi), crudi",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 486,
+    "nome": "Gamberi tigre, crudi",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 487,
+    "nome": "Gamberoni, cotti",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 488,
+    "nome": "Calamari, cotti",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 489,
+    "nome": "Polpo, crudo",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 490,
+    "nome": "Seppie, crude",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 491,
+    "nome": "Vongole (lupini di mare), cotte",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 492,
+    "nome": "Cozze (mitili), cotte",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 493,
+    "nome": "Ostrica, cruda",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 494,
+    "nome": "Capesante, crude",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 495,
+    "nome": "Riccio di mare (uni), crudo",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 496,
+    "nome": "Aragosta, cotta",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 497,
+    "nome": "Granchio, cotto",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 498,
+    "nome": "Storione, crudo",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 499,
+    "nome": "Pesce persico, filetto crudo",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 500,
+    "nome": "Tilapia, cruda",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 501,
+    "nome": "Pangasio, filetto crudo",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 502,
+    "nome": "Olio di fegato di merluzzo",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 503,
+    "nome": "Salmone in scatola (al naturale)",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 504,
+    "nome": "Uovo di quaglia, crudo",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 505,
+    "nome": "Albume d'uovo, cotto",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 506,
+    "nome": "Frittata base (uovo+latte), cotta",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 507,
+    "nome": "Uovo in camicia (poché)",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 508,
+    "nome": "Uovo intero, strapazzato (con latte)",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 509,
+    "nome": "Uovo di anatra, crudo",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 510,
+    "nome": "Latte di capra, intero",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 511,
+    "nome": "Latte condensato zuccherato",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 512,
+    "nome": "Latte in polvere scremato",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 513,
+    "nome": "Latte fermentato (kefir)",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 514,
+    "nome": "Yogurt intero con frutta",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 515,
+    "nome": "Yogurt magro bianco",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 516,
+    "nome": "Yogurt greco 2% grassi",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 517,
+    "nome": "Parmigiano Reggiano DOP (grattugiato)",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 518,
+    "nome": "Grana Padano DOP",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 519,
+    "nome": "Pecorino romano DOP",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 520,
+    "nome": "Pecorino stagionato",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 521,
+    "nome": "Emmenthal (Emmentaler)",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 522,
+    "nome": "Fontina DOP",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 523,
+    "nome": "Provolone",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 524,
+    "nome": "Gorgonzola DOP",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 525,
+    "nome": "Taleggio DOP",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 526,
+    "nome": "Brie",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 527,
+    "nome": "Camembert",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 528,
+    "nome": "Ricotta di pecora",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 529,
+    "nome": "Mascarpone",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 530,
+    "nome": "Burrata",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 531,
+    "nome": "Crescenza (stracchino)",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 532,
+    "nome": "Robiola",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 533,
+    "nome": "Formaggio spalmabile (tipo Philadelphia)",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 534,
+    "nome": "Caciotta toscana",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 535,
+    "nome": "Quark (fiocchi proteici 0.2%)",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 536,
+    "nome": "Feta DOP",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 537,
+    "nome": "Halloumi (cipriota)",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 538,
+    "nome": "Ricotta vaccina (light < 8%g)",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 539,
+    "nome": "Latte di cocco (in lattina)",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 540,
+    "nome": "Olio di oliva, raffinato",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 541,
+    "nome": "Olio di mais",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 542,
+    "nome": "Olio di soia",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 543,
+    "nome": "Olio di arachide",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 544,
+    "nome": "Olio di lino (semi di lino)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 545,
+    "nome": "Olio di avocado",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 546,
+    "nome": "Olio di sesamo",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 547,
+    "nome": "Burro chiarificato (ghee)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 548,
+    "nome": "Margarina vegetale (80% grassi)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 549,
+    "nome": "Strutto di maiale",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 550,
+    "nome": "Aceto balsamico tradizionale",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 551,
+    "nome": "Aceto di mele (apple cider vinegar)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 552,
+    "nome": "Salsa worcestershire",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 553,
+    "nome": "Salsa teriyaki",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 554,
+    "nome": "Mostarda (gialla)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 555,
+    "nome": "Ketchup di pomodoro",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 556,
+    "nome": "Salsa di soia classica (shoyu)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 557,
+    "nome": "Miso (pasta di soia fermentata)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 558,
+    "nome": "Salsa tahini allungata (hummus base)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 559,
+    "nome": "Pesto genovese (basilico/olio/parmigiano)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 560,
+    "nome": "Guacamole",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 561,
+    "nome": "Salsa tzatziki",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 562,
+    "nome": "Maionese (commerciale)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 563,
+    "nome": "Salsa di panna (besciamella)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 564,
+    "nome": "Zucchero di canna grezzo",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 565,
+    "nome": "Zucchero a velo",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 566,
+    "nome": "Fruttosio cristallino",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 567,
+    "nome": "Stevia (dolcificante in polvere)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 568,
+    "nome": "Eritritolo",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 569,
+    "nome": "Miele di acacia",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 570,
+    "nome": "Miele di castagno",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 571,
+    "nome": "Sciroppo di agave",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 572,
+    "nome": "Sciroppo di riso (malto di riso)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 573,
+    "nome": "Cioccolato fondente 85%",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 574,
+    "nome": "Cioccolato fondente 90%",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 575,
+    "nome": "Cioccolato bianco",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 576,
+    "nome": "Cacao amaro in polvere",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 577,
+    "nome": "Cacao solubile zuccherato",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 578,
+    "nome": "Nutella (crema nocciole e cacao)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 579,
+    "nome": "Marmellata di fragole",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 580,
+    "nome": "Marmellata di albicocche",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 581,
+    "nome": "Confettura extra (70% frutta)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 582,
+    "nome": "Gelato alla crema (artigianale)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 583,
+    "nome": "Gelato al cioccolato",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 584,
+    "nome": "Gelato alla frutta (sorbetto)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 585,
+    "nome": "Torta sponge (pan di spagna)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 586,
+    "nome": "Crostata (base frolla + marmellata)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 587,
+    "nome": "Tiramisù",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 588,
+    "nome": "Panna cotta",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 589,
+    "nome": "Budino di vaniglia (commerciale)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 590,
+    "nome": "Wafer alla vaniglia",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 591,
+    "nome": "Barretta ai cereali (media)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 592,
+    "nome": "Barretta proteica (media, 30% prot)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 593,
+    "nome": "Pancakes (base classica)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 594,
+    "nome": "Acqua (naturale)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 595,
+    "nome": "Acqua frizzante (gassata)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 596,
+    "nome": "Tè verde, infuso (senza zucchero)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 597,
+    "nome": "Tè nero, infuso (senza zucchero)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 598,
+    "nome": "Caffè americano (lungo)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 599,
+    "nome": "Caffè macchiato (con latte)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 600,
+    "nome": "Cappuccino (con latte intero)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 601,
+    "nome": "Succo di pomodoro (senza sale aggiunto)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 602,
+    "nome": "Succo di mela, senza zuccheri aggiunti",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 603,
+    "nome": "Succo di carota, fresco",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 604,
+    "nome": "Succo di melograno, puro",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 605,
+    "nome": "Bevanda isotonica (sport drink)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 606,
+    "nome": "Bevanda energetica (energy drink standard)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 607,
+    "nome": "Latte vegetale di riso (non zuccherato)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 608,
+    "nome": "Latte di soia non zuccherato",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 609,
+    "nome": "Latte di avena non zuccherato",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 610,
+    "nome": "Latte di mandorla non zuccherato",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 611,
+    "nome": "Kombucha (fermentato base)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 612,
+    "nome": "Birra (lager 5% alcol)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 613,
+    "nome": "Vino rosso secco (12%)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 614,
+    "nome": "Vino bianco secco (12%)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 615,
+    "nome": "Whey protein concentrate 80% (polvere)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 616,
+    "nome": "Caseina miceallare (polvere)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 617,
+    "nome": "Proteine dell'uovo in polvere",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 618,
+    "nome": "Proteine vegetali (pisello+riso, polvere)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 627,
+    "nome": "Frumento tenero, farina 0",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 628,
+    "nome": "Frumento tenero, farina 1",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 629,
+    "nome": "Frumento tenero, farina 2 (semintegrale)",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 630,
+    "nome": "Fiocchi di quinoa",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 631,
+    "nome": "Orzo mondo (integrale), crudo",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 632,
+    "nome": "Farina di lupini",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 633,
+    "nome": "Farina di soia sgrassata",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 634,
+    "nome": "Farina di grano saraceno",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 635,
+    "nome": "Semolino di frumento",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 636,
+    "nome": "Pop corn (sgonfio, senza grassi)",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 637,
+    "nome": "Riso parboiled, cotto",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 638,
+    "nome": "Pasta gluten-free riso/mais, cotta",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 639,
+    "nome": "Spätzle (gnocchetti tirolesi), cotti",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 640,
+    "nome": "Trofie, cotte",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 641,
+    "nome": "Penne integrali, cotte",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 642,
+    "nome": "Lasagne fresche, cotte",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 643,
+    "nome": "Pane di kamut, biologico",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 644,
+    "nome": "Pane con noci",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 645,
+    "nome": "Pane all'olio",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 646,
+    "nome": "Focaccia genovese",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 647,
+    "nome": "Schiacciata toscana",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 648,
+    "nome": "Crespelle (crêpes, neutre)",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 649,
+    "nome": "Waffle (neutro base)",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 650,
+    "nome": "Muffin all'avena (senza latticini)",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 651,
+    "nome": "Fetta biscottata alla frutta",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 652,
+    "nome": "Pane azzimo integrale",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 653,
+    "nome": "Baguette francese",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 654,
+    "nome": "Naan indiano",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 655,
+    "nome": "Fagioli di Lamon, cotti",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 656,
+    "nome": "Fagiolini piattoni, cotti",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 657,
+    "nome": "Ceci neri, cotti",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 658,
+    "nome": "Fagioli all'occhio, cotti",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 659,
+    "nome": "Fave fresche, crude",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 660,
+    "nome": "Lenticchie beluga (nere), cotte",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 661,
+    "nome": "Piselli spezzati gialli, cotti",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 662,
+    "nome": "Soia, granuli texturizzati secchi (TVP)",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 663,
+    "nome": "Pomodoro secco (sun-dried)",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 664,
+    "nome": "Pomodoro, passata (senza sale)",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 665,
+    "nome": "Pomodoro, concentrato (doppio)",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 666,
+    "nome": "Insalata mista (mix lattuga/radicchio)",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 667,
+    "nome": "Misticanza (mix erbe e foglie)",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 668,
+    "nome": "Broccoletti (cime di broccolo)",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 669,
+    "nome": "Verza (cavolo savoia)",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 670,
+    "nome": "Indivia riccia",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 671,
+    "nome": "Puntarelle (radici di catalogna)",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 672,
+    "nome": "Senape, foglie fresche",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 673,
+    "nome": "Okra (gombo), cruda",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 674,
+    "nome": "Taro (colocasia), cotto",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 675,
+    "nome": "Radice di loto, cruda",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 676,
+    "nome": "Germogli di bambù, in scatola",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 677,
+    "nome": "Zucchine, crude a fettine",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 678,
+    "nome": "Pomodori verdi, crudi",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 679,
+    "nome": "Avocado, polpa",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 680,
+    "nome": "Edamame (baccelli cotti interi)",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 681,
+    "nome": "Cavolo cappuccio viola",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 682,
+    "nome": "Rucola, cotta",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 683,
+    "nome": "Bietole colorate (arcobaleno), cotte",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 684,
+    "nome": "Topinambur, cotto",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 685,
+    "nome": "Mais dolce in scatola, sgocciolato",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 686,
+    "nome": "Finocchi, crudi",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 687,
+    "nome": "Peperonata (peperoni cotti in olio/pomodoro)",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 688,
+    "nome": "Passata di verdure mista",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 689,
+    "nome": "Capperi sotto sale (dissalati)",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 690,
+    "nome": "Funghi secchi (porcini reidratati)",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 691,
+    "nome": "Cachi (persimon) secchi",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 692,
+    "nome": "Zucca butternut, cotta",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 693,
+    "nome": "Pompelmo rosa, fresco",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 694,
+    "nome": "Nettarina (pesca noce), fresca",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 695,
+    "nome": "Cocomero (anguria) a fette",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 696,
+    "nome": "Melone cantalupo, polpa",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 697,
+    "nome": "Mora di gelso, fresca",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 698,
+    "nome": "Carambola (star fruit)",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 699,
+    "nome": "Mela cotogna, cruda",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 700,
+    "nome": "Giuggiole secche",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 701,
+    "nome": "Kiwi verde, sbucciato",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 702,
+    "nome": "Kiwi giallo (golden), sbucciato",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 703,
+    "nome": "Banana plantano, cotta",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 704,
+    "nome": "Pera abate, fresca",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 705,
+    "nome": "Fragoline di bosco, fresche",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 706,
+    "nome": "Ananas essiccato",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 707,
+    "nome": "Mango essiccato",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 708,
+    "nome": "Papaya essiccata",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 709,
+    "nome": "Noci di macadamia tostate (salate)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 710,
+    "nome": "Arachidi bollite",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 711,
+    "nome": "Mix di frutta secca e semi",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 712,
+    "nome": "Cocco, latte in polvere",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 713,
+    "nome": "Noci pecan tostate",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 714,
+    "nome": "Semi di sesamo tostati",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 715,
+    "nome": "Semi di lino tostati",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 716,
+    "nome": "Burro di girasole",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 717,
+    "nome": "Pollo, arrosto con pelle",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 718,
+    "nome": "Anatra, petto crudo (senza pelle)",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 719,
+    "nome": "Anatra, coscia cotta",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 720,
+    "nome": "Oca, petto crudo",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 721,
+    "nome": "Fagiano, petto crudo",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 722,
+    "nome": "Quaglia, intera cotta",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 723,
+    "nome": "Tacchino, petto macinato crudo",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 724,
+    "nome": "Manzo, fianco (flank steak), crudo",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 725,
+    "nome": "Manzo, girello (topside), crudo",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 726,
+    "nome": "Vitello, fettina al limone (cotta)",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 727,
+    "nome": "Agnello, coscio cotto al forno",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 728,
+    "nome": "Capretto, carne cruda",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 729,
+    "nome": "Bisonte (bufalo americano), macinato crudo",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 730,
+    "nome": "Maiale, arrosto al forno cotto",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 731,
+    "nome": "Maiale, salsiccia fresca cruda",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 732,
+    "nome": "Manzo, stinco cotto in umido",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 733,
+    "nome": "Pollo, petto marinato alla griglia",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 734,
+    "nome": "Vitello, fegato cotto in padella",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 735,
+    "nome": "Soppressata calabrese",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 736,
+    "nome": "Porchetta (arrosto di maiale)",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 737,
+    "nome": "Mortadella di Bologna IGP",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 738,
+    "nome": "Salame di Varzi DOP",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 739,
+    "nome": "Prosciutto di San Daniele DOP",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 740,
+    "nome": "Finocchiona (salame al finocchio)",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 741,
+    "nome": "Chorizo (salame spagnolo)",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 742,
+    "nome": "Jamón ibérico (prosciutto iberico)",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 743,
+    "nome": "Prosciutto di Norcia",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 744,
+    "nome": "Spianata romana piccante",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 745,
+    "nome": "Mormora (sparo), cruda",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 746,
+    "nome": "Luccio, crudo",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 747,
+    "nome": "Carpa, cruda",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 748,
+    "nome": "Anguilla di fiume, cruda",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 749,
+    "nome": "Pesce gatto (siluro), crudo",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 750,
+    "nome": "Acciughe sotto sale (lavate)",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 751,
+    "nome": "Bottarga di muggine",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 752,
+    "nome": "Tonno rosso (bluefin), crudo",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 753,
+    "nome": "Rana pescatrice (coda di rospo), cruda",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 754,
+    "nome": "Grongo, crudo",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 755,
+    "nome": "Salmone coho, crudo",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 756,
+    "nome": "Trota iridea, cotta",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 757,
+    "nome": "Surimi (bastoncini di granchio)",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 758,
+    "nome": "Polpo, in umido",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 759,
+    "nome": "Totano, crudo",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 760,
+    "nome": "Uovo di struzzo, crudo",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 761,
+    "nome": "Frittata proteica (2 uova+albume)",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 762,
+    "nome": "Parmigiano Reggiano 24 mesi",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 763,
+    "nome": "Asiago pressato (fresco)",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 764,
+    "nome": "Asiago d'allevo (stagionato)",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 765,
+    "nome": "Scamorza affumicata",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 766,
+    "nome": "Montasio DOP",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 767,
+    "nome": "Stracchino (crescenza fresca)",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 768,
+    "nome": "Squacquerone di Romagna DOP",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 769,
+    "nome": "Latte d'asina (equino)",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 770,
+    "nome": "Burro di cacao (cosmesi/food)",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 771,
+    "nome": "Panna da cucina (18% grassi)",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 772,
+    "nome": "Panna fresca (35% grassi)",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 773,
+    "nome": "Gelato proteico (alto prot, basso grassi)",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 774,
+    "nome": "Yogurt di capra, intero",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 775,
+    "nome": "Ayran (bevanda yogurt turca)",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 776,
+    "nome": "Lassi dolce (bevanda yogurt indiana)",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 777,
+    "nome": "Salsa romesco (pomodoro/mandorle)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 778,
+    "nome": "Salsa verde (prezzemolo/acciughe)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 779,
+    "nome": "Salsa chimichurri",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 780,
+    "nome": "Salsa aglio, olio e peperoncino (condimento)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 781,
+    "nome": "Soffritto di cipolla-sedano-carota (base)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 782,
+    "nome": "Aceto di lampone",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 783,
+    "nome": "Colomba pasquale",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 784,
+    "nome": "Panettone milanese",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 785,
+    "nome": "Pandoro veronese",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 786,
+    "nome": "Cantucci (biscotti di Prato)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 787,
+    "nome": "Biscotti di avena e cioccolato",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 788,
+    "nome": "Brownie al cioccolato",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 789,
+    "nome": "Madeleine (pasticcino francese)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 790,
+    "nome": "Crostino dolce con miele e ricotta",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 791,
+    "nome": "Polenta dolce alla bergamasca",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 792,
+    "nome": "Chewing gum senza zucchero (1 pezzo)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 793,
+    "nome": "Caramelle gommose (jelly candy)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 794,
+    "nome": "Meringa secca",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 795,
+    "nome": "Semifreddo al caffè",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 796,
+    "nome": "Zabaione (zabaglione)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 797,
+    "nome": "Tè matcha in polvere (1 cucchiaino)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 798,
+    "nome": "Tè bianco, infuso",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 799,
+    "nome": "Tisana di camomilla",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 800,
+    "nome": "Tisana di zenzero e limone",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 801,
+    "nome": "Latte proteico (1.5% grassi, 5% prot)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 802,
+    "nome": "Frullato proteico base (latte+whey)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 803,
+    "nome": "Succo di barbabietola, puro",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 804,
+    "nome": "Succo di aloe vera (puro, senza zucchero)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 805,
+    "nome": "Birra artigianale (IPA 6.5%)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 806,
+    "nome": "Vino rosé secco (11%)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 807,
+    "nome": "Prosecco DOC",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 808,
+    "nome": "Sciroppo di proteine + frutta (meal prep)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 810,
+    "nome": "Nespresso (capsula espresso ristretto)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 811,
+    "nome": "Pasta proteica (+proteine di legumi), secca",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 812,
+    "nome": "Pasta di konjac (shirataki, cotta)",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 813,
+    "nome": "Pasta di edamame/soia, secca",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 814,
+    "nome": "Riso rosso (Camargue), crudo",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 815,
+    "nome": "Farro spelta, chicchi crudi",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 816,
+    "nome": "Panino al sesamo",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 817,
+    "nome": "Pane tipo pugliese (semola rimacinata)",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 818,
+    "nome": "Pane di mais senza glutine",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 819,
+    "nome": "Pane di segale compatto (tipo wasa)",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 820,
+    "nome": "Tortino di mais (polenta al forno)",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 821,
+    "nome": "Zuppa di lenticchie (piatto pronto)",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 822,
+    "nome": "Passata di ceci (hummus base ridotta)",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 823,
+    "nome": "Fagioli al pomodoro (in scatola)",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 824,
+    "nome": "Minestrone con legumi (piatto pronto)",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 825,
+    "nome": "Cavoletti di Bruxelles arrosto",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 826,
+    "nome": "Zucca gialla, gratinata al forno",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 827,
+    "nome": "Patate al vapore (no sale)",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 828,
+    "nome": "Broccoli romanesco, crudi",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 829,
+    "nome": "Cipolla di Tropea, cruda",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 830,
+    "nome": "Peperone rosso arrostito (in vasetto)",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 831,
+    "nome": "Pomodori datterini, freschi",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 832,
+    "nome": "Friggitelli (peperoni piccoli verdi)",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 833,
+    "nome": "Bietola rossa, cruda",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 834,
+    "nome": "Zucchine lunghe (romanesche)",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 835,
+    "nome": "Peperoni gialli arrostiti",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 836,
+    "nome": "Pomodori ramati, freschi",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 837,
+    "nome": "Fico d'India (ficodindia), polpa",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 838,
+    "nome": "Corbezzolo, fresco",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 839,
+    "nome": "Bacche di acai (polvere, 100%)",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 840,
+    "nome": "Bacche di goji, essiccate",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 841,
+    "nome": "Bacche di aronia (chokeberry)",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 842,
+    "nome": "Mela rossa (Fuji), fresca",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 843,
+    "nome": "Mela verde (Granny Smith), fresca",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 844,
+    "nome": "Pera Williams, fresca",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 845,
+    "nome": "Pesca bianca, fresca",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 846,
+    "nome": "Pesca tabacchiera, fresca",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 847,
+    "nome": "Mandorle pelate e blanched",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 848,
+    "nome": "Nocciole fresche (non tostate)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 849,
+    "nome": "Farro soffiato",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 850,
+    "nome": "Riso soffiato",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 851,
+    "nome": "Mais soffiato (popcorn commercial)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 852,
+    "nome": "Pollo in scatola (al naturale)",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 853,
+    "nome": "Tonno-pollo proteico (piatto mix)",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 854,
+    "nome": "Hamburger di manzo (80% magro)",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 855,
+    "nome": "Hamburger di pollo (grigliato)",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 856,
+    "nome": "Polpette di carne al sugo (cotte)",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 857,
+    "nome": "Scaloppina di vitello al marsala",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 858,
+    "nome": "Pollo tikka masala (piatto indiano)",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 859,
+    "nome": "Prosciutto crudo magro affettato (packed)",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 860,
+    "nome": "Salume di cinghiale",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 861,
+    "nome": "Salamella (salsiccia tipo mantovana)",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 862,
+    "nome": "Zampone di Modena IGP (cotto)",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 863,
+    "nome": "Petto di pollo arrosto (affettato, packed)",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 864,
+    "nome": "Mazzancolle (gamberi grandi), cotte",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 865,
+    "nome": "Scampi fritti (impanati)",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 866,
+    "nome": "Baccalà alla vicentina (piatto cotto)",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 867,
+    "nome": "Tonno in scatola al naturale (sgocciolato)",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 868,
+    "nome": "Sardine grigliate",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 869,
+    "nome": "Sgombro in scatola al naturale",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 870,
+    "nome": "Ostriche gratinate al forno",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 871,
+    "nome": "Ceviche di branzino (piatto crudo)",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 872,
+    "nome": "Caciocavallo podolico stagionato",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 873,
+    "nome": "Pecorino di Pienza",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 874,
+    "nome": "Mozzarella affumicata",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 875,
+    "nome": "Yogurt greco proteico (15g prot/100g)",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 876,
+    "nome": "Ricotta al forno (siciliana)",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 877,
+    "nome": "Olio di ribes nero (omega-6)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 878,
+    "nome": "Salsa di ostrica",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 879,
+    "nome": "Olio di canapa",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 880,
+    "nome": "Salsa harissa (pasta di peperoncino)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 881,
+    "nome": "Aceto di riso (giapponese)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 882,
+    "nome": "Ciambelle glassate (donuts)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 883,
+    "nome": "Cheesecake (fetta, base biscotto)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 884,
+    "nome": "Cioccolato fondente proteico (>25% prot)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 885,
+    "nome": "Granita al limone (senza latte)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 886,
+    "nome": "Crema di marroni (crema di castagne)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 887,
+    "nome": "Latte di nocciole non zuccherato",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 888,
+    "nome": "Succo di kiwi (100% frutto)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 889,
+    "nome": "Smoothie verde (spinaci+mela+zenzero)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 890,
+    "nome": "Acqua di cocco (100% naturale)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 891,
+    "nome": "Tisana di finocchio e anice",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 892,
+    "nome": "Tisana di orzo (caffe' d'orzo)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 893,
+    "nome": "Smoothie proteico (whey+banana+latte)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 894,
+    "nome": "Red bull (energy drink 250ml/100ml)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 895,
+    "nome": "Succo di limone (puro, senza zucchero)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 896,
+    "nome": "Sprite / gassosa (100ml)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 897,
+    "nome": "Cola (100ml)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 898,
+    "nome": "Pasta di lenticchie rosse, secca",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 899,
+    "nome": "Chapati (pane indiano integrale)",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 900,
+    "nome": "Tortilla di farro",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 901,
+    "nome": "Teff, cotto",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 902,
+    "nome": "Sorgo, cotto",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 903,
+    "nome": "Pane di patate",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 904,
+    "nome": "Crumble di avena (base dolce)",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 905,
+    "nome": "Biscotto al cocco (tipo Oro Saiwa)",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 906,
+    "nome": "Fagiolini in scatola (sgocciolati)",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 907,
+    "nome": "Piselli primavera surgelati (cotti)",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 908,
+    "nome": "Ceci al curry (piatto pronto)",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 909,
+    "nome": "Zuppa di fagioli neri",
+    "csv": "micronutrients_cereals_legumes.csv",
+    "cats": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 910,
+    "nome": "Rucola selvaggia (wild rocket)",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 911,
+    "nome": "Cavolo nero toscano (crudo)",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 912,
+    "nome": "Cavolo nero toscano (cotto)",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 913,
+    "nome": "Erba cipollina, fresca",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 914,
+    "nome": "Menta fresca",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 915,
+    "nome": "Rosmarino fresco",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 916,
+    "nome": "Timo fresco",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 917,
+    "nome": "Origano fresco",
+    "csv": "micronutrients_vegetables.csv",
+    "cats": [
+      5
+    ]
+  },
+  {
+    "id": 918,
+    "nome": "Litchi essiccato",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 919,
+    "nome": "Kaki essiccato (hoshigaki)",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 920,
+    "nome": "Ribes nero (succo, senza zucchero)",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 921,
+    "nome": "Giuggiola fresca tipo cinese",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 922,
+    "nome": "Carambola (starfruit) essiccata",
+    "csv": "micronutrients_fruits.csv",
+    "cats": [
+      6
+    ]
+  },
+  {
+    "id": 923,
+    "nome": "Fave di cacao tostate (cacao nibs)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 924,
+    "nome": "Noci di Grenoble (noci francesi)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 925,
+    "nome": "Arachidi con guscio (crude)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 926,
+    "nome": "Mix di semi (chia+lino+zucca+girasole)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 927,
+    "nome": "Agnello, macinato cotto",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 928,
+    "nome": "Struzzo, filetto cotto",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 929,
+    "nome": "Coniglio, dorso cotto",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 930,
+    "nome": "Cervo, coscia cotta",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 931,
+    "nome": "Anatra, petto cotto al forno",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 932,
+    "nome": "Testa in cassetta (headcheese)",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 933,
+    "nome": "Coppa di testa",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 934,
+    "nome": "Salsiccia di pollo e tacchino",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 935,
+    "nome": "Anguilla affumicata",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 936,
+    "nome": "Acciughe in pasta (tubo)",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 937,
+    "nome": "Salmone teriyaki al forno",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 938,
+    "nome": "Branzino al cartoccio (cotto)",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 939,
+    "nome": "Mazzancolle al vapore",
+    "csv": "micronutrients_meat_fish.csv",
+    "cats": [
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 940,
+    "nome": "Caciotta fresca (tipo formaggella)",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 941,
+    "nome": "Latte intero UHT",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 942,
+    "nome": "Panna acida (sour cream)",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 943,
+    "nome": "Yogurt al frutto di bosco (magro)",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 944,
+    "nome": "Kefir di acqua (water kefir)",
+    "csv": "micronutrients_dairy.csv",
+    "cats": [
+      12
+    ]
+  },
+  {
+    "id": 945,
+    "nome": "Salsa di pomodoro fresco (bruschetta)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 946,
+    "nome": "Crema di aceto balsamico",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 947,
+    "nome": "Senape di Digione",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 948,
+    "nome": "Salsa barbecue (classica)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 949,
+    "nome": "Coppetta di gelato (2 palline tipo)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 950,
+    "nome": "Bignè alla crema",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 951,
+    "nome": "Sfogliatella napoletana",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 952,
+    "nome": "Croissant integrale (whole wheat)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 953,
+    "nome": "Torta di mele (classica)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 954,
+    "nome": "Succo di uva nera (100%)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 955,
+    "nome": "Succo di pera (100%)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 956,
+    "nome": "Latte caldo con cacao (cioccolata calda)",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": 957,
+    "nome": "Frullato di banana e mandorle",
+    "csv": "micronutrients_remaining.csv",
+    "cats": [
+      7,
+      13,
+      14,
+      15
+    ]
+  }
+]
