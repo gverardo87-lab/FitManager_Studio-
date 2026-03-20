@@ -4,6 +4,15 @@ Food Pool Auto-Builder — classifica automaticamente 880 alimenti in pool funzi
 Sostituisce FOOD_POOLS hardcoded in meal_archetypes.py (~100 alimenti curati a mano).
 Usa categoria + profilo nutrizionale + keyword exclusion per classificare l'intero catalogo.
 
+v5 — Servability Architecture:
+  - Secondo pools (carne, pesce, uova): SOLO pietanze (food_type == "pietanza")
+  - Primo pool: pietanze + ingredienti cotti (no crudo/secco)
+  - Breakfast dairy: solo yogurt/latte/kefir/ricotta (no formaggi)
+  - Breakfast cereal: solo fiocchi/crusca/muesli/fette biscottate (no farine/grani)
+  - Dinner bread (carb_light): solo pane vero (no cornflakes/crackers)
+  - Fat: solo oli salubri (no strutto/margarina/cocco/palma)
+  - Legumi secondo: threshold alzato (p>=5 pietanze, p>=8 ingredienti)
+
 Ordinamento interno: alimenti con piu' micronutrienti non-null prima (preferiti dal selector).
 """
 
@@ -39,14 +48,57 @@ def _matches_any(nome: str, keywords: list[str]) -> bool:
 
 
 # ---------------------------------------------------------------------------
-# Regole di classificazione: (ruolo, cat_ids, food_types, macro_filter, exclude_kw)
+# Keyword exclusion lists
 # ---------------------------------------------------------------------------
 
 _POULTRY_KW = ["pollo", "tacchino", "gallina"]
 
+# Dolci/snack esclusi da cereal e carb_light
+_SWEET_EXCL = [
+    "torta", "biscotti", "biscotto", "croissant", "brioche", "cornett",
+    "waffle", "muffin", "crumble", "colomba", "panettone", "pandoro",
+]
+
+# Dairy exclusion (generale)
+_DAIRY_EXCL = [
+    "gelato", "burro", "mascarpone", "condensato", "polvere", "panna",
+    "cacao",
+]
+
+# Breakfast dairy: SOLO yogurt, latte, kefir, ricotta, fiocchi di latte
+_BREAKFAST_DAIRY_KW = [
+    "yogurt", "latte", "kefir", "quark", "fiocchi di latte", "ricotta",
+]
+
+# Breakfast cereal: SOLO fiocchi, crusca, muesli, granola, fette biscottate
+_CEREAL_KW = [
+    "fiocchi", "crusca", "muesli", "granola", "fette biscottat", "cereali",
+]
+# Cereal exclusion: farine, germe, grani crudi
+_CEREAL_EXCL = [
+    "farina", "germe", "crudo", "secca", "secco", "semola", "amido",
+]
+
+# Dinner bread (carb_light): SOLO pane vero
+_BREAD_KW = ["pane ", "pane,", "tortilla", "piadina", "chapati"]
+# Bread exclusion: snack non-pane
+_BREAD_EXCL = [
+    "cornflakes", "fiocchi", "crackers", "grissini", "taralli",
+    "focaccia", "schiacciata",
+]
+
+# Fat exclusion: grassi insalubri
+_FAT_EXCL = [
+    "strutto", "margarin", "cocco", "palma", "burro", "lardo",
+    "maionese",
+]
+
 
 def build_food_pools(session: Session) -> dict[str, list[Food]]:
     """Auto-classifica tutti gli alimenti attivi in pool funzionali.
+
+    v5: Servability Architecture — secondo/primo pools SOLO pietanze servibili.
+    Meal-context pools per colazione/cena coerenti.
 
     Ritorna: {ruolo: [Food, ...]} con oggetti ORM completi.
     Pool ordinati per micro_count decrescente (alimenti nutrient-dense prima).
@@ -55,12 +107,16 @@ def build_food_pools(session: Session) -> dict[str, list[Food]]:
 
     pools: dict[str, list[Food]] = {
         "dairy": [],
+        "dairy_breakfast": [],
         "dairy_light": [],
+        "dairy_aged": [],
+        "dairy_plant": [],
         "cereal": [],
         "carb_light": [],
         "fruit": [],
         "nuts": [],
         "fat": [],
+        "condimento": [],
         "primo_piatto": [],
         "contorno": [],
         "secondo_fish": [],
@@ -80,34 +136,46 @@ def build_food_pools(session: Session) -> dict[str, list[Food]]:
         g = food.grassi_g
         kcal = food.energia_kcal
 
-        # ── dairy (cat 12: Latte, yogurt e formaggi) ──
+        # ── dairy (cat 12: Latte, yogurt e formaggi freschi) ──
         if cat == 12 and ft in ("ingrediente", "bevanda"):
-            if p >= 3 and g <= 20 and kcal <= 200:
-                excl = ["gelato", "burro", "mascarpone"]
-                if not _matches_any(nome, excl):
+            if p >= 3 and g <= 25 and kcal <= 300:
+                if not _matches_any(nome, _DAIRY_EXCL):
                     pools["dairy"].append(food)
-                    # dairy_light subset
-                    if g <= 8 and kcal <= 120 and not _matches_any(nome, ["formaggio"]):
+
+                    # dairy_breakfast: SOLO yogurt/latte/kefir/ricotta
+                    if _matches_any(nome, _BREAKFAST_DAIRY_KW):
+                        pools["dairy_breakfast"].append(food)
+
+                    # dairy_light subset (spuntino)
+                    if g <= 10 and kcal <= 150 and not _matches_any(nome, ["formaggio"]):
                         pools["dairy_light"].append(food)
 
-        # ── cereal (cat 1: Cereali e derivati, cat 3: Pane e prodotti da forno) ──
-        if cat in (1, 3) and ft == "ingrediente":
-            if c >= 40 and kcal >= 200:
-                excl = ["torta", "biscott", "croissant", "brioche"]
-                if not _matches_any(nome, excl):
-                    pools["cereal"].append(food)
+            # dairy_aged: formaggi stagionati (porzione piccola, condimento)
+            elif p >= 15 and kcal <= 400:
+                if not _matches_any(nome, _DAIRY_EXCL):
+                    pools["dairy_aged"].append(food)
 
-        # ── carb_light (cat 3: Pane e prodotti da forno) ──
-        if cat == 3 and ft == "ingrediente":
-            if c >= 40 and g <= 10:
-                excl = ["torta", "biscott", "croissant"]
-                if not _matches_any(nome, excl):
-                    pools["carb_light"].append(food)
+        # ── cereal (cat 1: Cereali e derivati, cat 3: Pane e prodotti da forno) ──
+        # v5: SOLO fiocchi/crusca/muesli/granola/fette biscottate per colazione
+        if cat in (1, 3) and ft in ("ingrediente", "pietanza"):
+            if c >= 35 and kcal >= 180:
+                if not _matches_any(nome, _SWEET_EXCL):
+                    if _matches_any(nome, _CEREAL_KW) and not _matches_any(nome, _CEREAL_EXCL):
+                        pools["cereal"].append(food)
+
+        # ── carb_light (cena bread) ──
+        # v5: SOLO pane vero per cena (no cornflakes, crackers, grissini)
+        if cat == 3 and ft in ("ingrediente", "pietanza"):
+            if c >= 35 and g <= 15:
+                if not _matches_any(nome, _SWEET_EXCL + _BREAD_EXCL):
+                    if _matches_any(nome, _BREAD_KW):
+                        pools["carb_light"].append(food)
 
         # ── fruit (cat 6: Frutta fresca) ──
         if cat == 6 and ft == "ingrediente":
-            if kcal <= 100:
-                excl = ["candita", "sciroppat", "disidratat"]
+            if kcal <= 120:
+                excl = ["candita", "sciroppat", "disidratat", "secch",
+                        "essiccata", "chip"]
                 if not _matches_any(nome, excl):
                     pools["fruit"].append(food)
 
@@ -116,17 +184,30 @@ def build_food_pools(session: Session) -> dict[str, list[Food]]:
             if g >= 10 and p >= 5:
                 pools["nuts"].append(food)
 
-        # ── fat (cat 13: Oli e condimenti) ──
+        # ── fat (cat 13: Oli e condimenti — SOLO oli salubri) ──
+        # v5: escludi strutto, margarina, olio di cocco/palma, burro, lardo
         if cat == 13 and ft == "ingrediente":
             if g >= 50:
-                excl = ["maionese", "burro"]
-                if not _matches_any(nome, excl):
+                if not _matches_any(nome, _FAT_EXCL):
                     pools["fat"].append(food)
 
+        # ── condimento (cat 13: Salse e condimenti a basso contenuto calorico) ──
+        if cat == 13 and ft in ("ingrediente", "pietanza"):
+            if g < 50 and kcal <= 250:
+                excl = ["maionese", "burro", "strutto"]
+                if not _matches_any(nome, excl):
+                    pools["condimento"].append(food)
+
         # ── primo_piatto (cat 2: Pasta, riso e cereali cotti) ──
-        if cat == 2 and ft == "pietanza":
-            if c >= 15 and kcal >= 80:
-                pools["primo_piatto"].append(food)
+        # v5: SOLO pietanze O ingredienti cotti (no crudo/secco)
+        if cat == 2:
+            if ft == "pietanza":
+                if c >= 10 and kcal >= 50:
+                    pools["primo_piatto"].append(food)
+            elif ft == "ingrediente":
+                if c >= 10 and kcal >= 50:
+                    if _matches_any(nome, ["cott"]) and not _matches_any(nome, ["secc", "crud"]):
+                        pools["primo_piatto"].append(food)
 
         # ── contorno (cat 5: Verdure e ortaggi) ──
         if cat == 5 and ft in ("ingrediente", "pietanza"):
@@ -135,16 +216,16 @@ def build_food_pools(session: Session) -> dict[str, list[Food]]:
                 if not _matches_any(nome, excl):
                     pools["contorno"].append(food)
 
-        # ── secondo_fish (cat 10: Prodotti ittici) ──
-        if cat == 10 and ft in ("ingrediente", "pietanza"):
+        # ── secondo_fish (cat 10: Prodotti ittici) — SOLO pietanze ──
+        if cat == 10 and ft == "pietanza":
             if p >= 10:
-                excl = ["bastoncin", "surimi"]
+                excl = ["bastoncin", "surimi", "olio di fegato"]
                 if not _matches_any(nome, excl):
                     pools["secondo_fish"].append(food)
 
-        # ── secondo_poultry / secondo_red_meat (cat 8: Carne e pollame) ──
-        if cat == 8 and ft in ("ingrediente", "pietanza"):
-            if p >= 15:
+        # ── secondo_poultry / secondo_red_meat (cat 8: Carne) — SOLO pietanze ──
+        if cat == 8 and ft == "pietanza":
+            if p >= 12:
                 excl = ["wurstel"]
                 if not _matches_any(nome, excl):
                     if _matches_any(nome, _POULTRY_KW):
@@ -152,21 +233,32 @@ def build_food_pools(session: Session) -> dict[str, list[Food]]:
                     else:
                         pools["secondo_red_meat"].append(food)
 
-        # ── secondo_egg (cat 11: Uova) ──
-        if cat == 11 and ft in ("ingrediente", "pietanza"):
+        # ── secondo_egg (cat 11: Uova) — SOLO pietanze ──
+        if cat == 11 and ft == "pietanza":
             pools["secondo_egg"].append(food)
 
         # ── secondo_legume (cat 4: Legumi) ──
-        if cat == 4 and ft in ("ingrediente", "pietanza"):
-            if p >= 5:
-                pools["secondo_legume"].append(food)
+        # v5: threshold alzato — pietanze p>=5, ingredienti p>=8
+        if cat == 4:
+            excl = ["fagiolini"]
+            if not _matches_any(nome, excl):
+                if ft == "pietanza" and p >= 5:
+                    pools["secondo_legume"].append(food)
+                elif ft == "ingrediente" and p >= 8:
+                    pools["secondo_legume"].append(food)
 
         # ── secondo_deli (cat 9: Salumi e affettati) ──
-        if cat == 9 and ft == "ingrediente":
-            if p >= 10:
-                excl = ["pancetta", "lardo", "strutto"]
+        if cat == 9 and ft in ("ingrediente", "pietanza"):
+            if p >= 8:
+                excl = ["pancetta", "lardo", "strutto", "guanciale"]
                 if not _matches_any(nome, excl):
                     pools["secondo_deli"].append(food)
+
+        # ── dairy_plant (cat 15: Bevande — latti vegetali per colazione) ──
+        if cat == 15 and ft in ("ingrediente", "bevanda"):
+            if _matches_any(nome, ["latte di ", "latte d'", "latte vegetale"]):
+                if kcal <= 80:
+                    pools["dairy_plant"].append(food)
 
     # Ordina ogni pool: micro_count decrescente (nutrient-dense prima)
     for role in pools:

@@ -26,7 +26,10 @@ PORTION_LIMITS: dict[str, tuple[float, float]] = {
     # --- Colazione / spuntini (ingredienti) ---
     # Latticini: yogurt/latte 125g standard → 100-200g
     "dairy":          (100, 200),
+    "dairy_breakfast": (100, 200),    # yogurt/latte colazione (v5)
     "dairy_light":    (100, 175),
+    "dairy_aged":     (15, 50),       # formaggi stagionati: porzione piccola
+    "dairy_plant":    (100, 250),
     # Cereali colazione: 30g standard → 20-50g
     "cereal":         (20, 50),
     # Pane: 50g standard → 25-75g
@@ -50,6 +53,10 @@ PORTION_LIMITS: dict[str, tuple[float, float]] = {
     "secondo_egg":     (120, 220),
     "secondo_red_meat": (120, 200),
     "secondo_deli":    (30, 80),     # affettati: porzione piccola
+
+    # --- Condimento (salse e condimenti) ---
+    # Porzione piccola per condimento
+    "condimento":      (10, 50),
 
     # --- Contorno (pietanza composta o verdura) ---
     # 200g standard → 100-350g

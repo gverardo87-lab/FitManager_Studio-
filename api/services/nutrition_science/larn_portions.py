@@ -113,10 +113,14 @@ ROLE_TO_LARN_PORTION: dict[str, str] = {
 
     # Latticini
     "dairy": "yogurt",
+    "dairy_breakfast": "yogurt",     # v5: pool colazione (yogurt/latte)
     "dairy_light": "yogurt",
+    "dairy_aged": "formaggio_stagionato",
+    "dairy_plant": "latte",
 
-    # Grassi e frutta secca
+    # Grassi, condimenti e frutta secca
     "fat": "olio",
+    "condimento": "olio",
     "nuts": "frutta_secca",
 }
 
@@ -177,11 +181,11 @@ LARN_FOOD_GROUPS: dict[str, dict] = {
 # ---------------------------------------------------------------------------
 
 LARN_WEEKLY_FREQUENCIES: dict[str, tuple[int, int]] = {
-    # === Piatti composti (v2 dish-based) ===
+    # === Piatti composti (v5 — pranzo + cena con secondo) ===
     # Primo piatto: 1/giorno a pranzo → 5-7/settimana
     "primo_piatto": (5, 7),
-    # Secondo piatto: 1/giorno a cena → 5-7/settimana
-    "secondo_piatto": (5, 7),
+    # Secondo piatto: 1 a pranzo + 1 a cena → 10-14/settimana
+    "secondo_piatto": (10, 14),
 
     # === Cereali (colazione + cena) ===
     "pane": (5, 14),               # pane a cena + eventuale colazione
@@ -212,15 +216,18 @@ LARN_WEEKLY_FREQUENCIES: dict[str, tuple[int, int]] = {
 # ---------------------------------------------------------------------------
 
 PROTEIN_SUB_FREQUENCIES: dict[str, dict] = {
+    # v5: ranges aggiornati per 14 slot proteici (7 pranzi + 7 cene)
+    # Totale rotazione: pesce 3x, pollo 3x, legumi 4x, uova 2x,
+    # carne rossa 1x, affettati 1x
     "pesce": {
         "label": "Pesce",
-        "min": 2, "max": 3,
+        "min": 2, "max": 4,
         "ruoli": ["protein_fish", "secondo_fish"],
         "nota": "CREA 2018: 2-3 porzioni/settimana, preferire pesce azzurro",
     },
     "carne_bianca": {
         "label": "Carne bianca",
-        "min": 1, "max": 3,
+        "min": 1, "max": 4,
         "ruoli": ["protein_poultry", "secondo_poultry"],
         "nota": "CREA 2018: 1-3 porzioni/settimana",
     },
@@ -238,7 +245,7 @@ PROTEIN_SUB_FREQUENCIES: dict[str, dict] = {
     },
     "legumi": {
         "label": "Legumi",
-        "min": 2, "max": 4,
+        "min": 2, "max": 5,
         "ruoli": ["protein_legume", "secondo_legume"],
         "nota": "CREA 2018: 2-4 porzioni/settimana, fonte proteica vegetale",
     },

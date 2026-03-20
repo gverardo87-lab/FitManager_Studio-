@@ -1,5 +1,9 @@
 """
-Selettore alimenti v3 per il generatore LARN.
+Selettore alimenti v4 per il generatore LARN.
+
+v4: Dual protein rotation — rotazione pranzo/cena separata (14 slot settimanali).
+    Pranzo: WEEKLY_PRANZO_ROTATION (legumi, pollo, pesce, carne rossa, affettati).
+    Cena: WEEKLY_CENA_ROTATION (pesce, uova, pollo, legumi).
 
 v3: Nutrient-Aware Selection — selezione greedy che colma gap micronutrienti.
     Ogni pick aggiorna un accumulatore giornaliero. Top-3 candidati per score,
@@ -19,7 +23,6 @@ from api.models.nutrition import Food
 from api.services.nutrition_science.meal_archetypes import (
     ARCHETYPES,
     MEAL_ORDER,
-    WEEKLY_SECONDO_ROTATION,
 )
 
 
@@ -158,6 +161,25 @@ def _pick_from_pool(
 # Day builder
 # ---------------------------------------------------------------------------
 
+def _get_secondo_pool_for_meal(
+    tipo_pasto: str,
+    giorno: int,
+) -> str:
+    """Ritorna il pool secondo_* per un pasto+giorno dalla rotazione duale.
+
+    v4: pranzo e cena hanno rotazioni separate per 14 slot proteici/settimana.
+    Importa le rotazioni qui per evitare problemi di import circolare.
+    """
+    from api.services.nutrition_science.meal_archetypes import (
+        WEEKLY_CENA_ROTATION,
+        WEEKLY_PRANZO_ROTATION,
+    )
+    if tipo_pasto == "PRANZO":
+        return WEEKLY_PRANZO_ROTATION[giorno - 1]
+    # CENA (o fallback)
+    return WEEKLY_CENA_ROTATION[giorno - 1]
+
+
 def build_day_selections(
     giorno: int,
     pools: dict[str, list[Food]],
@@ -168,14 +190,12 @@ def build_day_selections(
     """
     Costruisce le selezioni per un giorno completo.
 
+    v4: dual protein rotation — pranzo e cena hanno rotazioni separate.
     v3: se daily_targets fornito, usa DayNutrientAccumulator per selezione
     gap-filling che massimizza la copertura micronutrienti LARN.
 
     Ritorna: [(tipo_pasto, [(Food, grammi), ...]), ...]
     """
-    # Pool secondo piatto per oggi (da rotazione settimanale)
-    secondo_pool_name = WEEKLY_SECONDO_ROTATION[giorno - 1]
-
     # Create accumulator if targets provided
     accumulator = None
     if daily_targets:
@@ -195,7 +215,8 @@ def build_day_selections(
             food: Optional[Food] = None
 
             if slot.ruolo == "secondo_piatto":
-                # Secondo piatto: usa il pool proteico del giorno
+                # v4: rotazione separata pranzo/cena
+                secondo_pool_name = _get_secondo_pool_for_meal(tipo_pasto, giorno)
                 pool = pools.get(secondo_pool_name, [])
             else:
                 # Tutti gli altri slot: usa il pool del ruolo

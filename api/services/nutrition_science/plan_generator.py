@@ -30,8 +30,6 @@ from api.services.nutrition_science.frequency_validator import validate_frequenc
 from api.services.nutrition_science.meal_archetypes import (
     ARCHETYPES,
     MEAL_ORDER,
-    SECONDO_TO_PROTEIN_ROLE,
-    WEEKLY_SECONDO_ROTATION,
 )
 from api.services.nutrition_science.portion_optimizer import optimize_day
 from api.services.nutrition_science.plan_validator import validate_plan
@@ -143,18 +141,23 @@ def generate_plan(
             daily_targets=daily_targets,
         )
 
-        # Determina il pool secondo del giorno per mappare ruoli corretti
-        secondo_pool = WEEKLY_SECONDO_ROTATION[giorno - 1]
-        # Mappa secondo_* → protein_* per la frequenza
-        protein_role = SECONDO_TO_PROTEIN_ROLE.get(secondo_pool, secondo_pool)
+        # v5: rotazioni separate pranzo/cena
+        from api.services.nutrition_science.meal_archetypes import (
+            WEEKLY_CENA_ROTATION,
+            WEEKLY_PRANZO_ROTATION,
+        )
+        pranzo_pool = WEEKLY_PRANZO_ROTATION[giorno - 1]
+        cena_pool = WEEKLY_CENA_ROTATION[giorno - 1]
 
         day_for_opt: list[tuple[str, list[tuple[Food, float, str]]]] = []
         for tipo_pasto, food_list in day_selections:
             arch = ARCHETYPES.get(tipo_pasto)
+            # Determina il pool secondo per questo pasto specifico
+            secondo_pool = pranzo_pool if tipo_pasto == "PRANZO" else cena_pool
             items: list[tuple[Food, float, str]] = []
             for i, (food, grammi) in enumerate(food_list):
                 ruolo = arch.slots[i].ruolo if arch and i < len(arch.slots) else "other"
-                # secondo_piatto → usa il pool specifico del giorno come ruolo
+                # secondo_piatto → usa il pool specifico del pasto come ruolo
                 if ruolo == "secondo_piatto":
                     ruolo = secondo_pool
                 items.append((food, grammi, ruolo))

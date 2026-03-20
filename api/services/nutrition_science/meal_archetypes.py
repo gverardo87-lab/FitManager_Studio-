@@ -1,19 +1,23 @@
 """
-Archetipi pasto e pool alimentari per il generatore LARN v2.
+Archetipi pasto e pool alimentari per il generatore LARN v5.
 
-Architettura dish-based: PRANZO e CENA usano pietanze composte,
-COLAZIONE e spuntini usano ingredienti singoli.
+v5 — Servability Architecture:
+  - PRANZO: primo piatto + SECONDO piatto (rotazione) + contorno + olio
+  - CENA: secondo piatto (rotazione separata) + contorno + pane + olio
+  - COLAZIONE: dairy_breakfast (yogurt/latte) + cereali veri + frutta + noci
+  - SPUNTINI: frutta, yogurt, frutta secca
+  - 14 slot proteici settimanali (7 pranzi + 7 cene) con rotazione separata
 
 Pattern alimentari italiani:
-  - PRANZO: primo piatto (pietanza) + contorno + olio
-  - CENA: secondo piatto (pietanza, protein-rotated) + contorno + pane + olio
+  - PRANZO: primo + secondo + contorno + olio
+  - CENA: secondo (protein-rotated) + contorno + pane + olio
   - COLAZIONE: yogurt/latte + cereali + frutta + frutta secca
   - SPUNTINI: frutta, yogurt, frutta secca
 
 Porzioni default allineate a LARN 2014:
   - Primo piatto: ~200g (peso finito, include condimento)
-  - Secondo piatto: ~160g (peso finito, include condimento)
-  - Contorno: 200g | Pane: 50g | Frutta: 150g | Olio: 10g
+  - Secondo piatto: ~130-160g (peso finito, include condimento)
+  - Contorno: 200g | Pane: 50g | Frutta: 150g | Olio: 5-10g
   - Yogurt/latte: 125g | Frutta secca: 30g
 
 Frequenze allineate a CREA 2018 Direttive 1-13.
@@ -38,14 +42,14 @@ class MealArchetype:
 
 
 # ---------------------------------------------------------------------------
-# Archetipi pasto (struttura standard italiana v2 — dish-based)
+# Archetipi pasto (struttura standard italiana v5 — Servability Architecture)
 # ---------------------------------------------------------------------------
 
 ARCHETYPES: dict[str, MealArchetype] = {
     "COLAZIONE": MealArchetype(
         tipo_pasto="COLAZIONE",
         slots=[
-            MealSlot("dairy", 125),           # yogurt/latte (LARN: 125g)
+            MealSlot("dairy_breakfast", 125),  # yogurt/latte (LARN: 125g)
             MealSlot("cereal", 30),            # fiocchi/fette bisc. (LARN: 30g)
             MealSlot("fruit", 150),            # frutta fresca (LARN: 150g)
             MealSlot("nuts", 30, obbligatorio=False),  # frutta secca (LARN: 30g)
@@ -62,6 +66,8 @@ ARCHETYPES: dict[str, MealArchetype] = {
         slots=[
             # Primo piatto pietanza (peso finito: pasta cotta + sugo + condimento)
             MealSlot("primo_piatto", 200),
+            # Secondo piatto (protein-rotated, porzione ridotta vs cena)
+            MealSlot("secondo_piatto", 130),
             # Contorno: pietanza composta o verdura cruda
             MealSlot("contorno", 200),
             # Olio extra per il contorno (se contorno non composto)
@@ -94,37 +100,44 @@ ARCHETYPES: dict[str, MealArchetype] = {
 MEAL_ORDER = ["COLAZIONE", "SPUNTINO_MATTINA", "PRANZO", "SPUNTINO_POMERIGGIO", "CENA"]
 
 # ---------------------------------------------------------------------------
-# Rotazione settimanale proteine (Lun-Dom)
+# Rotazione settimanale proteine — PRANZO (Lun-Dom)
 #
+# v5: 14 slot proteici (7 pranzi + 7 cene) con rotazioni separate.
 # Allineata a CREA 2018 Dir. 9:
 #   Pesce 2-3x, Carne bianca 1-3x, Legumi 2-4x, Uova 2-4x,
 #   Carne rossa max 1-2x, Affettati max 1x.
 #
-# Il primo piatto a PRANZO ha proteine integrate (pasta e fagioli,
-# pasta con tonno, ecc.). La rotazione proteica si applica al
-# SECONDO piatto a CENA.
-#
-# Totale cena: pesce 2x, pollo 1x, legumi 3x, uova 2x = 7 cene
-# + primi pranzo con proteine (legumi 3x nel pranzo = dentro range CREA)
+# Totale settimana (pranzo + cena):
+#   Pesce 3x, Pollo 3x, Legumi 4x, Uova 2x,
+#   Carne rossa 1x, Affettati 1x → compliant CREA 2018
 # ---------------------------------------------------------------------------
 
-# Secondo piatto per CENA di ogni giorno 1-7
-#
-# Allineato a CREA 2018 Dir. 9 sub-frequenze:
-#   Pesce 2-3x, Pollo 1-3x, Legumi 2-4x, Uova 2-4x,
-#   Carne rossa max 1-2x, Affettati max 1x.
-#
-# Totale: pesce 2x, pollo 1x, legumi 3x, uova 2x = 7 cene
-# Allineato a DIETA_DONNA_ATTIVA in build_nutrition.py
-WEEKLY_SECONDO_ROTATION: list[str] = [
-    "secondo_fish",        # Lun: merluzzo (pesce magro)
-    "secondo_egg",         # Mar: uova
-    "secondo_legume",      # Mer: lenticchie
-    "secondo_poultry",     # Gio: pollo
-    "secondo_fish",        # Ven: salmone (omega-3)
-    "secondo_legume",      # Sab: ceci
-    "secondo_egg",         # Dom: uova
+WEEKLY_PRANZO_ROTATION: list[str] = [
+    "secondo_legume",      # Lun pranzo: legumi
+    "secondo_poultry",     # Mar pranzo: pollo
+    "secondo_fish",        # Mer pranzo: pesce
+    "secondo_legume",      # Gio pranzo: legumi
+    "secondo_red_meat",    # Ven pranzo: carne rossa (1x/sett)
+    "secondo_poultry",     # Sab pranzo: pollo
+    "secondo_deli",        # Dom pranzo: affettati (1x/sett)
 ]
+
+# ---------------------------------------------------------------------------
+# Rotazione settimanale proteine — CENA (Lun-Dom)
+# ---------------------------------------------------------------------------
+
+WEEKLY_CENA_ROTATION: list[str] = [
+    "secondo_fish",        # Lun cena: pesce
+    "secondo_egg",         # Mar cena: uova
+    "secondo_poultry",     # Mer cena: pollo
+    "secondo_legume",      # Gio cena: legumi
+    "secondo_fish",        # Ven cena: pesce
+    "secondo_egg",         # Sab cena: uova
+    "secondo_legume",      # Dom cena: legumi
+]
+
+# Backward-compat: alias per codice che importa la vecchia rotazione singola
+WEEKLY_SECONDO_ROTATION = WEEKLY_CENA_ROTATION
 
 # Mapping secondo_* → ruolo proteico per il frequency_validator
 SECONDO_TO_PROTEIN_ROLE: dict[str, str] = {
