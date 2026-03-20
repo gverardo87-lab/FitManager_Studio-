@@ -103,7 +103,14 @@ def login(data: TrainerLogin, session: Session = Depends(get_session)):
         select(Trainer).where(Trainer.email == data.email.strip().lower())
     ).first()
 
-    if not trainer or not verify_password(data.password, trainer.hashed_password):
+    # Constant-time: hash sempre la password anche se trainer non esiste,
+    # per impedire timing attack (enumeration email via differenza tempo risposta).
+    _dummy_hash = "$2b$12$LJ3m4ys3Lp0Ab5XGJkPbXeDMDjCiOC2JIHbVf5a5e5e5e5e5e5e5e"
+    password_valid = verify_password(
+        data.password,
+        trainer.hashed_password if trainer else _dummy_hash,
+    )
+    if not trainer or not password_valid:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Email o password non corretti",
