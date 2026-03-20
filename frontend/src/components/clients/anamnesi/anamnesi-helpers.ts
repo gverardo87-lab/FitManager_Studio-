@@ -5,6 +5,7 @@
  * Supporta backward compat con v1 (isStructuredAnamnesi distingue i formati).
  */
 
+import { toISOLocal } from "@/lib/format";
 import type { AnamnesiData, AnamnesiQuestion } from "@/types/api";
 
 const EMPTY_QUESTION: AnamnesiQuestion = { presente: false, dettaglio: null };
@@ -62,8 +63,8 @@ export function getEmptyAnamnesi(): AnamnesiData {
     consenso_privacy: false,
     note_finali: null,
     // Metadata
-    data_compilazione: new Date().toISOString().slice(0, 10),
-    data_ultimo_aggiornamento: new Date().toISOString().slice(0, 10),
+    data_compilazione: toISOLocal(new Date()).slice(0, 10),
+    data_ultimo_aggiornamento: toISOLocal(new Date()).slice(0, 10),
   };
 }
 

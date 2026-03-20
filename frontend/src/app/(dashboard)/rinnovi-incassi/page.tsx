@@ -40,7 +40,7 @@ import { ContractSheet } from "@/components/contracts/ContractSheet";
 import { useOverdueRates, useExpiringContracts } from "@/hooks/useDashboard";
 import { usePayRate } from "@/hooks/useRates";
 import { usePageReveal } from "@/lib/page-reveal";
-import { formatCurrency, formatShortDate } from "@/lib/format";
+import { formatCurrency, formatShortDate, toISOLocal } from "@/lib/format";
 import type { ExpiringContractItem, OverdueRateItem } from "@/types/api";
 
 const PAYMENT_METHODS = ["CONTANTI", "POS", "BONIFICO"] as const;
@@ -169,7 +169,7 @@ function OverdueRateCard({ item }: { item: OverdueRateItem }) {
       rateId: item.rate_id,
       importo: item.importo_residuo,
       metodo: method,
-      data_pagamento: new Date().toISOString().split("T")[0],
+      data_pagamento: toISOLocal(new Date()).slice(0, 10),
     });
   };
 
