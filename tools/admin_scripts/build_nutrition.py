@@ -42,6 +42,8 @@ from api.models.nutrition import (
 )
 from sqlmodel import Session, select
 
+from api.services.nutrition_science.types import ClientProfile, Sex
+
 
 # ---------------------------------------------------------------------------
 # Dati seed: categorie
@@ -884,243 +886,31 @@ PLAN_TEMPLATES = [
     },
 ]
 
-# Dieta settimanale completa per "donna_under30_attiva" (~1900 kcal/die)
-# Struttura: (giorno 1-7, tipo_pasto, ordine, [(alimento_nome, grammi_g), ...])
-DIETA_DONNA_ATTIVA = [
-    # ── Lunedi (giorno 1) ───────────────────────────────────────────────
-    (1, "COLAZIONE", 0, [
-        ("Yogurt greco 0% grassi", 150),
-        ("Avena, fiocchi", 40),
-        ("Mirtilli, freschi", 80),
-        ("Mandorle", 15),
-    ]),
-    (1, "SPUNTINO_MATTINA", 1, [
-        ("Mela, fresca", 150),
-    ]),
-    (1, "PRANZO", 2, [
-        ("Petto di pollo, crudo", 150),
-        ("Riso integrale, cotto", 180),
-        ("Zucchine", 200),
-        ("Olio di oliva extravergine", 10),
-    ]),
-    (1, "SPUNTINO_POMERIGGIO", 3, [
-        ("Yogurt greco 0% grassi", 125),
-        ("Noci", 15),
-    ]),
-    (1, "CENA", 4, [
-        ("Salmone atlantico, crudo", 150),
-        ("Spinaci, crudi", 150),
-        ("Pane integrale", 40),
-        ("Olio di oliva extravergine", 10),
-    ]),
-    # ── Martedi (giorno 2) ──────────────────────────────────────────────
-    (2, "COLAZIONE", 0, [
-        ("Latte parzialmente scremato", 200),
-        ("Avena, fiocchi", 40),
-        ("Banana, fresca", 100),
-        ("Semi di chia", 10),
-    ]),
-    (2, "SPUNTINO_MATTINA", 1, [
-        ("Arancia, fresca", 150),
-    ]),
-    (2, "PRANZO", 2, [
-        ("Pasta integrale, secca", 80),
-        ("Lenticchie, cotte", 150),
-        ("Pomodori, freschi", 100),
-        ("Olio di oliva extravergine", 10),
-    ]),
-    (2, "SPUNTINO_POMERIGGIO", 3, [
-        ("Fiocchi di latte (cottage cheese)", 100),
-        ("Crackers, classici", 20),
-    ]),
-    (2, "CENA", 4, [
-        ("Merluzzo, filetto crudo", 180),
-        ("Broccoli, cotti", 200),
-        ("Pane di frumento, bianco", 40),
-        ("Olio di oliva extravergine", 10),
-    ]),
-    # ── Mercoledi (giorno 3) ────────────────────────────────────────────
-    (3, "COLAZIONE", 0, [
-        ("Yogurt greco 0% grassi", 150),
-        ("Avena, fiocchi", 40),
-        ("Fragole, fresche", 120),
-        ("Nocciole", 15),
-    ]),
-    (3, "SPUNTINO_MATTINA", 1, [
-        ("Pera, fresca", 150),
-    ]),
-    (3, "PRANZO", 2, [
-        ("Petto di tacchino, crudo", 150),
-        ("Farro, cotto", 180),
-        ("Peperoni rossi", 150),
-        ("Olio di oliva extravergine", 10),
-    ]),
-    (3, "SPUNTINO_POMERIGGIO", 3, [
-        ("Banana, fresca", 100),
-        ("Mandorle", 15),
-    ]),
-    (3, "CENA", 4, [
-        ("Uovo intero, crudo", 120),  # 2 uova
-        ("Asparagi", 200),
-        ("Pane integrale", 40),
-        ("Olio di oliva extravergine", 10),
-    ]),
-    # ── Giovedi (giorno 4) ──────────────────────────────────────────────
-    (4, "COLAZIONE", 0, [
-        ("Latte parzialmente scremato", 200),
-        ("Fette biscottate integrali", 40),
-        ("Miele", 15),
-        ("Noci", 15),
-    ]),
-    (4, "SPUNTINO_MATTINA", 1, [
-        ("Kiwi", 120),
-    ]),
-    (4, "PRANZO", 2, [
-        ("Tonno in scatola al naturale", 120),
-        ("Quinoa, cotta", 180),
-        ("Pomodori, freschi", 150),
-        ("Olio di oliva extravergine", 10),
-    ]),
-    (4, "SPUNTINO_POMERIGGIO", 3, [
-        ("Yogurt greco 0% grassi", 125),
-        ("Mirtilli, freschi", 60),
-    ]),
-    (4, "CENA", 4, [
-        ("Manzo, fesa, cruda", 140),
-        ("Fagiolini, cotti", 200),
-        ("Pane di frumento, bianco", 40),
-        ("Olio di oliva extravergine", 10),
-    ]),
-    # ── Venerdi (giorno 5) ──────────────────────────────────────────────
-    (5, "COLAZIONE", 0, [
-        ("Yogurt greco 0% grassi", 150),
-        ("Avena, fiocchi", 40),
-        ("Banana, fresca", 100),
-        ("Semi di lino", 10),
-    ]),
-    (5, "SPUNTINO_MATTINA", 1, [
-        ("Mandorle", 20),
-    ]),
-    (5, "PRANZO", 2, [
-        ("Pasta di semola, secca", 80),
-        ("Gamberi, cotti", 150),
-        ("Zucchine", 150),
-        ("Olio di oliva extravergine", 10),
-    ]),
-    (5, "SPUNTINO_POMERIGGIO", 3, [
-        ("Mela, fresca", 150),
-        ("Ricotta di vaccino", 50),
-    ]),
-    (5, "CENA", 4, [
-        ("Orata, cruda", 180),
-        ("Carote", 150),
-        ("Lattuga, iceberg", 100),
-        ("Pane integrale", 40),
-        ("Olio di oliva extravergine", 10),
-    ]),
-    # ── Sabato (giorno 6) ───────────────────────────────────────────────
-    (6, "COLAZIONE", 0, [
-        ("Yogurt greco intero", 150),
-        ("Avena, fiocchi", 35),
-        ("Miele", 10),
-        ("Fragole, fresche", 100),
-    ]),
-    (6, "SPUNTINO_MATTINA", 1, [
-        ("Arancia, fresca", 150),
-    ]),
-    (6, "PRANZO", 2, [
-        ("Ceci, cotti", 200),
-        ("Riso integrale, cotto", 160),
-        ("Spinaci, crudi", 100),
-        ("Olio di oliva extravergine", 10),
-    ]),
-    (6, "SPUNTINO_POMERIGGIO", 3, [
-        ("Fiocchi di latte (cottage cheese)", 100),
-        ("Gallette di riso", 20),
-    ]),
-    (6, "CENA", 4, [
-        ("Petto di pollo, crudo", 150),
-        ("Melanzane", 200),
-        ("Pane di frumento, bianco", 40),
-        ("Olio di oliva extravergine", 10),
-    ]),
-    # ── Domenica (giorno 7) ─────────────────────────────────────────────
-    (7, "COLAZIONE", 0, [
-        ("Latte parzialmente scremato", 200),
-        ("Pane integrale", 50),
-        ("Avocado", 50),
-        ("Uovo intero, crudo", 60),  # 1 uovo
-    ]),
-    (7, "SPUNTINO_MATTINA", 1, [
-        ("Pesca, fresca", 150),
-    ]),
-    (7, "PRANZO", 2, [
-        ("Pasta integrale, secca", 80),
-        ("Branzino, cotto", 160),
-        ("Pomodori, freschi", 100),
-        ("Olio di oliva extravergine", 10),
-    ]),
-    (7, "SPUNTINO_POMERIGGIO", 3, [
-        ("Yogurt greco 0% grassi", 125),
-        ("Anacardi", 15),
-    ]),
-    (7, "CENA", 4, [
-        ("Edamame, cotti", 150),
-        ("Riso bianco, cotto", 160),
-        ("Broccoli, crudi", 150),
-        ("Olio di oliva extravergine", 10),
-    ]),
-]
-
-
 # ---------------------------------------------------------------------------
-# Scaling diete: 7 profili donna derivati da DIETA_DONNA_ATTIVA (~1900 kcal)
-#
-# Fattore = target_kcal / 1900. Olio, semi e miele restano invariati.
-# Porzioni arrotondate a 5g per realismo. Min 10g per ogni alimento.
+# Template profiles per generazione algoritmica (sostituisce diete hardcoded)
+# (slug) → (ClientProfile, target_kcal, seed)
 # ---------------------------------------------------------------------------
 
-_FIXED_ITEMS = {
-    "Olio di oliva extravergine", "Semi di chia", "Semi di lino", "Miele",
+
+TEMPLATE_PROFILES: dict[str, tuple[ClientProfile, int, int]] = {
+    "donna_under30_attiva":      (ClientProfile(eta=25, sesso=Sex.F, peso_kg=60), 1900, 42),
+    "donna_under30_sedentaria":  (ClientProfile(eta=25, sesso=Sex.F, peso_kg=58), 1500, 43),
+    "donna_under30_sportiva":    (ClientProfile(eta=25, sesso=Sex.F, peso_kg=62), 2300, 44),
+    "donna_over30_mantenimento": (ClientProfile(eta=35, sesso=Sex.F, peso_kg=60), 1750, 45),
+    "donna_30_50_sedentaria":    (ClientProfile(eta=40, sesso=Sex.F, peso_kg=62), 1550, 46),
+    "donna_30_50_sportiva":      (ClientProfile(eta=40, sesso=Sex.F, peso_kg=60), 2100, 47),
+    "donna_over50_sedentaria":   (ClientProfile(eta=55, sesso=Sex.F, peso_kg=63), 1400, 48),
+    "donna_over50_attiva":       (ClientProfile(eta=55, sesso=Sex.F, peso_kg=60), 1600, 49),
 }
 
 
-def _adapt_diet(base: list, factor: float) -> list:
-    """Scala le quantita' di una dieta base per un fattore calorico.
 
-    Olio, semi e miele restano invariati (quantita' minime fisse).
-    Arrotondamento a 5g per porzioni realistiche.
-    """
-    result = []
-    for giorno, tipo_pasto, ordine, alimenti in base:
-        new_alimenti = []
-        for nome, grammi in alimenti:
-            if nome in _FIXED_ITEMS:
-                new_grammi = grammi
-            else:
-                new_grammi = round(grammi * factor / 5) * 5
-                new_grammi = max(new_grammi, 10)
-            new_alimenti.append((nome, new_grammi))
-        result.append((giorno, tipo_pasto, ordine, new_alimenti))
-    return result
-
-
-# Mapping slug → dieta settimanale completa (35 pasti × ~4 componenti)
-# donna_under30_attiva = base originale, le altre derivate per scaling
-TEMPLATE_DIETS: dict[str, list] = {
-    "donna_under30_attiva": DIETA_DONNA_ATTIVA,
-    "donna_under30_sedentaria": _adapt_diet(DIETA_DONNA_ATTIVA, 1500 / 1900),
-    "donna_under30_sportiva": _adapt_diet(DIETA_DONNA_ATTIVA, 2300 / 1900),
-    "donna_over30_mantenimento": _adapt_diet(DIETA_DONNA_ATTIVA, 1750 / 1900),
-    "donna_30_50_sedentaria": _adapt_diet(DIETA_DONNA_ATTIVA, 1550 / 1900),
-    "donna_30_50_sportiva": _adapt_diet(DIETA_DONNA_ATTIVA, 2100 / 1900),
-    "donna_over50_sedentaria": _adapt_diet(DIETA_DONNA_ATTIVA, 1400 / 1900),
-    "donna_over50_attiva": _adapt_diet(DIETA_DONNA_ATTIVA, 1600 / 1900),
-}
 
 
 def _seed_templates(session: Session, food_id_map: dict[str, int], dry_run: bool) -> None:
-    """Seed template piani + diete complete donna (8 profili)."""
+    """Seed template piani + diete complete donna (8 profili via generate_plan)."""
+    from api.services.nutrition_science.plan_generator import generate_plan
+
     inserted_templates = 0
     inserted_meals = 0
     inserted_components = 0
@@ -1150,31 +940,40 @@ def _seed_templates(session: Session, food_id_map: dict[str, int], dry_run: bool
         session.flush()
         inserted_templates += 1
 
-        # Seed dieta completa se disponibile in TEMPLATE_DIETS
-        diet_data = TEMPLATE_DIETS.get(tmpl_data["slug"])
-        if diet_data:
-            for giorno, tipo_pasto, ordine, alimenti in diet_data:
-                meal = TemplatePlanMeal(
+        # Genera dieta algoritmica se profilo disponibile in TEMPLATE_PROFILES
+        profile_data = TEMPLATE_PROFILES.get(tmpl_data["slug"])
+        if profile_data:
+            profile, target_kcal, seed = profile_data
+            plan = generate_plan(
+                session=session,
+                profile=profile,
+                target_kcal=target_kcal,
+                seed=seed,
+            )
+            print(f"    {tmpl_data['slug']}: score={plan.score_larn}, "
+                  f"kcal={plan.kcal_die_media}")
+            if plan.warnings:
+                for w in plan.warnings[:3]:
+                    print(f"      ! {w}")
+
+            for meal in plan.pasti:
+                tmpl_meal = TemplatePlanMeal(
                     template_id=tmpl.id,
-                    giorno_settimana=giorno,
-                    tipo_pasto=tipo_pasto,
-                    ordine=ordine,
+                    giorno_settimana=meal.giorno_settimana,
+                    tipo_pasto=meal.tipo_pasto,
+                    ordine=meal.ordine,
                 )
-                session.add(meal)
+                session.add(tmpl_meal)
                 session.flush()
                 inserted_meals += 1
 
-                for alimento_nome, grammi in alimenti:
-                    food_id = food_id_map.get(alimento_nome)
-                    if not food_id:
-                        print(f"  [WARN] Alimento non trovato per template: '{alimento_nome}'")
-                        continue
-                    comp = TemplatePlanComponent(
-                        meal_id=meal.id,
-                        alimento_id=food_id,
-                        quantita_g=grammi,
+                for comp in meal.componenti:
+                    tmpl_comp = TemplatePlanComponent(
+                        meal_id=tmpl_meal.id,
+                        alimento_id=comp.food_id,
+                        quantita_g=comp.quantita_g,
                     )
-                    session.add(comp)
+                    session.add(tmpl_comp)
                     inserted_components += 1
 
     if not dry_run:

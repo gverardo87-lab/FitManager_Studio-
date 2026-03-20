@@ -64,6 +64,23 @@ class GeneratedPlan:
     warnings: list[str] = field(default_factory=list)
 
 
+def _compute_daily_targets(profile: ClientProfile) -> dict[str, float]:
+    """LARN daily PRI/AI targets per il profilo (19 micronutrienti)."""
+    from api.services.nutrition_science.larn_tables import NUTRIENT_REGISTRY, lookup_larn
+
+    targets: dict[str, float] = {}
+    for entry in NUTRIENT_REGISTRY:
+        campo = entry["campo_db"]
+        ref = lookup_larn(entry["tabella"], profile.eta, profile.sesso)
+        if ref is None:
+            continue
+        # Preferisci PRI (raccomandato), fallback AI (adeguato)
+        value = ref.get("pri") or ref.get("ai")
+        if value and value > 0:
+            targets[campo] = value
+    return targets
+
+
 def generate_plan(
     session: Session,
     profile: ClientProfile,
@@ -110,6 +127,9 @@ def generate_plan(
     # 1. Risolvi food pool
     pools = resolve_food_pools(session)
 
+    # 1b. Compute LARN daily targets per nutrient-aware selection
+    daily_targets = _compute_daily_targets(profile)
+
     # 2-3. Per ogni giorno: seleziona + ottimizza
     all_meals: list[GeneratedMeal] = []
     used_yesterday: set[int] = set()
@@ -117,8 +137,11 @@ def generate_plan(
     _ruolo_map: dict[tuple[int, str, int], str] = {}
 
     for giorno in range(1, 8):  # Lun-Dom
-        # Seleziona alimenti
-        day_selections = build_day_selections(giorno, pools, used_yesterday, rng)
+        # Seleziona alimenti (nutrient-aware se targets disponibili)
+        day_selections = build_day_selections(
+            giorno, pools, used_yesterday, rng,
+            daily_targets=daily_targets,
+        )
 
         # Determina il pool secondo del giorno per mappare ruoli corretti
         secondo_pool = WEEKLY_SECONDO_ROTATION[giorno - 1]
