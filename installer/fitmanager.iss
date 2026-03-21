@@ -2,7 +2,7 @@
 ; FitManager AI Studio — Inno Setup Script
 ; ══════════════════════════════════════════════════════════════
 ;
-; Produce: FitManager_Setup_1.0.2.exe (~95 MB)
+; Produce: FitManager_Setup_1.0.3.exe (~100 MB)
 ; Requisiti: Inno Setup 6+ (winget install JRSoftware.InnoSetup)
 ;
 ; Compilazione:
@@ -17,7 +17,7 @@
 ;     data\          (creata al primo avvio, preservata sugli aggiornamenti)
 
 #define MyAppName "FitManager AI Studio"
-#define MyAppVersion "1.0.2"
+#define MyAppVersion "1.0.3"
 
 [Setup]
 AppName={#MyAppName}
@@ -58,6 +58,7 @@ Source: "launcher.bat"; DestDir: "{app}"; Flags: ignoreversion
 ; Seed esercizi (prima installazione)
 Source: "..\data\exercises\seed_exercises.json"; DestDir: "{app}\data\exercises"; Flags: ignoreversion
 Source: "..\data\exercises\seed_exercise_relations.json"; DestDir: "{app}\data\exercises"; Flags: ignoreversion
+Source: "..\data\exercises\seed_exercise_progressions.json"; DestDir: "{app}\data\exercises"; Flags: ignoreversion
 Source: "..\data\exercises\seed_exercise_media.json"; DestDir: "{app}\data\exercises"; Flags: ignoreversion
 
 ; Catalog DB (tassonomia scientifica - muscoli, articolazioni, condizioni, metriche)

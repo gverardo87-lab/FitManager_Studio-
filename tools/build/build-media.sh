@@ -5,7 +5,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 CATALOG_DB="${FITMANAGER_CATALOG_DB:-$ROOT/data/catalog.db}"
-EXPECTED_ACTIVE_COUNT="${FITMANAGER_EXPECTED_ACTIVE_COUNT:-400}"
+EXPECTED_ACTIVE_COUNT="${FITMANAGER_EXPECTED_ACTIVE_COUNT:-500}"
 MEDIA_SRC="$ROOT/data/media/exercises"
 MEDIA_DST="$ROOT/dist/media/exercises"
 
@@ -59,15 +59,16 @@ if not src.exists():
     sys.exit(1)
 
 query = """
-SELECT DISTINCT id_esercizio
+SELECT DISTINCT r.id_esercizio
 FROM (
     SELECT id_esercizio FROM esercizi_muscoli
     UNION
     SELECT id_esercizio FROM esercizi_articolazioni
     UNION
     SELECT id_esercizio FROM esercizi_condizioni
-)
-ORDER BY id_esercizio
+) r
+JOIN esercizi e ON e.id = r.id_esercizio
+ORDER BY r.id_esercizio
 """
 
 with sqlite3.connect(str(catalog_db)) as conn:

@@ -52,10 +52,7 @@ function topAccent(s, color) {
   s.addShape("rect", { x: 0, y: 0, w: 10, h: 0.06, fill: { color: color || C.teal } });
 }
 
-// Logo watermark — small brand mark bottom-left (logo 444×406 = ratio 1.094:1)
-function logoMark(s) {
-  s.addImage({ path: LOGO, x: 0.1, y: 4.95, w: 0.55, h: 0.5 });
-}
+// Logo only on cover — removed watermark from inner slides
 
 // Screenshot slide helper: dark bg, accent bar, title, subtitle, centered screenshot (ratio 1.6:1)
 function screenshotSlide(title, subtitle, imgPath, accent, num) {
@@ -66,7 +63,7 @@ function screenshotSlide(title, subtitle, imgPath, accent, num) {
   s.addText(subtitle, { x: 0.8, y: 0.5, w: 8.2, h: 0.25, fontSize: 11, fontFace: FONT_B, color: C.slate });
   s.addShape("rect", { x: 1.15, y: 0.85, w: 7.7, h: 4.75, fill: { color: C.darkAlt }, shadow: shadow() });
   s.addImage({ path: imgPath, x: 1.25, y: 0.9, w: 7.5, h: 4.65 });
-  logoMark(s);
+
   sNum(s, num);
   return s;
 }
@@ -170,7 +167,7 @@ const TOTAL = 17;
     });
   });
 
-  logoMark(s);
+
   sNum(s, 2);
 })();
 
@@ -220,7 +217,7 @@ const TOTAL = 17;
     });
   });
 
-  logoMark(s);
+
   sNum(s, 3);
 })();
 
@@ -263,7 +260,7 @@ screenshotSlide(
     fontSize: 11, fontFace: FONT_B, color: C.mintLight, italic: true, valign: "middle", margin: 0,
   });
 
-  logoMark(s);
+
   sNum(s, 5);
 })();
 
@@ -420,7 +417,7 @@ screenshotSlide(
     fontSize: 13, fontFace: FONT_B, color: C.dark, lineSpacingMultiple: 1.35, margin: 0,
   });
 
-  logoMark(s);
+
   sNum(s, 10);
 })();
 
@@ -485,7 +482,7 @@ screenshotSlide(
     fontSize: 9, fontFace: FONT_B, color: C.slateDark, italic: true,
   });
 
-  logoMark(s);
+
   sNum(s, 11);
 })();
 
@@ -556,7 +553,7 @@ screenshotSlide(
     fontSize: 12, fontFace: FONT_B, color: C.dark, bold: true, margin: 0,
   });
 
-  logoMark(s);
+
   sNum(s, 12);
 })();
 
@@ -601,7 +598,7 @@ screenshotSlide(
     autoPage: false,
   });
 
-  logoMark(s);
+
   sNum(s, 13);
 })();
 
@@ -758,7 +755,7 @@ screenshotSlide(
     fontSize: 12, fontFace: FONT_B, color: C.slateDark, margin: 0, lineSpacingMultiple: 1.2,
   });
 
-  logoMark(s);
+
   sNum(s, 15);
 })();
 
@@ -821,7 +818,7 @@ screenshotSlide(
     });
   });
 
-  logoMark(s);
+
   sNum(s, 16);
 })();
 

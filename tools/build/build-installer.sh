@@ -4,7 +4,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-INSTALLER_VERSION="1.0.2"
+INSTALLER_VERSION="1.0.3"
 ISCC_PATH=""
 SKIP_CHECKS=0
 
@@ -87,6 +87,7 @@ bash "$ROOT/tools/build/build-media.sh"
 echo "Staging immutable release data..."
 mkdir -p "$RELEASE_DATA_DIR"
 cp "$ROOT/data/catalog.db" "$RELEASE_DATA_DIR/catalog.db"
+cp "$ROOT/data/nutrition.db" "$RELEASE_DATA_DIR/nutrition.db"
 cp "$ROOT/data/license_public.pem" "$RELEASE_DATA_DIR/license_public.pem"
 
 ISCC_BIN="$(resolve_iscc)"
