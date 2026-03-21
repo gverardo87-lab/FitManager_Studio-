@@ -1,26 +1,30 @@
 #!/usr/bin/env python3
 """
-Seed Dev Complete — Database realistico per sviluppo con 30 clienti e 4 mesi di attivita'.
+Seed Dev Complete — Database realistico per demo investitore (30 clienti, 4 mesi).
 
 Simula l'attivita' di Chiara Bassani (personal trainer P.IVA) da dicembre 2025 a marzo 2026.
 Ogni cliente ha profilo completo: contratti, pagamenti, anamnesi, misurazioni, obiettivi,
-schede allenamento, sessioni in agenda, log di allenamento.
+schede allenamento con blocchi (superset/circuit), piani nutrizionali 7gg,
+sessioni in agenda, log di allenamento, workout schedule, todos operativi.
 
 COSA CREA:
 - 1 Trainer (Chiara Bassani)
 - 30 Clienti con anamnesi diversificate (sano, ortopedico, metabolico, cardiovascolare)
-- ~35 Contratti PT/Sala con rate e pagamenti
+- ~35 Contratti PT/Sala con rate e pagamenti + catene rinnovo
 - ~12 Spese ricorrenti (business + personali P.IVA)
-- ~300 CashMovement (entrate rate + uscite fisse + variabili + personali)
-- ~200 Eventi agenda (PT + Corso + Colloqui) con SlotGrid anti-overlap
+- ~300+ CashMovement (entrate rate + uscite fisse + variabili + personali)
+- ~200+ Eventi agenda (PT + Corso + Colloqui) con SlotGrid anti-overlap
 - Anamnesi JSON completa per ogni cliente
 - 4-6 Misurazioni progressi per cliente (mensili, metric IDs corretti da catalog.db)
 - 1-2 Obiettivi fitness per cliente con baseline e target
-- 1-2 Schede allenamento per cliente (con sessioni, esercizi reali, carico_kg)
-- ~80 WorkoutLog (esecuzioni sessioni registrate)
+- 1-2 Schede allenamento per cliente (con sessioni, blocchi superset/circuit, esercizi reali)
+- ~80+ WorkoutLog (esecuzioni sessioni registrate)
+- Workout Schedule Slots (calendario allenamenti pianificati)
+- 6-8 Piani nutrizionali 7gg completi (con pasti e componenti da nutrition.db)
+- 8+ Todos operativi (reminder dashboard)
 
-PERIODO: 1 dicembre 2025 -> 4 marzo 2026 (4 mesi)
-TODAY: 4 marzo 2026
+PERIODO: 1 dicembre 2025 -> 22 marzo 2026 (4 mesi)
+TODAY: 22 marzo 2026 (demo day)
 
 INVARIANTI GARANTITI:
 - Nomi campi ESATTI (tipo_pacchetto, data_vendita, metodo, anamnesi_json, tempo_riposo_sec)
@@ -63,8 +67,13 @@ from api.models.movement import CashMovement  # noqa: E402
 from api.models.recurring_expense import RecurringExpense  # noqa: E402
 from api.models.measurement import ClientMeasurement, MeasurementValue  # noqa: E402
 from api.models.goal import ClientGoal  # noqa: E402
-from api.models.workout import WorkoutPlan, WorkoutSession, WorkoutExercise  # noqa: E402
+from api.models.workout import WorkoutPlan, WorkoutSession, WorkoutExercise, SessionBlock  # noqa: E402
 from api.models.workout_log import WorkoutLog  # noqa: E402
+from api.models.workout_schedule import WorkoutScheduleSlot  # noqa: E402
+from api.models.nutrition import NutritionPlan, PlanMeal, MealComponent  # noqa: E402
+from api.models.todo import Todo  # noqa: E402
+from api.services.nutrition_science.types import ClientProfile, Sex  # noqa: E402
+from api.services.nutrition_science.plan_generator import generate_plan  # noqa: E402
 from api.models.exercise import Exercise  # noqa: E402
 from api.seed_exercises import seed_builtin_exercises  # noqa: E402
 
@@ -77,7 +86,7 @@ random.seed(42)
 # ═══════════════════════════════════════════════════════════════
 
 PERIOD_START = date(2025, 12, 1)
-TODAY = date(2026, 3, 4)
+TODAY = date(2026, 3, 22)
 
 # Metric IDs da catalog.db (FISSI, corrispondono a seed_metrics)
 MET_PESO = 1           # Peso Corporeo (kg)
@@ -271,91 +280,241 @@ SESSION_TEMPLATES = {
 
 
 # ═══════════════════════════════════════════════════════════════
+# PROFILI NUTRIZIONALI (per generate_plan engine)
+# ═══════════════════════════════════════════════════════════════
+
+# 5 clienti target per piano nutrizionale generato dal motore LARN
+# (client_idx, nome_piano, kcal, prot_g, carb_g, fat_g)
+NUTRITION_TARGETS = [
+    (0,  "Definizione Donna 1600kcal",    1600, 120, 160, 53),   # Alessia (sana, donna)
+    (3,  "Mantenimento Uomo 2400kcal",    2400, 150, 280, 80),   # Marco (sano, uomo)
+    (4,  "Metabolico Donna 1500kcal",     1500, 115, 140, 50),   # Sara (metabolico, donna)
+    (7,  "Cardiovascolare Uomo 1800kcal", 1800, 120, 210, 55),   # Andrea (cardiovascolare, uomo)
+    (14, "Definizione Donna 1700kcal",    1700, 130, 170, 57),   # Martina (metabolico, donna)
+]
+
+TODOS_DATA = [
+    {"titolo": "Chiamare Alessia per rinnovo contratto", "desc": "Contratto in scadenza tra 2 settimane, proporre PT 20 sedute", "scadenza_offset": 3, "completato": False},
+    {"titolo": "Ordinare elastici fitness nuovi", "desc": "Quelli rossi (media resistenza) sono quasi finiti, ordinare su Amazon", "scadenza_offset": 5, "completato": False},
+    {"titolo": "Preparare scheda per Marco Bianchi", "desc": "Passaggio da beginner a intermedio, focus ipertrofia", "scadenza_offset": 1, "completato": False},
+    {"titolo": "Aggiornare anamnesi Valentina Ricci", "desc": "Controllo ortopedico schiena fatto la settimana scorsa, aggiornare limitazioni", "scadenza_offset": 0, "completato": False},
+    {"titolo": "Fattura trimestrale commercialista", "desc": "Inviare riepilogo movimenti Q1 2026 a Studio Rossi", "scadenza_offset": 7, "completato": False},
+    {"titolo": "Confermare prenotazione sala sabato", "desc": "Gruppo functional training 10 persone", "scadenza_offset": 2, "completato": False},
+    {"titolo": "Controllare bilancia impedenziometrica", "desc": "Calibrazione mensile, ultimo check 22 febbraio", "scadenza_offset": -2, "completato": False},
+    {"titolo": "Aggiornare piano alimentare Sara Romano", "desc": "Nutrizionista ha inviato nuove indicazioni per ipotiroidismo", "scadenza_offset": 4, "completato": False},
+    {"titolo": "Rinnovo assicurazione RC professionale", "desc": "Scadenza 15 marzo — rinnovata online", "scadenza_offset": -7, "completato": True},
+    {"titolo": "Backup mensile database", "desc": "Eseguito backup crm.db del 15 marzo", "scadenza_offset": -5, "completato": True},
+    {"titolo": "Colloquio nuovo cliente (Cristina Pellegrini)", "desc": "Prospect interessata a PT, chiamata conoscitiva fatta", "scadenza_offset": -3, "completato": True},
+]
+
+
+# ═══════════════════════════════════════════════════════════════
 # ANAMNESI GENERATOR
 # ═══════════════════════════════════════════════════════════════
 
-def _build_anamnesi(profilo: str, data_compilazione: date) -> str:
-    """Genera JSON anamnesi realistico basato sul profilo clinico."""
+def _build_anamnesi(profilo: str, sesso: str, data_compilazione: date) -> str:
+    """Genera JSON anamnesi v2 (6 step) con keyword per il Safety Engine."""
     base = {
+        # Metadata (CRITICAL: obiettivo_principale + data_compilazione → "structured")
         "data_compilazione": data_compilazione.isoformat(),
         "data_ultimo_aggiornamento": data_compilazione.isoformat(),
-        "infortuni_attuali": {"presente": False, "dettaglio": ""},
-        "infortuni_pregressi": {"presente": False, "dettaglio": ""},
-        "interventi_chirurgici": {"presente": False, "dettaglio": ""},
-        "dolori_cronici": {"presente": False, "dettaglio": ""},
-        "patologie": {"presente": False, "dettaglio": ""},
-        "farmaci": {"presente": False, "dettaglio": ""},
-        "problemi_cardiovascolari": {"presente": False, "dettaglio": ""},
-        "problemi_respiratori": {"presente": False, "dettaglio": ""},
-        "dieta_particolare": {"presente": False, "dettaglio": ""},
-        "limitazioni_funzionali": "",
-        "note": "",
-        "obiettivi_specifici": "",
+        # Step 1: Stile di Vita
+        "professione": random.choice([
+            "Impiegato/a", "Insegnante", "Libero professionista",
+            "Commerciante", "Studente", "Ingegnere", "Avvocato",
+        ]),
+        "ore_seduto": random.choice(["<3", "3-6", "6-9"]),
+        "spostamento": random.choice(["auto", "mezzi", "a_piedi"]),
+        "ore_sonno": random.choice(["6-7", "7-8", ">8"]),
+        "qualita_sonno": random.choice(["riposante", "varia"]),
+        "livello_stress": random.randint(3, 7),
+        "fumo": random.choices(["no", "occasionalmente"], [85, 15])[0],
+        "alcol": random.choices(["mai", "occasionalmente", "1-2_sett"], [25, 50, 25])[0],
+        "passi_giornalieri": str(random.choice([5000, 6000, 7000, 8000, 10000])),
+        # Step 2: Obiettivo e Motivazione
+        "obiettivo_principale": "salute_generale",
+        "obiettivi_secondari": None,
+        "perche_adesso": random.choice([
+            "Voglio rimettermi in forma dopo un periodo sedentario",
+            "Il medico me lo ha consigliato",
+            "Preparazione per un evento sportivo",
+            "Voglio sentirmi meglio con me stesso/a",
+            None,
+        ]),
+        "cosa_3_mesi": None,
+        "impegno": random.randint(7, 10),
+        # Step 3: Esperienza Sportiva
+        "si_allena": random.choices([True, False], [70, 30])[0],
+        "frequenza_settimanale": random.choice(["1", "2", "3"]),
+        "luogo_allenamento": random.choice(["palestra", "mix"]),
+        "tipo_preferito": random.choice(["Pesi", "Funzionale", "Corsa", "Nuoto", None]),
+        "esperienza_durata": random.choice(["<3m", "3-6m", "6-12m", ">1a"]),
+        "esperienza_pt": random.choice([True, False]),
+        "feedback_pt": None,
+        # Step 4: Salute e Sicurezza (SAFETY ENGINE triggers)
+        "dolori_attuali": [],
+        "dolori_attuali_altro": None,
+        "infortuni_importanti": {"presente": False, "dettaglio": None},
+        "patologie": {"presente": False, "dettaglio": None},
+        "patologie_lista": [],
+        "patologie_altro": None,
+        "farmaci_risposta": "no",
+        "farmaci_dettaglio": None,
+        "limitazioni_mediche": {"presente": False, "dettaglio": None},
+        "certificato_sportivo": random.choice(["si", "in_programma"]),
+        # Step 5: Alimentazione
+        "tipo_alimentazione": random.choice(["equilibrata", "mediterranea"]),
+        "intolleranze": None,
+        "serenita_cibo": random.randint(6, 9),
+        "messaggio_alimentazione": None,
+        "rapporto_complesso_alimentazione": "no",
+        # Step 6: Logistica e Note
+        "preferenza_luogo": "palestra",
+        "sedute_settimana": random.choice(["2", "3"]),
+        "giorni_orari_preferiti": random.choice([
+            "Lunedi' e giovedi' mattina", "Martedi' e venerdi' pomeriggio",
+            "Lunedi', mercoledi', venerdi'", None,
+        ]),
+        "freni_passato": [],
+        "freni_altro": None,
+        "consenso_privacy": True,
+        "note_finali": None,
     }
 
+    # ── Profili specifici (keyword per Safety Engine) ──
+
     if profilo == "sano":
-        base["obiettivi_specifici"] = random.choice([
-            "Migliorare forma fisica generale",
-            "Tonificazione e perdita peso",
-            "Aumentare massa muscolare",
-            "Preparazione per gara amatoriale",
-            "Migliorare postura e mobilita'",
-            "Aumentare forza e resistenza",
+        base["obiettivo_principale"] = random.choice([
+            "tonificazione", "massa_muscolare", "salute_generale", "performance",
+        ])
+        base["cosa_3_mesi"] = random.choice([
+            "Sentirmi piu' in forma e tonico/a",
+            "Aumentare forza e resistenza muscolare",
+            "Prepararmi per una mezza maratona",
+            "Migliorare la postura da ufficio",
         ])
 
     elif profilo == "ortopedico_spalla":
-        base["infortuni_pregressi"]["presente"] = True
-        base["infortuni_pregressi"]["dettaglio"] = "Tendinite spalla destra da sovraccarico (2024)"
-        base["dolori_cronici"]["presente"] = True
-        base["dolori_cronici"]["dettaglio"] = "Dolore spalla destra su abduzione oltre 90 gradi"
-        base["limitazioni_funzionali"] = "Evitare overhead press pesante e dip profondi"
-        base["obiettivi_specifici"] = "Rinforzare cuffia rotatori, riprendere allenamento completo"
+        base["obiettivo_principale"] = "riabilitazione"
+        base["dolori_attuali"] = ["spalle"]
+        base["infortuni_importanti"] = {
+            "presente": True,
+            "dettaglio": "Tendinite cuffia dei rotatori spalla destra da sovraccarico (2024), "
+                         "trattamento conservativo con fisioterapia",
+        }
+        base["limitazioni_mediche"] = {
+            "presente": True,
+            "dettaglio": "Evitare overhead press pesante e dip profondi, "
+                         "dolore su abduzione spalla oltre 90 gradi",
+        }
+        base["cosa_3_mesi"] = "Riprendere allenamento completo senza dolore alla spalla"
+        base["freni_passato"] = ["dolore"]
+        base["certificato_sportivo"] = "si"
 
     elif profilo == "ortopedico_schiena":
-        base["infortuni_pregressi"]["presente"] = True
-        base["infortuni_pregressi"]["dettaglio"] = "Protrusione discale L4-L5 diagnosticata 2023"
-        base["dolori_cronici"]["presente"] = True
-        base["dolori_cronici"]["dettaglio"] = "Lombalgia cronica, peggiorata da sedentarieta'"
-        base["limitazioni_funzionali"] = "Evitare flessione lombare sotto carico, squat ATG con bilanciere"
-        base["obiettivi_specifici"] = "Rinforzare core, ridurre dolore lombare"
+        base["obiettivo_principale"] = "postura"
+        base["dolori_attuali"] = ["schiena"]
+        base["dolori_attuali_altro"] = "Lombalgia cronica, peggiorata dalla sedentarieta'"
+        base["infortuni_importanti"] = {
+            "presente": True,
+            "dettaglio": "Protrusione discale L4-L5 diagnosticata nel 2023, "
+                         "ernia discale lombare confermata alla RM",
+        }
+        base["patologie_lista"] = ["ernie"]
+        base["limitazioni_mediche"] = {
+            "presente": True,
+            "dettaglio": "Evitare flessione lombare sotto carico pesante, "
+                         "niente squat profondi con bilanciere, cautela con stacchi",
+        }
+        base["ore_seduto"] = ">9"
+        base["cosa_3_mesi"] = "Ridurre il mal di schiena e rinforzare il core"
+        base["freni_passato"] = ["dolore", "paura_infortunio"]
 
     elif profilo == "ortopedico_ginocchio":
-        base["interventi_chirurgici"]["presente"] = True
-        base["interventi_chirurgici"]["dettaglio"] = "Ricostruzione LCA ginocchio sinistro (2023)"
-        base["limitazioni_funzionali"] = "Evitare pivot improvvisi, deep squat monopodalico"
-        base["obiettivi_specifici"] = "Recupero funzionale completo, simmetria bilaterale"
+        base["obiettivo_principale"] = "riabilitazione"
+        base["dolori_attuali"] = ["ginocchia"]
+        base["infortuni_importanti"] = {
+            "presente": True,
+            "dettaglio": "Ricostruzione legamento crociato anteriore (LCA) "
+                         "ginocchio sinistro, artroscopia nel 2023",
+        }
+        base["limitazioni_mediche"] = {
+            "presente": True,
+            "dettaglio": "Evitare pivot improvvisi e deep squat monopodalico, "
+                         "cautela con impatto asimmetrico sulle ginocchia",
+        }
+        base["cosa_3_mesi"] = "Recupero funzionale completo e simmetria bilaterale"
+        base["freni_passato"] = ["infortunio_precedente"]
 
     elif profilo == "ortopedico_caviglia":
-        base["infortuni_pregressi"]["presente"] = True
-        base["infortuni_pregressi"]["dettaglio"] = "Distorsione caviglia sinistra grado 2 (2024)"
-        base["limitazioni_funzionali"] = "Instabilita' residua caviglia sx su terreno irregolare"
-        base["obiettivi_specifici"] = "Propriocezione caviglia, rinforzo peronei"
+        base["obiettivo_principale"] = "riabilitazione"
+        base["dolori_attuali"] = ["caviglie"]
+        base["infortuni_importanti"] = {
+            "presente": True,
+            "dettaglio": "Distorsione grave caviglia sinistra grado 2 nel 2024, "
+                         "instabilita' residua caviglia con lassita' legamentosa",
+        }
+        base["limitazioni_mediche"] = {
+            "presente": True,
+            "dettaglio": "Instabilita' caviglia sinistra su terreno irregolare, "
+                         "cautela con salti laterali e cambi direzione rapidi",
+        }
+        base["cosa_3_mesi"] = "Recuperare stabilita' della caviglia e riprendere la corsa"
 
     elif profilo == "metabolico":
         patologia = random.choice([
-            ("Ipotiroidismo in trattamento farmacologico", "Eutirox 75mcg/die"),
-            ("Prediabete, glicemia a digiuno 108 mg/dL", "Metformina 500mg"),
-            ("Dislipidemia, colesterolo totale 235 mg/dL", "Statina 20mg"),
+            {
+                "dettaglio": "Ipotiroidismo in trattamento endocrinologico, tiroide sotto controllo",
+                "lista": ["tiroide"],
+                "farmaci": "Eutirox 75mcg/die (levotiroxina)",
+            },
+            {
+                "dettaglio": "Prediabete con glicemia a digiuno 108 mg/dL, "
+                             "diabete tipo 2 in fase iniziale sotto monitoraggio",
+                "lista": ["diabete"],
+                "farmaci": "Metformina 500mg/die",
+            },
+            {
+                "dettaglio": "Dislipidemia mista, colesterolo totale 235 mg/dL, "
+                             "trigliceridi 180, terapia con statina",
+                "lista": [],
+                "farmaci": "Atorvastatina 20mg/die (statina)",
+            },
         ])
-        base["patologie"]["presente"] = True
-        base["patologie"]["dettaglio"] = patologia[0]
-        base["farmaci"]["presente"] = True
-        base["farmaci"]["dettaglio"] = patologia[1]
-        base["dieta_particolare"]["presente"] = True
-        base["dieta_particolare"]["dettaglio"] = "Dieta mediterranea ipocalorica, seguita da nutrizionista"
-        base["obiettivi_specifici"] = "Perdita di peso, miglioramento parametri metabolici"
+        base["obiettivo_principale"] = "dimagrimento"
+        base["patologie"] = {"presente": True, "dettaglio": patologia["dettaglio"]}
+        base["patologie_lista"] = patologia["lista"]
+        base["farmaci_risposta"] = "si"
+        base["farmaci_dettaglio"] = patologia["farmaci"]
+        base["tipo_alimentazione"] = "mediterranea"
+        base["cosa_3_mesi"] = "Perdere peso e migliorare i parametri metabolici"
+        base["ore_seduto"] = random.choice(["6-9", ">9"])
 
     elif profilo == "cardiovascolare":
         cv = random.choice([
-            ("Ipertensione stadio 1, PA abituale 145/92", "Ramipril 5mg/die"),
-            ("Extrasistoli ventricolari benigne, ECG nella norma", "Magnesio pidolato"),
+            {
+                "dettaglio": "Ipertensione arteriosa stadio 1, pressione abituale 145/92 mmHg",
+                "lista": ["pressione"],
+                "farmaci": "Ramipril 5mg/die + bisoprololo 2.5mg (betabloccante)",
+            },
+            {
+                "dettaglio": "Extrasistoli ventricolari benigne documentate all'ECG Holter, "
+                             "problemi cardiovascolari sotto monitoraggio cardiologico",
+                "lista": ["pressione"],
+                "farmaci": "Magnesio pidolato 1500mg/die + atenololo 25mg (betabloccante)",
+            },
         ])
-        base["problemi_cardiovascolari"]["presente"] = True
-        base["problemi_cardiovascolari"]["dettaglio"] = cv[0]
-        base["farmaci"]["presente"] = True
-        base["farmaci"]["dettaglio"] = cv[1]
-        base["limitazioni_funzionali"] = "Evitare Valsalva, monitorare FC durante sforzo intenso"
-        base["obiettivi_specifici"] = "Migliorare capacita' aerobica, controllare pressione arteriosa"
+        base["obiettivo_principale"] = "salute_generale"
+        base["patologie"] = {"presente": True, "dettaglio": cv["dettaglio"]}
+        base["patologie_lista"] = cv["lista"]
+        base["farmaci_risposta"] = "si"
+        base["farmaci_dettaglio"] = cv["farmaci"]
+        base["limitazioni_mediche"] = {
+            "presente": True,
+            "dettaglio": "Evitare manovra di Valsalva prolungata, "
+                         "monitorare FC durante sforzo intenso con cardiofrequenzimetro",
+        }
+        base["cosa_3_mesi"] = "Migliorare la capacita' aerobica e controllare la pressione"
 
     return json.dumps(base, ensure_ascii=False)
 
@@ -690,7 +849,7 @@ def seed_complete(engine):
         clients: list[Client] = []
         for cd in CLIENTS_DATA:
             data_compilazione = PERIOD_START + timedelta(days=random.randint(0, 14))
-            anamnesi_json = _build_anamnesi(cd["profilo"], data_compilazione)
+            anamnesi_json = _build_anamnesi(cd["profilo"], cd["sesso"], data_compilazione)
             client = Client(
                 trainer_id=tid,
                 nome=cd["nome"],
@@ -1371,6 +1530,7 @@ def seed_complete(engine):
         n_plans = 0
         n_sessions = 0
         n_exercises = 0
+        n_blocks = 0
         n_logs = 0
 
         for client in clients[:24]:
@@ -1433,15 +1593,34 @@ def seed_complete(engine):
                             serie=2,
                             ripetizioni="10-12",
                             tempo_riposo_sec=30,
-                            categoria_esercizio="avviamento",
+                            note="Avviamento",
                         ))
                         ordine += 1
                         n_exercises += 1
 
                     # Principali (4-5 esercizi dai pattern della sessione)
+                    # ~40% chance di avere un superset block per sessioni non-beginner
                     n_main = random.randint(4, 5)
                     used_ids: set[int] = set()
-                    for _ in range(n_main):
+                    has_block = livello != "beginner" and random.random() < 0.40
+                    block = None
+                    block_pos = 0
+
+                    if has_block:
+                        block_type = random.choice(["superset", "circuit"])
+                        block = SessionBlock(
+                            id_sessione=ws.id,
+                            tipo_blocco=block_type,
+                            ordine=ordine,
+                            nome=f"{'Superset' if block_type == 'superset' else 'Circuit'} A",
+                            giri=3 if block_type == "superset" else 4,
+                            durata_riposo_sec=60 if block_type == "superset" else 30,
+                        )
+                        session.add(block)
+                        session.flush()
+                        n_blocks += 1
+
+                    for ex_idx in range(n_main):
                         pattern = random.choice(tpl["patterns"])
                         candidates = [eid for eid in active_exercises.get(f"pat_{pattern}", []) if eid not in used_ids]
                         if not candidates:
@@ -1455,16 +1634,21 @@ def seed_complete(engine):
                             riposo = random.choice([90, 120]) if obiettivo in ("forza", "ipertrofia") else random.choice([45, 60])
                             carico = round(random.uniform(10, 80), 1) if random.random() < 0.6 else None
 
+                            # Primi 2 esercizi nel block (se presente)
+                            in_block = block and ex_idx < 2
                             session.add(WorkoutExercise(
                                 id_sessione=ws.id,
+                                id_blocco=block.id if in_block else None,
                                 id_esercizio=ex_id,
                                 ordine=ordine,
+                                posizione_nel_blocco=block_pos if in_block else None,
                                 serie=serie,
                                 ripetizioni=rip,
                                 tempo_riposo_sec=riposo,
                                 carico_kg=carico,
-                                categoria_esercizio="principale",
                             ))
+                            if in_block:
+                                block_pos += 1
                             ordine += 1
                             n_exercises += 1
 
@@ -1478,7 +1662,7 @@ def seed_complete(engine):
                             serie=2,
                             ripetizioni="30s",
                             tempo_riposo_sec=15,
-                            categoria_esercizio="stretching",
+                            note="Stretching",
                         ))
                         n_exercises += 1
 
@@ -1502,12 +1686,292 @@ def seed_complete(engine):
                                         n_logs += 1
 
         session.flush()
-        print(f"   {n_plans} schede, {n_sessions} sessioni, {n_exercises} esercizi, {n_logs} log")
+        print(f"   {n_plans} schede, {n_sessions} sessioni, {n_exercises} esercizi, {n_blocks} blocchi, {n_logs} log")
 
         # ────────────────────────────────────────────────
-        # Step 10: Integrita' + Stato Clienti + Commit
+        # Step 10: Workout Schedule Slots
         # ────────────────────────────────────────────────
-        print("\n[10/10] Integrita' e commit...")
+        print("\n[10/14] Workout schedule...")
+
+        n_schedule_slots = 0
+        # Per ogni scheda attiva, crea slot pianificati sulle prossime 2-3 settimane
+        all_plans = session.exec(
+            select(WorkoutPlan).where(
+                WorkoutPlan.trainer_id == tid,
+                WorkoutPlan.deleted_at == None,  # noqa: E711
+            )
+        ).all()
+
+        for plan in all_plans:
+            if not plan.data_inizio or not plan.id_cliente:
+                continue
+
+            plan_sessions_q = session.exec(
+                select(WorkoutSession).where(WorkoutSession.id_scheda == plan.id)
+            ).all()
+            if not plan_sessions_q:
+                continue
+
+            # Schedule: 3 sessioni/settimana, ciclando le sessioni
+            start = max(plan.data_inizio, TODAY - timedelta(days=21))
+            end = min(TODAY + timedelta(days=14), plan.data_fine or TODAY + timedelta(days=30))
+            current = start
+            sess_cycle = 0
+
+            while current <= end:
+                if _is_open(current) and current.weekday() in (0, 2, 4):  # lun/mer/ven
+                    ws_target = plan_sessions_q[sess_cycle % len(plan_sessions_q)]
+                    sess_cycle += 1
+
+                    if current < TODAY - timedelta(days=2):
+                        stato = random.choices(["completato", "saltato"], [80, 20])[0]
+                    elif current <= TODAY:
+                        stato = random.choices(["completato", "pianificato"], [60, 40])[0]
+                    else:
+                        stato = "pianificato"
+
+                    # Collega a WorkoutLog esistente se completato
+                    log_id = None
+                    if stato == "completato":
+                        existing_log = session.exec(
+                            select(WorkoutLog).where(
+                                WorkoutLog.id_scheda == plan.id,
+                                WorkoutLog.id_sessione == ws_target.id,
+                                WorkoutLog.data_esecuzione == current,
+                            )
+                        ).first()
+                        if existing_log:
+                            log_id = existing_log.id
+
+                    session.add(WorkoutScheduleSlot(
+                        id_scheda=plan.id,
+                        id_sessione=ws_target.id,
+                        id_cliente=plan.id_cliente,
+                        trainer_id=tid,
+                        data_pianificata=current,
+                        stato=stato,
+                        id_log=log_id,
+                    ))
+                    n_schedule_slots += 1
+                current += timedelta(days=1)
+
+        session.flush()
+        print(f"   {n_schedule_slots} slot pianificati")
+
+        # ────────────────────────────────────────────────
+        # Step 11: Piani Nutrizionali via Nutrition Engine
+        # ────────────────────────────────────────────────
+        print("\n[11/14] Piani nutrizionali (via generate_plan engine)...")
+
+        n_nutrition_plans = 0
+        n_meals = 0
+        n_components = 0
+        scores_larn = []
+
+        # nutrition.db session separata (read-only, catalogo alimenti)
+        nutrition_engine_db = create_engine(
+            f"sqlite:///{DATA_DIR / 'nutrition.db'}",
+            echo=False,
+            connect_args={"check_same_thread": False},
+        )
+
+        with Session(nutrition_engine_db) as nut_session:
+            for idx, nome_piano, kcal, prot, carb, fat in NUTRITION_TARGETS:
+                if idx >= len(clients):
+                    continue
+                client = clients[idx]
+                cl_data = CLIENTS_DATA[idx]
+
+                # Calcola eta' dal sesso e data di nascita
+                eta = (TODAY.year - cl_data["nascita"].year)
+                sesso_enum = Sex.F if cl_data["sesso"] == "Donna" else Sex.M
+
+                # Peso stimato dalla prima misurazione (se presente)
+                peso_row = session.exec(text(
+                    f"SELECT v.valore FROM valori_misurazione v "
+                    f"JOIN misurazioni_cliente m ON v.id_misurazione = m.id "
+                    f"WHERE m.id_cliente = {client.id} AND v.id_metrica = {MET_PESO} "
+                    f"ORDER BY m.data_misurazione LIMIT 1"
+                )).first()
+                peso = peso_row[0] if peso_row else (65.0 if sesso_enum == Sex.F else 80.0)
+
+                altezza_row = session.exec(text(
+                    f"SELECT v.valore FROM valori_misurazione v "
+                    f"JOIN misurazioni_cliente m ON v.id_misurazione = m.id "
+                    f"WHERE m.id_cliente = {client.id} AND v.id_metrica = {MET_ALTEZZA} "
+                    f"ORDER BY m.data_misurazione LIMIT 1"
+                )).first()
+                altezza = altezza_row[0] if altezza_row else (165.0 if sesso_enum == Sex.F else 178.0)
+
+                profile = ClientProfile(
+                    eta=eta,
+                    sesso=sesso_enum,
+                    peso_kg=round(peso, 1),
+                    altezza_cm=round(altezza, 1),
+                )
+
+                try:
+                    result = generate_plan(
+                        session=nut_session,
+                        profile=profile,
+                        target_kcal=kcal,
+                        target_prot_g=prot,
+                        target_carb_g=carb,
+                        target_fat_g=fat,
+                        seed=42 + idx,
+                    )
+                except Exception as e:
+                    print(f"   [!] Errore generazione piano per {client.nome}: {e}")
+                    continue
+
+                data_inizio = PERIOD_START + timedelta(days=random.randint(14, 45))
+                plan = NutritionPlan(
+                    trainer_id=tid,
+                    id_cliente=client.id,
+                    nome=nome_piano,
+                    obiettivo_calorico=kcal,
+                    proteine_g_target=prot,
+                    carboidrati_g_target=carb,
+                    grassi_g_target=fat,
+                    data_inizio=data_inizio,
+                    data_fine=data_inizio + timedelta(days=56),
+                    attivo=True,
+                    note_cliniche=(
+                        f"Generato dal motore LARN — Score: {result.score_larn}/100, "
+                        f"Media {result.kcal_die_media:.0f} kcal/die"
+                    ),
+                )
+                session.add(plan)
+                session.flush()
+                n_nutrition_plans += 1
+                scores_larn.append(result.score_larn)
+
+                # Salva pasti e componenti generati dal motore
+                for meal in result.pasti:
+                    pasto = PlanMeal(
+                        piano_id=plan.id,
+                        giorno_settimana=meal.giorno_settimana,
+                        tipo_pasto=meal.tipo_pasto,
+                        ordine=meal.ordine,
+                    )
+                    session.add(pasto)
+                    session.flush()
+                    n_meals += 1
+
+                    for comp in meal.componenti:
+                        session.add(MealComponent(
+                            pasto_id=pasto.id,
+                            alimento_id=comp.food_id,
+                            quantita_g=round(comp.quantita_g),
+                        ))
+                        n_components += 1
+
+                print(f"   {client.nome} {client.cognome}: {nome_piano} "
+                      f"(score LARN {result.score_larn}, {len(result.pasti)} pasti, "
+                      f"{sum(len(m.componenti) for m in result.pasti)} comp)")
+
+        session.flush()
+        avg_score = round(sum(scores_larn) / len(scores_larn)) if scores_larn else 0
+        print(f"   {n_nutrition_plans} piani, {n_meals} pasti, {n_components} componenti, "
+              f"score LARN medio {avg_score}/100")
+
+        # ────────────────────────────────────────────────
+        # Step 12: Todos
+        # ────────────────────────────────────────────────
+        print("\n[12/14] Todos...")
+
+        n_todos = 0
+        for td in TODOS_DATA:
+            scadenza = TODAY + timedelta(days=td["scadenza_offset"])
+            completed_at = None
+            if td["completato"]:
+                completed_at = datetime.combine(scadenza, datetime.min.time(), tzinfo=timezone.utc)
+
+            session.add(Todo(
+                trainer_id=tid,
+                titolo=td["titolo"],
+                descrizione=td["desc"],
+                data_scadenza=scadenza,
+                completato=td["completato"],
+                completed_at=completed_at,
+            ))
+            n_todos += 1
+
+        session.flush()
+        print(f"   {n_todos} todos ({sum(1 for t in TODOS_DATA if not t['completato'])} attivi, {sum(1 for t in TODOS_DATA if t['completato'])} completati)")
+
+        # ────────────────────────────────────────────────
+        # Step 13: Catene Rinnovo
+        # ────────────────────────────────────────────────
+        print("\n[13/14] Catene rinnovo...")
+
+        # Crea 2 rinnovi: clienti inattivi che rinnovano (riattivazione)
+        n_renewals = 0
+        renewal_candidates = [c for c in all_contracts if c.chiuso]
+
+        for old_contract in renewal_candidates[:2]:
+            cl_id = old_contract.id_cliente
+            cl = next(c for c in clients if c.id == cl_id)
+
+            pkg = random.choice(PACKAGES[:3])  # solo PT packages
+            prezzo = _rand_price(pkg)
+            sale_date = (old_contract.data_scadenza or TODAY - timedelta(days=30)) + timedelta(days=random.randint(1, 7))
+            if sale_date > TODAY:
+                sale_date = TODAY - timedelta(days=5)
+            start_date = sale_date + timedelta(days=2)
+            end_date = start_date + timedelta(days=pkg["mesi"] * 30)
+
+            acconto = round(prezzo * 0.3 / 10) * 10
+            new_contract = Contract(
+                trainer_id=tid, id_cliente=cl_id,
+                tipo_pacchetto=pkg["nome"],
+                crediti_totali=pkg["crediti"],
+                prezzo_totale=prezzo, acconto=acconto,
+                data_vendita=sale_date, data_inizio=start_date,
+                data_scadenza=end_date,
+                totale_versato=acconto,
+                stato_pagamento="PARZIALE" if acconto > 0 else "PENDENTE",
+                chiuso=False,
+                rinnovo_di=old_contract.id,
+            )
+            session.add(new_contract)
+            session.flush()
+            all_contracts.append(new_contract)
+            client_contracts[cl_id].append(new_contract)
+            credit_pool[new_contract.id] = pkg["crediti"]
+
+            if acconto > 0:
+                movements.append(_make_movement(
+                    tid, "ENTRATA", acconto, "ACCONTO_CONTRATTO", sale_date,
+                    id_cliente=cl_id, id_contratto=new_contract.id,
+                    note=f"Acconto rinnovo {pkg['nome']} - {cl.nome} {cl.cognome}",
+                ))
+
+            # 2 rate
+            residuo = prezzo - acconto
+            for j in range(2):
+                amt = round(residuo / 2, 2) if j == 0 else round(residuo - round(residuo / 2, 2), 2)
+                rata_date = start_date + timedelta(days=30 * (j + 1))
+                rate = Rate(
+                    id_contratto=new_contract.id,
+                    data_scadenza=rata_date,
+                    importo_previsto=amt,
+                    importo_saldato=0.0,
+                    stato="PENDENTE",
+                    descrizione=f"Rata {j + 1}/2 (rinnovo)",
+                )
+                session.add(rate)
+                all_rates.append(rate)
+
+            n_renewals += 1
+
+        session.flush()
+        print(f"   {n_renewals} contratti rinnovati (catena rinnovo_di)")
+
+        # ────────────────────────────────────────────────
+        # Step 14: Integrita' + Stato Clienti + Commit
+        # ────────────────────────────────────────────────
+        print("\n[14/14] Integrita' e commit...")
 
         # Aggiorna crediti_usati e chiuso su contratti
         for contract in all_contracts:
@@ -1581,23 +2045,26 @@ def seed_complete(engine):
             print(f"   {n_fixes} contratti corretti (integrity)")
 
         print(f"\n{'=' * 60}")
-        print(f"SEED COMPLETATO")
+        print(f"SEED COMPLETATO — DEMO READY")
         print(f"{'=' * 60}")
         print(f"   Trainer:          1 (Chiara Bassani)")
         print(f"   Clienti:          {len(clients)} (24 attivi + 3 inattivi + 3 prospect)")
-        print(f"   Contratti:        {len(all_contracts)}")
+        print(f"   Contratti:        {len(all_contracts)} ({n_renewals} rinnovi)")
         print(f"   Rate:             {len(all_rates)} ({n_saldate} SALDATE)")
         print(f"   Eventi:           {len(all_events)}")
         print(f"   Movimenti:        {len(movements)}")
         print(f"   Misurazioni:      {n_measurements_total}")
         print(f"   Obiettivi:        {n_goals}")
-        print(f"   Schede:           {n_plans}")
+        print(f"   Schede:           {n_plans} ({n_blocks} blocchi superset/circuit)")
         print(f"   Workout Logs:     {n_logs}")
+        print(f"   Schedule Slots:   {n_schedule_slots}")
+        print(f"   Piani Nutrizione: {n_nutrition_plans} ({n_meals} pasti, {n_components} componenti)")
+        print(f"   Todos:            {n_todos}")
         print(f"   Entrate totali:   {tot_entrate:>10,.2f} EUR")
         print(f"   Uscite totali:    {tot_uscite:>10,.2f} EUR")
         print(f"   Periodo: {PERIOD_START} -> {TODAY}")
         print(f"\n   Login: chiarabassani96@gmail.com / Fitness2026!")
-        print(f"   Porta dev: 8001")
+        print(f"   Porta dev: 8001 / 3001")
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -1606,12 +2073,12 @@ def seed_complete(engine):
 
 if __name__ == "__main__":
     print("\n" + "=" * 60)
-    print("SEED DEV COMPLETE - Database Realistico 30 Clienti x 4 Mesi")
+    print("SEED DEV COMPLETE — Demo Investitore (30 Clienti x 4 Mesi)")
     print("=" * 60)
     print(f"Target: data/crm_dev.db")
     print(f"Periodo: {PERIOD_START} -> {TODAY}")
     print("=" * 60)
-    print("\n⚠️  ATTENZIONE: Questo resetta completamente crm_dev.db!")
+    print("\n[!] ATTENZIONE: Questo resetta completamente crm_dev.db!")
     print("Procedendo in 3 secondi...\n")
 
     import time
