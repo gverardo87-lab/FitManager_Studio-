@@ -78,6 +78,49 @@ def _resolve_default(column: Any, sqlite_type: str) -> str:
     return "DEFAULT ''"
 
 
+def _drop_phantom_tables(db_engine: Engine) -> list[str]:
+    """Rimuove tabelle fantasma catalog/nutrition da crm.db.
+
+    Queste tabelle vengono restaurate da backup pre-separazione 3 DB.
+    Sono vuote e non interferiscono, ma confondono l'audit e gonfiano
+    il conteggio tabelle. DROP solo se vuote (safety check).
+    """
+    messages: list[str] = []
+    # Tabelle che vivono SOLO in catalog.db o nutrition.db
+    phantoms = (
+        _EXCLUDED_TABLE_NAMES | {"esercizi", "esercizi_relazioni", "esercizi_media",
+        "esercizi_muscoli", "esercizi_articolazioni", "esercizi_condizioni",
+        "muscoli", "articolazioni", "condizioni_mediche"}
+    )
+
+    with db_engine.connect() as conn:
+        existing = {row[0] for row in conn.execute(text(
+            "SELECT name FROM sqlite_master WHERE type='table'"
+        )).fetchall()}
+
+        for table_name in sorted(phantoms & existing):
+            # Safety: DROP solo se vuota
+            count = conn.execute(text(f"SELECT COUNT(*) FROM [{table_name}]")).fetchone()[0]
+            if count > 0:
+                continue
+            # Safety extra: skip se la tabella ha schema completo (test in-memory
+            # o DB dove create_all ha creato il modello ORM intero — non e' phantom)
+            col_count = len(conn.execute(text(
+                f"PRAGMA table_info([{table_name}])"
+            )).fetchall())
+            if col_count > 3:
+                continue  # schema reale (ORM), non phantom stub
+            conn.execute(text(f"DROP TABLE IF EXISTS [{table_name}]"))
+            msg = f"dropped phantom table '{table_name}' (empty, belongs to catalog/nutrition.db)"
+            messages.append(msg)
+            logger.info("  schema_sync: %s", msg)
+
+        if messages:
+            conn.commit()
+
+    return messages
+
+
 def _fix_cross_db_fk(db_engine: Engine) -> list[str]:
     """Rimuove FK residue cross-DB (esercizi_sessione → esercizi).
 
@@ -150,6 +193,9 @@ def sync_schema(db_engine: Engine) -> list[str]:
 
     # Fix legacy cross-DB FK constraints (idempotente)
     messages.extend(_fix_cross_db_fk(db_engine))
+
+    # Rimuovi tabelle phantom da backup pre-separazione (idempotente)
+    messages.extend(_drop_phantom_tables(db_engine))
 
     tables_checked = 0
     columns_added = 0
