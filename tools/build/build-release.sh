@@ -260,6 +260,11 @@ print(json.dumps({'version': h.get('version'), 'db': h.get('db'), 'catalog': h.g
 # Shutdown
 kill "$SMOKE_PID" 2>/dev/null || true
 wait "$SMOKE_PID" 2>/dev/null || true
+
+# Cleanup: il smoke test crea dist/data/ (crm.db, .env, logs) come side-effect
+# Rimuovi per non contaminare il safety gate dei build successivi
+rm -rf "$ROOT/dist/data" 2>/dev/null || true
+
 echo ""
 echo "  VERIFY: OK — 5/5 invarianti rispettate"
 echo ""
