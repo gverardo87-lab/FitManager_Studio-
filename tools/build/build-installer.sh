@@ -170,7 +170,8 @@ echo "Tutti i safety gate superati."
 ISCC_BIN="$(resolve_iscc)"
 echo "Using ISCC: $ISCC_BIN"
 
-"$ISCC_BIN" "/DMyAppVersion=$INSTALLER_VERSION" "$ROOT/installer/fitmanager.iss"
+# //D (doppio slash) impedisce a MSYS/Git Bash di convertire /D in un path Windows
+"$ISCC_BIN" "//DMyAppVersion=$INSTALLER_VERSION" "$ROOT/installer/fitmanager.iss"
 
 echo "Installer atteso: $ROOT/dist/FitManager_Setup_${INSTALLER_VERSION}.exe"
 echo "=== build-installer.sh completato ==="
