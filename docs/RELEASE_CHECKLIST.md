@@ -18,12 +18,13 @@
 
 - [x] PyInstaller backend exe: `dist/fitmanager/fitmanager.exe` (bundle ~100 MB)
 - [x] Next.js standalone: `frontend/.next/standalone/server.js`
-- [x] Inno Setup installer: `dist/FitManager_Setup_1.0.2.exe` (`98,510,802` bytes)
-- [x] SHA-256 release candidate: `9D9EF9FF22053C37EEE8B66EA41C58FA5D467395120EFE37B2AB613FFC6B51C6`
+- [x] Inno Setup installer: `dist/FitManager_Setup_1.0.4.exe`
 - [x] Launcher: `installer/launcher.bat` con `LICENSE_ENFORCEMENT_ENABLED=true`
+- [x] License enforcement default ON in PyInstaller (non dipende piu' solo da launcher.bat)
 - [x] Node runtime: `installer/node/node.exe`
 - [x] Seed data in bundle: esercizi JSON + relazioni + media
-- [x] Versione `1.0.2` riallineata in `api/__init__.py`, `api/main.py`, `frontend/package.json` e `installer/fitmanager.iss`
+- [x] Versione `1.0.4` riallineata in `api/__init__.py`, `frontend/package.json` e `installer/fitmanager.iss`
+- [x] Build pipeline safety gates: CRM data leak + ISS reference + nutrition.db integrity
 - [x] Nome output installer versionato e tracciabile, non solo `FitManager_Setup.exe`
 - [x] Packaging di `catalog.db` e `license_public.pem` tramite snapshot immutabili in `dist/release-data`
 - [x] Rebuild del setup dopo il fix rewrite loopback: `frontend/.next/standalone/server.js` non contiene host LAN/Tailscale/developer nei rewrite `/api`, `/health`, `/media`
@@ -35,13 +36,15 @@
 - [x] `license.key` cliente tenuta fuori dal repository e fuori da `installer/assets`, con copia solo verso `data/license.key` sulla macchina target
 - [x] Health endpoint riporta `license_status: valid`
 - [x] Launcher impone `LICENSE_ENFORCEMENT_ENABLED=true` in produzione
+- [x] PyInstaller default: enforcement ON anche senza launcher (v1.0.4)
 - [x] Verifica manuale post-install/post-upgrade: `data/license.key` presente nella cartella installata finale prima di interpretare errori pagina come bug runtime
 - [ ] Test enforcement negativo manuale: rimuovere `license.key` su installazione reale e verificare pagina `/licenza`
 
 ## 4. Dati e Configurazione
 
 - [ ] `data/crm.db` nel bundle release candidate vuoto e first-run-safe
-- [x] `data/catalog.db` congelato al catalogo canonico corrente con 400 ID esercizio per il bundle release candidate
+- [x] `data/catalog.db` congelato al catalogo canonico corrente (500 esercizi attivi) per il bundle
+- [x] `data/nutrition.db` con integrity check automatico nel build (>= 8 template, >= 800 alimenti)
 - [x] `data/.env` - JWT_SECRET (52 char), PUBLIC_PORTAL_ENABLED, PUBLIC_BASE_URL
 - [x] `data/media/exercises/` - 1788 foto esercizi
 - [x] `data/exercises/` - 3 seed JSON (esercizi + relazioni + media)
@@ -91,15 +94,17 @@
 
 ## Baseline
 
-- **Branch**: `codex_02`
-- **Preflight anchor commit**: `4a19bf2` (docs-first)
-- **Release candidate artifact**: `dist/FitManager_Setup_1.0.2.exe`
-- **Release candidate SHA-256**: `9D9EF9FF22053C37EEE8B66EA41C58FA5D467395120EFE37B2AB613FFC6B51C6`
-- **Versione candidata**: `1.0.2`
-- **Data**: 2026-03-11
+- **Branch**: `fit_launch_01`
+- **Versione corrente**: `1.0.4`
+- **Data**: 2026-03-21
+- **Release candidate artifact**: `dist/FitManager_Setup_1.0.4.exe`
 
-> Nota 2026-03-11: la RC `1.0.1` gia costruita va considerata non distribuibile perche contiene
-> rewrite standalone contaminati da un host di sviluppo. La build distribuibile corrente riparte da `1.0.2`.
+### Storico versioni
+| Versione | Data | Note |
+|----------|------|------|
+| 1.0.2 | 2026-03-11 | Prima RC distribuibile (fix rewrite loopback) |
+| 1.0.3 | 2026-03-20 | Fix build pipeline + pitch deck + seed dev realistico |
+| 1.0.4 | 2026-03-21 | License enforcement frozen default + safety gates build + nutrition integrity |
 
 ## Rollback
 

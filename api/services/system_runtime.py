@@ -22,7 +22,8 @@ APP_STARTED_AT = datetime.now(timezone.utc)
 
 
 def is_license_enforcement_enabled() -> bool:
-    value = os.getenv("LICENSE_ENFORCEMENT_ENABLED", "false").strip().lower()
+    default = "true" if getattr(sys, "frozen", False) else "false"
+    value = os.getenv("LICENSE_ENFORCEMENT_ENABLED", default).strip().lower()
     return value in {"1", "true", "yes", "on"}
 
 

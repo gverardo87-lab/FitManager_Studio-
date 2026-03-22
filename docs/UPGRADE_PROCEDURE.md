@@ -54,7 +54,7 @@ macchina guasta, usa prima [SUPPORT_RUNBOOK.md](/Users/gvera/Projects/FitManager
 
 Prima di iniziare devi avere:
 
-- il nuovo installer, per esempio `FitManager_Setup_1.0.2.exe`;
+- il nuovo installer, per esempio `FitManager_Setup_1.0.4.exe`;
 - accesso al FitManager attuale sul PC del trainer;
 - accesso alla cartella installata;
 - una posizione sicura dove copiare temporaneamente i file critici

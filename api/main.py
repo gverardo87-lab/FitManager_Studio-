@@ -224,6 +224,24 @@ async def lifespan(app: FastAPI):
         seed_exercise_relations(catalog_seed_session)
         seed_exercise_media(catalog_seed_session)
 
+    # ── 4b. Nutrition template check (warning, non bloccante) ──
+    if Path(nutrition_path).exists():
+        try:
+            conn = sqlite3.connect(nutrition_path)
+            template_count = conn.execute(
+                "SELECT COUNT(*) FROM template_dieta WHERE attivo = 1"
+            ).fetchone()[0]
+            conn.close()
+            if template_count < 8:
+                logger.warning(
+                    f"nutrition.db ha solo {template_count} template attivi (attesi >= 8). "
+                    "I piani alimentari LARN potrebbero non essere generabili."
+                )
+            else:
+                logger.info(f"  NUTRITION_TEMPLATES = {template_count} attivi")
+        except Exception as e:
+            logger.warning(f"Impossibile verificare template nutrizione: {e}")
+
     # ── 5. Integrity check ──
     _integrity_check_on_startup(DATABASE_URL, CATALOG_DATABASE_URL)
     # Integrity check nutrition.db (separato, non blocca se mancante)

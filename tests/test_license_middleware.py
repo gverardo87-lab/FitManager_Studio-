@@ -124,6 +124,26 @@ def test_health_route_stays_exempt_and_reports_negative_license_status(
     assert data["license_enforcement_enabled"] is True
 
 
+def test_license_enforcement_default_true_when_frozen(monkeypatch):
+    """PyInstaller (sys.frozen=True) → enforcement ON di default."""
+    from api.services.system_runtime import is_license_enforcement_enabled
+
+    monkeypatch.delenv("LICENSE_ENFORCEMENT_ENABLED", raising=False)
+    monkeypatch.setattr("api.services.system_runtime.sys", type("sys", (), {"frozen": True}))
+    assert is_license_enforcement_enabled() is True
+
+
+def test_license_enforcement_default_false_when_not_frozen(monkeypatch):
+    """Source run (no sys.frozen) → enforcement OFF di default."""
+    from api.services.system_runtime import is_license_enforcement_enabled
+
+    monkeypatch.delenv("LICENSE_ENFORCEMENT_ENABLED", raising=False)
+    import sys as real_sys
+
+    monkeypatch.setattr("api.services.system_runtime.sys", real_sys)
+    assert is_license_enforcement_enabled() is False
+
+
 def test_license_middleware_allows_protected_route_with_valid_license(client, monkeypatch):
     monkeypatch.setenv("LICENSE_ENFORCEMENT_ENABLED", "true")
     token = _register_and_token(client, "license-valid@test.com")

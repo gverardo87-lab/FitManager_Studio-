@@ -42,11 +42,16 @@ Distribuzione: PyInstaller + Next.js standalone + Inno Setup (Windows installer)
 cd frontend && npm run dev                                         # frontend dev (porta 3001)
 
 # --- Test ---
-./venv/Scripts/python -m pytest tests/ -v                          # 324 test backend
+./venv/Scripts/python -m pytest tests/ -v                          # 326 test backend
 cd frontend && npm test                                            # 69 vitest (data protection)
 
 # --- Quality gate (obbligatorio prima di commit) ---
 bash tools/scripts/check-all.sh                                    # ruff check api/ + next build
+
+# --- Release (ADR-004: pipeline 5 fasi) ---
+# 1. Bump __version__ in api/__init__.py
+# 2. Commit "release: vX.Y.Z"
+# 3. bash tools/build/build-release.sh                             # preflight+build+verify+seal+tag
 
 # --- Lint singoli ---
 ./venv/Scripts/ruff check api/                                     # backend lint
@@ -164,6 +169,7 @@ Skills installate in `.agents/skills/` — knowledge base attive per audit e cod
 | `POSTMORTEMS.md` | Lezioni da errori passati | Quando incontri un pattern sospetto |
 | `AGENTS.md` | Delivery loop, quality gates, commit standard | Quando serve contesto operativo agenti |
 | `docs/LICENSE_ACTIVATION.md` | Attivazione licenza, hardware binding, CLI admin | Quando tocchi licenza, fingerprint, setup |
+| `docs/adr/ADR-004-release-pipeline-sicuro.md` | Pipeline release 5 fasi, version SSoT, safety gate, smoke test | Quando fai una release o tocchi il build pipeline |
 
 ## Commit
 

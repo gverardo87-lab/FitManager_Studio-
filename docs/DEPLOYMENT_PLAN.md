@@ -28,12 +28,12 @@
 
 ---
 
-## Release Candidate Refresh (2026-03-11)
+## Release Candidate Refresh (2026-03-11 → 1.0.4 del 2026-03-21)
 
 Decisioni operative congelate prima del rebuild candidato:
 
 1. **Preflight anchor**: commit `4a19bf2` come baseline docs-first del freeze iniziale.
-2. **Versione candidata**: `1.0.2`, riallineata in backend, frontend e installer.
+2. **Versione candidata**: `1.0.4` (precedenti: 1.0.2 → 1.0.3 → 1.0.4).
 3. **Policy bundle dati**:
    - `data/catalog.db` e' il catalogo canonico del prodotto e oggi espone 400 ID esercizio per il bundle release candidate;
    - `data/crm.db` nel bundle deve essere vuoto e first-run-safe.
@@ -46,17 +46,16 @@ Decisioni operative congelate prima del rebuild candidato:
 Questa sezione e' il contratto di base per ogni rebuild release candidate. Nessun installer nuovo va generato
 se questi punti non sono gia stati riflessi nella documentazione operativa e nella checklist release.
 
-### Stato Reale Del Rebuild (2026-03-11)
+### Stato Reale Del Rebuild (2026-03-11 → aggiornato 2026-03-21)
 
 - Build completata con `bash tools/build/build-installer.sh`
-- Artefatto prodotto: `dist/FitManager_Setup_1.0.2.exe`
-- Dimensione: `98,510,802` bytes
-- SHA-256: `9D9EF9FF22053C37EEE8B66EA41C58FA5D467395120EFE37B2AB613FFC6B51C6`
-- Reality freeze accettato senza modifiche DB:
-  - `catalog.db` canonico bundle = 400 ID esercizio
-  - `crm.db` locale = 396 record `in_subset=True`
-- Packaging hardening: `catalog.db` e `license_public.pem` vengono stageati in `dist/release-data`
-  per evitare lock sui file live in `data/`
+- Artefatto corrente: `dist/FitManager_Setup_1.0.4.exe`
+- Packaging hardening: `catalog.db`, `nutrition.db` e `license_public.pem` stageati in `dist/release-data`
+- **Safety gate v1.0.4** (3 check nel build pipeline):
+  1. CRM data leak prevention: fail se `crm.db`/`crm_dev.db` trovato in `dist/`
+  2. ISS reference check: fail se `fitmanager.iss` referenzia `crm.db`
+  3. Nutrition DB integrity: verifica soglie minime (template >= 8, alimenti >= 800)
+- **License enforcement default**: `sys.frozen` (PyInstaller) → default `true` senza dipendere da `launcher.bat`
 
 ---
 
@@ -74,7 +73,7 @@ Source (Git privato — MAI esposto al cliente)
 |   Output: .next/standalone/ + .next/static/
 |   Source maps: MAI distribuite
 |
-+-- installer/              <- Inno Setup -> FitManager_Setup_1.0.2.exe (~98 MB)
++-- installer/              <- Inno Setup -> FitManager_Setup_1.0.4.exe (~100 MB)
 |   fitmanager.iss          Script installer Inno Setup
 |   launcher.bat            Avvia backend + frontend + apre browser
 |   assets/                 Icone, testi, EULA (mai `license.key` cliente)
@@ -94,7 +93,7 @@ Source (Git privato — MAI esposto al cliente)
 
 ```
 1. Riceve link download (GitHub Release privato o sito web)
-2. Scarica "FitManager_Setup_1.0.2.exe" (~98MB)
+2. Scarica "FitManager_Setup_1.0.4.exe" (~100MB)
 3. Doppio click -> installer professionale
    +-----------------------------------+
    |  FitManager AI Studio             |
@@ -144,7 +143,7 @@ SVILUPPATORE                              APPLICAZIONE
 ### Implementazione
 - Chiave privata: `~/.fitmanager/private_key.pem` (solo sul PC sviluppatore)
 - Chiave pubblica: embedded in `api/services/license.py`
-- Middleware FastAPI: controlla licenza su ogni request (cache in memoria)
+- Middleware FastAPI: controlla licenza su ogni request (enforcement ON di default in PyInstaller)
 - CLI tool: `python -m tools.admin_scripts.generate_license --client "gym-roma" --tier pro --months 12`
 - Storage licenza: `data/license.key` (file JWT nella cartella dati)
 - Chiave pubblica distribuita: `data/license_public.pem`, stageata in `dist/release-data` durante il packaging
