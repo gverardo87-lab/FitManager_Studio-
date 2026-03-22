@@ -161,6 +161,29 @@ def _integrity_check_on_startup(business_url: str, catalog_url: str) -> None:
             logger.critical(f"  {label} DB integrity check error: {e}")
 
 
+def _purge_stale_wal(db_path: str, label: str) -> None:
+    """
+    Elimina file WAL/SHM stale per cataloghi read-only (catalog.db, nutrition.db).
+
+    Questi DB vengono shippati pre-costruiti dall'installer. Se una versione
+    precedente li ha aperti in WAL mode, i file -wal/-shm persistono nella
+    cartella data/ (protetta da uninsneveruninstall). L'installer sovrascrive
+    il .db ma NON i file WAL/SHM — SQLite legge il WAL stale e i dati
+    risultano corrotti o vuoti.
+
+    Sicuro perche' cataloghi e nutrition sono read-only: qualsiasi WAL
+    residuo e' spazzatura di una versione precedente.
+    """
+    for suffix in ("-wal", "-shm"):
+        wal_file = Path(db_path + suffix)
+        if wal_file.exists():
+            try:
+                wal_file.unlink()
+                logger.info(f"  {label}: rimosso WAL stale {wal_file.name}")
+            except OSError as e:
+                logger.warning(f"  {label}: impossibile rimuovere {wal_file.name}: {e}")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
@@ -205,6 +228,7 @@ async def lifespan(app: FastAPI):
     if not Path(catalog_path).exists():
         logger.warning("catalog.db non trovato — creo tabelle vuote. "
                        "Eseguire: python -m tools.admin_scripts.build_catalog")
+    _purge_stale_wal(catalog_path, "catalog")
     create_catalog_tables()
     logger.info(f"  CATALOG_DB = {catalog_path}")
 
@@ -213,6 +237,7 @@ async def lifespan(app: FastAPI):
     if not Path(nutrition_path).exists():
         logger.warning("nutrition.db non trovato — creo tabelle vuote. "
                        "Eseguire: python -m tools.admin_scripts.build_nutrition")
+    _purge_stale_wal(nutrition_path, "nutrition")
     create_nutrition_tables()
     logger.info(f"  NUTRITION_DB = {nutrition_path}")
 
