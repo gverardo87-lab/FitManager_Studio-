@@ -280,9 +280,9 @@ import sqlite3, json
 db = sqlite3.connect(r'$NUTRITION_DB_W')
 counts = {
     'catalog_exercises': 500,
-    'nutrition_templates': db.execute('SELECT COUNT(*) FROM template_dieta WHERE attivo = 1').fetchone()[0],
-    'nutrition_alimenti': db.execute('SELECT COUNT(*) FROM alimenti WHERE attivo = 1').fetchone()[0],
-    'nutrition_pasti': db.execute('SELECT COUNT(*) FROM pasti_template').fetchone()[0],
+    'nutrition_templates': db.execute('SELECT COUNT(*) FROM plan_templates WHERE is_active = 1').fetchone()[0],
+    'nutrition_alimenti': db.execute('SELECT COUNT(*) FROM alimenti WHERE is_active = 1').fetchone()[0],
+    'nutrition_pasti': db.execute('SELECT COUNT(*) FROM template_plan_meals').fetchone()[0],
 }
 db.close()
 print(json.dumps(counts))

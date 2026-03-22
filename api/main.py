@@ -229,7 +229,7 @@ async def lifespan(app: FastAPI):
         try:
             conn = sqlite3.connect(nutrition_path)
             template_count = conn.execute(
-                "SELECT COUNT(*) FROM template_dieta WHERE attivo = 1"
+                "SELECT COUNT(*) FROM plan_templates WHERE is_active = 1"
             ).fetchone()[0]
             conn.close()
             if template_count < 8:

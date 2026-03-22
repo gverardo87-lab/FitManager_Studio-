@@ -142,10 +142,10 @@ python3 -c "
 import sqlite3, sys
 db = sqlite3.connect(r'$NUTRITION_DB')
 checks = {
-    'template attivi': ('SELECT COUNT(*) FROM template_dieta WHERE attivo = 1', 8),
-    'pasti template': ('SELECT COUNT(*) FROM pasti_template', 200),
-    'componenti template': ('SELECT COUNT(*) FROM componenti_pasto_template', 500),
-    'alimenti attivi': ('SELECT COUNT(*) FROM alimenti WHERE attivo = 1', 800),
+    'template attivi': ('SELECT COUNT(*) FROM plan_templates WHERE is_active = 1', 8),
+    'pasti template': ('SELECT COUNT(*) FROM template_plan_meals', 200),
+    'componenti template': ('SELECT COUNT(*) FROM template_plan_components', 500),
+    'alimenti attivi': ('SELECT COUNT(*) FROM alimenti WHERE is_active = 1', 800),
 }
 failed = False
 for label, (query, threshold) in checks.items():
