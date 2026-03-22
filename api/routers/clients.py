@@ -562,8 +562,9 @@ def _build_client_dossier_response(
 
     activity_items: List[tuple[datetime, ClientDossierActivityItem]] = []
     for event in recent_events:
+        event_dt = event.data_inizio if event.data_inizio.tzinfo else event.data_inizio.replace(tzinfo=timezone.utc)
         activity_items.append((
-            event.data_inizio,
+            event_dt,
             ClientDossierActivityItem(
                 at=event.data_inizio.isoformat(),
                 kind="event",

@@ -148,6 +148,8 @@ data/media/
 data/license.key
 data/license_public.pem
 data/license_private.pem
+data/logs/
+data/*.bak_*
 
 # Installer binaries (non committare, troppo pesanti)
 installer/node/

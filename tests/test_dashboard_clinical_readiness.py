@@ -148,7 +148,10 @@ def test_clinical_readiness_prioritizes_missing_and_legacy(client, auth_headers,
     assert items[3]["readiness_score"] == 100
     assert items[3]["priority"] == "low"
     assert items[3]["timeline_reason"] == "workout_review"
-    assert items[3]["timeline_label"] == f"Review scheda tra {expected_ready_days} giorni"
+    if expected_ready_days == 1:
+        assert items[3]["timeline_label"] == "Review scheda domani"
+    else:
+        assert items[3]["timeline_label"] == f"Review scheda tra {expected_ready_days} giorni"
     assert items[3]["next_due_date"] == expected_ready_due.isoformat()
     assert items[3]["measurement_freshness"]["status"] == "ok"
     assert items[3]["measurement_freshness"]["due_date"] == expected_measurement_due.isoformat()

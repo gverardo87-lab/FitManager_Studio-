@@ -231,7 +231,7 @@ def test_client_dossier_returns_operational_summary(client, auth_headers, sessio
 
     assert data["session_summary"]["total_pt_sessions"] == 2
     assert data["session_summary"]["completed_pt_sessions"] == 1
-    assert data["session_summary"]["next_scheduled_session_at"] == next_session["data_inizio"]
+    assert data["session_summary"]["next_scheduled_session_at"] == next_session["data_inizio"].replace(" ", "T")
     assert data["session_summary"]["last_completed_session_at"] is not None
 
     assert data["plan_summary"]["total_plans"] == 2

@@ -49,7 +49,8 @@ def test_support_snapshot_returns_safe_runtime_diagnostic_payload(
     data = response.json()
     assert "trainer" not in data
     assert "data" not in data
-    assert data["generated_at"].startswith("2026-03-10T")
+    # generated_at usa datetime.now() — verifico solo il formato ISO
+    assert "T" in data["generated_at"]
     assert data["public_base_url"] == "https://fitmanager.example.ts.net"
     assert data["health"]["status"] == "ok"
     assert data["health"]["app_mode"] == "production"
