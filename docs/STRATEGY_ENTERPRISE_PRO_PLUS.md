@@ -1,6 +1,6 @@
 # Strategia Enterprise PRO+ — FitManager Studio+
 
-**Versione:** 1.1 — 22 marzo 2026
+**Versione:** 2.0 — 23 marzo 2026
 **Contesto:** Preparazione incontro con [Chinesiologo Senior] — ex dirigente TechnoGym, 20+ anni nel settore, network ai vertici del fitness italiano.
 
 ---
@@ -403,79 +403,105 @@ Questo ritmo crea un **appuntamento settimanale** — il PT sa che ogni settiman
 
 ---
 
-## Parte 3: Il ruolo del Chinesiologo Senior
+## Parte 3: Industry Partner — Ruolo strutturale
 
-### Perche' questa persona e' strategicamente critica
+### Perche' questo ruolo e' indispensabile
 
-| Asset | Valore per FitManager |
-|-------|-----------------------|
-| 20+ anni nel settore | Credibilita' istantanea che un prodotto software non puo' comprare |
-| Ex dirigente TechnoGym | Conosce l'ecosistema dall'interno (Mywellness, 30.000 club, 40M utenti) |
-| Network ai vertici | Accesso diretto a decision maker, formatori, opinion leader |
-| Libero professionista attivo | Puo' parlare da pari a pari con il target (non e' "quello del software") |
-| Mental coach | Capisce la psicologia del PT — le resistenze, le paure, le ambizioni |
-| Ha gia' identificato i limiti | Pensa strategicamente, non tatticamente |
+FitManager e' un prodotto software che deve essere venduto a professionisti che non sanno di averne bisogno (vedi Parte 1: Category Creation). Il founder e' uno sviluppatore, non un professionista del fitness. Serve una figura che:
 
-### 3 possibili ruoli (da proporre domani)
+1. **Parli la lingua del target** — i PT si fidano di un pari, non di un software
+2. **Abbia il network** — per selezionare la POC, aprire porte, generare vendite
+3. **Crei contenuti di valore** — masterclass, webinar, formazione
+4. **Validi il posizionamento** — il concetto "PT Evoluto" deve venire dal mondo fitness, non dal mondo tech
 
-#### Opzione A — Co-Founder / Chief Growth Officer
+**Questo ruolo esiste a prescindere dalla persona.** Il candidato attuale e' il profilo ideale (20+ anni, ex TechnoGym, network attivo). Se non dovesse accettare, lo stesso ruolo va coperto con un profilo equivalente.
+
+### Profilo richiesto
+
+| Requisito | Minimo | Ideale |
+|-----------|--------|--------|
+| Esperienza nel settore fitness | 15+ anni | 20+ anni |
+| Network attivo (formatori, enti, catene) | Regionale | Nazionale |
+| Credibilita' verso i PT | Riconosciuto nel settore | Opinion leader |
+| Capacita' di creare contenuti | Webinar/presentazioni | Masterclass + video + articoli |
+| Disponibilita' | 8-10h/mese | 15-20h/mese |
+
+**Candidato identificato:** Chinesiologo senior, 20+ anni, ex dirigente TechnoGym, libero professionista e mental coach. Network ai vertici del settore. In fase di definizione dell'accordo.
+
+### 3 modelli di ingaggio
+
+#### Scenario A — Partnership equity + revenue share (PRIMARIO)
+
+**Principio:** Zero costi fissi. Il partner guadagna solo se il progetto genera ricavi. Allineamento totale degli incentivi: piu' vende, piu' guadagna. Zero tetto.
 
 **Cosa fa:**
-- Guida la strategia go-to-market e community
+- Seleziona i 10 Fondatori per la POC dal suo network
 - E' il volto pubblico di FitManager nel mondo fitness
-- Conduce masterclass, webinar, eventi
-- Attiva il network per i primi 30 Fondatori + Early Adopter
-- Partecipa alle decisioni di prodotto (validazione feature)
+- Conduce masterclass e webinar (8-10/anno)
+- Attiva il network per generare vendite (referral tracciato)
+- Valida posizionamento, messaging, priorita' prodotto
 
 **Cosa riceve:**
-- Equity (5-15% vesting 4 anni)
-- Revenue share sulla community PRO (es. 20% sui rinnovi)
-- Licenza Fondatore + ruolo "Ambassador #1"
 
-**Quando ha senso:** Se vuole impegnarsi a medio-lungo termine e crede nel progetto come missione.
+| Componente | Valore | Meccanismo |
+|------------|--------|------------|
+| Equity | 5-8% | Vesting 4 anni, cliff 1 anno |
+| Rev. share Community PRO | 25% dei ricavi upgrade €99/anno | Su tutti i rinnovi |
+| Rev. share Inner Circle | 25% dei ricavi €299/anno | Su tutti gli abbonamenti |
+| Rev. share vendite network | 20% sulle licenze da referral | Tracciato con link/codice |
+| Rev. share masterclass | 30% sul ricavo delle sessioni che conduce | Sia live che registrate |
+| Licenza Fondatore | Inclusa | Badge, upgrade lifetime |
 
-#### Opzione B — Strategic Advisor + Ambassador
+**Proiezione guadagno partner (dettaglio nel business plan sezione 8):**
 
-**Cosa fa:**
-- Advisory mensile (2-4h/mese) su strategia e posizionamento
-- Conduce 2-3 masterclass/trimestre come "esperto ospite"
-- Introduce FitManager al suo network (warm intro)
-- Valida il linguaggio e il messaging verso il target
+| Anno | Cash da revenue share | Equity paper value (6%) | Totale |
+|------|----------------------|------------------------|--------|
+| 1 | €2.445 | ~€15.000 | ~€17.000 |
+| 2 | €8.275 | ~€39.000 | ~€47.000 |
+| 3 | €18.582 | ~€75.000 | ~€93.000 |
 
-**Cosa riceve:**
-- Fee advisory (€500-1.000/mese) o equity advisor (1-3%)
-- Revenue share sulle masterclass che conduce
-- Licenza Fondatore + badge "Expert Advisor"
+**Quando ha senso:** Sempre — e' il modello primario. Funziona se il candidato crede nella visione e accetta che il guadagno cash e' basso nell'Anno 1 ma cresce con il progetto.
 
-**Quando ha senso:** Se ha gia' troppi impegni per un ruolo operativo ma vuole contribuire.
+#### Scenario B — Retainer + equity ridotta (FALLBACK)
 
-#### Opzione C — Content Partner / Expert in Residence
+Da usare se serve cercare un profilo diverso sul mercato che richiede compenso fisso.
 
-**Cosa fa:**
-- Crea contenuti per la community (masterclass, video, articoli)
-- E' il "volto esperto" — il PT si fida di lui, non del software
-- Partecipa ai webinar mensili come host o co-host
+**Cosa fa:** Come Scenario A ma con impegno minimo garantito (8-10h/mese documentate).
 
-**Cosa riceve:**
-- Fee per contenuto (€200-500/masterclass)
-- Visibilita' + personal branding (la community lo amplifica)
-- Licenza Fondatore
+| Componente | Valore |
+|------------|--------|
+| Retainer | €500-1.000/mese |
+| Equity | 1-3% (vesting 4 anni, cliff 1 anno) |
+| Fee masterclass | €200-500 per sessione |
 
-**Quando ha senso:** Se vuole un coinvolgimento leggero ma ad alto impatto.
+**Costo fisso:** €6.000-12.000/anno. Impatta il P&L come costo operativo.
 
-### Cosa proporre domani (script suggerito)
+#### Scenario C — Content Partner (MINIMO)
 
-> "Ho costruito lo strumento — il CRM scientifico che manca al mercato. Tu hai la visione, il network e la credibilita' per portarlo ai trainer che ne hanno bisogno ma non lo sanno ancora.
->
-> Il prodotto e' pronto: 500 esercizi, 880 alimenti CREA, safety engine per 47 condizioni cliniche, tutto locale, tutto suo. Ma come hai detto tu — il mercato va istruito.
->
-> Io non posso farlo da solo. Ho bisogno di qualcuno che parli la lingua dei trainer, che sia credibile quando dice 'lascia Excel', e che abbia il network per aprire le porte giuste.
->
-> Ecco cosa ho in mente per la community e il modello di crescita..."
->
-> [Mostra la struttura 3 livelli + il calendario mensile]
->
-> "Il tuo ruolo potrebbe essere [Opzione A/B/C]. Cosa ti risuona di piu'?"
+Coinvolgimento leggero, nessun allineamento strategico a lungo termine.
+
+| Componente | Valore |
+|------------|--------|
+| Fee per masterclass | €300-500/sessione |
+| Fee per contenuto | €100-200/articolo o video |
+| Licenza Fondatore | Inclusa |
+
+**Costo fisso:** €2.400-6.000/anno. Nessun equity, nessun revenue share.
+
+### Impatto sul P&L per scenario
+
+| Voce | Scenario A | Scenario B | Scenario C |
+|------|-----------|-----------|-----------|
+| Costo fisso Anno 1 | **€0** | €6.000-12.000 | €2.400-6.000 |
+| Costo variabile Anno 1 | €2.445 (rev. share) | €0 | €0 |
+| **Costo totale Anno 1** | **€2.445** | **€6.000-12.000** | **€2.400-6.000** |
+| Costo fisso Anno 2 | **€0** | €6.000-12.000 | €4.000-8.000 |
+| Costo variabile Anno 2 | €8.275 (rev. share) | €1.000-2.500 (MC fee) | €0 |
+| **Costo totale Anno 2** | **€8.275** | **€7.000-14.500** | **€4.000-8.000** |
+| Allineamento incentivi | Massimo | Medio | Basso |
+| Compatibilita' bootstrap | Perfetta | Richiede cash | Richiede cash |
+
+**Lo Scenario A e' l'unico che non richiede cash upfront** e che allinea completamente gli incentivi. E' il modello naturale per un bootstrap.
 
 ---
 
@@ -504,19 +530,21 @@ Questo ritmo crea un **appuntamento settimanale** — il PT sa che ogni settiman
 | Masterclass erogate | 8 | 12 |
 | Template condivisi | 20 | 50 |
 
-### KPI Revenue composito (aggiornamento al business plan)
+### KPI Revenue composito (allineato al business plan v3.0)
 
 | | **Anno 1** | **Anno 2** | **Anno 3** |
 |---|-----------|-----------|-----------|
-| Licenze vendute | 130 | 240 | 360 |
-| Ricavi licenze | €52.370 | €107.760 | €161.640 |
-| Ricavi upgrade PRO | €0 | €8.200 | €21.500 |
-| Ricavi Inner Circle | €0 | €0 | €14.950 |
-| Ricavi masterclass singole* | €0 | €3.000 | €8.000 |
-| Setup/onboarding | €5.000 | €12.000 | €20.000 |
-| **Ricavi totali** | **€57.370** | **€130.960** | **€226.090** |
+| Licenze vendute | 90 | 180 | 300 |
+| Ricavi licenze | €34.410 | €80.820 | €134.700 |
+| Ricavi upgrade PRO | €0 | €4.850 | €13.600 |
+| Ricavi Inner Circle | €0 | €0 | €8.970 |
+| Ricavi masterclass singole | €0 | €4.680 | €11.700 |
+| Setup/onboarding | €1.500 | €5.000 | €10.000 |
+| **Ricavi lordi totali** | **€35.910** | **€95.350** | **€178.970** |
+| Revenue share Industry Partner | -€2.445 | -€8.275 | -€18.582 |
+| **Ricavi netti** | **€33.465** | **€87.075** | **€160.388** |
 
-*Masterclass vendute singolarmente a non-abbonati PRO (€29-49 cad.)
+I calcoli dettagliati e le formule sono nel business plan (sezione 9, legenda P&L).
 
 ---
 

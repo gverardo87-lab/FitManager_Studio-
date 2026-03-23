@@ -389,46 +389,193 @@ Nessun costo fisso       Coeff. redditivita' 67%    fatturato >€85K)
 
 ## 8. Team
 
-### Anno 1 — Solo founder (zero costi strutturali)
+### Organigramma per fase
+
+```
+ANNO 1 (bootstrap)              ANNO 2 (primo team)            ANNO 3 (scala)
+┌──────────────┐                ┌──────────────┐               ┌──────────────┐
+│   Founder    │                │   Founder    │               │   Founder    │
+│  (Gianluca)  │                │  (Gianluca)  │               │  (Gianluca)  │
+└──────┬───────┘                └──────┬───────┘               └──────┬───────┘
+       │                               │                              │
+┌──────┴───────┐                ┌──────┴───────┐               ┌──────┴───────┐
+│   Industry   │                │   Industry   │               │   Industry   │
+│   Partner    │                │   Partner    │               │   Partner    │
+│  (equity +   │                │  (equity +   │               │  (equity +   │
+│  rev. share) │                │  rev. share) │               │  rev. share) │
+└──────────────┘                └──────┬───────┘               └──────┬───────┘
+                                       │                              │
+                                ┌──────┴───────┐               ┌──────┼───────┐
+                                │  Tirocinante │               │ Junior│Tirocin│
+                                │  (€1.200/m)  │               │€1.500 │€1.200 │
+                                └──────────────┘               └───────┴───────┘
+```
+
+### Founder
 
 **Gianluca Vera** — Fondatore, sviluppatore e product owner
 - Ha costruito FitManager Studio+ da zero in ~6 mesi
 - Stack completo: Python/FastAPI + Next.js/React + SQLite + AI
 - 45.000+ LOC, 395 test, 3 database, 5 motori scientifici
-- Copre: sviluppo, supporto, community, marketing, vendite
+- Anno 1: copre sviluppo, supporto, community, marketing, vendite
 
-**Principio Anno 1:** Nessun costo fisso per personale. Il founder fa tutto. Il prodotto e' costruito, il focus e' vendere e validare. L'unico "costo" e' il tempo del founder.
+### Industry Partner — Ruolo strutturale (non opzionale)
 
-### Strategic Advisor (in definizione)
+Il progetto richiede una figura con profonda esperienza nel settore fitness, credibilita' verso i professionisti target e un network attivo ai vertici del mercato italiano. Questo ruolo e' **indispensabile** per la fase di lancio e category creation.
 
-Chinesiologo senior con 20+ anni di esperienza, ex dirigente TechnoGym, network ai vertici del settore fitness italiano. Ruolo:
-- Validazione prodotto e posizionamento
-- Selezione dei 10 Fondatori per la POC
-- Masterclass e contenuti per la community
-- Accesso al network per go-to-market
+**Profilo richiesto:**
+- 15+ anni di esperienza operativa nel settore fitness/wellness
+- Network attivo tra formatori, enti (CONI, FIF, ISSA, ASI), catene, opinion leader
+- Credibilita' diretta verso il target (i PT si fidano di un pari, non di un software)
+- Capacita' di creare e condurre contenuti (masterclass, webinar, formazione)
 
-Compenso: equity advisor (1-3%) e/o revenue share su community, oppure fee per contenuto. Da definire in base al livello di coinvolgimento.
+**Candidato identificato:** Chinesiologo senior con 20+ anni di esperienza, ex dirigente TechnoGym, attualmente libero professionista e mental coach. Network attivo ai vertici del settore. In fase di definizione dell'accordo.
 
-### Anno 2 — Primo team minimo
+**Responsabilita':**
 
-| Ruolo | Costo/mese | Quando | Cosa fa |
-|-------|-----------|--------|---------|
-| **Tirocinante** (extracurriculare) | €1.200 | Mese 13 | Customer success, community, onboarding, contenuti |
-| **Ufficio** (piccolo, condiviso) | €350-500 | Mese 13 | Base operativa, demo in presenza, credibilita' |
+| Area | Attivita' | Impatto |
+|------|-----------|---------|
+| **POC** | Selezione dei 10 Fondatori dal suo network | Qualita' del campione POC |
+| **Go-to-market** | Introduzioni a PT, formatori, enti del settore | Pipeline vendite |
+| **Community** | Conduzione masterclass e webinar mensili | Retention + valore upgrade |
+| **Posizionamento** | Validazione messaggio "PT Evoluto", linguaggio | Credibilita' della categoria |
+| **Product** | Feedback su feature, priorita', workflow reali | Product-market fit |
 
-**Costo aggiuntivo Anno 2:** ~€18.000-20.400/anno (tirocinante) + ~€4.200-6.000 (ufficio) = **~€22.200-26.400**
+#### Modello di ingaggio: 3 opzioni
+
+Il ruolo di Industry Partner prevede 3 possibili strutture di compenso. Lo **Scenario A e' il modello primario**, coerente con il bootstrap e con una vera partnership dove entrambe le parti guadagnano in proporzione ai risultati.
+
+##### Scenario A — Partnership a equity + revenue share (PRIMARIO)
+
+**Principio:** Nessun costo fisso. Il partner guadagna solo se il progetto genera ricavi. Piu' vende, piu' guadagna. Zero tetto.
+
+| Componente | Valore | Come funziona |
+|------------|--------|---------------|
+| **Equity** | 5-8% | Vesting 4 anni, cliff 1 anno (*) |
+| **Revenue share: Community PRO** | 25% dei ricavi upgrade €99/anno | Calcolato su tutti i rinnovi upgrade |
+| **Revenue share: Inner Circle** | 25% dei ricavi €299/anno (futuro) | Calcolato su tutti gli abbonamenti IC |
+| **Revenue share: Vendite da network** | 20% sulle licenze generate via referral | Tracciato con codice/link referral univoco |
+| **Revenue share: Masterclass** | 30% sul ricavo delle masterclass che conduce | Sia live che registrate vendute singolarmente |
+| **Licenza Fondatore** | Inclusa | Badge, upgrade lifetime, accesso roadmap |
+
+(*) **Vesting 4 anni, cliff 1 anno:** L'equity matura progressivamente. Se il partner lascia prima di 12 mesi, non matura nulla. Dopo il cliff, matura 1/48 al mese. Dopo 4 anni, l'equity e' completamente maturata. Questo protegge entrambe le parti.
+
+**Costo fisso per il founder: €0.** Il revenue share e' un costo variabile che esiste solo quando ci sono ricavi.
+
+##### Scenario B — Retainer + equity ridotta (FALLBACK)
+
+Da usare se il candidato ideale non accetta lo Scenario A, o se serve cercare un profilo diverso sul mercato che richiede compenso fisso.
+
+| Componente | Valore |
+|------------|--------|
+| Retainer mensile | €500-1.000/mese |
+| Equity | 1-3% (vesting 4 anni, cliff 1 anno) |
+| Masterclass fee | €200-500 per sessione condotta |
+
+**Costo fisso:** €6.000-12.000/anno. Impatta il P&L come costo operativo.
+
+##### Scenario C — Content Partner (MINIMO)
+
+Coinvolgimento leggero, per un profilo che non puo' o non vuole impegnarsi strategicamente.
+
+| Componente | Valore |
+|------------|--------|
+| Fee per masterclass | €300-500 per sessione |
+| Fee per contenuto | €100-200 per articolo/video |
+| Licenza Fondatore | Inclusa |
+
+**Costo fisso:** €2.400-6.000/anno. Nessun equity, nessun allineamento a lungo termine.
+
+#### Proiezione guadagno Industry Partner — Scenario A
+
+I calcoli seguenti mostrano quanto guadagna il partner in ciascun anno, assumendo lo Scenario A (equity + revenue share) e che il partner generi direttamente il 35% delle vendite totali tramite il suo network.
+
+**Legenda calcoli:**
+- `Vendite da network` = 35% delle vendite totali × prezzo medio × 20% revenue share
+- `Community PRO` = ricavi upgrade totali × 25%
+- `Masterclass` = 8 masterclass/anno × ricavo medio per masterclass × 30%
+
+##### Anno 1
+
+| Voce | Calcolo | Importo partner |
+|------|---------|-----------------|
+| Vendite da network (20%) | 35% di 90 licenze = 32 vendite × €382 prezzo medio (*) × 20% | **€2.445** |
+| Community PRO (25%) | €0 (upgrade incluso nel primo anno) | **€0** |
+| Masterclass (30%) | 6 masterclass × €0 (**) | **€0** |
+| **Totale cash Anno 1** | | **€2.445** |
+
+(*) Prezzo medio ponderato: (10×€149 + 20×€299 + 60×€449) / 90 = €382
+(**) Anno 1: le masterclass sono incluse nella community base per costruire il valore. Nessun ricavo separato.
+
+##### Anno 2
+
+| Voce | Calcolo | Importo partner |
+|------|---------|-----------------|
+| Vendite da network (20%) | 35% di 180 licenze = 63 × €449 × 20% | **€5.658** |
+| Community PRO (25%) | €4.850 ricavi upgrade × 25% | **€1.213** |
+| Masterclass (30%) | 8 sessioni, 4 vendute singolarmente a €39 × ~30 partecipanti = €4.680 × 30% | **€1.404** |
+| **Totale cash Anno 2** | | **€8.275** |
+
+##### Anno 3
+
+| Voce | Calcolo | Importo partner |
+|------|---------|-----------------|
+| Vendite da network (20%) | 35% di 300 licenze = 105 × €449 × 20% | **€9.429** |
+| Community PRO (25%) | €13.600 ricavi upgrade × 25% | **€3.400** |
+| Inner Circle (25%) | 30 membri × €299 × 25% | **€2.243** |
+| Masterclass (30%) | 10 sessioni, 6 vendute × €39 × ~50 partecipanti = €11.700 × 30% | **€3.510** |
+| **Totale cash Anno 3** | | **€18.582** |
+
+##### Riepilogo 3 anni — Chi guadagna quanto
+
+| | **Anno 1** | **Anno 2** | **Anno 3** | **Cumulativo** |
+|---|-----------|-----------|-----------|---------------|
+| **Ricavi lordi totali** | €35.910 | €95.350 | €178.970 | €310.230 |
+| Revenue share Industry Partner | €2.445 | €8.275 | €18.582 | **€29.302** |
+| % dei ricavi al partner | 6,8% | 8,7% | 10,4% | 9,4% |
+| **Ricavi netti founder** (pre-costi e tasse) | €33.465 | €87.075 | €160.388 | €280.928 |
+
+**Nota:** La % del partner cresce nel tempo perche' la componente Community PRO + Inner Circle + Masterclass cresce piu' velocemente delle licenze pure. Questo e' by design: il partner e' incentivato a costruire la community (valore a lungo termine), non solo a vendere licenze (valore una tantum).
+
+##### Valore equity nel tempo (stima)
+
+| Anno | Valutazione stimata progetto (*) | Valore equity partner (6%) |
+|------|----------------------------------|---------------------------|
+| 1 | €200.000-350.000 | €12.000-21.000 |
+| 2 | €500.000-800.000 | €30.000-48.000 |
+| 3 | €1.000.000-1.500.000 | €60.000-90.000 |
+
+(*) Valutazione basata su multiplo 5-10x dei ricavi annuali (benchmark software perpetuo con componente ricorrente). Non e' una valutazione formale — serve solo come ordine di grandezza.
+
+##### Guadagno totale partner (cash + equity paper value)
+
+| | **Anno 1** | **Anno 2** | **Anno 3** |
+|---|-----------|-----------|-----------|
+| Cash (revenue share) | €2.445 | €8.275 | €18.582 |
+| Equity paper value (6%) | €15.000 | €39.000 | €75.000 |
+| **Totale** | **€17.445** | **€47.275** | **€93.582** |
+
+> **Lettura per il partner:** "Anno 1 guadagno poco in cash, ma sto costruendo un asset. Anno 3 ho €18K di cash ricorrente + un pezzo di un'azienda che vale €75K+. E cresce ogni anno."
+
+### Anno 2 — Primo team operativo
+
+| Ruolo | Tipo | Costo/mese | Quando | Cosa fa |
+|-------|------|-----------|--------|---------|
+| **Tirocinante** | Extracurriculare | €1.200 | Mese 13 | Customer success, community, onboarding, contenuti |
+| **Ufficio** | Piccolo/condiviso | €400 | Mese 13 | Base operativa, demo in presenza |
+
+**Costo fisso aggiuntivo Anno 2:** €14.400 (tirocinante) + €4.800 (ufficio) = **€19.200/anno**
 
 ### Anno 3 — Crescita misurata
 
-| Ruolo | Costo/mese | Quando | Cosa fa |
-|-------|-----------|--------|---------|
-| **Tirocinante → junior** (se confermato) | €1.500 | Mese 25 | Customer success + community management |
-| **Secondo tirocinante** (opzionale) | €1.200 | Mese 30 | Marketing content + social |
-| **Ufficio** | €500 | Continuo | Base operativa |
+| Ruolo | Tipo | Costo/mese | Quando | Cosa fa |
+|-------|------|-----------|--------|---------|
+| **Tirocinante → junior** | Conferma | €1.500 | Mese 25 | Customer success + community management |
+| **Secondo tirocinante** | Extracurriculare (opzionale) | €1.200 | Mese 30 | Marketing content + social |
+| **Ufficio** | Continuo | €500 | Continuo | Base operativa |
 
 ### Advisory board (da costruire progressivamente)
 
-- Chinesiologo/PT senior (in definizione — validazione prodotto e network)
 - Commercialista specializzato in startup/forfettario
 - Legale GDPR/privacy (consulenza spot, non retainer)
 
@@ -470,41 +617,91 @@ Compenso: equity advisor (1-3%) e/o revenue share su community, oppure fee per c
 
 > **Nota:** Stima conservativa: 10 vendite/mese a prezzo pieno (non 12-15). Le vendite POC e EA sono certe (scarcita' controllata). Le vendite a prezzo pieno sono la variabile.
 
-### Proiezione 3 anni (P&L realistico)
+### Proiezione 3 anni — P&L completo (Scenario A: partnership equity + revenue share)
 
 | | **Anno 1** | **Anno 2** | **Anno 3** |
 |---|-----------|-----------|-----------|
 | **Nuove licenze** | 90 | 180 | 300 |
 | **Base installata cumulativa** | 90 | 270 | 570 |
 | | | | |
-| **RICAVI** | | | |
-| Licenze | €34.410 | €80.820 | €134.700 |
-| Upgrade annuale | €0 | €4.850 | €13.600 |
+| **RICAVI LORDI** | | | |
+| Licenze (a) | €34.410 | €80.820 | €134.700 |
+| Upgrade annuale (b) | €0 | €4.850 | €13.600 |
+| Inner Circle (c) | €0 | €0 | €8.970 |
+| Masterclass singole (d) | €0 | €4.680 | €11.700 |
 | Setup/onboarding | €1.500 | €5.000 | €10.000 |
-| **Ricavi totali** | **€35.910** | **€90.670** | **€158.300** |
+| **Ricavi lordi totali** | **€35.910** | **€95.350** | **€178.970** |
 | | | | |
-| **COSTI OPERATIVI** | | | |
+| **COSTI VARIABILI — Revenue share Industry Partner** | | | |
+| 20% su vendite da network (e) | €2.445 | €5.658 | €9.429 |
+| 25% su Community PRO (f) | €0 | €1.213 | €3.400 |
+| 25% su Inner Circle (g) | €0 | €0 | €2.243 |
+| 30% su Masterclass (h) | €0 | €1.404 | €3.510 |
+| **Totale revenue share partner** | **€2.445** | **€8.275** | **€18.582** |
+| | | | |
+| **RICAVI NETTI** (dopo revenue share) | **€33.465** | **€87.075** | **€160.388** |
+| | | | |
+| **COSTI FISSI OPERATIVI** | | | |
 | Commercialista | €1.000 | €1.500 | €2.500 |
 | Marketing (organico + ads) | €1.500 | €5.000 | €12.000 |
 | Infrastruttura (hosting, tools, cert.) | €500 | €800 | €1.200 |
 | Legale/admin (spot) | €1.000 | €2.000 | €3.000 |
-| Ufficio | €0 | €4.800 (€400×12) | €6.000 (€500×12) |
-| Tirocinante | €0 | €14.400 (€1.200×12) | €14.400 |
-| Junior (tirocinante confermato) | €0 | €0 | €9.000 (€1.500×6) |
-| Advisor (fee/contenuti) | €0 | €2.000 | €4.000 |
-| **Costi operativi totali** | **€4.000** | **€30.500** | **€52.100** |
+| Ufficio | €0 | €4.800 | €6.000 |
+| Tirocinante | €0 | €14.400 | €14.400 |
+| Junior (tirocinante confermato) | €0 | €0 | €9.000 |
+| **Totale costi fissi** | **€4.000** | **€28.500** | **€48.100** |
 | | | | |
-| **EBITDA** | **€31.910** | **€60.170** | **€106.200** |
-| **Margine EBITDA** | **89%** | **66%** | **67%** |
+| **EBITDA** | **€29.465** | **€58.575** | **€112.288** |
+| **Margine EBITDA** | **82%** | **61%** | **63%** |
 | | | | |
 | **TASSE + CONTRIBUTI** | | | |
-| IRPEF 5% su 67% fatturato | €1.203 | €3.037 | * |
-| INPS ~26% su 67% fatturato | €6.262 | €15.815 | * |
-| **Totale fiscale** | **€7.465** | **€18.852** | * |
+| IRPEF 5% su 67% fatturato (i) | €1.203 | €3.194 | * |
+| INPS ~26% su 67% fatturato (j) | €6.262 | €16.639 | * |
+| **Totale fiscale** | **€7.465** | **€19.833** | * |
 | | | | |
-| **UTILE NETTO** | **€24.445** | **€41.318** | * |
+| **UTILE NETTO FOUNDER** | **€22.000** | **€38.742** | * |
 
-*Anno 3: se il fatturato supera €85.000, si esce dal forfettario. Sara' necessario valutare con il commercialista la transizione a regime ordinario o SRL. Il carico fiscale aumentera', ma il volume di utile netto resta ampiamente positivo.
+#### Legenda calcoli P&L
+
+| Riferimento | Formula |
+|-------------|---------|
+| (a) Licenze | N. licenze × prezzo di fase. Anno 1: 10×€149 + 20×€299 + 60×€449 = €34.410 |
+| (b) Upgrade | Clienti idonei al rinnovo × €99 × tasso rinnovo (55% A2, 65% A3). Anno 1: €0 (incluso) |
+| (c) Inner Circle | Membri × €299/anno. Attivo dal Anno 3: stimati 30 membri |
+| (d) Masterclass | Sessioni vendute singolarmente a non-abbonati × €39 × partecipanti medi |
+| (e) Rev. share vendite | 35% delle vendite totali attribuite al network partner × prezzo × 20% |
+| (f) Rev. share PRO | Ricavi upgrade totali (b) × 25% |
+| (g) Rev. share IC | Ricavi Inner Circle totali (c) × 25% |
+| (h) Rev. share MC | Ricavi masterclass totali (d) × 30% |
+| (i) IRPEF | Ricavi lordi × 67% (coeff. redditivita') × 5% (aliquota startup) |
+| (j) INPS | Ricavi lordi × 67% × 26,07% (gestione separata 2026) |
+
+*Anno 3: se il fatturato supera €85.000, si esce dal regime forfettario. Sara' necessario valutare con il commercialista la transizione a regime ordinario o SRL. Il carico fiscale aumentera' (stima ~35-40% del reddito imponibile), ma l'EBITDA di €112K genera comunque un utile netto ampiamente positivo (stima €55-65K).
+
+#### Come leggere il P&L: chi guadagna quanto
+
+```
+RICAVI LORDI = Tutto cio' che entra
+      │
+      ├──► Revenue share partner (costo VARIABILE: sale solo se i ricavi salgono)
+      │         Anno 1: €2.445 (6,8%)    → il partner guadagna poco ma costruisce
+      │         Anno 2: €8.275 (8,7%)    → la community genera ricavi, il partner cresce
+      │         Anno 3: €18.582 (10,4%)  → masterclass + IC + upgrade = cash serio
+      │
+      ├──► Costi fissi operativi (stabili e prevedibili)
+      │         Anno 1: €4.000   → solo founder, zero struttura
+      │         Anno 2: €28.500  → ufficio + tirocinante
+      │         Anno 3: €48.100  → team 3 persone
+      │
+      ├──► Tasse + contributi (proporzionali al fatturato)
+      │         Anno 1: €7.465   → forfettario 5% + INPS
+      │         Anno 2: €19.833  → forfettario 5% + INPS
+      │
+      └──► UTILE NETTO FOUNDER = cio' che resta in tasca
+               Anno 1: €22.000
+               Anno 2: €38.742
+               Anno 3: stima €55-65K
+```
 
 ### Dettaglio ricavi upgrade (componente ricorrente)
 
@@ -519,31 +716,18 @@ Compenso: equity advisor (1-3%) e/o revenue share su community, oppure fee per c
 
 > La componente upgrade cresce geometricamente con la base installata. Dal Anno 4, con 570+ clienti e tasso 65-70%, il solo upgrade genera ~€37K-40K/anno di ricavo ricorrente — un "pavimento" che copre tutti i costi operativi.
 
-### Confronto: costi v2.0 (irrealistici) vs v3.0 (reali)
-
-| Voce | v2.0 Anno 1 | v3.0 Anno 1 | Delta |
-|------|-------------|-------------|-------|
-| Co-founder commerciale | €24.000 | €0 | -€24.000 |
-| Customer success | €0 | €0 | €0 |
-| Marketing | €10.000 | €1.500 | -€8.500 |
-| Infrastruttura | €3.000 | €500 | -€2.500 |
-| Legale/admin | €5.000 | €1.000 | -€4.000 |
-| **Totale costi** | **€42.000** | **€4.000** | **-€38.000** |
-| **EBITDA** | €15.370 | **€31.910** | **+€16.540** |
-
-Il margine passa dal 27% al **89%** semplicemente eliminando costi che non servono nell'Anno 1.
-
 ### Cash flow
 
-| Metrica | Valore |
-|---------|--------|
-| Costi fissi mensili (Anno 1) | ~€330/mese |
-| Break-even | **Mese 4** (prima vendita EA a €299 copre gia' i costi mensili) |
-| Cash in pocket fine Anno 1 | ~€24.000 (netto dopo tasse) |
-| Cash in pocket fine Anno 2 | ~€65.000 cumulativo |
-| Necessita' di investimento esterno | **€0 per Anno 1-2** (bootstrap autofinanziato) |
+| Metrica | Valore | Calcolo |
+|---------|--------|---------|
+| Costi fissi mensili (Anno 1) | ~€330/mese | €4.000 / 12 mesi |
+| Costi variabili mensili (Anno 1) | ~€200/mese | Revenue share medio su vendite |
+| Break-even | **Mese 4** | Prima vendita EA a €299 > costi mensili €530 |
+| Cash netto fine Anno 1 | **€22.000** | Ricavi - rev.share - costi fissi - tasse |
+| Cash netto fine Anno 2 | **€60.742** cumulativo | Anno 1 + Anno 2 |
+| Investimento esterno necessario | **€0** | Bootstrap autofinanziato |
 
-**Il business e' profittevole dal primo mese di vendite reali.** Non serve seed round per sopravvivere. Un eventuale investimento serve solo per accelerare (marketing, fiere, team), non per restare in vita.
+**Il business e' profittevole dal primo mese di vendite reali.** Il revenue share al partner e' un costo variabile che cresce solo quando crescono i ricavi — non pesa mai su mesi a zero vendite. Non serve seed round per sopravvivere.
 
 ### Metriche chiave per milestone
 
@@ -570,11 +754,14 @@ Questo cambia radicalmente il rapporto con gli investitori: non siamo in cerca d
 
 ### Scenario A — Bootstrap puro (default)
 
-| Anno | Ricavi | Costi | Utile netto | Crescita |
-|------|--------|-------|-------------|----------|
-| 1 | €35.910 | €11.465 | €24.445 | Organica, 90 clienti |
-| 2 | €90.670 | €49.352 | €41.318 | Ufficio + tirocinante |
-| 3 | €158.300 | ~€85.000* | ~€73.000* | Team 3, scala |
+| Anno | Ricavi lordi | Costi totali (*) | Utile netto | Crescita |
+|------|-------------|-------------------|-------------|----------|
+| 1 | €35.910 | €13.910 | **€22.000** | Organica, 90 clienti |
+| 2 | €95.350 | €56.608 | **€38.742** | Ufficio + tirocinante |
+| 3 | €178.970 | ~€115.000** | **€55-65K** | Team 3, scala |
+
+(*) Costi totali = revenue share partner + costi fissi + tasse/contributi.
+(**) Anno 3 stima con regime ordinario/SRL (carico fiscale superiore al forfettario).
 
 *Stima con regime ordinario/SRL (carico fiscale superiore al forfettario).
 
@@ -628,20 +815,33 @@ Un investitore nel Anno 2 di FitManager non sta scommettendo su un'idea — sta 
 
 ### Scenario pessimistico (vendite -50%)
 
-Se l'adozione e' 50% inferiore alle proiezioni:
-- Anno 1: 45 licenze → ~€17.500 ricavi, costi €4.000 → **utile netto ~€10.000**
-- Il business resta profittevole anche vendendo meta'
-- Con 45 clienti attivi, il tasso di rinnovo e' comunque misurabile
-- Zero debito, zero investitori da rimborsare, zero runway problem
+| | Pessimistico | Base | Formula |
+|---|-------------|------|---------|
+| Licenze Anno 1 | 45 | 90 | 50% delle vendite base |
+| Ricavi lordi | €17.500 | €35.910 | |
+| Revenue share partner | €1.200 | €2.445 | Proporzionale ai ricavi |
+| Costi fissi | €4.000 | €4.000 | Invariati (zero struttura) |
+| Tasse + INPS | €3.600 | €7.465 | ~20,8% del fatturato |
+| **Utile netto founder** | **€8.700** | **€22.000** | |
+| **Guadagno partner** | **€1.200 cash** | **€2.445 cash** | + equity |
 
-**Questo e' il vantaggio strutturale del bootstrap a costi zero:** non esiste uno scenario in cui il business "muore" per mancanza di cash nell'Anno 1. Il worst case e' crescere piu' lentamente.
+**Il business resta profittevole anche vendendo meta'.** Con costi fissi a €330/mese, bastano 1-2 vendite/mese per coprirli. Zero debito, zero investitori da rimborsare. Il partner guadagna meno, ma il revenue share e' proporzionale — nessuno perde piu' di quanto entra.
 
 ### Scenario ottimistico (vendite +50%)
 
-- Anno 1: 135 licenze → ~€54K ricavi, utile netto ~€36K
-- Superamento soglia forfettario gia' nell'Anno 1 → transizione anticipata
-- Team dal mese 10 (anticipo ufficio + tirocinante)
-- Investitore attratto da traction forte gia' nel Anno 1
+| | Ottimistico | Base | Formula |
+|---|------------|------|---------|
+| Licenze Anno 1 | 135 | 90 | 150% delle vendite base |
+| Ricavi lordi | €54.000 | €35.910 | |
+| Revenue share partner | €3.700 | €2.445 | Proporzionale ai ricavi |
+| Costi fissi | €4.000 | €4.000 | Invariati |
+| Tasse + INPS | €11.200 | €7.465 | ~20,8% del fatturato |
+| **Utile netto founder** | **€35.100** | **€22.000** | |
+| **Guadagno partner** | **€3.700 cash** | **€2.445 cash** | + equity piu' preziosa |
+
+- Superamento soglia forfettario possibile gia' nell'Anno 1 → transizione anticipata a ordinario/SRL
+- Team anticipato al mese 10 (ufficio + tirocinante)
+- Partner motivato: il suo revenue share cresce con le vendite
 
 ---
 
