@@ -1,6 +1,6 @@
 # Strategia Enterprise PRO+ — FitManager Studio+
 
-**Versione:** 2.0 — 23 marzo 2026
+**Versione:** 2.1 — 23 marzo 2026
 **Contesto:** Preparazione incontro con [Chinesiologo Senior] — ex dirigente TechnoGym, 20+ anni nel settore, network ai vertici del fitness italiano.
 
 ---
@@ -91,6 +91,27 @@ La POC dura **90 giorni** (3 mesi) divisi in 3 fasi:
 5. Quanto ti senti organizzato da 1 a 10?
 6. Quanto saresti disposto a pagare per uno strumento che risolve questi problemi? (**porre PRIMA di rivelare il prezzo** — dato critico per validare il pricing €449)
 7. Raccomanderesti uno strumento cosi' a un collega? (scala 1-10)
+
+#### First 10 Minutes Experience (critica per l'adozione)
+
+L'energia di attivazione e' il nemico #1. Il PT deve vedere valore nei primi 10 minuti dalla prima apertura, altrimenti lo chiude e non torna. Il costo reale di FitManager non e' €449 — e' lo sforzo di cambiare abitudine.
+
+**Sequenza primi 10 minuti (guidata dall'onboarding):**
+
+| Minuto | Azione | Risultato percepito |
+|--------|--------|---------------------|
+| 0-2 | Apre il software, setup wizard completato | "E' stato facile" |
+| 2-4 | Inserisce il primo cliente (nome, contatto, note) | "Ecco, ho gia' un cliente dentro" |
+| 4-6 | Crea la prima scheda allenamento (3 esercizi dal catalogo) | "Wow, 500 esercizi pronti con le progressioni" |
+| 6-8 | Vede il Safety Engine segnalare una condizione | "Questo mi avrebbe evitato l'errore con il cliente dell'ernia" |
+| 8-10 | Registra un pagamento e vede il contratto aggiornato | "Lunedi' mattina sapro' chi ha pagato senza controllare Excel" |
+
+**Principio psicologico (BJ Fogg):** Behavior = Motivation × Ability × Prompt. Il PT ha motivazione (ha comprato), serve che l'ability sia alta (facilita') e il prompt sia chiaro (onboarding guidato). Se l'ability e' bassa nei primi 10 minuti, nessuna motivazione basta.
+
+**Antidoti allo status-quo bias:**
+- "Importa i tuoi clienti da Excel in 5 minuti" (template CSV pronto)
+- Quick win immediato: 1 cliente + 1 scheda + 1 pagamento = valore visibile in <10 min
+- Garanzia 30gg: "Se dopo 30 giorni torni a Excel, ti rimborsiamo. Nessuna domanda."
 
 #### Fase B — Adozione e feedback (Giorni 15-75)
 
@@ -271,6 +292,21 @@ Questo non e' un problema di prodotto. E' un problema di **consapevolezza**.
 └──────────────────────────────────────────────────────────────┘
 ```
 
+### Jobs to Be Done — il PT non compra feature, compra risultati
+
+Il PT non "assume" FitManager per avere un CRM. Lo assume per risolvere un lavoro concreto. Tutta la comunicazione deve partire dal job, non dalla feature.
+
+| Feature (NON dire cosi') | Job to Be Done (DI' cosi') |
+|--------------------------|---------------------------|
+| "500 esercizi con tassonomia" | "Non perdi mai tempo a cercare l'esercizio giusto per quel cliente" |
+| "Safety Engine 47 condizioni" | "Non rischi mai di fare un errore con un cliente patologico" |
+| "CRM clienti + contratti" | "Lunedi' mattina sai esattamente chi ha pagato, chi deve rinnovare, chi non viene da 2 settimane" |
+| "Training Science Engine" | "Crei la prossima scheda in 5 minuti, non in 30 — e sai che e' scientificamente corretta" |
+| "Nutrizione CREA 880 alimenti" | "Dai al tuo cliente un piano alimentare LARN in 10 minuti, non in 2 ore con tabelle Excel" |
+| "Backup = copia file" | "I dati dei tuoi clienti sono tuoi per sempre. Non dipendi da nessun server." |
+
+**Regola di comunicazione:** Ogni messaggio al PT deve rispondere alla domanda *"Cosa cambia per me lunedi' mattina?"* — non "quante feature ha il software".
+
 ### Il framework di category creation (3 passi)
 
 **Passo 1 — Mostra che il vecchio gioco e' rotto**
@@ -307,10 +343,74 @@ FitManager non e' "un software". E' **lo strumento operativo del PT Evoluto** �
 | Mese | Azione | Formato | Obiettivo |
 |------|--------|---------|-----------|
 | 1-2 | "Il PT del futuro: perche' Excel ti sta frenando" | Articoli LinkedIn + video brevi | Consapevolezza del problema |
-| 2-3 | "5 errori che il 90% dei PT commette nella gestione clienti" | Webinar gratuito (con [Chinesiologo Senior]) | Autorita' + lead generation |
+| 2-3 | "5 errori che il 90% dei PT commette nella gestione clienti" | Webinar gratuito (con Industry Partner) | Autorita' + lead generation |
 | 3-4 | "Come passare da 25 a 45 clienti senza lavorare piu' ore" | Case study Fondatori FitManager | Social proof + conversione |
 | 4-6 | "Il Metodo PT Evoluto" — mini-corso gratuito 5 lezioni | Email sequence + video | Educazione profonda + nurturing |
 | 6+ | "La community dei PT Evoluti" — contenuti continui | Community + eventi | Retention + referral |
+
+### Funnel 7-touch: dal primo contatto alla conversione
+
+Un prospect ha bisogno di ~7 touchpoint prima di comprare (Rule of 7, Mere Exposure Effect). Il funnel non puo' essere "vede un post e compra" — serve una sequenza strutturata.
+
+```
+Touch 1: Vede un post LinkedIn dell'Industry Partner (awareness)
+    ↓
+Touch 2: Vede il teaser video 60 sec del software (interesse)
+    ↓
+Touch 3: Si iscrive alla waiting list (micro-commitment)
+    ↓
+Touch 4: Riceve email con il caso "Marco, PT a Milano" (empatia + dolore)
+    ↓
+Touch 5: Partecipa al webinar gratuito (demo live + Q&A)
+    ↓
+Touch 6: Riceve testimonial di un Fondatore con numeri reali (social proof)
+    ↓
+Touch 7: Demo 1:1 personalizzata di 20 min (conversione)
+```
+
+**Principi psicologici attivi nel funnel:**
+- **Touch 1-2:** Mere Exposure Effect — la familiarita' genera preferenza
+- **Touch 3:** Commitment & Consistency — chi ha fatto un passo piccolo ne fara' uno grande
+- **Touch 4:** Present Bias — enfatizzare cosa cambia *lunedi' mattina*, non tra 6 mesi
+- **Touch 5:** Authority Bias — l'Industry Partner conduce, non il founder tecnico
+- **Touch 6:** Bandwagon Effect — "questi 10 lo usano gia' e risparmiano 3h/settimana"
+- **Touch 7:** Endowment Effect — nella demo mostrare *i suoi clienti* (fittizi) nel CRM. Una volta che li vede dentro, sono gia' "suoi"
+
+**Tempistica target:** 3-6 settimane dal touch 1 al touch 7. Non accelerare — la fiducia richiede tempo.
+
+### Pricing psychology: come il PT percepisce €449
+
+Il prezzo €449 e' oggettivamente basso per il valore offerto, ma il PT medio non ragiona in valore — ragiona in "quanto mi costa" e "cosa mi cambiera' domani". Servono 3 frame diversi per 3 obiezioni diverse.
+
+**Frame 1 — Costo giornaliero (Mental Accounting):**
+> "€449 = €1,23 al giorno per il primo anno. Meno di un caffe' al bar."
+
+Il cervello tratta €449 come "una spesa grossa". €1,23/giorno lo sposta nel conto mentale delle "spese quotidiane irrilevanti".
+
+**Frame 2 — Costo dell'inazione (Loss Aversion):**
+> "Ogni settimana che usi Excel perdi 3-5 ore in admin. A €30/ora del tuo tempo, sono €90-150/settimana. In un anno = €4.500-7.500 di tempo perso. FitManager si ripaga in 3-5 settimane."
+
+La perdita fa piu' male del guadagno (Prospect Theory). Non dire "risparmierai tempo" — di' "stai perdendo €150/settimana".
+
+**Frame 3 — Investimento, non costo (Reframe):**
+> "Non compri un software. Investi nella tua crescita professionale. Il PT che usa strumenti professionali guadagna di piu' del PT che usa WhatsApp — e lo dimostra ai clienti."
+
+Spostare da "spesa" a "investimento" cambia il conto mentale. Un investimento ha un ritorno. Una spesa e' soldi persi.
+
+**Pratfall Effect — ammettere un limite per aumentare la credibilita':**
+> "FitManager non e' per tutti. Se hai 5 clienti e ti basta WhatsApp, non ti serve. E' per chi vuole crescere oltre i 25 clienti senza perdere il controllo."
+
+Questo fa 3 cose: (1) aumenta la fiducia — onesta', (2) qualifica il target — evita clienti sbagliati che poi churnano, (3) rafforza il posizionamento "PT Evoluto" — e' per chi vuole di piu'.
+
+### Referral program: struttura corretta
+
+Il referral NON deve essere uno sconto per il nuovo cliente (rischio Cobra Effect: attira chi compra per lo sconto, non per il valore, con churn alto).
+
+| Struttura sbagliata | Struttura corretta |
+|--------------------|-------------------|
+| "Porta un amico → lui ha €50 di sconto" | "Porta un amico → TU ricevi 3 mesi di upgrade gratis" |
+
+Il referrer e' motivato (guadagna valore tangibile). L'amico compra a prezzo pieno con garanzia 30gg — la sua decisione e' basata sul valore del prodotto, non su uno sconto. Questo filtra i clienti di qualita' e protegge il pricing.
 
 ---
 
@@ -381,6 +481,16 @@ Dati di benchmark:
 - **Totale valore percepito: ~€650/anno per €99** → rapporto 6,5:1
 
 Questo rapporto e' la chiave del tasso di rinnovo. Se il PT percepisce €650 di valore per €99, il rinnovo e' una non-decisione.
+
+**Engagement loop (Zeigarnik Effect + Goal-Gradient):**
+
+Il Zeigarnik Effect dice che le attivita' incomplete occupano la mente piu' di quelle completate. Applicato alla community:
+
+- **Onboarding:** "Hai configurato 3/5 aree del tuo CRM. Completa Anamnesi e Schede per sbloccare il tuo primo report cliente." (progress bar)
+- **Settimanale:** "Questa settimana il 70% dei PT PRO ha completato la masterclass. Tu non ancora." (social + incompletezza)
+- **Mensile:** "Hai usato 3 dei 5 template di questo mese. Scarica gli ultimi 2 prima del rinnovo." (goal-gradient: piu' vicino sei al completamento, piu' acceleri)
+
+Questo ritmo crea l'abitudine di tornare. L'abitudine e' il miglior antidoto al churn.
 
 #### Livello 3 — Inner Circle (futuro, Anno 2+)
 
