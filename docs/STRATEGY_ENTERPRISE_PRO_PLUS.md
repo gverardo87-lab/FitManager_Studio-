@@ -1,7 +1,8 @@
 # Strategia Enterprise PRO+ — FitManager Studio+
 
 **Versione:** 2.1 — 23 marzo 2026
-**Contesto:** Preparazione incontro con [Chinesiologo Senior] — ex dirigente TechnoGym, 20+ anni nel settore, network ai vertici del fitness italiano.
+**Contesto:** Strategia di lancio, category creation e definizione del ruolo Industry Partner.
+**Riferimento finanziario:** I dettagli completi (P&L, scenari, struttura fiscale) sono nel Business Plan v3.2 (`docs/BUSINESS_PLAN.md`).
 
 ---
 
@@ -179,8 +180,11 @@ POC riuscita
     ├──► Feedback prodotto prioritizzato
     │         └──► Roadmap v1.1 basata su dati reali, non ipotesi
     │
-    └──► I 10 Fondatori diventano Ambassador naturali
-              └──► Referral per Early Adopter (ognuno porta 2-3 colleghi)
+    ├──► I 10 Fondatori diventano Ambassador naturali
+    │         └──► Referral per Early Adopter (ognuno porta 2-3 colleghi)
+    │
+    └──► Case study + testimonial alimentano il funnel 7-touch
+              └──► Touch 4 (email caso reale) e Touch 6 (social proof con numeri)
 ```
 
 **Se la POC e' mista (NPS 20-40, adozione parziale):**
@@ -532,7 +536,7 @@ FitManager e' un prodotto software che deve essere venduto a professionisti che 
 3. **Crei contenuti di valore** — masterclass, webinar, formazione
 4. **Validi il posizionamento** — il concetto "PT Evoluto" deve venire dal mondo fitness, non dal mondo tech
 
-**Questo ruolo esiste a prescindere dalla persona.** Il candidato attuale e' il profilo ideale (20+ anni, ex TechnoGym, network attivo). Se non dovesse accettare, lo stesso ruolo va coperto con un profilo equivalente.
+**Questo ruolo esiste a prescindere dalla persona.** Se il candidato identificato non accetta, lo stesso ruolo va coperto con un profilo equivalente dal mercato.
 
 ### Profilo richiesto
 
@@ -544,7 +548,7 @@ FitManager e' un prodotto software che deve essere venduto a professionisti che 
 | Capacita' di creare contenuti | Webinar/presentazioni | Masterclass + video + articoli |
 | Disponibilita' | 8-10h/mese | 15-20h/mese |
 
-**Candidato identificato:** Chinesiologo senior, 20+ anni, ex dirigente TechnoGym, libero professionista e mental coach. Network ai vertici del settore. In fase di definizione dell'accordo.
+**Candidato identificato:** Professionista senior con 20+ anni nel settore fitness, network attivo ai vertici. In fase di definizione dell'accordo.
 
 ### 3 modelli di ingaggio
 
@@ -625,120 +629,100 @@ Coinvolgimento leggero, nessun allineamento strategico a lungo termine.
 
 ## Parte 4: Metriche e KPI della strategia
 
-### KPI di Category Creation (Mesi 1-6)
+### KPI Pre-lancio e Category Creation (Mesi -1 a 6)
 
-| KPI | Target Mese 3 | Target Mese 6 |
-|-----|---------------|---------------|
-| Waiting list iscritti | 200 | 500 |
-| Follower LinkedIn/social | 500 | 1.500 |
-| Partecipanti webinar | 30/evento | 60/evento |
-| Contenuti pubblicati | 12 articoli/video | 24 |
-| Menzioni "PT Evoluto" | 10 organiche | 50 |
-| Demo 1:1 completate | 30 | 80 |
+| KPI | Target Mese 0 (pre-POC) | Target Mese 3 | Target Mese 6 |
+|-----|------------------------|---------------|---------------|
+| Waiting list iscritti | 50+ | 150 | 300 |
+| Follower LinkedIn/social | 100 | 400 | 1.000 |
+| Partecipanti webinar | - | 20/evento | 40/evento |
+| Contenuti pubblicati | 4 (teaser) | 12 articoli/video | 24 |
+| Demo 1:1 completate | - | 20 | 50 |
+| Touchpoint medi per prospect (funnel 7-touch) | - | 3-4 | 5-7 |
 
-### KPI Community (dal Mese 1 di lancio)
+### KPI Community e Engagement (dal Mese 1 di lancio)
 
 | KPI | Target Anno 1 | Target Anno 2 |
 |-----|---------------|---------------|
-| Membri community base | 130 (= licenziatari) | 370 |
+| Membri community base | 90 (= licenziatari) | 270 |
 | Membri attivi settimanali | 40% | 50% |
-| Tasso rinnovo upgrade PRO | N/A (incluso) | 60% |
+| **Onboarding completion rate** (5 step) | 80% | 85% |
+| **Weekly return rate** (accesso community) | 35% | 45% |
+| **Template download rate** (mensile) | 50% dei PRO | 60% dei PRO |
+| Tasso rinnovo upgrade PRO | N/A (incluso) | 55% |
 | NPS community | >40 | >50 |
-| Referral da community | 20 | 60 |
-| Masterclass erogate | 8 | 12 |
-| Template condivisi | 20 | 50 |
+| Referral da community | 15 | 45 |
+| Masterclass erogate | 6-8 | 12 |
+| Template condivisi | 15 | 40 |
 
-### KPI Revenue composito (allineato al business plan v3.0)
+### KPI Revenue composito (allineato al Business Plan v3.2)
 
 | | **Anno 1** | **Anno 2** | **Anno 3** |
 |---|-----------|-----------|-----------|
-| Licenze vendute | 90 | 180 | 300 |
+| Nuove licenze | 90 | 180 | 300 |
+| Base installata | 90 | 270 | 570 |
 | Ricavi licenze | €34.410 | €80.820 | €134.700 |
 | Ricavi upgrade PRO | €0 | €4.850 | €13.600 |
-| Ricavi Inner Circle | €0 | €0 | €8.970 |
-| Ricavi masterclass singole | €0 | €4.680 | €11.700 |
+| Ricavi IC + Masterclass * | €0 | €4.680 | €20.670 |
 | Setup/onboarding | €1.500 | €5.000 | €10.000 |
 | **Ricavi lordi totali** | **€35.910** | **€95.350** | **€178.970** |
 | Revenue share Industry Partner | -€2.445 | -€8.275 | -€18.582 |
 | **Ricavi netti** | **€33.465** | **€87.075** | **€160.388** |
 
-I calcoli dettagliati e le formule sono nel business plan (sezione 9, legenda P&L).
+*Inner Circle e Masterclass sono stream proiettati, non ancora validati. I calcoli dettagliati e le formule sono nel Business Plan v3.2 (sezione 9, legenda P&L).
 
 ---
 
-## Parte 5: Confronto con l'ecosistema TechnoGym
-
-Il [Chinesiologo Senior] conosce Mywellness dall'interno. Questo e' un punto di forza, non un rischio.
-
-| Dimensione | TechnoGym Mywellness | FitManager Studio+ |
-|------------|---------------------|-------------------|
-| Target | Club/palestre (B2B enterprise) | PT singolo / P.IVA (B2B micro) |
-| Prezzo | Legato all'hardware (€€€€) | €449 una tantum |
-| Dati | Cloud centralizzato | Locale sul PC del PT |
-| Personalizzazione | Standard per catena | Totale (il PT e' il "proprietario") |
-| Scienza | Basic (programmazione macchina) | Avanzata (periodizzazione, safety, nutrizione LARN) |
-| Community | Utenti finali (40M consumer) | Professionisti (PT tra pari) |
-| Dipendenza | Lock-in hardware TechnoGym | Zero lock-in, dati esportabili |
-
-**Posizionamento rispetto a TechnoGym:** FitManager non compete — si posiziona nello spazio che TechnoGym non copre e non vuole coprire: il singolo professionista autonomo che lavora fuori dalle catene.
-
-Il [Chinesiologo Senior] puo' validare questo posizionamento con cognizione di causa: sa cosa Mywellness fa e non fa, e puo' spiegare ai PT perche' FitManager copre esattamente il vuoto.
-
----
-
-## Parte 6: Rischi e mitigazioni specifici
+## Parte 5: Rischi e mitigazioni specifici
 
 | Rischio | Mitigazione |
 |---------|-------------|
-| "Il PT non vuole pagare per un software" | Non vendi software — vendi il Metodo PT Evoluto. Il software e' lo strumento. La community e' il valore continuo. |
+| "Il PT non vuole pagare per un software" | Non vendi software — vendi il Metodo PT Evoluto. Il software e' lo strumento. La community e' il valore continuo. Usa i 3 frame di pricing psychology (daily, inaction cost, investment). |
 | "La community non decolla" | I primi 10 Fondatori SONO la community. Coltivarli intensamente per 3 mesi crea il nucleo. La massa critica per una community di nicchia e' 30-50 membri attivi, non migliaia. |
-| "Il [Chinesiologo Senior] si disimpegna" | Strutturare il ruolo con deliverable chiari e compenso legato ai risultati. L'Opzione B (advisor) ha meno rischio di abbandono dell'Opzione A. |
-| "TechnoGym entra nel mercato PT singolo" | Improbabile: il margine per-utente e' troppo basso per il loro modello. Ma se accadesse, FitManager ha 12-18 mesi di vantaggio + community radicata. |
-| "Il tasso di rinnovo upgrade e' basso" | Ogni masterclass e template deve risolvere un problema reale del PT. Se il valore percepito e' 6x il prezzo, il rinnovo e' automatico. Misurare NPS mensilmente. |
+| "L'Industry Partner si disimpegna" | Strutturare il ruolo con deliverable chiari e compenso legato ai risultati (Scenario A: revenue share). Se il partner lascia prima del cliff (12 mesi), nessuna equity matura. Piano B: 4-6 settimane per trovare profilo sostitutivo. |
+| "Il tasso di rinnovo upgrade e' basso" | Ogni masterclass e template deve risolvere un problema reale del PT. Rapporto valore percepito/prezzo target 6,5:1. Engagement loop (Zeigarnik) per creare abitudine di ritorno. Misurare NPS mensilmente. Se <40%, rivedere pricing o contenuti. |
+| "Competitor SaaS aggiunge scienza" | Il moat scientifico (500 esercizi, 940 relazioni, Safety Engine, CREA) richiede 6+ mesi di lavoro. L'architettura locale-first non e' replicabile da un SaaS senza riscrittura totale. Community radicata crea switching costs. |
 
 ---
 
-## Checklist per l'incontro di domani
+## Checklist per il primo incontro con candidato Industry Partner
 
 ### Da portare:
 
 - [ ] Demo live del software (5 minuti, flow: nuovo cliente → anamnesi → scheda → pagamento)
-- [ ] Questo documento stampato/su tablet (struttura POC + 3 livelli community)
-- [ ] I numeri del business plan (v2.0) — pricing, proiezioni, break-even
-- [ ] Il protocollo POC stampato (profilo dei 10, timeline 90gg, metriche)
-- [ ] La proposta di ruolo (3 opzioni A/B/C) — lasciare che scelga lui
+- [ ] Struttura POC + 3 livelli community (questo documento)
+- [ ] I numeri del business plan — pricing, proiezioni, break-even (docs/BUSINESS_PLAN.md)
+- [ ] Il protocollo POC (profilo dei 10, timeline 90gg, metriche di successo)
+- [ ] La proposta di ruolo (3 scenari A/B/C) — lasciare che il candidato graviti verso una
 
 ### Da chiedere (focus POC):
 
-- [ ] "Per i 10 Fondatori, mi servono profili diversi — tu chi metteresti nella lista? Partiamo dai nomi."
-- [ ] "Secondo te, qual e' la metrica che un PT capirebbe subito? Ore risparmiate? Clienti in piu'? Soldi?"
-- [ ] "Il concetto di PT Evoluto ti convince come categoria? Come lo chiameresti tu?"
+- [ ] "Per i 10 Fondatori, servono profili diversi — chi metteresti nella lista?"
+- [ ] "Qual e' la metrica che un PT capirebbe subito? Ore risparmiate? Clienti in piu'? Soldi?"
+- [ ] "Il concetto di PT Evoluto convince come categoria? Come lo chiameresti tu?"
 - [ ] "Quali sono i 3 motivi per cui un PT oggi direbbe NO anche a €149?"
-- [ ] "Saresti disposto a condurre tu la sessione di gruppo al giorno 90? Il tuo ruolo come voce autorevole sarebbe fondamentale."
-- [ ] "Quanto pensi che un PT sia disposto a investire in formazione professionale all'anno?" (valida il pricing upgrade €99)
-- [ ] "Conosci formatori/accademie che potrebbero essere partner di distribuzione per la fase post-POC?"
+- [ ] "Saresti disposto a condurre la sessione di gruppo al giorno 90?"
+- [ ] "Quanto pensi che un PT sia disposto a investire in formazione all'anno?" (valida upgrade €99)
+- [ ] "Conosci formatori/accademie come partner di distribuzione per la fase post-POC?"
 
 ### Da proporre:
 
-> "I primi 10 non sono clienti — sono la Proof of Concept. Li selezioniamo insieme, li seguiamo per 90 giorni con check-in strutturati, e alla fine avremo dati reali: ore risparmiate, clienti gestiti, NPS. Se i numeri reggono, abbiamo la prova che il PT Evoluto esiste. Se non reggono, lo scopriamo con 10 persone e non con 100. Tu sei l'unico che puo' selezionare i profili giusti e dare credibilita' all'esperimento."
+> "I primi 10 non sono clienti — sono la Proof of Concept. Li selezioniamo insieme, li seguiamo per 90 giorni con check-in strutturati, e alla fine avremo dati reali: ore risparmiate, clienti gestiti, NPS. Se i numeri reggono, abbiamo la prova che il PT Evoluto esiste. Se non reggono, lo scopriamo con 10 persone e non con 100."
 
 ### Da NON fare:
 
 - Non parlare di codice, stack tecnologico o architettura
 - Non promettere feature non ancora implementate
-- Non sottovalutare i suoi limiti — li ha visti dall'interno di TechnoGym
-- Non proporre un ruolo troppo presto — prima capire il suo livello di interesse
+- Non proporre un ruolo troppo presto — prima capire il livello di interesse del candidato
 - Non trattare i 10 Fondatori come "i primi che capitano" — la selezione e' strategica
 
 ---
 
-*Documento strategico v1.0 — 22 marzo 2026*
-*Da usare come base per l'incontro e da aggiornare con i feedback ricevuti.*
+*Documento strategico v2.1 — 23 marzo 2026*
+*Da aggiornare con feedback dal primo incontro Industry Partner e risultati della POC.*
 
 Sources:
 - [Community-Led Growth B2B 2026](https://thesmarketers.com/blogs/community-led-growth-b2b-2026/)
 - [Community-Led Growth for Niche B2B SaaS](https://onlinetrademarketing.com/community-led-growth-strategies-for-niche-b2b-saas-platforms/)
 - [Category Design for B2B Founders](https://growthstage.marketing/marketing-execution-pod/category-design-for-b2b-founders-3-strategies-to-own-your-market/)
 - [Category Creation and B2B Go-To-Market](https://www.t2d3.pro/learn/b2b-saas-go-to-market-strategy)
-- [TechnoGym Mywellness Platform](https://www.technogym.com/en-US/stories/mywellness-open-platform/)
-- [TechnoGym Ecosystem Open Platform](https://www.technogym.com/us/newsroom/technogym-ecosystem-open-platform/)
