@@ -76,11 +76,11 @@ La POC dura **90 giorni** (3 mesi) divisi in 3 fasi:
 
 | Azione | Responsabile | Deliverable |
 |--------|-------------|-------------|
-| Installazione 1:1 assistita (30 min) | Gianluca | Software funzionante sul PC del PT |
+| Installazione 1:1 assistita (30 min) | Giacomo | Software funzionante sul PC del PT |
 | Questionario baseline | Fondatore | Come gestisce i clienti OGGI (strumenti, tempo, problemi) |
 | Obiettivi personali | Fondatore | "Cosa spero di ottenere con FitManager in 90gg?" |
 | Setup dati iniziali | Fondatore (con guida) | 5-10 clienti inseriti, prima scheda creata |
-| Aggiunta alla community Fondatori | Gianluca | Canale dedicato (WhatsApp/Telegram/Discord) |
+| Aggiunta alla community Fondatori | Giacomo | Canale dedicato (WhatsApp/Telegram/Discord) |
 
 **Questionario baseline (metriche chiave da raccogliere):**
 
@@ -185,7 +185,7 @@ Il canale dedicato ai 10 Fondatori e' il **cuore operativo** della POC. Non e' u
 **Routine settimanale nel canale:**
 | Giorno | Contenuto | Chi |
 |--------|-----------|-----|
-| Lunedi' | "Obiettivo della settimana" — una cosa da provare | Gianluca |
+| Lunedi' | "Obiettivo della settimana" — una cosa da provare | Giacomo |
 | Mercoledi' | Micro-sondaggio (3 domande) | Automatico |
 | Venerdi' | "Win of the week" — cosa ha funzionato? | I Fondatori |
 
@@ -234,7 +234,7 @@ MESE 4 — LANCIO EARLY ADOPTER (con le prove in mano)
 | Voce | Costo | Note |
 |------|-------|------|
 | 10 licenze a €149 | -€1.490 (mancato ricavo vs €449) | Investimento, non costo |
-| Tempo Gianluca (check-in + supporto) | ~40h in 90gg | Sweat equity |
+| Tempo Giacomo (check-in + supporto) | ~40h in 90gg | Sweat equity |
 | Piattaforma community | €0 (Discord/Telegram) | Gratis |
 | Tool survey (Google Forms/Typeform) | €0-30/mese | Free tier sufficiente |
 | Video editing testimonial | €0-200 | Smartphone + editing base |

@@ -1,7 +1,7 @@
 # Business Plan — FitManager Studio+
 
 **Versione:** 3.0 — 23 marzo 2026
-**Autore:** Gianluca Vera
+**Autore:** Giacomo Verardo
 **Stato:** Draft per investitori e collaboratori
 
 ---
@@ -412,7 +412,7 @@ Nessun costo fisso       Coeff. redditivita' 67%    fatturato >€85K)
 ANNO 1 (bootstrap)              ANNO 2 (primo team)            ANNO 3 (scala)
 ┌──────────────┐                ┌──────────────┐               ┌──────────────┐
 │   Founder    │                │   Founder    │               │   Founder    │
-│  (Gianluca)  │                │  (Gianluca)  │               │  (Gianluca)  │
+│  (Giacomo)  │                │  (Giacomo)  │               │  (Giacomo)  │
 └──────┬───────┘                └──────┬───────┘               └──────┬───────┘
        │                               │                              │
 ┌──────┴───────┐                ┌──────┴───────┐               ┌──────┴───────┐
@@ -430,7 +430,7 @@ ANNO 1 (bootstrap)              ANNO 2 (primo team)            ANNO 3 (scala)
 
 ### Founder
 
-**Gianluca Vera** — Fondatore, sviluppatore e product owner
+**Giacomo Verardo** — Fondatore, sviluppatore e product owner
 - Ha costruito FitManager Studio+ da zero in ~6 mesi
 - Stack completo: Python/FastAPI + Next.js/React + SQLite + AI
 - 45.000+ LOC, 395 test, 3 database, 5 motori scientifici
@@ -923,7 +923,7 @@ Un investitore nel Anno 2 di FitManager non sta scommettendo su un'idea — sta 
 ---
 
 **Contatti:**
-Gianluca Vera
+Giacomo Verardo
 [email da definire]
 [telefono da definire]
 
