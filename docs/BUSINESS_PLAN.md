@@ -51,7 +51,7 @@ Il professionista fitness italiano lavora tipicamente con 15-40 clienti attivi e
 
 1. **Regolamentazione in arrivo:** Dal 1 luglio 2023 il Registro Nazionale delle attivita' sportive dilettantistiche e' operativo. La professionalizzazione spinge verso strumenti strutturati.
 2. **Boom P.IVA fitness:** Il 75% dei trainer in Europa lavora come autonomo. In Italia la domanda di PT qualificati e' cresciuta del 35% in 2 anni (ISTAT 2023).
-3. **AI come moltiplicatore:** Il trend 2026 e' "AI + personalizzazione". FitManager ha gia' l'architettura pronta (Langchain + Ollama dormiente).
+3. **Architettura AI-ready:** Il trend 2026 e' "AI + personalizzazione". FitManager ha l'architettura predisposta (Langchain + Ollama) — non ancora attiva, ma pronta per l'attivazione senza riscritture.
 4. **Privacy post-GDPR:** I trainer gestiscono dati sanitari (anamnesi, patologie, misurazioni). Il cloud generico non offre garanzie adeguate.
 
 ### Dimensione del mercato
@@ -244,7 +244,7 @@ Dal secondo anno: €99/anno per continuare a ricevere update.
 | **Tasso rinnovo upgrade** | 60% | Conservativo (benchmark perpetuo: 50-70%) |
 | **Ricavo medio per cliente Anno 1** | €410 | Licenza (upgrade incluso nel primo anno) |
 | **Ricavo medio per cliente Anno 2+** | €99 × 60% = €59 | Solo upgrade rinnovi |
-| **CAC** | €120 | Organico + demo + community |
+| **CAC** | €120 (stimato) | Organico + demo + community. Da validare con dati POC e prime vendite |
 | **LTV** (5 anni) | €410 + (4 × €59) = €646 | Licenza + 4 anni upgrade al 60% |
 | **LTV:CAC** | 5,4:1 | Target >3:1 |
 | **Gross margin** | 90%+ | Zero costi cloud per utente |
@@ -325,12 +325,12 @@ Prima della POC, serve un minimo di presenza online per validare l'interesse e a
 
 **Messaggio Early Adopter:** *"I Fondatori hanno ridotto l'admin del 55%. 20 posti a €299 con 2 anni di aggiornamenti. Poi si chiude."*
 
-### Fase 2 — Prezzo pieno + crescita organica (Mesi 7-12): 30 → 130 clienti
+### Fase 2 — Prezzo pieno + crescita organica (Mesi 7-12): 30 → 90 clienti
 
 | Azione | Canale | Obiettivo |
 |--------|--------|-----------|
 | Webinar mensile | Demo live + Q&A, garanzia 30gg | 10-20 partecipanti/webinar |
-| Referral program | Fondatore/EA porta un amico → sconto €50 per l'amico | Viralita' organica |
+| Referral program | Fondatore/EA porta un amico → il referrer riceve 3 mesi upgrade gratis | Viralita' organica, clienti di qualita' |
 | Content marketing | Blog + LinkedIn + gruppi FB in italiano | SEO long-tail |
 | Partnership formatori | ISSA, FIF, ASI, accademie | Accesso a neoqualificati |
 | Calcolatore ROI | Sul sito: "quante ore perdi in admin?" | Conversione razionale |
@@ -339,7 +339,7 @@ Prima della POC, serve un minimo di presenza online per validare l'interesse e a
 
 **Garanzia:** Soddisfatto o rimborsato 30 giorni — zero rischio percepito su €449.
 
-### Fase 3 — Scala (Mesi 13-36): 130 → 800 clienti
+### Fase 3 — Scala (Mesi 13-36): 90 → 570 clienti
 
 - Tirocinante dedicato a customer success + community (dal mese 13)
 - Piccolo ufficio come base operativa (dal mese 13)
@@ -446,7 +446,7 @@ Il progetto richiede una figura con profonda esperienza nel settore fitness, cre
 - Credibilita' diretta verso il target (i PT si fidano di un pari, non di un software)
 - Capacita' di creare e condurre contenuti (masterclass, webinar, formazione)
 
-**Candidato identificato:** Chinesiologo senior con 20+ anni di esperienza, ex dirigente TechnoGym, attualmente libero professionista e mental coach. Network attivo ai vertici del settore. Accordo in fase di definizione (incontro in corso).
+**Candidato identificato:** Professionista senior con 20+ anni nel settore fitness, network attivo ai vertici. Accordo in fase di definizione.
 
 **Piano B:** Se il candidato attuale non accetta, il ruolo viene ricercato tramite: (1) enti di formazione fitness (ISSA, FIF, ASI) — formatori senior con network attivo; (2) LinkedIn — profili ex-catena con esperienza gestionale; (3) community fitness italiane — opinion leader con following attivo. Timeline piano B: 4-6 settimane di ricerca. La POC non parte senza questo ruolo coperto.
 
@@ -531,9 +531,9 @@ I calcoli seguenti mostrano quanto guadagna il partner in ciascun anno, assumend
 | Voce | Calcolo | Importo partner |
 |------|---------|-----------------|
 | Vendite da network (20%) | 35% di 180 licenze = 63 × €449 × 20% | **€5.658** |
-| Community PRO (25%) | €4.850 ricavi upgrade × 25% | **€1.213** |
+| Community PRO (25%) | €4.356 ricavi upgrade × 25% | **€1.089** |
 | Masterclass (30%) | 8 sessioni, 4 vendute singolarmente a €39 × ~30 partecipanti = €4.680 × 30% | **€1.404** |
-| **Totale cash Anno 2** | | **€8.275** |
+| **Totale cash Anno 2** | | **€8.151** |
 
 ##### Anno 3
 
@@ -549,10 +549,10 @@ I calcoli seguenti mostrano quanto guadagna il partner in ciascun anno, assumend
 
 | | **Anno 1** | **Anno 2** | **Anno 3** | **Cumulativo** |
 |---|-----------|-----------|-----------|---------------|
-| **Ricavi lordi totali** | €35.910 | €95.350 | €178.970 | €310.230 |
-| Revenue share Industry Partner | €2.445 | €8.275 | €18.582 | **€29.302** |
+| **Ricavi lordi totali** | €35.910 | €94.856 | €178.970 | €309.736 |
+| Revenue share Industry Partner | €2.445 | €8.151 | €18.582 | **€29.178** |
 | % dei ricavi al partner | 6,8% | 8,7% | 10,4% | 9,4% |
-| **Ricavi netti founder** (pre-costi e tasse) | €33.465 | €87.075 | €160.388 | €280.928 |
+| **Ricavi netti founder** (pre-costi e tasse) | €33.465 | €86.705 | €160.388 | €280.558 |
 
 **Nota:** La % del partner cresce nel tempo perche' la componente Community PRO + Inner Circle + Masterclass cresce piu' velocemente delle licenze pure. Questo e' by design: il partner e' incentivato a costruire la community (valore a lungo termine), non solo a vendere licenze (valore una tantum).
 
@@ -570,7 +570,7 @@ I calcoli seguenti mostrano quanto guadagna il partner in ciascun anno, assumend
 
 | | **Anno 1** | **Anno 2** | **Anno 3** |
 |---|-----------|-----------|-----------|
-| Cash (revenue share) | €2.445 | €8.275 | €18.582 |
+| Cash (revenue share) | €2.445 | €8.151 | €18.582 |
 | Equity paper value (6%) | €15.000 | €39.000 | €75.000 |
 | **Totale** | **€17.445** | **€47.275** | **€93.582** |
 
@@ -645,20 +645,20 @@ I calcoli seguenti mostrano quanto guadagna il partner in ciascun anno, assumend
 | | | | |
 | **RICAVI LORDI** | | | |
 | Licenze (a) | €34.410 | €80.820 | €134.700 |
-| Upgrade annuale (b) | €0 | €4.850 | €13.600 |
+| Upgrade annuale (b) | €0 | €4.356 | €13.600 |
 | Inner Circle (c) ° | €0 | €0 | €8.970 |
 | Masterclass singole (d) ° | €0 | €4.680 | €11.700 |
 | Setup/onboarding | €1.500 | €5.000 | €10.000 |
-| **Ricavi lordi totali** | **€35.910** | **€95.350** | **€178.970** |
+| **Ricavi lordi totali** | **€35.910** | **€94.856** | **€178.970** |
 | | | | |
 | **COSTI VARIABILI — Revenue share Industry Partner** | | | |
 | 20% su vendite da network (e) | €2.445 | €5.658 | €9.429 |
-| 25% su Community PRO (f) | €0 | €1.213 | €3.400 |
+| 25% su Community PRO (f) | €0 | €1.089 | €3.400 |
 | 25% su Inner Circle (g) | €0 | €0 | €2.243 |
 | 30% su Masterclass (h) | €0 | €1.404 | €3.510 |
-| **Totale revenue share partner** | **€2.445** | **€8.275** | **€18.582** |
+| **Totale revenue share partner** | **€2.445** | **€8.151** | **€18.582** |
 | | | | |
-| **RICAVI NETTI** (dopo revenue share) | **€33.465** | **€87.075** | **€160.388** |
+| **RICAVI NETTI** (dopo revenue share) | **€33.465** | **€86.705** | **€160.388** |
 | | | | |
 | **COSTI FISSI OPERATIVI** | | | |
 | Commercialista | €1.000 | €1.500 | €2.500 |
@@ -670,15 +670,15 @@ I calcoli seguenti mostrano quanto guadagna il partner in ciascun anno, assumend
 | Junior (tirocinante confermato) | €0 | €0 | €9.000 |
 | **Totale costi fissi** | **€4.000** | **€28.500** | **€48.100** |
 | | | | |
-| **EBITDA** | **€29.465** | **€58.575** | **€112.288** |
+| **EBITDA** | **€29.465** | **€58.205** | **€112.288** |
 | **Margine EBITDA** | **82%** | **61%** | **63%** |
 | | | | |
 | **TASSE + CONTRIBUTI** | | | |
-| IRPEF 5% su 67% fatturato (i) | €1.203 | €3.194 | * |
-| INPS ~26% su 67% fatturato (j) | €6.262 | €16.639 | * |
-| **Totale fiscale** | **€7.465** | **€19.833** | * |
+| IRPEF 5% su 67% fatturato (i) | €1.203 | €3.178 | * |
+| INPS ~26% su 67% fatturato (j) | €6.262 | €16.553 | * |
+| **Totale fiscale** | **€7.465** | **€19.731** | * |
 | | | | |
-| **UTILE NETTO FOUNDER** | **€22.000** | **€38.742** | * |
+| **UTILE NETTO FOUNDER** | **€22.000** | **€38.474** | * |
 
 #### Legenda calcoli P&L
 
@@ -692,8 +692,10 @@ I calcoli seguenti mostrano quanto guadagna il partner in ciascun anno, assumend
 | (f) Rev. share PRO | Ricavi upgrade totali (b) × 25% |
 | (g) Rev. share IC | Ricavi Inner Circle totali (c) × 25% |
 | (h) Rev. share MC | Ricavi masterclass totali (d) × 30% |
-| (i) IRPEF | Ricavi lordi × 67% (coeff. redditivita') × 5% (aliquota startup) |
-| (j) INPS | Ricavi lordi × 67% × 26,07% (gestione separata 2026) |
+| (i) IRPEF | Ricavi lordi (*) × 67% (coeff. redditivita') × 5% (aliquota startup) |
+| (j) INPS | Ricavi lordi (*) × 67% × 26,07% (gestione separata 2026) |
+
+(*) **Nota fiscale:** Nel regime forfettario, la base imponibile e' il fatturato lordo del founder. Se l'Industry Partner fattura autonomamente le sue prestazioni (masterclass, referral), quei ricavi non transitano dal P.IVA del founder e non concorrono alla base imponibile. Il P&L sopra assume prudenzialmente che tutto il fatturato transiti dal founder — il carico fiscale reale potrebbe essere leggermente inferiore. Da definire con il commercialista in base alla struttura contrattuale del rev. share.
 
 ° Inner Circle e Masterclass singole sono **stream proiettati, non ancora validati**. Senza di essi, i ricavi Anno 3 sarebbero €158.300 (anziche' €178.970) e l'EBITDA resterebbe comunque >€90K. Questi stream verranno validati durante l'Anno 2 con la community attiva.
 
@@ -715,7 +717,7 @@ RICAVI LORDI = Tutto cio' che entra
       │
       ├──► Revenue share partner (costo VARIABILE: sale solo se i ricavi salgono)
       │         Anno 1: €2.445 (6,8%)    → il partner guadagna poco ma costruisce
-      │         Anno 2: €8.275 (8,7%)    → la community genera ricavi, il partner cresce
+      │         Anno 2: €8.151 (8,7%)    → la community genera ricavi, il partner cresce
       │         Anno 3: €18.582 (10,4%)  → masterclass + IC + upgrade = cash serio
       │
       ├──► Costi fissi operativi (stabili e prevedibili)
@@ -725,11 +727,11 @@ RICAVI LORDI = Tutto cio' che entra
       │
       ├──► Tasse + contributi (proporzionali al fatturato)
       │         Anno 1: €7.465   → forfettario 5% + INPS
-      │         Anno 2: €19.833  → forfettario 5% + INPS
+      │         Anno 2: €19.731  → forfettario 5% + INPS
       │
       └──► UTILE NETTO FOUNDER = cio' che resta in tasca
                Anno 1: €22.000
-               Anno 2: €38.742
+               Anno 2: €38.474
                Anno 3: stima €55-65K
 ```
 
@@ -754,7 +756,7 @@ RICAVI LORDI = Tutto cio' che entra
 | Costi variabili mensili (Anno 1) | ~€200/mese | Revenue share medio su vendite |
 | Break-even | **Mese 4** | Prima vendita EA a €299 > costi mensili €530 |
 | Cash netto fine Anno 1 | **€22.000** | Ricavi - rev.share - costi fissi - tasse |
-| Cash netto fine Anno 2 | **€60.742** cumulativo | Anno 1 + Anno 2 |
+| Cash netto fine Anno 2 | **€60.474** cumulativo | Anno 1 + Anno 2 |
 | Investimento esterno necessario | **€0** | Bootstrap autofinanziato |
 
 **Il business e' profittevole dal primo mese di vendite reali.** Il revenue share al partner e' un costo variabile che cresce solo quando crescono i ricavi — non pesa mai su mesi a zero vendite. Non serve seed round per sopravvivere.
@@ -787,13 +789,11 @@ Questo cambia radicalmente il rapporto con gli investitori: non siamo in cerca d
 | Anno | Ricavi lordi | Costi totali (*) | Utile netto | Crescita |
 |------|-------------|-------------------|-------------|----------|
 | 1 | €35.910 | €13.910 | **€22.000** | Organica, 90 clienti |
-| 2 | €95.350 | €56.608 | **€38.742** | Ufficio + tirocinante |
+| 2 | €94.856 | €56.382 | **€38.474** | Ufficio + tirocinante |
 | 3 | €178.970 | ~€115.000** | **€55-65K** | Team 3, scala |
 
 (*) Costi totali = revenue share partner + costi fissi + tasse/contributi.
 (**) Anno 3 stima con regime ordinario/SRL (carico fiscale superiore al forfettario).
-
-*Stima con regime ordinario/SRL (carico fiscale superiore al forfettario).
 
 **Pro:** Pieno controllo, zero diluizione, decisioni rapide.
 **Contro:** Crescita piu' lenta, no budget per fiere/ads, tutto sulle spalle del founder.
@@ -915,6 +915,57 @@ Un investitore nel Anno 2 di FitManager non sta scommettendo su un'idea — sta 
 - Domanda PT qualificati: +35% in 2 anni (ISTAT 2023)
 - Gym management software globale: $2,03B (2025), CAGR 10-18%
 - Fitness training software globale: $12,45B (2026), CAGR 15,8%
+
+---
+
+### D. Glossario acronimi e termini
+
+| Acronimo/Termine | Significato |
+|-----------------|------------|
+| **ARPU** | Average Revenue Per User — ricavo medio per utente |
+| **ATECO** | Classificazione delle attivita' economiche (codice italiano per tipo di lavoro) |
+| **B2B** | Business-to-Business — vendita tra aziende/professionisti |
+| **B2C** | Business-to-Consumer — vendita al consumatore finale |
+| **CAC** | Customer Acquisition Cost — costo per acquisire un nuovo cliente |
+| **CAGR** | Compound Annual Growth Rate — tasso di crescita annuo composto |
+| **CONI** | Comitato Olimpico Nazionale Italiano |
+| **CREA** | Consiglio per la ricerca in agricoltura e l'analisi dell'economia agraria (fonte dati alimenti italiani) |
+| **CRM** | Customer Relationship Management — sistema di gestione clienti |
+| **DnD** | Drag and Drop — interazione trascina e rilascia nell'interfaccia |
+| **EBITDA** | Earnings Before Interest, Taxes, Depreciation and Amortization — utile operativo lordo |
+| **EMG** | Elettromiografia — misurazione dell'attivita' muscolare |
+| **FK** | Foreign Key — chiave esterna nel database |
+| **GDPR** | General Data Protection Regulation — regolamento europeo sulla privacy |
+| **GTM** | Go-to-Market — strategia di lancio sul mercato |
+| **HW** | Hardware |
+| **IC** | Inner Circle — livello premium della community |
+| **INPS** | Istituto Nazionale della Previdenza Sociale |
+| **IRES** | Imposta sul Reddito delle Societa' (24% per SRL) |
+| **IRPEF** | Imposta sul Reddito delle Persone Fisiche |
+| **ISSA** | International Sports Sciences Association |
+| **LARN** | Livelli di Assunzione di Riferimento di Nutrienti (standard nutrizionale italiano) |
+| **LOC** | Lines of Code — righe di codice sorgente |
+| **LTV** | Lifetime Value — valore totale di un cliente nel tempo |
+| **MAV** | Maximum Adaptive Volume — volume massimo di allenamento adattivo |
+| **MC** | Masterclass |
+| **MEV** | Minimum Effective Volume — volume minimo efficace di allenamento |
+| **MRV** | Maximum Recoverable Volume — volume massimo recuperabile |
+| **NPS** | Net Promoter Score — indice di soddisfazione (-100 a +100; >50 = eccellente) |
+| **P&L** | Profit & Loss — conto economico (ricavi meno costi) |
+| **P.IVA** | Partita IVA — codice fiscale per lavoratori autonomi in Italia |
+| **POC** | Proof of Concept — esperimento di validazione con utenti reali |
+| **PRO** | Livello Community PRO (= upgrade annuale €99) |
+| **PT** | Personal Trainer |
+| **ROI** | Return on Investment — ritorno sull'investimento |
+| **SAFE** | Simple Agreement for Future Equity — strumento di investimento pre-seed |
+| **SAM** | Serviceable Available Market — mercato raggiungibile |
+| **SOM** | Serviceable Obtainable Market — mercato ottenibile realisticamente |
+| **SRL** | Societa' a Responsabilita' Limitata |
+| **SSoT** | Single Source of Truth — fonte unica di verita' per i dati |
+| **TAM** | Total Addressable Market — mercato totale indirizzabile |
+| **WAL** | Write-Ahead Logging — modalita' di scrittura del database SQLite |
+| **WTP** | Willingness to Pay — disponibilita' a pagare |
+| **YoY** | Year over Year — confronto anno su anno |
 
 ---
 
