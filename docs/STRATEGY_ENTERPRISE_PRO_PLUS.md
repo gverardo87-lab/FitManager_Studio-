@@ -813,7 +813,325 @@ Coinvolgimento leggero, nessun allineamento strategico a lungo termine.
 
 ---
 
-*Documento strategico v2.1 — 23 marzo 2026*
+## Marketing Ideas — 17 tattiche per fase (budget €0-1.200 Anno 1)
+
+Tattiche selezionate dal framework "139 Marketing Ideas for SaaS" e adattate al contesto FitManager: bootstrap, 1 persona + Industry Partner, target PT italiani P.IVA. Ogni tattica e' mappata su una fase specifica del lancio.
+
+### Pre-lancio (Settimane -4 a 0)
+
+#### #79 — Waitlist con referral virale
+
+**Cosa:** Aggiungere un meccanismo virale alla waiting list — ogni iscritto riceve un link unico. Chi porta 3 amici sblocca accesso anticipato alla demo.
+
+**Perche' funziona:** Moltiplica gli iscritti senza costo. Il PT che condivide il link sta facendo una micro-commitment pubblica — e' gia' coinvolto prima ancora di comprare.
+
+**Come implementare:**
+1. Usare Tally + Viral Loops (o SparkLoop) per creare link referral univoci
+2. Nella thank-you page: "Sei al posto #X. Porta 3 colleghi per saltare la fila e accedere alla demo in anteprima."
+3. Email automatica con il link referral personale
+
+**Risorse:** €0, 2h di setup
+**Risultato atteso:** 2-3x iscritti alla waiting list rispetto a una lista semplice
+
+#### #81 — Early access pricing visivo
+
+**Cosa:** Sulla landing page, mostrare il prezzo pieno barrato con il prezzo early access in evidenza — price anchoring visivo.
+
+**Perche' funziona:** Il PT vede "€449" barrato e "€149 Fondatore" — il risparmio percepito e' immediato e viscerale. Non serve spiegare: lo vede.
+
+**Come implementare:**
+- Landing page: "~~€449~~ → €149 per i primi 10 Fondatori"
+- Contatore posti rimanenti reale (non finto): "7 posti rimasti su 10"
+- Timer non a scadenza temporale ma a posti: la scarsita' e' sul numero, non sul tempo
+
+**Risorse:** €0, gia' nella landing page
+**Risultato atteso:** Conversione waiting list → Fondatore +30-40%
+
+#### #44 — Comment marketing
+
+**Cosa:** Ogni giorno, 15 minuti a cercare post di PT nei gruppi Facebook e su LinkedIn che si lamentano di gestione clienti, Excel, disorganizzazione. Rispondere con un insight utile (non spam) + link landing page.
+
+**Perche' funziona:** Il PT non cerca un software — ma quando legge un commento che descrive il suo problema con una soluzione, clicca. E' outreach non invasivo.
+
+**Come implementare:**
+1. Identificare 5-10 gruppi Facebook di PT italiani + 10 profili LinkedIn di formatori fitness
+2. Impostare alert (Google Alerts, o check manuale) per keyword: "gestionale palestra", "schede Excel", "gestione clienti PT"
+3. Rispondere con valore: "Ho avuto lo stesso problema. Ho scoperto che il costo di usare Excel e' circa €150/settimana di tempo perso. [link]"
+4. Mai vendere nel commento — dare valore, il link fa il resto
+
+**Risorse:** €0, 15 min/giorno
+**Risultato atteso:** 5-10 visite landing/settimana, 1-2 iscritti waiting list/settimana
+
+---
+
+### POC (Mesi 1-3)
+
+#### #47 — Founder-led sales
+
+**Cosa:** In questa fase, ogni interazione con i 10 Fondatori e' una vendita 1:1 mascherata da supporto. Il founder conosce il prodotto meglio di chiunque e puo' adattare il messaggio in tempo reale.
+
+**Perche' funziona:** A 10 clienti, il founder e' il miglior venditore. Nessun materiale marketing sostituisce una conversazione diretta con chi ha costruito il prodotto.
+
+**Come implementare:**
+- Nei check-in bisettimanali, chiedere: "Come lo racconteresti a un collega?"
+- Annotare le obiezioni reali e come le superano
+- Ogni Fondatore che dice "funziona" diventa un canale: "Puoi dirlo a 2-3 colleghi?"
+
+**Risorse:** €0, gia' nei check-in POC (40h in 90gg)
+**Risultato atteso:** 2-3 referral per Fondatore = 20-30 prospect per la fase EA
+
+#### #139 — Customer language mining
+
+**Cosa:** Raccogliere le frasi esatte che i Fondatori usano per descrivere il problema e la soluzione. Queste parole sono piu' efficaci di qualsiasi copy scritto a tavolino.
+
+**Perche' funziona:** Il PT che legge "finalmente so chi ha pagato senza aprire Excel" si riconosce. E' la sua voce, non quella di un marketer.
+
+**Come implementare:**
+1. In ogni check-in, annotare le frasi verbatim (non parafrasare)
+2. Categorizzare: frasi sul problema, frasi sulla soluzione, frasi sulla differenza
+3. Usarle nel copy: landing page, email, social, pitch deck
+
+**Esempi gia' raccolti nel product-marketing-context:**
+- "Perdo un sacco di tempo a fare le schede"
+- "Non mi ricordo mai chi ha pagato e chi no"
+- "Mi ha salvato con quel cliente con l'ernia"
+
+**Risorse:** €0, durante i check-in
+**Risultato atteso:** Copy 2-3x piu' efficace rispetto a frasi "inventate"
+
+#### #97 — Case study come contenuto multi-formato
+
+**Cosa:** Ogni case study della POC non e' solo un testimonial — e' un asset marketing riutilizzabile su 5+ canali.
+
+**Perche' funziona:** Un case study con numeri reali ("admin da 4h a 1.5h/settimana") e' la prova piu' convincente che esista. Vale piu' di qualsiasi feature list.
+
+**Come implementare — da 1 case study, 5 formati:**
+1. **Pagina scritta** (sito): Problema → Soluzione → Numeri dopo (1 pagina, 500 parole)
+2. **Video 60 sec** (social): Il Fondatore racconta in prima persona (smartphone, non produzione)
+3. **3 post LinkedIn** (rented): Uno sul problema, uno sul cambiamento, uno sui numeri
+4. **1 email** (owned): Inserita nella sequenza nurturing come Touch 4 o 6
+5. **1 slide** (pitch deck): Sintesi con numeri per presentazioni a partner/investitori
+
+**Risorse:** €0-200 (editing video base)
+**Risultato atteso:** 10 case study = 50 asset marketing pronti
+
+---
+
+### Early Adopter (Mesi 4-6)
+
+#### #11 — Comparison pages (competitor)
+
+**Cosa:** Creare pagine sul sito "FitManager vs Mangofit", "FitManager vs EvolutionFit", "FitManager vs Excel". Keyword ad alta intent di acquisto.
+
+**Perche' funziona:** Il PT che cerca "Mangofit alternative" o "gestionale PT confronto" e' gia' in fase di decisione. Una pagina onesta (non denigratoria) cattura quel momento.
+
+**Come implementare:**
+1. 1 pagina per competitor: tabella di confronto (locale/cloud, scienza/base, prezzo annualizzato)
+2. Tono: onesto, non aggressivo. "Mangofit e' ottimo per [X]. FitManager e' meglio per chi vuole [Y]."
+3. CTA: "Prova FitManager 30 giorni. Se preferisci Mangofit, ti rimborsiamo."
+4. SEO: title tag "FitManager vs Mangofit: confronto [anno]"
+
+**Risorse:** €0, 3-4h per pagina
+**Risultato atteso:** 10-30 visite organiche/mese per pagina (keyword bassa competizione in italiano)
+
+#### #1 — Easy keyword ranking (SEO)
+
+**Cosa:** 1 blog post/settimana su keyword a bassa competizione in italiano. Pochi risultati di qualita' per "gestionale personal trainer", "software schede palestra", "CRM fitness italiano".
+
+**Perche' funziona:** Il mercato italiano del software fitness ha pochissimo contenuto SEO di qualita'. Bastano 10-15 post per dominare le SERP su keyword long-tail.
+
+**Come implementare:**
+1. Keyword research: "gestionale personal trainer", "software schede palestra gratis", "app gestione clienti PT", "come gestire pagamenti palestra"
+2. 1 post/settimana, 500-800 parole, risponde a una domanda reale
+3. Ogni post: CTA in fondo (demo o waiting list)
+4. Formato: "Come [fare X] — guida per personal trainer"
+
+**Risorse:** €0, 2h/post
+**Risultato atteso:** 200-500 visite organiche/mese dopo 3-4 mesi di contenuti
+
+#### #38 — Forum e gruppi marketing
+
+**Cosa:** Essere presente nei gruppi Telegram e Facebook dove i PT italiani discutono. Non per vendere — per dare valore e costruire reputazione.
+
+**Perche' funziona:** Il PT si fida di chi lo aiuta nei gruppi, non di chi gli manda ads. 4 settimane di contributi utili → un post con link che non sembra spam.
+
+**Come implementare:**
+1. Identificare 3-5 gruppi (Facebook: "Personal Trainer Italia", "PT e chinesiologi", Telegram: gruppi locali)
+2. Settimane 1-4: rispondere a domande, condividere tip utili, zero link
+3. Settimana 5+: primo post con contenuto di valore + link ("Ho scritto una guida su come gestire 40 clienti senza impazzire")
+
+**Risorse:** €0, 30 min/settimana
+**Risultato atteso:** 3-5 prospect qualificati/mese
+
+#### #107 — Podcast tour
+
+**Cosa:** L'Industry Partner va ospite su podcast fitness italiani. Non per vendere FitManager — per parlare del concetto "PT Evoluto" e della trasformazione professionale.
+
+**Perche' funziona:** Il PT ascolta podcast in auto o in palestra. Un'ora di conversazione con una voce credibile costruisce piu' fiducia di 100 ads.
+
+**Come implementare:**
+1. Listare 10 podcast fitness italiani (cercare su Spotify/Apple "personal trainer Italia", "fitness business")
+2. Pitch: "Posso parlare di come i PT possono scalare oltre 30 clienti con metodo scientifico — ho 20+ anni nel settore"
+3. 1 podcast/mese dal mese 4. Ogni episodio: CTA = "cerca FitManager Studio" o link in show notes
+
+**Risorse:** €0 (tempo Industry Partner)
+**Risultato atteso:** 50-100 visite/episodio, alta qualita' di prospect
+
+---
+
+### Launch Day + Prezzo pieno (Mesi 7-12)
+
+#### #15 — Calcolatore ROI (engineering as marketing)
+
+**Cosa:** Pagina web interattiva sul sito: "Quanto ti costa Excel?". Il PT inserisce ore/settimana admin e tariffa oraria → vede il costo annuo dell'inazione → CTA demo.
+
+**Perche' funziona:** Trasforma il prezzo da "€449 e' tanto" a "sto perdendo €7.000/anno". Il frame Loss Aversion in versione interattiva.
+
+**Come implementare:**
+1. Pagina semplice: 3 campi (clienti attivi, ore admin/settimana, tariffa oraria stimata)
+2. Output: "Stai perdendo €X.XXX/anno in tempo. FitManager si ripaga in Y settimane."
+3. CTA: "Prenota demo gratuita di 20 minuti"
+4. Bonus: "Condividi il risultato con un collega" (viralita')
+
+**Risorse:** €0, 4h dev (componente React o pagina statica)
+**Risultato atteso:** Conversione landing page +20-30% per chi usa il calcolatore
+
+#### #65 — Webinar tematici mensili
+
+**Cosa:** Gia' nel piano. La chiave: ogni webinar ha un **tema specifico** (non "demo generica") e un **co-host** (Industry Partner).
+
+**Perche' funziona:** Il PT non partecipa a una "demo prodotto". Partecipa a "Come periodizzare per over 50" — e scopre che FitManager lo fa automaticamente.
+
+**Calendario suggerito Anno 1:**
+| Mese | Tema | Co-host |
+|------|------|---------|
+| 7 | "Da 25 a 45 clienti senza lavorare piu' ore" | Industry Partner |
+| 8 | "Periodizzazione per over 50" | Industry Partner |
+| 9 | "I 5 errori clinici piu' comuni dei PT" | Industry Partner |
+| 10 | "Nutrizione LARN in pratica: un piano in 10 min" | Founder |
+| 11 | "Come un Fondatore ha ridotto l'admin del 55%" | Fondatore ospite |
+| 12 | "Obiettivi 2027: il PT Evoluto" | Industry Partner |
+
+**Risorse:** €0, 2h preparazione + 1h live per webinar
+**Risultato atteso:** 10-20 partecipanti/webinar, conversione 15-25%
+
+#### #87 + #93 — Powered-by marketing + viral loop anamnesi
+
+**Cosa:** Aggiungere "Powered by FitManager Studio+" nel footer del portale anamnesi self-service. Ogni volta che un PT manda il link anamnesi a un cliente, il cliente vede il brand.
+
+**Perche' funziona:** Marketing a costo zero con esposizione esponenziale. 30 PT × 20 clienti = 600 esposizioni/mese. Alcuni clienti sono PT a loro volta, o conoscono PT.
+
+**Come implementare:**
+1. Aggiungere footer discreto nel portale anamnesi: "Powered by FitManager Studio+ — Il CRM per il PT Evoluto"
+2. Link cliccabile alla landing page
+3. Opzionale: "Sei un personal trainer? Scopri FitManager →"
+
+**Risorse:** €0, 10 min dev
+**Risultato atteso:** 600+ impressioni/mese organiche, 5-10 visite landing/mese
+
+#### #91 — In-app upgrade prompt
+
+**Cosa:** Quando un utente senza upgrade PRO accede a una feature bloccata (template premium, masterclass), mostrare un hint non invasivo.
+
+**Perche' funziona:** Il momento in cui il PT ha bisogno di qualcosa e non ce l'ha e' il momento perfetto per proporre l'upgrade. Non e' un'interruzione — e' una soluzione al suo bisogno attuale.
+
+**Come implementare:**
+- Tooltip discreto: "Questo template e' disponibile con l'upgrade PRO (€99/anno). Include anche masterclass mensili e supporto prioritario."
+- Mai bloccante: il software base funziona sempre al 100%
+- Frequenza: max 1 prompt/settimana per non infastidire
+
+**Risorse:** €0, 2h dev
+**Risultato atteso:** Tasso di conversione upgrade +10-15% rispetto a senza prompt
+
+---
+
+### Post-lancio / Scala (Mesi 13+)
+
+#### #54 — Affiliate program
+
+**Cosa:** Ogni cliente soddisfatto puo' diventare affiliato. Riceve un link personalizzato. Per ogni vendita generata: 3 mesi di upgrade gratis (coerente con il referral program).
+
+**Perche' funziona:** I PT si fidano dei colleghi. Un PT che dice "io uso FitManager e funziona" vale 100 ads. L'incentivo (upgrade gratis) costa €0 cash e motiva senza attirare clienti di bassa qualita'.
+
+**Come implementare:**
+1. Dashboard affiliato nel portale (o anche solo link tracciato con UTM)
+2. Email ai clienti attivi al mese 6: "Ti piace FitManager? Condividi il tuo link e ricevi upgrade gratis."
+3. Tracking: codice univoco per affiliato, conteggio vendite
+
+**Risorse:** €0 costo cash (upgrade gratis = mancato ricavo, non spesa), 1 giornata dev
+**Risultato atteso:** 15-20% dei clienti attiva l'affiliazione, 1-2 vendite/affiliato/anno
+
+#### #70 — Conference speaking
+
+**Cosa:** L'Industry Partner o il founder propongono un talk a RiminiWellness, ForumClub, o eventi regionali di formazione PT. Tema: il "PT Evoluto", non FitManager.
+
+**Perche' funziona:** 200-500 PT in una sala che ascoltano per 30 minuti. Se il talk e' educativo (non una vendita), la credibilita' e' enorme. QR code alla fine → waiting list/demo.
+
+**Come implementare:**
+1. Proporre talk 3-6 mesi prima dell'evento (le call for speakers aprono in anticipo)
+2. Titolo: "Come passare da 25 a 45 clienti senza lavorare piu' ore" (titolo educativo, non promozionale)
+3. Slide 1-25: contenuto di valore. Slide 26: "Se vuoi provare → QR code"
+4. Follow-up: email a chi ha scansionato il QR entro 48 ore
+
+**Risorse:** €500-1.000 (stand/viaggio)
+**Risultato atteso:** 30-50 lead qualificati per evento
+
+#### #104 — Mini-corso gratuito "Il Metodo PT Evoluto"
+
+**Cosa:** 5 lezioni email gratuite che educano il PT sul concetto di PT Evoluto. Non vendita — formazione. La vendita arriva nella lezione 5 come conseguenza naturale.
+
+**Perche' funziona:** Chi completa 5 lezioni ha investito tempo e attenzione. Il commitment e' alto. La lezione 5 non e' un pitch — e' "ora che sai tutto questo, ecco lo strumento che lo fa".
+
+**Come implementare:**
+| Lezione | Giorno | Titolo | Contenuto |
+|---------|--------|--------|-----------|
+| 1 | 0 | "Il problema che non sai di avere" | Costo dell'inazione: €150/settimana persi |
+| 2 | 3 | "Perche' Excel ti sta frenando" | I 5 limiti strutturali di Excel per un PT |
+| 3 | 6 | "Il PT Evoluto: chi e' e cosa fa di diverso" | Definizione della categoria + caratteristiche |
+| 4 | 9 | "Come [Fondatore] ha ridotto l'admin del 55%" | Case study reale con numeri |
+| 5 | 12 | "Il tuo prossimo passo" | CTA: demo 1:1 gratuita di 20 minuti |
+
+**Risorse:** €0, 5h scrittura totale
+**Risultato atteso:** 30-40% completamento, 15-20% prenota demo dalla lezione 5
+
+#### #12 — Marketing jiu-jitsu (competitor)
+
+**Cosa:** Usare la comunicazione dei competitor come trampolino. Quando Mangofit pubblica "gestisci i clienti in cloud", creare contenuto che contrappone.
+
+**Perche' funziona:** Non attacchi il competitor — lo usi come contesto per posizionarti. Il PT vede entrambi i messaggi e sceglie consapevolmente.
+
+**Come implementare:**
+1. Monitorare i post social di Mangofit, EvolutionFit (follow + alert)
+2. Quando pubblicano su cloud/subscription, creare risposta (non polemica): "Il cloud e' comodo. Ma i tuoi dati clinici sono veramente tuoi? Con FitManager, si. Sul tuo PC, per sempre."
+3. Mai citare il competitor per nome nel post — parlare del concetto
+
+**Risorse:** €0, 15 min/settimana
+**Risultato atteso:** Posizionamento chiaro nella mente del PT che segue piu' brand
+
+---
+
+### Riepilogo completo
+
+| Fase | # Tattiche | Budget | Tattiche |
+|------|-----------|--------|----------|
+| **Pre-lancio** | 3 | €0 | #79 waitlist referral, #81 pricing visivo, #44 comment marketing |
+| **POC** | 3 | €0-200 | #47 founder-led sales, #139 customer language, #97 case study multi-formato |
+| **Early Adopter** | 4 | €0 | #11 comparison pages, #1 SEO easy keywords, #38 forum marketing, #107 podcast tour |
+| **Launch + Pieno** | 4 | €0 | #15 calcolatore ROI, #65 webinar tematici, #87+#93 powered-by + viral loop, #91 in-app upgrade |
+| **Scala** | 4 | €500-1.000 | #54 affiliate, #70 conference speaking, #104 mini-corso, #12 marketing jiu-jitsu |
+| **Totale** | **17** | **€500-1.200** | |
+
+### Le 3 azioni immediate (implementabili questa settimana)
+
+| Priorita' | Tattica | Tempo | Impatto |
+|-----------|---------|-------|---------|
+| 1 | **#87 Powered-by nel portale anamnesi** | 10 min dev | 600+ esposizioni/mese gratuite |
+| 2 | **#79 Waitlist con referral virale** | 2h setup | 2-3x iscritti waiting list |
+| 3 | **#44 Comment marketing** | 15 min/giorno | 5-10 visite/settimana, pipeline continua |
+
+---
+
+*Documento strategico v2.2 — 23 marzo 2026*
 *Da aggiornare con feedback dal primo incontro Industry Partner e risultati della POC.*
 
 Sources:
