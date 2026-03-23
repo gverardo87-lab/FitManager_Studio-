@@ -1,6 +1,6 @@
 # Strategia Enterprise PRO+ — FitManager Studio+
 
-**Versione:** 2.1 — 23 marzo 2026
+**Versione:** 2.2 — 23 marzo 2026
 **Contesto:** Strategia di lancio, category creation e definizione del ruolo Industry Partner.
 **Riferimento finanziario:** I dettagli completi (P&L, scenari, struttura fiscale) sono nel Business Plan v3.2 (`docs/BUSINESS_PLAN.md`).
 
@@ -415,6 +415,101 @@ Il referral NON deve essere uno sconto per il nuovo cliente (rischio Cobra Effec
 | "Porta un amico → lui ha €50 di sconto" | "Porta un amico → TU ricevi 3 mesi di upgrade gratis" |
 
 Il referrer e' motivato (guadagna valore tangibile). L'amico compra a prezzo pieno con garanzia 30gg — la sua decisione e' basata sul valore del prodotto, non su uno sconto. Questo filtra i clienti di qualita' e protegge il pricing.
+
+### Email Strategy — il canale owned piu' potente
+
+L'email e' l'unico canale dove hai accesso diretto al prospect senza algoritmi, senza pagare, senza dipendere da piattaforme. La waiting list raccoglie email — ma senza un piano per usarle, sono dati morti.
+
+**3 sequenze email automatizzate:**
+
+#### Sequenza 1 — Nurturing pre-vendita (dalla waiting list alla demo)
+
+Obiettivo: portare l'iscritto dalla waiting list al Touch 7 (demo 1:1).
+
+| Email | Giorno | Oggetto | Contenuto | Principio |
+|-------|--------|---------|-----------|-----------|
+| 1 | Giorno 0 | "Benvenuto — ecco perche' sei qui" | Conferma iscrizione + il caso "Marco, PT a Milano" | Empatia + dolore |
+| 2 | Giorno 3 | "Quanto ti costa Excel ogni settimana?" | Frame costo dell'inazione: €90-150/sett persi | Loss Aversion |
+| 3 | Giorno 7 | "Come [Fondatore X] ha ridotto l'admin del 55%" | Testimonial con numeri reali dalla POC | Social Proof |
+| 4 | Giorno 12 | "Il PT Evoluto: cosa lo distingue" | Il concetto di categoria + cosa cambia | Category Creation |
+| 5 | Giorno 17 | "Vuoi vedere FitManager in azione? 20 min." | CTA per prenotare demo 1:1 + garanzia 30gg | Commitment + zero rischio |
+
+**Nota:** Le email 3-4 sono attivabili solo dopo la POC (servono i dati reali). Prima della POC, la sequenza si ferma a 3 email.
+
+#### Sequenza 2 — Onboarding post-acquisto (i primi 14 giorni)
+
+Obiettivo: portare il nuovo cliente al quick win entro 24 ore e all'adozione completa entro 2 settimane.
+
+| Email | Quando | Oggetto | Contenuto |
+|-------|--------|---------|-----------|
+| 1 | Giorno 0 | "Benvenuto in FitManager — parti da qui" | Link download + guida installazione + video "primi 10 minuti" |
+| 2 | Giorno 1 | "Hai inserito il primo cliente?" | Reminder + tip: importa da Excel con template CSV |
+| 3 | Giorno 3 | "La tua prima scheda in 5 minuti" | Tutorial workout builder + catalogo 500 esercizi |
+| 4 | Giorno 7 | "Hai provato il Safety Engine?" | Mostra come funziona con un caso reale (condizione clinica) |
+| 5 | Giorno 14 | "Come va? 3 domande veloci" | Micro-survey (soddisfazione, cosa manca, NPS) |
+
+#### Sequenza 3 — Upgrade reminder (mese 10-11)
+
+Obiettivo: ricordare il valore dell'upgrade prima della scadenza del primo anno incluso.
+
+| Email | Quando | Oggetto | Contenuto |
+|-------|--------|---------|-----------|
+| 1 | Mese 10 | "Il tuo anno di aggiornamenti: ecco cosa hai ricevuto" | Recap di tutto cio' che ha ricevuto (nuovi esercizi, masterclass, template) |
+| 2 | Mese 11 | "Ecco cosa arriva nei prossimi 3 mesi" | Anteprima roadmap + feature in arrivo |
+| 3 | Mese 11.5 | "Il tuo upgrade scade tra 2 settimane" | CTA rinnovo + confronto: €99 = €650 di valore. Rapporto 6,5:1 |
+
+**Strumenti:** Sequenze gestibili con strumenti gratuiti/low-cost (Brevo free tier, Mailchimp free tier, o Buttondown). Costo: €0-15/mese fino a 500 contatti.
+
+### Borrowed Channels — sfruttare audience altrui
+
+L'Industry Partner e' il borrowed channel principale, ma non deve essere l'unico. Ogni mese dal mese 4 in poi, attivare almeno 1 borrowed channel aggiuntivo.
+
+**Canali borrowed target per il mercato PT italiano:**
+
+| Canale | Tipo | Come | Quando |
+|--------|------|------|--------|
+| **Podcast fitness italiani** | Guest interview | Il founder o l'Industry Partner racconta "perche' ho costruito FitManager" | Dal mese 4 (con dati POC) |
+| **Blog enti formazione** (ISSA, FIF, ASI) | Guest post | Articolo "5 errori che il 90% dei PT commette nella gestione clienti" | Dal mese 5 |
+| **Formatori di accademie PT** | Partnership | Demo di FitManager nei corsi di formazione (20-50 studenti/anno ciascuno) | Dal mese 6 |
+| **Influencer PT su Instagram/YouTube** | Prodotto in prova | Licenza gratuita + review onesta. Non sponsorship pagata. | Dal mese 7 |
+| **Community Facebook/Telegram PT** | Contenuto di valore | Post utili (non promozionali) + link a risorse gratuite | Continuo |
+
+**Principio (ORB Framework):** I borrowed channels danno velocita' ma non stabilita'. Ogni interazione deve riportare il prospect su un owned channel (email list, community Discord, waiting list). Mai lasciare l'attenzione sulla piattaforma altrui.
+
+**Template pitch per guest content:**
+> "Ciao [nome], seguo il tuo lavoro su [canale] e ho visto che parli spesso di [tema]. Ho costruito uno strumento per i PT che [beneficio specifico] — abbiamo dati da 10 Fondatori che hanno ridotto l'admin del [X]%. Ti andrebbe di fare una chiacchierata? Potrebbe essere un contenuto interessante per il tuo pubblico."
+
+### Launch Day — il momento di apertura pubblica
+
+Il piano attuale prevede una transizione fluida da EA a prezzo pieno. Ma manca un **momento di lancio pubblico** — un giorno specifico in cui si annuncia "FitManager e' disponibile per tutti".
+
+**Quando:** Mese 7 (primo giorno di vendita a prezzo pieno €449), dopo che i testimonial dei Fondatori e degli EA sono pronti.
+
+**Launch assets da preparare entro il Launch Day:**
+
+| Asset | Formato | Obiettivo |
+|-------|---------|-----------|
+| 6 screenshot professionali | PNG alta risoluzione | Mostrare le schermate chiave (dashboard, scheda, anamnesi, cassa) |
+| 3 GIF animate | 10-15 sec ciascuna | Workflow: crea cliente → scheda → pagamento |
+| Demo video | 3 minuti, screen recording con voce | "Ecco FitManager in 3 minuti" — condivisibile |
+| Blog post | "Perche' ho costruito FitManager" | Storia del founder, il problema, la visione PT Evoluto |
+| Pagina confronto | Landing page sul sito | FitManager vs Mangofit vs Excel — tabella chiara |
+
+**Azioni del Launch Day:**
+
+| Ora | Azione | Canale |
+|-----|--------|--------|
+| Mattina | Blog post pubblicato sul sito | Owned |
+| Mattina | Email alla lista "Oggi lanciamo" | Owned (email) |
+| Mattina | Post LinkedIn founder + Industry Partner | Rented |
+| Mattina | Post nei gruppi Facebook/Telegram PT | Rented + Borrowed |
+| Pomeriggio | Condivisione da parte dei Fondatori e EA (pre-concordata) | Borrowed |
+| Sera | Webinar live "Demo + Q&A" con Industry Partner | Owned |
+
+**Post-Launch Day (settimana successiva):**
+- Email di recap a chi non ha aperto la prima
+- Confronto competitor pubblicato sul sito
+- Primo contenuto SEO long-tail ("gestionale personal trainer" keyword)
 
 ---
 
