@@ -89,7 +89,7 @@ La POC dura **90 giorni** (3 mesi) divisi in 3 fasi:
 3. Con quali strumenti gestisci i clienti oggi? (Excel, WhatsApp, carta, app, altro)
 4. Hai mai perso un dato importante di un cliente? (anamnesi, pagamento, misurazione)
 5. Quanto ti senti organizzato da 1 a 10?
-6. Quanto saresti disposto a pagare per uno strumento che risolve questi problemi?
+6. Quanto saresti disposto a pagare per uno strumento che risolve questi problemi? (**porre PRIMA di rivelare il prezzo** — dato critico per validare il pricing €449)
 7. Raccomanderesti uno strumento cosi' a un collega? (scala 1-10)
 
 #### Fase B — Adozione e feedback (Giorni 15-75)
@@ -194,10 +194,18 @@ Il canale dedicato ai 10 Fondatori e' il **cuore operativo** della POC. Non e' u
 ### Timeline completa della POC
 
 ```
+PRE-LANCIO (4 settimane prima della POC)
+│
+├── Landing page "Coming Soon" + waiting list (target: 50+ iscritti)
+├── Profilo LinkedIn attivo (2-3 post/settimana su dolori del PT)
+├── Teaser video 60 sec (screen recording del software reale)
+├── Accordo con Industry Partner formalizzato
+│
+▼
 PRIMA DELLA POC (2-3 settimane di preparazione)
 │
-├── Selezione 10 Fondatori (con aiuto [Chinesiologo Senior])
-├── Preparazione questionario baseline
+├── Selezione 10 Fondatori (con Industry Partner)
+├── Preparazione questionario baseline (incl. willingness-to-pay)
 ├── Preparazione canale community dedicato
 ├── Preparazione kit onboarding (video 5 step + guida PDF)
 ├── Verifica installer su 2-3 macchine diverse

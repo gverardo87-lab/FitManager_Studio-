@@ -56,13 +56,15 @@ Il professionista fitness italiano lavora tipicamente con 15-40 clienti attivi e
 
 ### Dimensione del mercato
 
-| Livello | Stima | Metodologia |
-|---------|-------|-------------|
-| **TAM** (Total Addressable Market) | €360M/anno | ~120.000 professionisti fitness P.IVA Italia × €250/mese software |
-| **SAM** (Serviceable Available Market) | €43M/anno | ~15.000 trainer tech-ready (certificati CONI, <45 anni, urbani) × €240/anno |
-| **SOM** (Serviceable Obtainable Market) | €720K/anno Anno 3 | 1.000 clienti paganti × €60/mese piano Pro |
+Il mercato di riferimento di FitManager non e' "il fitness italiano" ma una nicchia specifica: **il professionista fitness a P.IVA tech-ready che lavora in autonomia**.
 
-Il TAM e' calcolato bottom-up: il mercato fitness italiano vale €3,1 miliardi (2024), con ~8.000 centri e una media di 23,5 trainer per struttura. Aggiungendo freelance e chinesiologi, la stima conservativa e' 100.000-150.000 operatori.
+| Livello | Stima | Metodologia | Nota |
+|---------|-------|-------------|------|
+| **SOM** (anno 3) | **€135K/anno** | 300 licenze × €449 | Obiettivo operativo reale |
+| **SAM** | **€7,2M/anno** | ~15.000 trainer tech-ready × €480/anno (licenza+upgrade) | Il mercato raggiungibile |
+| **TAM** (contesto) | €360M/anno | ~120.000 operatori fitness P.IVA × €250/mese | Solo contesto — non il mercato indirizzabile |
+
+**Come si arriva al SAM di 15.000:** Il mercato fitness italiano vale €3,1 miliardi (2024), con ~8.000 centri e 23,5 trainer/struttura media. Aggiungendo freelance e chinesiologi, la stima e' 100.000-150.000 operatori totali. Di questi, ~15.000 sono il segmento tech-ready: certificati CONI, <45 anni, aree urbane, disposti a investire in strumenti professionali. FitManager punta a catturare il **2-4% del SAM entro 3 anni** (300-600 clienti).
 
 ---
 
@@ -262,6 +264,19 @@ Questo crea un "pavimento" di ricavi ricorrenti che cresce con la base installat
 
 ## 6. Strategia Go-to-Market
 
+### Pre-lancio (Settimane -4 a 0): Segnali di domanda
+
+Prima della POC, serve un minimo di presenza online per validare l'interesse e alimentare il funnel.
+
+| Azione | Strumento | Costo | Target |
+|--------|-----------|-------|--------|
+| Landing page "Coming Soon" | Sito statico (Vercel/Netlify) | €0 | Online in 1 settimana |
+| Waiting list | Form sulla landing (Tally/Google Forms) | €0 | 50+ iscritti pre-POC |
+| Profilo LinkedIn attivo | Post 2-3/settimana su dolori del PT | €0 | 200+ follower in 4 settimane |
+| Teaser video (60 sec) | Screen recording del software | €0 | Condivisibile, mostra il prodotto reale |
+
+**Perche' serve:** Un investitore o un partner chiedera' "quanti sono interessati?". Anche 50 iscritti in waiting list sono un dato. Zero iscritti = zero segnale.
+
 ### Fase 0 — POC: Proof of Concept (Mesi 1-3): 10 Fondatori
 
 **La POC e' il fondamento di tutto.** I primi 10 Fondatori non sono clienti — sono un esperimento controllato che deve rispondere a una domanda: *"Un PT che adotta FitManager migliora in modo misurabile gestione clienti, tempo operativo e crescita professionale?"*
@@ -292,6 +307,8 @@ Questo crea un "pavimento" di ricavi ricorrenti che cresce con la base installat
 | "Lo ricompreresti a €449?" | N/A | 8/10 dicono si |
 
 **Output della POC:** 10 case study con dati reali + 10 testimonial video + dati aggregati per marketing e investitori. Se la POC fallisce, lo scopriamo con €200 di investimento cash, non con €50.000 di marketing.
+
+**Nota importante:** Il questionario baseline include una domanda di willingness-to-pay ("Quanto saresti disposto a pagare per uno strumento che risolve questi problemi?") posta **prima** di rivelare il prezzo. Questo dato valida il pricing €449 con evidenze reali, non con ipotesi.
 
 **Nota fiscale:** Durante la POC (mesi 1-3) le 10 vendite a €149 possono rientrare in prestazione occasionale (sotto la soglia dei €5.000 annui). L'apertura P.IVA avviene al mese 4, quando partono le vendite Early Adopter.
 
@@ -429,7 +446,9 @@ Il progetto richiede una figura con profonda esperienza nel settore fitness, cre
 - Credibilita' diretta verso il target (i PT si fidano di un pari, non di un software)
 - Capacita' di creare e condurre contenuti (masterclass, webinar, formazione)
 
-**Candidato identificato:** Chinesiologo senior con 20+ anni di esperienza, ex dirigente TechnoGym, attualmente libero professionista e mental coach. Network attivo ai vertici del settore. In fase di definizione dell'accordo.
+**Candidato identificato:** Chinesiologo senior con 20+ anni di esperienza, ex dirigente TechnoGym, attualmente libero professionista e mental coach. Network attivo ai vertici del settore. Accordo in fase di definizione (incontro in corso).
+
+**Piano B:** Se il candidato attuale non accetta, il ruolo viene ricercato tramite: (1) enti di formazione fitness (ISSA, FIF, ASI) — formatori senior con network attivo; (2) LinkedIn — profili ex-catena con esperienza gestionale; (3) community fitness italiane — opinion leader con following attivo. Timeline piano B: 4-6 settimane di ricerca. La POC non parte senza questo ruolo coperto.
 
 **Responsabilita':**
 
@@ -627,8 +646,8 @@ I calcoli seguenti mostrano quanto guadagna il partner in ciascun anno, assumend
 | **RICAVI LORDI** | | | |
 | Licenze (a) | €34.410 | €80.820 | €134.700 |
 | Upgrade annuale (b) | €0 | €4.850 | €13.600 |
-| Inner Circle (c) | €0 | €0 | €8.970 |
-| Masterclass singole (d) | €0 | €4.680 | €11.700 |
+| Inner Circle (c) ° | €0 | €0 | €8.970 |
+| Masterclass singole (d) ° | €0 | €4.680 | €11.700 |
 | Setup/onboarding | €1.500 | €5.000 | €10.000 |
 | **Ricavi lordi totali** | **€35.910** | **€95.350** | **€178.970** |
 | | | | |
@@ -676,7 +695,18 @@ I calcoli seguenti mostrano quanto guadagna il partner in ciascun anno, assumend
 | (i) IRPEF | Ricavi lordi × 67% (coeff. redditivita') × 5% (aliquota startup) |
 | (j) INPS | Ricavi lordi × 67% × 26,07% (gestione separata 2026) |
 
-*Anno 3: se il fatturato supera €85.000, si esce dal regime forfettario. Sara' necessario valutare con il commercialista la transizione a regime ordinario o SRL. Il carico fiscale aumentera' (stima ~35-40% del reddito imponibile), ma l'EBITDA di €112K genera comunque un utile netto ampiamente positivo (stima €55-65K).
+° Inner Circle e Masterclass singole sono **stream proiettati, non ancora validati**. Senza di essi, i ricavi Anno 3 sarebbero €158.300 (anziche' €178.970) e l'EBITDA resterebbe comunque >€90K. Questi stream verranno validati durante l'Anno 2 con la community attiva.
+
+**Anno 3 — Transizione fiscale post-forfettario:**
+
+Se il fatturato supera €85.000 (previsto tra il mese 20 e 24), si esce dal regime forfettario. Le opzioni sono:
+
+| Regime | Carico fiscale stimato | Pro | Contro |
+|--------|----------------------|-----|--------|
+| Ordinario P.IVA | ~35-40% su reddito netto | Deduzione costi, IVA a credito | Contabilita' ordinaria, costi commercialista |
+| SRL | ~24% IRES + 26% dividendi | Responsabilita' limitata, credibilita' | Costi costituzione ~€2K, contabilita' |
+
+**Stima impatto Anno 3:** Con EBITDA di €112K e carico fiscale ~35-38% (ordinario), l'utile netto stimato e' **€55.000-65.000**. Con SRL (IRES 24% + distribuzione parziale), l'utile netto disponibile e' simile ma con maggiore flessibilita' fiscale. Da pianificare con il commercialista entro il mese 18.
 
 #### Come leggere il P&L: chi guadagna quanto
 
@@ -810,7 +840,8 @@ Un investitore nel Anno 2 di FitManager non sta scommettendo su un'idea — sta 
 | **Resistenza al prezzo €449** | Media | Medio | Confronto annualizzato vs SaaS (€449 una volta < €480/anno Mangofit). Garanzia 30gg. |
 | **Basso tasso rinnovo upgrade** | Media | Alto | Masterclass + template + community = valore percepito €650 per €99. Se <40%, rivedere pricing. |
 | **Superamento soglia €85K forfettario** | Alta | Medio | Buon problema: pianificare transizione a ordinario/SRL con commercialista dal mese 18. |
-| **Single founder burnout** | Alta | Alto | Anno 1 lean by design. Tirocinante dal mese 13 delega operativa. Community come supporto scalabile. |
+| **Single founder risk** | Alta | Alto | Industry Partner operativo dalla POC mitiga il lato commerciale. Release pipeline automatizzata riduce il carico dev. Tirocinante dal mese 13 per operativita'. Se il founder si ferma >2 settimane, il partner puo' gestire community e vendite. Il prodotto installato continua a funzionare (locale). |
+| **Tutte le proiezioni sono non validate** | Alta | Medio | Nessun PT ha ancora pagato. La POC e' progettata esattamente per trasformare ipotesi in dati entro 90 giorni. Nessuna spesa significativa avviene prima della validazione POC. |
 | **Competitor SaaS aggressivo** | Media | Basso | Il quadrante locale+scienza e' vuoto. Riscrivere un SaaS in locale costa ordini di grandezza di piu'. |
 
 ### Scenario pessimistico (vendite -50%)
@@ -872,7 +903,8 @@ Un investitore nel Anno 2 di FitManager non sta scommettendo su un'idea — sta 
 | Q4 2026 | AI suggestions (Ollama) | Differenziazione premium |
 | Q1 2027 | Multi-operatore | Espansione a centri |
 | Q2 2027 | Cloud sync opzionale (hybrid) | Richiesta mercato |
-| Q3 2027 | Espansione iberica | Nuovo mercato |
+| Q3 2027 | Valutazione cross-platform (web-based) | Sblocco macOS + tablet (15-20% mercato escluso) |
+| Q4 2027 | Espansione iberica | Nuovo mercato |
 
 ### C. Riferimenti di mercato
 
@@ -886,7 +918,7 @@ Un investitore nel Anno 2 di FitManager non sta scommettendo su un'idea — sta 
 
 ---
 
-*Documento v3.0, 23 marzo 2026. Modello bootstrap: licenza perpetua + upgrade annuale + POC 90gg + P.IVA forfettaria Anno 1. Dati di mercato basati su fonti pubbliche (ISTAT, Les Mills, Business Research Insights, Polaris Market Research). Dati fiscali: regime forfettario 2026 (ATECO 62.10.00, coefficiente 67%, aliquota startup 5%).*
+*Documento v3.2, 23 marzo 2026. Modello bootstrap: licenza perpetua + upgrade annuale + POC 90gg + P.IVA forfettaria Anno 1. Dati di mercato basati su fonti pubbliche (ISTAT, Les Mills, Business Research Insights, Polaris Market Research). Dati fiscali: regime forfettario 2026 (ATECO 62.10.00, coefficiente 67%, aliquota startup 5%).*
 
 ---
 
