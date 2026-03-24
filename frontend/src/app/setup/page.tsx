@@ -10,7 +10,7 @@ import { Loader2, Dumbbell, Sparkles } from "lucide-react"
 import type { AxiosError } from "axios"
 
 import apiClient from "@/lib/api-client"
-import { register } from "@/lib/auth"
+import { register, clearStaleAuth } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -54,6 +54,9 @@ export default function SetupPage() {
   const [checking, setChecking] = useState(true)
 
   useEffect(() => {
+    // Pulisci sempre cookie stale all'arrivo su setup (fresh install)
+    clearStaleAuth();
+
     apiClient
       .get<{ needs_setup: boolean }>("/auth/setup-status")
       .then(({ data }) => {

@@ -23,7 +23,7 @@ import { Loader2, Eye, EyeOff, KeyRound } from "lucide-react";
 import { AxiosError } from "axios";
 
 import apiClient from "@/lib/api-client";
-import { login } from "@/lib/auth";
+import { login, clearStaleAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -88,12 +88,15 @@ export default function LoginPage() {
   const [resetSuccess, setResetSuccess] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
 
-  // Se non esiste nessun trainer, redirect al Setup Wizard
+  // Se non esiste nessun trainer, pulisci cookie stale e redirect al Setup Wizard
   useEffect(() => {
     apiClient
       .get<{ needs_setup: boolean }>("/auth/setup-status")
       .then(({ data }) => {
-        if (data.needs_setup) router.replace("/setup");
+        if (data.needs_setup) {
+          clearStaleAuth();
+          router.replace("/setup");
+        }
       })
       .catch(() => {});
   }, [router]);

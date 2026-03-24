@@ -63,6 +63,10 @@ class LicenseClaims(BaseModel):
     """Claim minimi richiesti dal token licenza."""
 
     client_id: str = Field(min_length=1)
+    client_name: str | None = None
+    client_surname: str | None = None
+    client_birthdate: str | None = None  # YYYY-MM-DD
+    client_email: str | None = None
     tier: str = Field(min_length=1)
     max_clients: int | None = Field(default=None, ge=1)
     machine_id: str | None = None

@@ -4,14 +4,10 @@
 /**
  * AuthGuard — protezione client-side per le rotte autenticate.
  *
- * Il middleware Next.js (Edge) e' il primo livello di protezione,
- * ma in Next.js 16 la convenzione `middleware.ts` e' deprecata
- * e potrebbe non intercettare tutte le richieste.
- *
- * Questo componente aggiunge un secondo livello:
- * - Controlla la presenza del cookie JWT
- * - Se assente, redirect immediato a /login
- * - Se presente, renderizza i children normalmente
+ * Due livelli di protezione:
+ * 1. Fresh install detection: se backend dice needs_setup=true ma il browser
+ *    ha cookie auth stale (es. reinstallazione), li pulisce e manda a /setup.
+ * 2. Auth check: se il cookie JWT e' assente, redirect a /login.
  *
  * NOTA: useState(false) + useEffect e' il pattern corretto qui.
  * isAuthenticated() legge document.cookie (browser-only API).
@@ -23,18 +19,38 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { isAuthenticated } from "@/lib/auth";
+import apiClient from "@/lib/api-client";
+import { isAuthenticated, clearStaleAuth } from "@/lib/auth";
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [checked, setChecked] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated()) {
-      setChecked(true);
-    } else {
-      router.replace("/login");
-    }
+    apiClient
+      .get<{ needs_setup: boolean }>("/auth/setup-status")
+      .then(({ data }) => {
+        if (data.needs_setup) {
+          // Fresh install: pulisci eventuali cookie stale e manda a setup
+          clearStaleAuth();
+          router.replace("/setup");
+          return;
+        }
+        // Setup completato: verifica auth normalmente
+        if (isAuthenticated()) {
+          setChecked(true);
+        } else {
+          router.replace("/login");
+        }
+      })
+      .catch(() => {
+        // Network error: fallback al check auth semplice
+        if (isAuthenticated()) {
+          setChecked(true);
+        } else {
+          router.replace("/login");
+        }
+      });
   }, [router]);
 
   if (!checked) return null;

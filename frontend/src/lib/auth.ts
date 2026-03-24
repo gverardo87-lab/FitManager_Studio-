@@ -141,3 +141,19 @@ export function getStoredTrainer(): StoredTrainer | null {
 export function isAuthenticated(): boolean {
   return !!Cookies.get(TOKEN_COOKIE);
 }
+
+/**
+ * Rimuove cookie auth stale (token + trainer).
+ * Da chiamare quando il backend segnala needs_setup=true (fresh install)
+ * ma il browser ha ancora cookie dalla sessione precedente.
+ */
+export function clearStaleAuth(): boolean {
+  const hadToken = !!Cookies.get(TOKEN_COOKIE);
+  const hadTrainer = !!Cookies.get(TRAINER_COOKIE);
+  if (hadToken || hadTrainer) {
+    Cookies.remove(TOKEN_COOKIE);
+    Cookies.remove(TRAINER_COOKIE);
+    return true;
+  }
+  return false;
+}

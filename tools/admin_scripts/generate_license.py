@@ -79,6 +79,14 @@ def cmd_sign(args: argparse.Namespace) -> None:
         "tier": args.tier,
         "exp": int(exp.timestamp()),
     }
+    if args.name is not None:
+        claims["client_name"] = args.name
+    if args.surname is not None:
+        claims["client_surname"] = args.surname
+    if args.birthdate is not None:
+        claims["client_birthdate"] = args.birthdate
+    if args.email is not None:
+        claims["client_email"] = args.email
     if args.max_clients is not None:
         claims["max_clients"] = args.max_clients
     if args.machine_id is not None:
@@ -92,6 +100,12 @@ def cmd_sign(args: argparse.Namespace) -> None:
 
     print(f"Licenza firmata:")
     print(f"  Client: {args.client}")
+    if args.name and args.surname:
+        print(f"  Intestata a: {args.name} {args.surname}")
+    if args.birthdate:
+        print(f"  Data nascita: {args.birthdate}")
+    if args.email:
+        print(f"  Email: {args.email}")
     print(f"  Tier: {args.tier}")
     print(f"  Scadenza: {exp.strftime('%Y-%m-%d')}")
     if args.max_clients:
@@ -123,6 +137,12 @@ def cmd_verify(args: argparse.Namespace) -> None:
         print(f"Scadenza: {result.expires_at.strftime('%Y-%m-%d %H:%M UTC')}")
     if result.claims:
         print(f"Client: {result.claims.client_id}")
+        if result.claims.client_name and result.claims.client_surname:
+            print(f"Intestata a: {result.claims.client_name} {result.claims.client_surname}")
+        if result.claims.client_birthdate:
+            print(f"Data nascita: {result.claims.client_birthdate}")
+        if result.claims.client_email:
+            print(f"Email: {result.claims.client_email}")
         print(f"Tier: {result.claims.tier}")
         if result.claims.max_clients:
             print(f"Max clienti: {result.claims.max_clients}")
@@ -173,7 +193,11 @@ def main() -> None:
 
     # sign
     sign = sub.add_parser("sign", help="Firma un token licenza")
-    sign.add_argument("--client", required=True, help="ID cliente (es. gym-roma)")
+    sign.add_argument("--client", required=True, help="ID cliente (es. chiara-bassani)")
+    sign.add_argument("--name", default=None, help="Nome del titolare licenza")
+    sign.add_argument("--surname", default=None, help="Cognome del titolare licenza")
+    sign.add_argument("--birthdate", default=None, help="Data nascita titolare (YYYY-MM-DD)")
+    sign.add_argument("--email", default=None, help="Email cliente (es. chiara@esempio.com)")
     sign.add_argument("--tier", required=True, choices=["basic", "pro", "enterprise"], help="Tier licenza")
     sign.add_argument("--months", type=int, default=12, help="Durata in mesi (default 12)")
     sign.add_argument("--max-clients", type=int, default=None, help="Limite clienti (default illimitato)")
