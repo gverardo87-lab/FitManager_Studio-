@@ -143,8 +143,22 @@ Questi endpoint funzionano anche senza licenza valida (necessari per setup e att
 ## Sicurezza
 
 - **Chiave privata** (`~/.fitmanager/private_key.pem`): MAI distribuire, MAI committare
-- **Chiave pubblica** (`data/license_public.pem`): inclusa nell'installer, serve solo per verificare
+- **Chiave pubblica**: embedded nel codice Python compilato (non piu' da file in produzione)
 - **Fingerprint**: hash SHA-256, non espone seriali hardware reali
 - **Backward compat**: licenze senza `machine_id` continuano a funzionare (campo opzionale)
-- **Graceful degradation**: se PowerShell/WMI non disponibile, il check machine viene saltato
 - **Proxy fix**: `/licenza` rimossa da `AUTH_ONLY_PAGES` — un trainer loggato senza licenza deve poterla vedere
+
+### Hardening anti-tampering (ADR-005, 2026-03-24)
+
+In build PyInstaller (frozen mode), sono attive 4 protezioni aggiuntive:
+
+| Protezione | Effetto |
+|-----------|--------|
+| Chiave pubblica embedded nel codice | `license_public.pem` su disco viene ignorato — impedisce sostituzione chiave |
+| Integrity hash SHA-256 | Se la chiave embedded viene alterata nel bytecode, l'hash non corrisponde → blocco |
+| Enforcement sempre ON | `LICENSE_ENFORCEMENT_ENABLED` env var viene ignorata — impossibile disabilitare |
+| Fingerprint fail-closed | Se PowerShell/WMI non disponibile → blocco (non bypass silenzioso) |
+
+In dev mode (non-frozen) il comportamento resta invariato per comodita' sviluppo.
+
+Per il modello di sicurezza completo e la roadmap: `docs/SECURITY_MODEL.md`

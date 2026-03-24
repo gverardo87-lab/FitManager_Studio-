@@ -22,8 +22,11 @@ APP_STARTED_AT = datetime.now(timezone.utc)
 
 
 def is_license_enforcement_enabled() -> bool:
-    default = "true" if getattr(sys, "frozen", False) else "false"
-    value = os.getenv("LICENSE_ENFORCEMENT_ENABLED", default).strip().lower()
+    # Frozen mode (PyInstaller): enforcement SEMPRE ON, nessun env var bypass.
+    if getattr(sys, "frozen", False):
+        return True
+    # Dev mode: configurabile via env (default OFF per comodita' sviluppo).
+    value = os.getenv("LICENSE_ENFORCEMENT_ENABLED", "false").strip().lower()
     return value in {"1", "true", "yes", "on"}
 
 

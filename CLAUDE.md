@@ -128,6 +128,7 @@ Tutte con PRAGMA: `journal_mode=WAL`, `foreign_keys=ON`, `busy_timeout=5000`.
 - **Proxy Next.js intercetta PRIMA dei rewrite**: `/api` in `PUBLIC_ROUTES` (auth JWT gestita dal backend).
 - **Seed data**: 500 esercizi + 940 relazioni + 1788 media in `data/exercises/`, seed idempotente al startup in catalog.db.
 - **Licenza con hardware binding**: JWT RS256 con `machine_id` (SHA-256 di CPU+Board+BIOS via PowerShell). Generazione via CLI (`tools/admin_scripts/generate_license.py`). Flusso completo in `docs/LICENSE_ACTIVATION.md`. `/licenza` NON e' in `AUTH_ONLY_PAGES` (il trainer loggato senza licenza deve vederla).
+- **Anti-tampering (ADR-005)**: in frozen mode (PyInstaller) la chiave pubblica e' embedded nel codice (non da file), enforcement sempre ON (no env bypass), fingerprint fail-closed. Modello completo in `docs/SECURITY_MODEL.md`.
 
 ## Motori scientifici
 
@@ -168,8 +169,10 @@ Skills installate in `.agents/skills/` — knowledge base attive per audit e cod
 | `LAUNCH_SCOPE.md` | Cosa e' in scope per il lancio | Quando prioritizzi feature |
 | `POSTMORTEMS.md` | Lezioni da errori passati | Quando incontri un pattern sospetto |
 | `AGENTS.md` | Delivery loop, quality gates, commit standard | Quando serve contesto operativo agenti |
+| `docs/SECURITY_MODEL.md` | Threat model, 5 livelli protezione, roadmap sicurezza | Quando tocchi licenza, auth, anti-tampering |
 | `docs/LICENSE_ACTIVATION.md` | Attivazione licenza, hardware binding, CLI admin | Quando tocchi licenza, fingerprint, setup |
 | `docs/adr/ADR-004-release-pipeline-sicuro.md` | Pipeline release 5 fasi, version SSoT, safety gate, smoke test | Quando fai una release o tocchi il build pipeline |
+| `docs/adr/ADR-005-license-hardening-anti-tampering.md` | Hardening licenza: embedded key, env bypass block, fail-closed | Quando tocchi sistema licenza o anti-tampering |
 | `docs/VIDEO_PRODUCTION.md` | Format e pipeline video promozionali/demo | Quando crei o modifichi video per il sito |
 
 ## Commit
