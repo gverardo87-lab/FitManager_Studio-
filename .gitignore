@@ -194,3 +194,6 @@ htmlcov/
 
 # Test output artifacts
 *_output.json
+
+# Video output (generati da tools/scripts/video-*.js)
+data/videos/
