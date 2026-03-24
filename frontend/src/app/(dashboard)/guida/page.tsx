@@ -51,6 +51,8 @@ import {
   FEATURE_CARDS,
   type FeatureCard,
 } from "@/lib/guide-tours";
+import { VIDEO_GUIDES } from "@/lib/video-guides";
+import { VideoGuideCard } from "@/components/guide/VideoGuideCard";
 
 // ── Icon map per feature cards (evita import dinamico) ──
 
@@ -160,36 +162,21 @@ export default function GuidaPage() {
         </div>
       </Card>
 
-      {/* ── Video: I Primi 10 Minuti ── */}
-      <Card className={revealClass(75, "overflow-hidden border-border/70")} style={revealStyle(75)}>
-        <CardHeader className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Play className="h-5 w-5 text-primary" />
-            <CardTitle>I Primi 10 Minuti</CardTitle>
-          </div>
-          <CardDescription>
-            Video demo: dall&apos;inserimento di un nuovo cliente alla registrazione di un pagamento,
-            passando per il catalogo esercizi e il Safety Engine.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-hidden rounded-lg border border-border/50 bg-black">
-            {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-            <video
-              className="w-full"
-              controls
-              preload="metadata"
-              poster="/videos/primi-10-minuti/cards/intro.png"
-            >
-              <source
-                src="/videos/primi-10-minuti/primi-10-minuti.mp4"
-                type="video/mp4"
-              />
-              Il tuo browser non supporta la riproduzione video.
-            </video>
-          </div>
-        </CardContent>
-      </Card>
+      {/* ── Video Guide ── */}
+      <section className={revealClass(75, "space-y-3")} style={revealStyle(75)}>
+        <div className="flex items-center gap-2">
+          <Play className="h-4 w-4 text-muted-foreground" />
+          <h2 className="text-base font-semibold tracking-tight">Video guide</h2>
+          <span className="text-xs text-muted-foreground">
+            ({VIDEO_GUIDES.filter((v) => v.ready).length}/{VIDEO_GUIDES.length} disponibili)
+          </span>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {VIDEO_GUIDES.map((video) => (
+            <VideoGuideCard key={video.id} video={video} />
+          ))}
+        </div>
+      </section>
 
       {/* ── Scorciatoie da tastiera ── */}
       <section className={revealClass(100, "space-y-3")} style={revealStyle(100)}>
