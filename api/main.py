@@ -92,7 +92,7 @@ LICENSE_EXEMPT_PATHS = {
     f"{API_PREFIX}/auth/setup-status",
     f"{API_PREFIX}/auth/reset-password",
 }
-LICENSE_EXEMPT_PREFIXES = ("/media/", f"{API_PREFIX}/public/")
+LICENSE_EXEMPT_PREFIXES = ("/media/", "/videos/", f"{API_PREFIX}/public/")
 
 
 def _auto_backup_on_startup(database_url: str) -> None:
@@ -354,6 +354,11 @@ async def add_security_headers(request, call_next):
 _media_dir = DATA_DIR / "media"
 _media_dir.mkdir(parents=True, exist_ok=True)
 app.mount("/media", StaticFiles(directory=str(_media_dir)), name="media")
+
+# Static files: video (tutorial, demo)
+_videos_dir = DATA_DIR / "videos"
+_videos_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/videos", StaticFiles(directory=str(_videos_dir)), name="videos")
 
 # Registra router
 app.include_router(auth_router, prefix=API_PREFIX)

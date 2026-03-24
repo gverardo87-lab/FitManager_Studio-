@@ -25,6 +25,7 @@ import {
   FileDown,
   Keyboard,
   MessageCircleQuestion,
+  Play,
   Shield,
   Sparkles,
 } from "lucide-react";
@@ -157,6 +158,37 @@ export default function GuidaPage() {
             </div>
           </CardContent>
         </div>
+      </Card>
+
+      {/* ── Video: I Primi 10 Minuti ── */}
+      <Card className={revealClass(75, "overflow-hidden border-border/70")} style={revealStyle(75)}>
+        <CardHeader className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Play className="h-5 w-5 text-primary" />
+            <CardTitle>I Primi 10 Minuti</CardTitle>
+          </div>
+          <CardDescription>
+            Video demo: dall&apos;inserimento di un nuovo cliente alla registrazione di un pagamento,
+            passando per il catalogo esercizi e il Safety Engine.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-hidden rounded-lg border border-border/50 bg-black">
+            {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+            <video
+              className="w-full"
+              controls
+              preload="metadata"
+              poster="/videos/primi-10-minuti/cards/intro.png"
+            >
+              <source
+                src="/videos/primi-10-minuti/primi-10-minuti.mp4"
+                type="video/mp4"
+              />
+              Il tuo browser non supporta la riproduzione video.
+            </video>
+          </div>
+        </CardContent>
       </Card>
 
       {/* ── Scorciatoie da tastiera ── */}
