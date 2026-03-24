@@ -1,6 +1,6 @@
 """Dashboard clinical readiness queue tests."""
 
-from datetime import date
+from datetime import date, timedelta  # noqa: F401
 
 from sqlmodel import select
 
@@ -55,12 +55,15 @@ def test_clinical_readiness_prioritizes_missing_and_legacy(client, auth_headers,
         anamnesi=_structured_anamnesi(),
     )
 
+    today = date.today()
+    recent = today - timedelta(days=5)  # Date recenti, ben dentro finestra review
+
     # c_workout_missing: has baseline, no workout
     session.add(
         ClientMeasurement(
             id_cliente=c_workout_missing["id"],
             trainer_id=trainer.id,
-            data_misurazione=date(2026, 3, 1),
+            data_misurazione=recent,
         )
     )
 
@@ -69,7 +72,7 @@ def test_clinical_readiness_prioritizes_missing_and_legacy(client, auth_headers,
         ClientMeasurement(
             id_cliente=c_ready["id"],
             trainer_id=trainer.id,
-            data_misurazione=date(2026, 3, 2),
+            data_misurazione=recent,
         )
     )
     session.add(
@@ -79,9 +82,9 @@ def test_clinical_readiness_prioritizes_missing_and_legacy(client, auth_headers,
             nome="Ready plan",
             obiettivo="generale",
             livello="beginner",
-            data_inizio=date(2026, 3, 2),
-            data_fine=date(2026, 6, 2),
-            created_at=date(2026, 3, 2).isoformat(),
+            data_inizio=recent,
+            data_fine=recent + timedelta(days=90),
+            created_at=recent.isoformat(),
         )
     )
     session.commit()
@@ -138,11 +141,11 @@ def test_clinical_readiness_prioritizes_missing_and_legacy(client, auth_headers,
     assert items[2]["measurement_freshness"]["reason_code"] == "measurement_review"
     assert items[2]["workout_freshness"]["status"] == "missing"
 
-    expected_measurement_due = date(2026, 3, 2) + date.resolution * 25
-    expected_workout_due = date(2026, 3, 2) + date.resolution * 21
+    expected_measurement_due = recent + timedelta(days=25)
+    expected_workout_due = recent + timedelta(days=21)
     # Workout review (21 days) comes before measurement review (25 days)
     expected_ready_due = expected_workout_due
-    expected_ready_days = (expected_ready_due - date.today()).days
+    expected_ready_days = (expected_ready_due - today).days
     assert items[3]["client_id"] == c_ready["id"]
     assert items[3]["next_action_code"] == "ready"
     assert items[3]["readiness_score"] == 100
@@ -276,25 +279,28 @@ def test_clinical_readiness_worklist_supports_pagination_and_filters(client, aut
         anamnesi=_structured_anamnesi(),
     )
 
+    today = date.today()
+    recent = today - timedelta(days=5)
+
     session.add(
         ClientMeasurement(
             id_cliente=c_workout_missing["id"],
             trainer_id=trainer.id,
-            data_misurazione=date(2026, 3, 1),
+            data_misurazione=recent,
         )
     )
     session.add(
         ClientMeasurement(
             id_cliente=c_ready["id"],
             trainer_id=trainer.id,
-            data_misurazione=date(2026, 3, 2),
+            data_misurazione=recent,
         )
     )
     session.add(
         ClientMeasurement(
             id_cliente=c_ready_two["id"],
             trainer_id=trainer.id,
-            data_misurazione=date(2026, 3, 3),
+            data_misurazione=recent + timedelta(days=1),
         )
     )
     session.add(
@@ -304,9 +310,9 @@ def test_clinical_readiness_worklist_supports_pagination_and_filters(client, aut
             nome="Ready plan 1",
             obiettivo="generale",
             livello="beginner",
-            data_inizio=date(2026, 3, 2),
-            data_fine=date(2026, 6, 2),
-            created_at=date(2026, 3, 2).isoformat(),
+            data_inizio=recent,
+            data_fine=recent + timedelta(days=90),
+            created_at=recent.isoformat(),
         )
     )
     session.add(
@@ -316,9 +322,9 @@ def test_clinical_readiness_worklist_supports_pagination_and_filters(client, aut
             nome="Ready plan 2",
             obiettivo="generale",
             livello="beginner",
-            data_inizio=date(2026, 3, 3),
-            data_fine=date(2026, 6, 3),
-            created_at=date(2026, 3, 3).isoformat(),
+            data_inizio=recent + timedelta(days=1),
+            data_fine=recent + timedelta(days=91),
+            created_at=(recent + timedelta(days=1)).isoformat(),
         )
     )
     session.commit()
