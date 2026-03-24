@@ -170,6 +170,7 @@ Skills installate in `.agents/skills/` — knowledge base attive per audit e cod
 | `AGENTS.md` | Delivery loop, quality gates, commit standard | Quando serve contesto operativo agenti |
 | `docs/LICENSE_ACTIVATION.md` | Attivazione licenza, hardware binding, CLI admin | Quando tocchi licenza, fingerprint, setup |
 | `docs/adr/ADR-004-release-pipeline-sicuro.md` | Pipeline release 5 fasi, version SSoT, safety gate, smoke test | Quando fai una release o tocchi il build pipeline |
+| `docs/VIDEO_PRODUCTION.md` | Format e pipeline video promozionali/demo | Quando crei o modifichi video per il sito |
 
 ## Commit
 

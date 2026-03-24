@@ -1,6 +1,26 @@
 {
   "version": 1,
   "skills": {
+    "ai-marketing-videos": {
+      "source": "inferen-sh/skills",
+      "sourceType": "github",
+      "computedHash": "e101767679fa204ade10423a48ea89b489faa5ff743cd1cd29f0d03043220ab4"
+    },
+    "ai-social-media-content": {
+      "source": "inference-sh/skills",
+      "sourceType": "github",
+      "computedHash": "5c0ed6420ad2a8aa97b9d964141df8700a69118dd3ae2d3f71bca5ade22aaaa6"
+    },
+    "infsh-cli": {
+      "source": "inference-sh/skills",
+      "sourceType": "github",
+      "computedHash": "d79eeeb63f5acaf9e5d31815f6519185476b69b23d30de3fbe3554c3b9566d4b"
+    },
+    "text-to-speech": {
+      "source": "inference-sh/skills",
+      "sourceType": "github",
+      "computedHash": "bb90b1d9e9594756c6a4f554f7ed6127c4e454620f189c97fe80f33b1b76778c"
+    },
     "vercel-react-best-practices": {
       "source": "vercel-labs/agent-skills",
       "sourceType": "github",
