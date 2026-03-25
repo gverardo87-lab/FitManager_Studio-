@@ -187,33 +187,29 @@ export default function SchedaDetailPage({ params }: { params: Promise<{ id: str
           </div>
         )}
 
-        {/* ── Session cards (sbloccate, flex-grow) ── */}
+        {/* ── Session cards (griglia max 2 colonne, nomi sempre leggibili) ── */}
         {effectiveView === "sessioni" && (
           <div className="flex-1">
-            <div className="flex gap-3 overflow-x-auto pb-2 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
               {builder.sessions.map((session) => (
-                <div key={session.id} className="min-w-[320px] flex-1">
-                  <SessionCard session={session} boardView safetyMap={safetyEntries} exerciseMap={exerciseMap} schedaId={id} parentFrom={fromParam} oneRMByPattern={oneRMByPattern}
-                    onUpdateSession={handlers.handleUpdateSession} onDeleteSession={handlers.handleDeleteSession} onDuplicateSession={handlers.handleDuplicateSession}
-                    onAddExercise={handlers.handleAddExercise} onUpdateExercise={handlers.handleUpdateExercise} onDeleteExercise={handlers.handleDeleteExercise}
-                    onReplaceExercise={handlers.handleReplaceExercise} onQuickReplace={handlers.handleQuickReplace}
-                    onAddBlock={handlers.handleAddBlock} onUpdateBlock={handlers.handleUpdateBlock} onDeleteBlock={handlers.handleDeleteBlock} onDuplicateBlock={handlers.handleDuplicateBlock}
-                    onAddExerciseToBlock={handlers.handleAddExerciseToBlock} onUpdateExerciseInBlock={handlers.handleUpdateExerciseInBlock}
-                    onDeleteExerciseFromBlock={handlers.handleDeleteExerciseFromBlock} onReplaceExerciseInBlock={handlers.handleReplaceExerciseInBlock}
-                    onQuickReplaceInBlock={handlers.handleQuickReplaceInBlock} onClearSection={handlers.handleClearSection}
-                  />
-                </div>
+                <SessionCard key={session.id} session={session} boardView safetyMap={safetyEntries} exerciseMap={exerciseMap} schedaId={id} parentFrom={fromParam} oneRMByPattern={oneRMByPattern}
+                  onUpdateSession={handlers.handleUpdateSession} onDeleteSession={handlers.handleDeleteSession} onDuplicateSession={handlers.handleDuplicateSession}
+                  onAddExercise={handlers.handleAddExercise} onUpdateExercise={handlers.handleUpdateExercise} onDeleteExercise={handlers.handleDeleteExercise}
+                  onReplaceExercise={handlers.handleReplaceExercise} onQuickReplace={handlers.handleQuickReplace}
+                  onAddBlock={handlers.handleAddBlock} onUpdateBlock={handlers.handleUpdateBlock} onDeleteBlock={handlers.handleDeleteBlock} onDuplicateBlock={handlers.handleDuplicateBlock}
+                  onAddExerciseToBlock={handlers.handleAddExerciseToBlock} onUpdateExerciseInBlock={handlers.handleUpdateExerciseInBlock}
+                  onDeleteExerciseFromBlock={handlers.handleDeleteExerciseFromBlock} onReplaceExerciseInBlock={handlers.handleReplaceExerciseInBlock}
+                  onQuickReplaceInBlock={handlers.handleQuickReplaceInBlock} onClearSection={handlers.handleClearSection}
+                />
               ))}
-              {/* Add session — compact inline */}
-              <div className="min-w-[120px] shrink-0">
-                <button
-                  onClick={handlers.handleAddSession}
-                  className="w-full rounded-xl border-2 border-dashed border-muted-foreground/10 bg-muted/10 py-16 flex flex-col items-center gap-2 text-muted-foreground/40 hover:border-primary/20 hover:bg-primary/[0.02] hover:text-primary/60 transition-all duration-200 group"
-                >
-                  <Plus className="h-5 w-5" />
-                  <span className="text-[11px] font-medium">Sessione</span>
-                </button>
-              </div>
+              {/* Add session — inline nella griglia */}
+              <button
+                onClick={handlers.handleAddSession}
+                className="rounded-xl border-2 border-dashed border-muted-foreground/10 bg-muted/5 py-12 flex flex-col items-center gap-2 text-muted-foreground/30 hover:border-primary/20 hover:bg-primary/[0.02] hover:text-primary/50 transition-all duration-200"
+              >
+                <Plus className="h-5 w-5" />
+                <span className="text-[11px] font-medium">Aggiungi sessione</span>
+              </button>
             </div>
           </div>
         )}
