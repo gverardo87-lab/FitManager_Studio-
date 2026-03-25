@@ -44,6 +44,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { useGuideProgress } from "@/hooks/useGuideProgress";
+import { BuilderModeProvider, useBuilderMode } from "@/lib/builder-mode";
 import { TOUR_SCOPRI_FITMANAGER, MINI_TOUR_MAP } from "@/lib/guide-tours";
 import type { TourDefinition } from "@/lib/guide-tours";
 import type { SpotlightTarget } from "@/lib/helpbot-types";
@@ -197,6 +198,7 @@ export default function DashboardLayout({
 
   return (
     <AuthGuard>
+    <BuilderModeProvider>
     <CommandPalette />
     <SpotlightTour
       key={activeTour.id}
@@ -221,15 +223,41 @@ export default function DashboardLayout({
       onMiniTour={handleMiniTour}
       onSpotlight={handleSpotlight}
     />
+    <DashboardShell mainRef={mainRef} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} shouldShowOnboarding={shouldShowOnboarding}>
+      {children}
+    </DashboardShell>
+    </BuilderModeProvider>
+    </AuthGuard>
+  );
+}
+
+/**
+ * Shell interna che consuma BuilderModeContext per nascondere la sidebar.
+ * Separato dal layout perché useBuilderMode() richiede il Provider come ancestor.
+ */
+function DashboardShell({
+  children, mainRef, mobileOpen, setMobileOpen, shouldShowOnboarding,
+}: {
+  children: React.ReactNode;
+  mainRef: React.RefObject<HTMLDivElement | null>;
+  mobileOpen: boolean;
+  setMobileOpen: (v: boolean) => void;
+  shouldShowOnboarding: boolean;
+}) {
+  const { isBuilderMode } = useBuilderMode();
+
+  return (
     <div className="bg-mesh-app flex h-screen">
-      {/* ── Sidebar desktop (fissa, visibile da lg in su) ── */}
-      <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:border-r lg:bg-sidebar dark:lg:bg-sidebar">
-        <Sidebar guidePulse={shouldShowOnboarding} />
-      </aside>
+      {/* ── Sidebar desktop — nascosta in builder mode ── */}
+      {!isBuilderMode && (
+        <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:border-r lg:bg-sidebar dark:lg:bg-sidebar">
+          <Sidebar guidePulse={shouldShowOnboarding} />
+        </aside>
+      )}
 
       {/* ── Contenuto principale ── */}
       <div className="flex flex-1 flex-col overflow-hidden">
-        {/* ── Header mobile (visibile sotto lg) ── */}
+        {/* ── Header mobile (visibile sotto lg, anche in builder) ── */}
         <header className="flex h-14 shrink-0 items-center gap-3 border-b bg-sidebar px-4 lg:hidden dark:bg-sidebar">
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
@@ -246,12 +274,11 @@ export default function DashboardLayout({
           <span className="text-sm font-semibold">FitManager Studio+</span>
         </header>
 
-        {/* ── Page content ── */}
-        <main ref={mainRef} className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+        {/* ── Page content — padding ridotto in builder mode ── */}
+        <main ref={mainRef} className={isBuilderMode ? "flex-1 overflow-y-auto p-3 lg:p-4" : "flex-1 overflow-y-auto p-4 md:p-6 lg:p-8"}>
           {children}
         </main>
       </div>
     </div>
-    </AuthGuard>
   );
 }

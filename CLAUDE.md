@@ -179,6 +179,7 @@ Skills installate in `.agents/skills/` — knowledge base attive per audit e cod
 | `docs/POST_LAUNCH_ROADMAP_90D.md` | Roadmap 90 giorni post-lancio: PWA, mobile UX, Box, science nudges, GTM | Quando pianifichi lavoro post-lancio |
 | `docs/adr/ADR-007-fitscan-computer-vision-biomechanics.md` | FitScan: architettura a strati (pose commodity + engine proprietario), 3 livelli, integrazione motori | Quando tocchi FitScan, CV, misurazioni automatiche |
 | `docs/FITSCAN_ARCHITECTURE.md` | Spec tecnica FitScan: DB schema, Biomechanical Engine, Pose Provider, exercise profiles, privacy | Quando implementi FitScan — leggere SEMPRE prima di scrivere codice |
+| `docs/adr/ADR-008-builder-fullscreen-science-panel.md` | Builder full-screen: sidebar nascosta, Science Panel 320px con Safety+Score+Coverage+Balance live | Quando tocchi il builder, il layout, o la sidebar |
 
 ## Commit
 

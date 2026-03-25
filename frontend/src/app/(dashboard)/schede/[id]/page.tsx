@@ -20,6 +20,7 @@ const ExerciseSelector = dynamic(
   { ssr: false },
 );
 import { ScientificAnalysisTab } from "@/components/workouts/ScientificAnalysisTab";
+import { SciencePanel } from "@/components/workouts/SciencePanel";
 import { BuilderHeader } from "@/components/workouts/BuilderHeader";
 import { BuilderSafetyCard } from "@/components/workouts/BuilderSafetyCard";
 import { BuilderSaveBar } from "@/components/workouts/BuilderSaveBar";
@@ -30,6 +31,7 @@ import { useExercises, useExerciseSafetyMap } from "@/hooks/useExercises";
 import { useLatestMeasurement } from "@/hooks/useMeasurements";
 import { useBuilderState } from "@/hooks/useBuilderState";
 import { useBuilderHandlers } from "@/hooks/useBuilderHandlers";
+import { useBuilderMode } from "@/lib/builder-mode";
 
 import { PATTERN_TO_1RM } from "@/lib/derived-metrics";
 import { CATEGORY_ORDER } from "@/lib/builder-utils";
@@ -109,6 +111,13 @@ export default function SchedaDetailPage({ params }: { params: Promise<{ id: str
   // eslint-disable-next-line react-hooks/exhaustive-deps -- isDirtyRef is a stable ref
   }, [router]);
 
+  // ── Builder mode (full-screen, ADR-008) ──
+  const { enterBuilderMode, exitBuilderMode } = useBuilderMode();
+  useEffect(() => {
+    enterBuilderMode();
+    return () => exitBuilderMode();
+  }, [enterBuilderMode, exitBuilderMode]);
+
   // ── View state ──
   const [activeView, setActiveView] = useState<"sessioni" | "analisi">("sessioni");
   const [showAdvanced, setShowAdvanced] = useState(() => {
@@ -145,106 +154,125 @@ export default function SchedaDetailPage({ params }: { params: Promise<{ id: str
   }
 
   return (
-    <div className="space-y-6">
-      <BuilderHeader
-        plan={plan} clients={clients} clientNome={clientNome} totalVolume={builder.totalVolume}
-        isDirty={builder.isDirty} isSaving={updateSessions.isPending} lastSavedLabel={builder.lastSavedLabel}
-        canUndo={builder.canUndo} canRedo={builder.canRedo} sessions={builder.sessions}
-        safetyExportData={safetyExportData} exportLogoDataUrl={builder.exportLogoDataUrl} fromParam={fromParam}
-        onUndo={builder.handleUndo} onRedo={builder.handleRedo} onSave={builder.handleSave}
-        onGoBack={goBack} onNavigate={guardedNavigate}
-        onUpdatePlan={(updates) => updateWorkout.mutate({ id: plan.id, ...updates })}
-        onLogoChange={builder.handleLogoChange}
-        showAdvanced={showAdvanced} onToggleAdvanced={() => setShowAdvanced((v) => !v)} hasSessions={builder.sessions.length > 0}
-      />
+    <div className="flex gap-0 -m-3 lg:-m-4 min-h-[calc(100vh-3.5rem)] lg:min-h-screen">
+      {/* ── Main builder area (fluid) ── */}
+      <div className="flex-1 min-w-0 p-3 lg:p-4 space-y-4 overflow-y-auto">
+        <BuilderHeader
+          plan={plan} clients={clients} clientNome={clientNome} totalVolume={builder.totalVolume}
+          isDirty={builder.isDirty} isSaving={updateSessions.isPending} lastSavedLabel={builder.lastSavedLabel}
+          canUndo={builder.canUndo} canRedo={builder.canRedo} sessions={builder.sessions}
+          safetyExportData={safetyExportData} exportLogoDataUrl={builder.exportLogoDataUrl} fromParam={fromParam}
+          onUndo={builder.handleUndo} onRedo={builder.handleRedo} onSave={builder.handleSave}
+          onGoBack={goBack} onNavigate={guardedNavigate}
+          onUpdatePlan={(updates) => updateWorkout.mutate({ id: plan.id, ...updates })}
+          onLogoChange={builder.handleLogoChange}
+          showAdvanced={showAdvanced} onToggleAdvanced={() => setShowAdvanced((v) => !v)} hasSessions={builder.sessions.length > 0}
+        />
 
-      {/* CTA Calendario — visibile solo con cliente + sessioni */}
-      {plan.id_cliente && builder.sessions.length > 0 && (
-        <div className="flex items-center justify-between rounded-lg border border-teal-200 dark:border-teal-800 bg-teal-50/50 dark:bg-teal-950/20 px-4 py-2.5">
-          <div className="text-sm">
-            <span className="font-medium">Pianifica il calendario</span>
-            <span className="text-muted-foreground ml-1.5 hidden sm:inline">
-              — distribuisci le sessioni nella settimana
-            </span>
-          </div>
-          <Button
-            size="sm"
-            variant="outline"
-            className="text-xs border-teal-300 dark:border-teal-700 hover:bg-teal-100 dark:hover:bg-teal-900/40"
-            onClick={() => guardedNavigate(`/allenamenti/${plan.id}`)}
-          >
-            <CalendarDays className="mr-1.5 h-3.5 w-3.5" />
-            Calendario
-          </Button>
-        </div>
-      )}
-
-      <div className="space-y-3">
-          {safetyMap && safetyMap.condition_count > 0 && (
-            <BuilderSafetyCard safetyMap={safetyMap} safetyStats={safetyStats} safetyConditionStats={safetyConditionStats} groupedConditions={groupedConditions} uniqueConditionsForMap={uniqueConditionsForMap} clientId={plan.id_cliente} onNavigateToClient={(cid) => guardedNavigate(`/clienti/${cid}`)} />
-          )}
-
-          {builder.sessions.length > 0 && showAdvanced && (
-            <div className="flex items-center gap-1 rounded-xl bg-muted/40 p-1 ring-1 ring-border/30">
-              {(["sessioni", "analisi"] as const).map((tab) => (
-                <button key={tab} type="button" onClick={() => setActiveView(tab)} className={`flex-1 text-xs font-semibold py-1.5 px-4 rounded-lg transition-all duration-200 ${activeView === tab ? "bg-background shadow-sm text-foreground ring-1 ring-border/50" : "text-muted-foreground/70 hover:text-foreground hover:bg-background/50"}`}>
-                  {tab === "sessioni" ? "Sessioni" : "Analisi Scientifica"}
-                </button>
-              ))}
+        {/* CTA Calendario — visibile solo con cliente + sessioni */}
+        {plan.id_cliente && builder.sessions.length > 0 && (
+          <div className="flex items-center justify-between rounded-lg border border-teal-200 dark:border-teal-800 bg-teal-50/50 dark:bg-teal-950/20 px-4 py-2.5">
+            <div className="text-sm">
+              <span className="font-medium">Pianifica il calendario</span>
+              <span className="text-muted-foreground ml-1.5 hidden sm:inline">
+                — distribuisci le sessioni nella settimana
+              </span>
             </div>
-          )}
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-xs border-teal-300 dark:border-teal-700 hover:bg-teal-100 dark:hover:bg-teal-900/40"
+              onClick={() => guardedNavigate(`/allenamenti/${plan.id}`)}
+            >
+              <CalendarDays className="mr-1.5 h-3.5 w-3.5" />
+              Calendario
+            </Button>
+          </div>
+        )}
 
-          {effectiveView === "sessioni" && (
-            <>
-              <div className="flex gap-3 overflow-x-auto pb-2">
-                {builder.sessions.map((session) => (
-                  <div key={session.id} className="min-w-[340px] max-w-[460px] flex-1">
-                    <SessionCard session={session} boardView safetyMap={safetyEntries} exerciseMap={exerciseMap} schedaId={id} parentFrom={fromParam} oneRMByPattern={oneRMByPattern}
-                      onUpdateSession={handlers.handleUpdateSession} onDeleteSession={handlers.handleDeleteSession} onDuplicateSession={handlers.handleDuplicateSession}
-                      onAddExercise={handlers.handleAddExercise} onUpdateExercise={handlers.handleUpdateExercise} onDeleteExercise={handlers.handleDeleteExercise}
-                      onReplaceExercise={handlers.handleReplaceExercise} onQuickReplace={handlers.handleQuickReplace}
-                      onAddBlock={handlers.handleAddBlock} onUpdateBlock={handlers.handleUpdateBlock} onDeleteBlock={handlers.handleDeleteBlock} onDuplicateBlock={handlers.handleDuplicateBlock}
-                      onAddExerciseToBlock={handlers.handleAddExerciseToBlock} onUpdateExerciseInBlock={handlers.handleUpdateExerciseInBlock}
-                      onDeleteExerciseFromBlock={handlers.handleDeleteExerciseFromBlock} onReplaceExerciseInBlock={handlers.handleReplaceExerciseInBlock}
-                      onQuickReplaceInBlock={handlers.handleQuickReplaceInBlock} onClearSection={handlers.handleClearSection}
-                    />
-                  </div>
+        <div className="space-y-3">
+            {/* Safety card compatta — visibile solo sotto xl (sopra xl c'è il SciencePanel) */}
+            {safetyMap && safetyMap.condition_count > 0 && (
+              <div className="xl:hidden">
+                <BuilderSafetyCard safetyMap={safetyMap} safetyStats={safetyStats} safetyConditionStats={safetyConditionStats} groupedConditions={groupedConditions} uniqueConditionsForMap={uniqueConditionsForMap} clientId={plan.id_cliente} onNavigateToClient={(cid) => guardedNavigate(`/clienti/${cid}`)} />
+              </div>
+            )}
+
+            {builder.sessions.length > 0 && showAdvanced && (
+              <div className="flex items-center gap-1 rounded-xl bg-muted/40 p-1 ring-1 ring-border/30">
+                {(["sessioni", "analisi"] as const).map((tab) => (
+                  <button key={tab} type="button" onClick={() => setActiveView(tab)} className={`flex-1 text-xs font-semibold py-1.5 px-4 rounded-lg transition-all duration-200 ${activeView === tab ? "bg-background shadow-sm text-foreground ring-1 ring-border/50" : "text-muted-foreground/70 hover:text-foreground hover:bg-background/50"}`}>
+                    {tab === "sessioni" ? "Sessioni" : "Analisi Scientifica"}
+                  </button>
                 ))}
               </div>
-              {/* Add session — dashed placeholder card (Trello-style) */}
-              <div className="min-w-[340px] max-w-[460px]">
-                <button
-                  onClick={handlers.handleAddSession}
-                  className="w-full rounded-xl border-2 border-dashed border-muted-foreground/15 bg-muted/20 py-10 flex flex-col items-center gap-2.5 text-muted-foreground/60 hover:border-primary/30 hover:bg-primary/[0.03] hover:text-primary transition-all duration-300 group"
-                >
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted/60 group-hover:bg-primary/10 group-hover:ring-1 group-hover:ring-primary/20 transition-all duration-300">
-                    <Plus className="h-5 w-5" />
-                  </div>
-                  <span className="text-sm font-medium tracking-tight">Aggiungi Sessione</span>
-                </button>
-              </div>
-            </>
-          )}
+            )}
 
-          {effectiveView === "analisi" && builder.sessions.length > 0 && (
-            <ScientificAnalysisTab
-              sessions={builder.sessions.map((s) => ({ nome_sessione: s.nome_sessione, esercizi: s.esercizi.map((e) => ({ id_esercizio: e.id_esercizio, serie: e.serie, carico_kg: e.carico_kg })) }))}
-              exerciseMap={exerciseMap} livello={plan.livello} obiettivo={plan.obiettivo}
-              sessioniPerSettimana={plan.sessioni_per_settimana} safetyMap={safetyEntries ?? null}
-              clientSesso={clientSesso} clientDataNascita={clientDataNascita}
-            />
-          )}
+            {effectiveView === "sessioni" && (
+              <>
+                <div className="flex gap-3 overflow-x-auto pb-2">
+                  {builder.sessions.map((session) => (
+                    <div key={session.id} className="min-w-[340px] max-w-[460px] flex-1">
+                      <SessionCard session={session} boardView safetyMap={safetyEntries} exerciseMap={exerciseMap} schedaId={id} parentFrom={fromParam} oneRMByPattern={oneRMByPattern}
+                        onUpdateSession={handlers.handleUpdateSession} onDeleteSession={handlers.handleDeleteSession} onDuplicateSession={handlers.handleDuplicateSession}
+                        onAddExercise={handlers.handleAddExercise} onUpdateExercise={handlers.handleUpdateExercise} onDeleteExercise={handlers.handleDeleteExercise}
+                        onReplaceExercise={handlers.handleReplaceExercise} onQuickReplace={handlers.handleQuickReplace}
+                        onAddBlock={handlers.handleAddBlock} onUpdateBlock={handlers.handleUpdateBlock} onDeleteBlock={handlers.handleDeleteBlock} onDuplicateBlock={handlers.handleDuplicateBlock}
+                        onAddExerciseToBlock={handlers.handleAddExerciseToBlock} onUpdateExerciseInBlock={handlers.handleUpdateExerciseInBlock}
+                        onDeleteExerciseFromBlock={handlers.handleDeleteExerciseFromBlock} onReplaceExerciseInBlock={handlers.handleReplaceExerciseInBlock}
+                        onQuickReplaceInBlock={handlers.handleQuickReplaceInBlock} onClearSection={handlers.handleClearSection}
+                      />
+                    </div>
+                  ))}
+                </div>
+                {/* Add session — dashed placeholder card (Trello-style) */}
+                <div className="min-w-[340px] max-w-[460px]">
+                  <button
+                    onClick={handlers.handleAddSession}
+                    className="w-full rounded-xl border-2 border-dashed border-muted-foreground/15 bg-muted/20 py-10 flex flex-col items-center gap-2.5 text-muted-foreground/60 hover:border-primary/30 hover:bg-primary/[0.03] hover:text-primary transition-all duration-300 group"
+                  >
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted/60 group-hover:bg-primary/10 group-hover:ring-1 group-hover:ring-primary/20 transition-all duration-300">
+                      <Plus className="h-5 w-5" />
+                    </div>
+                    <span className="text-sm font-medium tracking-tight">Aggiungi Sessione</span>
+                  </button>
+                </div>
+              </>
+            )}
+
+            {effectiveView === "analisi" && builder.sessions.length > 0 && (
+              <ScientificAnalysisTab
+                sessions={builder.sessions.map((s) => ({ nome_sessione: s.nome_sessione, esercizi: s.esercizi.map((e) => ({ id_esercizio: e.id_esercizio, serie: e.serie, carico_kg: e.carico_kg })) }))}
+                exerciseMap={exerciseMap} livello={plan.livello} obiettivo={plan.obiettivo}
+                sessioniPerSettimana={plan.sessioni_per_settimana} safetyMap={safetyEntries ?? null}
+                clientSesso={clientSesso} clientDataNascita={clientDataNascita}
+              />
+            )}
+        </div>
+
+        <ExerciseSelector open={handlers.selectorOpen} onOpenChange={handlers.setSelectorOpen} onSelect={handlers.handleExerciseSelected}
+          categoryFilter={handlers.selectorContext?.sezione ? SECTION_CATEGORIES[handlers.selectorContext.sezione] : undefined}
+          safetyMap={safetyEntries} schedaId={id} usedExerciseIds={usedExerciseIds}
+          feasibilityDetails={builder.smartPlanPackage?.feasibility_details}
+        />
+
+        <BuilderSaveBar isDirty={builder.isDirty} isSaving={updateSessions.isPending} lastSavedLabel={builder.lastSavedLabel} saveIssues={builder.saveIssues}
+          canUndo={builder.canUndo} canRedo={builder.canRedo}
+          onSave={builder.handleSave} onUndo={builder.handleUndo} onRedo={builder.handleRedo} onClearIssues={() => {}}
+        />
       </div>
 
-      <ExerciseSelector open={handlers.selectorOpen} onOpenChange={handlers.setSelectorOpen} onSelect={handlers.handleExerciseSelected}
-        categoryFilter={handlers.selectorContext?.sezione ? SECTION_CATEGORIES[handlers.selectorContext.sezione] : undefined}
-        safetyMap={safetyEntries} schedaId={id} usedExerciseIds={usedExerciseIds}
-        feasibilityDetails={builder.smartPlanPackage?.feasibility_details}
-      />
-
-      <BuilderSaveBar isDirty={builder.isDirty} isSaving={updateSessions.isPending} lastSavedLabel={builder.lastSavedLabel} saveIssues={builder.saveIssues}
-        canUndo={builder.canUndo} canRedo={builder.canRedo}
-        onSave={builder.handleSave} onUndo={builder.handleUndo} onRedo={builder.handleRedo} onClearIssues={() => {}}
+      {/* ── Science Panel (fisso a destra, visibile da xl in su) ── */}
+      <SciencePanel
+        sessions={builder.sessions}
+        exerciseMap={exerciseMap}
+        livello={plan.livello}
+        obiettivo={plan.obiettivo}
+        sessioniPerSettimana={plan.sessioni_per_settimana}
+        safetyMap={safetyMap}
+        safetyEntries={safetyEntries}
+        clientSesso={clientSesso}
+        clientDataNascita={clientDataNascita}
       />
     </div>
   );
