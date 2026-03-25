@@ -385,10 +385,10 @@ export function SortableExerciseRow({
             ) : null}
           </div>
 
-          {/* Nome — single line, truncated */}
+          {/* Nome — wrap instead of truncate so it's always readable */}
           <button
             onClick={onReplace}
-            className="text-left text-xs font-medium truncate hover:text-primary transition-colors min-w-0 cursor-pointer"
+            className="text-left text-xs font-medium hover:text-primary transition-colors min-w-0 cursor-pointer break-words leading-snug"
             title={`${exercise.esercizio_nome} — clicca per sostituire`}
           >
             {exercise.esercizio_nome}
