@@ -19,7 +19,8 @@ from typing import Optional, List, Dict, Any
 from dataclasses import dataclass, field
 
 from core.error_handler import logger
-from core.repositories.base_repository import DB_FILE
+# Legacy: DB_FILE was imported from removed core/repositories/. Resolve from core/config.
+from core.config import DB_CRM_PATH as DB_FILE
 
 
 # ═══════════════════════════════════════════════════════════════

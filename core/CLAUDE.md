@@ -1,20 +1,15 @@
-# Core — AI & Business Logic Layer
+# Core — AI & Business Logic Layer (Dormiente)
 
 Moduli AI e workout in attesa di essere esposti via API endpoints.
-I repository sono legacy (sqlite3 raw) — il backend API usa SQLModel ORM.
-
-## Coordinamento
-
-Per task cross-layer, coordinare esplicitamente per evitare conflitti.
-A fine task: verifiche reali e note sui rischi residui.
 
 ## Stato attuale
 
-I moduli AI **funzionano** ma non hanno ancora endpoint API.
-Saranno wrappati da `api/routers/` nella prossima fase di sviluppo.
-NON modificare i repository legacy — il nuovo codice va in `api/`.
+I moduli AI sono **dormenti**: funzionano in isolamento ma non hanno endpoint API.
+Saranno wrappati da `api/routers/` quando l'AI diverra' attiva nel prodotto.
 
-## Moduli AI (attivi, da esporre via API)
+**Pulizia 2026-03-25**: rimossi 9 repository legacy + tests/legacy/ + db_migrations.py + financial_analytics.py + backup_service.py (~4,630 LOC di dead code). I moduli che importavano dai repository (exercise_archive.py, pattern_extractor.py) sono stati aggiornati con placeholder.
+
+## Moduli AI (dormenti, da esporre via API)
 
 | Modulo | LOC | Funzione |
 |--------|-----|----------|
@@ -29,19 +24,13 @@ NON modificare i repository legacy — il nuovo codice va in `api/`.
 | methodology_chain.py | 171 | RAG separato per pattern metodologici |
 | document_manager.py | 82 | Scanner documenti knowledge_base/ |
 
-## Fondamenta (usate da tutti i moduli)
+## Fondamenta (usate dai moduli dormenti)
 
 | File | LOC | Funzione |
 |------|-----|----------|
 | config.py | 72 | Path, DB, modelli LLM, embedding model |
 | constants.py | 79 | Enum (EventStatus, RateStatus, MovementType) |
 | error_handler.py | 284 | Logger, @safe_operation, eccezioni custom |
-
-## Repository (legacy — usati da moduli AI, NON dal backend API)
-
-9 repository + BaseRepository + FinancialAnalytics.
-Usano sqlite3 raw + Pydantic v2. Il backend API usa SQLModel ORM.
-**Non creare nuovi metodi qui** — il nuovo codice va in `api/routers/`.
 
 ## Regole
 

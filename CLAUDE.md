@@ -177,6 +177,8 @@ Skills installate in `.agents/skills/` — knowledge base attive per audit e cod
 | `docs/VIDEO_GUIDE_STRATEGY.md` | Sistema video-guide contestuali: 4 livelli (hub, header, bussola, palette), regole, mapping | Quando integri video nell'interfaccia |
 | `docs/adr/ADR-006-fitmanager-box-multi-platform.md` | FitManager Box: strategia multi-platform, modello hardware+software, BOM, pricing | Quando tocchi deploy, licensing cross-platform, o strategia prodotto |
 | `docs/POST_LAUNCH_ROADMAP_90D.md` | Roadmap 90 giorni post-lancio: PWA, mobile UX, Box, science nudges, GTM | Quando pianifichi lavoro post-lancio |
+| `docs/adr/ADR-007-fitscan-computer-vision-biomechanics.md` | FitScan: architettura a strati (pose commodity + engine proprietario), 3 livelli, integrazione motori | Quando tocchi FitScan, CV, misurazioni automatiche |
+| `docs/FITSCAN_ARCHITECTURE.md` | Spec tecnica FitScan: DB schema, Biomechanical Engine, Pose Provider, exercise profiles, privacy | Quando implementi FitScan — leggere SEMPRE prima di scrivere codice |
 
 ## Commit
 

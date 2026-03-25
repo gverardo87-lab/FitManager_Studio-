@@ -24,6 +24,24 @@ Il suo vantaggio e' l'unione di:
 - attenzione clinica/scientifica deterministica e dimostrabile
 - gestione finance coerente
 - installazione locale e supportabile
+- computer vision integrata per misurazioni corporee e analisi biomeccanica (FitScan)
+
+## Visione AI/CV
+
+FitManager integra computer vision per eliminare la frizione tra il professionista e i dati scientifici.
+La camera del dispositivo (telefono, tablet, PiCam) diventa lo strumento di misura.
+
+Tre livelli, delivery incrementale:
+- **Body Scan**: foto statica → rapporti corporei → tracking automatico nel tempo
+- **Exercise Form Analysis**: video live → analisi biomeccanica per esercizio → feedback real-time
+- **Movement Screening**: test codificati → scoring automatico → input per programmazione
+
+Principi:
+- Il modello di pose estimation e' commodity (MediaPipe, YOLO). **L'analisi biomeccanica e' il valore proprietario** — costruita sui motori scientifici esistenti (Training Science, Safety Engine, Demand Vector).
+- Privacy assoluta: i frame video sono processati in locale, mai trasmessi. Solo keypoints e metriche persistiti.
+- L'AI amplifica l'occhio del trainer, non lo sostituisce.
+
+Architettura tecnica: `docs/FITSCAN_ARCHITECTURE.md`. Decisione: `docs/adr/ADR-007`.
 
 ## Principi UX
 
@@ -37,7 +55,7 @@ Il suo vantaggio e' l'unione di:
 
 - Nessun compromesso su ownership, audit e privacy.
 - Dati persistenti in `data/`.
-- AI solo come capability opzionale, mai come prerequisito del CRM.
+- AI e computer vision come capability che amplifica, mai come prerequisito del CRM.
 - Le feature launch-critical valgono piu' delle macro-feature accessorie.
 
 ## Visual Identity

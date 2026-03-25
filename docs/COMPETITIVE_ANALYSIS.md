@@ -14,8 +14,10 @@ Il mercato del software per personal trainer e' dominato da piattaforme cloud an
 3. **Safety engine con mapping condizioni mediche** — nessuno incrocia anamnesi con esercizi
 4. **Periodizzazione evidence-based integrata** — solo parametri generici, mai modelli Israetel/Helms
 5. **Lingua italiana nativa** — il 90% dei competitor e' solo inglese, chi supporta italiano lo fa come traduzione generica
+6. **Computer vision integrata per body scan e analisi biomeccanica** — nessun competitor integra pose estimation con safety engine + training science per feedback real-time sulla forma degli esercizi (FitScan, ADR-007)
+7. **Hardware dedicato always-on** — FitManager Box (Raspberry Pi 5) elimina la dipendenza dal PC. Nessun competitor offre un modello hardware+software privacy-first (ADR-006)
 
-FitManager occupa una **nicchia vuota**: CRM scientifico, privacy-first, italiano, per PT a P.IVA.
+FitManager occupa una **nicchia vuota**: CRM scientifico con computer vision integrata, privacy-first, italiano, per PT a P.IVA.
 
 ---
 

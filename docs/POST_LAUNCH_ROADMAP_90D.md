@@ -247,6 +247,25 @@ LANCIO     Sett 1-3              Sett 4-8                Sett 9-12
   (come oggi)       (WiFi/Tailscale)        (alpha)             (early adopter)
 ```
 
+### Oltre i 90 giorni — FitScan (Fase 4+)
+
+```
+Mese 4-5              Mese 5-6              Mese 6-9              Mese 9-12
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FASE 4a               FASE 4b               FASE 4c               FASE 4d
+FitScan L1            FitScan L2 proto      FitScan L2 scale      FitScan L3
+Body Scan             Form Analysis (3 ex)  Form Analysis (20 ex) Movement Screen
+
+- MediaPipe browser   - Profili squat/dl/bp - Top 20 compound     - Overhead squat test
+- 3 pose (F/R/L)      - Rep detection       - Box Pro (Hailo)     - Single-leg test
+- 12 metriche         - Tempo analyzer      - Per-exercise rules  - FMS-like scoring
+- Bridge measurement  - Safety cross-ref    - Score comparison    - Smart Programming
+- History chart       - Form score          - Client trends       - Clinical Analysis
+```
+
+Spec tecnica completa: `docs/FITSCAN_ARCHITECTURE.md`
+Decisione architetturale: `docs/adr/ADR-007-fitscan-computer-vision-biomechanics.md`
+
 ---
 
 ## Pricing Strategy
@@ -262,7 +281,9 @@ LANCIO     Sett 1-3              Sett 4-8                Sett 9-12
 | Prodotto | Costo nostro | Prezzo | Margine |
 |---|---|---|---|
 | FitManager Box | ~EUR 103 | EUR 249-299 | ~EUR 150-200 |
+| FitManager Box Pro (+ Hailo + Camera) | ~EUR 210 | EUR 399-449 | ~EUR 190-240 |
 | Box + Tablet Android 10" | ~EUR 200-250 | EUR 449-499 | ~EUR 200-250 |
+| Box Pro + Tablet Android 10" | ~EUR 310 | EUR 599-649 | ~EUR 290-340 |
 
 ### Tier Servizi (opzionale)
 
@@ -298,6 +319,7 @@ LANCIO     Sett 1-3              Sett 4-8                Sett 9-12
 | Early adopter Box (ordini) | >= 5 |
 | Feedback early adopter positivo | >= 80% |
 | Safety Engine alert visibili senza click | Si |
+| FitScan L1 prototipo funzionante | Si (se tempo permette, altrimenti mese 4) |
 
 ---
 
@@ -309,3 +331,5 @@ LANCIO     Sett 1-3              Sett 4-8                Sett 9-12
 - Competitive Analysis: `docs/COMPETITIVE_ANALYSIS.md`
 - Launch Scope: `LAUNCH_SCOPE.md`
 - Manifesto: `MANIFESTO.md`
+- ADR-007 FitScan: `docs/adr/ADR-007-fitscan-computer-vision-biomechanics.md`
+- FitScan Architecture: `docs/FITSCAN_ARCHITECTURE.md`

@@ -8,13 +8,16 @@ Extracted patterns feed into the Trainer DNA system.
 """
 
 import json
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 
 from langchain_ollama.llms import OllamaLLM
 from langchain.prompts import PromptTemplate
 
 from core.config import MAIN_LLM_MODEL
-from core.repositories import CardImportRepository, TrainerDNARepository
+# Legacy: repositories removed (dead code cleanup). This module is dormant — will be rewired when exposed via API.
+# from core.repositories import CardImportRepository, TrainerDNARepository
+CardImportRepository = None  # placeholder until API wrapper
+TrainerDNARepository = None  # placeholder until API wrapper
 from core.card_parser import ParsedCard, ParsedExercise
 from core.methodology_chain import MethodologyChain
 from core.error_handler import logger
