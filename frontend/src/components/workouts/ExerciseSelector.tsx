@@ -160,7 +160,9 @@ export function ExerciseSelector({
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [selectedPattern, setSelectedPattern] = useState<string | null>(null);
+  const [selectedMuscle, setSelectedMuscle] = useState<string | null>(null);
   const [selectedEquipment, setSelectedEquipment] = useState<string | null>(null);
+  const [selectedDifficulty, setSelectedDifficulty] = useState<string | null>(null);
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
   const [recentStore, setRecentStore] = useState<RecentExerciseItem[]>(loadRecentExercises);
 
@@ -189,12 +191,27 @@ export function ExerciseSelector({
     return exercises;
   }, [exercises, categoryFilter]);
 
-  // ── Filtering ──
+  // ── Available filter options (dynamic from current pool) ──
+  const MUSCLE_SORT_ORDER = [
+    "chest", "shoulders", "triceps", "back", "lats", "traps", "biceps", "forearms",
+    "quadriceps", "hamstrings", "glutes", "adductors", "calves", "core",
+  ];
+  const availableMuscles = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const ex of sectionPool) {
+      for (const m of ex.muscoli_primari) counts.set(m, (counts.get(m) ?? 0) + 1);
+    }
+    return MUSCLE_SORT_ORDER.filter((m) => counts.has(m)).map((m) => ({ value: m, count: counts.get(m)! }));
+  }, [sectionPool]);
+
+  // ── Filtering (4 dimensions + search) ──
   const filtered = useMemo(() => {
     const q = debouncedSearch.trim().toLowerCase();
     const result = sectionPool.filter((e) => {
       if (selectedPattern && e.pattern_movimento !== selectedPattern) return false;
+      if (selectedMuscle && !e.muscoli_primari.includes(selectedMuscle)) return false;
       if (selectedEquipment && e.attrezzatura !== selectedEquipment) return false;
+      if (selectedDifficulty && e.difficolta !== selectedDifficulty) return false;
       if (q) {
         const matches =
           e.nome.toLowerCase().includes(q) ||
@@ -214,7 +231,7 @@ export function ExerciseSelector({
       return [...hinted, ...rest];
     }
     return result;
-  }, [sectionPool, debouncedSearch, patternHint, selectedPattern, selectedEquipment]);
+  }, [sectionPool, debouncedSearch, patternHint, selectedPattern, selectedMuscle, selectedEquipment, selectedDifficulty]);
 
   const recentExercises = useMemo(() => {
     const allowedIds = new Set(sectionPool.map((e) => e.id));
@@ -229,7 +246,7 @@ export function ExerciseSelector({
   }, [recentStore, recentSection, sectionPool, exerciseMap]);
 
   const recentExerciseIds = useMemo(() => new Set(recentExercises.map((e) => e.id)), [recentExercises]);
-  const hasActiveFilters = !!selectedPattern || !!selectedEquipment || !!rawSearch;
+  const hasActiveFilters = !!selectedPattern || !!selectedMuscle || !!selectedEquipment || !!selectedDifficulty || !!rawSearch;
   const showRecent = recentExercises.length > 0 && !hasActiveFilters;
   const visibleFiltered = useMemo(() => {
     if (!showRecent) return filtered;
@@ -240,7 +257,8 @@ export function ExerciseSelector({
   const resetFilters = useCallback(() => {
     setRawSearch(""); setDebouncedSearch("");
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    setSelectedPattern(null); setSelectedEquipment(null);
+    setSelectedPattern(null); setSelectedMuscle(null);
+    setSelectedEquipment(null); setSelectedDifficulty(null);
     setSelectedExercise(null);
   }, []);
 
@@ -263,100 +281,123 @@ export function ExerciseSelector({
   const sectionLabel = categoryFilter?.includes("avviamento")
     ? "Avviamento" : categoryFilter?.includes("stretching") ? "Stretching & Mobilita" : null;
 
+  const activeFilterCount = [selectedPattern, selectedMuscle, selectedEquipment, selectedDifficulty].filter(Boolean).length;
+
   return (
     <Dialog open={open} onOpenChange={(o) => { onOpenChange(o); if (!o) resetFilters(); }}>
       <DialogContent className="sm:max-w-[1100px] h-[85vh] p-0 flex flex-col overflow-hidden">
-        {/* ── Header ── */}
-        <DialogHeader className="px-5 pt-4 pb-0 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
-              <Dumbbell className="h-4.5 w-4.5 text-primary" />
+        {/* ── Compact header: search + count in one row ── */}
+        <div className="flex items-center gap-3 px-4 pt-3 pb-2 shrink-0">
+          <DialogHeader className="p-0 flex-1 min-w-0">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/40" />
+              <Input
+                placeholder={sectionLabel ? `Cerca ${sectionLabel.toLowerCase()}...` : "Cerca per nome, muscolo, attrezzatura..."}
+                value={rawSearch}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                className="pl-9 h-9 rounded-lg bg-muted/30 border-0 focus-visible:ring-1 focus-visible:ring-primary/30 text-sm"
+                autoFocus
+              />
+              {rawSearch && (
+                <button onClick={() => handleSearchChange("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
             </div>
-            <div className="flex-1 min-w-0">
-              <DialogTitle className="text-base">
-                {sectionLabel ? `Seleziona ${sectionLabel}` : "Seleziona Esercizio"}
-              </DialogTitle>
-            </div>
-            <span className="text-xs text-muted-foreground tabular-nums">{filtered.length} esercizi</span>
-            {usedExerciseIds && usedExerciseIds.size > 0 && (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary tabular-nums">
-                {usedExerciseIds.size} in scheda
-              </span>
-            )}
-          </div>
-        </DialogHeader>
-
-        {/* ── Search bar ── */}
-        <div className="px-5 py-3 shrink-0">
-          <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/50" />
-            <Input
-              placeholder="Cerca per nome, muscolo, attrezzatura..."
-              value={rawSearch}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              className="pl-10 h-10 rounded-xl bg-muted/40 border-0 focus-visible:ring-1 focus-visible:ring-primary/30"
-              autoFocus
-            />
-            {rawSearch && (
-              <button onClick={() => handleSearchChange("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                <X className="h-4 w-4" />
-              </button>
-            )}
-          </div>
+            <DialogTitle className="sr-only">{sectionLabel ? `Seleziona ${sectionLabel}` : "Seleziona Esercizio"}</DialogTitle>
+          </DialogHeader>
+          <span className="text-[11px] text-muted-foreground/60 tabular-nums shrink-0">{filtered.length}</span>
+          {usedExerciseIds && usedExerciseIds.size > 0 && (
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary tabular-nums shrink-0">
+              {usedExerciseIds.size} in scheda
+            </span>
+          )}
+          {activeFilterCount > 0 && (
+            <button onClick={resetFilters} className="text-[10px] text-muted-foreground hover:text-primary shrink-0">Resetta</button>
+          )}
         </div>
 
-        {/* ── Tab filters (pattern + equipment) ── */}
-        {isPrincipale && (
-          <div className="px-5 pb-2 shrink-0 space-y-1.5">
-            {/* Pattern tabs */}
-            <div className="flex gap-1 overflow-x-auto">
-              {PATTERN_TABS.map((tab) => (
-                <button
-                  key={tab.value ?? "all"}
-                  onClick={() => setSelectedPattern(tab.value)}
-                  className={`shrink-0 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-colors ${
-                    selectedPattern === tab.value
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-            {/* Equipment tabs */}
-            <div className="flex gap-1 overflow-x-auto">
-              {EQUIPMENT_TABS.map((tab) => (
-                <button
-                  key={tab.value ?? "all-eq"}
-                  onClick={() => setSelectedEquipment(tab.value)}
-                  className={`shrink-0 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-colors ${
-                    selectedEquipment === tab.value
-                      ? "bg-muted text-foreground shadow-sm ring-1 ring-border/50"
-                      : "text-muted-foreground/60 hover:bg-muted/40 hover:text-foreground"
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ── Split body ── */}
+        {/* ── Split body (from the top, no wasted space) ── */}
         <div className="flex-1 flex min-h-0 border-t">
-          {/* ── Left panel: exercise list (60%) ── */}
-          <div className="w-full md:w-[60%] flex flex-col min-h-0 overflow-hidden">
-            {/* Column header */}
-            <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b bg-background/95 backdrop-blur-sm px-5 py-2">
-              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Esercizio</span>
-              <div className="flex gap-3 text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
-                <span className="w-16 text-center">Pattern</span>
-                <span className="w-14 text-center">Diff.</span>
-              </div>
-            </div>
+          {/* ── Left panel: filters + list ── */}
+          <div className="w-full md:w-[58%] flex flex-col min-h-0 overflow-hidden">
 
+            {/* Filters (inside left panel, not above entire dialog) */}
+            {isPrincipale && (
+              <div className="px-4 py-2 border-b space-y-1.5 shrink-0 bg-muted/5">
+                {/* Row 1: Muscle chips (primary — come ragiona il PT) */}
+                <div>
+                  <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/50 mr-2">Muscolo</span>
+                  <div className="inline-flex flex-wrap gap-1 mt-0.5">
+                    {availableMuscles.map(({ value, count }) => (
+                      <button key={value}
+                        onClick={() => setSelectedMuscle(selectedMuscle === value ? null : value)}
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-medium transition-colors ${
+                          selectedMuscle === value
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                        }`}>
+                        {MUSCLE_LABELS[value] ?? value} <span className="text-[8px] opacity-60">{count}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {/* Row 2: Equipment + Pattern + Difficulty (secondary) */}
+                <div className="flex items-start gap-3 flex-wrap">
+                  <div>
+                    <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/50 mr-1">Attrezz.</span>
+                    <div className="inline-flex flex-wrap gap-0.5 mt-0.5">
+                      {EQUIPMENT_TABS.slice(1).map((tab) => (
+                        <button key={tab.value}
+                          onClick={() => setSelectedEquipment(selectedEquipment === tab.value ? null : tab.value)}
+                          className={`px-1.5 py-0.5 rounded text-[10px] transition-colors ${
+                            selectedEquipment === tab.value
+                              ? "bg-muted text-foreground ring-1 ring-border"
+                              : "text-muted-foreground/50 hover:text-foreground"
+                          }`}>
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/50 mr-1">Pattern</span>
+                    <div className="inline-flex flex-wrap gap-0.5 mt-0.5">
+                      {PATTERN_TABS.slice(1).map((tab) => (
+                        <button key={tab.value}
+                          onClick={() => setSelectedPattern(selectedPattern === tab.value ? null : tab.value)}
+                          className={`px-1.5 py-0.5 rounded text-[10px] transition-colors ${
+                            selectedPattern === tab.value
+                              ? "bg-primary/10 text-primary font-medium"
+                              : "text-muted-foreground/50 hover:text-foreground"
+                          }`}>
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/50 mr-1">Diff.</span>
+                    <div className="inline-flex gap-0.5 mt-0.5">
+                      {(["beginner", "intermediate", "advanced"] as const).map((d) => (
+                        <button key={d}
+                          onClick={() => setSelectedDifficulty(selectedDifficulty === d ? null : d)}
+                          className={`px-1.5 py-0.5 rounded text-[10px] transition-colors ${
+                            selectedDifficulty === d
+                              ? "bg-muted text-foreground ring-1 ring-border"
+                              : "text-muted-foreground/50 hover:text-foreground"
+                          }`}>
+                          {DIFFICULTY_LABELS[d]}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Exercise list */}
             <ScrollArea className="flex-1 min-h-0">
               {visibleFiltered.length === 0 && !showRecent ? (
                 <div className="flex flex-col items-center justify-center py-16 gap-2">
@@ -368,48 +409,33 @@ export function ExerciseSelector({
                 </div>
               ) : (
                 <div>
-                  {/* Recent section */}
                   {showRecent && (
                     <div className="border-b">
-                      <div className="flex items-center justify-between px-5 py-1.5">
+                      <div className="flex items-center justify-between px-4 py-1.5">
                         <span className="text-[10px] font-semibold uppercase tracking-wider text-primary">Recenti</span>
                         <button onClick={handleClearRecent} className="text-[10px] text-muted-foreground hover:text-foreground">Pulisci</button>
                       </div>
                       {recentExercises.map((exercise) => (
-                        <ExerciseListRow
-                          key={`r-${exercise.id}`}
-                          exercise={exercise}
-                          safety={safetyMap?.[exercise.id]}
-                          isUsed={usedExerciseIds?.has(exercise.id)}
-                          isSelected={selectedExercise?.id === exercise.id}
+                        <ExerciseListRow key={`r-${exercise.id}`} exercise={exercise} safety={safetyMap?.[exercise.id]}
+                          isUsed={usedExerciseIds?.has(exercise.id)} isSelected={selectedExercise?.id === exercise.id}
                           feasibility={feasibilityDetails?.[exercise.id]}
-                          onClickRow={() => setSelectedExercise(exercise)}
-                          onDoubleClick={() => handleSelect(exercise)}
-                        />
+                          onClickRow={() => setSelectedExercise(exercise)} onDoubleClick={() => handleSelect(exercise)} />
                       ))}
                     </div>
                   )}
-
-                  {/* All exercises */}
                   {visibleFiltered.map((exercise) => (
-                    <ExerciseListRow
-                      key={exercise.id}
-                      exercise={exercise}
-                      safety={safetyMap?.[exercise.id]}
-                      isUsed={usedExerciseIds?.has(exercise.id)}
-                      isSelected={selectedExercise?.id === exercise.id}
+                    <ExerciseListRow key={exercise.id} exercise={exercise} safety={safetyMap?.[exercise.id]}
+                      isUsed={usedExerciseIds?.has(exercise.id)} isSelected={selectedExercise?.id === exercise.id}
                       feasibility={feasibilityDetails?.[exercise.id]}
-                      onClickRow={() => setSelectedExercise(exercise)}
-                      onDoubleClick={() => handleSelect(exercise)}
-                    />
+                      onClickRow={() => setSelectedExercise(exercise)} onDoubleClick={() => handleSelect(exercise)} />
                   ))}
                 </div>
               )}
             </ScrollArea>
           </div>
 
-          {/* ── Right panel: detail (40%) ── */}
-          <div className="hidden md:flex md:w-[40%] md:flex-col md:border-l min-h-0">
+          {/* ── Right panel: detail (42%) — starts from the very top ── */}
+          <div className="hidden md:flex md:w-[42%] md:flex-col md:border-l min-h-0">
             {selectedExercise ? (
               <ExerciseDetailSide
                 exercise={selectedExercise}
@@ -424,11 +450,11 @@ export function ExerciseSelector({
               />
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-center px-8">
-                <div className="h-16 w-16 rounded-2xl bg-muted/30 flex items-center justify-center mb-4">
-                  <Target className="h-7 w-7 text-muted-foreground/30" />
+                <div className="h-14 w-14 rounded-2xl bg-muted/20 flex items-center justify-center mb-3">
+                  <Target className="h-6 w-6 text-muted-foreground/25" />
                 </div>
-                <p className="text-sm font-medium text-muted-foreground/60">Seleziona un esercizio dalla lista</p>
-                <p className="text-xs text-muted-foreground/40 mt-1">Clicca per vedere i dettagli, doppio click per selezionare</p>
+                <p className="text-sm font-medium text-muted-foreground/50">Seleziona un esercizio</p>
+                <p className="text-[11px] text-muted-foreground/35 mt-1">Clicca per dettagli, doppio click per selezionare</p>
               </div>
             )}
           </div>
