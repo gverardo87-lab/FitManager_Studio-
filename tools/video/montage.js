@@ -133,11 +133,16 @@ function montageContinuous(manifest, videoDir) {
     .map((s) => `-i "${path.join(videoDir, s.vo.file)}"`)
     .join(" ");
 
+  // Calcola offset VO con anti-overlap: ogni VO inizia al max tra
+  // (scene_start video) e (fine VO precedente) — mai sovrapposizione
+  let prevVoEnd = 0;
   const voDelays = scenes
     .map((s, i) => {
-      // Offset = intro duration + (scene_start - trim iniziale)
-      const sceneStart = Math.max(0, (s.recording.scene_start || 0) - trimStart);
-      const delayMs = Math.round((sceneStart + introOffset) * 1000);
+      const sceneStart = Math.max(0, (s.recording.scene_start || 0) - trimStart) + introOffset;
+      const voStart = Math.max(sceneStart, prevVoEnd);
+      prevVoEnd = voStart + (s.vo.duration || 0);
+      const delayMs = Math.round(voStart * 1000);
+      s._voOffset = voStart; // salva per report
       return `[${i}:a]adelay=${delayMs}|${delayMs}[vo${i}]`;
     })
     .join("; ");
@@ -295,8 +300,9 @@ function reportFinal(outputPath, scenes, videoDur, drift, tempDir) {
 
   console.log("\n  Scene:");
   for (const s of scenes) {
-    const offset = s._offset !== undefined ? s._offset : (s.recording.scene_start || 0);
-    console.log(`    ${s.name}: @${offset.toFixed(1)}s — VO ${s.vo.duration.toFixed(1)}s`);
+    const offset = s._voOffset !== undefined ? s._voOffset : (s._offset !== undefined ? s._offset : (s.recording.scene_start || 0));
+    const voEnd = offset + s.vo.duration;
+    console.log(`    ${s.name}: VO @${offset.toFixed(1)}s -> ${voEnd.toFixed(1)}s (${s.vo.duration.toFixed(1)}s)`);
   }
 
   fs.rmSync(tempDir, { recursive: true });
