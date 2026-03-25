@@ -47,6 +47,10 @@ Prima del lancio allargato servono evidenze su:
 - nuove macro-feature AI non necessarie al CRM core
 - redesign trasversali che non spostano affidabilita' o supportabilita'
 
+> **Post-launch**: la roadmap 90 giorni (ADR-006 + `docs/POST_LAUNCH_ROADMAP_90D.md`) definisce
+> la strategia di accesso mobile (PWA + Tailscale full-app) e il modello hardware FitManager Box.
+> Queste iniziative partono DOPO il lancio Windows, non lo rallentano.
+
 ## Regole anti-scope-creep
 
 - Nessuna nuova macro-feature entra se rallenta installazione, supporto, licenza, backup o connettivita'.

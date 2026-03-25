@@ -175,6 +175,8 @@ Skills installate in `.agents/skills/` — knowledge base attive per audit e cod
 | `docs/adr/ADR-005-license-hardening-anti-tampering.md` | Hardening licenza: embedded key, env bypass block, fail-closed | Quando tocchi sistema licenza o anti-tampering |
 | `docs/VIDEO_PRODUCTION.md` | Pipeline video blindata: manifest SSoT, flusso continuo, selettori verificati, errori critici | Quando crei o modifichi video — leggere §5.1 + §8 SEMPRE prima di scriptare |
 | `docs/VIDEO_GUIDE_STRATEGY.md` | Sistema video-guide contestuali: 4 livelli (hub, header, bussola, palette), regole, mapping | Quando integri video nell'interfaccia |
+| `docs/adr/ADR-006-fitmanager-box-multi-platform.md` | FitManager Box: strategia multi-platform, modello hardware+software, BOM, pricing | Quando tocchi deploy, licensing cross-platform, o strategia prodotto |
+| `docs/POST_LAUNCH_ROADMAP_90D.md` | Roadmap 90 giorni post-lancio: PWA, mobile UX, Box, science nudges, GTM | Quando pianifichi lavoro post-lancio |
 
 ## Commit
 
