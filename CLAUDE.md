@@ -173,7 +173,7 @@ Skills installate in `.agents/skills/` — knowledge base attive per audit e cod
 | `docs/LICENSE_ACTIVATION.md` | Attivazione licenza, hardware binding, CLI admin | Quando tocchi licenza, fingerprint, setup |
 | `docs/adr/ADR-004-release-pipeline-sicuro.md` | Pipeline release 5 fasi, version SSoT, safety gate, smoke test | Quando fai una release o tocchi il build pipeline |
 | `docs/adr/ADR-005-license-hardening-anti-tampering.md` | Hardening licenza: embedded key, env bypass block, fail-closed | Quando tocchi sistema licenza o anti-tampering |
-| `docs/VIDEO_PRODUCTION.md` | Format e pipeline video promozionali/demo | Quando crei o modifichi video per il sito |
+| `docs/VIDEO_PRODUCTION.md` | Pipeline video blindata: manifest SSoT, flusso continuo, selettori verificati, errori critici | Quando crei o modifichi video — leggere §5.1 + §8 SEMPRE prima di scriptare |
 
 ## Commit
 

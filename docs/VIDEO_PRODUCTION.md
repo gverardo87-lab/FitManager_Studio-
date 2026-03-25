@@ -164,7 +164,7 @@ await authCtx.storageState({ path: authStatePath });
 | Data inizio | `button:has-text("Inizio...")` | DatePicker trigger |
 | Data scadenza | `button:has-text("Scadenza...")` | DatePicker trigger |
 | Acconto | `#acconto` | Input number (solo creazione, non edit) |
-| Metodo acconto | `[data-slot="select-trigger"]:last-of-type` | Radix Select, appare solo se acconto > 0 |
+| Metodo acconto | `[data-slot="select-trigger"]:has-text("Metodo")` | Radix Select, appare solo se acconto > 0. **MAI `:last-of-type`** (risolve a 2 elementi, vedi §8.3 punto 3) |
 | Submit | `button[type="submit"]:has-text("Crea Contratto")` | |
 | Sheet content | `[data-slot="sheet-content"]` | Per scroll interno |
 
@@ -263,17 +263,21 @@ async function selectRadixOption(page, triggerSelector, optionText) {
 
 ## 5. Mappa Navigazioni
 
-### 5.1 Flusso Onboarding (video 01)
+### 5.1 Flusso Onboarding (video 01) — VERIFICATO 2026-03-25
 
 ```
 /clienti                          → "Nuovo Cliente" → Sheet (stessa pagina)
-Sheet "Crea Cliente"              → submit → toast → lista aggiornata
-Lista clienti                     → click riga → /clienti/[id]
-/clienti/[id] checklist           → "Crea contratto" → /contratti?new=1&cliente=[id]
-/contratti?new=1&cliente=[id]     → auto-apre Sheet → compilazione → submit
-Submit contratto                  → redirect → /contratti/[id]
+Sheet "Crea Cliente"              → submit → AUTO-REDIRECT a /clienti/[id] (profilo)
+                                    ⚠ NON torna alla lista — siamo GIA' sul profilo
+/clienti/[id] checklist           → "Crea contratto" → ContractSheet INLINE (stessa pagina!)
+                                    ⚠ NON naviga a /contratti?new=1 — apre sheet sul profilo
+ContractSheet submit              → sheet si chiude → restiamo su /clienti/[id]
+                                    ⚠ NON redirige a /contratti/[id] — serve navigazione esplicita
+/clienti/[id]                     → API fetch per trovare contractId → goto /contratti/[id]
 /contratti/[id]                   → scroll a piano rate → genera → rate visibili
-/clienti/[id] checklist           → "Compila" → /clienti/[id]/anamnesi?startWizard=1
+/contratti/[id]                   → goBack → /clienti/[id] (profilo con checklist aggiornata)
+/clienti/[id] checklist           → "Compila" → /clienti/[id]/anamnesi
+/clienti/[id]/anamnesi            → "Compila tu" → wizard aperto → Avanti/Salva
 ```
 
 ### 5.2 Tempi di caricamento (dev, porta 3001)
@@ -396,21 +400,37 @@ updateRecording(videoDir, "04_anamnesi", {
 - `trim_start` viene MISURATO dal timestamp `pageReady - recordingStart`
 - MAI hardcodare trim — i tempi cambiano tra sessioni
 
-### Fase 5 — Montaggio deterministico
-**Input**: manifest.json completo (VO + clip + trim misurati)
-**Output**: `<slug>.mp4` (H.264 + AAC, 1440x900, 30fps)
+### Fase 4b — Registrazione continua (metodo preferito)
+
+**UN browser, UN context, UN clip.** Navigazione diretta tra sezioni senza chiudere/riaprire.
 
 ```bash
-node tools/video/manifest-sync.js data/videos/<slug>   # 1. Risincronizza durate
-node tools/video/montage.js data/videos/<slug>          # 2. Monta (con GATE validazione)
+node tools/scripts/video-01-primo-cliente.js   # registra tutto, salva full_flow.webm
 ```
 
-Il montaggio:
-1. **GATE**: valida manifest — blocca se dati incompleti o clip corti
-2. **TRIM**: `-ss trim_start -t (vo_duration + gap)` per ogni clip
-3. **XFADE**: crossfade con offset da durate REALI trimmate (mai da target stimati)
-4. **VO SYNC**: `adelay` con offset da durate REALI (allineamento perfetto)
-5. **MIX**: video + VO + musica (volume, fade in/out da manifest)
+Il flusso continuo e' piu' veloce, affidabile, e produce transizioni naturali.
+Se una scena fallisce, ri-registra TUTTO (1-2 minuti, non ore).
+
+**Pre-run obbligatorio**: `tools/scripts/video-cleanup-moretti.py` — hard-delete completo
+di tutti i dati test (clienti + contratti + rate + movimenti). Senza pre-run, dati residui
+da sessioni precedenti causano navigazioni a contratti vecchi, checklist gia' completate, ecc.
+
+### Fase 5 — Montaggio deterministico
+
+Due modalita' (scelta automatica dal `recording_mode` nel manifest):
+
+**Modalita' `continuous`** (metodo preferito):
+```bash
+node tools/video/montage.js data/videos/<slug>
+```
+Pipeline: converti clip H.264 → VO sync (offset da scene_start) → mix con musica → output.
+Zero split, zero crossfade — il clip continuo e' gia' il video finale, serve solo l'audio.
+
+**Modalita' `clips`** (legacy):
+```bash
+node tools/video/manifest-sync.js data/videos/<slug>   # risincronizza durate
+node tools/video/montage.js data/videos/<slug>          # trim + xfade + VO + mix
+```
 
 Parametri fissi (nel manifest, non hardcodati nello script):
 ```json
@@ -450,7 +470,9 @@ data/videos/
 
 ---
 
-## 8. Errori Risolti (2026-03-25)
+## 8. Errori Risolti
+
+### 8.1 Playwright & Selettori (sessione iniziale)
 
 | Errore | Causa | Soluzione |
 |--------|-------|-----------|
@@ -458,12 +480,53 @@ data/videos/
 | Codegen inutilizzabile | Inspector panel ruba spazio, bussola resta aperta | Non usare codegen. Mappare selettori dal codice sorgente |
 | DatePicker non seleziona data | Formato data-day sbagliato (provato US `M/D/YYYY`) | Formato corretto: `DD/MM/YYYY` (locale italiana) |
 | Select BONIFICO risolve a 2 elementi | `text=BONIFICO` matcha sia `<option>` che `<span>` Radix | Usare `[data-slot="select-item"]:has-text("BONIFICO")` |
-| ElevenLabs rate limit | Piu' di 2 richieste parallele | Generare VO in sequenza, mai parallelo |
-| ElevenLabs UTF-8 error | curl con bash non gestisce accenti italiani | Usare Python `urllib` con `.encode('utf-8')` |
-| Flash bianchi tra scene | Caricamento pagina (1-2s bianco) registrato nel clip | Trim iniziale per scena (`-ss 1.5`) + crossfade 0.4s |
 | Bottone "Genera Piano" disabled | DatePicker non compilato (data obbligatoria) | Selezionare data prima rata con `selectDate()` PRIMA del click |
 | VO parla di azione ma video mostra risultato statico | Contratto e rate creati via API, non via UI | Registrare azioni REALI via UI — nessun dato pre-generato |
+
+### 8.2 Audio (sessione iniziale)
+
+| Errore | Causa | Soluzione |
+|--------|-------|-----------|
+| ElevenLabs rate limit | Piu' di 2 richieste parallele | Generare VO in sequenza, mai parallelo |
+| ElevenLabs UTF-8 error | curl con bash non gestisce accenti italiani | Usare Python `urllib` con `.encode('utf-8')` |
 | Musica SFX > 22s | Limite API ElevenLabs | Generare 3 parti da 22s e concatenare con FFmpeg |
+
+### 8.3 Flusso Onboarding — CRITICI (sessione 2026-03-25)
+
+Questi errori hanno causato ore di blocco. Tutti legati alla mappa navigazioni sbagliata.
+
+| # | Errore | Causa root | Soluzione |
+|---|--------|-----------|-----------|
+| 1 | **Dopo "Crea Cliente" cerca `td:has-text("Moretti")` ma non trova nulla** | Il submit redirige AUTO a `/clienti/[id]` (profilo). NON torna alla lista clienti. Cercare nella tabella e' inutile — siamo gia' sul profilo | Dopo submit, aspettare `[data-guide="client-avatar-hero"]` direttamente. ZERO click sulla lista |
+| 2 | **"Crea contratto" non naviga a `/contratti?new=1`** | La checklist CTA ha `onAction` che apre `ContractSheet` INLINE sul profilo (riga 113 di `clienti/[id]/page.tsx`). NON naviga via | Compilare il form nella sheet inline. I selettori §4.4 funzionano, ma siamo su `/clienti/[id]` non su `/contratti` |
+| 3 | **Select metodo: `[data-slot="select-trigger"]:last-of-type` → strict mode violation** | La ContractSheet ha 2 select: cliente (pre-compilato "Moretti Luca") + metodo ("Metodo..."). `:last-of-type` risolve a entrambi (non sono fratelli nello stesso parent) | Usare `[data-slot="select-trigger"]:has-text("Metodo")` — seleziona per contenuto testuale, non posizione DOM |
+| 4 | **Dopo submit contratto, navigazione al dettaglio trova contratto vecchio** | Il submit chiude la sheet e resta su `/clienti/[id]`. Il tab "Contratti" nel profilo potrebbe mostrare contratti di test precedenti se il pre-run non li ha puliti | Trovare `contractId` via API backend (`fetch("http://localhost:8001/api/contracts")` con Bearer token), filtrare per `id_cliente`, poi `goto /contratti/[contractId]` |
+| 5 | **`#numero_rate` non trovato nella pagina contratto** | Navigava al contratto sbagliato (es. contratto 36 con rate gia' generate). Il form genera rate appare SOLO se `rate.length === 0` | Fix del punto 4 sopra — navigare al contratto CORRETTO del cliente appena creato |
+| 6 | **Dati residui da test precedenti** | Soft-delete del cliente non rimuove contratti, rate, movimenti. I contratti vecchi restano attivi e possono interferire | Pre-run: hard-delete COMPLETO (clienti + contratti + rate + movimenti). Script: `tools/scripts/video-cleanup-moretti.py` |
+| 7 | **Python multilinea in `execSync` fallisce** | `python -c "..."` con `\n` convertiti in `;` non supporta `if/for` blocks | Usare script `.py` separato, non `-c` inline |
+| 8 | **Clip separati per scena causano desync, trim sbagliati, selettori ambigui** | Context separati per scena → ogni scena riparte da zero → deve cercare il cliente nella lista → selettori ambigui → crash | Registrazione continua: UN browser, UN context, UN clip. Navigazione diretta tra sezioni. Il `goBack()` funziona per tornare al profilo |
+| 9 | **API fetch nel browser via proxy Next.js non trova i contratti** | `fetch("/api/contracts")` passa dal proxy Next.js che potrebbe non inoltrare correttamente | Usare URL backend diretto: `fetch("http://localhost:8001/api/contracts")` con header `Authorization: Bearer <token>` estratto dal cookie |
+
+### 8.4 Montaggio — Errori risolti (sessione 2026-03-25)
+
+| # | Errore | Causa root | Soluzione |
+|---|--------|-----------|-----------|
+| 1 | **Taskbar Windows catturata nel video** | `recordVideo` cattura 1440x900 ma la finestra browser non occupa l'intera altezza — la taskbar di Windows (~120px) appare come barra grigia in basso | `crop=1440:780:0:0,pad=1440:900:0:0:color=0xf0f4f8` — croppa la taskbar e pad con colore sfondo app. MAI `scale` dopo crop (stira l'immagine). Parametri nel manifest: `recording_crop_bottom`, `recording_pad_color` |
+| 2 | **Flash bianco 0-2.5s all'inizio** | La prima navigazione (`goto /clienti`) mostra la pagina bianca di caricamento, catturata nella registrazione | `trim_start` nel manifest (es. 2.5s). Il montaggio usa `-ss` per saltare il flash. Gli offset VO vengono ricalcolati sottraendo il trim |
+| 3 | **Outro tagliata dal video** | `-shortest` nel mix finale tronca il video alla durata dell'audio (VO piu' corto del video con outro) | Usare `apad=whole_dur=<videoDur>` per estendere il VO alla durata del video, poi `-t <videoDur>` invece di `-shortest` |
+| 4 | **Immagine distorta dopo crop taskbar** | `crop` + `scale` stira verticalmente (780px → 900px) | Usare `crop` + `pad` con colore sfondo, non `crop` + `scale` |
+| 5 | **Musica troppo invasiva (0.18)** | La musica ha picchi a -3.3 dB, anche a 0.18 i picchi raggiungono il livello medio della voce | Volume 0.10 + `acompressor=threshold=-20dB:ratio=4` sulla musica PRIMA di ridurre il volume. Il compressor appiattisce i picchi |
+
+### 8.5 Regole derivate (NON NEGOZIABILI)
+
+Dalla tabella §8.3, le regole da seguire **sempre** per la registrazione:
+
+1. **MAI cercare un cliente nella tabella dopo la creazione** — il submit redirige al profilo
+2. **MAI usare `:last-of-type` per i Select Radix** — usare `:has-text("Placeholder")`
+3. **MAI navigare al contratto dal tab profilo** — usare API per trovare l'ID e `goto` diretto
+4. **MAI registrare scene in context separati** — flusso continuo, un solo clip
+5. **SEMPRE eseguire pre-run cleanup completo** — `video-cleanup-moretti.py`
+6. **SEMPRE verificare il flusso navigazione REALE** prima di scriptare (il codice sorgente fa fede, non la documentazione vecchia)
 
 ---
 
@@ -474,12 +537,13 @@ Eseguire PRIMA di ogni sessione di registrazione:
 - [ ] Backend dev running su porta 8001
 - [ ] Frontend dev running su porta 3001
 - [ ] Login verificato con credenziali dev
-- [ ] DB in stato noto (sapere quali clienti/contratti esistono)
+- [ ] **Pre-run cleanup eseguito** (`python tools/scripts/video-cleanup-moretti.py` — hard-delete completo)
+- [ ] DB verificato pulito (zero Luca Moretti, zero contratti/rate orfani)
 - [ ] Script editoriale completato con timeline secondo per secondo
-- [ ] VO generati e durate reali misurate
-- [ ] Timeline aggiornata con durate reali
+- [ ] VO generati e durate reali misurate (`manifest-sync.js`)
 - [ ] Musica generata (60s+)
-- [ ] **Pre-flight interazione completato — TUTTI i selettori verificati**
+- [ ] **Flusso navigazione verificato contro §5.1** (attenzione: redirect auto, sheet inline)
+- [ ] **Selettori verificati contro §4** (attenzione: 2 select nella ContractSheet, §8.3 punto 3)
 - [ ] Playwright `--start-maximized` + `viewport: null` verificato
 - [ ] FFmpeg raggiungibile
 - [ ] Spazio disco sufficiente per clip webm (~1-3 MB per scena)
@@ -491,7 +555,7 @@ Eseguire PRIMA di ogni sessione di registrazione:
 | # | Slug | Durata | Scopo | Stato |
 |---|------|--------|-------|-------|
 | 0 | `primi-10-minuti` | 78s | Panoramica generale (gia' in /guida) | COMPLETATO |
-| 1 | `01-primo-cliente` | ~60s | Crea cliente + contratto + anamnesi | IN PRODUZIONE |
+| 1 | `01-primo-cliente` | 86s | Crea cliente + contratto + anamnesi | COMPLETATO (v1) |
 | 2 | `02-contratto-rate` | 60s | Approfondimento: pagamenti, parziali, rinnovi | PIANIFICATO |
 | 3 | `03-agenda` | 45s | Sessioni, DnD, credit guard | PIANIFICATO |
 | 4 | `04-cassa` | 60s | Pagamento rata, spese fisse, forecast | PIANIFICATO |
@@ -509,7 +573,8 @@ Eseguire PRIMA di ogni sessione di registrazione:
 |------|---------|---------|
 | Script editoriale | `docs/videos/<slug>.md` | `docs/videos/01-primo-cliente.md` |
 | Script Playwright | `tools/scripts/video-<slug>.js` | `tools/scripts/video-01-primo-cliente.js` |
-| Script montaggio | `tools/scripts/video-<slug>-montaggio.js` | `tools/scripts/video-01-montaggio.js` |
+| Script montaggio | `tools/video/montage.js` | `node tools/video/montage.js data/videos/<slug>` |
+| Script cleanup | `tools/scripts/video-cleanup-moretti.py` | Pre-run: hard-delete dati test |
 | Script test | `tools/scripts/video-test-*.js` | `tools/scripts/video-test-full-flow.js` |
 | Directory assets | `data/videos/<slug>/` | `data/videos/01-primo-cliente/` |
 | Output finale | `data/videos/<slug>/<slug>.mp4` | `data/videos/01-primo-cliente/primo-cliente.mp4` |
