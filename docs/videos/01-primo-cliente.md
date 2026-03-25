@@ -1,176 +1,248 @@
 # Video: Il Primo Cliente
-# Durata target: 45s (feature spotlight — guida in-app)
+# Durata target: ~60s (feature spotlight — guida in-app)
 # Formato: feature spotlight
-# Voce: it-IT-DiegoNeural, rate +5%
-# Musica: corporate ambient generativa (115 BPM, Am)
-# Risoluzione: 1440×900
+# Voce: ElevenLabs Daniel (onwK4e9ZLuTAKqWW03F9), eleven_multilingual_v2
+# Musica: acoustic calm (ElevenLabs SFX)
+# Risoluzione: 1440×900 (registrazione maximized)
 
 ---
 
-## Struttura narrativa
+## Metodo di produzione
 
 ```
-HOOK (5s)      → Il PT ha un nuovo cliente, cosa fa?
-DEMO (37s)     → 4 scene: crea cliente, contratto con piano rate, anamnesi, profilo 2/5
-CTA (7s)       → Invito a provare
-Totale: ~49s
+1. SCRIPT (questo file)     → master, ogni secondo mappato
+2. AUDIO (ElevenLabs)       → VO per scena, durata reale misurata
+3. VIDEO (Playwright)       → azioni reali, nessun dato pre-generato, nessun limite tempo
+4. TRIM (FFmpeg)            → taglia bianchi caricamento, allinea a durata VO
+5. MONTAGGIO (FFmpeg)       → crossfade 0.4s + VO sincronizzato + musica 18%
 ```
+
+Regola fondamentale: **il VO detta il ritmo, il video si adatta**.
+Il clip video viene registrato PIU' lungo del VO (azioni reali senza fretta),
+poi tagliato in montaggio alla durata esatta del VO + gap.
+
+---
 
 ## Ordine operativo (da OnboardingChecklist)
 
-L'ordine rispetta ESATTAMENTE la checklist di configurazione cliente:
-1. **Contratto** — "da qui parte tutto" (incluso piano rate automatico)
-2. **Anamnesi** — questionario clinico con condizioni mediche
+1. **Contratto** — "da qui parte tutto"
+2. **Anamnesi** — questionario clinico
 3. Misurazioni base (→ video 07)
 4. Scheda allenamento (→ video 06)
 5. Prima sessione (→ video 03)
 
-Questo video copre la creazione cliente + step 1 (contratto completo) + step 2 (anamnesi).
-Il momento WOW e' la generazione automatica del piano rate in un click.
+Questo video copre: creazione cliente + step 1 (contratto + rate) + step 2 (anamnesi).
 
 ---
 
-## Pre-produzione: dati da creare via API
+## Pre-produzione
 
-Lo script Playwright crea via API PRIMA della registrazione video:
-- **Cliente**: Marco Ferretti, telefono 339 1234567
+Lo script Playwright fa TUTTO in tempo reale:
+- Crea cliente via UI (nome, cognome, telefono)
+- Crea contratto via UI (tipo, crediti, prezzo, date, acconto, metodo)
+- Genera piano rate via UI (numero rate, data prima rata, frequenza)
+- Apre wizard anamnesi via UI
 
-Poi registra le azioni successive (contratto + anamnesi) visivamente.
+**Nessun dato pre-generato via API.** Ogni azione è reale e visibile.
 
----
-
-## Scena 01 — HOOK: Nuovo cliente, da dove parti? [CORE]
-
-| VIDEO | AUDIO |
-|-------|-------|
-| **Schermata**: pagina `/clienti` — lista clienti, empty state o pochi clienti | **VO**: "Un nuovo cliente ti contatta. In trenta secondi lo inserisci e hai gia' il contratto e l'anamnesi." |
-| **Azione**: statica, la pagina e' caricata | **Musica**: pad ambient, volume basso |
-| **Transizione**: cut a scena 02 | **Pausa**: 0.3s |
-| **Durata stimata**: ~5s | |
-
-**Note regia**: partire dal contesto reale. Il PT riceve un contatto, deve agire. Tono pratico, zero teoria.
+**Dati del demo:**
+- Cliente: Luca Moretti, tel 340 5678901
+- Contratto: Pacchetto 10, 10 crediti, €550, 01/04-01/06/2026, acconto €50 Bonifico
+- Piano rate: 2 rate mensili da €250 (01/05 e 01/06)
+- Anamnesi: ernia cervicale, dolore spalla destra
 
 ---
 
-## Scena 02 — Crea il cliente [CORE]
+## SCENA 01 — Hook (VO: 7.3s)
 
-| VIDEO | AUDIO |
-|-------|-------|
-| **Schermata**: pagina `/clienti` → "Nuovo Cliente" → Sheet → salva → profilo | **VO**: "Crei il cliente in cinque secondi. Nome, cognome, telefono. Salvi." |
-| **Azione 1**: (0.0s) click su "Nuovo Cliente" |  |
-| **Azione 2**: (0.8s) Sheet si apre da destra |  |
-| **Azione 3**: (1.3s) typing Nome: "Marco" |  |
-| **Azione 4**: (1.8s) typing Cognome: "Ferretti" |  |
-| **Azione 5**: (2.5s) typing Telefono: "339 1234567" |  |
-| **Azione 6**: (3.5s) click "Salva" → toast "Cliente creato" → sheet si chiude |  |
-| **Azione 7**: (4.5s) click sul profilo di Marco Ferretti |  |
-| **Azione 8**: (5.5s) si vede la Panoramica con OnboardingChecklist — step 1 "Contratto" in evidenza, hero card blu, CTA "Crea contratto" |  |
-| **Transizione**: cut a scena 03 | **Pausa**: 0.3s |
-| **Durata stimata**: ~7s | |
+### VO (testo esatto)
+"Un nuovo cliente ti contatta. In trenta secondi lo inserisci e hai già il contratto e l'anamnesi."
 
-**Note regia**: ritmo veloce. Il messaggio e': ci vogliono 5 secondi. Dopo il salvataggio, la checklist appare e dice chiaramente cosa fare: "Contratto — da qui parte tutto".
+### Timeline video
 
----
+| Secondo | Azione video | Sync con VO |
+|---------|-------------|-------------|
+| 0.0-1.0 | Pagina /clienti caricata, lista visibile | "Un nuovo cliente ti contatta." |
+| 1.0-5.0 | Statica — il viewer vede la pagina clienti | "In trenta secondi lo inserisci..." |
+| 5.0-7.3 | Statica | "...e hai già il contratto e l'anamnesi." |
 
-## Scena 03 — Il contratto con piano rate automatico [CORE]
+### Registrazione Playwright
+```
+goto /clienti → waitForSelector clienti-header → wait(durata clip)
+```
 
-| VIDEO | AUDIO |
-|-------|-------|
-| **Schermata**: form nuovo contratto → compilazione → genera rate → salva | **VO**: "La checklist dice: crea il contratto. Pacchetto dieci sedute, cinquecentocinquanta euro, acconto cinquanta. Generi il piano rate in un click: due rate da duecentocinquanta, gia' pronte." |
-| **Azione 1**: (0.0s) click sulla hero card "Crea contratto" nella checklist |  |
-| **Azione 2**: (1.0s) si apre il form nuovo contratto (cliente gia' pre-selezionato "Marco Ferretti") |  |
-| **Azione 3**: (1.8s) seleziona Tipo: "PT Personal" |  |
-| **Azione 4**: (2.5s) typing Nome contratto: "Pacchetto 10" |  |
-| **Azione 5**: (3.3s) typing Crediti totali: "10" |  |
-| **Azione 6**: (4.0s) seleziona Data inizio: 01/04/2026 |  |
-| **Azione 7**: (4.8s) seleziona Data fine: 01/06/2026 |  |
-| **Azione 8**: (5.5s) typing Prezzo totale: "550" |  |
-| **Azione 9**: (6.3s) typing Acconto: "50" |  |
-| **Azione 10**: (7.0s) seleziona Metodo acconto: "Contanti" |  |
-| **Azione 11**: (7.8s) **click "Genera piano rate"** → le 2 rate appaiono istantaneamente nella tabella: €250 il 01/05, €250 il 01/06 |  |
-| **Azione 12**: (9.5s) **pausa** di 1s sulla tabella rate generata — il viewer DEVE vedere le rate con importi e date |  |
-| **Azione 13**: (10.5s) click "Salva" → toast "Contratto creato" |  |
-| **Transizione**: cut a scena 04 | **Pausa**: 0.3s |
-| **Durata stimata**: ~12s | |
-
-**Note regia**: scena chiave del video. Il momento WOW e' l'azione 11: un click su "Genera piano rate" e le rate appaiono istantaneamente con importi e date corretti. PAUSA obbligatoria dopo la generazione (azione 12) — il viewer deve leggere "€250 — 01/05/2026" e "€250 — 01/06/2026". Questo e' l'antidoto allo status-quo bias: "con Excel ci metto 10 minuti, qui un click".
+### Trim: 0s (prima scena, nessun caricamento da tagliare)
 
 ---
 
-## Scena 04 — Compila l'anamnesi (secondo step) [CORE]
+## SCENA 02 — Crea il cliente (VO: 5.6s)
 
-| VIDEO | AUDIO |
-|-------|-------|
-| **Schermata**: profilo cliente → OnboardingChecklist aggiornata → wizard anamnesi | **VO**: "Contratto fatto. La checklist dice: anamnesi. Condizioni mediche, stile di vita, obiettivi. Ogni dato alimenta lo Scudo Clinico." |
-| **Azione 1**: (0.0s) si vede il profilo con checklist aggiornata — Contratto completato (check verde), step 2 "Anamnesi" in evidenza con hero card rosa |  |
-| **Azione 2**: (1.5s) click sulla hero card "Compila anamnesi" |  |
-| **Azione 3**: (2.5s) wizard anamnesi si apre → primo step |  |
-| **Azione 4**: (3.5s) compilazione rapida: data nascita, sesso, altezza, peso |  |
-| **Azione 5**: (6.0s) avanzamento allo step condizioni mediche |  |
-| **Azione 6**: (7.5s) seleziona "Ernia cervicale" + "Dolore spalla destra" |  |
-| **Azione 7**: (9.0s) i badge rossi appaiono nella lista condizioni |  |
-| **Transizione**: cut a scena 05 | **Pausa**: 0.5s |
-| **Durata stimata**: ~12s | |
+### VO (testo esatto)
+"Crei il cliente in cinque secondi. Nome, cognome, telefono. Salvi."
 
-**Note regia**: il filo conduttore e' la checklist. Il trainer non decide cosa fare: la checklist gli dice "Anamnesi" e lui segue. Il momento chiave: i badge rossi delle condizioni = setup per il Safety Engine nei video successivi (Scheda Allenamento).
+### Timeline video
 
----
+| Secondo | Azione video | Sync con VO |
+|---------|-------------|-------------|
+| 0.0-0.5 | Click "Nuovo Cliente" | "Crei il cliente..." |
+| 0.5-1.0 | Sheet si apre | "...in cinque secondi." |
+| 1.0-2.0 | Typing Nome: "Luca" | "Nome," |
+| 2.0-3.0 | Typing Cognome: "Moretti" | "cognome," |
+| 3.0-4.0 | Typing Telefono: "340 5678901" | "telefono." |
+| 4.0-5.0 | Click "Crea Cliente" → toast | "Salvi." |
+| 5.0-7.0 | Click profilo → checklist visibile con "Contratto" step 1 | (respiro, transizione) |
 
-## Scena 05 — Il profilo operativo completo [CORE]
+### Registrazione Playwright
+```
+click [data-guide="clienti-new-button"]
+fill #nome "Luca", #cognome "Moretti", #telefono "340 5678901"
+click button:has-text("Crea Cliente")
+wait toast
+click profilo Moretti → wait checklist visibile
+```
 
-| VIDEO | AUDIO |
-|-------|-------|
-| **Schermata**: profilo cliente con Panoramica aggiornata — 2/5 step completati, prossimo "Misurazioni" | **VO**: "Due passi completati. La checklist ti guida al prossimo: misurazioni, scheda, prima sessione. Tutto in ordine." |
-| **Azione 1**: (0.0s) si vede il profilo completo — OnboardingChecklist con 2/5 (Contratto e Anamnesi verdi) |  |
-| **Azione 2**: (1.5s) step 3 "Misurazioni base" in evidenza (hero card ambra) |  |
-| **Azione 3**: (3.0s) scroll lento per mostrare i pill degli step: Contratto ✓, Anamnesi ✓, Misurazioni (prossimo), Scheda, Sessione |  |
-| **Transizione**: fade a scena 06 | **Pausa**: 0.5s |
-| **Durata stimata**: ~6s | |
-
-**Note regia**: momento di gratificazione. Il trainer vede 2/5 completati e sa esattamente cosa fare dopo. La checklist e' il filo conduttore di TUTTO l'onboarding — ogni video-pillola successiva copre il passo seguente.
+### Trim: 0s (siamo già su /clienti dalla scena 01)
 
 ---
 
-## Scena 06 — CTA: Provalo [CORE]
+## SCENA 03a — Contratto: compilazione form (VO prima parte: ~8s)
 
-| VIDEO | AUDIO |
-|-------|-------|
-| **Schermata**: title card outro (sfondo gradiente teal, "Il Primo Cliente — Fatto." + pill "1 minuto" / "Contratto con piano rate" / "Anamnesi guidata" / "Checklist passo passo") | **VO**: "Un minuto. Cliente, contratto con rate, anamnesi. Prova dalla pagina clienti." |
-| **Azione**: statica, fade in 0.6s | **Musica**: shimmer, fade out 1s |
-| **Transizione**: fade out 1s a nero | **Pausa**: 1.5s dopo fine VO |
-| **Durata stimata**: ~7s | |
+### VO (testo esatto, prima parte)
+"La checklist dice: crea il contratto. Pacchetto dieci sedute, cinquecentocinquanta euro, acconto cinquanta."
 
-**Note regia**: CTA pratico — "prova dalla pagina clienti" e' un invito interno all'app. Il video e' dentro FitManager, il prossimo step e' a un click.
+### Timeline video
+
+| Secondo | Azione video | Sync con VO |
+|---------|-------------|-------------|
+| 0.0-1.5 | Si vede profilo con checklist, hero card "Contratto" blu | "La checklist dice:" |
+| 1.5-2.5 | Click "Crea contratto" → navigazione a /contratti?new=1 | "crea il contratto." |
+| 2.5-3.5 | Sheet contratto aperto, form vuoto | "Pacchetto" |
+| 3.5-4.5 | Fill tipo: "Pacchetto 10", crediti: 10 | "dieci sedute," |
+| 4.5-5.5 | Fill prezzo: 550 | "cinquecentocinquanta euro," |
+| 5.5-6.5 | Fill date: 01/04/2026 - 01/06/2026 | (azione visiva) |
+| 6.5-7.5 | Fill acconto: 50, metodo: Bonifico | "acconto cinquanta." |
+| 7.5-8.5 | Click "Crea Contratto" → toast | (azione visiva) |
+| 8.5-10.0 | Redirect a dettaglio contratto, KPI visibili | (respiro, transizione a 03b) |
+
+### Registrazione Playwright
+```
+Da profilo → click "Crea contratto" (checklist)
+Compila form (fill + DatePicker + Select)
+Click "Crea Contratto"
+Wait redirect a dettaglio
+```
+
+### Nota: il DatePicker e Select Radix richiedono automazione specifica (vedi script)
 
 ---
 
-## Riepilogo timing
+## SCENA 03b — Contratto: genera piano rate (VO seconda parte: ~7s)
 
-| # | Scena | Tipo | Durata | VO (parole) | Cumulativo |
-|---|-------|------|--------|-------------|------------|
-| 01 | Hook: nuovo cliente | app screen | ~5s | 18 | 5s |
-| 02 | Crea il cliente | app screen | ~7s | 12 | 12s |
-| 03 | Contratto + piano rate | app screen | ~12s | 30 | 24s |
-| 04 | Anamnesi (step 2) | app screen | ~12s | 22 | 36s |
-| 05 | Profilo completo | app screen | ~6s | 18 | 42s |
-| 06 | CTA: provalo | title card | ~7s | 12 | 49s |
-| | **TOTALE** | | **~49s** | **~112 parole** | |
+### VO (testo esatto, seconda parte)
+"Generi il piano rate in un click: due rate da duecentocinquanta, già pronte."
 
-A 150 parole/min (+5% rate), 112 parole ≈ 42s di parlato puro.
-Con padding inter-scena (0.3-0.5s × 5) ≈ +3s.
-**Durata finale stimata: 47-52s** (leggermente sopra target 45s, accettabile per la completezza del contratto).
+### Timeline video
+
+| Secondo | Azione video | Sync con VO |
+|---------|-------------|-------------|
+| 0.0-1.0 | Siamo nel dettaglio contratto, scroll al "Piano Pagamenti" | "Generi il piano rate" |
+| 1.0-2.0 | Form genera rate visibile: numero rate 2, data prima rata | (azione visiva) |
+| 2.0-3.0 | Click "Genera Piano Pagamenti" | "in un click:" |
+| 3.0-5.0 | **LE RATE APPAIONO** — €250 il 01/05, €250 il 01/06 | "due rate da duecentocinquanta," |
+| 5.0-7.0 | Pausa sulle rate visibili | "già pronte." |
+
+### Registrazione Playwright
+```
+Scroll a piano pagamenti
+Fill numero_rate: 2, seleziona data prima rata, frequenza mensile
+Click "Genera Piano Pagamenti"
+Wait rate visibili → pausa
+```
+
+### Nota: questo è il MOMENTO WOW. La pausa 5.0-7.0 è fondamentale.
 
 ---
 
-## Collegamento agli altri video
+## SCENA 04 — Anamnesi (VO: 11.3s)
 
-Questo video copre: **Crea cliente → Contratto con piano rate (step 1) → Anamnesi (step 2)**.
+### VO (testo esatto)
+"Contratto fatto. La checklist dice: anamnesi. Condizioni mediche, stile di vita, obiettivi. Ogni dato alimenta lo Scudo Clinico."
 
-I video successivi proseguono la checklist:
-- **Video 07 "Misurazioni e Progressi"** → step 3 (Misurazioni base)
-- **Video 06 "Scheda Allenamento"** → step 4 (Scheda + Safety Engine)
-- **Video 03 "Agenda e Sessioni"** → step 5 (Prima sessione)
-- **Video 02 "Contratto e Rate"** → approfondimento: pagamenti, parziali, rinnovi
+### Timeline video
+
+| Secondo | Azione video | Sync con VO |
+|---------|-------------|-------------|
+| 0.0-2.0 | Profilo cliente, checklist 1/5 (Contratto ✓), hero card "Anamnesi" rosa | "Contratto fatto. La checklist dice: anamnesi." |
+| 2.0-3.5 | Click "Compila" → wizard anamnesi si apre | (transizione) |
+| 3.5-5.5 | Wizard step 1: compilazione dati base (data nascita, sesso, altezza, peso) | "Condizioni mediche," |
+| 5.5-7.0 | Avanza allo step condizioni mediche | "stile di vita," |
+| 7.0-9.0 | Seleziona "Ernia cervicale" + "Dolore spalla destra" | "obiettivi." |
+| 9.0-11.0 | Badge rossi condizioni visibili | "Ogni dato alimenta lo Scudo Clinico." |
+
+### Registrazione Playwright
+```
+goto profilo → click "Compila" (checklist anamnesi)
+Wizard: compila step 1 (dati base)
+Avanti → step condizioni
+Seleziona condizioni → badge rossi visibili
+```
+
+---
+
+## SCENA 05 — Profilo completo (VO: 8.4s)
+
+### VO (testo esatto)
+"Due passi completati. La checklist ti guida al prossimo: misurazioni, scheda, prima sessione. Tutto in ordine."
+
+### Timeline video
+
+| Secondo | Azione video | Sync con VO |
+|---------|-------------|-------------|
+| 0.0-2.0 | Profilo con checklist 2/5 (Contratto ✓, Anamnesi ✓) | "Due passi completati." |
+| 2.0-4.5 | Step 3 "Misurazioni" in evidenza (hero card ambra) | "La checklist ti guida al prossimo:" |
+| 4.5-7.0 | Scroll lento mostra pill: ✓ ✓ 3 4 5 | "misurazioni, scheda, prima sessione." |
+| 7.0-8.4 | Statica sul profilo completo | "Tutto in ordine." |
+
+### Registrazione Playwright
+```
+goto profilo → wait checklist visibile
+Scroll lento per mostrare i pill
+```
+
+---
+
+## SCENA 06 — CTA (VO: 6.2s)
+
+### VO (testo esatto)
+"Un minuto. Cliente, contratto con rate, anamnesi. Prova dalla pagina clienti."
+
+### Timeline video
+
+| Secondo | Azione video | Sync con VO |
+|---------|-------------|-------------|
+| 0.0-6.2 | Title card: gradiente teal, "Il Primo Cliente — Fatto." | Testo VO completo |
+| 6.2-8.0 | Title card resta visibile (silenzio + musica fade out) | (respiro finale) |
+
+### Registrazione: title card HTML → screenshot → video statico FFmpeg
+
+---
+
+## Riepilogo timing definitivo
+
+| # | Scena | VO | Gap | Clip target |
+|---|-------|-----|-----|------------|
+| 01 | Hook | 7.3s | 0.3s | 7.6s |
+| 02 | Crea cliente | 5.6s | 2.0s | 7.6s |
+| 03a | Contratto form | ~8.0s | 2.0s | ~10.0s |
+| 03b | Genera rate | ~7.3s | 2.0s | ~9.3s |
+| 04 | Anamnesi | 11.3s | 1.0s | 12.3s |
+| 05 | Profilo 2/5 | 8.4s | 0.5s | 8.9s |
+| 06 | CTA | 6.2s | 1.8s | 8.0s |
+| | **TOTALE** | **~54s** | | **~64s** |
+
+Con crossfade 0.4s × 6 transizioni = -2.4s → **~61s** finale.
+Il VO viene tagliato in montaggio: 03_contratto.mp3 viene splittato in due parti
+allineate a 03a e 03b.
 
 ---
 
@@ -179,7 +251,23 @@ I video successivi proseguono la checklist:
 - [ ] Backend dev running su porta 8001
 - [ ] Frontend dev running su porta 3001
 - [ ] Login con credenziali dev
-- [ ] Pagina clienti accessibile
-- [ ] Playwright installato
-- [ ] FFmpeg raggiungibile
-- [ ] edge-tts raggiungibile
+- [ ] Nessun cliente "Moretti" nel DB (pulito)
+- [ ] Playwright installato + --start-maximized verificato
+- [ ] FFmpeg + FFprobe raggiungibili
+- [ ] VO generati in scenes/
+- [ ] Musica generata in music/
+
+---
+
+## Format replicabile (per video 02-09)
+
+```
+1. Scrivi script con timeline secondo per secondo (questo formato)
+2. Genera VO con ElevenLabs Daniel → misura durate reali
+3. Aggiorna timeline con durate reali
+4. Registra Playwright: azioni reali, nessun limite tempo, browser maximized
+5. Trim bianchi caricamento
+6. Montaggio: crossfade 0.4s + VO sync + musica 18%
+7. Review: verifica sync voce-video secondo per secondo
+8. Iterate: ri-registra singole scene se necessario
+```

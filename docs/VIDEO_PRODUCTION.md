@@ -1,172 +1,362 @@
-# VIDEO_PRODUCTION.md — Format e Pipeline Video FitManager
+# VIDEO_PRODUCTION.md — Runbook Operativo Produzione Video
 
-Documento di processo per la produzione di tutti i video promozionali,
-demo e esplicativi di FitManager Studio+.
+Documento operativo per produrre video-guide FitManager Studio+.
+Non teoria — solo procedure verificate, selettori testati, problemi risolti.
 
-**Principio fondante**: lo script è il master, il video è un derivato.
-Cambia una feature → ri-registri solo quella scena → ri-assembli in 1 comando.
-
----
-
-## 1. Filosofia: Audio-First Production
-
-```
-SBAGLIATO (video-first):  registra UI → spera che la voce ci stia sopra
-GIUSTO (audio-first):     scrivi script → genera voce → registra UI sulla durata della voce
-```
-
-L'audio detta il ritmo. Il video si taglia e si adatta all'audio, mai il contrario.
-Questo elimina qualsiasi disallineamento voce/video.
+**Ultima revisione**: 2026-03-25 (consolidamento post-video 01 "Il Primo Cliente")
 
 ---
 
-## 2. Pipeline in 5 Fasi
+## 1. Toolchain
+
+Percorsi fissi Windows (verificati):
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│  FASE 1 — SCRIPT EDITORIALE                            │
-│  Input:  idea / feature da mostrare                     │
-│  Output: script AV a 2 colonne (docs/videos/NOME.md)   │
-│  Chi:    umano + Claude                                 │
-├─────────────────────────────────────────────────────────┤
-│  FASE 2 — ASSET AUDIO                                  │
-│  Input:  script approvato                               │
-│  Output: voiceover per scena + voiceover completo       │
-│  Tool:   edge-tts (DiegoNeural) + FFmpeg               │
-├─────────────────────────────────────────────────────────┤
-│  FASE 3 — ASSET VIDEO                                  │
-│  Input:  durate reali audio per scena                   │
-│  Output: registrazione UI scena per scena               │
-│  Tool:   Playwright (headless: false, recordVideo)      │
-├─────────────────────────────────────────────────────────┤
-│  FASE 4 — MONTAGGIO                                    │
-│  Input:  clip video + audio + title cards               │
-│  Output: video finale (MP4 H.264 + AAC)                │
-│  Tool:   FFmpeg (concat, sidechain, fade)               │
-├─────────────────────────────────────────────────────────┤
-│  FASE 5 — REVIEW & MULTI-FORMATO                       │
-│  Input:  video finale                                   │
-│  Output: tagli per canale (30s, 60s, full)              │
-│  Chi:    umano verifica sync → Claude taglia            │
-└─────────────────────────────────────────────────────────┘
+FFmpeg:    C:\Users\gvera\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-8.1-full_build\bin\ffmpeg.exe
+FFprobe:   (stessa directory)\ffprobe.exe
+Playwright: npx playwright (v1.58.2, nel progetto)
+ElevenLabs: API REST (chiave in ~/.fitmanager/elevenlabs.env)
 ```
 
 ---
 
-## 3. Script Editoriale — Formato AV a 2 Colonne
+## 2. Configurazione Audio (definitiva)
 
-Ogni video ha il suo script in `docs/videos/<nome-video>.md`.
-Lo script è la **Single Source of Truth** del video.
-
-### Struttura del file script
-
-```markdown
-# Video: <titolo>
-# Durata target: <secondi>s
-# Formato: <tipo> (demo | explainer | social | feature-spotlight)
-# Voce: <voice-id>
-# Musica: <stile>
-
-## Scena 01 — <nome scena>
-| VIDEO | AUDIO |
-|-------|-------|
-| **Schermata**: /pagina | **VO**: "Testo voiceover." |
-| **Azione**: click su X, scroll fino a Y | **Musica**: sotto, corporate ambient |
-| **Transizione**: fade 0.5s | **Pausa**: 0.5s prima della prossima scena |
-| **Durata stimata**: ~Xs | |
-
-## Scena 02 — <nome scena>
-...
-```
-
-### Regole dello script
-
-| Regola | Dettaglio |
-|--------|-----------|
-| **150 parole = 1 minuto** | Stima affidabile per TTS DiegoNeural a rate +5% |
-| **1 concetto = 1 scena** | Mai due feature nella stessa scena |
-| **Max 2 frasi per scena** | Voiceover breve, lascia respirare il video |
-| **Azione visibile** | Ogni scena deve mostrare UN'AZIONE chiara (click, scroll, risultato) |
-| **No gergo tecnico** | Il target è il PT, non lo sviluppatore |
-| **Italiano parlato** | Scrivi come parli: "Crei il contratto", non "Il contratto viene creato" |
-
----
-
-## 4. Struttura Narrativa (tutti i formati)
-
-Ogni video segue questa struttura, indipendentemente dalla durata:
-
-```
-┌─ HOOK (10-15% della durata) ────────────────────────┐
-│  Il dolore / il problema del target.                 │
-│  "Ogni mese perdi ore su Excel e WhatsApp..."        │
-├─ SOLUZIONE (5-10%) ─────────────────────────────────┤
-│  Cos'è FitManager in una frase.                      │
-│  "FitManager è il gestionale pensato per te."        │
-├─ DIMOSTRAZIONE (60-70%) ────────────────────────────┤
-│  Flusso reale. Feature in azione.                    │
-│  Ogni scena = 1 feature = 1 azione visibile.         │
-├─ CTA (10-15%) ──────────────────────────────────────┤
-│  Cosa fare dopo. URL. Garanzia.                      │
-│  "Provalo gratis. fitmanager.studio"                 │
-└──────────────────────────────────────────────────────┘
-```
-
-### Applicazione per durata
-
-| Formato | Durata | Hook | Soluzione | Demo | CTA |
-|---------|--------|------|-----------|------|-----|
-| **Social clip** | 30s | 4s | 3s | 18s (2-3 scene) | 5s |
-| **Homepage hero** | 60-90s | 8s | 5s | 55-65s (5-7 scene) | 7s |
-| **Full demo** | 2-3min | 12s | 8s | 100-140s (8-12 scene) | 10s |
-| **Feature spotlight** | 45-60s | 5s | 3s | 30-45s (3-5 scene) | 7s |
-
----
-
-## 5. Specifiche Tecniche
-
-### Video
+### Voce
 | Parametro | Valore |
 |-----------|--------|
-| Risoluzione | 1440×900 (16:10, match viewport) |
-| FPS | 30 |
-| Codec | H.264 (libx264), preset medium, CRF 20 |
-| Container | MP4 (+faststart) |
-| Pixel format | yuv420p |
+| Provider | ElevenLabs |
+| Modello | `eleven_multilingual_v2` |
+| Voce | Daniel |
+| Voice ID | `onwK4e9ZLuTAKqWW03F9` |
+| Stability | 0.5 |
+| Similarity boost | 0.75 |
+| Lingua | Italiano nativo |
+| Reference | `data/videos/voce-daniel-reference.mp3` |
 
-### Audio
+### Musica
 | Parametro | Valore |
 |-----------|--------|
-| Voiceover | edge-tts, `it-IT-DiegoNeural`, rate `+5%` |
-| Sample rate | 44100 Hz |
-| Voiceover codec | MP3 192kbps (intermedio), AAC 192kbps (finale) |
-| Musica | Generata FFmpeg (pad + bass + kick + hihat + shimmer) |
-| Mix | Voce a 1.0, musica a 0.18-0.22, sidechain compress |
-| Ducking | threshold=0.02, ratio=4, attack=50ms, release=300ms |
+| Provider | ElevenLabs Sound Generation |
+| Stile | Acoustic calm (fingerpicked guitar + warm pad) |
+| Prompt | "gentle acoustic ambient music, soft fingerpicked guitar with subtle warm pad underneath, very calm and grounded, evokes trust and simplicity, background for a premium software demo" |
+| Limite API | 22s per richiesta → concat 3 parti per 60s+ |
+| Mix volume | 18% rispetto alla voce |
+| Fade in | 2s |
+| Fade out | 3s (ultimi 3s del video) |
+| Reference | `data/videos/musica-reference-acoustic.mp3` |
 
-### Title Cards
-| Parametro | Valore |
-|-----------|--------|
-| Tool | Playwright headless, screenshot 2x |
-| Stile | Gradiente teal scuro, font Inter/system-ui, logo FM |
-| Intro | Fade in 1s, durata = VO_intro + 1s padding |
-| Outro | Fade in 0.6s, fade out 1s, durata = VO_cta + 1.5s |
+### Limiti API ElevenLabs
+- **Max 2 richieste parallele** (piano gratuito) → generare VO in sequenza, non parallelo
+- **Encoding**: usare Python `urllib` con `.encode('utf-8')`, NON curl con bash (problemi accenti)
+- **~10.000 caratteri/mese** piano gratuito
+
+### Generazione VO (comando verificato)
+```python
+import json, urllib.request
+data = json.dumps({
+    'text': '<TESTO ITALIANO>',
+    'model_id': 'eleven_multilingual_v2',
+    'voice_settings': {'stability': 0.5, 'similarity_boost': 0.75}
+}).encode('utf-8')
+req = urllib.request.Request(
+    'https://api.elevenlabs.io/v1/text-to-speech/onwK4e9ZLuTAKqWW03F9',
+    data=data,
+    headers={'xi-api-key': '<KEY>', 'Content-Type': 'application/json'}
+)
+with urllib.request.urlopen(req) as resp, open('output.mp3', 'wb') as f:
+    f.write(resp.read())
+```
+
+### Generazione Musica (comando verificato)
+```python
+data = json.dumps({
+    'text': '<PROMPT MUSICALE>',
+    'duration_seconds': 22  # MAX 22s per richiesta
+}).encode('utf-8')
+req = urllib.request.Request(
+    'https://api.elevenlabs.io/v1/sound-generation',
+    data=data,
+    headers={'xi-api-key': '<KEY>', 'Content-Type': 'application/json'}
+)
+```
+Per video >22s: genera 3 parti e concatena con FFmpeg + crossfade.
 
 ---
 
-## 6. Toolchain
+## 3. Configurazione Playwright (definitiva)
 
-```
-edge-tts          → TTS Microsoft Neural (gratuito, qualità alta)
-Playwright 1.58   → Registrazione UI (headless: false + recordVideo)
-FFmpeg 8.1        → Encoding, montaggio, mix audio, title cards → MP4
-Node.js           → Script di automazione (orchestratore)
-```
-
-Percorsi fissi (Windows):
+### Browser
 ```javascript
-const FF  = "C:/Users/gvera/AppData/Local/Microsoft/WinGet/Packages/Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe/ffmpeg-8.1-full_build/bin/ffmpeg.exe";
-const TTS = "./venv/Scripts/edge-tts.exe";
+const browser = await chromium.launch({
+  headless: false,
+  slowMo: 80,            // 80ms tra azioni — visivamente leggibile
+  args: ["--start-maximized"],
+});
+const context = await browser.newContext({
+  viewport: null,         // OBBLIGATORIO con --start-maximized
+  recordVideo: {
+    dir: CLIPS_DIR,
+    size: { width: 1440, height: 900 },  // Risoluzione output video
+  },
+  storageState: authStatePath,  // Cookie auth pre-salvati
+});
+```
+
+### Regole ferree
+- **MAI `viewport: { width: X, height: Y }`** con `--start-maximized` → causa layout sfalsato
+- **MAI headless** per registrazione → il video non cattura nulla
+- **MAI piu' di 2 richieste ElevenLabs in parallelo**
+- **Sempre `--start-maximized` + `viewport: null`** → layout identico al browser reale
+
+### Login e auth state
+```javascript
+// Login una volta, salva cookies, riusa per tutte le scene
+await authCtx.storageState({ path: authStatePath });
+// Ogni scena successiva usa: storageState: authStatePath
+```
+
+---
+
+## 4. Mappa Selettori UI (verificati 2026-03-25)
+
+### 4.1 Pagina Clienti (`/clienti`)
+
+| Elemento | Selettore | Note |
+|----------|-----------|------|
+| Header | `[data-guide="clienti-header"]` | Usare come "pagina pronta" |
+| Bottone Nuovo | `[data-guide="clienti-new-button"]` | Apre Sheet |
+| KPI cards | `[data-guide="clienti-kpi"]` | |
+| Riga cliente | `td:has-text("Cognome")` | Click apre profilo |
+| Ricerca | `[data-guide="clienti-search"]` | |
+
+### 4.2 Sheet Nuovo Cliente (dentro `/clienti`)
+
+| Elemento | Selettore | Note |
+|----------|-----------|------|
+| Nome | `#nome` | Input text, `register("nome")` |
+| Cognome | `#cognome` | Input text |
+| Email | `#email` | Input email (opzionale) |
+| Telefono | `#telefono` | Input text (opzionale) |
+| Submit | `button:has-text("Crea Cliente")` | `type="submit"` |
+| Submit (edit) | `button:has-text("Salva Modifiche")` | |
+
+### 4.3 Profilo Cliente (`/clienti/[id]`)
+
+| Elemento | Selettore | Note |
+|----------|-----------|------|
+| Avatar hero | `[data-guide="client-avatar-hero"]` | |
+| Checklist | `[data-guide="client-onboarding-checklist"]` | |
+| CTA "Crea contratto" | `text=Crea contratto` | Hero card OnboardingChecklist step 1 |
+| CTA "Compila" (anamnesi) | `text=Compila` | Hero card step 2 |
+| Tab Panoramica | `text=Panoramica` | Tab attivo di default |
+| Tab Contratti | `text=Contratti` | |
+| Tab Sessioni | `text=Sessioni` | |
+| Tab Schede | `text=Schede` | |
+
+### 4.4 Sheet Nuovo Contratto (`/contratti?new=1&cliente=ID`)
+
+| Elemento | Selettore | Note |
+|----------|-----------|------|
+| Tipo pacchetto | `#tipo_pacchetto` | Input text |
+| Crediti | `#crediti_totali` | Input number |
+| Prezzo totale | `#prezzo_totale` | Input number, step 0.01 |
+| Data inizio | `button:has-text("Inizio...")` | DatePicker trigger |
+| Data scadenza | `button:has-text("Scadenza...")` | DatePicker trigger |
+| Acconto | `#acconto` | Input number (solo creazione, non edit) |
+| Metodo acconto | `[data-slot="select-trigger"]:last-of-type` | Radix Select, appare solo se acconto > 0 |
+| Submit | `button[type="submit"]:has-text("Crea Contratto")` | |
+| Sheet content | `[data-slot="sheet-content"]` | Per scroll interno |
+
+### 4.5 Dettaglio Contratto (`/contratti/[id]`)
+
+| Elemento | Selettore | Note |
+|----------|-----------|------|
+| Header | `[data-guide="contratto-header"]` | "Pagina pronta" |
+| Hero finanziario | `[data-guide="contratto-hero-finanziario"]` | KPI cards |
+| Piano rate | `[data-guide="contratto-piano-rate"]` | |
+| Numero rate | `#numero_rate` | Input number nel form genera |
+| Data prima rata | `button:has-text("Seleziona data...")` | DatePicker nel form genera |
+| Frequenza | Select in GeneratePlanForm | Radix Select |
+| Genera rate | `button:has-text("Genera Piano Pagamenti")` | **Disabled se data non selezionata** |
+
+### 4.6 DatePicker (componente globale)
+
+| Azione | Selettore/Metodo | Note |
+|--------|------------------|------|
+| Apri calendario | Click sul trigger button | Testo: placeholder o data formattata |
+| Formato data-day | `DD/MM/YYYY` | Es: `button[data-day="01/04/2026"]` |
+| Naviga mese avanti | `button.rdp-button_next` | |
+| Naviga mese indietro | `button.rdp-button_previous` | |
+| Seleziona giorno | `button[data-day="DD/MM/YYYY"]` | Potrebbe servire navigare prima |
+| Chiudi senza selezionare | `Escape` | |
+
+**Procedura `selectDate()` verificata:**
+```javascript
+async function selectDate(page, triggerText, targetDataDay, maxNavClicks = 6) {
+  await page.locator(`button:has-text("${triggerText}")`).click();
+  await wait(500);
+  const daySelector = `button[data-day="${targetDataDay}"]`;
+  let dayBtn = page.locator(daySelector);
+  if (await dayBtn.isVisible({ timeout: 500 }).catch(() => false)) {
+    await dayBtn.click();
+    return;
+  }
+  for (let i = 0; i < maxNavClicks; i++) {
+    await page.locator('button.rdp-button_next').click();
+    await wait(400);
+    if (await dayBtn.isVisible({ timeout: 500 }).catch(() => false)) {
+      await dayBtn.click();
+      return;
+    }
+  }
+  throw new Error(`Data ${targetDataDay} non trovata`);
+}
+```
+
+### 4.7 Radix Select (componente globale)
+
+| Azione | Selettore | Note |
+|--------|-----------|------|
+| Apri dropdown | `[data-slot="select-trigger"]` | Potrebbe esserci piu' di uno → usare `.last()` o indice |
+| Opzione | `[data-slot="select-item"]:has-text("VALORE")` | Testo esatto, case-sensitive |
+
+**Procedura `selectRadixOption()` verificata:**
+```javascript
+async function selectRadixOption(page, triggerSelector, optionText) {
+  await page.locator(triggerSelector).click();
+  await wait(400);
+  await page.locator(`[data-slot="select-item"]:has-text("${optionText}")`).click();
+  await wait(300);
+}
+```
+
+### 4.8 Wizard Anamnesi (`/clienti/[id]/anamnesi?startWizard=1`)
+
+| Elemento | Selettore | Note |
+|----------|-----------|------|
+| Auto-apertura | URL param `?startWizard=1` | Apre wizard automaticamente |
+| Avanti | `button:has-text("Avanti")` | Naviga al prossimo step |
+| Indietro | `button:has-text("Indietro")` | |
+| Salva | `button:has-text("Salva")` | Solo ultimo step |
+
+### 4.9 Selettori "Pagina Pronta" (waitForSelector)
+
+| Pagina | Selettore | Timeout |
+|--------|-----------|---------|
+| `/clienti` | `[data-guide="clienti-header"]` | 10s |
+| `/clienti/[id]` | `[data-guide="client-avatar-hero"]` | 10s |
+| `/contratti` | `[data-guide="contratti-header"]` | 10s |
+| `/contratti/[id]` | `[data-guide="contratto-header"]` | 10s |
+| `/agenda` | `[data-guide="agenda-header"]` | 10s |
+| `/cassa` | `[data-guide="cassa-header"]` | 10s |
+| `/esercizi` | `[data-guide="esercizi-header"]` | 10s |
+| `/schede` | `[data-guide="schede-header"]` | 10s |
+| `/impostazioni` | `[data-guide="impostazioni-header"]` | 10s |
+| `/guida` | `[data-guide="guida-hero"]` | 10s |
+| Dashboard | `[data-guide="dashboard-header"]` | 10s |
+
+---
+
+## 5. Mappa Navigazioni
+
+### 5.1 Flusso Onboarding (video 01)
+
+```
+/clienti                          → "Nuovo Cliente" → Sheet (stessa pagina)
+Sheet "Crea Cliente"              → submit → toast → lista aggiornata
+Lista clienti                     → click riga → /clienti/[id]
+/clienti/[id] checklist           → "Crea contratto" → /contratti?new=1&cliente=[id]
+/contratti?new=1&cliente=[id]     → auto-apre Sheet → compilazione → submit
+Submit contratto                  → redirect → /contratti/[id]
+/contratti/[id]                   → scroll a piano rate → genera → rate visibili
+/clienti/[id] checklist           → "Compila" → /clienti/[id]/anamnesi?startWizard=1
+```
+
+### 5.2 Tempi di caricamento (dev, porta 3001)
+
+| Navigazione | Tempo reale | Trim consigliato |
+|-------------|-------------|------------------|
+| goto qualsiasi pagina | 1.0-2.0s | 1.5s |
+| Sheet apertura | 0.3-0.5s | 0s |
+| Submit + redirect | 1.5-2.5s | 0s (l'azione e' parte del video) |
+| Toast apparizione | 0.5-1.0s | 0s |
+
+---
+
+## 6. Pipeline Produzione (5 fasi)
+
+### Fase 1 — Script editoriale
+**Input**: idea del video
+**Output**: `docs/videos/<slug>.md` con timeline secondo per secondo
+**Formato**: tabella `Secondo | Azione video | Sync con VO`
+
+Regole:
+- 150 parole = 1 minuto (stima TTS Daniel)
+- 1 concetto = 1 scena
+- Max 2 frasi per scena
+- Ogni scena ha UN'AZIONE visibile
+- Il VO dice quello che il video mostra (MAI incongruenze)
+
+### Fase 2 — Asset audio
+**Input**: script approvato
+**Output**: VO per scena (`scenes/01_nome.mp3`) + musica (`music/background.mp3`)
+
+Procedura:
+1. Genera ogni VO in sequenza (max 2 parallele ElevenLabs) con Python urllib
+2. Misura durate reali con FFprobe
+3. Aggiorna timeline nello script con durate reali
+4. Genera musica (3 parti da 22s → concat → fade in/out)
+
+### Fase 3 — Pre-flight interazione
+**Input**: script con azioni Playwright
+**Output**: conferma che TUTTE le interazioni funzionano
+
+**QUESTO STEP E' OBBLIGATORIO. Senza pre-flight, non si registra.**
+
+Procedura:
+1. Per ogni scena, scrivi un test che esegue le azioni SENZA registrare video
+2. Verifica che ogni selettore trovi l'elemento
+3. Verifica che ogni navigazione arrivi a destinazione
+4. Verifica che lo stato del DB sia quello atteso (cliente creato, contratto presente, ecc.)
+5. Se un test fallisce, correggi il selettore e ri-testa
+6. Solo quando TUTTI i test passano, procedi alla fase 4
+
+### Fase 4 — Registrazione video
+**Input**: test passati, durate VO note
+**Output**: clip per scena (`clips/01_nome.webm`)
+
+Regole:
+- Browser `--start-maximized` + `viewport: null`
+- Auth state pre-salvato (login una volta sola)
+- Nessun limite di tempo — registra l'azione completa
+- SlowMo 80ms per leggibilita' visiva
+- Ogni scena = un browser context separato (cleanup automatico)
+- Se una scena fallisce, ri-registra SOLO quella
+
+### Fase 5 — Montaggio
+**Input**: clip + VO + musica
+**Output**: `<slug>.mp4` (H.264 + AAC, 1440x900, 30fps)
+
+Pipeline FFmpeg:
+1. **Trim**: rimuovi bianchi caricamento iniziali da ogni clip (`-ss <trim>`)
+2. **Taglia**: durata clip = durata VO + gap (`-t <durata>`)
+3. **Converti**: webm → mp4 H.264 (`-c:v libx264 -preset medium -crf 20 -pix_fmt yuv420p`)
+4. **Crossfade**: concatena con `xfade=transition=fade:duration=0.4`
+5. **VO sync**: posiziona ogni VO al suo offset con `adelay`
+6. **Mix**: video + VO + musica (`amix`, musica a 0.18)
+7. **Output**: `-movflags +faststart`
+
+Parametri fissi:
+```
+Risoluzione:  1440x900
+FPS:          30
+Video codec:  libx264, preset medium, CRF 20
+Audio codec:  AAC 192kbps
+Crossfade:    0.4s fade
+Musica volume: 0.18
+Musica fade in: 2s
+Musica fade out: 3s (ultimi 3s)
 ```
 
 ---
@@ -175,156 +365,81 @@ const TTS = "./venv/Scripts/edge-tts.exe";
 
 ```
 data/videos/
-├── <nome-video>/
-│   ├── scenes/              # VO per scena (01_hook.mp3, 02_soluzione.mp3, ...)
-│   ├── clips/               # Video clip per scena (01_hook.mp4, 02_soluzione.mp4, ...)
-│   ├── cards/               # Title cards (intro.png, outro.png, .html, .mp4)
-│   ├── music/               # Tracce musicali generate
-│   ├── voiceover.mp3        # VO completo concatenato
-│   ├── music.wav            # Mix musicale completo
-│   └── <nome-video>.mp4     # OUTPUT FINALE
+├── voce-daniel-reference.mp3       # Campione voce definitiva
+├── musica-reference-acoustic.mp3   # Campione musica definitiva
+├── <slug>/
+│   ├── scenes/           # VO per scena (01_hook.mp3, 02_cliente.mp3, ...)
+│   ├── clips/            # Video clip per scena (01_hook.webm, ...)
+│   ├── cards/            # Title cards (intro.png, outro.png)
+│   ├── music/            # Background music (background.mp3, parti)
+│   ├── auth-state.json   # Cookie auth Playwright (non committare)
+│   └── <slug>.mp4        # OUTPUT FINALE
 └── exports/
-    └── <nome-video>-<formato>.mp4  # Tagli (30s, 60s, ecc.)
-```
-
-**Regola**: i file intermedi restano nella cartella del video per debug e ri-assembly.
-Solo il video finale e gli export vanno referenziati per l'uso.
-
----
-
-## 8. Algoritmo di Sync Audio-Video
-
-Questo è il cuore del metodo. Garantisce sync perfetto.
-
-```
-PER OGNI scena nello script:
-  1. Genera VO scena → misura DURATA REALE (FFprobe)
-  2. scena.durata_video = scena.durata_vo + scena.padding (0.5-1.5s)
-  3. Registra UI per ESATTAMENTE scena.durata_video secondi
-
-MONTAGGIO:
-  4. Concatena clip video:  intro_card + clip_01 + clip_02 + ... + outro_card
-  5. Concatena audio VO:    silenzio(intro) + vo_01 + vo_02 + ... + vo_cta
-  6. VERIFICA: durata_video_totale ≈ durata_vo_totale (tolleranza ±0.5s)
-  7. Mix finale: video + VO + musica (con sidechain ducking)
-```
-
-### Registrazione scena per scena (non un unico take)
-
-A differenza del v4 che registrava tutto in un unico take e sperava nel sync,
-il metodo corretto è:
-
-```
-PER OGNI scena:
-  - Apri browser context con recordVideo
-  - Esegui azioni UI (navigate, click, scroll)
-  - Attendi fino a durata_video esatta
-  - Chiudi context → salva clip
-  - Prossima scena = nuovo context
-```
-
-Vantaggi:
-- Ogni clip ha durata esatta
-- Se una scena fallisce, ri-registri solo quella
-- Cambi l'ordine delle scene senza ri-registrare nulla
-
----
-
-## 9. Voci Disponibili
-
-| Voice ID | Genere | Note |
-|----------|--------|------|
-| `it-IT-DiegoNeural` | Maschile | **Default**. Professionale, caldo, amichevole |
-| `it-IT-IsabellaNeural` | Femminile | Alternativa per variare |
-| `it-IT-GiuseppeMultilingualNeural` | Maschile | Multilingua, tono leggermente diverso |
-| `it-IT-ElsaNeural` | Femminile | Più formale |
-
----
-
-## 10. Musica Generativa
-
-La musica è generata da FFmpeg con 5 layer sintetici.
-BPM: 115. Tonalità: Am (220 Hz root). Stile: corporate ambient.
-
-| Layer | Funzione | Entra a |
-|-------|----------|---------|
-| Pad | Atmosfera continua, accordi Am | 0s (fade in 4s) |
-| Bass | Sub-bass pulsante | 6s |
-| Kick | Ritmo base | 8s |
-| Hihat | Texture ritmica | 10s |
-| Shimmer | Armonici alti per il finale | ultimi 18s |
-
-Tutti i layer hanno fade out sugli ultimi 3-4 secondi.
-Il volume complessivo della musica è 18-22% rispetto alla voce.
-
----
-
-## 11. Multi-Formato da Unico Girato
-
-Dopo aver prodotto il video full, i tagli sono meccanici:
-
-```bash
-# 30s social (hook + 2 scene migliori + cta)
-ffmpeg -i full.mp4 -filter_complex "..." -t 30 export-30s.mp4
-
-# 60s homepage (hook + 4-5 scene + cta)
-ffmpeg -i full.mp4 -filter_complex "..." -t 60 export-60s.mp4
-```
-
-Lo script editoriale deve indicare quali scene sono **core** (vanno in tutti i formati)
-e quali sono **extended** (solo nel full).
-
-Notazione nello script:
-```
-## Scena 03 — Cassa [CORE]        ← va in tutti i formati
-## Scena 06 — Esercizio [EXTENDED] ← solo nel full demo
+    └── <slug>-<formato>.mp4  # Tagli (30s, 60s)
 ```
 
 ---
 
-## 12. Checklist Pre-Produzione
+## 8. Errori Risolti (2026-03-25)
 
-Prima di avviare lo script di automazione:
+| Errore | Causa | Soluzione |
+|--------|-------|-----------|
+| Layout sfalsato nel browser Playwright | `viewport: { width, height }` con `--start-maximized` | `viewport: null` — il viewport segue la finestra reale |
+| Codegen inutilizzabile | Inspector panel ruba spazio, bussola resta aperta | Non usare codegen. Mappare selettori dal codice sorgente |
+| DatePicker non seleziona data | Formato data-day sbagliato (provato US `M/D/YYYY`) | Formato corretto: `DD/MM/YYYY` (locale italiana) |
+| Select BONIFICO risolve a 2 elementi | `text=BONIFICO` matcha sia `<option>` che `<span>` Radix | Usare `[data-slot="select-item"]:has-text("BONIFICO")` |
+| ElevenLabs rate limit | Piu' di 2 richieste parallele | Generare VO in sequenza, mai parallelo |
+| ElevenLabs UTF-8 error | curl con bash non gestisce accenti italiani | Usare Python `urllib` con `.encode('utf-8')` |
+| Flash bianchi tra scene | Caricamento pagina (1-2s bianco) registrato nel clip | Trim iniziale per scena (`-ss 1.5`) + crossfade 0.4s |
+| Bottone "Genera Piano" disabled | DatePicker non compilato (data obbligatoria) | Selezionare data prima rata con `selectDate()` PRIMA del click |
+| VO parla di azione ma video mostra risultato statico | Contratto e rate creati via API, non via UI | Registrare azioni REALI via UI — nessun dato pre-generato |
+| Musica SFX > 22s | Limite API ElevenLabs | Generare 3 parti da 22s e concatenare con FFmpeg |
 
-- [ ] Backend dev in esecuzione (porta 8001)
-- [ ] Frontend dev in esecuzione (porta 3001)
-- [ ] Dati demo puliti (o script crea i propri dati via API)
-- [ ] Script editoriale approvato (`docs/videos/<nome>.md`)
-- [ ] `npm list playwright` OK
+---
+
+## 9. Checklist Pre-Registrazione
+
+Eseguire PRIMA di ogni sessione di registrazione:
+
+- [ ] Backend dev running su porta 8001
+- [ ] Frontend dev running su porta 3001
+- [ ] Login verificato con credenziali dev
+- [ ] DB in stato noto (sapere quali clienti/contratti esistono)
+- [ ] Script editoriale completato con timeline secondo per secondo
+- [ ] VO generati e durate reali misurate
+- [ ] Timeline aggiornata con durate reali
+- [ ] Musica generata (60s+)
+- [ ] **Pre-flight interazione completato — TUTTI i selettori verificati**
+- [ ] Playwright `--start-maximized` + `viewport: null` verificato
 - [ ] FFmpeg raggiungibile
-- [ ] edge-tts raggiungibile
+- [ ] Spazio disco sufficiente per clip webm (~1-3 MB per scena)
 
 ---
 
-## 13. Naming Convention
+## 10. Catalogo Video Pianificati
+
+| # | Slug | Durata | Scopo | Stato |
+|---|------|--------|-------|-------|
+| 0 | `primi-10-minuti` | 78s | Panoramica generale (gia' in /guida) | COMPLETATO |
+| 1 | `01-primo-cliente` | ~60s | Crea cliente + contratto + anamnesi | IN PRODUZIONE |
+| 2 | `02-contratto-rate` | 60s | Approfondimento: pagamenti, parziali, rinnovi | PIANIFICATO |
+| 3 | `03-agenda` | 45s | Sessioni, DnD, credit guard | PIANIFICATO |
+| 4 | `04-cassa` | 60s | Pagamento rata, spese fisse, forecast | PIANIFICATO |
+| 5 | `05-esercizi-safety` | 60s | Catalogo 500 + Safety Engine | PIANIFICATO |
+| 6 | `06-scheda-allenamento` | 60s | Builder, blocchi, export PDF | PIANIFICATO |
+| 7 | `07-misurazioni-progressi` | 45s | Misurazioni + analisi clinica | PIANIFICATO |
+| 8 | `08-piano-alimentare` | 60s | Piano LARN 7 giorni | PIANIFICATO |
+| 9 | `09-backup-dati` | 45s | Backup, restore, export | PIANIFICATO |
+
+---
+
+## 11. Naming Convention
 
 | Tipo | Pattern | Esempio |
 |------|---------|---------|
-| Script editoriale | `docs/videos/<slug>.md` | `docs/videos/primi-10-minuti.md` |
-| Script automazione | `tools/scripts/video-<slug>.js` | `tools/scripts/video-primi-10-minuti.js` |
-| Directory assets | `data/videos/<slug>/` | `data/videos/primi-10-minuti/` |
-| Output finale | `data/videos/<slug>/<slug>.mp4` | `data/videos/primi-10-minuti/primi-10-minuti.mp4` |
-| Export formato | `data/videos/exports/<slug>-<formato>.mp4` | `data/videos/exports/primi-10-minuti-60s.mp4` |
-
----
-
-## 14. Catalogo Video Pianificati
-
-| # | Slug | Tipo | Durata | Scopo | Stato |
-|---|------|------|--------|-------|-------|
-| 1 | `primi-10-minuti` | full demo | 90s | Homepage hero + YouTube | DA FARE |
-| 2 | `feature-safety-engine` | feature spotlight | 45s | Pagina feature | DA FARE |
-| 3 | `feature-nutrizione` | feature spotlight | 45s | Pagina feature | DA FARE |
-| 4 | `social-hook-excel` | social clip | 30s | Instagram/TikTok | DA FARE |
-
----
-
-## 15. Errori da Non Ripetere
-
-| Errore | Lezione | Soluzione |
-|--------|---------|-----------|
-| Video-first production | Audio e video disallineati alla fine | **Audio-first**: genera VO, poi registra UI sulla sua durata |
-| Unico take per tutto il video | Una scena sbagliata = ri-registrare tutto | **Scena per scena**: ogni scena = un clip indipendente |
-| `waitForTimeout(vo.duration * 1000)` | Timing approssimativo, drift cumulativo | **FFprobe** per durata reale, padding esplicito |
-| 5 iterazioni di script nello stesso file | 274MB di file intermedi, confusione | **1 script = 1 file**, naming convention rigorosa |
-| Title card outro troppo corto | Schermata uscita visibile con voce ancora attiva | **Outro durata = VO_cta + 1.5s padding** |
+| Script editoriale | `docs/videos/<slug>.md` | `docs/videos/01-primo-cliente.md` |
+| Script Playwright | `tools/scripts/video-<slug>.js` | `tools/scripts/video-01-primo-cliente.js` |
+| Script montaggio | `tools/scripts/video-<slug>-montaggio.js` | `tools/scripts/video-01-montaggio.js` |
+| Script test | `tools/scripts/video-test-*.js` | `tools/scripts/video-test-full-flow.js` |
+| Directory assets | `data/videos/<slug>/` | `data/videos/01-primo-cliente/` |
+| Output finale | `data/videos/<slug>/<slug>.mp4` | `data/videos/01-primo-cliente/primo-cliente.mp4` |
