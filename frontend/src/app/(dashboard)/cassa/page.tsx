@@ -14,6 +14,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { loadFilters, saveFilters, getUrlParams, syncUrlParams } from "@/lib/url-state";
+import { PageVideoGuide } from "@/components/guide/PageVideoGuide";
 import { usePageReveal } from "@/lib/page-reveal";
 import {
   Plus,
@@ -322,6 +323,7 @@ export default function CassaPage() {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
+          <PageVideoGuide />
           <Select
             value={String(mese)}
             onValueChange={(v) => setMese(parseInt(v, 10))}

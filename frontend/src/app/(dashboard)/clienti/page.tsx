@@ -34,6 +34,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ClientsTable } from "@/components/clients/ClientsTable";
 import { ClientSheet } from "@/components/clients/ClientSheet";
 import { DeleteClientDialog } from "@/components/clients/DeleteClientDialog";
+import { PageVideoGuide } from "@/components/guide/PageVideoGuide";
 import { useClients } from "@/hooks/useClients";
 import type { ClientEnriched } from "@/types/api";
 
@@ -276,6 +277,7 @@ export default function ClientiPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <PageVideoGuide />
           <Link href="/monitoraggio">
             <Button variant="outline">
               <Eye className="h-4 w-4 sm:mr-2" />

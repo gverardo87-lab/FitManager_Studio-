@@ -15,6 +15,8 @@ export interface TourStep {
   desktopOnly?: boolean;
   /** Se presente, naviga a questa route prima di cercare il target */
   navigateTo?: string;
+  /** ID video collegato (da video-guides.ts). Mostra link "Guarda il video" nello step */
+  videoId?: string;
 }
 
 export interface TourDefinition {
@@ -33,6 +35,7 @@ export const TOUR_SCOPRI_FITMANAGER: TourDefinition = {
     {
       target: "dashboard-header",
       navigateTo: "/",
+      videoId: "panoramica",
       title: "La tua Dashboard",
       description:
         "La panoramica operativa della giornata: clienti attivi, appuntamenti in scadenza, completamento sessioni e alert rate scadute. Aprila ogni mattina per partire allineato.",
@@ -43,6 +46,7 @@ export const TOUR_SCOPRI_FITMANAGER: TourDefinition = {
     {
       target: "clienti-header",
       navigateTo: "/clienti",
+      videoId: "primo-cliente",
       title: "I tuoi Clienti",
       description:
         "Qui gestisci ogni cliente: anagrafica, stato e storico. Ogni riga mostra a colpo d'occhio crediti residui, contratti attivi e ultima sessione. Filtra per stato (attivo, in pausa, archiviato) o cerca per nome.",
@@ -67,6 +71,7 @@ export const TOUR_SCOPRI_FITMANAGER: TourDefinition = {
     {
       target: "contratti-header",
       navigateTo: "/contratti",
+      videoId: "contratto-rate",
       title: "I tuoi Contratti",
       description:
         "Gestisci contratti, pacchetti e abbonamenti. Ogni contratto ha tipo (PT, sala, corso), prezzo, durata, crediti sessione e piano rateale. Lo stato finanziario si aggiorna automaticamente: attivi, in scadenza, saldati.",
@@ -91,6 +96,7 @@ export const TOUR_SCOPRI_FITMANAGER: TourDefinition = {
     {
       target: "agenda-header",
       navigateTo: "/agenda",
+      videoId: "agenda",
       title: "La tua Agenda",
       description:
         "Calendario interattivo con vista giorno, settimana e mese. Slot da 30 minuti, color coding per categoria (PT, sala, corso, amministrazione). Trascina per spostare, ridimensiona per cambiare durata. KPI contestuali: completamento, programmati, cancellati.",
@@ -108,6 +114,7 @@ export const TOUR_SCOPRI_FITMANAGER: TourDefinition = {
     {
       target: "cassa-header",
       navigateTo: "/cassa",
+      videoId: "cassa",
       title: "La tua Cassa",
       description:
         "Il centro di controllo finanziario: saldo attuale, entrate, uscite variabili, uscite fisse e margine netto. Grafico giornaliero con barre entrate/uscite e linea saldo. Filtro per mese e anno. Dati separati dalla dashboard per privacy.",
@@ -125,6 +132,7 @@ export const TOUR_SCOPRI_FITMANAGER: TourDefinition = {
     {
       target: "esercizi-header",
       navigateTo: "/esercizi",
+      videoId: "esercizi-safety",
       title: "269 Esercizi Scientifici",
       description:
         "Catalogo professionale con classificazione a 14 dimensioni: pattern movimento (squat, hinge, push, pull, core, rotation, carry), gruppi muscolari, catena cinetica, piano di movimento e tipo contrazione. Ogni esercizio ha foto, progressioni, regressioni e mapping a 47 condizioni mediche.",
@@ -142,6 +150,7 @@ export const TOUR_SCOPRI_FITMANAGER: TourDefinition = {
     {
       target: "schede-header",
       navigateTo: "/schede",
+      videoId: "scheda-allenamento",
       title: "Schede Allenamento",
       description:
         "Qui crei e gestisci le schede allenamento. Ogni scheda ha sessioni strutturate con avviamento, parte principale e stretching. Builder professionale con drag & drop, blocchi (circuito, superset, AMRAP, EMOM, tabata, for time), preview live ed export clinico PDF con foto esercizi e logo personalizzato.",
@@ -169,6 +178,7 @@ export const TOUR_SCOPRI_FITMANAGER: TourDefinition = {
     {
       target: "impostazioni-header",
       navigateTo: "/impostazioni",
+      videoId: "backup-dati",
       title: "Backup e Protezione Dati",
       description:
         "Crea backup atomici del database con checksum SHA-256. Ripristina da backup precedenti con verifica integrita'. Configura il saldo iniziale di cassa. Esporta tutti i dati in JSON (portabilita' GDPR). I tuoi dati restano sempre sul tuo computer.",

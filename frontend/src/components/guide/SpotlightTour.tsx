@@ -12,7 +12,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { ArrowLeft, ArrowRight, Compass, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, CirclePlay, Compass, X } from "lucide-react";
+import { getVideoGuide } from "@/lib/video-guides";
 
 import { Button } from "@/components/ui/button";
 import type { TourDefinition, TourStep } from "@/lib/guide-tours";
@@ -365,9 +366,24 @@ export function SpotlightTour({ tour, open, onComplete, onDismiss, onNavigate }:
           </div>
 
           {/* Description */}
-          <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
+          <p className="mb-2 text-sm leading-relaxed text-muted-foreground">
             {step.description}
           </p>
+
+          {/* Video link (L3 — bussola) */}
+          {step.videoId && (() => {
+            const video = getVideoGuide(step.videoId);
+            return video?.ready ? (
+              <a
+                href={`/guida#${video.id}`}
+                className="mb-3 flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+                onClick={(e) => { e.preventDefault(); window.location.href = `/guida#${video.id}`; }}
+              >
+                <CirclePlay className="h-3.5 w-3.5" />
+                Guarda il video ({Math.floor(video.durationSec / 60)}:{(video.durationSec % 60).toString().padStart(2, "0")})
+              </a>
+            ) : null;
+          })()}
 
           {/* Footer */}
           <div className="flex items-center justify-between">

@@ -47,6 +47,7 @@ import {
   FORCE_TYPE_LABELS,
   LATERAL_PATTERN_LABELS,
 } from "@/components/exercises/exercise-constants";
+import { PageVideoGuide } from "@/components/guide/PageVideoGuide";
 import type { Exercise } from "@/types/api";
 
 // ════════════════════════════════════════════════════════════
@@ -346,10 +347,13 @@ export default function EserciziPage() {
             )}
           </div>
         </div>
-        <Button onClick={handleNewExercise}>
-          <Plus aria-hidden="true" className="h-4 w-4 sm:mr-2" />
-          <span className="hidden sm:inline">Nuovo Esercizio</span>
-        </Button>
+        <div className="flex items-center gap-2">
+          <PageVideoGuide />
+          <Button onClick={handleNewExercise}>
+            <Plus aria-hidden="true" className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Nuovo Esercizio</span>
+          </Button>
+        </div>
       </div>
 
       {/* ── Search bar (prima dei filtri) ── */}

@@ -57,6 +57,7 @@ import {
 import { TemplateSelector } from "@/components/workouts/TemplateSelector";
 import { useWorkouts, useDeleteWorkout, useDuplicateWorkout, type WorkoutFilters } from "@/hooks/useWorkouts";
 import { useClients } from "@/hooks/useClients";
+import { PageVideoGuide } from "@/components/guide/PageVideoGuide";
 import { OBIETTIVI_SCHEDA, LIVELLI_SCHEDA, type WorkoutPlan } from "@/types/api";
 
 // ════════════════════════════════════════════════════════════
@@ -205,10 +206,13 @@ export default function SchedePage() {
             )}
           </div>
         </div>
-        <Button data-guide="schede-new-button" onClick={() => setTemplateSelectorOpen(true)}>
-          <Plus className="h-4 w-4 sm:mr-2" />
-          <span className="hidden sm:inline">Nuova Scheda</span>
-        </Button>
+        <div className="flex items-center gap-2">
+          <PageVideoGuide />
+          <Button data-guide="schede-new-button" onClick={() => setTemplateSelectorOpen(true)}>
+            <Plus className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Nuova Scheda</span>
+          </Button>
+        </div>
       </div>
 
       {/* ── KPI Cards ── */}

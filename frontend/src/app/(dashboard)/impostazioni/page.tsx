@@ -10,6 +10,7 @@
 
 import { useRef, useState } from "react";
 import { usePageReveal } from "@/lib/page-reveal";
+import { PageVideoGuide } from "@/components/guide/PageVideoGuide";
 import {
   Settings,
   Database,
@@ -90,16 +91,19 @@ export default function ImpostazioniPage() {
   return (
     <div className="space-y-6">
       {/* ── Header ── */}
-      <div data-guide="impostazioni-header" className={revealClass(0, "flex items-center gap-3")} style={revealStyle(0)}>
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-900/40 dark:to-slate-800/30">
-          <Settings className="h-5 w-5 text-slate-600 dark:text-slate-400" />
+      <div data-guide="impostazioni-header" className={revealClass(0, "flex items-center justify-between")} style={revealStyle(0)}>
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-900/40 dark:to-slate-800/30">
+            <Settings className="h-5 w-5 text-slate-600 dark:text-slate-400" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Impostazioni</h1>
+            <p className="text-sm text-muted-foreground">
+              Sistema, backup e configurazione
+            </p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Impostazioni</h1>
-          <p className="text-sm text-muted-foreground">
-            Sistema, backup e configurazione
-          </p>
-        </div>
+        <PageVideoGuide />
       </div>
 
       {/* ── Tabs ── */}

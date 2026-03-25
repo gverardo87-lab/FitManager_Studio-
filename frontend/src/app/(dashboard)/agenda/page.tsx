@@ -32,6 +32,7 @@ import {
 } from "@/components/agenda/calendar-setup";
 import { EVENT_CATEGORIES, EVENT_STATUSES } from "@/types/api";
 import { toISOLocal } from "@/lib/format";
+import { PageVideoGuide } from "@/components/guide/PageVideoGuide";
 
 /** Range iniziale: mese corrente +/- 1 mese di buffer. */
 function getInitialRange() {
@@ -282,14 +283,17 @@ export default function AgendaPage() {
             </p>
           </div>
         </div>
-        <Button
-          data-guide="agenda-new-button"
-          onClick={handleNewEvent}
-          className="bg-blue-600 text-white shadow-sm hover:bg-blue-700"
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Nuovo Evento
-        </Button>
+        <div className="flex items-center gap-2">
+          <PageVideoGuide />
+          <Button
+            data-guide="agenda-new-button"
+            onClick={handleNewEvent}
+            className="bg-blue-600 text-white shadow-sm hover:bg-blue-700"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Nuovo Evento
+          </Button>
+        </div>
       </div>
 
       {/* ── Filtri + Legenda ── */}

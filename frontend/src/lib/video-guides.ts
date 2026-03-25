@@ -2,10 +2,11 @@
 // VIDEO GUIDES — Registro video-pillole per guida contestuale
 // File puro dati. Zero React, zero side-effect.
 //
-// Ogni video ha 3 punti di accesso:
-// 1. Pagina /guida — catalogo completo in griglia
-// 2. Bussola (?) — popover contestuale nell'header di ogni sezione
-// 3. Empty state — inline quando la lista è vuota (primo utilizzo)
+// Ogni video ha 4 punti di accesso (docs/VIDEO_GUIDE_STRATEGY.md):
+// L1. Pagina /guida — catalogo completo in griglia (VideoGuideCard)
+// L2. Header pagina — icona contestuale (VideoGuidePopover)
+// L3. Bussola (SpotlightTour) — link "Guarda il video" dentro lo step
+// L4. Command Palette (Ctrl+K) — gruppo "Video Guide"
 // ════════════════════════════════════════════════════════════
 
 export interface VideoGuide {
@@ -51,10 +52,10 @@ export const VIDEO_GUIDES: VideoGuide[] = [
       "Crea un cliente, compila l'anamnesi strutturata e scopri il profilo operativo.",
     src: "/videos/01-primo-cliente/primo-cliente.mp4",
     poster: "/videos/01-primo-cliente/poster.png",
-    durationSec: 45,
+    durationSec: 86,
     pages: ["/clienti"],
     iconName: "user-plus",
-    ready: false,
+    ready: true,
   },
   {
     id: "contratto-rate",

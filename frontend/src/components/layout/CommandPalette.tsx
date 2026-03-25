@@ -39,8 +39,10 @@ import {
   HeartPulse,
   Sparkles,
   Loader2,
+  CirclePlay,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { getReadyVideoGuides } from "@/lib/video-guides";
 
 import {
   Command,
@@ -701,6 +703,7 @@ export function CommandPalette() {
 
   const clients = useMemo(() => clientsData?.items ?? [], [clientsData]);
   const exercises = useMemo(() => exercisesData?.items ?? [], [exercisesData]);
+  const readyVideos = getReadyVideoGuides();
 
   // ── Client/Exercise lookup maps ──
   const clientMap = useMemo(
@@ -1102,6 +1105,28 @@ export function CommandPalette() {
                 )}
 
                 <CommandSeparator />
+
+                {/* ── Video Guide (L4) ── */}
+                {readyVideos.length > 0 && (
+                  <>
+                    <CommandGroup heading="Video Guide">
+                      {readyVideos.map((v) => (
+                        <CommandItem
+                          key={`video-${v.id}`}
+                          value={`video ${v.id} ${v.title} guida come fare ${v.pages.join(" ")}`}
+                          onSelect={() => navigate(`/guida#${v.id}`)}
+                        >
+                          <CirclePlay className="mr-2 h-4 w-4 text-muted-foreground" />
+                          {v.title}
+                          <span className="ml-auto text-xs text-muted-foreground">
+                            {Math.floor(v.durationSec / 60)}:{(v.durationSec % 60).toString().padStart(2, "0")}
+                          </span>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                    <CommandSeparator />
+                  </>
+                )}
 
                 {/* ── Azioni rapide ── */}
                 <CommandGroup heading="Azioni">

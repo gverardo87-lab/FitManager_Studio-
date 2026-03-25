@@ -36,6 +36,7 @@ import { DeleteContractDialog } from "@/components/contracts/DeleteContractDialo
 import { useContracts } from "@/hooks/useContracts";
 import { formatCurrency } from "@/lib/format";
 import { loadFilters, saveFilters, getUrlParams, syncUrlParams } from "@/lib/url-state";
+import { PageVideoGuide } from "@/components/guide/PageVideoGuide";
 import type { ContractListItem, ContractListResponse } from "@/types/api";
 
 // ── KPI Config (pattern CLIENTI_KPI) ──
@@ -304,10 +305,13 @@ export default function ContrattiPage() {
             )}
           </div>
         </div>
-        <Button data-guide="contratti-new-button" onClick={handleNewContract}>
-          <Plus className="h-4 w-4 sm:mr-2" />
-          <span className="hidden sm:inline">Nuovo Contratto</span>
-        </Button>
+        <div className="flex items-center gap-2">
+          <PageVideoGuide />
+          <Button data-guide="contratti-new-button" onClick={handleNewContract}>
+            <Plus className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Nuovo Contratto</span>
+          </Button>
+        </div>
       </div>
 
       {/* ── KPI Cards ── */}

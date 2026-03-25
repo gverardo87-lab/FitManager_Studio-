@@ -2,15 +2,16 @@
 "use client";
 
 /**
- * VideoGuidePopover — bussola (?) contestuale per gli header delle pagine.
+ * VideoGuidePopover — icona contestuale per gli header delle pagine.
  *
- * Mostra un popover con il video-pillola della sezione corrente.
- * Click sull'icona → popover con player inline.
- * Se il video non è pronto, mostra link alla guida.
+ * L2 nella gerarchia (docs/VIDEO_GUIDE_STRATEGY.md):
+ * - Click icona CirclePlay → popover con player inline
+ * - Bottone "Apri nella Guida" → naviga a /guida#id (fullscreen)
+ * - Se video non pronto, mostra link alla guida
  */
 
 import { useState } from "react";
-import { HelpCircle, Play, Clock, BookOpen } from "lucide-react";
+import { CirclePlay, Play, Clock, Maximize2, BookOpen } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -31,7 +32,6 @@ export function VideoGuidePopover({ video }: { video: VideoGuide }) {
   const [playing, setPlaying] = useState(false);
   const [open, setOpen] = useState(false);
 
-  // Reset player quando si chiude il popover
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen);
     if (!isOpen) setPlaying(false);
@@ -42,11 +42,12 @@ export function VideoGuidePopover({ video }: { video: VideoGuide }) {
       <PopoverTrigger asChild>
         <Button
           variant="ghost"
-          size="icon"
-          className="h-8 w-8 text-muted-foreground hover:text-primary"
-          title="Video guida"
+          size="sm"
+          className="gap-1.5 text-muted-foreground hover:text-primary"
+          title={`Video guida: ${video.title}`}
         >
-          <HelpCircle className="h-4 w-4" />
+          <CirclePlay className="h-4 w-4" />
+          <span className="hidden sm:inline text-xs">Guida</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent
@@ -68,34 +69,44 @@ export function VideoGuidePopover({ video }: { video: VideoGuide }) {
         </div>
 
         {video.ready ? (
-          <div className="border-t">
-            {playing ? (
-              <div className="bg-black">
-                {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-                <video
-                  className="w-full"
-                  controls
-                  autoPlay
-                  preload="metadata"
-                >
-                  <source src={video.src} type="video/mp4" />
-                </video>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setPlaying(true)}
-                className="group relative w-full bg-black"
-              >
-                <div className="aspect-video w-full bg-muted/20" />
-                <div className="absolute inset-0 flex items-center justify-center bg-black/30 transition-colors group-hover:bg-black/40">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-lg transition-transform group-hover:scale-110">
-                    <Play className="h-4 w-4 text-zinc-900 ml-0.5" />
-                  </div>
+          <>
+            <div className="border-t">
+              {playing ? (
+                <div className="bg-black">
+                  {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                  <video
+                    className="w-full"
+                    controls
+                    autoPlay
+                    preload="metadata"
+                  >
+                    <source src={video.src} type="video/mp4" />
+                  </video>
                 </div>
-              </button>
-            )}
-          </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setPlaying(true)}
+                  className="group relative w-full bg-black"
+                >
+                  <div className="aspect-video w-full bg-muted/20" />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/30 transition-colors group-hover:bg-black/40">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-lg transition-transform group-hover:scale-110">
+                      <Play className="h-4 w-4 text-zinc-900 ml-0.5" />
+                    </div>
+                  </div>
+                </button>
+              )}
+            </div>
+            <div className="border-t px-3 py-2">
+              <Button asChild variant="ghost" size="sm" className="h-7 w-full gap-1.5 text-xs">
+                <Link href={`/guida#${video.id}`}>
+                  <Maximize2 className="h-3 w-3" />
+                  Apri nella Guida
+                </Link>
+              </Button>
+            </div>
+          </>
         ) : (
           <div className="border-t px-3 py-2">
             <Button asChild variant="ghost" size="sm" className="h-7 w-full gap-1 text-xs">
