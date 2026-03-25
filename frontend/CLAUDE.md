@@ -530,6 +530,49 @@ type NavEntry = NavLink | NavSection;
 Struttura: Dashboard, Agenda (top-level) → Clienti (Clienti, MyPortal) → Contabilita' (Contratti, Cassa, Rinnovi & Incassi) → Allenamento (Esercizi, Schede, Monitoraggio).
 Guida + Impostazioni pinned in fondo. Search trigger sopra la nav. Header con `LogoIcon` SVG su sfondo teal.
 
+## Workout Builder — Full-Screen Layout (ADR-008)
+
+Il builder schede entra in "builder mode": sidebar nascosta, spazio intero per il workspace.
+Flask toggle controlla la visibilita' del SciencePanel. Dettagli in `docs/upgrades/UPG-2026-03-26-builder-fullscreen-science-panel.md`.
+
+### Griglia esercizi (boardView) — regole non negoziabili
+
+```
+Griglia: [nome_con_icone 1fr] [S 44px] [Rip 52px] [Kg 48px] [Rec 44px] [del 24px]
+```
+
+- **Grip**: overlay `absolute -left-1`, visibile solo su `group-hover/row`. MAI colonna griglia.
+- **Info + Safety**: icone inline nella cella nome (prima del testo). MAI colonne separate.
+- **Nome**: `break-words leading-snug` — va a capo se necessario, MAI truncate/ellipsis.
+- **Input**: `h-7 text-xs tabular-nums text-center`. Tutti con `aria-label`.
+- **Delete**: visibile solo su hover, `hover:bg-destructive/10`.
+- **Avviamento/Stretching**: omettono colonne Kg e Rec.
+- **Column header** (S, Rip, Kg, Rec): visibile una volta per sezione, `text-[9px] uppercase`.
+
+### Session card layout
+
+- Griglia `grid-cols-1 lg:grid-cols-2` (sempre, con e senza pannello).
+- Nessun `max-width` sulle card. Nessun `overflow-x-auto`.
+- Bottone "+ Sessione" inline nella griglia.
+
+### Header compatto (2 righe sticky)
+
+- Row 1: back + nome (con nome cliente inline) + Flask toggle + Save.
+- Row 2: client selector + profilo link + obiettivo badge + livello badge + export.
+- Totale ~80px. Sticky `top-0 z-30` con `backdrop-blur`.
+
+### SciencePanel (320px, toggle)
+
+- Visibile quando `showAdvanced = true` + viewport >= lg.
+- Score Ring SVG animato → 4 barre sub-score → Safety → Mappa Anatomica → Equilibrio → Azioni.
+- Debounce analisi: 1s su fingerprint change.
+- Consuma `useAnalyzePlan()` (stesso backend della ScientificAnalysisTab).
+
+### BuilderModeContext
+
+- `enterBuilderMode()` al mount di `schede/[id]`, `exitBuilderMode()` all'unmount.
+- Layout nasconde sidebar desktop e riduce padding main.
+
 ## Exercise Selector — Pattern Professionale
 
 > **Filosofia: INFORMARE, mai LIMITARE.** Per laureati in scienze motorie.
