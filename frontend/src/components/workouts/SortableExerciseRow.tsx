@@ -335,43 +335,45 @@ export function SortableExerciseRow({
 
   // ── Layout board (colonne affiancate): riga singola compressa ──
   // Griglia: grip | info | safety | nome | serie | rip | [kg] | [rec] | delete
+  // Touch target: colonne 28px per grip/info/safety, 28px per delete (icone centrate nel padding)
   // Muscle tags nascosti — visibili nel pannello info espandibile.
-  // Labels colonne nel section header (SessionCard), non ripetute per esercizio.
   if (boardView && blockType === undefined) {
     const gridCols = compact
-      ? "grid-cols-[16px_14px_14px_1fr_44px_52px_20px]"
-      : "grid-cols-[16px_14px_14px_1fr_44px_52px_48px_44px_20px]";
+      ? "grid-cols-[28px_28px_20px_1fr_44px_52px_28px]"
+      : "grid-cols-[28px_28px_20px_1fr_44px_52px_48px_44px_28px]";
 
     return (
       <div ref={setNodeRef} style={style} data-workout-exercise-id={exercise.id}>
         <div
-          className={`group/row grid ${gridCols} gap-1 items-center rounded-md px-1.5 py-1 hover:bg-muted/30 transition-colors ${safetyBg}`}
+          className={`group/row grid ${gridCols} gap-1.5 items-center rounded-md px-1 py-0.5 hover:bg-muted/30 transition-colors ${safetyBg}`}
         >
-          {/* Grip */}
+          {/* Grip — 28px col, icona centrata, area touch piena */}
           <button
             {...attributes}
             {...listeners}
-            className="flex items-center justify-center cursor-grab active:cursor-grabbing text-muted-foreground/20 hover:text-muted-foreground/50 transition-colors"
+            aria-label="Trascina per riordinare"
+            className="h-7 flex items-center justify-center cursor-grab active:cursor-grabbing text-muted-foreground/20 hover:text-muted-foreground/50 transition-colors rounded"
           >
-            <GripVertical className="h-3 w-3" />
+            <GripVertical className="h-3.5 w-3.5" />
           </button>
 
-          {/* Info */}
+          {/* Info — 28px col, area touch piena */}
           <button
             onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
-            className={`flex items-center justify-center transition-colors ${expanded ? "text-primary" : "text-muted-foreground/30 hover:text-muted-foreground/60"}`}
+            aria-label={expanded ? "Chiudi dettagli" : "Apri dettagli esercizio"}
+            className={`h-7 flex items-center justify-center transition-colors rounded hover:bg-muted/40 ${expanded ? "text-primary" : "text-muted-foreground/30 hover:text-muted-foreground/60"}`}
           >
-            <Info className="h-3 w-3" />
+            <Info className="h-3.5 w-3.5" />
           </button>
 
-          {/* Safety */}
+          {/* Safety — 20px col (solo icona, il popover gestisce il touch) */}
           <div className="flex items-center justify-center">
             {safety ? (
               <SafetyPopover
                 safety={safety}
                 exerciseName={exercise.esercizio_nome}
                 exerciseId={exercise.id_esercizio}
-                iconSize="h-3 w-3"
+                iconSize="h-3.5 w-3.5"
                 safetyEntries={safetyEntries}
                 sourceExercise={exerciseData}
                 exerciseMap={exerciseMap}
@@ -386,7 +388,7 @@ export function SortableExerciseRow({
           {/* Nome — single line, truncated */}
           <button
             onClick={onReplace}
-            className="text-left text-xs font-medium truncate hover:text-primary transition-colors min-w-0"
+            className="text-left text-xs font-medium truncate hover:text-primary transition-colors min-w-0 cursor-pointer"
             title={`${exercise.esercizio_nome} — clicca per sostituire`}
           >
             {exercise.esercizio_nome}
@@ -399,14 +401,16 @@ export function SortableExerciseRow({
             onChange={(e) => onUpdate({ serie: parseInt(e.target.value) || 1 })}
             onWheel={(e) => (e.target as HTMLInputElement).blur()}
             min={1} max={10}
-            className="h-6 text-center text-[11px] font-semibold tabular-nums px-0.5"
+            aria-label="Serie"
+            className="h-7 text-center text-xs font-semibold tabular-nums px-0.5"
           />
 
           {/* Rip */}
           <Input
             value={exercise.ripetizioni}
             onChange={(e) => onUpdate({ ripetizioni: e.target.value })}
-            className="h-6 text-center text-[11px] font-medium tabular-nums px-0.5"
+            aria-label="Ripetizioni"
+            className="h-7 text-center text-xs font-medium tabular-nums px-0.5"
             placeholder={compact ? "30s" : "8-12"}
           />
 
@@ -419,7 +423,8 @@ export function SortableExerciseRow({
                 onChange={(e) => onUpdate({ carico_kg: e.target.value ? parseFloat(e.target.value) : null })}
                 onWheel={(e) => (e.target as HTMLInputElement).blur()}
                 min={0} max={500} step={0.5}
-                className="h-6 text-center text-[11px] font-medium tabular-nums px-0.5"
+                aria-label="Carico kg"
+                className="h-7 text-center text-xs font-medium tabular-nums px-0.5"
                 placeholder="—"
               />
               <Input
@@ -428,20 +433,20 @@ export function SortableExerciseRow({
                 onChange={(e) => onUpdate({ tempo_riposo_sec: parseInt(e.target.value) || 0 })}
                 onWheel={(e) => (e.target as HTMLInputElement).blur()}
                 min={0} max={300} step={15}
-                className="h-6 text-center text-[11px] font-medium tabular-nums px-0.5"
+                aria-label="Recupero secondi"
+                className="h-7 text-center text-xs font-medium tabular-nums px-0.5"
               />
             </>
           )}
 
-          {/* Delete */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-5 w-5 text-muted-foreground/0 group-hover/row:text-muted-foreground/30 hover:!text-destructive transition-all"
+          {/* Delete — 28px col, area touch piena */}
+          <button
             onClick={onDelete}
+            aria-label={`Elimina ${exercise.esercizio_nome}`}
+            className="h-7 flex items-center justify-center rounded text-muted-foreground/0 group-hover/row:text-muted-foreground/30 hover:!text-destructive hover:bg-destructive/10 transition-all cursor-pointer"
           >
-            <Trash2 className="h-2.5 w-2.5" />
-          </Button>
+            <Trash2 className="h-3 w-3" />
+          </button>
         </div>
 
         {/* Pannello espandibile: nota + tempo + muscoli + dettagli */}

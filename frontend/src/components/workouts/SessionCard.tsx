@@ -578,12 +578,12 @@ export function SessionCard({
                       {/* Column header — griglia allineata con SortableExerciseRow */}
                       <div className={`grid ${boardView
                         ? (isPrincipale
-                          ? "grid-cols-[16px_14px_14px_1fr_44px_52px_48px_44px_20px]"
-                          : "grid-cols-[16px_14px_14px_1fr_44px_52px_20px]")
+                          ? "grid-cols-[28px_28px_20px_1fr_44px_52px_48px_44px_28px]"
+                          : "grid-cols-[28px_28px_20px_1fr_44px_52px_28px]")
                         : (isPrincipale
                           ? "grid-cols-[20px_14px_1fr_48px_56px_56px_48px_24px]"
                           : "grid-cols-[20px_14px_1fr_48px_56px_56px_48px_24px]")
-                      } gap-1 px-1.5 pb-0.5 text-[8px] font-semibold text-muted-foreground/40 uppercase tracking-widest`}>
+                      } gap-1.5 px-1 pb-0.5 text-[9px] font-semibold text-muted-foreground/40 uppercase tracking-wider`}>
                         <span />
                         <span />
                         {boardView && <span />}
