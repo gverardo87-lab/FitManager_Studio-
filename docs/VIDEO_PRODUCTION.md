@@ -231,14 +231,17 @@ async function selectRadixOption(page, triggerSelector, optionText) {
 }
 ```
 
-### 4.8 Wizard Anamnesi (`/clienti/[id]/anamnesi?startWizard=1`)
+### 4.8 Pagina Anamnesi + Wizard (`/clienti/[id]/anamnesi`)
 
 | Elemento | Selettore | Note |
 |----------|-----------|------|
-| Auto-apertura | URL param `?startWizard=1` | Apre wizard automaticamente |
-| Avanti | `button:has-text("Avanti")` | Naviga al prossimo step |
-| Indietro | `button:has-text("Indietro")` | |
-| Salva | `button:has-text("Salva")` | Solo ultimo step |
+| Bottone "Compila tu" | `button:has-text("Compila tu")` | **Apre il wizard** — NON usare `?startWizard=1` (non affidabile con Playwright) |
+| Bottone "Invia al cliente" | `button:has-text("Invia al cliente")` | Alternativa (portale self-service) |
+| Avanti (dentro wizard) | `button:has-text("Avanti")` | Naviga al prossimo step |
+| Indietro (dentro wizard) | `button:has-text("Indietro")` | |
+| Salva (dentro wizard) | `button:has-text("Salva")` | Solo ultimo step |
+
+**Flusso verificato**: navigare a `/clienti/[id]/anamnesi` → click "Compila tu" → wizard si apre → "Avanti" visibile.
 
 ### 4.9 Selettori "Pagina Pronta" (waitForSelector)
 
