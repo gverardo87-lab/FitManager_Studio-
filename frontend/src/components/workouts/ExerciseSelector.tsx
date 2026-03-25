@@ -347,7 +347,7 @@ export function ExerciseSelector({
         {/* ── Split body ── */}
         <div className="flex-1 flex min-h-0 border-t">
           {/* ── Left panel: exercise list (60%) ── */}
-          <div className="w-full md:w-[60%] flex flex-col min-h-0">
+          <div className="w-full md:w-[60%] flex flex-col min-h-0 overflow-hidden">
             {/* Column header */}
             <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b bg-background/95 backdrop-blur-sm px-5 py-2">
               <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Esercizio</span>
@@ -357,7 +357,7 @@ export function ExerciseSelector({
               </div>
             </div>
 
-            <ScrollArea className="flex-1">
+            <ScrollArea className="flex-1 min-h-0">
               {visibleFiltered.length === 0 && !showRecent ? (
                 <div className="flex flex-col items-center justify-center py-16 gap-2">
                   <Dumbbell className="h-8 w-8 text-muted-foreground/20" />
@@ -539,8 +539,8 @@ function ExerciseDetailSide({
   onSelectById: (id: number) => void;
 }) {
   return (
-    <div className="flex flex-col h-full">
-      <ScrollArea className="flex-1">
+    <div className="flex flex-col h-full min-h-0 overflow-hidden">
+      <ScrollArea className="flex-1 min-h-0">
         <div className="p-5 space-y-4">
           {/* Identity */}
           <div>
