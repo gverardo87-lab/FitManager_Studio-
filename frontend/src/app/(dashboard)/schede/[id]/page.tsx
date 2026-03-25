@@ -190,7 +190,7 @@ export default function SchedaDetailPage({ params }: { params: Promise<{ id: str
         {/* ── Session cards (griglia max 2 colonne, nomi sempre leggibili) ── */}
         {effectiveView === "sessioni" && (
           <div className="flex-1">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            <div className={`grid gap-3 ${showAdvanced ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-2"}`}>
               {builder.sessions.map((session) => (
                 <SessionCard key={session.id} session={session} boardView safetyMap={safetyEntries} exerciseMap={exerciseMap} schedaId={id} parentFrom={fromParam} oneRMByPattern={oneRMByPattern}
                   onUpdateSession={handlers.handleUpdateSession} onDeleteSession={handlers.handleDeleteSession} onDuplicateSession={handlers.handleDuplicateSession}
