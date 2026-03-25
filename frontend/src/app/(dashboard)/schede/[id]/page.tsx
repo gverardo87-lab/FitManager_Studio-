@@ -193,7 +193,7 @@ export default function SchedaDetailPage({ params }: { params: Promise<{ id: str
         <div className="space-y-3">
             {/* Safety card compatta — visibile solo sotto xl (sopra xl c'è il SciencePanel) */}
             {safetyMap && safetyMap.condition_count > 0 && (
-              <div className="xl:hidden">
+              <div className="lg:hidden">
                 <BuilderSafetyCard safetyMap={safetyMap} safetyStats={safetyStats} safetyConditionStats={safetyConditionStats} groupedConditions={groupedConditions} uniqueConditionsForMap={uniqueConditionsForMap} clientId={plan.id_cliente} onNavigateToClient={(cid) => guardedNavigate(`/clienti/${cid}`)} />
               </div>
             )}

@@ -184,7 +184,7 @@ export function SciencePanel({
   const hasExercises = sessions.some(s => s.esercizi.length > 0 || s.blocchi.some(b => b.esercizi.length > 0));
 
   return (
-    <div className="hidden xl:flex xl:w-80 xl:flex-col xl:border-l xl:bg-muted/20 dark:xl:bg-muted/10 overflow-hidden">
+    <div className="hidden lg:flex lg:w-80 lg:flex-col lg:border-l lg:bg-muted/20 dark:lg:bg-muted/10 overflow-hidden">
       <div className="flex items-center gap-2 px-4 py-3 border-b bg-background/80">
         <Activity className="h-4 w-4 text-primary" />
         <span className="text-sm font-semibold">Analisi Live</span>
