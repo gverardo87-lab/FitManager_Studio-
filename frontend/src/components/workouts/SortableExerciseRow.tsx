@@ -333,66 +333,69 @@ export function SortableExerciseRow({
   // Indicatore contenuto secondario (nota o tempo compilati)
   const hasSecondaryContent = !!exercise.note || !!exercise.tempo_esecuzione;
 
-  // ── Layout board (colonne affiancate): riga singola compressa ──
-  // Griglia: grip | info | safety | nome | serie | rip | [kg] | [rec] | delete
-  // Touch target: colonne 28px per grip/info/safety, 28px per delete (icone centrate nel padding)
-  // Muscle tags nascosti — visibili nel pannello info espandibile.
+  // ── Layout board: nome con icone inline, grip su hover overlay ──
+  // Griglia: [nome_con_icone] [S] [Rip] [Kg?] [Rec?] [delete]
+  // Grip appare su hover come overlay a sinistra (fuori dalla griglia).
+  // Info + Safety inline prima del testo nome → max spazio per il nome.
   if (boardView && blockType === undefined) {
     const gridCols = compact
-      ? "grid-cols-[28px_28px_20px_1fr_44px_52px_28px]"
-      : "grid-cols-[28px_28px_20px_1fr_44px_52px_48px_44px_28px]";
+      ? "grid-cols-[1fr_44px_52px_24px]"
+      : "grid-cols-[1fr_44px_52px_48px_44px_24px]";
 
     return (
       <div ref={setNodeRef} style={style} data-workout-exercise-id={exercise.id}>
         <div
-          className={`group/row grid ${gridCols} gap-1.5 items-center rounded-md px-1 py-0.5 hover:bg-muted/30 transition-colors ${safetyBg}`}
+          className={`group/row relative grid ${gridCols} gap-1.5 items-center rounded-md pl-2 pr-1 py-1 hover:bg-muted/30 transition-colors ${safetyBg}`}
         >
-          {/* Grip — 28px col, icona centrata, area touch piena */}
+          {/* Grip — overlay a sinistra, visibile su hover */}
           <button
             {...attributes}
             {...listeners}
             aria-label="Trascina per riordinare"
-            className="h-7 flex items-center justify-center cursor-grab active:cursor-grabbing text-muted-foreground/20 hover:text-muted-foreground/50 transition-colors rounded"
+            className="absolute -left-1 top-1/2 -translate-y-1/2 h-7 w-5 flex items-center justify-center cursor-grab active:cursor-grabbing text-muted-foreground/0 group-hover/row:text-muted-foreground/30 hover:!text-muted-foreground/60 transition-colors rounded"
           >
             <GripVertical className="h-3.5 w-3.5" />
           </button>
 
-          {/* Info — 28px col, area touch piena */}
-          <button
-            onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
-            aria-label={expanded ? "Chiudi dettagli" : "Apri dettagli esercizio"}
-            className={`h-7 flex items-center justify-center transition-colors rounded hover:bg-muted/40 ${expanded ? "text-primary" : "text-muted-foreground/30 hover:text-muted-foreground/60"}`}
-          >
-            <Info className="h-3.5 w-3.5" />
-          </button>
+          {/* Nome con icone info + safety inline */}
+          <div className="flex items-center gap-1 min-w-0">
+            {/* Info inline */}
+            <button
+              onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
+              aria-label={expanded ? "Chiudi dettagli" : "Apri dettagli esercizio"}
+              className={`shrink-0 h-5 w-5 flex items-center justify-center rounded transition-colors ${expanded ? "text-primary" : "text-muted-foreground/25 hover:text-muted-foreground/60"}`}
+            >
+              <Info className="h-3 w-3" />
+            </button>
 
-          {/* Safety — 20px col (solo icona, il popover gestisce il touch) */}
-          <div className="flex items-center justify-center">
+            {/* Safety inline */}
             {safety ? (
-              <SafetyPopover
-                safety={safety}
-                exerciseName={exercise.esercizio_nome}
-                exerciseId={exercise.id_esercizio}
-                iconSize="h-3.5 w-3.5"
-                safetyEntries={safetyEntries}
-                sourceExercise={exerciseData}
-                exerciseMap={exerciseMap}
-                onQuickReplace={onQuickReplace}
-                onResolve={onReplace}
-              />
+              <span className="shrink-0">
+                <SafetyPopover
+                  safety={safety}
+                  exerciseName={exercise.esercizio_nome}
+                  exerciseId={exercise.id_esercizio}
+                  iconSize="h-3 w-3"
+                  safetyEntries={safetyEntries}
+                  sourceExercise={exerciseData}
+                  exerciseMap={exerciseMap}
+                  onQuickReplace={onQuickReplace}
+                  onResolve={onReplace}
+                />
+              </span>
             ) : hasSecondaryContent ? (
-              <span className="h-1.5 w-1.5 rounded-full bg-primary/50" />
+              <span className="shrink-0 h-1.5 w-1.5 rounded-full bg-primary/50" />
             ) : null}
-          </div>
 
-          {/* Nome — wrap instead of truncate so it's always readable */}
-          <button
-            onClick={onReplace}
-            className="text-left text-xs font-medium hover:text-primary transition-colors min-w-0 cursor-pointer break-words leading-snug"
-            title={`${exercise.esercizio_nome} — clicca per sostituire`}
-          >
-            {exercise.esercizio_nome}
-          </button>
+            {/* Nome */}
+            <button
+              onClick={onReplace}
+              className="text-left text-xs font-medium hover:text-primary transition-colors min-w-0 cursor-pointer break-words leading-snug"
+              title={`${exercise.esercizio_nome} — clicca per sostituire`}
+            >
+              {exercise.esercizio_nome}
+            </button>
+          </div>
 
           {/* Serie */}
           <Input
@@ -439,7 +442,7 @@ export function SortableExerciseRow({
             </>
           )}
 
-          {/* Delete — 28px col, area touch piena */}
+          {/* Delete — visibile su hover */}
           <button
             onClick={onDelete}
             aria-label={`Elimina ${exercise.esercizio_nome}`}
