@@ -241,18 +241,20 @@ export default function SchedaDetailPage({ params }: { params: Promise<{ id: str
         />
       </div>
 
-      {/* ── Science Panel (fisso a destra, visibile da lg in su) ── */}
-      <SciencePanel
-        sessions={builder.sessions}
-        exerciseMap={exerciseMap}
-        livello={plan.livello}
-        obiettivo={plan.obiettivo}
-        sessioniPerSettimana={plan.sessioni_per_settimana}
-        safetyMap={safetyMap}
-        safetyEntries={safetyEntries}
-        clientSesso={clientSesso}
-        clientDataNascita={clientDataNascita}
-      />
+      {/* ── Science Panel (visibile da lg + quando showAdvanced è ON) ── */}
+      {showAdvanced && (
+        <SciencePanel
+          sessions={builder.sessions}
+          exerciseMap={exerciseMap}
+          livello={plan.livello}
+          obiettivo={plan.obiettivo}
+          sessioniPerSettimana={plan.sessioni_per_settimana}
+          safetyMap={safetyMap}
+          safetyEntries={safetyEntries}
+          clientSesso={clientSesso}
+          clientDataNascita={clientDataNascita}
+        />
+      )}
     </div>
   );
 }
