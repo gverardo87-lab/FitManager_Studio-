@@ -287,7 +287,38 @@ Submit contratto                  → redirect → /contratti/[id]
 
 ---
 
-## 6. Pipeline Produzione (5 fasi)
+## 6. Pipeline Produzione (5 fasi + manifest)
+
+### Architettura: Manifest SSoT
+
+Ogni video ha un `manifest.json` che fa da **Single Source of Truth** per il timing.
+Il manifest elimina tre classi di bug ricorrenti:
+- **Clip corto**: impossibile — Playwright legge `vo_duration + gap` dal manifest e aspetta abbastanza
+- **Trim sbagliato**: impossibile — `trim_start` misurato durante registrazione, non stimato
+- **Offset sfasato**: impossibile — montaggio calcola offset da durate reali trimmate
+
+```
+VO generato → manifest-sync.js (misura durate) → manifest.json (SSoT)
+                                                        |
+                                          +-------------+-------------+
+                                          |                           |
+                                    Playwright LEGGE            montage.js LEGGE
+                                    vo_duration + gap            trim + durate reali
+                                    → wait VO-locked             → zero hardcode
+```
+
+**Comandi**:
+```bash
+node tools/video/manifest-sync.js data/videos/<slug>   # misura VO + clip, aggiorna manifest
+node tools/video/montage.js data/videos/<slug>          # montaggio deterministico da manifest
+```
+
+**Infrastruttura** (`tools/video/`):
+| File | Ruolo |
+|------|-------|
+| `lib.js` | SSoT percorsi FFmpeg, misurazione durate, manifest I/O, validazione, helper registrazione |
+| `manifest-sync.js` | Scansiona VO + clip su disco, misura durate reali, aggiorna manifest |
+| `montage.js` | Montaggio deterministico: GATE validazione → trim → xfade → VO sync → mix |
 
 ### Fase 1 — Script editoriale
 **Input**: idea del video
@@ -301,15 +332,16 @@ Regole:
 - Ogni scena ha UN'AZIONE visibile
 - Il VO dice quello che il video mostra (MAI incongruenze)
 
-### Fase 2 — Asset audio
+### Fase 2 — Asset audio + manifest
 **Input**: script approvato
-**Output**: VO per scena (`scenes/01_nome.mp3`) + musica (`music/background.mp3`)
+**Output**: VO per scena (`scenes/01_nome.mp3`) + musica (`music/background.mp3`) + `manifest.json`
 
 Procedura:
-1. Genera ogni VO in sequenza (max 2 parallele ElevenLabs) con Python urllib
-2. Misura durate reali con FFprobe
-3. Aggiorna timeline nello script con durate reali
-4. Genera musica (3 parti da 22s → concat → fade in/out)
+1. Crea `manifest.json` con struttura scene (nome, VO file, gap, page_ready_selector)
+2. Genera ogni VO in sequenza (max 2 parallele ElevenLabs) con Python urllib
+3. Genera musica (3 parti da 22s → concat → fade in/out)
+4. **`node tools/video/manifest-sync.js <dir>`** — misura durate reali, aggiorna manifest
+5. Verifica report: tutti i VO hanno duration misurata
 
 ### Fase 3 — Pre-flight interazione
 **Input**: script con azioni Playwright
@@ -325,41 +357,70 @@ Procedura:
 5. Se un test fallisce, correggi il selettore e ri-testa
 6. Solo quando TUTTI i test passano, procedi alla fase 4
 
-### Fase 4 — Registrazione video
-**Input**: test passati, durate VO note
-**Output**: clip per scena (`clips/01_nome.webm`)
+### Fase 4 — Registrazione video (VO-locked)
+**Input**: pre-flight passato, manifest con durate VO
+**Output**: clip per scena (`clips/01_nome.webm`) + manifest aggiornato con `trim_start` e `clip_duration`
 
 Regole:
 - Browser `--start-maximized` + `viewport: null`
 - Auth state pre-salvato (login una volta sola)
-- Nessun limite di tempo — registra l'azione completa
 - SlowMo 80ms per leggibilita' visiva
 - Ogni scena = un browser context separato (cleanup automatico)
 - Se una scena fallisce, ri-registra SOLO quella
 
-### Fase 5 — Montaggio
-**Input**: clip + VO + musica
+**VO-locked timing** (il cuore del metodo):
+```javascript
+const { getSceneTiming, updateRecording } = require("../../tools/video/lib");
+const timing = getSceneTiming(videoDir, "04_anamnesi");
+// timing.minDuration = vo_duration + gap + 0.5s buffer
+
+const recordingStart = Date.now();
+// ... naviga alla pagina ...
+await page.waitForSelector(selector, { timeout: 10000 });
+const pageReady = Date.now();
+// ... esegui azioni UI ...
+const elapsed = (Date.now() - pageReady) / 1000;
+if (elapsed < timing.minDuration) {
+  await page.waitForTimeout((timing.minDuration - elapsed) * 1000);
+}
+// ... chiudi context ...
+
+// Aggiorna manifest con timing MISURATO (non stimato)
+updateRecording(videoDir, "04_anamnesi", {
+  trimStart: (pageReady - recordingStart) / 1000
+});
+```
+
+**Tempi caricamento dev** (porta 3001, NON installer):
+- Navigazione pagina: 1.0-2.0s (variabile)
+- `trim_start` viene MISURATO dal timestamp `pageReady - recordingStart`
+- MAI hardcodare trim — i tempi cambiano tra sessioni
+
+### Fase 5 — Montaggio deterministico
+**Input**: manifest.json completo (VO + clip + trim misurati)
 **Output**: `<slug>.mp4` (H.264 + AAC, 1440x900, 30fps)
 
-Pipeline FFmpeg:
-1. **Trim**: rimuovi bianchi caricamento iniziali da ogni clip (`-ss <trim>`)
-2. **Taglia**: durata clip = durata VO + gap (`-t <durata>`)
-3. **Converti**: webm → mp4 H.264 (`-c:v libx264 -preset medium -crf 20 -pix_fmt yuv420p`)
-4. **Crossfade**: concatena con `xfade=transition=fade:duration=0.4`
-5. **VO sync**: posiziona ogni VO al suo offset con `adelay`
-6. **Mix**: video + VO + musica (`amix`, musica a 0.18)
-7. **Output**: `-movflags +faststart`
-
-Parametri fissi:
+```bash
+node tools/video/manifest-sync.js data/videos/<slug>   # 1. Risincronizza durate
+node tools/video/montage.js data/videos/<slug>          # 2. Monta (con GATE validazione)
 ```
-Risoluzione:  1440x900
-FPS:          30
-Video codec:  libx264, preset medium, CRF 20
-Audio codec:  AAC 192kbps
-Crossfade:    0.4s fade
-Musica volume: 0.18
-Musica fade in: 2s
-Musica fade out: 3s (ultimi 3s)
+
+Il montaggio:
+1. **GATE**: valida manifest — blocca se dati incompleti o clip corti
+2. **TRIM**: `-ss trim_start -t (vo_duration + gap)` per ogni clip
+3. **XFADE**: crossfade con offset da durate REALI trimmate (mai da target stimati)
+4. **VO SYNC**: `adelay` con offset da durate REALI (allineamento perfetto)
+5. **MIX**: video + VO + musica (volume, fade in/out da manifest)
+
+Parametri fissi (nel manifest, non hardcodati nello script):
+```json
+{
+  "resolution": [1440, 900],
+  "fps": 30,
+  "codec": { "video": "libx264", "crf": 20, "audio": "aac", "audio_bitrate": "192k" },
+  "crossfade_duration": 0.4,
+  "music": { "volume": 0.18, "fade_in": 2.0, "fade_out": 3.0 }
+}
 ```
 
 ---
@@ -367,18 +428,24 @@ Musica fade out: 3s (ultimi 3s)
 ## 7. Directory Structure
 
 ```
+tools/video/                         # Infrastruttura (condivisa tra tutti i video)
+├── lib.js                           # SSoT percorsi, FFprobe, manifest I/O, validazione
+├── manifest-sync.js                 # Scansiona VO + clip, misura durate, aggiorna manifest
+└── montage.js                       # Montaggio deterministico da manifest
+
 data/videos/
-├── voce-daniel-reference.mp3       # Campione voce definitiva
-├── musica-reference-acoustic.mp3   # Campione musica definitiva
+├── voce-daniel-reference.mp3        # Campione voce definitiva
+├── musica-reference-acoustic.mp3    # Campione musica definitiva
 ├── <slug>/
-│   ├── scenes/           # VO per scena (01_hook.mp3, 02_cliente.mp3, ...)
-│   ├── clips/            # Video clip per scena (01_hook.webm, ...)
-│   ├── cards/            # Title cards (intro.png, outro.png)
-│   ├── music/            # Background music (background.mp3, parti)
-│   ├── auth-state.json   # Cookie auth Playwright (non committare)
-│   └── <slug>.mp4        # OUTPUT FINALE
+│   ├── manifest.json                # SSoT timing (durate VO, trim, gap, parametri video)
+│   ├── scenes/                      # VO per scena (01_hook.mp3, 02_cliente.mp3, ...)
+│   ├── clips/                       # Video clip per scena (01_hook.webm, ...)
+│   ├── cards/                       # Title cards (intro.png, outro.png)
+│   ├── music/                       # Background music (background.mp3, parti)
+│   ├── auth-state.json              # Cookie auth Playwright (non committare)
+│   └── <slug>.mp4                   # OUTPUT FINALE
 └── exports/
-    └── <slug>-<formato>.mp4  # Tagli (30s, 60s)
+    └── <slug>-<formato>.mp4         # Tagli (30s, 60s)
 ```
 
 ---

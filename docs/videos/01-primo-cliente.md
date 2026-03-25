@@ -163,29 +163,65 @@ Wait rate visibili → pausa
 
 ---
 
-## SCENA 04 — Anamnesi (VO: 11.3s)
+## SCENA 04 — Anamnesi (VO: DA RIGENERARE)
 
-### VO (testo esatto)
-"Contratto fatto. La checklist dice: anamnesi. Condizioni mediche, stile di vita, obiettivi. Ogni dato alimenta lo Scudo Clinico."
+### VO (testo esatto — DEFINITIVO)
+"Contratto fatto. Ora l'anamnesi: sei sezioni, arrivi alla salute. Schiena, ginocchia, ernia lombare. Questi dati li ritrovi dopo nello Scudo Clinico."
 
 ### Timeline video
 
 | Secondo | Azione video | Sync con VO |
 |---------|-------------|-------------|
-| 0.0-2.0 | Profilo cliente, checklist 1/5 (Contratto ✓), hero card "Anamnesi" rosa | "Contratto fatto. La checklist dice: anamnesi." |
-| 2.0-3.5 | Click "Compila" → wizard anamnesi si apre | (transizione) |
-| 3.5-5.5 | Wizard step 1: compilazione dati base (data nascita, sesso, altezza, peso) | "Condizioni mediche," |
-| 5.5-7.0 | Avanza allo step condizioni mediche | "stile di vita," |
-| 7.0-9.0 | Seleziona "Ernia cervicale" + "Dolore spalla destra" | "obiettivi." |
-| 9.0-11.0 | Badge rossi condizioni visibili | "Ogni dato alimenta lo Scudo Clinico." |
+| 0.0-2.0 | Profilo cliente, checklist 1/5 (Contratto ✓), hero card "Anamnesi" rosa | "Contratto fatto." |
+| 2.0-3.0 | Click "Compila" → pagina anamnesi → click "Compila tu" | "Ora l'anamnesi:" |
+| 3.0-5.0 | Wizard aperto → click "Avanti" ×3 rapido (step 1→2→3→4) | "sei sezioni, arrivi alla salute." |
+| 5.0-7.0 | Step 4 "Salute" visibile → click "Schiena" + "Ginocchia" | "Schiena, ginocchia," |
+| 7.0-9.0 | Switch Patologie ON → click "Ernie" + Switch Infortuni ON → type "Ernia lombare L4-L5" | "ernia lombare." |
+| 9.0-11.0 | Pausa: checkbox e switch compilati visibili | "Questi dati li ritrovi dopo" |
+| 11.0-12.9 | Click "Salva" → toast | "nello Scudo Clinico." |
+
+### Dati da compilare (Step 4 — Salute)
+- **Dolori**: schiena ✓, ginocchia ✓ (checkbox nella griglia)
+- **Infortuni**: switch ON → textarea "Ernia lombare L4-L5"
+- **Patologie**: switch ON → checkbox "ernie" ✓, "articolari" ✓
+- **Limitazioni mediche**: switch ON → "Evitare carichi assiali pesanti"
+
+Queste condizioni attivano il Safety Engine nel workout builder:
+- "ernie" → avvisi su squat pesante, deadlift, good morning
+- "articolari" + "ginocchia" → avvisi su leg extension, squat profondo
+- "schiena" → avvisi su remata pesante, hyperextension
 
 ### Registrazione Playwright
 ```
-goto profilo → click "Compila" (checklist anamnesi)
-Wizard: compila step 1 (dati base)
-Avanti → step condizioni
-Seleziona condizioni → badge rossi visibili
+goto /clienti/[id] → checklist → click "Compila"
+→ pagina anamnesi → click "Compila tu" → wizard aperto (step 1)
+→ click "Avanti" × 3 (step 1→2→3→4)
+→ Step 4 "Salute":
+   - click div con "Schiena" (checkbox dolori)
+   - click div con "Ginocchia" (checkbox dolori)
+   - click Switch "Hai avuto infortuni importanti?" → ON
+   - fill textarea "Ernia lombare L4-L5"
+   - click Switch "Hai patologie diagnosticate?" → ON
+   - click div con "Ernie" (checkbox patologie)
+   - click div con "Problemi articolari" (checkbox patologie)
+   - click Switch "Hai limitazioni mediche?" → ON
+   - fill textarea "Evitare carichi assiali pesanti"
+→ click "Avanti" × 2 (step 5, 6 — skip)
+→ click "Salva"
 ```
+
+### Selettori Step 4 (verificare in pre-flight)
+| Elemento | Selettore | Note |
+|----------|-----------|------|
+| Checkbox "Schiena" | `div:has-text("Schiena")` dentro griglia dolori | Click sul div, non sul checkbox |
+| Checkbox "Ginocchia" | `div:has-text("Ginocchia")` | |
+| Switch Infortuni | Switch dopo "Hai avuto infortuni importanti?" | |
+| Textarea infortuni | `textarea` dentro QuestionToggle infortuni | `placeholder="Es. fratture..."` |
+| Switch Patologie | Switch dopo "Hai patologie diagnosticate?" | |
+| Checkbox "Ernie" | `div:has-text("Ernie")` dentro griglia patologie | Appare solo dopo switch ON |
+| Checkbox "Articolari" | `div:has-text("Problemi articolari")` | |
+| Switch Limitazioni | Switch dopo "Hai limitazioni mediche" | |
+| Textarea limitazioni | `textarea` dentro QuestionToggle limitazioni | |
 
 ---
 
@@ -235,12 +271,12 @@ Scroll lento per mostrare i pill
 | 02 | Crea cliente | 5.6s | 2.0s | 7.6s |
 | 03a | Contratto form | ~8.0s | 2.0s | ~10.0s |
 | 03b | Genera rate | ~7.3s | 2.0s | ~9.3s |
-| 04 | Anamnesi | 11.3s | 1.0s | 12.3s |
+| 04 | Anamnesi (6 step + salute) | 12.9s | 2.0s | 14.9s |
 | 05 | Profilo 2/5 | 8.4s | 0.5s | 8.9s |
 | 06 | CTA | 6.2s | 1.8s | 8.0s |
-| | **TOTALE** | **~54s** | | **~64s** |
+| | **TOTALE** | **~61s** | | **~71s** |
 
-Con crossfade 0.4s × 6 transizioni = -2.4s → **~61s** finale.
+Con crossfade 0.4s × 6 transizioni = -2.4s → **~69s** finale.
 Il VO viene tagliato in montaggio: 03_contratto.mp3 viene splittato in due parti
 allineate a 03a e 03b.
 

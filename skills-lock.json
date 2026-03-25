@@ -26,6 +26,11 @@
       "sourceType": "github",
       "computedHash": "ff602214356ac15c65aa8702aff5a2aedaf958d66d301e3279f1dfeaf18c94e9"
     },
+    "videoagent-audio-studio": {
+      "source": "pexoai/pexo-skills",
+      "sourceType": "github",
+      "computedHash": "eb5b18a90c7edcf6026cd085af0fc1b888eb7764b6b5b4d5c8c99441742f5efb"
+    },
     "web-design-guidelines": {
       "source": "vercel-labs/agent-skills",
       "sourceType": "github",
