@@ -34,6 +34,7 @@ import type {
   TSDettaglioMuscolo,
   TSDettaglioRapporto,
 } from "@/types/api";
+import { AnatomicalMuscleMap } from "./AnatomicalMuscleMap";
 import type { SessionCardData } from "./SessionCard";
 
 // ════════════════════════════════════════════════════════════
@@ -253,15 +254,24 @@ export function SciencePanel({
               </PanelSection>
             )}
 
-            {/* 3. COPERTURA MUSCOLARE */}
+            {/* 3. COPERTURA MUSCOLARE + MAPPA ANATOMICA */}
             {analysis && (
-              <PanelSection title="Muscoli" icon={Activity} defaultOpen={false}
+              <PanelSection title="Muscoli" icon={Activity} defaultOpen
                 badge={`${analysis.volume.muscoli_sotto_mev.length} deficit`}
                 badgeColor={analysis.volume.muscoli_sotto_mev.length > 0 ? "amber" : "green"}>
-                <div className="space-y-1">
-                  {analysis.dettaglio_muscoli.map((m) => (
-                    <MuscleRow key={m.muscolo} muscle={m} />
-                  ))}
+                <div className="space-y-3">
+                  {/* Mappa anatomica visiva — anteriore + posteriore */}
+                  <div className="flex justify-center">
+                    <div className="w-full max-w-[280px]">
+                      <AnatomicalMuscleMap dettaglioMuscoli={analysis.dettaglio_muscoli} />
+                    </div>
+                  </div>
+                  {/* Lista dettaglio muscoli */}
+                  <div className="space-y-1">
+                    {analysis.dettaglio_muscoli.map((m) => (
+                      <MuscleRow key={m.muscolo} muscle={m} />
+                    ))}
+                  </div>
                 </div>
               </PanelSection>
             )}
