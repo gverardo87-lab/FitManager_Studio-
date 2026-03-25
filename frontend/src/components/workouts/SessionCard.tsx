@@ -575,26 +575,30 @@ export function SessionCard({
                   {/* Exercise rows */}
                   {exercises.length > 0 && (
                     <>
-                      {/* Column header — nascosto in board view (spazio troppo stretto) */}
-                      {!boardView && (
-                        <div className={`grid ${isPrincipale
-                          ? "grid-cols-[20px_14px_1fr_44px_52px_52px_44px_24px]"
-                          : "grid-cols-[20px_14px_1fr_44px_52px_24px]"
-                        } gap-1 px-1 pb-0.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wider`}>
-                          <span />
-                          <span />
-                          <span>Esercizio</span>
-                          <span className="text-center">Serie</span>
-                          <span className="text-center">Rip</span>
-                          {isPrincipale && (
-                            <>
-                              <span className="text-center">Kg</span>
-                              <span className="text-center">Riposo</span>
-                            </>
-                          )}
-                          <span />
-                        </div>
-                      )}
+                      {/* Column header — griglia allineata con SortableExerciseRow */}
+                      <div className={`grid ${boardView
+                        ? (isPrincipale
+                          ? "grid-cols-[16px_14px_14px_1fr_44px_52px_48px_44px_20px]"
+                          : "grid-cols-[16px_14px_14px_1fr_44px_52px_20px]")
+                        : (isPrincipale
+                          ? "grid-cols-[20px_14px_1fr_48px_56px_56px_48px_24px]"
+                          : "grid-cols-[20px_14px_1fr_48px_56px_56px_48px_24px]")
+                      } gap-1 px-1.5 pb-0.5 text-[8px] font-semibold text-muted-foreground/40 uppercase tracking-widest`}>
+                        <span />
+                        <span />
+                        {boardView && <span />}
+                        <span />
+                        <span className="text-center">S</span>
+                        <span className="text-center">Rip</span>
+                        {isPrincipale && (
+                          <>
+                            <span className="text-center">Kg</span>
+                            <span className="text-center">Rec</span>
+                          </>
+                        )}
+                        {!boardView && !isPrincipale && <><span /><span /></>}
+                        <span />
+                      </div>
 
                       <SortableContext
                         items={exercises.map((e) => e.id)}

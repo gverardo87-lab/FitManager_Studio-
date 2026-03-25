@@ -333,30 +333,40 @@ export function SortableExerciseRow({
   // Indicatore contenuto secondario (nota o tempo compilati)
   const hasSecondaryContent = !!exercise.note || !!exercise.tempo_esecuzione;
 
-  // ── Layout board (colonne affiancate): 2 righe compatte ──
+  // ── Layout board (colonne affiancate): riga singola compressa ──
+  // Griglia: grip | info | safety | nome | serie | rip | [kg] | [rec] | delete
+  // Muscle tags nascosti — visibili nel pannello info espandibile.
+  // Labels colonne nel section header (SessionCard), non ripetute per esercizio.
   if (boardView && blockType === undefined) {
+    const gridCols = compact
+      ? "grid-cols-[16px_14px_14px_1fr_44px_52px_20px]"
+      : "grid-cols-[16px_14px_14px_1fr_44px_52px_48px_44px_20px]";
+
     return (
       <div ref={setNodeRef} style={style} data-workout-exercise-id={exercise.id}>
         <div
-          className={`group/row rounded-lg px-2 py-1.5 hover:bg-muted/30 transition-all duration-150 border border-transparent hover:border-border/20 hover:shadow-sm ${safetyBg}`}
+          className={`group/row grid ${gridCols} gap-1 items-center rounded-md px-1.5 py-1 hover:bg-muted/30 transition-colors ${safetyBg}`}
         >
-          {/* Riga 1: grip + info + safety + nome + dot + delete */}
-          <div className="flex items-center gap-1 min-w-0">
-            <button
-              {...attributes}
-              {...listeners}
-              className="shrink-0 flex items-center justify-center cursor-grab active:cursor-grabbing text-muted-foreground/30 hover:text-muted-foreground/60 transition-colors"
-            >
-              <GripVertical className="h-3 w-3" />
-            </button>
-            {/* Info icon — espande pannello unificato */}
-            <button
-              onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
-              className={`shrink-0 flex items-center justify-center transition-colors ${expanded ? "text-primary" : "text-muted-foreground/40 hover:text-muted-foreground"}`}
-            >
-              <Info className="h-3 w-3" />
-            </button>
-            {safety && (
+          {/* Grip */}
+          <button
+            {...attributes}
+            {...listeners}
+            className="flex items-center justify-center cursor-grab active:cursor-grabbing text-muted-foreground/20 hover:text-muted-foreground/50 transition-colors"
+          >
+            <GripVertical className="h-3 w-3" />
+          </button>
+
+          {/* Info */}
+          <button
+            onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
+            className={`flex items-center justify-center transition-colors ${expanded ? "text-primary" : "text-muted-foreground/30 hover:text-muted-foreground/60"}`}
+          >
+            <Info className="h-3 w-3" />
+          </button>
+
+          {/* Safety */}
+          <div className="flex items-center justify-center">
+            {safety ? (
               <SafetyPopover
                 safety={safety}
                 exerciseName={exercise.esercizio_nome}
@@ -368,98 +378,76 @@ export function SortableExerciseRow({
                 onQuickReplace={onQuickReplace}
                 onResolve={onReplace}
               />
-            )}
-            <div className="flex-1 min-w-0">
-              <button
-                onClick={onReplace}
-                className="w-full text-left text-[13px] font-medium truncate hover:text-primary transition-colors leading-snug"
-                title={`${exercise.esercizio_nome} — clicca per sostituire`}
-              >
-                {exercise.esercizio_nome}
-              </button>
-              {exerciseData?.muscoli_primari && exerciseData.muscoli_primari.length > 0 && (
-                <div className="flex gap-0.5 mt-0.5 flex-wrap">
-                  {exerciseData.muscoli_primari.slice(0, 2).map((m) => (
-                    <span key={m} className={`text-[8px] font-semibold rounded px-1 py-px leading-tight tracking-wide uppercase ${MUSCLE_COLORS[m] ?? "bg-muted/30 text-muted-foreground/60"}`}>
-                      {MUSCLE_LABELS[m] ?? m}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-            {hasSecondaryContent && (
-              <span className="shrink-0 h-1.5 w-1.5 rounded-full bg-primary/60" />
-            )}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-4 w-4 shrink-0 text-muted-foreground/0 group-hover/row:text-muted-foreground/40 hover:!text-destructive transition-all duration-150"
-              onClick={onDelete}
-            >
-              <Trash2 className="h-2.5 w-2.5" />
-            </Button>
+            ) : hasSecondaryContent ? (
+              <span className="h-1.5 w-1.5 rounded-full bg-primary/50" />
+            ) : null}
           </div>
-          {/* Riga 2: serie + rip + kg + riposo con micro-label */}
-          <div className="flex items-end gap-2.5 ml-4 mt-2">
-            <div className="flex flex-col items-center gap-1">
-              <span className="text-[8px] text-muted-foreground/50 uppercase tracking-widest leading-none font-semibold">Serie</span>
+
+          {/* Nome — single line, truncated */}
+          <button
+            onClick={onReplace}
+            className="text-left text-xs font-medium truncate hover:text-primary transition-colors min-w-0"
+            title={`${exercise.esercizio_nome} — clicca per sostituire`}
+          >
+            {exercise.esercizio_nome}
+          </button>
+
+          {/* Serie */}
+          <Input
+            type="number"
+            value={exercise.serie}
+            onChange={(e) => onUpdate({ serie: parseInt(e.target.value) || 1 })}
+            onWheel={(e) => (e.target as HTMLInputElement).blur()}
+            min={1} max={10}
+            className="h-6 text-center text-[11px] font-semibold tabular-nums px-0.5"
+          />
+
+          {/* Rip */}
+          <Input
+            value={exercise.ripetizioni}
+            onChange={(e) => onUpdate({ ripetizioni: e.target.value })}
+            className="h-6 text-center text-[11px] font-medium tabular-nums px-0.5"
+            placeholder={compact ? "30s" : "8-12"}
+          />
+
+          {/* Kg + Rec (solo principale) */}
+          {!compact && (
+            <>
               <Input
                 type="number"
-                value={exercise.serie}
-                onChange={(e) => onUpdate({ serie: parseInt(e.target.value) || 1 })}
-                min={1}
-                max={10}
-                className="h-7 text-center text-xs font-semibold tabular-nums px-1 w-11 rounded-md border-border/20 hover:border-border/40 focus:border-primary/50 focus:ring-2 focus:ring-primary/10 bg-background/80 shadow-sm"
+                value={exercise.carico_kg ?? ""}
+                onChange={(e) => onUpdate({ carico_kg: e.target.value ? parseFloat(e.target.value) : null })}
+                onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                min={0} max={500} step={0.5}
+                className="h-6 text-center text-[11px] font-medium tabular-nums px-0.5"
+                placeholder="—"
               />
-            </div>
-            <div className="flex flex-col items-center gap-1">
-              <span className="text-[8px] text-muted-foreground/50 uppercase tracking-widest leading-none font-semibold">Rip</span>
               <Input
-                value={exercise.ripetizioni}
-                onChange={(e) => onUpdate({ ripetizioni: e.target.value })}
-                className="h-7 text-center text-xs font-semibold tabular-nums px-1 w-14 rounded-md border-border/20 hover:border-border/40 focus:border-primary/50 focus:ring-2 focus:ring-primary/10 bg-background/80 shadow-sm"
-                placeholder={compact ? "30s" : "8-12"}
+                type="number"
+                value={exercise.tempo_riposo_sec}
+                onChange={(e) => onUpdate({ tempo_riposo_sec: parseInt(e.target.value) || 0 })}
+                onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                min={0} max={300} step={15}
+                className="h-6 text-center text-[11px] font-medium tabular-nums px-0.5"
               />
-            </div>
-            {!compact && (
-              <>
-                <div className="flex flex-col items-center gap-1">
-                  <span className="text-[8px] text-muted-foreground/50 uppercase tracking-widest leading-none font-semibold">Kg</span>
-                  <Input
-                    type="number"
-                    value={exercise.carico_kg ?? ""}
-                    onChange={(e) => onUpdate({
-                      carico_kg: e.target.value ? parseFloat(e.target.value) : null,
-                    })}
-                    min={0}
-                    max={500}
-                    step={0.5}
-                    className="h-7 text-center text-xs font-semibold tabular-nums px-1 w-14 rounded-md border-border/20 hover:border-border/40 focus:border-primary/50 focus:ring-2 focus:ring-primary/10 bg-background/80 shadow-sm"
-                    placeholder="—"
-                  />
-                </div>
-                <div className="flex flex-col items-center gap-1">
-                  <span className="text-[8px] text-muted-foreground/50 uppercase tracking-widest leading-none font-semibold">Rec</span>
-                  <Input
-                    type="number"
-                    value={exercise.tempo_riposo_sec}
-                    onChange={(e) => onUpdate({ tempo_riposo_sec: parseInt(e.target.value) || 0 })}
-                    min={0}
-                    max={300}
-                    step={15}
-                    className="h-7 text-center text-xs font-semibold tabular-nums px-1 w-11 rounded-md border-border/20 hover:border-border/40 focus:border-primary/50 focus:ring-2 focus:ring-primary/10 bg-background/80 shadow-sm"
-                  />
-                </div>
-              </>
-            )}
-          </div>
+            </>
+          )}
+
+          {/* Delete */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-5 w-5 text-muted-foreground/0 group-hover/row:text-muted-foreground/30 hover:!text-destructive transition-all"
+            onClick={onDelete}
+          >
+            <Trash2 className="h-2.5 w-2.5" />
+          </Button>
         </div>
 
-        {/* Pannello espandibile unificato: nota + tempo + dettagli */}
+        {/* Pannello espandibile: nota + tempo + muscoli + dettagli */}
         {expanded && (
-          <div className="mx-1 mt-0.5 mb-1 space-y-1.5">
-            {/* Nota + Tempo inline */}
-            <div className="flex gap-1">
+          <div className="ml-[44px] mr-1 mt-0.5 mb-1 space-y-1.5">
+            <div className="flex gap-1.5">
               <Input
                 value={exercise.note ?? ""}
                 onChange={(e) => onUpdate({ note: e.target.value || null })}
@@ -475,7 +463,15 @@ export function SortableExerciseRow({
                 />
               )}
             </div>
-            {/* Detail panel */}
+            {exerciseData?.muscoli_primari && exerciseData.muscoli_primari.length > 0 && (
+              <div className="flex gap-0.5 flex-wrap">
+                {exerciseData.muscoli_primari.map((m) => (
+                  <span key={m} className={`text-[8px] font-semibold rounded px-1 py-px leading-tight tracking-wide uppercase ${MUSCLE_COLORS[m] ?? "bg-muted/30 text-muted-foreground/60"}`}>
+                    {MUSCLE_LABELS[m] ?? m}
+                  </span>
+                ))}
+              </div>
+            )}
             {exerciseData && (
               <ExerciseDetailPanel
                 exercise={exerciseData}
