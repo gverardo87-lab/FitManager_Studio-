@@ -2,12 +2,15 @@
 "use client";
 
 /**
- * Header del builder schede: nome editabile inline, selettori cliente/obiettivo/livello,
- * undo/redo, export, salva. Include i banner di ritorno al contesto di provenienza.
+ * Header compatto del builder — riga singola sticky.
+ *
+ * Layout: [← Back] [Nome editabile] [Cliente ▾] [Obiettivo ▾] [Livello ▾] ... [Export ⋯] [Salva]
+ * Tutto in una riga. Nessun banner, nessun titolo gigante.
+ * ADR-008: workspace professionale (Figma-style header).
  */
 
 import { useState, useCallback } from "react";
-import { ArrowLeft, Pencil, Check, X, Undo2, Redo2, Save, FlaskConical } from "lucide-react";
+import { ArrowLeft, Pencil, Check, X, Save, FlaskConical } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -70,98 +73,104 @@ export function BuilderHeader({
 
   const cancelEdit = useCallback(() => setEditingField(null), []);
 
-  const returnClientId = fromParam?.startsWith("clienti-") ? fromParam.slice(8) : null;
-  const returnToAllenamenti = fromParam === "allenamenti";
-  const returnToMonitoraggio = fromParam === "monitoraggio" || fromParam?.startsWith("monitoraggio-");
-  const returnMonitoraggioClientId = fromParam?.startsWith("monitoraggio-") ? fromParam.slice(14) : null;
-
   return (
-    <>
-      {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between" data-print-hide>
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => onGoBack()}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            {editingField === "nome" ? (
-              <div className="flex items-center gap-1">
-                <Input value={editValue} onChange={(e) => setEditValue(e.target.value)} onKeyDown={(e) => e.key === "Enter" && saveEdit()} className="h-8 text-lg font-bold" autoFocus />
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={saveEdit}><Check className="h-4 w-4" /></Button>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={cancelEdit}><X className="h-4 w-4" /></Button>
-              </div>
-            ) : (
-              <button onClick={() => startEdit("nome", plan.nome)} className="flex items-center gap-2 text-xl font-extrabold tracking-tight hover:text-primary transition-colors group/name">
-                {plan.nome}
-                <Pencil className="h-3.5 w-3.5 text-muted-foreground/40 group-hover/name:text-muted-foreground/70 transition-opacity" />
-              </button>
-            )}
-            <div className="flex items-center gap-2 mt-1 flex-wrap">
-              <Select value={plan.id_cliente ? String(plan.id_cliente) : "__none__"} onValueChange={(v) => onUpdatePlan({ id_cliente: v === "__none__" ? null : Number(v) })}>
-                <SelectTrigger size="sm" className="w-[180px] text-xs"><SelectValue placeholder="Assegna cliente" /></SelectTrigger>
-                <SelectContent position="popper" sideOffset={4}>
-                  <SelectItem value="__none__">Nessun cliente</SelectItem>
-                  {clients.map((c) => (<SelectItem key={c.id} value={String(c.id)}>{c.nome} {c.cognome}</SelectItem>))}
-                </SelectContent>
-              </Select>
-              {plan.id_cliente && clientNome && (
-                <button onClick={() => onNavigate(`/clienti/${plan.id_cliente}`)} className="text-xs text-primary hover:underline">Vai al profilo</button>
-              )}
-              <Select value={plan.obiettivo} onValueChange={(v) => onUpdatePlan({ obiettivo: v })}>
-                <SelectTrigger className="h-6 w-auto text-xs border-0 bg-transparent p-0 font-medium">
-                  <Badge variant="outline" className="text-xs cursor-pointer">{OBIETTIVO_LABELS[plan.obiettivo] ?? plan.obiettivo}</Badge>
-                </SelectTrigger>
-                <SelectContent>{OBIETTIVI_SCHEDA.map((o) => (<SelectItem key={o} value={o}>{OBIETTIVO_LABELS[o]}</SelectItem>))}</SelectContent>
-              </Select>
-              <Select value={plan.livello} onValueChange={(v) => onUpdatePlan({ livello: v })}>
-                <SelectTrigger className="h-6 w-auto text-xs border-0 bg-transparent p-0 font-medium">
-                  <Badge variant="outline" className="text-xs cursor-pointer">{LIVELLO_LABELS[plan.livello] ?? plan.livello}</Badge>
-                </SelectTrigger>
-                <SelectContent>{LIVELLI_SCHEDA.map((l) => (<SelectItem key={l} value={l}>{LIVELLO_LABELS[l]}</SelectItem>))}</SelectContent>
-              </Select>
-              {totalVolume != null && (
-                <Badge variant="outline" className="text-xs font-semibold tabular-nums tracking-tight">Vol. totale: {totalVolume.toLocaleString("it-IT")} kg</Badge>
-              )}
-            </div>
+    <div className="sticky top-0 z-30 -mx-3 lg:-mx-4 -mt-3 lg:-mt-4 mb-3 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80" data-print-hide>
+      {/* ── Row 1: main toolbar ── */}
+      <div className="flex items-center gap-2 px-3 lg:px-4 h-12">
+        {/* Left: back + name */}
+        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => onGoBack()}>
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+
+        {editingField === "nome" ? (
+          <div className="flex items-center gap-1 min-w-0">
+            <Input value={editValue} onChange={(e) => setEditValue(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") saveEdit(); if (e.key === "Escape") cancelEdit(); }} className="h-7 text-sm font-semibold w-48" autoFocus />
+            <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={saveEdit}><Check className="h-3.5 w-3.5" /></Button>
+            <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={cancelEdit}><X className="h-3.5 w-3.5" /></Button>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          {!isDirty && lastSavedLabel && <span className="hidden sm:inline text-[11px] text-muted-foreground/60 font-medium">Salvata alle {lastSavedLabel}</span>}
-          <Button variant="outline" size="icon" className="h-8 w-8" onClick={onUndo} disabled={!canUndo} title="Annulla (Ctrl/Cmd+Z)"><Undo2 className="h-4 w-4" /></Button>
-          <Button variant="outline" size="icon" className="h-8 w-8" onClick={onRedo} disabled={!canRedo} title="Ripeti (Ctrl/Cmd+Shift+Z)"><Redo2 className="h-4 w-4" /></Button>
-          {hasSessions && (
-            <Button variant={showAdvanced ? "default" : "outline"} size="icon" className="h-8 w-8" onClick={onToggleAdvanced} title={showAdvanced ? "Nascondi analisi avanzata" : "Mostra analisi avanzata"}>
-              <FlaskConical className="h-4 w-4" />
-            </Button>
+        ) : (
+          <button
+            onClick={() => startEdit("nome", plan.nome)}
+            className="flex items-center gap-1.5 min-w-0 group/name"
+          >
+            <span className="text-sm font-bold tracking-tight truncate max-w-[200px] lg:max-w-[280px]">{plan.nome}</span>
+            <Pencil className="h-3 w-3 text-muted-foreground/30 group-hover/name:text-muted-foreground/60 transition-opacity shrink-0" />
+          </button>
+        )}
+
+        {/* Separator */}
+        <div className="h-4 w-px bg-border shrink-0 hidden sm:block" />
+
+        {/* Center: client + metadata */}
+        <div className="hidden sm:flex items-center gap-1.5 min-w-0">
+          <Select value={plan.id_cliente ? String(plan.id_cliente) : "__none__"} onValueChange={(v) => onUpdatePlan({ id_cliente: v === "__none__" ? null : Number(v) })}>
+            <SelectTrigger size="sm" className="h-7 w-[140px] text-xs border-0 bg-muted/50 hover:bg-muted transition-colors">
+              <SelectValue placeholder="Cliente" />
+            </SelectTrigger>
+            <SelectContent position="popper" sideOffset={4}>
+              <SelectItem value="__none__">Nessun cliente</SelectItem>
+              {clients.map((c) => (<SelectItem key={c.id} value={String(c.id)}>{c.nome} {c.cognome}</SelectItem>))}
+            </SelectContent>
+          </Select>
+
+          <Select value={plan.obiettivo} onValueChange={(v) => onUpdatePlan({ obiettivo: v })}>
+            <SelectTrigger className="h-7 w-auto text-[11px] border-0 bg-transparent px-1.5 font-medium hover:bg-muted/50 rounded transition-colors">
+              <Badge variant="outline" className="text-[10px] cursor-pointer px-1.5 py-0">{OBIETTIVO_LABELS[plan.obiettivo] ?? plan.obiettivo}</Badge>
+            </SelectTrigger>
+            <SelectContent>{OBIETTIVI_SCHEDA.map((o) => (<SelectItem key={o} value={o}>{OBIETTIVO_LABELS[o]}</SelectItem>))}</SelectContent>
+          </Select>
+
+          <Select value={plan.livello} onValueChange={(v) => onUpdatePlan({ livello: v })}>
+            <SelectTrigger className="h-7 w-auto text-[11px] border-0 bg-transparent px-1.5 font-medium hover:bg-muted/50 rounded transition-colors">
+              <Badge variant="outline" className="text-[10px] cursor-pointer px-1.5 py-0">{LIVELLO_LABELS[plan.livello] ?? plan.livello}</Badge>
+            </SelectTrigger>
+            <SelectContent>{LIVELLI_SCHEDA.map((l) => (<SelectItem key={l} value={l}>{LIVELLO_LABELS[l]}</SelectItem>))}</SelectContent>
+          </Select>
+
+          {totalVolume != null && (
+            <span className="text-[10px] font-medium tabular-nums text-muted-foreground/60 tracking-tight hidden lg:inline">
+              {totalVolume.toLocaleString("it-IT")} kg
+            </span>
           )}
-          <ExportButtons nome={plan.nome} obiettivo={plan.obiettivo} livello={plan.livello} clientNome={clientNome} durata_settimane={plan.durata_settimane} sessioni_per_settimana={plan.sessioni_per_settimana} sessioni={sessions} safety={safetyExportData} logoDataUrl={exportLogoDataUrl} onLogoChange={onLogoChange} />
-          {isDirty && (
-            <Button onClick={onSave} disabled={isSaving}>
-              <Save className="mr-1.5 h-4 w-4" />{isSaving ? "Salvataggio..." : "Salva"}
-            </Button>
-          )}
         </div>
+
+        {/* Spacer */}
+        <div className="flex-1" />
+
+        {/* Right: status + actions */}
+        {!isDirty && lastSavedLabel && (
+          <span className="hidden lg:inline text-[10px] text-muted-foreground/50 font-medium tabular-nums">
+            {lastSavedLabel}
+          </span>
+        )}
+
+        {hasSessions && (
+          <Button variant={showAdvanced ? "default" : "ghost"} size="icon" className="h-7 w-7" onClick={onToggleAdvanced} title={showAdvanced ? "Nascondi analisi" : "Mostra analisi"}>
+            <FlaskConical className="h-3.5 w-3.5" />
+          </Button>
+        )}
+
+        <ExportButtons nome={plan.nome} obiettivo={plan.obiettivo} livello={plan.livello} clientNome={clientNome} durata_settimane={plan.durata_settimane} sessioni_per_settimana={plan.sessioni_per_settimana} sessioni={sessions} safety={safetyExportData} logoDataUrl={exportLogoDataUrl} onLogoChange={onLogoChange} />
+
+        {isDirty && (
+          <Button size="sm" className="h-7 text-xs gap-1" onClick={onSave} disabled={isSaving}>
+            <Save className="h-3.5 w-3.5" />{isSaving ? "..." : "Salva"}
+          </Button>
+        )}
       </div>
 
-      {/* Return banners */}
-      {returnClientId && (
-        <div className="rounded-lg border border-primary/15 bg-primary/[0.03] px-4 py-2 flex items-center gap-2" data-print-hide>
-          <ArrowLeft className="h-3.5 w-3.5 text-primary" />
-          <button onClick={() => onNavigate(`/clienti/${returnClientId}?tab=schede`)} className="text-sm text-primary hover:underline">Torna al profilo cliente</button>
-        </div>
-      )}
-      {returnToAllenamenti && (
-        <div className="rounded-lg border border-primary/15 bg-primary/[0.03] px-4 py-2 flex items-center gap-2" data-print-hide>
-          <ArrowLeft className="h-3.5 w-3.5 text-primary" />
-          <button onClick={() => onNavigate("/allenamenti")} className="text-sm text-primary hover:underline">Torna agli allenamenti</button>
-        </div>
-      )}
-      {returnToMonitoraggio && (
-        <div className="rounded-lg border border-primary/15 bg-primary/[0.03] px-4 py-2 flex items-center gap-2" data-print-hide>
-          <ArrowLeft className="h-3.5 w-3.5 text-primary" />
-          <button onClick={() => onNavigate(returnMonitoraggioClientId ? `/monitoraggio/${returnMonitoraggioClientId}` : "/monitoraggio")} className="text-sm text-primary hover:underline">Torna al monitoraggio</button>
-        </div>
-      )}
-    </>
+      {/* ── Row 2 mobile only: client + metadata ── */}
+      <div className="flex items-center gap-1.5 px-3 pb-2 sm:hidden overflow-x-auto">
+        <Select value={plan.id_cliente ? String(plan.id_cliente) : "__none__"} onValueChange={(v) => onUpdatePlan({ id_cliente: v === "__none__" ? null : Number(v) })}>
+          <SelectTrigger size="sm" className="h-7 w-[140px] text-xs shrink-0"><SelectValue placeholder="Cliente" /></SelectTrigger>
+          <SelectContent position="popper" sideOffset={4}>
+            <SelectItem value="__none__">Nessun cliente</SelectItem>
+            {clients.map((c) => (<SelectItem key={c.id} value={String(c.id)}>{c.nome} {c.cognome}</SelectItem>))}
+          </SelectContent>
+        </Select>
+        <Badge variant="outline" className="text-[10px] shrink-0">{OBIETTIVO_LABELS[plan.obiettivo] ?? plan.obiettivo}</Badge>
+        <Badge variant="outline" className="text-[10px] shrink-0">{LIVELLO_LABELS[plan.livello] ?? plan.livello}</Badge>
+      </div>
+    </div>
   );
 }
