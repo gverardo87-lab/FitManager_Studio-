@@ -516,17 +516,25 @@ Questi errori hanno causato ore di blocco. Tutti legati alla mappa navigazioni s
 | 3 | **Outro tagliata dal video** | `-shortest` nel mix finale tronca il video alla durata dell'audio (VO piu' corto del video con outro) | Usare `apad=whole_dur=<videoDur>` per estendere il VO alla durata del video, poi `-t <videoDur>` invece di `-shortest` |
 | 4 | **Immagine distorta dopo crop taskbar** | `crop` + `scale` stira verticalmente (780px → 900px) | Usare `crop` + `pad` con colore sfondo, non `crop` + `scale` |
 | 5 | **Musica troppo invasiva (0.18)** | La musica ha picchi a -3.3 dB, anche a 0.18 i picchi raggiungono il livello medio della voce | Volume 0.10 + `acompressor=threshold=-20dB:ratio=4` sulla musica PRIMA di ridurre il volume. Il compressor appiattisce i picchi |
+| 6 | **VO sovrapposti tra scene consecutive (~10s)** | Nel flusso continuo le scene si susseguono senza gap. Se il VO di una scena e' piu' lungo della durata video di quella scena, il VO successivo parte SOPRA il precedente | Anti-overlap: ogni VO inizia al `max(scene_start, fine_VO_precedente)`. Il montaggio usa `prevVoEnd` per garantire che i VO non si sovrappongano MAI |
 
 ### 8.5 Regole derivate (NON NEGOZIABILI)
 
-Dalla tabella §8.3, le regole da seguire **sempre** per la registrazione:
+Dalla tabella §8.3 e §8.4, le regole da seguire **sempre**:
 
+**Registrazione:**
 1. **MAI cercare un cliente nella tabella dopo la creazione** — il submit redirige al profilo
 2. **MAI usare `:last-of-type` per i Select Radix** — usare `:has-text("Placeholder")`
 3. **MAI navigare al contratto dal tab profilo** — usare API per trovare l'ID e `goto` diretto
 4. **MAI registrare scene in context separati** — flusso continuo, un solo clip
 5. **SEMPRE eseguire pre-run cleanup completo** — `video-cleanup-moretti.py`
 6. **SEMPRE verificare il flusso navigazione REALE** prima di scriptare (il codice sorgente fa fede, non la documentazione vecchia)
+
+**Montaggio:**
+7. **MAI `crop` + `scale`** per rimuovere la taskbar — usare `crop` + `pad` (evita distorsione)
+8. **MAI `-shortest`** nel mix finale con intro/outro — usare `apad` + `-t videoDur`
+9. **SEMPRE anti-overlap VO** — `max(scene_start, prevVoEnd)` per ogni offset VO
+10. **SEMPRE compressor sulla musica** prima di ridurre il volume — `acompressor` appiattisce i picchi
 
 ---
 
