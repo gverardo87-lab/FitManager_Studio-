@@ -36,6 +36,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { GradientKpiCard, resolveMarginColors } from "@/components/movements/GradientKpiCard";
 import {
   ChartConfig,
   ChartContainer,
@@ -138,8 +139,10 @@ export function ForecastTab() {
 // KPI Cards
 // ════════════════════════════════════════════════════════════
 
-interface KpiCardDef {
-  key: "entrate_attese_90gg" | "uscite_previste_90gg" | "burn_rate_mensile" | "margine_proiettato_90gg";
+type ForecastKpiKey = "entrate_attese_90gg" | "uscite_previste_90gg" | "burn_rate_mensile" | "margine_proiettato_90gg";
+
+interface ForecastKpiDef {
+  key: ForecastKpiKey;
   label: string;
   sub: string;
   icon: typeof TrendingUp;
@@ -148,9 +151,10 @@ interface KpiCardDef {
   iconBg: string;
   iconColor: string;
   valueColor: string;
+  isMargin?: boolean;
 }
 
-const FORECAST_KPI: KpiCardDef[] = [
+const FORECAST_KPI: ForecastKpiDef[] = [
   {
     key: "entrate_attese_90gg",
     label: "Entrate Attese",
@@ -189,64 +193,10 @@ const FORECAST_KPI: KpiCardDef[] = [
     label: "Margine Proiettato",
     sub: "prossimi 90 giorni",
     icon: Target,
-    borderColor: "",
-    gradient: "",
-    iconBg: "",
-    iconColor: "",
-    valueColor: "",
+    borderColor: "", gradient: "", iconBg: "", iconColor: "", valueColor: "",
+    isMargin: true,
   },
 ];
-
-function ForecastKpiCards({ kpi }: { kpi: ForecastKpiCardData }) {
-  const isPositive = kpi.margine_proiettato_90gg >= 0;
-
-  return (
-    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-      {FORECAST_KPI.map((def) => {
-        const Icon = def.icon;
-        const isMargin = def.key === "margine_proiettato_90gg";
-
-        const borderColor = isMargin
-          ? (isPositive ? "border-l-blue-500" : "border-l-red-500")
-          : def.borderColor;
-        const gradient = isMargin
-          ? (isPositive
-              ? "from-blue-50/80 to-white dark:from-blue-950/40 dark:to-zinc-900"
-              : "from-red-50/80 to-white dark:from-red-950/40 dark:to-zinc-900")
-          : def.gradient;
-        const iconBg = isMargin
-          ? (isPositive ? "bg-blue-100 dark:bg-blue-900/30" : "bg-red-100 dark:bg-red-900/30")
-          : def.iconBg;
-        const iconColor = isMargin
-          ? (isPositive ? "text-blue-600 dark:text-blue-400" : "text-red-600 dark:text-red-400")
-          : def.iconColor;
-        const valueColor = isMargin
-          ? (isPositive ? "text-blue-700 dark:text-blue-400" : "text-red-700 dark:text-red-400")
-          : def.valueColor;
-
-        return (
-          <div
-            key={def.key}
-            className={`flex items-start gap-3 rounded-xl border border-l-4 ${borderColor} bg-gradient-to-br ${gradient} p-4 shadow-sm transition-shadow hover:shadow-md`}
-          >
-            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${iconBg}`}>
-              <Icon className={`h-5 w-5 ${iconColor}`} />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
-                {def.label}
-              </p>
-              <p className={`text-2xl font-bold tracking-tight ${valueColor}`}>
-                {formatCurrency(kpi[def.key])}
-              </p>
-              <p className="text-[10px] text-muted-foreground/70">{def.sub}</p>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
 
 type ForecastKpiCardData = {
   entrate_attese_90gg: number;
@@ -254,6 +204,36 @@ type ForecastKpiCardData = {
   burn_rate_mensile: number;
   margine_proiettato_90gg: number;
 };
+
+function ForecastKpiCards({ kpi }: { kpi: ForecastKpiCardData }) {
+  const margin = resolveMarginColors(kpi.margine_proiettato_90gg >= 0);
+
+  return (
+    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      {FORECAST_KPI.map((def) => {
+        const Icon = def.icon;
+        const bc = def.isMargin ? margin.borderColor : def.borderColor;
+        const gr = def.isMargin ? margin.gradient : def.gradient;
+        const ib = def.isMargin ? margin.iconBg : def.iconBg;
+        const ic = def.isMargin ? margin.iconColor : def.iconColor;
+        const vc = def.isMargin ? margin.valueColor : def.valueColor;
+
+        return (
+          <GradientKpiCard
+            key={def.key}
+            icon={<Icon className={`h-5 w-5 ${ic}`} />}
+            iconBg={ib}
+            label={def.label}
+            value={<p className={`text-2xl font-bold tracking-tight ${vc}`}>{formatCurrency(kpi[def.key])}</p>}
+            sub={def.sub}
+            borderColor={bc}
+            gradient={gr}
+          />
+        );
+      })}
+    </div>
+  );
+}
 
 // ════════════════════════════════════════════════════════════
 // Projection Chart (AreaChart gradient — 3 mesi)

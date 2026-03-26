@@ -72,6 +72,7 @@ import { SplitLedgerView } from "@/components/movements/SplitLedgerView";
 import { AgingReport } from "@/components/movements/AgingReport";
 import { ForecastTab } from "@/components/movements/ForecastTab";
 import { CashAuditSheet } from "@/components/movements/CashAuditSheet";
+import { GradientKpiCard, resolveMarginColors } from "@/components/movements/GradientKpiCard";
 import { useMovements, useMovementStats, usePendingExpenses, useCashBalance } from "@/hooks/useMovements";
 import type { CashMovement, CashProtection } from "@/types/api";
 import { formatCurrency } from "@/lib/format";
@@ -736,11 +737,9 @@ function ContextCell({
 // KPI Cards
 // ════════════════════════════════════════════════════════════
 
-// ── KPI Config ──
-
 type KpiKey = "totale_entrate" | "totale_uscite_variabili" | "totale_uscite_fisse" | "margine_netto";
 
-interface KpiDef {
+interface CassaKpiDef {
   key: KpiKey;
   label: string;
   icon: typeof TrendingUp;
@@ -749,9 +748,10 @@ interface KpiDef {
   iconBg: string;
   iconColor: string;
   valueColor: string;
+  isMargin?: boolean;
 }
 
-const CASSA_KPI: KpiDef[] = [
+const CASSA_KPI: CassaKpiDef[] = [
   {
     key: "totale_entrate",
     label: "Entrate",
@@ -786,11 +786,8 @@ const CASSA_KPI: KpiDef[] = [
     key: "margine_netto",
     label: "Margine Netto",
     icon: Target,
-    borderColor: "", // condizionale
-    gradient: "",    // condizionale
-    iconBg: "",      // condizionale
-    iconColor: "",   // condizionale
-    valueColor: "",  // condizionale
+    borderColor: "", gradient: "", iconBg: "", iconColor: "", valueColor: "",
+    isMargin: true,
   },
 ];
 
@@ -804,52 +801,35 @@ function KpiCards({
     margine_netto: number;
   };
 }) {
-  const isPositive = stats.margine_netto >= 0;
+  const margin = resolveMarginColors(stats.margine_netto >= 0);
 
   return (
     <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
       {CASSA_KPI.map((kpi) => {
         const Icon = kpi.icon;
-        const isMargin = kpi.key === "margine_netto";
-
-        const borderColor = isMargin
-          ? (isPositive ? "border-l-blue-500" : "border-l-red-500")
-          : kpi.borderColor;
-        const gradient = isMargin
-          ? (isPositive
-              ? "from-blue-50/80 to-white dark:from-blue-950/40 dark:to-zinc-900"
-              : "from-red-50/80 to-white dark:from-red-950/40 dark:to-zinc-900")
-          : kpi.gradient;
-        const iconBg = isMargin
-          ? (isPositive ? "bg-blue-100 dark:bg-blue-900/30" : "bg-red-100 dark:bg-red-900/30")
-          : kpi.iconBg;
-        const iconColor = isMargin
-          ? (isPositive ? "text-blue-600 dark:text-blue-400" : "text-red-600 dark:text-red-400")
-          : kpi.iconColor;
-        const valueColor = isMargin
-          ? (isPositive ? "text-blue-700 dark:text-blue-400" : "text-red-700 dark:text-red-400")
-          : kpi.valueColor;
+        const bc = kpi.isMargin ? margin.borderColor : kpi.borderColor;
+        const gr = kpi.isMargin ? margin.gradient : kpi.gradient;
+        const ib = kpi.isMargin ? margin.iconBg : kpi.iconBg;
+        const ic = kpi.isMargin ? margin.iconColor : kpi.iconColor;
+        const vc = kpi.isMargin ? margin.valueColor : kpi.valueColor;
 
         return (
-          <div
+          <GradientKpiCard
             key={kpi.key}
-            className={`flex items-start gap-3 rounded-xl border border-l-4 ${borderColor} bg-gradient-to-br ${gradient} p-4 shadow-sm transition-shadow hover:shadow-md`}
-          >
-            <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg sm:h-10 sm:w-10 ${iconBg}`}>
-              <Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${iconColor}`} />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[10px] font-semibold tracking-widest text-muted-foreground/70 uppercase sm:text-[11px]">
-                {kpi.label}
-              </p>
+            icon={<Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${ic}`} />}
+            iconBg={ib}
+            label={kpi.label}
+            value={
               <AnimatedNumber
                 value={stats[kpi.key]}
                 format="currency"
-                className={`text-xl font-extrabold tracking-tighter tabular-nums sm:text-3xl ${valueColor}`}
+                className={`text-xl font-extrabold tracking-tighter tabular-nums sm:text-3xl ${vc}`}
               />
-              <p className="text-[10px] font-medium text-muted-foreground/60">questo mese</p>
-            </div>
-          </div>
+            }
+            sub="questo mese"
+            borderColor={bc}
+            gradient={gr}
+          />
         );
       })}
     </div>

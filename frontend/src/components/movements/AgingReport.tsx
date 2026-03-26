@@ -16,6 +16,7 @@ import { AlertTriangle, Clock, Users, TrendingUp } from "lucide-react";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { GradientKpiCard } from "@/components/movements/GradientKpiCard";
 import { useAgingReport } from "@/hooks/useRates";
 import { formatCurrency } from "@/lib/format";
 import type { AgingBucket, AgingItem } from "@/types/api";
@@ -88,32 +89,29 @@ export function AgingReport() {
     <div className="space-y-6">
       {/* ── KPI Card ── */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
-        <KpiCard
+        <GradientKpiCard
           icon={<AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />}
           iconBg="bg-red-100 dark:bg-red-900/30"
           label="Totale Scaduto"
-          value={formatCurrency(data.totale_scaduto)}
-          valueClass="text-red-700 dark:text-red-400"
+          value={<p className="text-2xl font-bold tracking-tight text-red-700 dark:text-red-400">{formatCurrency(data.totale_scaduto)}</p>}
           sub={`${data.rate_scadute} rat${data.rate_scadute === 1 ? "a" : "e"}`}
           borderColor="border-l-red-500"
           gradient="from-red-50/80 to-white dark:from-red-950/40 dark:to-zinc-900"
         />
-        <KpiCard
+        <GradientKpiCard
           icon={<TrendingUp className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />}
           iconBg="bg-emerald-100 dark:bg-emerald-900/30"
           label="In Arrivo"
-          value={formatCurrency(data.totale_in_arrivo)}
-          valueClass="text-emerald-700 dark:text-emerald-400"
+          value={<p className="text-2xl font-bold tracking-tight text-emerald-700 dark:text-emerald-400">{formatCurrency(data.totale_in_arrivo)}</p>}
           sub={`${data.rate_in_arrivo} rat${data.rate_in_arrivo === 1 ? "a" : "e"}`}
           borderColor="border-l-emerald-500"
           gradient="from-emerald-50/80 to-white dark:from-emerald-950/40 dark:to-zinc-900"
         />
-        <KpiCard
+        <GradientKpiCard
           icon={<Users className="h-5 w-5 text-orange-600 dark:text-orange-400" />}
           iconBg="bg-orange-100 dark:bg-orange-900/30"
           label="Clienti con debito"
-          value={String(data.clienti_con_scaduto)}
-          valueClass="text-orange-700 dark:text-orange-400"
+          value={<p className="text-2xl font-bold tracking-tight text-orange-700 dark:text-orange-400">{data.clienti_con_scaduto}</p>}
           sub="con rate scadute"
           borderColor="border-l-orange-500"
           gradient="from-orange-50/80 to-white dark:from-orange-950/40 dark:to-zinc-900"
@@ -169,46 +167,7 @@ export function AgingReport() {
   );
 }
 
-// ════════════════════════════════════════════════════════════
-// KPI Card
-// ════════════════════════════════════════════════════════════
-
-function KpiCard({
-  icon,
-  iconBg,
-  label,
-  value,
-  valueClass,
-  sub,
-  borderColor,
-  gradient,
-}: {
-  icon: React.ReactNode;
-  iconBg: string;
-  label: string;
-  value: string;
-  valueClass: string;
-  sub: string;
-  borderColor: string;
-  gradient: string;
-}) {
-  return (
-    <div className={`flex items-start gap-3 rounded-xl border border-l-4 ${borderColor} bg-gradient-to-br ${gradient} p-4 shadow-sm transition-shadow hover:shadow-md`}>
-      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${iconBg}`}>
-        {icon}
-      </div>
-      <div className="min-w-0">
-        <p className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
-          {label}
-        </p>
-        <p className={`text-2xl font-bold tracking-tight ${valueClass}`}>
-          {value}
-        </p>
-        <p className="text-xs text-muted-foreground">{sub}</p>
-      </div>
-    </div>
-  );
-}
+// KpiCard rimossa — usa GradientKpiCard condivisa
 
 // ════════════════════════════════════════════════════════════
 // Bucket Card
