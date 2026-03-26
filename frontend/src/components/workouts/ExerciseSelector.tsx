@@ -153,6 +153,7 @@ export function ExerciseSelector({
   const [selectedEquipment, setSelectedEquipment] = useState<string | null>(null);
   const [selectedDifficulty, setSelectedDifficulty] = useState<string | null>(null);
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
+  const [showFilters, setShowFilters] = useState(true);
   const [recentStore, setRecentStore] = useState<RecentExerciseItem[]>(loadRecentExercises);
 
   const handleSearchChange = useCallback((value: string) => {
@@ -267,7 +268,7 @@ export function ExerciseSelector({
     if (debounceRef.current) clearTimeout(debounceRef.current);
     setSelectedPattern(null); setSelectedMuscle(null);
     setSelectedEquipment(null); setSelectedDifficulty(null);
-    setSelectedExercise(null);
+    setSelectedExercise(null); setShowFilters(true);
   }, []);
 
   const handleSelect = useCallback((exercise: Exercise) => {
@@ -333,7 +334,17 @@ export function ExerciseSelector({
 
             {/* Filters — SSoT con pagina esercizi (exercise-constants.ts) */}
             {isPrincipale && (
-              <div className="px-4 py-2 border-b space-y-1.5 shrink-0 bg-muted/5">
+              <div className="border-b shrink-0">
+                {/* Toggle header */}
+                <button
+                  type="button"
+                  onClick={() => setShowFilters((v) => !v)}
+                  className="w-full flex items-center justify-between px-4 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                >
+                  <span>Filtri{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}</span>
+                  <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${showFilters ? "rotate-180" : ""}`} />
+                </button>
+                {showFilters && <div className="px-4 pb-2 space-y-1.5 bg-muted/5">
                 {/* Row 1: Muscolo target (primario — come ragiona il PT) */}
                 {availableMuscles.length > 0 && (
                   <div>
@@ -410,6 +421,7 @@ export function ExerciseSelector({
                     </div>
                   )}
                 </div>
+              </div>}
               </div>
             )}
 
