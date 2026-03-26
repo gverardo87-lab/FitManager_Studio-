@@ -445,7 +445,7 @@ export default function CassaPage() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="ledger" className="mt-4">
+        <TabsContent value="ledger" className="mt-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <LedgerFiltersBar
             tipo={ledgerTipo}
             dataDa={ledgerDataDa}
@@ -488,19 +488,19 @@ export default function CassaPage() {
           )}
         </TabsContent>
 
-        <TabsContent value="recurring" className="mt-4">
+        <TabsContent value="recurring" className="mt-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <RecurringExpensesTab anno={anno} mese={mese} />
         </TabsContent>
 
-        <TabsContent value="split" className="mt-4">
+        <TabsContent value="split" className="mt-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <SplitLedgerView />
         </TabsContent>
 
-        <TabsContent value="aging" className="mt-4">
+        <TabsContent value="aging" className="mt-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <AgingReport />
         </TabsContent>
 
-        <TabsContent value="forecast" className="mt-4">
+        <TabsContent value="forecast" className="mt-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <ForecastTab />
         </TabsContent>
       </Tabs>
