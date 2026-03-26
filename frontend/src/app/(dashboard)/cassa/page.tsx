@@ -415,30 +415,30 @@ export default function CassaPage() {
       {/* ── Tabs: Libro Mastro + Spese Fisse ── */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className={revealClass(200, "w-full")} style={revealStyle(200)}>
         <TabsList className="w-full overflow-x-auto bg-muted/50 p-1">
-          <TabsTrigger value="ledger" className="flex-1 gap-1.5">
-            <BookOpen className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Libro Mastro</span>
+          <TabsTrigger value="ledger" className="flex-1 gap-1 px-2 sm:gap-1.5 sm:px-3">
+            <BookOpen className="h-3.5 w-3.5 shrink-0" />
+            <span className="text-[11px] sm:text-sm">Mastro</span>
           </TabsTrigger>
-          <TabsTrigger value="recurring" className="flex-1 gap-1.5">
-            <CalendarClock className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Spese Fisse</span>
+          <TabsTrigger value="recurring" className="flex-1 gap-1 px-2 sm:gap-1.5 sm:px-3">
+            <CalendarClock className="h-3.5 w-3.5 shrink-0" />
+            <span className="text-[11px] sm:text-sm"><span className="sm:hidden">Fisse</span><span className="hidden sm:inline">Spese Fisse</span></span>
             {pendingCount > 0 && (
-              <Badge variant="destructive" className="ml-1 h-5 min-w-5 px-1.5 text-[10px]">
+              <Badge variant="destructive" className="ml-0.5 h-5 min-w-5 px-1.5 text-[10px] sm:ml-1">
                 {pendingCount}
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="split" className="flex-1 gap-1.5">
-            <ArrowLeftRight className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Entrate & Uscite</span>
+          <TabsTrigger value="split" className="flex-1 gap-1 px-2 sm:gap-1.5 sm:px-3">
+            <ArrowLeftRight className="h-3.5 w-3.5 shrink-0" />
+            <span className="text-[11px] sm:text-sm"><span className="sm:hidden">E&U</span><span className="hidden sm:inline">Entrate & Uscite</span></span>
           </TabsTrigger>
-          <TabsTrigger value="aging" className="flex-1 gap-1.5">
-            <Clock className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Scadenze</span>
+          <TabsTrigger value="aging" className="flex-1 gap-1 px-2 sm:gap-1.5 sm:px-3">
+            <Clock className="h-3.5 w-3.5 shrink-0" />
+            <span className="text-[11px] sm:text-sm"><span className="sm:hidden">Scad.</span><span className="hidden sm:inline">Scadenze</span></span>
           </TabsTrigger>
-          <TabsTrigger value="forecast" className="flex-1 gap-1.5">
-            <LineChart className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Previsioni</span>
+          <TabsTrigger value="forecast" className="flex-1 gap-1 px-2 sm:gap-1.5 sm:px-3">
+            <LineChart className="h-3.5 w-3.5 shrink-0" />
+            <span className="text-[11px] sm:text-sm"><span className="sm:hidden">Prev.</span><span className="hidden sm:inline">Previsioni</span></span>
           </TabsTrigger>
         </TabsList>
 
