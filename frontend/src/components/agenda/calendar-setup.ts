@@ -8,7 +8,7 @@
 import { dateFnsLocalizer } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay } from "date-fns";
 import { it } from "date-fns/locale";
-import type { EventCategory } from "@/types/api";
+import type { EventCategory, Todo } from "@/types/api";
 import type { EventHydrated } from "@/hooks/useAgenda";
 
 // ── Localizer italiano (lunedi' primo giorno) ──
@@ -37,6 +37,10 @@ export interface CalendarEvent {
   note: string | null;
   cliente_nome: string | null;
   cliente_cognome: string | null;
+  /** true se l'evento rappresenta un promemoria (Todo) */
+  allDay?: boolean;
+  _isTodo?: boolean;
+  _todoData?: Todo;
 }
 
 /**
@@ -66,7 +70,7 @@ export function toCalendarEvent(event: EventHydrated): CalendarEvent {
 // Esempio: PT Completato = bordo blu + sfondo verde
 
 // Category border colors (identity — sempre visibili)
-const CATEGORY_BORDERS: Record<string, string> = {
+export const CATEGORY_BORDERS: Record<string, string> = {
   PT:        "#3b82f6",  // blu
   SALA:      "#a1a1aa",  // grigio
   CORSO:     "#10b981",  // verde
@@ -104,6 +108,14 @@ const STATUS_OVERRIDES: Record<string, StatusStyle> = {
 };
 
 export function getEventStyle(event: CalendarEvent): React.CSSProperties {
+  // Promemoria: stile dedicato amber bold (completato = zinc sbarrato)
+  if (event._isTodo) {
+    const completed = event._todoData?.completato ?? false;
+    return completed
+      ? { backgroundColor: "#e4e4e7", borderLeft: "3px solid #a1a1aa", color: "#71717a", borderRadius: "6px", padding: "3px 8px", fontSize: "0.8rem", fontWeight: 600, opacity: 0.55 }
+      : { backgroundColor: "#fde68a", borderLeft: "3px solid #d97706", color: "#78350f", borderRadius: "6px", padding: "3px 8px", fontSize: "0.8rem", fontWeight: 600 };
+  }
+
   const borderColor = CATEGORY_BORDERS[event.categoria] ?? DEFAULT_BORDER;
 
   // Stato override ha la precedenza, poi background categoria, poi default
@@ -120,6 +132,34 @@ export function getEventStyle(event: CalendarEvent): React.CSSProperties {
     padding: "2px 4px",
     fontSize: "0.8rem",
     ...(base.opacity != null && { opacity: base.opacity }),
+  };
+}
+
+// ── Promemoria: mapper Todo → CalendarEvent (all-day) ──
+
+/**
+ * Converte un Todo con data_scadenza in un CalendarEvent all-day.
+ * Usa ID negativi per evitare collisioni con gli event ID (auto-increment positivi).
+ */
+export function todoToCalendarEvent(todo: Todo): CalendarEvent {
+  const date = todo.data_scadenza
+    ? new Date(todo.data_scadenza + "T00:00:00")
+    : new Date();
+  return {
+    id: -todo.id,
+    title: todo.titolo,
+    start: date,
+    end: date,
+    categoria: "PROMEMORIA",
+    stato: todo.completato ? "Completato" : "Programmato",
+    id_cliente: null,
+    id_contratto: null,
+    note: todo.descrizione,
+    cliente_nome: null,
+    cliente_cognome: null,
+    allDay: true,
+    _isTodo: true,
+    _todoData: todo,
   };
 }
 

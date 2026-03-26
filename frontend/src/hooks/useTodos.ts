@@ -13,7 +13,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import apiClient, { extractErrorMessage } from "@/lib/api-client";
-import type { Todo, TodoCreate, ListResponse } from "@/types/api";
+import type { Todo, TodoCreate, TodoUpdate, ListResponse } from "@/types/api";
 
 // ── Query: lista todo ──
 
@@ -65,6 +65,26 @@ export function useToggleTodo() {
     },
     onError: (error) => {
       toast.error(extractErrorMessage(error, "Errore nell'aggiornamento"));
+    },
+  });
+}
+
+// ── Mutation: aggiorna todo ──
+
+export function useUpdateTodo() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, ...payload }: TodoUpdate & { id: number }) => {
+      const { data } = await apiClient.put<Todo>(`/todos/${id}`, payload);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["todos"] });
+      toast.success("Promemoria aggiornato");
+    },
+    onError: (error) => {
+      toast.error(extractErrorMessage(error, "Errore nell'aggiornamento del promemoria"));
     },
   });
 }

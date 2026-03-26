@@ -6,9 +6,9 @@
  *
  * Il PT vive in questa schermata:
  * - Vista settimanale default, slot da 30 min (06:00-22:00)
- * - Click slot vuoto -> crea evento con date pre-compilate
+ * - Click slot vuoto -> scelta Evento o Promemoria
  * - Click evento -> modifica via Sheet
- * - Navigazione avanti/indietro -> fetch nuovi dati
+ * - Promemoria overlay come all-day events
  * - Color coding per categoria (PT=blu, SALA=grigio, ecc.)
  */
 
@@ -16,20 +16,21 @@ import { useState, useCallback, useMemo, useEffect } from "react";
 import { usePageReveal } from "@/lib/page-reveal";
 import { format, startOfWeek, endOfWeek, endOfDay, startOfMonth, endOfMonth, subMonths, addMonths } from "date-fns";
 import { it } from "date-fns/locale";
-import { Plus, CalendarDays, Eye, EyeOff, CheckCircle2, Clock, Target, AlertTriangle, Loader2 } from "lucide-react";
+import { Plus, CalendarDays, AlertTriangle, Loader2, StickyNote } from "lucide-react";
 import type { SlotInfo } from "react-big-calendar";
 
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { AgendaCalendar } from "@/components/agenda/AgendaCalendar";
 import { EventSheet } from "@/components/agenda/EventSheet";
 import { DeleteEventDialog } from "@/components/agenda/DeleteEventDialog";
+import { SlotChoiceDialog } from "@/components/agenda/SlotChoiceDialog";
+import { TodoQuickCreateDialog } from "@/components/agenda/TodoQuickCreateDialog";
+import { FilterBar } from "@/components/agenda/FilterBar";
+import { RangeStatsBar } from "@/components/agenda/RangeStatsBar";
+import { CalendarSkeleton } from "@/components/agenda/CalendarSkeleton";
 import { useEvents, useUpdateEvent } from "@/hooks/useAgenda";
-import {
-  STATUS_LEGEND,
-  CATEGORY_LEGEND,
-  type CalendarEvent,
-} from "@/components/agenda/calendar-setup";
+import { useTodos } from "@/hooks/useTodos";
+import type { CalendarEvent } from "@/components/agenda/calendar-setup";
 import { EVENT_CATEGORIES, EVENT_STATUSES } from "@/types/api";
 import { toISOLocal } from "@/lib/format";
 import { PageVideoGuide } from "@/components/guide/PageVideoGuide";
@@ -63,81 +64,79 @@ function getInitialDeepLinkState() {
 export default function AgendaPage() {
   const { revealClass, revealStyle } = usePageReveal();
   const [initialDeepLink] = useState(getInitialDeepLinkState);
-  // ── State: date range per la query API ──
   const [dateRange, setDateRange] = useState(getInitialRange);
-
-  // ── State: Sheet crea/modifica ──
   const [sheetOpen, setSheetOpen] = useState(() => initialDeepLink.openFromDeepLink);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [slotStart, setSlotStart] = useState<Date | undefined>();
   const [slotEnd, setSlotEnd] = useState<Date | undefined>();
-  const [defaultClientId] = useState<number | undefined>(
-    () => initialDeepLink.defaultClientId
-  );
-
-  // ── Deep-link: ?newEvent=1&clientId=X → pulizia URL dopo bootstrap iniziale ──
-  useEffect(() => {
-    if (!initialDeepLink.openFromDeepLink) return;
-    // Pulisci URL senza ricaricare
-    window.history.replaceState(window.history.state, "", window.location.pathname);
-  }, [initialDeepLink.openFromDeepLink]);
-
-  // ── State: Dialog elimina ──
+  const [defaultClientId] = useState<number | undefined>(() => initialDeepLink.defaultClientId);
   const [deleteOpen, setDeleteOpen] = useState(false);
-
-  // ── State: filtri categoria + stato ──
-  const [activeCategories, setActiveCategories] = useState<Set<string>>(
-    () => new Set(EVENT_CATEGORIES)
-  );
-  const [activeStatuses, setActiveStatuses] = useState<Set<string>>(
-    () => new Set(EVENT_STATUSES)
-  );
-
-  // ── State: range visibile dal calendario (per KPI contestuali) ──
+  const [choiceOpen, setChoiceOpen] = useState(false);
+  const [todoCreateOpen, setTodoCreateOpen] = useState(false);
+  const [activeCategories, setActiveCategories] = useState<Set<string>>(() => new Set(EVENT_CATEGORIES));
+  const [activeStatuses, setActiveStatuses] = useState<Set<string>>(() => new Set(EVENT_STATUSES));
   const [visibleRange, setVisibleRange] = useState<{ start: Date; end: Date }>(() => {
     const now = new Date();
     return { start: startOfWeek(now, { locale: it }), end: endOfWeek(now, { locale: it }) };
   });
 
+  // Deep-link cleanup
+  useEffect(() => {
+    if (!initialDeepLink.openFromDeepLink) return;
+    window.history.replaceState(window.history.state, "", window.location.pathname);
+  }, [initialDeepLink.openFromDeepLink]);
+
   // ── Query: eventi nel range ──
   const queryParams = useMemo(
-    () => ({
-      start: format(dateRange.start, "yyyy-MM-dd"),
-      end: format(dateRange.end, "yyyy-MM-dd"),
-    }),
+    () => ({ start: format(dateRange.start, "yyyy-MM-dd"), end: format(dateRange.end, "yyyy-MM-dd") }),
     [dateRange]
   );
-
   const { data: eventsData, isLoading, isError, isFetching, refetch } = useEvents(queryParams);
   const events = useMemo(() => eventsData?.items ?? [], [eventsData]);
 
-  // ── Eventi filtrati per categoria + stato (per il calendario) ──
+  // ── Query: todos con data (per overlay calendario + badge header) ──
+  const { data: todosData } = useTodos();
+  const allTodos = useMemo(() => todosData?.items ?? [], [todosData]);
+
+  const visibleTodos = useMemo(() => {
+    const startStr = format(visibleRange.start, "yyyy-MM-dd");
+    const endStr = format(visibleRange.end, "yyyy-MM-dd");
+    return allTodos.filter(
+      (t) => t.data_scadenza && t.data_scadenza >= startStr && t.data_scadenza <= endStr
+    );
+  }, [allTodos, visibleRange]);
+
+  // ── KPI promemoria per badge header (azione 5) ──
+  const todoStats = useMemo(() => {
+    const today = format(new Date(), "yyyy-MM-dd");
+    let overdue = 0;
+    let dueToday = 0;
+    for (const t of allTodos) {
+      if (t.completato || !t.data_scadenza) continue;
+      if (t.data_scadenza < today) overdue++;
+      else if (t.data_scadenza === today) dueToday++;
+    }
+    return { overdue, dueToday };
+  }, [allTodos]);
+
+  // ── Filtering pipeline ──
   const calendarEvents = useMemo(
     () => events.filter((e) => activeCategories.has(e.categoria) && activeStatuses.has(e.stato)),
     [events, activeCategories, activeStatuses]
   );
 
-  // ── Eventi nel range visibile + filtrati per categoria + stato (per KPI + header) ──
   const visibleEvents = useMemo(
-    () =>
-      events.filter(
-        (e) =>
-          e.data_inizio >= visibleRange.start &&
-          e.data_inizio <= visibleRange.end &&
-          activeCategories.has(e.categoria) &&
-          activeStatuses.has(e.stato)
-      ),
+    () => events.filter(
+      (e) => e.data_inizio >= visibleRange.start && e.data_inizio <= visibleRange.end
+        && activeCategories.has(e.categoria) && activeStatuses.has(e.stato)
+    ),
     [events, visibleRange, activeCategories, activeStatuses]
   );
 
   const handleToggleCategory = useCallback((cat: string) => {
     setActiveCategories((prev) => {
       const next = new Set(prev);
-      if (next.has(cat)) {
-        next.delete(cat);
-      } else {
-        next.add(cat);
-      }
+      next.has(cat) ? next.delete(cat) : next.add(cat);
       return next;
     });
   }, []);
@@ -145,16 +144,12 @@ export default function AgendaPage() {
   const handleToggleStatus = useCallback((stato: string) => {
     setActiveStatuses((prev) => {
       const next = new Set(prev);
-      if (next.has(stato)) {
-        next.delete(stato);
-      } else {
-        next.add(stato);
-      }
+      next.has(stato) ? next.delete(stato) : next.add(stato);
       return next;
     });
   }, []);
 
-  // ── KPI contestuali al range visibile (rispettano filtro categoria) ──
+  // ── KPI ──
   const rangeStats = useMemo(() => {
     const completed = visibleEvents.filter((e) => e.stato === "Completato").length;
     const scheduled = visibleEvents.filter((e) => e.stato === "Programmato").length;
@@ -164,39 +159,29 @@ export default function AgendaPage() {
     return { total: visibleEvents.length, completed, scheduled, rate };
   }, [visibleEvents]);
 
-  /** Label dinamica per i KPI: si adatta alla vista (giorno/settimana/mese).
-   *  Per la vista mese usa il midpoint del range (il primo giorno della griglia
-   *  puo' appartenere al mese precedente — es. 23 feb per marzo 2026). */
   const rangeLabel = useMemo(() => {
     const ms = visibleRange.end.getTime() - visibleRange.start.getTime();
     const days = Math.round(ms / (1000 * 60 * 60 * 24));
-    if (days <= 1) {
-      return format(visibleRange.start, "EEEE d MMMM", { locale: it });
-    }
+    if (days <= 1) return format(visibleRange.start, "EEEE d MMMM", { locale: it });
     if (days <= 7) {
       const sameMonth = visibleRange.start.getMonth() === visibleRange.end.getMonth();
       return sameMonth
         ? `${format(visibleRange.start, "d", { locale: it })}-${format(visibleRange.end, "d MMM", { locale: it })}`
         : `${format(visibleRange.start, "d MMM", { locale: it })} - ${format(visibleRange.end, "d MMM", { locale: it })}`;
     }
-    // Vista mese: midpoint per determinare il mese reale
     const mid = new Date(visibleRange.start.getTime() + ms / 2);
     return format(mid, "MMMM yyyy", { locale: it });
   }, [visibleRange]);
 
-  // ── Mutation per Drag & Drop + Quick Actions ──
+  // ── Mutations ──
   const updateEvent = useUpdateEvent();
 
-  /** Quick action dall'hover card: aggiorna stato evento */
   const handleQuickAction = useCallback(
-    (eventId: number, stato: string) => {
-      updateEvent.mutate({ id: eventId, stato });
-    },
+    (eventId: number, stato: string) => { updateEvent.mutate({ id: eventId, stato }); },
     [updateEvent]
   );
 
   // ── Handlers ──
-
   const handleNewEvent = () => {
     setSelectedEvent(null);
     setSlotStart(undefined);
@@ -207,33 +192,28 @@ export default function AgendaPage() {
   const handleSelectSlot = useCallback((slotInfo: SlotInfo) => {
     setSelectedEvent(null);
     setSlotStart(slotInfo.start);
-    // Default 1 ora (lezioni standard), la griglia resta a 30 min per precisione
     setSlotEnd(new Date(slotInfo.start.getTime() + 60 * 60 * 1000));
-    setSheetOpen(true);
+    setChoiceOpen(true);
   }, []);
 
+  const handleChooseEvent = useCallback(() => { setChoiceOpen(false); setSheetOpen(true); }, []);
+  const handleChoosePromemoria = useCallback(() => { setChoiceOpen(false); setTodoCreateOpen(true); }, []);
+
   const handleSelectEvent = useCallback((event: CalendarEvent) => {
+    if (event._isTodo) return;
     setSelectedEvent(event);
     setSlotStart(undefined);
     setSlotEnd(undefined);
     setSheetOpen(true);
   }, []);
 
-  const handleDeleteRequest = () => {
-    setSheetOpen(false);
-    setDeleteOpen(true);
-  };
+  const handleDeleteRequest = () => { setSheetOpen(false); setDeleteOpen(true); };
 
   const handleRangeChange = useCallback((range: { start: Date; end: Date }) => {
-    // Normalizza end a fine giornata — react-big-calendar manda mezzanotte (00:00),
-    // senza endOfDay gli eventi dell'ultimo giorno sarebbero esclusi dai KPI
     const adjustedEnd = endOfDay(range.end);
     setVisibleRange({ start: range.start, end: adjustedEnd });
-    // Espandi il buffer API solo se necessario
     setDateRange((prev) => {
-      if (range.start >= prev.start && range.end <= prev.end) {
-        return prev; // stessa reference → zero state change
-      }
+      if (range.start >= prev.start && range.end <= prev.end) return prev;
       return {
         start: startOfMonth(subMonths(range.start, 1)),
         end: endOfMonth(addMonths(range.end, 1)),
@@ -241,29 +221,21 @@ export default function AgendaPage() {
     });
   }, []);
 
-  /** D&D: evento spostato in un nuovo slot */
   const handleEventDrop = useCallback(
     ({ event, start, end }: { event: CalendarEvent; start: Date; end: Date }) => {
-      updateEvent.mutate({
-        id: event.id,
-        data_inizio: toISOLocal(start),
-        data_fine: toISOLocal(end),
-      });
+      updateEvent.mutate({ id: event.id, data_inizio: toISOLocal(start), data_fine: toISOLocal(end) });
     },
     [updateEvent]
   );
 
-  /** D&D: evento ridimensionato */
   const handleEventResize = useCallback(
     ({ event, start, end }: { event: CalendarEvent; start: Date; end: Date }) => {
-      updateEvent.mutate({
-        id: event.id,
-        data_inizio: toISOLocal(start),
-        data_fine: toISOLocal(end),
-      });
+      updateEvent.mutate({ id: event.id, data_inizio: toISOLocal(start), data_fine: toISOLocal(end) });
     },
     [updateEvent]
   );
+
+  const hasFilters = activeCategories.size < EVENT_CATEGORIES.length || activeStatuses.size < EVENT_STATUSES.length;
 
   return (
     <div className="space-y-6">
@@ -274,12 +246,25 @@ export default function AgendaPage() {
             <CalendarDays className="h-5 w-5 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Agenda</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold tracking-tight">Agenda</h1>
+              {/* Badge promemoria urgenti */}
+              {todoStats.overdue > 0 && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-semibold text-red-700 dark:bg-red-900/40 dark:text-red-300">
+                  <StickyNote className="h-3 w-3" aria-hidden="true" />
+                  {todoStats.overdue} scadut{todoStats.overdue === 1 ? "o" : "i"}
+                </span>
+              )}
+              {todoStats.dueToday > 0 && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+                  <StickyNote className="h-3 w-3" aria-hidden="true" />
+                  {todoStats.dueToday} oggi
+                </span>
+              )}
+            </div>
             <p className="text-sm text-muted-foreground">
               {visibleEvents.length} event{visibleEvents.length !== 1 ? "i" : "o"} · {rangeLabel}
-              {(activeCategories.size < EVENT_CATEGORIES.length || activeStatuses.size < EVENT_STATUSES.length) && (
-                <span className="text-muted-foreground/60"> (filtro attivo)</span>
-              )}
+              {hasFilters ? <span className="text-muted-foreground/60"> (filtro attivo)</span> : null}
             </p>
           </div>
         </div>
@@ -296,7 +281,7 @@ export default function AgendaPage() {
         </div>
       </div>
 
-      {/* ── Filtri + Legenda ── */}
+      {/* ── Filtri ── */}
       <div className={revealClass(50)} style={revealStyle(50)}>
         <FilterBar
           activeCategories={activeCategories}
@@ -306,14 +291,15 @@ export default function AgendaPage() {
         />
       </div>
 
-      {/* ── KPI contestuali al range visibile ── */}
-      {!isLoading && <div className={revealClass(100)} style={revealStyle(100)}><RangeStatsBar stats={rangeStats} label={rangeLabel} /></div>}
+      {/* ── KPI ── */}
+      {!isLoading && (
+        <div className={revealClass(100)} style={revealStyle(100)}>
+          <RangeStatsBar stats={rangeStats} label={rangeLabel} />
+        </div>
+      )}
 
-      {/* ── Contenuto: 3-state rendering ── */}
-      {/* Calendar container: NO transform-gpu / page-reveal animation.
-           transform-gpu creates a GPU compositing layer that breaks
-           react-big-calendar DnD resize position calculations in production
-           (getBoundingClientRect offsets shift inside transformed parents). */}
+      {/* ── Calendario ── */}
+      {/* NO transform-gpu: breaks DnD getBoundingClientRect in production */}
       <div>
         {isLoading && <CalendarSkeleton />}
 
@@ -321,13 +307,9 @@ export default function AgendaPage() {
           <div className="flex items-center justify-between rounded-xl border border-destructive/50 bg-destructive/5 p-4">
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-destructive" />
-              <p className="text-sm text-destructive">
-                Errore nel caricamento degli eventi.
-              </p>
+              <p className="text-sm text-destructive">Errore nel caricamento degli eventi.</p>
             </div>
-            <Button variant="outline" size="sm" onClick={() => refetch()}>
-              Riprova
-            </Button>
+            <Button variant="outline" size="sm" onClick={() => refetch()}>Riprova</Button>
           </div>
         )}
 
@@ -344,9 +326,7 @@ export default function AgendaPage() {
               <div className="pointer-events-none absolute inset-0 z-[5] flex items-center justify-center">
                 <div className="pointer-events-auto rounded-xl border border-dashed border-blue-200 bg-white/90 px-6 py-8 text-center shadow-sm backdrop-blur-sm dark:border-blue-800/50 dark:bg-zinc-900/90">
                   <CalendarDays className="mx-auto mb-3 h-10 w-10 text-blue-400/60" />
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Nessun evento in questo periodo
-                  </p>
+                  <p className="text-sm font-medium text-muted-foreground">Nessun evento in questo periodo</p>
                   <p className="mt-1 text-xs text-muted-foreground/70">
                     Clicca su uno slot vuoto o premi &quot;Nuovo Evento&quot; per creare una sessione
                   </p>
@@ -355,6 +335,7 @@ export default function AgendaPage() {
             )}
             <AgendaCalendar
               events={calendarEvents}
+              todos={visibleTodos}
               onSelectSlot={handleSelectSlot}
               onSelectEvent={handleSelectEvent}
               onRangeChange={handleRangeChange}
@@ -366,7 +347,7 @@ export default function AgendaPage() {
         )}
       </div>
 
-      {/* ── Sheet crea/modifica ── */}
+      {/* ── Dialogs & Sheets ── */}
       <EventSheet
         open={sheetOpen}
         onOpenChange={setSheetOpen}
@@ -376,217 +357,19 @@ export default function AgendaPage() {
         defaultClientId={defaultClientId}
         onDeleteRequest={handleDeleteRequest}
       />
-
-      {/* ── Dialog elimina ── */}
-      <DeleteEventDialog
-        open={deleteOpen}
-        onOpenChange={setDeleteOpen}
-        event={selectedEvent}
+      <DeleteEventDialog open={deleteOpen} onOpenChange={setDeleteOpen} event={selectedEvent} />
+      <SlotChoiceDialog
+        open={choiceOpen}
+        onOpenChange={setChoiceOpen}
+        onChooseEvent={handleChooseEvent}
+        onChoosePromemoria={handleChoosePromemoria}
+        slotDate={slotStart}
       />
-    </div>
-  );
-}
-
-// ── Range Stats Bar (KPI contestuali al range visibile) ──
-
-interface RangeStatsData {
-  total: number;
-  completed: number;
-  scheduled: number;
-  rate: number;
-}
-
-const RANGE_KPI = [
-  {
-    key: "total" as const,
-    label: "Sessioni",
-    icon: CalendarDays,
-    borderColor: "border-l-blue-500",
-    iconBg: "bg-blue-100 dark:bg-blue-900/30",
-    iconColor: "text-blue-600 dark:text-blue-400",
-    valueColor: "text-blue-700 dark:text-blue-300",
-  },
-  {
-    key: "completed" as const,
-    label: "Completate",
-    icon: CheckCircle2,
-    borderColor: "border-l-emerald-500",
-    iconBg: "bg-emerald-100 dark:bg-emerald-900/30",
-    iconColor: "text-emerald-600 dark:text-emerald-400",
-    valueColor: "text-emerald-700 dark:text-emerald-300",
-  },
-  {
-    key: "scheduled" as const,
-    label: "Programmate",
-    icon: Clock,
-    borderColor: "border-l-amber-500",
-    iconBg: "bg-amber-100 dark:bg-amber-900/30",
-    iconColor: "text-amber-600 dark:text-amber-400",
-    valueColor: "text-amber-700 dark:text-amber-300",
-  },
-  {
-    key: "rate" as const,
-    label: "Completamento",
-    icon: Target,
-    borderColor: "border-l-violet-500",
-    iconBg: "bg-violet-100 dark:bg-violet-900/30",
-    iconColor: "text-violet-600 dark:text-violet-400",
-    valueColor: "text-violet-700 dark:text-violet-300",
-    suffix: "%",
-  },
-];
-
-function RangeStatsBar({ stats, label }: { stats: RangeStatsData; label: string }) {
-  return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-      {RANGE_KPI.map((kpi) => {
-        const Icon = kpi.icon;
-        const value = stats[kpi.key];
-        return (
-          <div
-            key={kpi.key}
-            className={`flex items-center gap-3 rounded-lg border border-l-4 ${kpi.borderColor} bg-white p-3 shadow-sm transition-shadow hover:shadow-md dark:bg-zinc-900`}
-          >
-            <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${kpi.iconBg}`}>
-              <Icon className={`h-4 w-4 ${kpi.iconColor}`} />
-            </div>
-            <div>
-              <p className={`text-xl font-bold tabular-nums ${kpi.valueColor}`}>
-                {value}{"suffix" in kpi ? kpi.suffix : ""}
-              </p>
-              <p className="text-[10px] font-medium capitalize text-muted-foreground">
-                {kpi.label} · {label}
-              </p>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-// ── Filter Bar (due righe: categoria + stato) ──
-
-function FilterBar({
-  activeCategories,
-  onToggleCategory,
-  activeStatuses,
-  onToggleStatus,
-}: {
-  activeCategories: Set<string>;
-  onToggleCategory: (cat: string) => void;
-  activeStatuses: Set<string>;
-  onToggleStatus: (stato: string) => void;
-}) {
-  return (
-    <div className="flex flex-col gap-2 rounded-xl border bg-gradient-to-br from-white to-zinc-50/50 px-3 py-2 shadow-sm sm:px-4 sm:py-2.5 dark:from-zinc-900 dark:to-zinc-800/50">
-      {/* Riga 1: filtri categoria */}
-      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-        <span className="text-xs font-medium text-muted-foreground sm:w-16">Tipo:</span>
-        {CATEGORY_LEGEND.map((cat) => {
-          const active = activeCategories.has(cat.categoria);
-          const Icon = active ? Eye : EyeOff;
-          return (
-            <button
-              key={cat.categoria}
-              type="button"
-              onClick={() => onToggleCategory(cat.categoria)}
-              className={`flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-medium transition-all duration-200 sm:gap-1.5 sm:px-3 sm:text-xs ${
-                active
-                  ? "border-transparent shadow-sm"
-                  : "border-dashed border-muted-foreground/30 opacity-40"
-              }`}
-              style={
-                active
-                  ? { backgroundColor: cat.borderColor + "20", color: cat.borderColor }
-                  : undefined
-              }
-            >
-              <div
-                className="h-2.5 w-2.5 rounded-full transition-opacity"
-                style={{ backgroundColor: cat.borderColor, opacity: active ? 1 : 0.3 }}
-              />
-              {cat.label}
-              <Icon className="h-3 w-3" />
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Riga 2: filtri stato */}
-      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-        <span className="text-xs font-medium text-muted-foreground sm:w-16">Stato:</span>
-        {STATUS_LEGEND.map((s) => {
-          const active = activeStatuses.has(s.stato);
-          const Icon = active ? Eye : EyeOff;
-          return (
-            <button
-              key={s.stato}
-              type="button"
-              onClick={() => onToggleStatus(s.stato)}
-              className={`flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-medium transition-all duration-200 sm:gap-1.5 sm:px-3 sm:text-xs ${
-                active
-                  ? "border-transparent shadow-sm"
-                  : "border-dashed border-muted-foreground/30 opacity-40"
-              }`}
-              style={
-                active
-                  ? { backgroundColor: s.backgroundColor, color: s.color }
-                  : undefined
-              }
-            >
-              <div
-                className="h-2.5 w-2.5 rounded-full transition-opacity"
-                style={{ backgroundColor: s.color, opacity: active ? 1 : 0.3 }}
-              />
-              {s.label}
-              <Icon className="h-3 w-3" />
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-// ── Skeleton per il calendario ──
-
-function CalendarSkeleton() {
-  return (
-    <div className="space-y-3">
-      {/* Toolbar skeleton */}
-      <div className="flex items-center justify-between">
-        <div className="flex gap-1.5">
-          <Skeleton className="h-9 w-9 rounded-md" />
-          <Skeleton className="h-9 w-16 rounded-md" />
-          <Skeleton className="h-9 w-9 rounded-md" />
-        </div>
-        <Skeleton className="h-6 w-40 rounded" />
-        <div className="flex gap-1.5">
-          <Skeleton className="h-9 w-20 rounded-md" />
-          <Skeleton className="h-9 w-24 rounded-md" />
-          <Skeleton className="h-9 w-20 rounded-md" />
-        </div>
-      </div>
-      {/* Grid skeleton */}
-      <div className="rounded-lg border">
-        {/* Header row */}
-        <div className="flex border-b">
-          <Skeleton className="h-10 w-16 shrink-0" />
-          {Array.from({ length: 7 }).map((_, i) => (
-            <Skeleton key={i} className="h-10 flex-1 border-l" />
-          ))}
-        </div>
-        {/* Time rows */}
-        {Array.from({ length: 8 }).map((_, i) => (
-          <div key={i} className="flex border-b last:border-b-0">
-            <Skeleton className="h-16 w-16 shrink-0" />
-            {Array.from({ length: 7 }).map((_, j) => (
-              <div key={j} className="h-16 flex-1 border-l" />
-            ))}
-          </div>
-        ))}
-      </div>
+      <TodoQuickCreateDialog
+        open={todoCreateOpen}
+        onOpenChange={setTodoCreateOpen}
+        defaultDate={slotStart}
+      />
     </div>
   );
 }

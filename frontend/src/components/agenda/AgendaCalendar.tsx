@@ -11,6 +11,7 @@
  */
 
 import { useState, useCallback, useMemo } from "react";
+import { format } from "date-fns";
 import { Calendar, Views, type View, type SlotInfo } from "react-big-calendar";
 import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
 
@@ -19,17 +20,20 @@ import {
   italianMessages,
   getEventStyle,
   toCalendarEvent,
+  todoToCalendarEvent,
   type CalendarEvent,
 } from "./calendar-setup";
 import { CustomToolbar } from "./CustomToolbar";
-import { CustomEvent, QuickActionProvider } from "./CustomEvent";
+import { CustomEvent, QuickActionProvider, ViewProvider } from "./CustomEvent";
 import type { EventHydrated } from "@/hooks/useAgenda";
+import type { Todo } from "@/types/api";
 
 // HOC: abilita drag & drop + resize sugli eventi
 const DnDCalendar = withDragAndDrop<CalendarEvent>(Calendar);
 
 interface AgendaCalendarProps {
   events: EventHydrated[];
+  todos?: Todo[];
   onSelectSlot: (slotInfo: SlotInfo) => void;
   onSelectEvent: (event: CalendarEvent) => void;
   onRangeChange: (range: { start: Date; end: Date }) => void;
@@ -40,6 +44,7 @@ interface AgendaCalendarProps {
 
 export function AgendaCalendar({
   events,
+  todos,
   onSelectSlot,
   onSelectEvent,
   onRangeChange,
@@ -51,14 +56,38 @@ export function AgendaCalendar({
   const [currentDate, setCurrentDate] = useState(new Date());
   const [currentView, setCurrentView] = useState<View>(Views.WEEK);
 
-  const calendarEvents = useMemo(
-    () => events.map(toCalendarEvent),
-    [events]
-  );
+  const calendarEvents = useMemo(() => {
+    const eventItems = events.map(toCalendarEvent);
+    const todoItems = (todos ?? []).map(todoToCalendarEvent);
+    return [...eventItems, ...todoItems];
+  }, [events, todos]);
 
   const eventPropGetter = useCallback(
     (event: CalendarEvent) => ({ style: getEventStyle(event) }),
     []
+  );
+
+  // ── Density heatmap: conta eventi per giorno → classe CSS ──
+  const dayDensityMap = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const ev of calendarEvents) {
+      if (ev._isTodo) continue; // solo eventi reali per density
+      const key = format(ev.start, "yyyy-MM-dd");
+      map.set(key, (map.get(key) ?? 0) + 1);
+    }
+    return map;
+  }, [calendarEvents]);
+
+  const dayPropGetter = useCallback(
+    (date: Date) => {
+      if (currentView !== "month") return {};
+      const key = format(date, "yyyy-MM-dd");
+      const count = dayDensityMap.get(key) ?? 0;
+      if (count === 0) return {};
+      const level = count <= 2 ? 1 : count <= 4 ? 2 : count <= 6 ? 3 : 4;
+      return { className: `density-${level}` };
+    },
+    [currentView, dayDensityMap]
   );
 
   /**
@@ -103,6 +132,7 @@ export function AgendaCalendar({
   );
 
   return (
+    <ViewProvider view={currentView}>
     <QuickActionProvider onQuickAction={onQuickAction}>
       <DnDCalendar
         localizer={localizer}
@@ -114,12 +144,15 @@ export function AgendaCalendar({
         views={[Views.MONTH, Views.WEEK, Views.DAY]}
         selectable
         resizable
+        draggableAccessor={(event: CalendarEvent) => !event._isTodo}
+        resizableAccessor={(event: CalendarEvent) => !event._isTodo}
         onSelectSlot={onSelectSlot}
         onSelectEvent={onSelectEvent}
         onRangeChange={handleRangeChange}
         onEventDrop={handleEventDrop}
         onEventResize={handleEventResize}
         eventPropGetter={eventPropGetter}
+        dayPropGetter={dayPropGetter}
         tooltipAccessor={() => ""}
         messages={italianMessages}
         components={{
@@ -135,5 +168,6 @@ export function AgendaCalendar({
         style={{ minHeight: "calc(100vh - 280px)" }}
       />
     </QuickActionProvider>
+    </ViewProvider>
   );
 }

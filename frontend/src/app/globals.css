@@ -27,6 +27,139 @@
 .rbc-time-slot { min-height: 25px; }
 .rbc-event { transition: box-shadow 0.15s, transform 0.1s; }
 .rbc-event:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.15); transform: translateY(-1px); }
+
+/* ── Agenda: All-day row (promemoria) — week/day views ── */
+.rbc-time-view .rbc-allday-cell { min-height: 38px; }
+.rbc-time-view .rbc-allday-cell .rbc-row-segment { padding: 1px 3px; }
+.rbc-time-view .rbc-allday-cell .rbc-event { padding: 3px 8px !important; font-size: 0.8rem !important; font-weight: 600; min-height: 26px; display: flex; align-items: center; }
+.rbc-time-view .rbc-allday-cell .rbc-event:hover { transform: translateY(0); box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3); }
+.rbc-time-view .rbc-allday-cell .rbc-show-more { font-size: 0.7rem; font-weight: 600; color: #92400e; padding: 2px 4px; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   Agenda: MONTH VIEW — CRM-grade redesign
+   Ultra-compact pills, density heatmap, professional typography
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Month rows: taller for more event visibility */
+.rbc-month-view .rbc-month-row { min-height: 110px; }
+.rbc-month-view .rbc-month-row + .rbc-month-row { border-top: 1px solid oklch(0.92 0.004 286.32); }
+
+/* Month headers: clean, compact */
+.rbc-month-view .rbc-header {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: oklch(0.55 0.02 260);
+  padding: 8px 4px;
+  border-bottom: 2px solid oklch(0.92 0.004 286.32);
+}
+
+/* Month day cells: vertical padding for event stacking */
+.rbc-month-view .rbc-date-cell {
+  padding: 2px 6px 0;
+  text-align: right;
+}
+.rbc-month-view .rbc-date-cell > a,
+.rbc-month-view .rbc-date-cell > button {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: oklch(0.45 0.01 260);
+  pointer-events: none;
+}
+
+/* Today: bold number with teal accent */
+.rbc-month-view .rbc-now > a,
+.rbc-month-view .rbc-now > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: oklch(0.52 0.14 173);
+  color: white !important;
+  font-weight: 700;
+  font-size: 0.7rem;
+  pointer-events: none;
+}
+
+/* Off-range (fuori mese): dimmed */
+.rbc-month-view .rbc-off-range { opacity: 0.35; }
+.rbc-month-view .rbc-off-range-bg { background: oklch(0.97 0.002 260) !important; }
+.dark .rbc-month-view .rbc-off-range-bg { background: oklch(0.14 0.005 260) !important; }
+
+/* ── Month: Ultra-compact event pills ── */
+.rbc-month-view .rbc-event {
+  padding: 1px 5px !important;
+  font-size: 0.7rem !important;
+  font-weight: 500;
+  min-height: 0;
+  height: 20px;
+  line-height: 18px;
+  border-radius: 4px;
+  border-left: none !important;
+  margin-bottom: 1px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  transition: box-shadow 0.15s, opacity 0.15s;
+}
+.rbc-month-view .rbc-event:hover {
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
+  transform: none;
+  opacity: 0.9;
+}
+.rbc-month-view .rbc-event-content {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 18px;
+}
+
+/* Month: event segments — tighter spacing */
+.rbc-month-view .rbc-row-segment { padding: 0 2px; }
+
+/* Month: "+N more" — prominent badge */
+.rbc-month-view .rbc-show-more {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: oklch(0.52 0.14 173);
+  background: oklch(0.95 0.03 173);
+  padding: 1px 8px;
+  border-radius: 10px;
+  margin: 2px 3px 0;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  letter-spacing: 0.01em;
+}
+.rbc-month-view .rbc-show-more:hover {
+  background: oklch(0.52 0.14 173);
+  color: white;
+}
+
+/* Month: today column highlight (subtle vertical strip) */
+.rbc-month-view .rbc-today {
+  background: oklch(0.96 0.02 173) !important;
+}
+.dark .rbc-month-view .rbc-today {
+  background: oklch(0.20 0.02 173) !important;
+}
+
+/* Month: density heatmap backgrounds (set via dayPropGetter) */
+.rbc-month-view .rbc-day-bg.density-1 { background: oklch(0.98 0.008 173); }
+.rbc-month-view .rbc-day-bg.density-2 { background: oklch(0.96 0.015 173); }
+.rbc-month-view .rbc-day-bg.density-3 { background: oklch(0.94 0.025 173); }
+.rbc-month-view .rbc-day-bg.density-4 { background: oklch(0.92 0.035 173); }
+.dark .rbc-month-view .rbc-day-bg.density-1 { background: oklch(0.17 0.008 173); }
+.dark .rbc-month-view .rbc-day-bg.density-2 { background: oklch(0.19 0.015 173); }
+.dark .rbc-month-view .rbc-day-bg.density-3 { background: oklch(0.21 0.025 173); }
+.dark .rbc-month-view .rbc-day-bg.density-4 { background: oklch(0.23 0.035 173); }
+
+/* Month: today overrides density */
+.rbc-month-view .rbc-day-bg.rbc-today { background: oklch(0.96 0.02 173) !important; }
+.dark .rbc-month-view .rbc-day-bg.rbc-today { background: oklch(0.20 0.02 173) !important; }
 /* During DnD resize/drag, disable ALL transforms — they break getBoundingClientRect
    position calculations in production (GPU compositing layer offsets). */
 .rbc-addons-dnd-resizing,
@@ -44,6 +177,15 @@
   .rbc-event { font-size: 0.7rem; padding: 1px 3px; }
   .rbc-time-content { font-size: 0.75rem; }
   .rbc-label { font-size: 0.7rem; padding: 0 2px; }
+  .rbc-allday-cell { min-height: 30px; }
+  .rbc-allday-cell .rbc-event { font-size: 0.7rem !important; padding: 2px 5px !important; min-height: 22px; }
+  /* Month view mobile: even more compact */
+  .rbc-month-view .rbc-month-row { min-height: 80px; }
+  .rbc-month-view .rbc-event { height: 18px; font-size: 0.6rem !important; padding: 0 4px !important; }
+  .rbc-month-view .rbc-date-cell > a,
+  .rbc-month-view .rbc-date-cell > button { font-size: 0.65rem; }
+  .rbc-month-view .rbc-now > a,
+  .rbc-month-view .rbc-now > button { width: 20px; height: 20px; font-size: 0.6rem; }
 }
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
