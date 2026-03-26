@@ -13,6 +13,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
+import { format, parseISO } from "date-fns";
 import { loadFilters, saveFilters, getUrlParams, syncUrlParams } from "@/lib/url-state";
 import { PageVideoGuide } from "@/components/guide/PageVideoGuide";
 import { usePageReveal } from "@/lib/page-reveal";
@@ -46,6 +47,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -560,19 +562,19 @@ function LedgerFiltersBar({
 
         <div className="w-full md:w-[180px]">
           <p className="mb-1 text-xs font-medium text-muted-foreground">Data da</p>
-          <Input
-            type="date"
-            value={dataDa}
-            onChange={(e) => onDataDaChange(e.target.value)}
+          <DatePicker
+            value={dataDa ? parseISO(dataDa) : undefined}
+            onChange={(d) => onDataDaChange(d ? format(d, "yyyy-MM-dd") : "")}
+            placeholder="Data inizio..."
           />
         </div>
 
         <div className="w-full md:w-[180px]">
           <p className="mb-1 text-xs font-medium text-muted-foreground">Data a</p>
-          <Input
-            type="date"
-            value={dataA}
-            onChange={(e) => onDataAChange(e.target.value)}
+          <DatePicker
+            value={dataA ? parseISO(dataA) : undefined}
+            onChange={(d) => onDataAChange(d ? format(d, "yyyy-MM-dd") : "")}
+            placeholder="Data fine..."
           />
         </div>
 

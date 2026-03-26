@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { format, parseISO } from "date-fns";
 import {
   ExternalLink,
   FileSearch,
@@ -12,7 +13,7 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -230,8 +231,16 @@ export function CashAuditSheet({
           </div>
 
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <Input type="date" value={dataDa} onChange={(e) => setDataDa(e.target.value)} />
-            <Input type="date" value={dataA} onChange={(e) => setDataA(e.target.value)} />
+            <DatePicker
+              value={dataDa ? parseISO(dataDa) : undefined}
+              onChange={(d) => setDataDa(d ? format(d, "yyyy-MM-dd") : "")}
+              placeholder="Data da..."
+            />
+            <DatePicker
+              value={dataA ? parseISO(dataA) : undefined}
+              onChange={(d) => setDataA(d ? format(d, "yyyy-MM-dd") : "")}
+              placeholder="Data a..."
+            />
             <Select value={flow} onValueChange={(v) => setFlow(v as FlowFilter)}>
               <SelectTrigger>
                 <SelectValue placeholder="Flusso" />
