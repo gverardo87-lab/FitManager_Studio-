@@ -38,6 +38,7 @@ import {
   MUSCLE_COLORS,
   EQUIPMENT_LABELS,
   DIFFICULTY_LABELS,
+  PATTERN_LABELS,
   FORCE_TYPE_LABELS,
   LATERAL_PATTERN_LABELS,
 } from "@/components/exercises/exercise-constants";
@@ -105,29 +106,17 @@ function clearRecentSection(section: RecentSection): RecentExerciseItem[] {
 // CONSTANTS
 // ════════════════════════════════════════════════════════════
 
-const PATTERN_TABS: { value: string | null; label: string }[] = [
-  { value: null, label: "Tutti" },
-  { value: "squat", label: "Squat" },
-  { value: "hinge", label: "Hinge" },
-  { value: "push_h", label: "Push O." },
-  { value: "push_v", label: "Push V." },
-  { value: "pull_h", label: "Pull O." },
-  { value: "pull_v", label: "Pull V." },
-  { value: "core", label: "Core" },
-  { value: "carry", label: "Carry" },
+// SSoT: pattern per la sezione principale (esclusi stretch/mobility/warmup che hanno le proprie sezioni)
+const PRINCIPALE_PATTERNS = ["squat", "hinge", "push_h", "push_v", "pull_h", "pull_v", "core", "rotation", "carry"];
+
+// Ordinamento anatomico muscoli (SSoT con pagina esercizi)
+const MUSCLE_SORT = [
+  "chest", "shoulders", "triceps", "back", "lats", "traps", "biceps", "forearms",
+  "quadriceps", "hamstrings", "glutes", "adductors", "calves", "core",
 ];
 
-const EQUIPMENT_TABS: { value: string | null; label: string }[] = [
-  { value: null, label: "Tutti" },
-  { value: "corpo_libero", label: "Corpo libero" },
-  { value: "bilanciere", label: "Bilanciere" },
-  { value: "manubri", label: "Manubri" },
-  { value: "kettlebell", label: "Kettlebell" },
-  { value: "cavi", label: "Cavi" },
-  { value: "macchina", label: "Macchina" },
-  { value: "trx", label: "TRX" },
-  { value: "elastici", label: "Elastici" },
-];
+// Ordinamento difficolta (SSoT con pagina esercizi)
+const DIFFICULTY_ORDER = ["beginner", "intermediate", "advanced"];
 
 const PRINCIPALE_CATEGORIES = new Set(["compound", "isolation", "bodyweight", "cardio"]);
 const RELATION_LABELS: Record<string, string> = { regression: "Regressione", variation: "Variante", progression: "Progressione" };
@@ -191,18 +180,37 @@ export function ExerciseSelector({
     return exercises;
   }, [exercises, categoryFilter]);
 
-  // ── Available filter options (dynamic from current pool) ──
-  const MUSCLE_SORT_ORDER = [
-    "chest", "shoulders", "triceps", "back", "lats", "traps", "biceps", "forearms",
-    "quadriceps", "hamstrings", "glutes", "adductors", "calves", "core",
-  ];
+  // ── Available filter options (dynamic from current pool, SSoT ordering) ──
   const availableMuscles = useMemo(() => {
     const counts = new Map<string, number>();
     for (const ex of sectionPool) {
       for (const m of ex.muscoli_primari) counts.set(m, (counts.get(m) ?? 0) + 1);
     }
-    return MUSCLE_SORT_ORDER.filter((m) => counts.has(m)).map((m) => ({ value: m, count: counts.get(m)! }));
+    return MUSCLE_SORT.filter((m) => counts.has(m)).map((m) => ({ value: m, count: counts.get(m)! }));
   }, [sectionPool]);
+
+  const availablePatterns = useMemo(() => {
+    if (!isPrincipale) return [];
+    const counts = new Map<string, number>();
+    for (const ex of sectionPool) {
+      if (ex.pattern_movimento) counts.set(ex.pattern_movimento, (counts.get(ex.pattern_movimento) ?? 0) + 1);
+    }
+    return PRINCIPALE_PATTERNS.filter((p) => counts.has(p)).map((p) => ({ value: p, count: counts.get(p)! }));
+  }, [sectionPool, isPrincipale]);
+
+  const availableEquipment = useMemo(() => {
+    if (!isPrincipale) return [];
+    const counts = new Map<string, number>();
+    for (const ex of sectionPool) counts.set(ex.attrezzatura, (counts.get(ex.attrezzatura) ?? 0) + 1);
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([value, count]) => ({ value, count }));
+  }, [sectionPool, isPrincipale]);
+
+  const availableDifficulties = useMemo(() => {
+    if (!isPrincipale) return [];
+    const counts = new Map<string, number>();
+    for (const ex of sectionPool) counts.set(ex.difficolta, (counts.get(ex.difficolta) ?? 0) + 1);
+    return DIFFICULTY_ORDER.filter((d) => counts.has(d)).map((d) => ({ value: d, count: counts.get(d)! }));
+  }, [sectionPool, isPrincipale]);
 
   // ── Filtering (4 dimensions + search) ──
   const filtered = useMemo(() => {
@@ -323,76 +331,84 @@ export function ExerciseSelector({
           {/* ── Left panel: filters + list ── */}
           <div className="w-full md:w-[58%] flex flex-col min-h-0 overflow-hidden">
 
-            {/* Filters (inside left panel, not above entire dialog) */}
+            {/* Filters — SSoT con pagina esercizi (exercise-constants.ts) */}
             {isPrincipale && (
               <div className="px-4 py-2 border-b space-y-1.5 shrink-0 bg-muted/5">
-                {/* Row 1: Muscle chips (primary — come ragiona il PT) */}
-                <div>
-                  <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/50 mr-2">Muscolo</span>
-                  <div className="inline-flex flex-wrap gap-1 mt-0.5">
-                    {availableMuscles.map(({ value, count }) => (
-                      <button key={value}
-                        onClick={() => setSelectedMuscle(selectedMuscle === value ? null : value)}
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-medium transition-colors ${
-                          selectedMuscle === value
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
-                        }`}>
-                        {MUSCLE_LABELS[value] ?? value} <span className="text-[8px] opacity-60">{count}</span>
-                      </button>
-                    ))}
+                {/* Row 1: Muscolo target (primario — come ragiona il PT) */}
+                {availableMuscles.length > 0 && (
+                  <div>
+                    <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/50 mr-2">Muscolo</span>
+                    <div className="inline-flex flex-wrap gap-1 mt-0.5">
+                      {availableMuscles.map(({ value, count }) => (
+                        <button key={value}
+                          onClick={() => setSelectedMuscle(selectedMuscle === value ? null : value)}
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-medium transition-colors ${
+                            selectedMuscle === value
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                          }`}>
+                          {MUSCLE_LABELS[value] ?? value} <span className="text-[8px] opacity-60">{count}</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
-                {/* Row 2: Equipment + Pattern + Difficulty (secondary) */}
+                )}
+                {/* Row 2: Attrezzatura + Pattern + Difficolta (dinamici dal pool, labels SSoT) */}
                 <div className="flex items-start gap-3 flex-wrap">
-                  <div>
-                    <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/50 mr-1">Attrezz.</span>
-                    <div className="inline-flex flex-wrap gap-0.5 mt-0.5">
-                      {EQUIPMENT_TABS.slice(1).map((tab) => (
-                        <button key={tab.value}
-                          onClick={() => setSelectedEquipment(selectedEquipment === tab.value ? null : tab.value)}
-                          className={`px-1.5 py-0.5 rounded text-[10px] transition-colors ${
-                            selectedEquipment === tab.value
-                              ? "bg-muted text-foreground ring-1 ring-border"
-                              : "text-muted-foreground/50 hover:text-foreground"
-                          }`}>
-                          {tab.label}
-                        </button>
-                      ))}
+                  {availableEquipment.length > 0 && (
+                    <div>
+                      <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/50 mr-1">Attrezz.</span>
+                      <div className="inline-flex flex-wrap gap-0.5 mt-0.5">
+                        {availableEquipment.map(({ value, count }) => (
+                          <button key={value}
+                            onClick={() => setSelectedEquipment(selectedEquipment === value ? null : value)}
+                            className={`px-1.5 py-0.5 rounded text-[10px] transition-colors ${
+                              selectedEquipment === value
+                                ? "bg-muted text-foreground ring-1 ring-border"
+                                : "text-muted-foreground/50 hover:text-foreground"
+                            }`}>
+                            {EQUIPMENT_LABELS[value] ?? value} <span className="text-[8px] opacity-50">{count}</span>
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                  <div>
-                    <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/50 mr-1">Pattern</span>
-                    <div className="inline-flex flex-wrap gap-0.5 mt-0.5">
-                      {PATTERN_TABS.slice(1).map((tab) => (
-                        <button key={tab.value}
-                          onClick={() => setSelectedPattern(selectedPattern === tab.value ? null : tab.value)}
-                          className={`px-1.5 py-0.5 rounded text-[10px] transition-colors ${
-                            selectedPattern === tab.value
-                              ? "bg-primary/10 text-primary font-medium"
-                              : "text-muted-foreground/50 hover:text-foreground"
-                          }`}>
-                          {tab.label}
-                        </button>
-                      ))}
+                  )}
+                  {availablePatterns.length > 0 && (
+                    <div>
+                      <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/50 mr-1">Pattern</span>
+                      <div className="inline-flex flex-wrap gap-0.5 mt-0.5">
+                        {availablePatterns.map(({ value, count }) => (
+                          <button key={value}
+                            onClick={() => setSelectedPattern(selectedPattern === value ? null : value)}
+                            className={`px-1.5 py-0.5 rounded text-[10px] transition-colors ${
+                              selectedPattern === value
+                                ? "bg-primary/10 text-primary font-medium"
+                                : "text-muted-foreground/50 hover:text-foreground"
+                            }`}>
+                            {PATTERN_LABELS[value] ?? value} <span className="text-[8px] opacity-50">{count}</span>
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                  <div>
-                    <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/50 mr-1">Diff.</span>
-                    <div className="inline-flex gap-0.5 mt-0.5">
-                      {(["beginner", "intermediate", "advanced"] as const).map((d) => (
-                        <button key={d}
-                          onClick={() => setSelectedDifficulty(selectedDifficulty === d ? null : d)}
-                          className={`px-1.5 py-0.5 rounded text-[10px] transition-colors ${
-                            selectedDifficulty === d
-                              ? "bg-muted text-foreground ring-1 ring-border"
-                              : "text-muted-foreground/50 hover:text-foreground"
-                          }`}>
-                          {DIFFICULTY_LABELS[d]}
-                        </button>
-                      ))}
+                  )}
+                  {availableDifficulties.length > 0 && (
+                    <div>
+                      <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/50 mr-1">Diff.</span>
+                      <div className="inline-flex gap-0.5 mt-0.5">
+                        {availableDifficulties.map(({ value, count }) => (
+                          <button key={value}
+                            onClick={() => setSelectedDifficulty(selectedDifficulty === value ? null : value)}
+                            className={`px-1.5 py-0.5 rounded text-[10px] transition-colors ${
+                              selectedDifficulty === value
+                                ? "bg-muted text-foreground ring-1 ring-border"
+                                : "text-muted-foreground/50 hover:text-foreground"
+                            }`}>
+                            {DIFFICULTY_LABELS[value] ?? value} <span className="text-[8px] opacity-50">{count}</span>
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
             )}
