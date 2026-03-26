@@ -335,16 +335,20 @@ export function ExerciseSelector({
             {/* Filters — SSoT con pagina esercizi (exercise-constants.ts) */}
             {isPrincipale && (
               <div className="border-b shrink-0">
-                {/* Toggle header */}
+                {/* Toggle header — sempre visibile */}
                 <button
                   type="button"
                   onClick={() => setShowFilters((v) => !v)}
-                  className="w-full flex items-center justify-between px-4 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                  className="w-full flex items-center justify-between px-4 py-2 hover:bg-muted/30 transition-colors"
                 >
-                  <span>Filtri{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}</span>
-                  <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${showFilters ? "rotate-180" : ""}`} />
+                  <span className="text-[11px] font-semibold text-muted-foreground">
+                    Filtri{activeFilterCount > 0 ? ` (${activeFilterCount} attivi)` : ""}
+                  </span>
+                  <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground/60 transition-transform duration-200 ${showFilters ? "rotate-180" : ""}`} />
                 </button>
-                {showFilters && <div className="px-4 pb-2 space-y-1.5 bg-muted/5">
+                {/* Collapsible filter body */}
+                {showFilters && (
+                <div className="px-4 pb-2.5 space-y-1.5">
                 {/* Row 1: Muscolo target (primario — come ragiona il PT) */}
                 {availableMuscles.length > 0 && (
                   <div>
@@ -421,7 +425,8 @@ export function ExerciseSelector({
                     </div>
                   )}
                 </div>
-              </div>}
+              </div>
+                )}
               </div>
             )}
 
