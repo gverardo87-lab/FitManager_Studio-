@@ -372,26 +372,34 @@ export default function CassaPage() {
         </div>
       </div>
 
-      {/* ── Saldo Hero Card ── */}
+      {/* ── Saldo Hero (dominant, inverted) ── */}
       <div className={revealClass(50)} style={revealStyle(50)}>
-        {balanceLoading && (
-          <Skeleton className="h-28 w-full rounded-xl" />
+        {(balanceLoading || statsLoading) && (
+          <Skeleton className="h-44 w-full rounded-2xl" />
         )}
         {balance && stats && (
           <SaldoHeroCard
             saldoAttuale={balance.saldo_attuale}
-            saldoPrevisto={balance.saldo_previsto}
-            deltaMovimentiFuturi={balance.delta_movimenti_futuri}
-            saldoInizioMese={stats.saldo_inizio_mese}
             margineMese={stats.margine_netto}
-            saldoFineMese={stats.saldo_fine_mese}
+            protectionStatus={balance.protezione_cassa.stato}
           />
         )}
       </div>
 
-      {balance && <div className={revealClass(80)} style={revealStyle(80)}><CashProtectionCard protection={balance.protezione_cassa} /></div>}
+      {/* ── Context Strip (secondary reference data) ── */}
+      {balance && stats && (
+        <div className={revealClass(80)} style={revealStyle(80)}>
+          <BalanceContextStrip
+            saldoInizioMese={stats.saldo_inizio_mese}
+            saldoFineMese={stats.saldo_fine_mese}
+            saldoPrevisto={balance.saldo_previsto}
+            deltaMovimentiFuturi={balance.delta_movimenti_futuri}
+            protection={balance.protezione_cassa}
+          />
+        </div>
+      )}
 
-      {/* ── Hero Section: 4 KPI ── */}
+      {/* ── KPI Mese ── */}
       <div className={revealClass(100)} style={revealStyle(100)}>
         {statsLoading && <KpiSkeleton />}
         {stats && <KpiCards stats={stats} />}
@@ -590,91 +598,55 @@ function LedgerFiltersBar({
 
 function SaldoHeroCard({
   saldoAttuale,
-  saldoPrevisto,
-  deltaMovimentiFuturi,
-  saldoInizioMese,
   margineMese,
-  saldoFineMese,
+  protectionStatus,
 }: {
   saldoAttuale: number;
-  saldoPrevisto: number;
-  deltaMovimentiFuturi: number;
-  saldoInizioMese: number;
   margineMese: number;
-  saldoFineMese: number;
+  protectionStatus: "OK" | "ATTENZIONE" | "CRITICO";
 }) {
   const isPositive = saldoAttuale >= 0;
+  const marginePositive = margineMese >= 0;
+
+  const pb = PROTECTION_BADGE[protectionStatus];
+  const ProtectionIcon = pb.icon;
 
   return (
-    <div className="rounded-xl border border-l-4 border-l-teal-500 bg-gradient-to-br from-teal-50/80 to-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg dark:from-teal-950/40 dark:to-zinc-900">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        {/* Saldo principale */}
-        <div className="flex items-center gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-teal-100 dark:bg-teal-900/30">
-            <Wallet className="h-6 w-6 text-teal-600 dark:text-teal-400" />
-          </div>
-          <div>
-            <p className="text-[11px] font-semibold tracking-widest text-muted-foreground/70 uppercase">
-              Saldo di Cassa
-            </p>
-            <AnimatedNumber
-              value={saldoAttuale}
-              format="currency"
-              className={`text-3xl font-extrabold tracking-tighter tabular-nums sm:text-4xl ${
-                isPositive ? "text-teal-700 dark:text-teal-400" : "text-red-700 dark:text-red-400"
-              }`}
-            />
-          </div>
-        </div>
-
-        {/* Sub-KPI mese */}
-        <div className="flex gap-6 sm:gap-8">
-          <div className="text-center">
-            <p className="text-[10px] font-medium text-muted-foreground/60 uppercase">Inizio Mese</p>
-            <AnimatedNumber
-              value={saldoInizioMese}
-              format="currency"
-              className="text-base font-bold tabular-nums text-zinc-700 dark:text-zinc-300"
-            />
-          </div>
-          <div className="text-center">
-            <p className="text-[10px] font-medium text-muted-foreground/60 uppercase">Margine</p>
-            <p className={`text-base font-bold tabular-nums ${
-              margineMese >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"
-            }`}>
-              {margineMese >= 0 ? "+" : ""}
-              <AnimatedNumber value={margineMese} format="currency" />
-            </p>
-          </div>
-          <div className="text-center">
-            <p className="text-[10px] font-medium text-muted-foreground/60 uppercase">Fine Mese</p>
-            <AnimatedNumber
-              value={saldoFineMese}
-              format="currency"
-              className="text-base font-bold tabular-nums text-zinc-700 dark:text-zinc-300"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-4 rounded-lg border border-teal-200/70 bg-white/70 px-4 py-3 dark:border-teal-800/50 dark:bg-teal-950/20">
-        <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-[11px] font-semibold tracking-widest text-muted-foreground/70 uppercase">
-              Saldo Previsto
-            </p>
-            <AnimatedNumber
-              value={saldoPrevisto}
-              format="currency"
-              className="text-xl font-extrabold tracking-tighter tabular-nums text-teal-700 dark:text-teal-300 sm:text-2xl"
-            />
-          </div>
-          <p className={`text-sm font-medium tabular-nums ${
-            deltaMovimentiFuturi >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"
-          }`}>
-            {deltaMovimentiFuturi >= 0 ? "+" : ""}
-            {formatCurrency(deltaMovimentiFuturi)} da movimenti futuri registrati
+    <div className="rounded-2xl border border-teal-200/60 bg-gradient-to-br from-teal-50/90 via-white to-teal-50/40 px-6 py-8 shadow-sm sm:px-8 sm:py-10 dark:border-teal-800/40 dark:from-teal-950/40 dark:via-zinc-900 dark:to-teal-950/20">
+      <div className="flex flex-col items-center gap-4 text-center">
+        {/* Label + protection badge */}
+        <div className="flex items-center gap-2.5">
+          <Wallet className="h-4 w-4 text-teal-500/70 dark:text-teal-400/60" />
+          <p className="text-xs font-semibold tracking-[0.2em] text-muted-foreground uppercase">
+            Saldo di Cassa
           </p>
+          <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${pb.cls}`}>
+            <ProtectionIcon className="h-3 w-3" />
+            {pb.label}
+          </span>
+        </div>
+
+        {/* Main number */}
+        <AnimatedNumber
+          value={saldoAttuale}
+          format="currency"
+          className={`text-5xl font-extrabold tracking-tighter tabular-nums sm:text-6xl ${
+            isPositive ? "text-teal-800 dark:text-teal-300" : "text-red-700 dark:text-red-400"
+          }`}
+        />
+
+        {/* Monthly delta pill */}
+        <div className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-sm font-semibold ${
+          marginePositive
+            ? "bg-emerald-100/80 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400"
+            : "bg-red-100/80 text-red-700 dark:bg-red-500/15 dark:text-red-400"
+        }`}>
+          {marginePositive ? (
+            <TrendingUp className="h-3.5 w-3.5" />
+          ) : (
+            <TrendingDown className="h-3.5 w-3.5" />
+          )}
+          {marginePositive ? "+" : ""}{formatCurrency(margineMese)} questo mese
         </div>
       </div>
     </div>
@@ -682,76 +654,79 @@ function SaldoHeroCard({
 }
 
 // ════════════════════════════════════════════════════════════
-function CashProtectionCard({ protection }: { protection: CashProtection }) {
-  const statusConfig = {
-    OK: {
-      label: "Protetta",
-      icon: ShieldCheck,
-      border: "border-l-emerald-500",
-      bg: "from-emerald-50/80 to-white dark:from-emerald-950/30 dark:to-zinc-900",
-      text: "text-emerald-700 dark:text-emerald-400",
-    },
-    ATTENZIONE: {
-      label: "Attenzione",
-      icon: ShieldAlert,
-      border: "border-l-amber-500",
-      bg: "from-amber-50/80 to-white dark:from-amber-950/30 dark:to-zinc-900",
-      text: "text-amber-700 dark:text-amber-400",
-    },
-    CRITICO: {
-      label: "Critica",
-      icon: ShieldX,
-      border: "border-l-red-500",
-      bg: "from-red-50/80 to-white dark:from-red-950/30 dark:to-zinc-900",
-      text: "text-red-700 dark:text-red-400",
-    },
-  } as const;
+// Protection badge config (shared by SaldoHeroCard)
+// ════════════════════════════════════════════════════════════
 
-  const cfg = statusConfig[protection.stato];
-  const Icon = cfg.icon;
+const PROTECTION_BADGE = {
+  OK: { label: "Protetta", icon: ShieldCheck, cls: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400" },
+  ATTENZIONE: { label: "Attenzione", icon: ShieldAlert, cls: "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400" },
+  CRITICO: { label: "Critica", icon: ShieldX, cls: "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400" },
+} as const;
 
+// ════════════════════════════════════════════════════════════
+// Balance Context Strip (secondary reference data)
+// ════════════════════════════════════════════════════════════
+
+function BalanceContextStrip({
+  saldoInizioMese,
+  saldoFineMese,
+  saldoPrevisto,
+  deltaMovimentiFuturi,
+  protection,
+}: {
+  saldoInizioMese: number;
+  saldoFineMese: number;
+  saldoPrevisto: number;
+  deltaMovimentiFuturi: number;
+  protection: CashProtection;
+}) {
   return (
-    <div className={`rounded-xl border border-l-4 ${cfg.border} bg-gradient-to-br ${cfg.bg} p-4 shadow-sm`}>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/80 dark:bg-zinc-900/70">
-            <Icon className={`h-4 w-4 ${cfg.text}`} />
-          </div>
-          <div>
-            <p className="text-[11px] font-semibold tracking-widest text-muted-foreground/70 uppercase">
-              Protezione Cassa
-            </p>
-            <p className={`text-lg font-bold tracking-tight ${cfg.text}`}>{cfg.label}</p>
-          </div>
-        </div>
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+      <ContextCell label="Inizio Mese" value={formatCurrency(saldoInizioMese)} />
+      <ContextCell label="Fine Mese" value={formatCurrency(saldoFineMese)} />
+      <ContextCell
+        label="Previsto"
+        value={formatCurrency(saldoPrevisto)}
+        sub={`${deltaMovimentiFuturi >= 0 ? "+" : ""}${formatCurrency(deltaMovimentiFuturi)} futuri`}
+        subPositive={deltaMovimentiFuturi >= 0}
+      />
+      <ContextCell
+        label="Copertura"
+        value={`${protection.copertura_giorni.toFixed(0)} giorni`}
+      />
+      <ContextCell
+        label="Costo Operativo"
+        value={formatCurrency(protection.costo_operativo_mensile)}
+        sub="/mese"
+      />
+    </div>
+  );
+}
 
-        <div className="grid grid-cols-2 gap-4 sm:flex sm:items-center sm:gap-8">
-          <div>
-            <p className="text-[10px] uppercase text-muted-foreground/70">Soglia 45gg</p>
-            <p className="text-sm font-bold tabular-nums">{formatCurrency(protection.soglia_sicurezza)}</p>
-          </div>
-          <div>
-            <p className="text-[10px] uppercase text-muted-foreground/70">Margine</p>
-            <p
-              className={`text-sm font-bold tabular-nums ${
-                protection.margine_sicurezza >= 0
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : "text-red-600 dark:text-red-400"
-              }`}
-            >
-              {formatCurrency(protection.margine_sicurezza)}
-            </p>
-          </div>
-          <div>
-            <p className="text-[10px] uppercase text-muted-foreground/70">Copertura</p>
-            <p className="text-sm font-bold tabular-nums">{protection.copertura_giorni.toFixed(1)} giorni</p>
-          </div>
-          <div>
-            <p className="text-[10px] uppercase text-muted-foreground/70">Costo mensile</p>
-            <p className="text-sm font-bold tabular-nums">{formatCurrency(protection.costo_operativo_mensile)}</p>
-          </div>
-        </div>
-      </div>
+function ContextCell({
+  label,
+  value,
+  sub,
+  subPositive,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+  subPositive?: boolean;
+}) {
+  return (
+    <div className="rounded-lg border bg-muted/30 px-3 py-2.5">
+      <p className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">{label}</p>
+      <p className="text-sm font-bold tabular-nums text-foreground">{value}</p>
+      {sub != null && (
+        <p className={`text-[10px] tabular-nums ${
+          subPositive !== undefined
+            ? (subPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400")
+            : "text-muted-foreground"
+        }`}>
+          {sub}
+        </p>
+      )}
     </div>
   );
 }
@@ -856,7 +831,7 @@ function KpiCards({
         return (
           <div
             key={kpi.key}
-            className={`flex items-start gap-3 rounded-xl border border-l-4 ${borderColor} bg-gradient-to-br ${gradient} p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg`}
+            className={`flex items-start gap-3 rounded-xl border border-l-4 ${borderColor} bg-gradient-to-br ${gradient} p-4 shadow-sm transition-shadow hover:shadow-md`}
           >
             <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg sm:h-10 sm:w-10 ${iconBg}`}>
               <Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${iconColor}`} />
