@@ -34,6 +34,7 @@ import { TodoCard } from "@/components/dashboard/TodoCard";
 import { GhostEventsSheet } from "@/components/dashboard/GhostEventsSheet";
 import { ExpiringContractsSheet } from "@/components/dashboard/ExpiringContractsSheet";
 import { InactiveClientsSheet } from "@/components/dashboard/InactiveClientsSheet";
+import { BirthdayClientsSheet } from "@/components/dashboard/BirthdayClientsSheet";
 import { useDashboard, useDashboardAlerts } from "@/hooks/useDashboard";
 import { useEvents } from "@/hooks/useAgenda";
 import { usePageReveal } from "@/lib/page-reveal";
@@ -108,11 +109,13 @@ export default function DashboardPage() {
   const [ghostSheetOpen, setGhostSheetOpen] = useState(false);
   const [expiringSheetOpen, setExpiringSheetOpen] = useState(false);
   const [inactiveSheetOpen, setInactiveSheetOpen] = useState(false);
+  const [birthdaySheetOpen, setBirthdaySheetOpen] = useState(false);
 
   const alertActions: Record<string, () => void> = {
     ghost_events: () => setGhostSheetOpen(true),
     expiring_contracts: () => setExpiringSheetOpen(true),
     inactive_clients: () => setInactiveSheetOpen(true),
+    birthdays: () => setBirthdaySheetOpen(true),
   };
 
   return (
@@ -203,6 +206,7 @@ export default function DashboardPage() {
       <GhostEventsSheet open={ghostSheetOpen} onOpenChange={setGhostSheetOpen} />
       <ExpiringContractsSheet open={expiringSheetOpen} onOpenChange={setExpiringSheetOpen} />
       <InactiveClientsSheet open={inactiveSheetOpen} onOpenChange={setInactiveSheetOpen} />
+      <BirthdayClientsSheet open={birthdaySheetOpen} onOpenChange={setBirthdaySheetOpen} />
     </div>
   );
 }

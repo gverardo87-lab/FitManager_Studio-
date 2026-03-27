@@ -1022,10 +1022,22 @@ export interface InactiveClientItem {
   ultimo_evento_categoria: string | null;
 }
 
+/** Cliente con compleanno imminente per Dashboard Sheet */
+export interface BirthdayClientItem {
+  client_id: number;
+  nome: string;
+  cognome: string;
+  telefono: string | null;
+  email: string | null;
+  data_nascita: string; // ISO date
+  giorni_mancanti: number; // 0 = oggi, 1-7 = prossimi giorni
+  eta_compie: number; // eta' che compie
+}
+
 /** Singolo alert con severity, categoria e contesto navigabile */
 export interface AlertItem {
   severity: "critical" | "warning" | "info";
-  category: "ghost_events" | "expiring_contracts" | "overdue_rates" | "inactive_clients";
+  category: "ghost_events" | "expiring_contracts" | "overdue_rates" | "inactive_clients" | "birthdays";
   title: string;
   detail: string;
   count: number;

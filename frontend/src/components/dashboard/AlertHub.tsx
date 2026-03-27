@@ -12,6 +12,7 @@ import Link from "next/link";
 import {
   AlertCircle,
   Bell,
+  Cake,
   CheckCircle2,
   ChevronDown,
   CreditCard,
@@ -35,6 +36,7 @@ const ALERT_ICON: Record<string, typeof Ghost> = {
   inactive_clients: UserX,
   stale_schede: Dumbbell,
   stale_measurements: Ruler,
+  birthdays: Cake,
 };
 
 const SEVERITY_STYLES: Record<string, {

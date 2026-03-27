@@ -398,6 +398,57 @@ def get_expiring_contracts(
     return {"items": items, "total": len(items)}
 
 
+@router.get("/birthday-clients")
+def get_birthday_clients(
+    trainer: Trainer = Depends(get_current_trainer),
+    session: Session = Depends(get_session),
+):
+    """
+    Clienti con compleanno oggi o nei prossimi 7 giorni.
+
+    Restituisce dati per auguri WhatsApp: nome, telefono, data nascita,
+    giorni mancanti, eta' che compie.
+    Ordinamento: compleanno piu' vicino prima.
+    """
+    today = date.today()
+
+    rows = session.execute(text("""
+        SELECT cl.id, cl.nome, cl.cognome, cl.data_nascita, cl.telefono, cl.email
+        FROM clienti cl
+        WHERE cl.trainer_id = :tid
+          AND cl.stato = 'Attivo'
+          AND cl.deleted_at IS NULL
+          AND cl.data_nascita IS NOT NULL
+    """), {"tid": trainer.id}).fetchall()
+
+    items = []
+    for cid, nome, cognome, dn_raw, telefono, email in rows:
+        try:
+            dn = date.fromisoformat(dn_raw) if isinstance(dn_raw, str) else dn_raw
+            this_year_bday = dn.replace(year=today.year)
+            if this_year_bday < today:
+                this_year_bday = dn.replace(year=today.year + 1)
+            days_until = (this_year_bday - today).days
+            if days_until > 7:
+                continue
+            eta = this_year_bday.year - dn.year
+            items.append({
+                "client_id": cid,
+                "nome": nome,
+                "cognome": cognome,
+                "telefono": telefono,
+                "email": email,
+                "data_nascita": dn.isoformat(),
+                "giorni_mancanti": days_until,
+                "eta_compie": eta,
+            })
+        except (ValueError, TypeError):
+            continue
+
+    items.sort(key=lambda x: x["giorni_mancanti"])
+    return {"items": items, "total": len(items)}
+
+
 @router.get("/inactive-clients")
 def get_inactive_clients(
     trainer: Trainer = Depends(get_current_trainer),
@@ -705,6 +756,55 @@ def get_dashboard_alerts(
             detail="Misurazioni non aggiornate da oltre 5 settimane",
             count=stale_misure_count,
             link="/monitoraggio",
+        ))
+
+    # ── 6. Compleanni imminenti (oggi + prossimi 7 giorni) ──
+    birthday_clients = session.execute(text("""
+        SELECT cl.id, cl.nome, cl.cognome, cl.data_nascita, cl.telefono
+        FROM clienti cl
+        WHERE cl.trainer_id = :tid
+          AND cl.stato = 'Attivo'
+          AND cl.deleted_at IS NULL
+          AND cl.data_nascita IS NOT NULL
+    """), {"tid": trainer.id}).fetchall()
+
+    birthday_today = []
+    birthday_upcoming = []
+    for cid, nome, cognome, dn_raw, telefono in birthday_clients:
+        try:
+            dn = date.fromisoformat(dn_raw) if isinstance(dn_raw, str) else dn_raw
+            # Confronto mese+giorno (ignora anno)
+            this_year_bday = dn.replace(year=today.year)
+            # Se gia' passato quest'anno, controlla il prossimo anno
+            if this_year_bday < today:
+                this_year_bday = dn.replace(year=today.year + 1)
+            days_until = (this_year_bday - today).days
+            if days_until == 0:
+                birthday_today.append((nome, cognome))
+            elif days_until <= 7:
+                birthday_upcoming.append((nome, cognome, days_until))
+        except (ValueError, TypeError):
+            continue
+
+    if birthday_today:
+        names = ", ".join(f"{n} {c}" for n, c in birthday_today)
+        items.append(AlertItem(
+            severity="info",
+            category="birthdays",
+            title=f"Buon compleanno {names}!" if len(birthday_today) == 1 else f"{len(birthday_today)} compleanni oggi!",
+            detail="Invia un messaggio di auguri" if len(birthday_today) == 1 else f"Auguri a: {names}",
+            count=len(birthday_today),
+        ))
+
+    if birthday_upcoming:
+        birthday_upcoming.sort(key=lambda x: x[2])
+        closest = birthday_upcoming[0]
+        items.append(AlertItem(
+            severity="info",
+            category="birthdays",
+            title=f"{len(birthday_upcoming)} {'compleanno' if len(birthday_upcoming) == 1 else 'compleanni'} nei prossimi 7 giorni",
+            detail=f"Prossimo: {closest[0]} {closest[1]} tra {closest[2]} {'giorno' if closest[2] == 1 else 'giorni'}",
+            count=len(birthday_upcoming),
         ))
 
     # ── Conteggi severity ──

@@ -145,6 +145,90 @@ export function waEventConfirm(
   );
 }
 
+/** Auguri di compleanno — caldo e personale. */
+export function waBirthday(
+  clientName: string,
+  trainerName: string,
+): string {
+  return (
+    `Ciao ${clientName}, tanti auguri di buon compleanno! ` +
+    `Spero che sia una giornata speciale. ` +
+    `Ci vediamo presto in palestra per festeggiare con un bell'allenamento! ` +
+    `A presto!\n— ${trainerName}`
+  );
+}
+
+/** Traguardo sedute raggiunto — celebrativo. */
+export function waMilestone(
+  clientName: string,
+  trainerName: string,
+  sedute: number,
+): string {
+  return (
+    `Ciao ${clientName}, volevo farti i complimenti: hai completato ${sedute} sedute! ` +
+    `E' un traguardo importante e i risultati si vedono. ` +
+    `Continuiamo cosi'!\n— ${trainerName}`
+  );
+}
+
+/** Reminder lezione di gruppo / classe. */
+export function waClassReminder(
+  clientName: string,
+  trainerName: string,
+  classe: string,
+  data: string,
+  ora: string,
+): string {
+  return (
+    `Ciao ${clientName}, ti ricordo la lezione di ${classe} ` +
+    `prevista per ${data} alle ${ora}. ` +
+    `Ti aspetto!\n— ${trainerName}`
+  );
+}
+
+/** Piano alimentare pronto — invito a consultarlo. */
+export function waNutritionPlan(
+  clientName: string,
+  trainerName: string,
+  pianoNome?: string,
+): string {
+  const nome = pianoNome ? ` "${pianoNome}"` : "";
+  return (
+    `Ciao ${clientName}, il tuo piano alimentare${nome} e' pronto! ` +
+    `Ho preparato un programma personalizzato per supportare i tuoi obiettivi. ` +
+    `Se hai domande su qualche pasto o sostituzione, scrivimi pure. ` +
+    `Buon appetito!\n— ${trainerName}`
+  );
+}
+
+/** Classe annullata — avviso tempestivo. */
+export function waClassCancelled(
+  clientName: string,
+  trainerName: string,
+  classe: string,
+  data: string,
+): string {
+  return (
+    `Ciao ${clientName}, ti avviso che la lezione di ${classe} ` +
+    `prevista per ${data} e' stata annullata. ` +
+    `Ti aggiorno appena riprogrammiamo. Scusa per il disagio! ` +
+    `A presto!\n— ${trainerName}`
+  );
+}
+
+/** Aggiornamento progressi — check mensile. */
+export function waProgressUpdate(
+  clientName: string,
+  trainerName: string,
+): string {
+  return (
+    `Ciao ${clientName}! E' passato un po' dall'ultimo check dei tuoi progressi. ` +
+    `Che ne dici di aggiornare le misurazioni nella prossima sessione? ` +
+    `Cosi' vediamo insieme i risultati del lavoro fatto. ` +
+    `Fammi sapere!\n— ${trainerName}`
+  );
+}
+
 /** Messaggio libero (solo numero pre-compilato, testo vuoto). */
 export function waFreeMessage(trainerName: string): string {
   return `\n— ${trainerName}`;

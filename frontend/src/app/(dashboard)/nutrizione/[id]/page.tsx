@@ -28,9 +28,12 @@ import { DayDetailPanel } from "@/components/nutrition/DayDetailPanel";
 import { FoodSearchSidebar } from "@/components/nutrition/FoodSearchSidebar";
 import { NutritionPlanSheet } from "@/components/nutrition/NutritionPlanSheet";
 import { LarnValidationPanel } from "@/components/nutrition/LarnValidationPanel";
+import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import { useClients } from "@/hooks/useClients";
+import { useTrainerName } from "@/hooks/useTrainerName";
 import { resolveBackNavigation } from "@/lib/url-state";
 import { printNutritionPlan } from "@/lib/print-nutrition-plan";
+import { waNutritionPlan } from "@/lib/whatsapp-templates";
 
 // ── Macro bar ─────────────────────────────────────────────────────────────
 
@@ -88,6 +91,8 @@ export default function NutritionPlanPage({
 
   const backNav = resolveBackNavigation(fromParam, { href: "/nutrizione", label: "Torna ai piani" });
   const { data: planDetail, isLoading } = useNutritionPlanById(planId);
+  const { data: clientsData } = useClients();
+  const trainerName = useTrainerName();
 
   if (isLoading) {
     return (
@@ -112,6 +117,10 @@ export default function NutritionPlanPage({
   }
 
   const clientId = planDetail.id_cliente;
+  const clientList = Array.isArray(clientsData)
+    ? clientsData
+    : (clientsData as { items?: { id: number; nome: string; cognome: string; telefono: string | null }[] })?.items ?? [];
+  const resolvedClient = clientList.find((c) => c.id === clientId);
 
   return (
     <div className="space-y-5">
@@ -158,6 +167,16 @@ export default function NutritionPlanPage({
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
+          <WhatsAppButton
+            phone={resolvedClient?.telefono}
+            message={waNutritionPlan(
+              resolvedClient?.nome ?? "",
+              trainerName,
+              planDetail.nome,
+            )}
+            variant="compact"
+            label="Invia"
+          />
           <Button variant="outline" size="sm" onClick={() => printNutritionPlan(planDetail)} title="Stampa piano">
             <Printer className="mr-2 h-3.5 w-3.5" />
             <span className="hidden sm:inline">Stampa</span>

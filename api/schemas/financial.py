@@ -416,7 +416,7 @@ class DashboardSummary(BaseModel):
 class AlertItem(BaseModel):
     """Singolo warning con severity, messaggio e contesto navigabile."""
     severity: str           # "critical" | "warning" | "info"
-    category: str           # "ghost_events" | "expiring_contracts" | "overdue_rates" | "inactive_clients"
+    category: str           # "ghost_events" | "expiring_contracts" | "overdue_rates" | "inactive_clients" | "birthdays"
     title: str
     detail: str
     count: int = 1
@@ -428,11 +428,13 @@ class DashboardAlerts(BaseModel):
     Warning proattivi per la dashboard — rispondono a:
     "Cosa richiede la mia attenzione ORA?"
 
-    4 categorie di alert:
+    6 categorie di alert:
     1. ghost_events: eventi passati ancora 'Programmato' (no-show candidates)
     2. expiring_contracts: contratti in scadenza con crediti inutilizzati
     3. overdue_rates: rate scadute non saldate
     4. inactive_clients: clienti attivi senza eventi da >14 giorni
+    5. stale_schede/stale_measurements: programmi/misurazioni da aggiornare
+    6. birthdays: compleanni oggi o nei prossimi 7 giorni
     """
     total_alerts: int = 0
     critical_count: int = 0
