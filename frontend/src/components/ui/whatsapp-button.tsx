@@ -51,20 +51,28 @@ export function WhatsAppButton({
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault();
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
+  // Variante icon: usa <a> nativo invece di <Button> per evitare
+  // button-inside-button (hydration error in SessionItem, EventHoverCard, etc.)
   if (variant === "icon") {
     return (
-      <Button
-        variant="ghost"
-        size="icon"
-        className={cn("h-7 w-7 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30", className)}
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
         onClick={handleClick}
         title="Contatta su WhatsApp"
+        className={cn(
+          "inline-flex items-center justify-center rounded-md transition-colors",
+          "h-7 w-7 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30",
+          className,
+        )}
       >
         <WhatsAppIcon className="h-3.5 w-3.5" />
-      </Button>
+      </a>
     );
   }
 
