@@ -12,6 +12,7 @@
 
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   UserX,
@@ -27,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import {
   Sheet,
   SheetContent,
@@ -36,6 +38,7 @@ import {
 } from "@/components/ui/sheet";
 import { useInactiveClients } from "@/hooks/useDashboard";
 import { formatShortDate } from "@/lib/format";
+import { waCheckIn } from "@/lib/whatsapp-templates";
 
 // ── Helpers ──
 
@@ -67,8 +70,18 @@ interface InactiveClientsSheetProps {
 
 export function InactiveClientsSheet({ open, onOpenChange }: InactiveClientsSheetProps) {
   const { data, isLoading } = useInactiveClients(open);
-
   const items = data?.items ?? [];
+
+  const [trainerName, setTrainerName] = useState("");
+  useEffect(() => {
+    try {
+      const raw = document.cookie.match(/fitmanager_trainer=([^;]+)/)?.[1];
+      if (raw) {
+        const t = JSON.parse(decodeURIComponent(raw));
+        setTrainerName(`${t.nome} ${t.cognome}`);
+      }
+    } catch { /* noop */ }
+  }, []);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -160,6 +173,12 @@ export function InactiveClientsSheet({ open, onOpenChange }: InactiveClientsShee
                         {item.telefono}
                       </a>
                     )}
+                    <WhatsAppButton
+                      phone={item.telefono}
+                      message={waCheckIn(item.nome, trainerName, item.giorni_inattivo)}
+                      variant="compact"
+                      label="Scrivi"
+                    />
                     {item.email && (
                       <a
                         href={`mailto:${item.email}`}

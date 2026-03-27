@@ -72,6 +72,79 @@ export function waWelcome(
   );
 }
 
+/** Rinnovo contratto in scadenza — urgenza calibrata. */
+export function waRenewalReminder(
+  clientName: string,
+  trainerName: string,
+  pacchetto: string,
+  giorniRimasti: number,
+  creditiResidui: number,
+): string {
+  const urgenza = giorniRimasti <= 3
+    ? "Il tuo pacchetto scade tra pochissimo"
+    : giorniRimasti <= 7
+      ? `Il tuo pacchetto "${pacchetto}" scade tra ${giorniRimasti} giorni`
+      : `Il tuo pacchetto "${pacchetto}" e' in scadenza`;
+  const crediti = creditiResidui > 0
+    ? ` Hai ancora ${creditiResidui} ${creditiResidui === 1 ? "seduta" : "sedute"} disponibili — organizziamoci per usarle!`
+    : "";
+  return (
+    `Ciao ${clientName}, ${urgenza}.${crediti} ` +
+    `Vuoi che prepari il rinnovo? Scrivimi e troviamo la soluzione migliore per te. ` +
+    `A presto!\n— ${trainerName}`
+  );
+}
+
+/** Conferma contratto appena firmato. */
+export function waContractConfirm(
+  clientName: string,
+  trainerName: string,
+  pacchetto: string,
+  crediti: number,
+  dataScadenza: string,
+): string {
+  return (
+    `Ciao ${clientName}, confermo l'attivazione del pacchetto "${pacchetto}" ` +
+    `(${crediti} ${crediti === 1 ? "seduta" : "sedute"}, ` +
+    `valido fino al ${formatShortDate(dataScadenza)}). ` +
+    `Non vedo l'ora di iniziare! Se hai domande, scrivimi pure. ` +
+    `A presto!\n— ${trainerName}`
+  );
+}
+
+/** Re-engagement cliente inattivo — tono caldo, zero pressione. */
+export function waCheckIn(
+  clientName: string,
+  trainerName: string,
+  giorniInattivo: number,
+): string {
+  const tempo = giorniInattivo >= 30
+    ? "E' passato un po' di tempo dall'ultima sessione"
+    : `Sono ${giorniInattivo} giorni che non ci vediamo`;
+  return (
+    `Ciao ${clientName}! ${tempo} e volevo sapere come stai. ` +
+    `Quando vuoi riprendere, sono qui. Anche solo per un allenamento di ripresa leggero. ` +
+    `Fammi sapere!\n— ${trainerName}`
+  );
+}
+
+/** Conferma appuntamento appena creato. */
+export function waEventConfirm(
+  clientName: string,
+  trainerName: string,
+  data: string,
+  ora: string,
+  titolo?: string,
+): string {
+  const sessione = titolo ? ` "${titolo}"` : "";
+  return (
+    `Ciao ${clientName}, ti confermo la sessione${sessione} ` +
+    `per ${data} alle ${ora}. ` +
+    `Ti aspetto! Se hai bisogno di spostare, scrivimi con anticipo. ` +
+    `A presto!\n— ${trainerName}`
+  );
+}
+
 /** Messaggio libero (solo numero pre-compilato, testo vuoto). */
 export function waFreeMessage(trainerName: string): string {
   return `\n— ${trainerName}`;

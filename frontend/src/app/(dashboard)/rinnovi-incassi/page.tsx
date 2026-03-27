@@ -10,7 +10,7 @@
  * Visual: KPI gradient strip + card con severity coloring.
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   AlertTriangle,
@@ -36,11 +36,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import { ContractSheet } from "@/components/contracts/ContractSheet";
 import { useOverdueRates, useExpiringContracts } from "@/hooks/useDashboard";
 import { usePayRate } from "@/hooks/useRates";
 import { usePageReveal } from "@/lib/page-reveal";
 import { formatCurrency, formatShortDate, toISOLocal } from "@/lib/format";
+import { waRenewalReminder, waRateReminder } from "@/lib/whatsapp-templates";
 import type { ExpiringContractItem, OverdueRateItem } from "@/types/api";
 
 const PAYMENT_METHODS = ["CONTANTI", "POS", "BONIFICO"] as const;
@@ -84,9 +86,11 @@ function KpiCard({ icon: Icon, label, value, sublabel, border, bg, iconBg, iconC
 function RenewalCard({
   item,
   onRenew,
+  trainerName,
 }: {
   item: ExpiringContractItem;
   onRenew: (item: ExpiringContractItem) => void;
+  trainerName: string;
 }) {
   const isExpired = item.giorni_rimasti <= 0;
   const urgencyClass = isExpired
@@ -139,6 +143,17 @@ function RenewalCard({
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <WhatsAppButton
+            phone={item.client_telefono}
+            message={waRenewalReminder(
+              item.client_nome,
+              trainerName,
+              item.tipo_pacchetto || "allenamento",
+              item.giorni_rimasti,
+              item.crediti_residui,
+            )}
+            variant="icon"
+          />
           <Button size="sm" asChild variant="ghost" className="text-xs">
             <Link href={`/contratti/${item.contract_id}`}>
               Dettaglio
@@ -159,7 +174,7 @@ function RenewalCard({
 // OverdueRateCard — rata in ritardo con pagamento inline
 // ════════════════════════════════════════════════════════════
 
-function OverdueRateCard({ item }: { item: OverdueRateItem }) {
+function OverdueRateCard({ item, trainerName }: { item: OverdueRateItem; trainerName: string }) {
   const payRate = usePayRate();
   const [method, setMethod] = useState("CONTANTI");
   const isPaying = payRate.isPending;
@@ -190,6 +205,11 @@ function OverdueRateCard({ item }: { item: OverdueRateItem }) {
             >
               {item.client_nome} {item.client_cognome}
             </Link>
+            <WhatsAppButton
+              phone={item.client_telefono}
+              message={waRateReminder(item.client_nome, trainerName, item.importo_residuo, item.data_scadenza)}
+              variant="icon"
+            />
             <Badge variant="destructive" className="text-xs">
               {item.giorni_ritardo === 1
                 ? "1 giorno"
@@ -244,6 +264,17 @@ export default function RinnoviIncassiPage() {
 
   const [renewSheet, setRenewSheet] = useState(false);
   const [renewItem, setRenewItem] = useState<ExpiringContractItem | null>(null);
+
+  const [trainerName, setTrainerName] = useState("");
+  useEffect(() => {
+    try {
+      const raw = document.cookie.match(/fitmanager_trainer=([^;]+)/)?.[1];
+      if (raw) {
+        const t = JSON.parse(decodeURIComponent(raw));
+        setTrainerName(`${t.nome} ${t.cognome}`);
+      }
+    } catch { /* noop */ }
+  }, []);
 
   const overdueItems = overdueQuery.data?.items ?? [];
   const expiringItems = expiringQuery.data?.items ?? [];
@@ -374,7 +405,7 @@ export default function RinnoviIncassiPage() {
           </div>
           <div className="space-y-2">
             {expiringItems.map((item) => (
-              <RenewalCard key={item.contract_id} item={item} onRenew={handleRenew} />
+              <RenewalCard key={item.contract_id} item={item} onRenew={handleRenew} trainerName={trainerName} />
             ))}
           </div>
         </section>
@@ -394,7 +425,7 @@ export default function RinnoviIncassiPage() {
           </div>
           <div className="space-y-2">
             {overdueItems.map((item) => (
-              <OverdueRateCard key={item.rate_id} item={item} />
+              <OverdueRateCard key={item.rate_id} item={item} trainerName={trainerName} />
             ))}
           </div>
         </section>

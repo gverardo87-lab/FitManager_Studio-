@@ -392,6 +392,7 @@ def get_expiring_contracts(
             "client_id": client.id,
             "client_nome": client.nome,
             "client_cognome": client.cognome,
+            "client_telefono": client.telefono,
         })
 
     return {"items": items, "total": len(items)}

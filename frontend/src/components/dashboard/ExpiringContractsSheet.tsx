@@ -11,6 +11,7 @@
 
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   CreditCard,
@@ -25,6 +26,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import {
   Sheet,
   SheetContent,
@@ -34,6 +36,7 @@ import {
 } from "@/components/ui/sheet";
 import { useExpiringContracts } from "@/hooks/useDashboard";
 import { formatCurrency, formatShortDate } from "@/lib/format";
+import { waRenewalReminder } from "@/lib/whatsapp-templates";
 
 // ── Helpers ──
 
@@ -58,8 +61,18 @@ interface ExpiringContractsSheetProps {
 
 export function ExpiringContractsSheet({ open, onOpenChange }: ExpiringContractsSheetProps) {
   const { data, isLoading } = useExpiringContracts(open);
-
   const items = data?.items ?? [];
+
+  const [trainerName, setTrainerName] = useState("");
+  useEffect(() => {
+    try {
+      const raw = document.cookie.match(/fitmanager_trainer=([^;]+)/)?.[1];
+      if (raw) {
+        const t = JSON.parse(decodeURIComponent(raw));
+        setTrainerName(`${t.nome} ${t.cognome}`);
+      }
+    } catch { /* noop */ }
+  }, []);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -118,13 +131,24 @@ export function ExpiringContractsSheet({ open, onOpenChange }: ExpiringContracts
                     key={item.contract_id}
                     className="rounded-lg border p-4 transition-shadow hover:shadow-sm"
                   >
-                    {/* Header: cliente + countdown */}
+                    {/* Header: cliente + WA + countdown */}
                     <div className="mb-2 flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <User aria-hidden="true" className="h-3.5 w-3.5 text-muted-foreground" />
                         <span className="text-sm font-semibold">
                           {item.client_nome} {item.client_cognome}
                         </span>
+                        <WhatsAppButton
+                          phone={item.client_telefono}
+                          message={waRenewalReminder(
+                            item.client_nome,
+                            trainerName,
+                            item.tipo_pacchetto || "allenamento",
+                            item.giorni_rimasti,
+                            item.crediti_residui,
+                          )}
+                          variant="icon"
+                        />
                       </div>
                       <div className={`rounded-md border px-2 py-0.5 text-[10px] font-bold tabular-nums ${countdownColor(item.giorni_rimasti)}`}>
                         {countdownLabel(item.giorni_rimasti)}

@@ -1007,6 +1007,7 @@ export interface ExpiringContractItem {
   client_id: number;
   client_nome: string;
   client_cognome: string;
+  client_telefono: string | null;
 }
 
 /** Cliente inattivo per Dashboard Sheet */
