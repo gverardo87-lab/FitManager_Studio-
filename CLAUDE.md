@@ -258,6 +258,7 @@ Skills installate in `.agents/skills/` — knowledge base attive per audit e cod
 | `docs/adr/ADR-007-fitscan-computer-vision-biomechanics.md` | FitScan: architettura a strati (pose commodity + engine proprietario), 3 livelli, integrazione motori | Quando tocchi FitScan, CV, misurazioni automatiche |
 | `docs/FITSCAN_ARCHITECTURE.md` | Spec tecnica FitScan: DB schema, Biomechanical Engine, Pose Provider, exercise profiles, privacy | Quando implementi FitScan — leggere SEMPRE prima di scrivere codice |
 | `docs/adr/ADR-008-builder-fullscreen-science-panel.md` | Builder full-screen: sidebar nascosta, Science Panel 320px con Safety+Score+Coverage+Balance live | Quando tocchi il builder, il layout, o la sidebar |
+| `docs/TAILSCALE_FUNNEL_SETUP.md` | Setup Tailscale Funnel, auto-start launcher, architettura proxy, troubleshooting, roadmap accesso remoto | Quando tocchi portale pubblico, anamnesi self-service, accesso remoto clienti |
 
 ## Commit
 
@@ -266,13 +267,14 @@ Formato: `area: descrizione` — es. `api: ...`, `nutrizione: ...`, `dashboard: 
 Quality gate obbligatorio: `bash tools/scripts/check-all.sh` (ruff + next build).
 Ogni commit deve lasciare il branch rilasciabile per il proprio scope.
 
-## Pitfalls ricorrenti (top 5)
+## Pitfalls ricorrenti (top 6)
 
 1. **`toISOString()` perde timezone**: usare `toISOLocal()` da `lib/format.ts` per ogni payload API con date.
 2. **`extra: "forbid"` + campo typo = 422**: verificare nomi campo con curl vs schema Pydantic dopo ogni refactor.
 3. **PyInstaller `Path(__file__)`**: non funziona in bundle → usare `DATA_DIR` da `config.py`.
 4. **Radix: no `<label>` + Checkbox**: causa double-toggle. Usare `<div onClick>` + `stopPropagation`.
 5. **`useState(() => browserAPI())`**: hydration mismatch. Usare `useState(false)` + `useEffect`.
+6. **Tailscale Funnel su porta FRONTEND, mai backend**: il funnel deve puntare a 3000 (Next.js), non 8000 (FastAPI). Le route `/public/*` sono pagine Next.js. Se punta al backend → `{"detail":"Not Found"}`. Dettagli in `docs/TAILSCALE_FUNNEL_SETUP.md`.
 
 ## Credenziali sviluppo
 

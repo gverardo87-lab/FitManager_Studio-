@@ -17,7 +17,7 @@ import { useMemo, useEffect, useRef, useState } from "react";
 import {
   Shield, Loader2, ChevronDown, Scale,
   AlertTriangle, CheckCircle2, XCircle, Pill,
-  Zap, Dumbbell,
+  Zap, Dumbbell, HelpCircle,
 } from "lucide-react";
 import { useAnalyzePlan } from "@/hooks/useTrainingScience";
 import { VALID_PATTERNS } from "@/lib/training-science-display";
@@ -33,6 +33,7 @@ import type {
   TSDettaglioMuscolo,
   TSDettaglioRapporto,
 } from "@/types/api";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { AnatomicalMuscleMap } from "./AnatomicalMuscleMap";
 import type { SessionCardData } from "./SessionCard";
 
@@ -382,6 +383,13 @@ function ScoreRing({ score, size, strokeWidth }: { score: number; size: number; 
 
 const BAR_ICONS: Record<string, string> = { vol: "V", bal: "E", frq: "F", rec: "R" };
 
+const SCORE_HINTS: Record<string, string> = {
+  vol: "Set totali per muscolo vs target settimanale (MEV-MAV-MRV)",
+  bal: "Rapporto push/pull, anteriore/posteriore e quad/hamstring",
+  frq: "Frequenza allenamento per muscolo rispetto all'ottimale",
+  rec: "Tempo di recupero stimato tra sessioni per gruppo muscolare",
+};
+
 function ScoreBar({ label, value, icon }: { label: string; value: number; icon: string }) {
   const pct = Math.min(100, Math.max(0, value));
   const color = pct >= 75
@@ -398,7 +406,12 @@ function ScoreBar({ label, value, icon }: { label: string; value: number; icon: 
   return (
     <div className="flex items-center gap-2">
       <span className="text-[10px] font-bold text-muted-foreground/50 w-3 shrink-0">{BAR_ICONS[icon]}</span>
-      <span className="text-[11px] text-muted-foreground w-16 shrink-0">{label}</span>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="text-[11px] text-muted-foreground w-16 shrink-0 cursor-help">{label}</span>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="max-w-xs text-xs">{SCORE_HINTS[icon] ?? label}</TooltipContent>
+      </Tooltip>
       <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
         <div
           className={`h-full rounded-full ${color}`}

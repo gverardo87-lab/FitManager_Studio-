@@ -209,7 +209,7 @@ export const TOUR_SCOPRI_FITMANAGER: TourDefinition = {
 
 // ── Mini-Tour Map ──
 // Mapping pagina → indici degli step in TOUR_SCOPRI_FITMANAGER
-// Usato dal HelpBot per lanciare tour contestuali (subset del tour completo).
+// Usato dal layout per lanciare tour contestuali (subset del tour completo).
 
 export const MINI_TOUR_MAP: Record<string, number[]> = {
   "/":            [0],         // dashboard-header

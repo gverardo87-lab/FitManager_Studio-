@@ -130,24 +130,24 @@ PUBLIC_BASE_URL=https://<nome-macchina>.<tailnet>.ts.net
 ```
 In quel caso riavviare FitManager dopo la modifica manuale del file `data/.env`.
 
-### Fase 5 — Attivazione Funnel Persistente (2 min)
+### Fase 5 — Funnel (automatico dal launcher)
 
-- [ ] 5.1 Aprire terminale (PowerShell o CMD)
-- [ ] 5.2 Attivare Funnel persistente:
-  ```bash
-  tailscale funnel --bg 3000
-  ```
-  Output atteso:
-  ```
-  Available on the internet:
-  https://<nome>.<tailnet>.ts.net/
-  |-- proxy http://127.0.0.1:3000
-  ```
-- [ ] 5.3 Verificare che sia in background:
+Il launcher attiva automaticamente il funnel se `PUBLIC_PORTAL_ENABLED=true` nel `.env`.
+Non serve aprire terminali — basta avviare FitManager normalmente.
+
+- [ ] 5.1 Verificare che nel log del launcher compaia: `[+] Attivazione Tailscale Funnel su porta 3000...`
+- [ ] 5.2 Verificare stato:
   ```bash
   tailscale funnel status
-  # Deve mostrare la configurazione attiva
+  # Deve mostrare:
+  # https://<nome>.<tailnet>.ts.net (Funnel on)
+  # |-- / proxy http://127.0.0.1:3000
   ```
+
+**Se serve attivare manualmente** (debug o terminale):
+```bash
+tailscale funnel --bg 3000
+```
 
 ### Fase 6 — Test End-to-End (3 min)
 
@@ -310,20 +310,61 @@ legge le variabili d'ambiente solo all'avvio).
 
 ---
 
+## Regola critica: il Funnel punta al FRONTEND, mai al backend
+
+```
+CORRETTO:    tailscale funnel --bg 3000    → proxy http://127.0.0.1:3000 (Next.js)
+SBAGLIATO:   tailscale funnel --bg 8000    → proxy http://127.0.0.1:8000 (FastAPI)
+```
+
+**Perche'**: la pagina `/public/anamnesi/{token}` e' una route Next.js. Se il funnel
+punta al backend (8000), il client riceve `404 Not Found` perche' FastAPI non serve
+pagine HTML. Il frontend Next.js fa proxy delle chiamate `/api/*` al backend internamente.
+
+Il launcher usa automaticamente `%FRONTEND_PORT%` (3000 in prod, variabile con `--port`).
+
+**Sintomo se la porta e' sbagliata**: il link anamnesi apre una pagina con `{"detail":"Not Found"}`
+invece del questionario. Il backend risponde, ma non sa servire la route frontend.
+
+---
+
+## Auto-start nel Launcher
+
+Dal v1.0.6, `launcher.bat` avvia automaticamente il Funnel dopo backend + frontend:
+
+```
+[1/3] Avvio backend API...
+[2/3] Attesa backend...
+[3/3] Avvio frontend...
+[+] Attivazione Tailscale Funnel su porta 3000...
+```
+
+**Condizioni per l'auto-start:**
+1. `PUBLIC_PORTAL_ENABLED=true` presente in `data/.env`
+2. Tailscale installato (trovato in PATH o in `C:\Program Files\Tailscale\`)
+
+Se una delle condizioni manca, il launcher prosegue senza Funnel (nessun errore bloccante).
+Il comando `tailscale funnel --bg` e' idempotente: se il funnel e' gia' attivo, non fa nulla.
+
+---
+
 ## Troubleshooting
 
 | Problema | Causa | Soluzione |
 |----------|-------|-----------|
+| `{"detail":"Not Found"}` sulla pagina anamnesi | **Funnel punta al backend (8000) invece che al frontend (3000)** | `tailscale funnel off` poi `tailscale funnel --bg 3000` |
 | "Funnel not available" | ACL non configurato | Admin Console → Access Controls → aggiungere funnel attr |
 | Login gira e da errore | Proxy blocca `/api/*` | Verificare `PUBLIC_ROUTES` include `/api` in `src/proxy.ts` |
 | Link anamnesi con "localhost" | `PUBLIC_BASE_URL` non configurato | Aggiungere `PUBLIC_BASE_URL=https://...` in `data/.env` e riavviare |
 | Link anamnesi non funziona da telefono | PC spento o FitManager non in esecuzione | Avviare FitManager + verificare `tailscale funnel status` |
 | "ERR_CONNECTION_REFUSED" da telefono | Funnel non attivo | `tailscale funnel --bg 3000` |
+| 502 Bad Gateway | Funnel attivo ma FitManager spento | Avviare FitManager |
 | Certificato non valido | HTTPS Certificates non abilitato | Admin Console → DNS → abilitare HTTPS Certificates |
 | Pagina bianca dopo login | Backend non raggiungibile | Verificare backend su porta 8000: `curl localhost:8000/health` |
 | Immagini esercizi non caricate | Rewrite `/media/*` mancante | Verificare `next.config.ts` ha rewrite per `/media/:path*` |
 | Tablet non raggiunge il CRM | IP LAN errato o firewall | Verificare IP con `ipconfig`, controllare firewall Windows porta 3000 |
 | Funnel --bg fallisce con "foreground listener" | Funnel temporaneo gia' attivo | Chiudere il terminale con Funnel foreground, poi `tailscale funnel --bg 3000` |
+| Launcher non avvia il funnel | `PUBLIC_PORTAL_ENABLED` non nel `.env` o Tailscale non installato | Verificare `data/.env` e `tailscale status` |
 
 ---
 
@@ -381,5 +422,33 @@ Dispositivi Tailscale:
   per avvio automatico al login del trainer
 - **Monitoring uptime**: potenziale feature futura — notifica push se il PC e' offline
   quando un cliente tenta di accedere
-- **Multi-porta Funnel**: possibile esporre anche la porta 8000 direttamente,
-  ma non necessario grazie al proxy Next.js
+
+### Roadmap accesso remoto clienti (oltre l'anamnesi)
+
+Il funnel su porta frontend e' la base per tutte le feature client-facing future.
+Lo stesso pattern (token monouso + pagina pubblica + proxy API) si applica a:
+
+1. **Anamnesi self-service** (attivo) — questionario 6 step
+2. **Visualizzazione scheda allenamento** — il cliente vede la scheda dal telefono
+3. **Visualizzazione piano alimentare** — il cliente vede il piano LARN
+4. **Progress report** — il cliente vede i propri progressi (misurazioni, grafici)
+5. **Booking self-service** — il cliente prenota la prossima sessione
+6. **Pagamento online** — integrazione Stripe/PayPal con link monouso
+
+Tutti passano per lo stesso tunnel: frontend porta 3000 → proxy API → SQLite locale.
+Nessun dato esce dal PC del trainer. Zero cloud. Zero abbonamenti.
+
+Architettura target:
+```
+/public/anamnesi/{token}     → questionario (attivo)
+/public/scheda/{token}       → scheda allenamento (futuro)
+/public/nutrizione/{token}   → piano alimentare (futuro)
+/public/progressi/{token}    → report progressi (futuro)
+/public/booking/{token}      → prenotazione sessione (futuro)
+```
+
+Ogni route pubblica segue lo stesso pattern:
+- Token UUID4 monouso, scadenza configurabile
+- Rate limiting IP-based
+- Mascheramento PII nella pagina pubblica
+- Fire-and-forget: il client invia, il trainer controlla dopo

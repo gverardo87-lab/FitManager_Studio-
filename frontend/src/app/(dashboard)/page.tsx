@@ -38,6 +38,7 @@ import { InactiveClientsSheet } from "@/components/dashboard/InactiveClientsShee
 import { BirthdayClientsSheet } from "@/components/dashboard/BirthdayClientsSheet";
 import { useDashboard, useDashboardAlerts, useBirthdayClients } from "@/hooks/useDashboard";
 import { useEvents } from "@/hooks/useAgenda";
+import { useTrainerMaturity } from "@/hooks/useTrainerMaturity";
 import { usePageReveal } from "@/lib/page-reveal";
 import {
   formatLocalISODate,
@@ -55,6 +56,7 @@ export default function DashboardPage() {
   const { revealClass, revealStyle } = usePageReveal();
   const { data: summary, isLoading: summaryLoading, isError, refetch } = useDashboard();
   const { data: alerts } = useDashboardAlerts();
+  const { level: maturityLevel, signals, nextGoal } = useTrainerMaturity();
 
   const [dateAnchor, setDateAnchor] = useState(() => new Date());
 
@@ -159,6 +161,24 @@ export default function DashboardPage() {
               />
             )}
           </div>
+
+          {/* ── Maturity nudge (livelli 2-3) ── */}
+          {maturityLevel >= 2 && maturityLevel <= 3 && nextGoal ? (
+            <div className={revealClass(40, "flex items-center gap-3 rounded-lg border border-primary/15 bg-primary/5 px-4 py-2.5")} style={revealStyle(40)}>
+              <Sparkles className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+              <p className="text-xs text-muted-foreground">{nextGoal}</p>
+            </div>
+          ) : null}
+
+          {/* ── Insight card (livelli 4-5, variable reward) ── */}
+          {maturityLevel >= 4 && signals.avgReadiness > 0 ? (
+            <div className={revealClass(40, "flex items-center gap-3 rounded-lg border border-emerald-200/60 bg-emerald-50/50 px-4 py-2.5 dark:border-emerald-900/40 dark:bg-emerald-950/20")} style={revealStyle(40)}>
+              <span className="text-xs text-emerald-700 dark:text-emerald-300">
+                Readiness medio dei tuoi clienti: <strong>{Math.round(signals.avgReadiness)}%</strong>
+                {signals.overdueRateCount === 0 ? " — zero rate scadute" : ""}
+              </span>
+            </div>
+          ) : null}
 
           {/* ── Action Zone: Agenda + Todo ── */}
           <div className="grid min-w-0 gap-4 md:gap-5 lg:grid-cols-2">

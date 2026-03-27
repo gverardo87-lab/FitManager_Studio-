@@ -18,8 +18,7 @@
  * Supporta tour completo (19 step), mini-tour e spotlight singolo.
  * Manual trigger da /guida via custom event.
  *
- * HelpBot: dispatcher contestuale FAB + Panel.
- * Lancia spotlight/mini-tour via callback diretto (no custom events).
+ * PageGuide: bussola contestuale adattiva al livello trainer (Popover FAB).
  */
 
 import { useState, useRef, useEffect, useCallback } from "react";
@@ -34,7 +33,7 @@ const CommandPalette = dynamic(
   { ssr: false },
 );
 import { SpotlightTour } from "@/components/guide/SpotlightTour";
-import { HelpBot } from "@/components/helpbot/HelpBot";
+import { PageGuide } from "@/components/guide/PageGuide";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { Button } from "@/components/ui/button";
 import {
@@ -47,7 +46,6 @@ import { useGuideProgress } from "@/hooks/useGuideProgress";
 import { BuilderModeProvider, useBuilderMode } from "@/lib/builder-mode";
 import { TOUR_SCOPRI_FITMANAGER, MINI_TOUR_MAP } from "@/lib/guide-tours";
 import type { TourDefinition } from "@/lib/guide-tours";
-import type { SpotlightTarget } from "@/lib/helpbot-types";
 
 export default function DashboardLayout({
   children,
@@ -86,7 +84,7 @@ export default function DashboardLayout({
     }
   }, [router, pathname]);
 
-  // ── Callback: launch mini-tour (called by HelpBot) ──
+  // ── Callback: launch mini-tour (called by custom event from /guida) ──
   const handleMiniTour = useCallback((page: string) => {
     const mini = buildMiniTour(page);
     if (!mini) return;
@@ -97,36 +95,6 @@ export default function DashboardLayout({
       setTourOpen(true);
     });
   }, [buildMiniTour]);
-
-  // ── Callback: launch spotlight (called by HelpBot) ──
-  // Due fasi: (1) chiudi tour + prepara nuovo, (2) apri dopo un frame.
-  // Senza questa separazione, React batcha setActiveTour + setTourOpen
-  // e SpotlightTour non monta correttamente sulla stessa pagina.
-  const handleSpotlight = useCallback((spot: SpotlightTarget) => {
-    // Navigate first if needed
-    if (spot.navigateTo && pathname !== spot.navigateTo) {
-      router.push(spot.navigateTo);
-    }
-
-    // Phase 1: close + prepare
-    setTourOpen(false);
-    setActiveTour({
-      id: `spotlight-${spot.target}-${Date.now()}`,
-      title: spot.title,
-      steps: [{
-        target: spot.target,
-        title: spot.title,
-        description: spot.description,
-        placement: spot.placement,
-        navigateTo: spot.navigateTo,
-      }],
-    });
-
-    // Phase 2: open after React commits the close + new tour
-    requestAnimationFrame(() => {
-      setTourOpen(true);
-    });
-  }, [pathname, router]);
 
   // ── Hook 1: Continuously save scroll position via scroll event ──
   useEffect(() => {
@@ -218,11 +186,7 @@ export default function DashboardLayout({
       }}
       onNavigate={handleTourNavigate}
     />
-    <HelpBot
-      tourOpen={tourOpen}
-      onMiniTour={handleMiniTour}
-      onSpotlight={handleSpotlight}
-    />
+    <PageGuide />
     <DashboardShell mainRef={mainRef} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} shouldShowOnboarding={shouldShowOnboarding}>
       {children}
     </DashboardShell>

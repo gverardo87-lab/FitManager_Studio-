@@ -14,8 +14,9 @@
  */
 
 import { useState, useRef, useCallback, forwardRef } from "react";
-import { ChevronDown, Target } from "lucide-react";
+import { ChevronDown, Target, HelpCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import {
   Collapsible,
@@ -270,9 +271,9 @@ const MuscleRow = forwardRef<HTMLDivElement, { muscolo: TSDettaglioMuscolo }>(
         <div className="px-3 pb-2 space-y-1">
           {/* Range target */}
           <div className="text-[10px] text-muted-foreground flex gap-3">
-            <span>MEV {muscolo.target_mev}</span>
-            <span>MAV {muscolo.target_mav_min}-{muscolo.target_mav_max}</span>
-            <span>MRV {muscolo.target_mrv}</span>
+            <Tooltip><TooltipTrigger asChild><span className="cursor-help">MEV {muscolo.target_mev}</span></TooltipTrigger><TooltipContent side="top" className="max-w-xs text-xs">Volume Minimo Efficace: set minimi per stimolare adattamento</TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild><span className="cursor-help">MAV {muscolo.target_mav_min}-{muscolo.target_mav_max}</span></TooltipTrigger><TooltipContent side="top" className="max-w-xs text-xs">Volume Massimo di Adattamento: range ottimale di set settimanali</TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild><span className="cursor-help">MRV {muscolo.target_mrv}</span></TooltipTrigger><TooltipContent side="top" className="max-w-xs text-xs">Volume Massimo Recuperabile: oltre questo limite il recupero e' compromesso</TooltipContent></Tooltip>
             <span className="ml-auto">Freq: {muscolo.frequenza}x/sett</span>
           </div>
 

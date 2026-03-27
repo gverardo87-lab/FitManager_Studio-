@@ -235,9 +235,16 @@ export function LarnValidationPanel({ planId }: LarnValidationPanelProps) {
         }
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Analisi LARN 2014
-            </span>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="cursor-help text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Analisi LARN 2014
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-xs text-xs">
+                Livelli di Assunzione di Riferimento di Nutrienti — linee guida ufficiali italiane (CREA/SINU) per macro e micronutrienti
+              </TooltipContent>
+            </Tooltip>
             <ScoreBadge score={data.score} />
           </div>
         </div>

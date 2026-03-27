@@ -73,6 +73,33 @@ REM ── Attendi frontend e apri browser ──
 timeout /t 3 /nobreak >nul
 start "" "http://localhost:%FRONTEND_PORT%"
 
+REM ── Tailscale Funnel (auto-start se portale pubblico abilitato) ──
+REM Verifica: Tailscale installato + PUBLIC_PORTAL_ENABLED=true nel .env
+REM Il funnel espone il frontend (non il backend) su HTTPS pubblico.
+REM --bg = background, non blocca il launcher. Idempotente se gia' attivo.
+set FUNNEL_ENABLED=0
+if exist "%INSTALL_DIR%data\.env" (
+    findstr /i /c:"PUBLIC_PORTAL_ENABLED=true" "%INSTALL_DIR%data\.env" >nul 2>&1
+    if not errorlevel 1 set FUNNEL_ENABLED=1
+)
+if "%FUNNEL_ENABLED%"=="1" (
+    where tailscale >nul 2>&1
+    if not errorlevel 1 (
+        echo  [+] Attivazione Tailscale Funnel su porta %FRONTEND_PORT%...
+        start /B "" tailscale funnel --bg %FRONTEND_PORT%
+        echo  Funnel attivo.
+    ) else (
+        REM Prova path installazione standard Windows
+        if exist "C:\Program Files\Tailscale\tailscale.exe" (
+            echo  [+] Attivazione Tailscale Funnel su porta %FRONTEND_PORT%...
+            start /B "" "C:\Program Files\Tailscale\tailscale.exe" funnel --bg %FRONTEND_PORT%
+            echo  Funnel attivo.
+        ) else (
+            echo  [!] Tailscale non trovato — portale pubblico non disponibile.
+        )
+    )
+)
+
 echo.
 echo  FitManager avviato!
 echo  Chiudi questa finestra per terminare l'applicazione.

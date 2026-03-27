@@ -46,11 +46,11 @@ import {
 } from "@/components/ui/collapsible";
 import { useGuideProgress } from "@/hooks/useGuideProgress";
 import {
-  GUIDE_FAQ,
   KEYBOARD_SHORTCUTS,
   FEATURE_CARDS,
   type FeatureCard,
 } from "@/lib/guide-tours";
+import { getAllFaqs } from "@/lib/guide-registry";
 import { VIDEO_GUIDES } from "@/lib/video-guides";
 import { VideoGuideCard } from "@/components/guide/VideoGuideCard";
 
@@ -213,7 +213,7 @@ export default function GuidaPage() {
           <h2 className="text-base font-semibold tracking-tight">Domande frequenti</h2>
         </div>
         <div className="space-y-2">
-          {GUIDE_FAQ.map((faq) => (
+          {getAllFaqs().map((faq) => (
             <FaqItem key={faq.question} question={faq.question} answer={faq.answer} />
           ))}
         </div>
