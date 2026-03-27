@@ -113,9 +113,9 @@ def get_all_communications(
     from sqlalchemy import text as sa_text
 
     query = """
-        SELECT cl.id, cl.nome, cl.cognome, cl.canale, cl.template_usato,
-               cl.anteprima, cl.created_at, cl.id_cliente,
-               c.nome as client_nome, c.cognome as client_cognome
+        SELECT cl.id, cl.canale, cl.template_usato, cl.anteprima,
+               cl.created_at, cl.id_cliente,
+               c.nome, c.cognome
         FROM communication_log cl
         JOIN clienti c ON c.id = cl.id_cliente
         WHERE cl.trainer_id = :tid
@@ -135,13 +135,13 @@ def get_all_communications(
         "items": [
             {
                 "id": row[0],
-                "canale": row[3],
-                "template_usato": row[4],
-                "anteprima": row[5],
-                "created_at": row[6],
-                "id_cliente": row[7],
-                "client_nome": row[8],
-                "client_cognome": row[9],
+                "canale": row[1],
+                "template_usato": row[2],
+                "anteprima": row[3],
+                "created_at": row[4],
+                "id_cliente": row[5],
+                "client_nome": row[6],
+                "client_cognome": row[7],
             }
             for row in rows
         ],

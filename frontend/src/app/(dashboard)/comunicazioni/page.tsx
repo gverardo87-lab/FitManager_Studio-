@@ -64,20 +64,22 @@ import {
 import { CommunicationRegistry } from "@/components/communications/CommunicationRegistry";
 import type { ClientEnriched } from "@/types/api";
 
-// ── Filter chip config ──
+// ── Filter config (2 assi: stato + situazione, pattern pagina Clienti) ──
 
 interface FilterChipDef {
   key: string;
   label: string;
+  axis: "stato" | "situazione";
   color: string;
   activeColor: string;
   match: (c: ClientEnriched) => boolean;
 }
 
-const FILTER_CHIPS: FilterChipDef[] = [
+const STATO_CHIPS: FilterChipDef[] = [
   {
     key: "attivi",
     label: "Attivi",
+    axis: "stato",
     color: "border-emerald-200 dark:border-emerald-800",
     activeColor: "bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-900/40 dark:text-emerald-400 dark:border-emerald-700",
     match: (c) => c.stato === "Attivo",
@@ -85,13 +87,18 @@ const FILTER_CHIPS: FilterChipDef[] = [
   {
     key: "inattivi",
     label: "Inattivi",
+    axis: "stato",
     color: "border-zinc-200 dark:border-zinc-700",
     activeColor: "bg-zinc-100 text-zinc-700 border-zinc-300 dark:bg-zinc-800/40 dark:text-zinc-400 dark:border-zinc-600",
     match: (c) => c.stato === "Inattivo",
   },
+];
+
+const SITUAZIONE_CHIPS: FilterChipDef[] = [
   {
     key: "con_crediti",
     label: "Con crediti",
+    axis: "situazione",
     color: "border-blue-200 dark:border-blue-800",
     activeColor: "bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-900/40 dark:text-blue-400 dark:border-blue-700",
     match: (c) => c.crediti_residui > 0,
@@ -99,6 +106,7 @@ const FILTER_CHIPS: FilterChipDef[] = [
   {
     key: "rate_scadute",
     label: "Rate scadute",
+    axis: "situazione",
     color: "border-red-200 dark:border-red-800",
     activeColor: "bg-red-100 text-red-700 border-red-300 dark:bg-red-900/40 dark:text-red-400 dark:border-red-700",
     match: (c) => c.ha_rate_scadute,
@@ -213,7 +221,8 @@ export default function ComunicazioniPage() {
 
   // State
   const [search, setSearch] = useState("");
-  const [activeFilters, setActiveFilters] = useState<Set<string>>(() => new Set(["attivi"]));
+  const [activeStati, setActiveStati] = useState<Set<string>>(() => new Set(["attivi"]));
+  const [activeSituazioni, setActiveSituazioni] = useState<Set<string>>(new Set());
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [templateKey, setTemplateKey] = useState("free");
   const [customMessage, setCustomMessage] = useState("");
@@ -226,20 +235,29 @@ export default function ComunicazioniPage() {
 
   const clients = useMemo(() => {
     return allWithPhone.filter((c) => {
+      // Search
       if (search) {
         const q = search.toLowerCase();
         const match = `${c.nome} ${c.cognome} ${c.telefono ?? ""} ${c.email ?? ""}`.toLowerCase();
         if (!match.includes(q)) return false;
       }
-      if (activeFilters.size > 0) {
-        const matchesAny = FILTER_CHIPS.some(
-          (chip) => activeFilters.has(chip.key) && chip.match(c),
+      // Asse 1: Stato (AND — client.stato deve matchare un chip attivo)
+      if (activeStati.size > 0) {
+        const matchesStato = STATO_CHIPS.some(
+          (chip) => activeStati.has(chip.key) && chip.match(c),
         );
-        if (!matchesAny) return false;
+        if (!matchesStato) return false;
+      }
+      // Asse 2: Situazione (AND — se attivo, il cliente deve matchare)
+      if (activeSituazioni.size > 0) {
+        const matchesSit = SITUAZIONE_CHIPS.some(
+          (chip) => activeSituazioni.has(chip.key) && chip.match(c),
+        );
+        if (!matchesSit) return false;
       }
       return true;
     });
-  }, [allWithPhone, search, activeFilters]);
+  }, [allWithPhone, search, activeStati, activeSituazioni]);
 
   // Selected template
   const selectedTemplate = TEMPLATES.find((t) => t.key === templateKey) ?? TEMPLATES[0];
@@ -266,11 +284,12 @@ export default function ComunicazioniPage() {
     return selectedTemplate.build(sampleName, trainerName);
   }, [clients, selectedIds, templateKey, customMessage, trainerName, selectedTemplate]);
 
-  // Toggle filter
-  const handleToggleFilter = useCallback((key: string) => {
-    setActiveFilters((prev) => {
+  // Toggle filter (2 assi)
+  const handleToggleFilter = useCallback((chip: FilterChipDef) => {
+    const setter = chip.axis === "stato" ? setActiveStati : setActiveSituazioni;
+    setter((prev) => {
       const next = new Set(prev);
-      if (next.has(key)) next.delete(key); else next.add(key);
+      if (next.has(chip.key)) next.delete(chip.key); else next.add(chip.key);
       return next;
     });
   }, []);
@@ -487,15 +506,17 @@ export default function ComunicazioniPage() {
             </Button>
           )}
         </div>
-        {/* Filter chips */}
-        <div className="flex flex-wrap gap-1.5">
-          {FILTER_CHIPS.map((chip) => {
-            const active = activeFilters.has(chip.key);
+        {/* Filter chips — 2 righe: stato + situazione */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          {[...STATO_CHIPS, ...SITUAZIONE_CHIPS].map((chip, i) => {
+            const active = chip.axis === "stato"
+              ? activeStati.has(chip.key)
+              : activeSituazioni.has(chip.key);
             return (
               <button
                 key={chip.key}
                 type="button"
-                onClick={() => handleToggleFilter(chip.key)}
+                onClick={() => handleToggleFilter(chip)}
                 className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-all ${
                   active ? chip.activeColor : `bg-background text-muted-foreground ${chip.color} opacity-60 hover:opacity-100`
                 }`}
@@ -505,7 +526,7 @@ export default function ComunicazioniPage() {
               </button>
             );
           })}
-          {/* Counter inline */}
+          {/* Separatore + counter */}
           <span className="flex items-center px-2 text-[11px] font-medium text-muted-foreground tabular-nums">
             {clients.length} {clients.length === 1 ? "cliente" : "clienti"}
             {selectedCount > 0 && <> · <span className="text-emerald-600 dark:text-emerald-400">{selectedCount} sel.</span></>}
