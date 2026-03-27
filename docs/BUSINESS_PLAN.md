@@ -676,11 +676,64 @@ Il margine lordo migliora nel tempo perché il ricavo ricorrente (PRO + IC) ha m
 
 Ogni proiezione è conservativa. I ricavi Inner Circle sono inclusi dal mese 4 (post-POC) nelle configurazioni con partner. Senza partner, l'Inner Circle non è attivabile.
 
-### A5 — Ecosistema community (sintesi)
+### A5 — Ecosistema community
 
-**Livello 1 — Base (gratuita):** Forum, knowledge base, networking tra PT, onboarding guidato.
-**Livello 2 — PRO (= assistenza €79/anno):** Masterclass mensili, webinar Q&A, nuovi cataloghi esercizi, template, supporto prioritario. Valore percepito stimato: ~€650/anno per €79 (rapporto 8,2:1).
-**Livello 3 — Inner Circle (futuro, Anno 2+, €299/anno, max 50):** Mastermind, mentorship, early access, certificazione PT Evoluto.
+La community ha tre livelli con identità nettamente separate: PRO mantiene il software vivo, Inner Circle fa crescere il professionista. Le masterclass e i webinar del partner sono esclusivi Inner Circle, non PRO.
+
+**Livello 1 — Base (gratuita, inclusa nella licenza)**
+
+Forum di supporto, knowledge base, annunci versioni, networking tra PT per città e specializzazione, onboarding guidato in 5 passi. Scopo: nessun licenziatario si sente solo.
+
+**Livello 2 — PRO (€79/anno) — "Il tuo software resta vivo"**
+
+| Contenuto | Frequenza |
+|---|---|
+| Aggiornamenti software (bugfix, miglioramenti) | Continui |
+| Nuovi esercizi nel catalogo | Trimestrale (30-50 nuovi) |
+| Nuovi alimenti nel database | Semestrale |
+| Template schede scaricabili | Mensile (1-2 template) |
+| Supporto prioritario (risposta <24h) | Sempre |
+| Badge PRO nella community | Permanente |
+
+Valore percepito: ~€300/anno per €79 (rapporto 3,8:1). Il motivo di rinnovo è pratico: il prodotto migliora. Se non rinnovi, il software funziona ancora ma smette di aggiornarsi.
+
+Primi 30 clienti: 12 mesi inclusi. Dal 31° cliente: €79 parte all'acquisto. Primi rinnovi effettivi: dal mese 13.
+
+**Livello 3 — Inner Circle (€249/anno) — "Diventa un PT Evoluto"**
+
+Include tutto il PRO, più il percorso formativo condotto dall'Industry Partner:
+
+| Contenuto | Frequenza | Conduce |
+|---|---|---|
+| Masterclass tematiche (45-60 min + Q&A) | Mensile | Industry Partner |
+| Webinar "Chiedi all'esperto" | Mensile (alternato) | Industry Partner + ospiti |
+| Mastermind group (max 30-50 membri) | Mensile (60-90 min) | Industry Partner |
+| Casi studio dalla community | Mensile | Peer |
+| Early access nuove feature | Ad ogni major release | Founder |
+| Certificazione PT Evoluto | Annuale | Industry Partner |
+
+Valore percepito: ~€800-900/anno per €249 (rapporto 3,4:1). Il motivo di acquisto è aspirazionale: crescita professionale, non aggiornamento software.
+
+Attivo dal mese 4 (post-POC) per gli Early Adopter. Le masterclass partono durante la POC come contenuto per i 10 Fondatori (Inner Circle incluso nel prezzo Fondatore) e le registrazioni entrano nella libreria Inner Circle per i membri futuri.
+
+**Il webinar gratuito mensile** resta come strumento di acquisizione anche quando l'Inner Circle è attivo. È il Touch 5 del funnel: il PT partecipa gratis, vede il valore, scopre che c'è un percorso più profondo. Non è in competizione con l'Inner Circle — è il suo meccanismo di alimentazione.
+
+**Livello 4 — Mentorship (futuro, Anno 3+, €499-599/anno, max 15-20)**
+
+Mentorship 1:1, co-creazione roadmap, eventi in presenza. Da definire quando la base Inner Circle raggiunge 30+ membri.
+
+**Proiezione ricavi community (scenario base):**
+
+| | Anno 1 | Anno 2 | Anno 3 |
+|---|---|---|---|
+| Membri PRO (paganti) | 12 | 47 | 92 |
+| Membri Inner Circle | 9 | 18 | 38 |
+| Ricavo PRO | €950 | €3.700 | €7.300 |
+| Ricavo Inner Circle | €2.250 | €4.500 | €9.500 |
+| **Totale ricorrente** | **€3.200** | **€8.200** | **€16.800** |
+| % del fatturato totale | 19% | 28% | 34% |
+
+Il ricorrente cresce dal 19% al 34% del fatturato in 3 anni. Questo è il pavimento che copre i costi operativi e rende il business progressivamente indipendente dalle nuove vendite.
 
 ### A6 — Piano B senza partner
 
