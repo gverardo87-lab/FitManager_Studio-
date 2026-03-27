@@ -2,14 +2,20 @@
 "use client";
 
 /**
- * Sidebar — navigazione principale dell'app.
+ * Sidebar — navigazione principale.
  *
- * Desktop: sidebar fissa a sinistra (w-64, sempre visibile).
- * Mobile: nascosta, aperta via Sheet (hamburger menu nell'header).
+ * Desktop: sidebar fissa w-64. Mobile: Sheet via hamburger.
  *
- * In basso: dati trainer loggato + bottone logout.
+ * Pattern collapsible: voce principale cliccabile (naviga)
+ * + sotto-pagine a scomparsa. Click ovunque sulla riga = naviga.
+ * Chevron integrato nel link per toggle expand/collapse.
+ * Auto-expand se la route corrente matcha un sub-item.
+ *
+ * Bottom zone: Guida e Impostazioni con trattamento secondario
+ * (testo piu' piccolo, icone muted, nessun hover bg prominente).
  */
 
+import { useState, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -32,6 +38,7 @@ import {
   Moon,
   Sun,
   UtensilsCrossed,
+  ChevronRight,
 } from "lucide-react";
 
 import { useTheme } from "next-themes";
@@ -41,14 +48,9 @@ import { getStoredTrainer, logout } from "@/lib/auth";
 import { clearPageState } from "@/lib/url-state";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 
 // ════════════════════════════════════════════════════════════
-// NAVIGAZIONE — Section Labels pattern (Linear/Notion style)
+// TYPES
 // ════════════════════════════════════════════════════════════
 
 type NavLink = {
@@ -56,65 +58,52 @@ type NavLink = {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   guideId?: string;
-  tooltip?: string;
   activeMatch?: (pathname: string) => boolean;
 };
-type NavSection = { section: string; items: NavLink[] };
-type NavEntry = NavLink | NavSection;
+
+type NavGroup = { main: NavLink; children: NavLink[] };
+type NavEntry = NavLink | NavGroup;
+
+function isGroup(entry: NavEntry): entry is NavGroup {
+  return "main" in entry;
+}
+
+// ════════════════════════════════════════════════════════════
+// DATA
+// ════════════════════════════════════════════════════════════
 
 const NAV_TOP: NavEntry[] = [
-  { href: "/oggi", label: "Oggi", icon: SunMedium, tooltip: "Preparazione sessioni del giorno" },
-  { href: "/", label: "Dashboard", icon: LayoutDashboard, tooltip: "Panoramica e KPI operativi" },
-  { href: "/agenda", label: "Agenda", icon: Calendar, tooltip: "Calendario settimanale interattivo" },
+  { href: "/oggi", label: "Oggi", icon: SunMedium },
+  { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/agenda", label: "Agenda", icon: Calendar },
   {
-    section: "Clienti",
-    items: [
-      {
-        href: "/clienti",
-        label: "Clienti",
-        icon: Users,
-        guideId: "sidebar-clienti",
-        activeMatch: (pathname) =>
-          pathname === "/clienti" || /^\/clienti\/\d+(\/|$)/.test(pathname),
-      },
-      {
-        href: "/monitoraggio",
-        label: "Monitoraggio",
-        icon: BarChart3,
-        tooltip: "Readiness clinica e onboarding clienti",
-        activeMatch: (pathname) => pathname.startsWith("/monitoraggio"),
-      },
-      {
-        href: "/comunicazioni",
-        label: "Comunicazioni",
-        icon: MessageCircle,
-        tooltip: "WhatsApp e messaggi ai clienti",
-      },
+    main: {
+      href: "/clienti",
+      label: "Clienti",
+      icon: Users,
+      guideId: "sidebar-clienti",
+      activeMatch: (p) => p === "/clienti" || /^\/clienti\/\d+(\/|$)/.test(p),
+    },
+    children: [
+      { href: "/monitoraggio", label: "Monitoraggio", icon: BarChart3, activeMatch: (p) => p.startsWith("/monitoraggio") },
+      { href: "/comunicazioni", label: "Comunicazioni", icon: MessageCircle },
     ],
   },
   {
-    section: "Contabilita",
-    items: [
-      { href: "/contratti", label: "Contratti", icon: FileText, tooltip: "Pacchetti, rate e pagamenti" },
-      { href: "/rinnovi-incassi", label: "Rinnovi & Incassi", icon: HandCoins, tooltip: "Rinnova contratti e incassa rate scadute" },
-      { href: "/cassa", label: "Cassa", icon: Wallet, tooltip: "Libro mastro, spese fisse e previsioni" },
+    main: { href: "/contratti", label: "Contratti", icon: FileText },
+    children: [
+      { href: "/rinnovi-incassi", label: "Rinnovi & Incassi", icon: HandCoins },
+      { href: "/cassa", label: "Cassa", icon: Wallet },
     ],
   },
   {
-    section: "Allenamento",
-    items: [
-      { href: "/esercizi", label: "Esercizi", icon: Dumbbell, tooltip: "Catalogo esercizi con tassonomia scientifica" },
-      { href: "/schede", label: "Schede", icon: ClipboardList, guideId: "sidebar-schede", tooltip: "Crea e gestisci schede allenamento" },
-      { href: "/allenamenti", label: "Aderenza", icon: Activity, tooltip: "Compliance e monitoraggio programmi attivi" },
-      {
-        href: "/nutrizione",
-        label: "Nutrizione",
-        icon: UtensilsCrossed,
-        tooltip: "Piani alimentari personalizzati per i clienti",
-        activeMatch: (pathname) => pathname.startsWith("/nutrizione"),
-      },
+    main: { href: "/schede", label: "Schede", icon: ClipboardList, guideId: "sidebar-schede" },
+    children: [
+      { href: "/esercizi", label: "Esercizi", icon: Dumbbell },
+      { href: "/allenamenti", label: "Aderenza", icon: Activity },
     ],
   },
+  { href: "/nutrizione", label: "Nutrizione", icon: UtensilsCrossed, activeMatch: (p) => p.startsWith("/nutrizione") },
 ];
 
 const NAV_BOTTOM: NavLink[] = [
@@ -123,10 +112,157 @@ const NAV_BOTTOM: NavLink[] = [
 ];
 
 // ════════════════════════════════════════════════════════════
-// NAV ITEM
+// HELPERS
+// ════════════════════════════════════════════════════════════
+
+function isLinkActive(item: NavLink, pathname: string): boolean {
+  if (item.activeMatch) return item.activeMatch(pathname);
+  if (item.href === "/") return pathname === "/";
+  return pathname.startsWith(item.href);
+}
+
+function isGroupActive(group: NavGroup, pathname: string): boolean {
+  return isLinkActive(group.main, pathname) || group.children.some((c) => isLinkActive(c, pathname));
+}
+
+// ════════════════════════════════════════════════════════════
+// NAV ITEM — singolo link
 // ════════════════════════════════════════════════════════════
 
 function NavItem({
+  item,
+  pathname,
+  onNavigate,
+  showPulse,
+  indent,
+}: {
+  item: NavLink;
+  pathname: string;
+  onNavigate?: () => void;
+  showPulse?: boolean;
+  indent?: boolean;
+}) {
+  const active = isLinkActive(item, pathname);
+
+  return (
+    <Link
+      href={item.href}
+      onClick={() => { clearPageState(item.href); onNavigate?.(); }}
+      data-guide={item.guideId}
+      className={cn(
+        "relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150",
+        indent && "ml-4 py-1.5",
+        active
+          ? "bg-primary/10 text-primary font-semibold before:absolute before:inset-y-[6px] before:left-0 before:w-[3px] before:rounded-full before:bg-primary before:content-['']"
+          : indent
+            ? "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+            : "text-muted-foreground hover:bg-accent/70 hover:text-foreground"
+      )}
+    >
+      <item.icon className={cn("shrink-0", indent ? "h-3.5 w-3.5" : "h-4.5 w-4.5")} />
+      <span className={indent ? "text-[13px]" : ""}>{item.label}</span>
+      {showPulse && (
+        <span className="absolute right-2 top-1/2 -translate-y-1/2">
+          <span className="absolute inline-flex h-2 w-2 animate-ping rounded-full bg-primary opacity-75" />
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+        </span>
+      )}
+    </Link>
+  );
+}
+
+// ════════════════════════════════════════════════════════════
+// NAV GROUP — voce principale + figli collapsible
+//
+// Tutta la riga e' un unico link navigabile.
+// Il chevron e' DENTRO il link: click su tutta la riga = naviga.
+// Click SOLO sul chevron (stopPropagation) = toggle expand.
+// ════════════════════════════════════════════════════════════
+
+function NavGroupItem({
+  group,
+  pathname,
+  onNavigate,
+}: {
+  group: NavGroup;
+  pathname: string;
+  onNavigate?: () => void;
+}) {
+  const mainActive = isLinkActive(group.main, pathname);
+  const childActive = group.children.some((c) => isLinkActive(c, pathname));
+  const anyActive = mainActive || childActive;
+
+  const [expanded, setExpanded] = useState(anyActive);
+  const prevChildActive = useRef(childActive);
+
+  useEffect(() => {
+    if (childActive && !prevChildActive.current) setExpanded(true);
+    prevChildActive.current = childActive;
+  }, [childActive]);
+
+  const toggleExpand = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setExpanded((prev) => !prev);
+  }, []);
+
+  return (
+    <div>
+      <Link
+        href={group.main.href}
+        onClick={() => { clearPageState(group.main.href); onNavigate?.(); }}
+        data-guide={group.main.guideId}
+        className={cn(
+          "relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150",
+          mainActive
+            ? "bg-primary/10 text-primary font-semibold before:absolute before:inset-y-[6px] before:left-0 before:w-[3px] before:rounded-full before:bg-primary before:content-['']"
+            : childActive
+              ? "text-primary/80 font-medium"
+              : "text-foreground/90 hover:bg-accent/70 hover:text-foreground"
+        )}
+      >
+        <group.main.icon className="h-4.5 w-4.5 shrink-0" />
+        {group.main.label}
+
+        {/* Chevron — click toggles expand, stopPropagation previene navigazione */}
+        <span
+          role="button"
+          tabIndex={-1}
+          onClick={toggleExpand}
+          className="ml-auto flex h-5 w-5 items-center justify-center rounded transition-colors hover:bg-black/5 dark:hover:bg-white/10"
+          aria-label={expanded ? `Chiudi ${group.main.label}` : `Espandi ${group.main.label}`}
+        >
+          <ChevronRight
+            className={cn(
+              "h-3 w-3 text-muted-foreground/50 transition-transform duration-200",
+              expanded && "rotate-90",
+            )}
+          />
+        </span>
+      </Link>
+
+      {/* Children */}
+      <div
+        className={cn(
+          "overflow-hidden transition-all duration-200 ease-out",
+          expanded ? "max-h-40 opacity-100" : "max-h-0 opacity-0"
+        )}
+      >
+        <div className="space-y-0.5 py-0.5">
+          {group.children.map((child) => (
+            <NavItem key={child.href} item={child} pathname={pathname} onNavigate={onNavigate} indent />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════
+// NAV UTILITY — Guida / Impostazioni (trattamento secondario)
+// ════════════════════════════════════════════════════════════
+
+function NavUtilityItem({
   item,
   pathname,
   onNavigate,
@@ -137,57 +273,29 @@ function NavItem({
   onNavigate?: () => void;
   showPulse?: boolean;
 }) {
-  const isActive =
-    item.activeMatch
-      ? item.activeMatch(pathname)
-      : item.href === "/"
-        ? pathname === "/"
-        : pathname.startsWith(item.href);
-
-  const handleClick = () => {
-    // Cancella filtri e scroll salvati per la pagina target →
-    // la pagina partirà da zero (fresh navigation).
-    // Su back-nav (browser back) questo onClick NON scatta →
-    // filtri e scroll vengono ripristinati da sessionStorage.
-    clearPageState(item.href);
-    onNavigate?.();
-  };
+  const active = isLinkActive(item, pathname);
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Link
-          href={item.href}
-          onClick={handleClick}
-          data-guide={item.guideId}
-          className={cn(
-            "relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150",
-            isActive
-              ? "bg-primary/12 text-primary font-semibold before:absolute before:inset-y-[6px] before:left-0 before:w-[3px] before:rounded-full before:bg-primary before:content-['']"
-              : "text-muted-foreground hover:bg-accent/70 hover:text-foreground"
-          )}
-        >
-          <item.icon className="h-4.5 w-4.5 shrink-0" />
-          {item.label}
-          {showPulse && (
-            <span className="absolute right-2 top-1/2 -translate-y-1/2">
-              <span className="absolute inline-flex h-2 w-2 animate-ping rounded-full bg-primary opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
-            </span>
-          )}
-        </Link>
-      </TooltipTrigger>
-      <TooltipContent side="right" className={item.tooltip ? "" : "lg:hidden"}>
-        {item.tooltip ? (
-          <div>
-            <p className="font-medium">{item.label}</p>
-            <p className="text-xs text-muted-foreground">{item.tooltip}</p>
-          </div>
-        ) : (
-          item.label
-        )}
-      </TooltipContent>
-    </Tooltip>
+    <Link
+      href={item.href}
+      onClick={() => { clearPageState(item.href); onNavigate?.(); }}
+      data-guide={item.guideId}
+      className={cn(
+        "relative flex items-center gap-2.5 rounded-md px-3 py-1.5 text-[13px] transition-colors duration-150",
+        active
+          ? "text-primary font-medium"
+          : "text-muted-foreground/70 hover:text-muted-foreground"
+      )}
+    >
+      <item.icon className="h-3.5 w-3.5 shrink-0" />
+      {item.label}
+      {showPulse && (
+        <span className="ml-auto">
+          <span className="absolute inline-flex h-1.5 w-1.5 animate-ping rounded-full bg-primary opacity-75" />
+          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
+        </span>
+      )}
+    </Link>
   );
 }
 
@@ -196,8 +304,8 @@ function NavItem({
 // ════════════════════════════════════════════════════════════
 
 interface SidebarProps {
-  onNavigate?: () => void; // Chiamato dopo click su mobile (chiude Sheet)
-  guidePulse?: boolean;    // Pulse dot su "Guida" (primo accesso, tour non completato)
+  onNavigate?: () => void;
+  guidePulse?: boolean;
 }
 
 export function Sidebar({ onNavigate, guidePulse }: SidebarProps) {
@@ -222,7 +330,7 @@ export function Sidebar({ onNavigate, guidePulse }: SidebarProps) {
 
       <Separator />
 
-      {/* ── Search trigger (apre Command Palette) ── */}
+      {/* ── Search ── */}
       <div className="px-3 pt-3">
         <Button
           data-guide="sidebar-search"
@@ -238,42 +346,23 @@ export function Sidebar({ onNavigate, guidePulse }: SidebarProps) {
         </Button>
       </div>
 
-      {/* ── Navigation Links ── */}
+      {/* ── Main Nav ── */}
       <nav data-guide="sidebar-nav" className="flex flex-1 flex-col overflow-y-auto px-3 py-4">
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           {NAV_TOP.map((entry) =>
-            "section" in entry ? (
-              <div key={entry.section} className="pt-4 first:pt-0">
-                <p className="mb-1 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
-                  {entry.section}
-                </p>
-                <div className="space-y-0.5">
-                  {entry.items.map((item) => (
-                    <NavItem
-                      key={item.href}
-                      item={item}
-                      pathname={pathname}
-                      onNavigate={onNavigate}
-                    />
-                  ))}
-                </div>
-              </div>
+            isGroup(entry) ? (
+              <NavGroupItem key={entry.main.href} group={entry} pathname={pathname} onNavigate={onNavigate} />
             ) : (
-              <NavItem
-                key={entry.href}
-                item={entry}
-                pathname={pathname}
-                onNavigate={onNavigate}
-              />
+              <NavItem key={entry.href} item={entry} pathname={pathname} onNavigate={onNavigate} />
             )
           )}
         </div>
 
-        {/* ── Bottom nav (Impostazioni) ── */}
-        <div className="mt-auto pt-4">
-          <Separator className="mb-3" />
+        {/* ── Utility Nav (visivamente secondario) ── */}
+        <div className="mt-auto space-y-0.5 pt-6">
+          <Separator className="mb-3 opacity-50" />
           {NAV_BOTTOM.map((item) => (
-            <NavItem
+            <NavUtilityItem
               key={item.href}
               item={item}
               pathname={pathname}
@@ -284,7 +373,7 @@ export function Sidebar({ onNavigate, guidePulse }: SidebarProps) {
         </div>
       </nav>
 
-      {/* ── Trainer info + Logout ── */}
+      {/* ── Trainer + Logout ── */}
       <div className="border-t p-4">
         {trainer && (
           <div className="mb-3 flex items-center gap-3">
