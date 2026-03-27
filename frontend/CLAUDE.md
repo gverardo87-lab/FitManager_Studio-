@@ -24,6 +24,7 @@ frontend/src/
 │   │   ├── esercizi/        Lista + [id]/ dettaglio con MuscleMap SVG + tassonomia
 │   │   ├── guida/           Hub guida interattiva + SpotlightTour
 │   │   ├── impostazioni/    Account, backup/restore, saldo iniziale, stato installazione, snapshot diagnostico, wizard Connettivita
+│   │   ├── comunicazioni/   Centro Comunicazioni WhatsApp (2 tab: Invia rubrica + Registro timeline)
 │   │   ├── oggi/            Cockpit session prep (SessionPrepCard, hero KPI, 4 sezioni urgenza)
 │   │   ├── rinnovi-incassi/ Rinnovi contratti + incassi rate (actionable, inline payment + renewal)
 │   │   └── schede/          Lista + [id]/ builder split con preview live
@@ -46,8 +47,10 @@ frontend/src/
 │   │                        ContractForm (RenewalDefaults pre-fill), ContractFinancialHero,
 │   │                        PaymentPlanTab (RateCard, PayRateForm, PaymentHistory, AddRateForm),
 │   │                        RateEditDialog, RateUnpayDialog, DeleteContractDialog
+│   ├── communications/      CommunicationRegistry (timeline raggruppata per data, filtro per cliente)
 │   ├── dashboard/           TodoCard (hero actions), ConnectivityOnboardingCard, GhostEventsSheet,
-│   │                        OverdueRatesSheet, ExpiringContractsSheet, InactiveClientsSheet
+│   │                        OverdueRatesSheet, ExpiringContractsSheet, InactiveClientsSheet,
+│   │                        BirthdayClientsSheet (auguri WhatsApp pre-compilati)
 │   ├── exercises/           ExercisesTable, ExerciseSheet, ExerciseForm, MuscleMap SVG
 │   ├── movements/           MovementsTable, MovementSheet, RecurringExpensesTab, CashAuditSheet,
 │   │                        SplitLedgerView, AdvancedFilters, AgingReport, ForecastTab
@@ -58,7 +61,7 @@ frontend/src/
 │   ├── workspace/           SessionPrepCard (client+non-client), workspace-ui.ts (config/metadata)
 │   ├── workouts/            SessionCard, SortableExerciseRow, BlockCard, ExerciseSelector (dynamic),
 │   │                        TemplateSelector, ExportButtons, ExerciseDetailPanel, RiskBodyMap
-│   └── ui/                  shadcn/ui (33 primitives + AnimatedNumber + Skeleton shimmer + LogoIcon)
+│   └── ui/                  shadcn/ui (33 primitives + AnimatedNumber + Skeleton shimmer + LogoIcon + WhatsAppButton)
 ├── hooks/                   React Query + app hooks — 28 moduli
 │   ├── useAgenda, useClients, useContracts, useRates, useMovements
 │   ├── useExercises, useWorkouts, useMeasurements, useGoals
@@ -68,6 +71,7 @@ frontend/src/
 │   │                        usePortalValidation, useUnsavedChanges, useGuideProgress
 │   ├── useTrainingScience   Hook per 5 endpoint Training Science Engine backend
 │   ├── useWorkspace         4 hook workspace: useWorkspaceToday, useWorkspaceCases, useWorkspaceCaseDetail, useSessionPrep (refetch 60s)
+│   ├── useCommunications    Log comunicazioni: useAllCommunications, useClientCommunications, useLogCommunication
 │   ├── useClientReadiness   Readiness singolo cliente (wraps useClinicalReadiness) + computeOnboardingSteps
 ├── lib/                     25 utility/engine
 │   ├── api-client.ts        Axios + JWT interceptor + runtime API URL detection
@@ -84,6 +88,7 @@ frontend/src/
 │   ├── muscle-map-utils.ts, exercise-replacement.ts, confetti.ts
 │   ├── page-reveal.ts (staggered reveal animations)
 │   ├── guide-tours.ts (dati tour, FAQ, shortcuts)
+│   ├── whatsapp-templates.ts 15 template messaggi WhatsApp pre-compilati (italiano, firma trainer)
 │   └── export-workout.ts, export-workout-pdf.ts (clinico HTML→PDF)
 ├── types/api.ts             TypeScript interfaces (mirror Pydantic)
 └── __tests__/               Vitest (data protection + onboarding/connectivity wizard + runtime UI logic)
@@ -105,7 +110,7 @@ Ogni mutation: `invalidateQueries` sulle key correlate + `toast.success/error`.
 Moduli: useAgenda, useClients, useContracts, useRates, useMovements, useExercises, useWorkouts,
 useMeasurements, useGoals, useRecurringExpenses, useTodos, useDashboard, useBackup,
 useAssistant, useSmartProgramming, useUnsavedChanges, useGuideProgress,
-useTrainingScience, useClientReadiness.
+useTrainingScience, useClientReadiness, useCommunications.
 
 ### Query Key Convention
 ```typescript
@@ -130,6 +135,9 @@ useTrainingScience, useClientReadiness.
 ["exercise", exerciseId]             // dettaglio singolo esercizio
 ["forecast", { mesi }]              // proiezione finanziaria N mesi
 ["todos", { completato }]           // lista todo (filtro opzionale)
+["communications", "all", clientId]  // registro comunicazioni (all o per cliente)
+["communications", clientId]         // comunicazioni singolo cliente (profilo)
+["dashboard", "birthday-clients"]    // compleanni oggi + 7gg
 ```
 
 ### Invalidazione Simmetrica (Regola Ferrea)

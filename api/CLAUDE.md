@@ -40,6 +40,7 @@ api/
 │   ├── joint.py         articolazioni + esercizi_articolazioni → catalog.db (no FK)
 │   ├── medical_condition.py condizioni_mediche + esercizi_condizioni → catalog.db (no FK)
 │   ├── audit_log.py     audit_log (timeline modifiche)
+│   ├── communication_log.py communication_log (log comunicazioni WhatsApp/tel/email)
 │   ├── todo.py          todos (trainer-owned)
 │   └── share_token.py   share_tokens (UUID4 monouso per portale pubblico anamnesi)
 ├── routers/             REST endpoints con Bouncer Pattern — router dominio + runtime/support
@@ -63,6 +64,7 @@ api/
 │   ├── workout_logs.py  CRUD log allenamenti (monitoraggio)
 │   ├── workouts.py      CRUD schede + sessioni + esercizi (deep IDOR chain)
 │   ├── workspace.py     Cockpit operativo: today + session-prep + cases (4 GET read-only)
+│   ├── communications.py Log comunicazioni WhatsApp/tel/email (POST log + GET registro all/per-cliente)
 │   └── public_portal.py Portale pubblico anamnesi: generate token (JWT) + validate + submit (2 endpoint pubblici, rate limiter IP-based, feature flag PUBLIC_PORTAL_ENABLED)
 ├── schemas/             Pydantic v2 — schema dominio + runtime/system contracts
 │   ├── assistant.py     ParseRequest/Response, CommitRequest/Response (6 schema)
@@ -313,18 +315,19 @@ Tabella `audit_log` + helper `log_audit()` in `api/routers/_audit.py`.
 
 ## Dashboard System (~980 LOC)
 
-8 endpoint in `dashboard.py`:
+9 endpoint in `dashboard.py`:
 
 | Endpoint | Scopo | Tipo query |
 |----------|-------|------------|
 | `GET /summary` | KPI aggregati (4 metriche) | `func.count/func.sum` |
 | `GET /reconciliation` | Audit contratti vs ledger | Raw SQL con GROUP BY |
-| `GET /alerts` | Warning proattivi (4 categorie) | 4 query aggregate |
+| `GET /alerts` | Warning proattivi (6 categorie) | 6 query aggregate |
 | `GET /clinical-readiness` | Coda readiness clinica per onboarding | ORM + timeline computation |
 | `GET /ghost-events` | Eventi fantasma per risoluzione inline | ORM + batch fetch clienti |
 | `GET /overdue-rates` | Rate scadute per pagamento inline | ORM join 3 entita' |
 | `GET /expiring-contracts` | Contratti in scadenza con crediti | ORM + batch fetch crediti |
 | `GET /inactive-clients` | Clienti inattivi con ultimo evento | Raw SQL + batch fetch ultimo evento |
+| `GET /birthday-clients` | Compleanni oggi + prossimi 7gg | Raw SQL + date comparison mese/giorno |
 
 ### Clinical Readiness (`/clinical-readiness`)
 Coda deterministica per onboarding/migrazione clienti. Per ogni cliente attivo calcola:

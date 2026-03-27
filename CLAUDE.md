@@ -42,7 +42,7 @@ SSoT numeri e proiezioni: `docs/BUSINESS_PLAN.md` (v4.2). Strategia operativa: `
         (business)  (tassonomia) (alimenti CREA)
 ```
 
-- **crm.db**: 25 tabelle business (clienti, contratti, workout, piani alimentari). Tenant-isolated via `trainer_id`. SACRO — dati del trainer, backup/restore.
+- **crm.db**: 26 tabelle business (clienti, contratti, workout, piani alimentari, communication_log). Tenant-isolated via `trainer_id`. SACRO — dati del trainer, backup/restore.
 - **catalog.db**: 10 tabelle catalogo scientifico (500 esercizi builtin + tassonomia muscoli/articolazioni/condizioni + relazioni + media). Read-only, shipped con installer. Zero `trainer_id`.
 - **nutrition.db**: 8 tabelle catalogo alimenti (CREA 2019 + USDA). Read-only, shipped con installer. 880 alimenti attivi, 210 ricette pietanze, 12 template dieta.
 - **Dual env**: prod (porta 8000/3000, crm.db) + dev (porta 8001/3001, crm_dev.db).
@@ -153,6 +153,68 @@ Tutte con PRAGMA: `journal_mode=WAL`, `foreign_keys=ON`, `busy_timeout=5000`.
 | Nutrition Science | `api/services/nutrition_science/` (~2100 LOC) | Piano LARN 7gg, scoring 3 assi |
 | Clinical Analysis | `frontend/src/lib/clinical-analysis.ts` | Range normativi OMS/ACSM (client-side) |
 | Smart Programming | `frontend/src/lib/smart-programming/` | Scoring 14D (consumer del backend SSoT) |
+
+## WhatsApp Communication System
+
+Integrazione nativa WhatsApp via deep-link `wa.me` — zero API esterne, privacy-first.
+Il trainer controlla ogni messaggio prima dell'invio. Ogni click logga in `communication_log`.
+
+```
+┌─────────────────┐     ┌──────────────────┐     ┌──────────────┐
+│  WhatsAppButton │────>│  wa.me deep-link  │────>│  WhatsApp    │
+│  (15 template)  │     │  (browser/app)    │     │  del trainer │
+└────────┬────────┘     └──────────────────┘     └──────────────┘
+         │ fire-and-forget
+         v
+┌──────────────────┐     ┌──────────────────┐
+│ POST /communi-   │────>│ communication_log│
+│ cations          │     │ (crm.db)         │
+└──────────────────┘     └──────────────────┘
+```
+
+### Stack comunicazioni
+
+| Layer | File | Funzione |
+|-------|------|----------|
+| Template engine | `frontend/src/lib/whatsapp-templates.ts` | 15 template pre-compilati (italiano, firma trainer) |
+| UI component | `frontend/src/components/ui/whatsapp-button.tsx` | 3 varianti (icon/compact/full) + auto-log via `clientId` prop |
+| Centro Comunicazioni | `frontend/src/app/(dashboard)/comunicazioni/page.tsx` | 2 tab: Invia (rubrica + invio multiplo) + Registro (timeline) |
+| Registry component | `frontend/src/components/communications/CommunicationRegistry.tsx` | Timeline raggruppata per data, filtro per cliente |
+| Frontend hooks | `frontend/src/hooks/useCommunications.ts` | `useAllCommunications`, `useClientCommunications`, `useLogCommunication` |
+| Backend router | `api/routers/communications.py` | POST log + GET registro (all/per-cliente) |
+| Backend model | `api/models/communication_log.py` | `CommunicationLog` (canale, template_usato, anteprima, trainer_id, id_cliente) |
+| Dashboard alerts | `api/routers/dashboard.py` | Alert "birthdays" (oggi + 7gg) + endpoint `/birthday-clients` |
+| Birthday sheet | `frontend/src/components/dashboard/BirthdayClientsSheet.tsx` | Sheet auguri con WhatsApp pre-compilato |
+| Birthday banner | `frontend/src/app/(dashboard)/page.tsx` | Banner dedicato sopra AlertHub (sempre visibile) |
+
+### 15 template WhatsApp
+
+| Template | Funzione | Contesto d'uso |
+|----------|----------|----------------|
+| `waRateReminder` | Sollecito rata scaduta | OverdueRatesSheet, Rinnovi & Incassi |
+| `waAppointmentReminder` | Conferma appuntamento 24h | AgendaLive, Oggi timeline |
+| `waWorkoutShare` | Scheda allenamento pronta | ExportButtons (builder), Comunicazioni |
+| `waWelcome` | Benvenuto + link anamnesi | ClientSheet (creazione) |
+| `waRenewalReminder` | Rinnovo in scadenza (urgenza calibrata) | ExpiringContractsSheet, Comunicazioni |
+| `waContractConfirm` | Conferma contratto attivato | Contratto dettaglio |
+| `waCheckIn` | Re-engagement inattivo (zero pressione) | InactiveClientsSheet, Comunicazioni |
+| `waEventConfirm` | Conferma sessione appena creata | EventSheet |
+| `waBirthday` | Auguri compleanno | BirthdayClientsSheet, Comunicazioni |
+| `waMilestone` | Traguardo N sedute | Comunicazioni |
+| `waClassReminder` | Reminder lezione di gruppo | Comunicazioni |
+| `waNutritionPlan` | Piano alimentare pronto | Nutrizione [id], Comunicazioni |
+| `waClassCancelled` | Classe annullata | Comunicazioni |
+| `waProgressUpdate` | Check mensile progressi | Comunicazioni |
+| `waFreeMessage` | Messaggio libero (solo firma) | Comunicazioni |
+
+### Pattern architetturali
+
+- **Auto-log trasparente**: `WhatsAppButton` accetta props `clientId` + `templateKey`. Al click, apre wa.me E logga in `communication_log` (fire-and-forget, non blocca l'utente).
+- **Invio multiplo sequenziale**: pagina `/comunicazioni` seleziona N clienti → apre wa.me uno alla volta con stepper dots + contatore. Ogni invio logga.
+- **Filtri 2 assi**: Stato (Attivi/Inattivi) AND Situazione (Con crediti/Rate scadute). Pattern identico a pagina Clienti.
+- **Profilo cliente pulito**: PanoramicaTab mostra solo link compatto "N comunicazioni → Vedi registro". Deep-link a `/comunicazioni?tab=registro&cliente=X`.
+- **Birthday alert separato**: banner dedicato sopra AlertHub (non soggetto a `MAX_VISIBLE_ALERTS`). Click apre BirthdayClientsSheet.
+- **Phone sanitization**: `sanitizePhone()` in `format.ts` auto-prefissa `+39` per numeri italiani 10 cifre.
 
 ## Agent Skills (quality automation)
 
