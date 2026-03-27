@@ -90,21 +90,23 @@ Il modello diventa: **vendere il sistema, non solo il software**. Il PC Windows 
 
 | Tier | Contenuto | Prezzo |
 |---|---|---|
-| Software License (PC Windows) | Licenza + installer + supporto email | EUR 149-199 una tantum |
-| FitManager Box | Raspberry Pi preconfigurato + licenza + setup assistito | EUR 249-299 una tantum |
-| Box + Tablet Bundle | Box + tablet Android preconfigurato | EUR 449-499 una tantum |
-| Assistenza annuale (opzionale) | Aggiornamenti major + supporto prioritario | EUR 49-79/anno |
+| Software License (PC Windows) | Licenza + installer + supporto email | EUR 249 una tantum |
+| FitManager Box | Raspberry Pi preconfigurato + licenza + setup assistito | EUR 449 una tantum |
+| Box + Tablet Bundle | Box + tablet Android preconfigurato | EUR 549-599 una tantum |
+| Assistenza PRO (opzionale) | Aggiornamenti, nuovi esercizi/alimenti, template, supporto prioritario | EUR 79/anno |
+| Inner Circle | Include PRO + masterclass, webinar, mastermind, certificazione PT Evoluto | EUR 249/anno |
 
 ### Hardware BOM (Box)
 
 | Componente | Costo | Note |
 |---|---|---|
-| Raspberry Pi 5 4GB | ~EUR 65 | Distributore ufficiale IT |
-| Case ufficiale + alimentatore 27W | ~EUR 20 | USB-C, ventola integrata |
+| Raspberry Pi 5 4GB | ~EUR 75-80 | Distributore ufficiale IT (2026) |
+| Case ufficiale + alimentatore 27W | ~EUR 25 | USB-C, ventola integrata |
 | MicroSD 64GB A2 | ~EUR 10 | Pre-flashata con immagine |
 | Cavo Ethernet Cat6 (1m) | ~EUR 3 | Opzionale, incluso |
 | Chiavetta USB 32GB (backup) | ~EUR 5 | Backup notturno automatico |
-| **Totale BOM** | **~EUR 103** | Margine: EUR 150-200/unita |
+| Packaging + branding | ~EUR 10-15 | Scatola, adesivi, quick-start card |
+| **Totale BOM** | **~EUR 130-150** | Margine: EUR 299-319/unita (67%) |
 
 ## Consequences
 
@@ -113,7 +115,7 @@ Il modello diventa: **vendere il sistema, non solo il software**. Il PC Windows 
 1. Risolve il problema mobile senza cloud (il server e' always-on in studio)
 2. Elimina variabilita' hardware (ambiente controllato, supporto prevedibile)
 3. Crea un prodotto fisico tangibile (valore percepito alto, differenziale forte)
-4. Margine hardware significativo (~60% su ogni Box)
+4. Margine hardware significativo (~67% su ogni Box)
 5. Narrativa di vendita unica: "Il tuo studio, il tuo server, la tua privacy"
 6. Il PC Windows resta supportato — la Box e' un'opzione, non un obbligo
 

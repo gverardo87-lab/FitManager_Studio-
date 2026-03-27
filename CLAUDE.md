@@ -13,6 +13,20 @@ Langchain + Ollama (moduli AI dormenti)              → core/    (27 file)
 
 Distribuzione: PyInstaller + Next.js standalone + Inno Setup (Windows installer).
 
+## Modello di business (contesto per lo sviluppo)
+
+```
+Licenza software: €249 una tantum (perpetua)
+FitManager Box:   €449 una tantum (Raspberry Pi + licenza)
+Assistenza PRO:   €79/anno (aggiornamenti, nuovi esercizi/alimenti, template, supporto)
+Inner Circle:     €249/anno (PRO + masterclass, webinar, mastermind, certificazione)
+Mentorship:       €499-599/anno (futuro Anno 3+, max 15-20 membri)
+```
+
+4 livelli community: Base (gratuita) → PRO → Inner Circle → Mentorship.
+PRO = solo aggiornamenti software e supporto. Masterclass e formazione = esclusivi Inner Circle.
+SSoT numeri e proiezioni: `docs/BUSINESS_PLAN.md` (v4.2). Strategia operativa: `docs/STRATEGY_PLAN.md`.
+
 ## Architettura
 
 ```
@@ -165,6 +179,8 @@ Skills installate in `.agents/skills/` — knowledge base attive per audit e cod
 | `api/CLAUDE.md` | Pattern backend, schema, endpoint, test | Quando tocchi `api/` |
 | `frontend/CLAUDE.md` | Pattern frontend, componenti, pitfalls | Quando tocchi `frontend/` |
 | `core/CLAUDE.md` | Moduli AI dormenti, stato legacy | Quando tocchi `core/` |
+| `docs/BUSINESS_PLAN.md` | **SSoT** numeri, pricing, proiezioni, modello community 4 livelli | Quando tocchi pricing, community, partner, proiezioni — BP v4.2 e' la fonte di verita' |
+| `docs/STRATEGY_PLAN.md` | Piano operativo lancio, category creation, ruolo partner | Quando pianifichi azioni di go-to-market o partnership |
 | `MANIFESTO.md` | Missione prodotto, visual identity, principi UX | Quando serve contesto di prodotto |
 | `LAUNCH_SCOPE.md` | Cosa e' in scope per il lancio | Quando prioritizzi feature |
 | `POSTMORTEMS.md` | Lezioni da errori passati | Quando incontri un pattern sospetto |

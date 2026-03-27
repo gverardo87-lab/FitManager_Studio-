@@ -18,7 +18,7 @@ Non ripete i numeri del BP (sono referenziati dove servono). Si concentra su tre
 
 ### Cosa c'è
 
-Un prodotto completo e funzionante. Versione 1.0.4, in uso quotidiano dalla prima utilizzatrice reale. 5 motori scientifici, 500 esercizi, 880 alimenti CREA, Safety Engine con 47 condizioni, analisi biomeccanica 4D, range OMS/ACSM. Installer pronto, licenza funzionante. La presentazione prodotto mostra tutto questo.
+Un prodotto completo e funzionante. Versione 1.0.5, in uso quotidiano dalla prima utilizzatrice reale. 5 motori scientifici, 500 esercizi, 880 alimenti CREA, Safety Engine con 47 condizioni, analisi biomeccanica 4D, range OMS/ACSM. Installer pronto, licenza funzionante. La presentazione prodotto mostra tutto questo.
 
 ### Cosa è cambiato rispetto alla presentazione prodotto
 
@@ -103,7 +103,7 @@ Non vendiamo subito. Prima dimostriamo il pacchetto completo: prodotto + percors
 | Masterclass mese 3: "Da 25 a 45 clienti — il metodo in pratica" | Partner | 2-3 ore (prep + live) |
 | Sessione di gruppo finale (giorno 90) | Partner + Founder | 2 ore |
 | Micro-sondaggi e analisi dati | Founder | 5 ore |
-| **Totale partner** | | **~12-15 ore in 90 giorni** |
+| **Totale partner** | | **~15-20 ore in 90 giorni** |
 | **Totale founder** | | **~40-45 ore in 90 giorni** |
 
 ### Cosa ricevono i 10 Fondatori
@@ -191,13 +191,15 @@ Il punto critico è il primo giro — la POC. Se i 10 Fondatori completano il ci
 
 Con la licenza perpetua, il ricavo da nuove vendite fluttua. La community trasforma la base installata in ricavo ricorrente prevedibile. Ma non solo: crea switching costs (chi è nella community non cambia software), genera referral (i membri portano colleghi), e produce contenuto (le discussioni tra pari hanno valore formativo).
 
-### I tre livelli
+### I quattro livelli
 
 **Base (gratuita, inclusa nella licenza).** Forum, knowledge base, networking tra PT per città e specializzazione, onboarding guidato. Nessun licenziatario si sente solo.
 
 **PRO (€79/anno) — "Il tuo software resta vivo."** Aggiornamenti, nuovi esercizi trimestrali, nuovi alimenti, template mensili, supporto prioritario. Rapporto valore/prezzo: 3,8:1. Il motivo del rinnovo è pratico.
 
 **Inner Circle (€249/anno) — "Diventa un PT Evoluto."** Include tutto il PRO più: masterclass mensile del partner, webinar esperti, mastermind, casi studio, early access, certificazione PT Evoluto. Rapporto valore/prezzo: 3,4:1. Il motivo dell'acquisto è aspirazionale.
+
+**Mentorship (€499-599/anno, futuro Anno 3+, max 15-20).** Mentorship 1:1, co-creazione roadmap, eventi in presenza. Da definire quando la base Inner Circle raggiunge 30+ membri.
 
 ### Il ruolo del partner nella community
 
@@ -262,7 +264,7 @@ Questo scenario non è stimabile con le assunzioni conservative del BP — dipen
 |---|---|---|---|
 | Clienti | 80-120 | 200-300 | 400-600+ |
 | Inner Circle | 20-30 | 50-80 | 100-150 |
-| Fatturato | €35.000-50.000 | €80.000-120.000 | €150.000-250.000+ | - TEST
+| Fatturato | €35.000-50.000 | €80.000-120.000 | €150.000-250.000+ |
 | Partner cash | €6.000-9.000 | €15.000-25.000 | €30.000-50.000+ |
 
 A questi volumi, FitManager non è più un prodotto di un solo founder. È un'azienda con team, presenza di settore, e un brand riconosciuto. Il valore dell'equity del partner (5-8%) diventa significativo.
@@ -323,14 +325,14 @@ Con 38 membri Inner Circle all'Anno 3 che accedono alla libreria, una masterclas
 | Voce | Anno 1 | Note |
 |---|---|---|
 | Selezione Fondatori | 3-4 ore | Una tantum |
-| 3 masterclass POC | 6-8 ore | Mesi 1-3 |
+| 3 masterclass POC | 6-9 ore | Mesi 1-3 |
 | Webinar gratuiti mensili (9 mesi) | 18-27 ore | Mesi 4-12 |
 | Masterclass Inner Circle (6 mesi) | 12-18 ore | Mesi 7-12 |
 | Mastermind Inner Circle (6 mesi) | 6-9 ore | Mesi 7-12 |
 | Attività di rete e referral | 20-30 ore | Distribuito |
-| **Totale Anno 1** | **~70-100 ore** | ~6-8 ore al mese |
+| **Totale Anno 1** | **~80-110 ore** | ~8-10 ore al mese |
 
-In cambio di 6-8 ore al mese: €2.375-9.000 in cash Anno 1 (a seconda dello scenario), equity in crescita, e un asset di contenuto che genera ricavo ricorrente.
+In cambio di 8-10 ore al mese: €2.375-9.000 in cash Anno 1 (a seconda dello scenario), equity in crescita, e un asset di contenuto che genera ricavo ricorrente.
 
 ---
 
@@ -397,9 +399,9 @@ Il materiale della POC diventa la macchina di vendita.
 |---|---|
 | Dominio + hosting | €120 |
 | Email marketing | €0-180 |
-| Video demo/testimonial | €0-200 |
-| Ads (mesi 7-12, keyword transazionali) | €300-500 |
-| **Totale** | **€420-1.000** |
+| Video demo/testimonial | €0-80 |
+| Ads (mesi 7-12, keyword transazionali) | €0-500 |
+| **Totale** | **€120-880** |
 
 Quasi interamente organico. Il marketing a pagamento parte solo quando la social proof è consolidata.
 

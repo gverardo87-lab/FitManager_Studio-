@@ -42,7 +42,7 @@ Prima del lancio allargato servono evidenze su:
 - cloud sync o trasformazione in SaaS
 - app mobile native
 - chat/messaging in-app
-- modulo nutrizione completo
+- modulo nutrizione avanzato (meal prep, shopping list, tracking aderenza)
 - multi-operatore/team workflow
 - nuove macro-feature AI non necessarie al CRM core
 - redesign trasversali che non spostano affidabilita' o supportabilita'

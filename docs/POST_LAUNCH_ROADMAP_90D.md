@@ -202,9 +202,9 @@ Rendere i motori scientifici **passivi e visibili**, non opt-in.
 |---|---|---|
 | Landing page dedicata | Sezione "FitManager Box" nel sito con foto, specs, prezzo, CTA | Settimana 9 |
 | Video demo | 2 minuti: unboxing, setup, accesso da telefono | Settimana 10 |
-| Early adopter program | Primi 10 Box a prezzo scontato (EUR 199) per testimonial | Settimana 10-11 |
+| Early adopter program | Primi 10 Fondatori: 8 licenze a EUR 99 + 2 Box a EUR 199 per testimonial | Settimana 10-11 |
 | Feedback loop | Survey strutturata post-setup + call 1:1 con early adopter | Settimana 11-12 |
-| Pricing ufficiale | Validare EUR 249-299 basandosi su feedback early adopter | Settimana 12 |
+| Pricing ufficiale | Prezzo definitivo: EUR 449 (validato in BP v4.2) | Settimana 12 |
 
 ### 3.4 Supporto e Operazioni
 
@@ -274,24 +274,32 @@ Decisione architetturale: `docs/adr/ADR-007-fitscan-computer-vision-biomechanics
 
 | Prodotto | Prezzo | Target |
 |---|---|---|
-| FitManager License (PC Windows) | EUR 149-199 una tantum | PT con PC fisso in studio |
+| FitManager License (PC Windows) | EUR 249 una tantum | PT con PC fisso in studio |
 
 ### Tier Hardware+Software (nuovo, da Fase 3)
 
 | Prodotto | Costo nostro | Prezzo | Margine |
 |---|---|---|---|
-| FitManager Box | ~EUR 103 | EUR 249-299 | ~EUR 150-200 |
-| FitManager Box Pro (+ Hailo + Camera) | ~EUR 210 | EUR 399-449 | ~EUR 190-240 |
-| Box + Tablet Android 10" | ~EUR 200-250 | EUR 449-499 | ~EUR 200-250 |
-| Box Pro + Tablet Android 10" | ~EUR 310 | EUR 599-649 | ~EUR 290-340 |
+| FitManager Box | ~EUR 130-150 | EUR 449 | ~EUR 299-319 (67%) |
+| FitManager Box Pro (+ Hailo + Camera) | ~EUR 210 | EUR 549-599 | ~EUR 340-390 |
+| Box + Tablet Android 10" | ~EUR 230-250 | EUR 549-599 | ~EUR 300-350 |
+| Box Pro + Tablet Android 10" | ~EUR 310 | EUR 699-749 | ~EUR 390-440 |
 
 ### Tier Servizi (opzionale)
 
 | Servizio | Prezzo | Contenuto |
 |---|---|---|
-| Assistenza annuale | EUR 49-79/anno | Aggiornamenti major + supporto prioritario |
+| Assistenza PRO | EUR 79/anno | Aggiornamenti, nuovi esercizi/alimenti, template, supporto prioritario |
 | Setup remoto assistito | EUR 29 una tantum | Videocall 30min per configurazione |
 | Migrazione da altro software | EUR 49-99 una tantum | Import dati da Excel/altro gestionale |
+
+### Tier Community (nuovo, da Mese 4)
+
+| Livello | Prezzo | Contenuto |
+|---|---|---|
+| Base (gratuita) | EUR 0 | Forum, knowledge base, networking, onboarding guidato |
+| Inner Circle | EUR 249/anno | Include PRO + masterclass, webinar, mastermind, certificazione PT Evoluto |
+| Mentorship (futuro, Anno 3+) | EUR 499-599/anno | 1:1, co-creazione roadmap, eventi in presenza |
 
 ---
 
