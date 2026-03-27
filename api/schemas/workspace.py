@@ -226,6 +226,7 @@ class SessionPrepItem(BaseModel):
     event_notes: str | None = None
     client_id: int | None = None
     client_name: str | None = None
+    client_phone: str | None = None
     client_age: int | None = None
     client_sex: str | None = None
     client_since: date | None = None

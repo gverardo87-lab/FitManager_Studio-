@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import {
   Select,
   SelectContent,
@@ -156,9 +157,12 @@ export function AgendaLive({ events, isLoading }: AgendaLiveProps) {
                         {event.titolo || event.categoria}
                       </p>
                       {event.cliente_nome && (
-                        <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                          {event.cliente_nome} {event.cliente_cognome}
-                        </p>
+                        <div className="mt-0.5 flex items-center gap-1">
+                          <p className="truncate text-xs text-muted-foreground">
+                            {event.cliente_nome} {event.cliente_cognome}
+                          </p>
+                          <WhatsAppButton phone={event.cliente_telefono} variant="icon" className="h-5 w-5 shrink-0" />
+                        </div>
                       )}
                     </div>
 

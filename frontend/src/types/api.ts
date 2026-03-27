@@ -1359,6 +1359,7 @@ export interface SessionPrepItem {
   event_notes: string | null;
   client_id: number | null;
   client_name: string | null;
+  client_phone: string | null;
   client_age: number | null;
   client_sex: string | null;
   client_since: string | null;

@@ -7,6 +7,7 @@ import {
   surfaceRoleClassName,
   type SurfaceTone,
 } from "@/components/ui/surface-role";
+import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import { cn } from "@/lib/utils";
 import type { ClientAvatar, SessionPrepItem } from "@/types/api";
 
@@ -174,6 +175,9 @@ function SessionItem({
               {TIME_FMT.format(new Date(session.starts_at))}
             </span>
             <p className="truncate text-sm font-bold text-foreground">{name}</p>
+            {session.client_phone ? (
+              <WhatsAppButton phone={session.client_phone} variant="icon" className="h-5 w-5 shrink-0" />
+            ) : null}
           </div>
           <p className="mt-1 truncate pl-1 text-[11px] text-muted-foreground/80">{subline}</p>
           {/* Semaphore dots — with accessible labels */}

@@ -418,6 +418,7 @@ def build_session_prep(
             event_notes=event.note,
             client_id=cid,
             client_name=client_name,
+            client_phone=client.telefono,
             client_age=_client_age(data_nascita, today),
             client_sex=client.sesso,
             client_since=client.data_creazione.date() if client.data_creazione else None,
