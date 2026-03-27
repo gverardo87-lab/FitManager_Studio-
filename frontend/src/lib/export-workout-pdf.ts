@@ -490,15 +490,24 @@ export async function downloadWorkoutClinicalPdf(data: ClinicalPdfExportData): P
   const html = buildHtml(data, imageMap);
   const filename = `${sanitizeFilename(data.nome)}_clinico.pdf`;
 
-  // Render HTML in un container temporaneo off-screen
-  const container = document.createElement("div");
-  container.style.cssText = "position:fixed;left:-9999px;top:0;width:210mm;";
-  container.innerHTML = html;
-  document.body.appendChild(container);
+  // Render HTML in un iframe isolato — NECESSARIO perche' html2canvas
+  // non supporta le funzioni CSS lab()/oklch() di Tailwind CSS 4.
+  // Un <div> nel body eredita quegli stili e crasha il parser colori.
+  // L'iframe ha il suo documento isolato con solo gli stili inline dell'HTML generato.
+  const iframe = document.createElement("iframe");
+  iframe.style.cssText = "position:fixed;left:-9999px;top:0;width:210mm;height:297mm;border:none;";
+  document.body.appendChild(iframe);
 
   try {
-    // html2pdf.js è un UMD bundle — il default export varia per bundler.
-    // Alcuni bundler espongono la funzione come .default, altri direttamente.
+    const iframeDoc = iframe.contentDocument ?? iframe.contentWindow?.document;
+    if (!iframeDoc) throw new Error("Cannot access iframe document");
+    iframeDoc.open();
+    iframeDoc.write(html);
+    iframeDoc.close();
+
+    // Attendi che le immagini embedded (data URL) vengano renderizzate
+    await new Promise((r) => { setTimeout(r, 300); });
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mod: any = await import("html2pdf.js");
     const html2pdf = typeof mod.default === "function" ? mod.default
@@ -517,7 +526,7 @@ export async function downloadWorkoutClinicalPdf(data: ClinicalPdfExportData): P
         html2canvas: { scale: 2, useCORS: true, logging: false },
         jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
       })
-      .from(container)
+      .from(iframeDoc.body)
       .save();
     toast.success("PDF clinico scaricato!");
   } catch (err) {
@@ -525,7 +534,7 @@ export async function downloadWorkoutClinicalPdf(data: ClinicalPdfExportData): P
     downloadHtml(html, `${sanitizeFilename(data.nome)}_clinico.html`);
     toast.warning("PDF non generabile — scaricato file HTML. Aprilo e stampa come PDF.");
   } finally {
-    container.remove();
+    iframe.remove();
   }
 }
 
