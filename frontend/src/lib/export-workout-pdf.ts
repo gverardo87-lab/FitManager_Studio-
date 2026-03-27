@@ -497,10 +497,21 @@ export async function downloadWorkoutClinicalPdf(data: ClinicalPdfExportData): P
   document.body.appendChild(container);
 
   try {
-    const html2pdf = (await import("html2pdf.js")).default;
+    // html2pdf.js è un UMD bundle — il default export varia per bundler.
+    // Alcuni bundler espongono la funzione come .default, altri direttamente.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mod: any = await import("html2pdf.js");
+    const html2pdf = typeof mod.default === "function" ? mod.default
+      : typeof mod === "function" ? mod
+      : null;
+
+    if (!html2pdf) {
+      throw new Error(`html2pdf.js: unable to resolve callable (keys: ${Object.keys(mod).join(",")})`);
+    }
+
     await html2pdf()
       .set({
-        margin: 0,
+        margin: [5, 5, 5, 5],
         filename,
         image: { type: "jpeg", quality: 0.92 },
         html2canvas: { scale: 2, useCORS: true, logging: false },
@@ -511,9 +522,8 @@ export async function downloadWorkoutClinicalPdf(data: ClinicalPdfExportData): P
     toast.success("PDF clinico scaricato!");
   } catch (err) {
     console.error("PDF generation failed, falling back to HTML:", err);
-    // Fallback: scarica HTML se il PDF fallisce
     downloadHtml(html, `${sanitizeFilename(data.nome)}_clinico.html`);
-    toast.warning("PDF non disponibile — scaricato file HTML. Aprilo e stampa come PDF.");
+    toast.warning("PDF non generabile — scaricato file HTML. Aprilo e stampa come PDF.");
   } finally {
     container.remove();
   }
