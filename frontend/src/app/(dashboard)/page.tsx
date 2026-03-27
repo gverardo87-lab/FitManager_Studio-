@@ -17,6 +17,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   AlertCircle,
+  Cake,
   Calendar,
   FileText,
   Rocket,
@@ -35,7 +36,7 @@ import { GhostEventsSheet } from "@/components/dashboard/GhostEventsSheet";
 import { ExpiringContractsSheet } from "@/components/dashboard/ExpiringContractsSheet";
 import { InactiveClientsSheet } from "@/components/dashboard/InactiveClientsSheet";
 import { BirthdayClientsSheet } from "@/components/dashboard/BirthdayClientsSheet";
-import { useDashboard, useDashboardAlerts } from "@/hooks/useDashboard";
+import { useDashboard, useDashboardAlerts, useBirthdayClients } from "@/hooks/useDashboard";
 import { useEvents } from "@/hooks/useAgenda";
 import { usePageReveal } from "@/lib/page-reveal";
 import {
@@ -182,6 +183,9 @@ export default function DashboardPage() {
             </div>
           </div>
 
+          {/* ── Birthday Banner (always visible when birthdays exist) ── */}
+          <BirthdayBanner onOpen={() => setBirthdaySheetOpen(true)} />
+
           {/* ── AlertHub (compact strip) ── */}
           <div className={revealClass(160)} style={revealStyle(160)}>
             <AlertHub
@@ -208,6 +212,51 @@ export default function DashboardPage() {
       <InactiveClientsSheet open={inactiveSheetOpen} onOpenChange={setInactiveSheetOpen} />
       <BirthdayClientsSheet open={birthdaySheetOpen} onOpenChange={setBirthdaySheetOpen} />
     </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════
+// Birthday Banner (sempre visibile, non soggetto a collapse AlertHub)
+// ════════════════════════════════════════════════════════════
+
+function BirthdayBanner({ onOpen }: { onOpen: () => void }) {
+  const { data } = useBirthdayClients();
+  const items = data?.items ?? [];
+  if (items.length === 0) return null;
+
+  const todayBirthdays = items.filter((i) => i.giorni_mancanti === 0);
+  const upcomingBirthdays = items.filter((i) => i.giorni_mancanti > 0);
+
+  const message = todayBirthdays.length > 0
+    ? `${todayBirthdays.map((i) => `${i.nome} ${i.cognome}`).join(", ")} — buon compleanno!`
+    : `${upcomingBirthdays[0].nome} ${upcomingBirthdays[0].cognome} compie gli anni tra ${upcomingBirthdays[0].giorni_mancanti} ${upcomingBirthdays[0].giorni_mancanti === 1 ? "giorno" : "giorni"}`;
+
+  const hasToday = todayBirthdays.length > 0;
+
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left transition-all hover:-translate-y-0.5 hover:shadow-md ${
+        hasToday
+          ? "border-pink-200 bg-gradient-to-r from-pink-50 to-rose-50 dark:border-pink-900/40 dark:from-pink-950/20 dark:to-rose-950/20"
+          : "border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 dark:border-blue-900/40 dark:from-blue-950/20 dark:to-indigo-950/20"
+      }`}
+    >
+      <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
+        hasToday ? "bg-pink-100 dark:bg-pink-900/30" : "bg-blue-100 dark:bg-blue-900/30"
+      }`}>
+        <Cake className={`h-4.5 w-4.5 ${hasToday ? "text-pink-600 dark:text-pink-400" : "text-blue-600 dark:text-blue-400"}`} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className={`text-sm font-semibold ${hasToday ? "text-pink-700 dark:text-pink-300" : "text-blue-700 dark:text-blue-300"}`}>
+          {message}
+        </p>
+        <p className="text-[11px] text-muted-foreground">
+          {items.length} {items.length === 1 ? "compleanno" : "compleanni"} questa settimana — clicca per inviare auguri
+        </p>
+      </div>
+    </button>
   );
 }
 

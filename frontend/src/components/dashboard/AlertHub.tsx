@@ -84,7 +84,10 @@ export function AlertHub({ alerts, isLoading, alertActions }: AlertHubProps) {
     return <AlertHubSkeleton />;
   }
 
-  const visibleAlerts = alerts?.items.filter((item) => item.category !== "overdue_rates") ?? [];
+  // Birthday hanno il loro banner dedicato — esclusi da AlertHub
+  const visibleAlerts = alerts?.items.filter(
+    (item) => item.category !== "overdue_rates" && item.category !== "birthdays",
+  ) ?? [];
 
   if (visibleAlerts.length === 0) {
     return (
