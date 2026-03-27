@@ -26,6 +26,7 @@ interface BuilderHeaderProps {
   plan: WorkoutPlan;
   clients: { id: number; nome: string; cognome: string }[];
   clientNome?: string;
+  clientTelefono?: string | null;
   totalVolume: number | null;
   isDirty: boolean;
   isSaving: boolean;
@@ -49,7 +50,7 @@ interface BuilderHeaderProps {
 }
 
 export function BuilderHeader({
-  plan, clients, clientNome, totalVolume,
+  plan, clients, clientNome, clientTelefono, totalVolume,
   isDirty, isSaving, lastSavedLabel, canUndo, canRedo,
   sessions, safetyExportData, exportLogoDataUrl, fromParam,
   onUndo, onRedo, onSave, onGoBack, onNavigate, onUpdatePlan, onLogoChange,
@@ -159,7 +160,7 @@ export function BuilderHeader({
 
         <div className="flex-1" />
 
-        <ExportButtons nome={plan.nome} obiettivo={plan.obiettivo} livello={plan.livello} clientNome={clientNome} durata_settimane={plan.durata_settimane} sessioni_per_settimana={plan.sessioni_per_settimana} sessioni={sessions} safety={safetyExportData} logoDataUrl={exportLogoDataUrl} onLogoChange={onLogoChange} />
+        <ExportButtons nome={plan.nome} obiettivo={plan.obiettivo} livello={plan.livello} clientNome={clientNome} clientTelefono={clientTelefono} durata_settimane={plan.durata_settimane} sessioni_per_settimana={plan.sessioni_per_settimana} sessioni={sessions} safety={safetyExportData} logoDataUrl={exportLogoDataUrl} onLogoChange={onLogoChange} />
       </div>
     </div>
   );

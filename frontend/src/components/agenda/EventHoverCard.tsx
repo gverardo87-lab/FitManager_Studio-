@@ -20,6 +20,7 @@ import { CheckCircle2, RotateCcw, X, Clock, User } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import { CATEGORY_LABELS } from "./calendar-setup";
 import type { CalendarEvent } from "./calendar-setup";
 import type { EventCategory } from "@/types/api";
@@ -159,6 +160,7 @@ export function EventHoverCard({ event, onQuickAction, children }: EventHoverCar
               <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
                 <User className="h-3 w-3" />
                 <span>{event.cliente_nome} {event.cliente_cognome ?? ""}</span>
+                <WhatsAppButton phone={event.cliente_telefono} variant="icon" className="h-5 w-5" />
               </div>
             )}
 

@@ -142,6 +142,7 @@ class EventResponse(BaseModel):
     note: Optional[str] = None
     cliente_nome: Optional[str] = None
     cliente_cognome: Optional[str] = None
+    cliente_telefono: Optional[str] = None
 
 
 class EventListResponse(BaseModel):
@@ -212,23 +213,24 @@ def _check_overlap(
 
 def _load_client_names_batch(
     session: Session, client_ids: set[int]
-) -> Dict[int, Tuple[str, str]]:
-    """Batch load client names. Returns {id: (nome, cognome)}. Zero N+1."""
+) -> Dict[int, Tuple[str, str, Optional[str]]]:
+    """Batch load client info. Returns {id: (nome, cognome, telefono)}. Zero N+1."""
     if not client_ids:
         return {}
     rows = session.exec(
-        select(Client.id, Client.nome, Client.cognome)
+        select(Client.id, Client.nome, Client.cognome, Client.telefono)
         .where(Client.id.in_(list(client_ids)))
     ).all()
-    return {r[0]: (r[1], r[2]) for r in rows}
+    return {r[0]: (r[1], r[2], r[3]) for r in rows}
 
 
 def _to_response(
     event: Event,
     cliente_nome: Optional[str] = None,
     cliente_cognome: Optional[str] = None,
+    cliente_telefono: Optional[str] = None,
 ) -> EventResponse:
-    """Converte un Event ORM in EventResponse con nome cliente opzionale."""
+    """Converte un Event ORM in EventResponse con dati cliente opzionali."""
     return EventResponse(
         id=event.id,
         data_inizio=str(event.data_inizio),
@@ -241,6 +243,7 @@ def _to_response(
         note=event.note,
         cliente_nome=cliente_nome,
         cliente_cognome=cliente_cognome,
+        cliente_telefono=cliente_telefono,
     )
 
 
@@ -368,10 +371,10 @@ def list_events(
     client_ids = {e.id_cliente for e in events if e.id_cliente}
     client_names = _load_client_names_batch(session, client_ids)
 
-    def _names(cid: Optional[int]) -> Tuple[Optional[str], Optional[str]]:
+    def _names(cid: Optional[int]) -> Tuple[Optional[str], Optional[str], Optional[str]]:
         if not cid:
-            return (None, None)
-        return client_names.get(cid, (None, None))
+            return (None, None, None)
+        return client_names.get(cid, (None, None, None))
 
     return EventListResponse(
         items=[
@@ -397,9 +400,9 @@ def get_event(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Evento non trovato")
 
     names = _load_client_names_batch(session, {event.id_cliente} if event.id_cliente else set())
-    nome, cognome = names.get(event.id_cliente, (None, None)) if event.id_cliente else (None, None)
+    nome, cognome, telefono = names.get(event.id_cliente, (None, None, None)) if event.id_cliente else (None, None, None)
 
-    return _to_response(event, nome, cognome)
+    return _to_response(event, nome, cognome, telefono)
 
 
 # --- POST: Crea evento ---
@@ -499,9 +502,9 @@ def create_event(
     session.refresh(event)
 
     names = _load_client_names_batch(session, {event.id_cliente} if event.id_cliente else set())
-    nome, cognome = names.get(event.id_cliente, (None, None)) if event.id_cliente else (None, None)
+    nome, cognome, telefono = names.get(event.id_cliente, (None, None, None)) if event.id_cliente else (None, None, None)
 
-    return _to_response(event, nome, cognome)
+    return _to_response(event, nome, cognome, telefono)
 
 
 # --- PUT: Aggiorna evento (partial update) ---
@@ -572,9 +575,9 @@ def update_event(
     session.refresh(event)
 
     names = _load_client_names_batch(session, {event.id_cliente} if event.id_cliente else set())
-    nome, cognome = names.get(event.id_cliente, (None, None)) if event.id_cliente else (None, None)
+    nome, cognome, telefono = names.get(event.id_cliente, (None, None, None)) if event.id_cliente else (None, None, None)
 
-    return _to_response(event, nome, cognome)
+    return _to_response(event, nome, cognome, telefono)
 
 
 # --- DELETE: Elimina evento ---

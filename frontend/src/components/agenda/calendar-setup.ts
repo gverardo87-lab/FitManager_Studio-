@@ -37,6 +37,7 @@ export interface CalendarEvent {
   note: string | null;
   cliente_nome: string | null;
   cliente_cognome: string | null;
+  cliente_telefono: string | null;
   /** true se l'evento rappresenta un promemoria (Todo) */
   allDay?: boolean;
   _isTodo?: boolean;
@@ -59,6 +60,7 @@ export function toCalendarEvent(event: EventHydrated): CalendarEvent {
     note: event.note,
     cliente_nome: event.cliente_nome,
     cliente_cognome: event.cliente_cognome,
+    cliente_telefono: event.cliente_telefono,
   };
 }
 
@@ -157,6 +159,7 @@ export function todoToCalendarEvent(todo: Todo): CalendarEvent {
     note: todo.descrizione,
     cliente_nome: null,
     cliente_cognome: null,
+    cliente_telefono: null,
     allDay: true,
     _isTodo: true,
     _todoData: todo,

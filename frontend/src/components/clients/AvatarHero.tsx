@@ -29,6 +29,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ReadinessRing } from "@/components/ui/readiness-ring";
 import { Skeleton } from "@/components/ui/skeleton";
+import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import { cn } from "@/lib/utils";
 import type { ClientAvatar, ClientEnriched, AvatarHighlight, SemaphoreStatus, TrendDirection, Momentum } from "@/types/api";
 
@@ -380,6 +381,7 @@ export function AvatarHero({
               {client.telefono && (
                 <span className="flex items-center gap-1.5">
                   <Phone className="h-3.5 w-3.5" /> {client.telefono}
+                  <WhatsAppButton phone={client.telefono} variant="icon" />
                 </span>
               )}
             </div>

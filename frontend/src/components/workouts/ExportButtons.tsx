@@ -13,6 +13,7 @@ import { useRef, useState, type ChangeEvent } from "react";
 import { Download, ImagePlus, Loader2, Printer, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import { toast } from "sonner";
 import { downloadWorkoutClinicalHtml, type SafetyExportData } from "@/lib/export-workout-pdf";
 import type { SessionCardData } from "./SessionCard";
@@ -25,6 +26,7 @@ interface ExportButtonsProps {
   obiettivo: string;
   livello: string;
   clientNome?: string;
+  clientTelefono?: string | null;
   durata_settimane?: number;
   sessioni_per_settimana?: number;
   sessioni: SessionCardData[];
@@ -47,6 +49,7 @@ export function ExportButtons({
   obiettivo,
   livello,
   clientNome,
+  clientTelefono,
   durata_settimane,
   sessioni_per_settimana,
   sessioni,
@@ -170,6 +173,13 @@ export function ExportButtons({
           <Trash2 className="h-4 w-4" />
         </Button>
       )}
+
+      <WhatsAppButton
+        phone={clientTelefono}
+        message={clientNome ? `Ciao ${clientNome.split(" ")[0]}, ho preparato la tua nuova scheda "${nome}"! La trovi gia' nel tuo programma. Buon allenamento!` : undefined}
+        variant="compact"
+        label="Invia"
+      />
     </div>
   );
 }

@@ -68,6 +68,7 @@ export default function SchedaDetailPage({ params }: { params: Promise<{ id: str
   const clientSesso = useMemo(() => { const s = assignedClient?.sesso; return s === "Uomo" ? "M" : s === "Donna" ? "F" : null; }, [assignedClient?.sesso]);
   const clientDataNascita = assignedClient?.data_nascita ?? null;
   const clientNome = plan?.client_nome && plan?.client_cognome ? `${plan.client_nome} ${plan.client_cognome}` : undefined;
+  const clientTelefono = assignedClient?.telefono ?? null;
 
   // 1RM measurements
   const { data: latestMeasurement } = useLatestMeasurement(plan?.id_cliente ?? null);
@@ -158,7 +159,7 @@ export default function SchedaDetailPage({ params }: { params: Promise<{ id: str
       {/* ── Main builder area (fluid) ── */}
       <div className="flex-1 min-w-0 p-3 lg:p-4 flex flex-col overflow-y-auto">
         <BuilderHeader
-          plan={plan} clients={clients} clientNome={clientNome} totalVolume={builder.totalVolume}
+          plan={plan} clients={clients} clientNome={clientNome} clientTelefono={clientTelefono} totalVolume={builder.totalVolume}
           isDirty={builder.isDirty} isSaving={updateSessions.isPending} lastSavedLabel={builder.lastSavedLabel}
           canUndo={builder.canUndo} canRedo={builder.canRedo} sessions={builder.sessions}
           safetyExportData={safetyExportData} exportLogoDataUrl={builder.exportLogoDataUrl} fromParam={fromParam}

@@ -577,6 +577,7 @@ export interface Event {
   note: string | null;
   cliente_nome: string | null;
   cliente_cognome: string | null;
+  cliente_telefono: string | null;
 }
 
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
@@ -990,6 +991,7 @@ export interface OverdueRateItem {
   client_id: number;
   client_nome: string;
   client_cognome: string;
+  client_telefono: string | null;
 }
 
 /** Contratto in scadenza con crediti inutilizzati per Dashboard Sheet */

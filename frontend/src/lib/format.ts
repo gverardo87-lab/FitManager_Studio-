@@ -56,6 +56,34 @@ export function getFinanceBarColor(ratio: number): string {
   return "bg-red-500";
 }
 
+// ── WhatsApp URL builder ─────────────────────────────────────────
+
+/**
+ * Sanitizza un numero telefonico italiano/internazionale per wa.me.
+ *
+ * Rimuove tutti i caratteri non-numerici, aggiunge prefisso 39 se
+ * il numero sembra italiano (10 cifre senza country code).
+ */
+function sanitizePhone(phone: string): string {
+  const clean = phone.replace(/\D/g, "");
+  // Numero italiano senza prefisso: 3xx xxx xxxx (10 cifre)
+  if (clean.length === 10 && clean.startsWith("3")) return "39" + clean;
+  return clean;
+}
+
+/**
+ * Genera URL wa.me con messaggio pre-compilato.
+ *
+ * Ritorna stringa vuota se il telefono manca (il bottone non viene mostrato).
+ */
+export function buildWhatsAppUrl(phone: string | null | undefined, message?: string): string {
+  if (!phone) return "";
+  const num = sanitizePhone(phone);
+  if (!num) return "";
+  const base = `https://wa.me/${num}`;
+  return message ? `${base}?text=${encodeURIComponent(message)}` : base;
+}
+
 export function toISOLocal(date: Date): string {
   const Y = date.getFullYear();
   const M = String(date.getMonth() + 1).padStart(2, "0");

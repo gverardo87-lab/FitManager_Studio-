@@ -13,7 +13,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ShieldAlert,
   CheckCircle2,
@@ -42,9 +42,11 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
+import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import { useOverdueRates } from "@/hooks/useDashboard";
 import { usePayRate } from "@/hooks/useRates";
 import { formatCurrency, formatShortDate } from "@/lib/format";
+import { waRateReminder } from "@/lib/whatsapp-templates";
 import type { OverdueRateItem } from "@/types/api";
 import { PAYMENT_METHODS } from "@/types/api";
 
@@ -67,6 +69,17 @@ export function OverdueRatesSheet({ open, onOpenChange }: OverdueRatesSheetProps
   const payRate = usePayRate();
   const [paying, setPaying] = useState<Set<number>>(new Set());
   const [methods, setMethods] = useState<Record<number, string>>({});
+
+  const [trainerName, setTrainerName] = useState("");
+  useEffect(() => {
+    try {
+      const raw = document.cookie.match(/fitmanager_trainer=([^;]+)/)?.[1];
+      if (raw) {
+        const t = JSON.parse(decodeURIComponent(raw));
+        setTrainerName(`${t.nome} ${t.cognome}`);
+      }
+    } catch { /* noop */ }
+  }, []);
 
   const items = data?.items ?? [];
 
@@ -154,13 +167,23 @@ export function OverdueRatesSheet({ open, onOpenChange }: OverdueRatesSheetProps
                         : "hover:shadow-sm"
                     }`}
                   >
-                    {/* Header: cliente + ritardo */}
+                    {/* Header: cliente + WA + ritardo */}
                     <div className="mb-2 flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <User aria-hidden="true" className="h-3.5 w-3.5 text-muted-foreground" />
                         <span className="text-sm font-semibold">
                           {item.client_nome} {item.client_cognome}
                         </span>
+                        <WhatsAppButton
+                          phone={item.client_telefono}
+                          message={waRateReminder(
+                            item.client_nome,
+                            trainerName,
+                            item.importo_residuo,
+                            item.data_scadenza,
+                          )}
+                          variant="icon"
+                        />
                       </div>
                       <Badge
                         variant="destructive"
