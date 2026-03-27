@@ -40,8 +40,11 @@
    Ultra-compact pills, density heatmap, professional typography
    ═══════════════════════════════════════════════════════════════════ */
 
-/* Month rows: taller for more event visibility */
-.rbc-month-view .rbc-month-row { min-height: 110px; }
+/* Month view: altezza minima del container per garantire righe sufficienti.
+   react-big-calendar distribuisce le righe uniformemente (flex:1 0 0).
+   Con min-height 720px e 6 righe: ogni riga ~110px → 3-4 eventi visibili per cella.
+   Su schermi grandi calc(100vh-280px) prende il sopravvento, righe ancora piu' alte. */
+.rbc-month-view { min-height: 720px; }
 .rbc-month-view .rbc-month-row + .rbc-month-row { border-top: 1px solid oklch(0.92 0.004 286.32); }
 
 /* Month headers: clean, compact */
@@ -180,7 +183,7 @@
   .rbc-allday-cell { min-height: 30px; }
   .rbc-allday-cell .rbc-event { font-size: 0.7rem !important; padding: 2px 5px !important; min-height: 22px; }
   /* Month view mobile: even more compact */
-  .rbc-month-view .rbc-month-row { min-height: 80px; }
+  .rbc-month-view { min-height: 520px; }
   .rbc-month-view .rbc-event { height: 18px; font-size: 0.6rem !important; padding: 0 4px !important; }
   .rbc-month-view .rbc-date-cell > a,
   .rbc-month-view .rbc-date-cell > button { font-size: 0.65rem; }

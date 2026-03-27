@@ -8,6 +8,8 @@ import {
 import { cn } from "@/lib/utils";
 import { getGreeting } from "@/lib/dashboard-helpers";
 import { AnalogClock } from "@/components/workspace/AnalogClock";
+import Link from "next/link";
+import { StickyNote } from "lucide-react";
 import type { SessionPrepItem, SessionPrepResponse } from "@/types/api";
 
 const TIME_FMT = new Intl.DateTimeFormat("it-IT", { hour: "2-digit", minute: "2-digit" });
@@ -132,6 +134,7 @@ export interface OggiHeroProps {
   focusStatus: PreFlightStatus | null;
   lastUpdatedAt?: number | null;
   isRefreshing?: boolean;
+  urgentTodoCount?: number;
   className?: string;
 }
 
@@ -144,6 +147,7 @@ export function OggiHero({
   focusStatus,
   lastUpdatedAt: _lastUpdatedAt,
   isRefreshing: _isRefreshing = false,
+  urgentTodoCount = 0,
   className,
 }: OggiHeroProps) {
   const now = getReferenceDate(prep.current_time);
@@ -238,6 +242,22 @@ export function OggiHero({
                   {readyCount === 1 ? "pronta" : "pronte"}
                 </p>
               </div>
+            ) : null}
+
+            {/* Promemoria urgenti — chip minimale, link ad agenda */}
+            {urgentTodoCount > 0 ? (
+              <Link
+                href="/agenda"
+                className="flex items-center gap-1.5 rounded-full border border-amber-300/60 bg-amber-50/80 px-3 py-1.5 transition-colors hover:bg-amber-100 dark:border-amber-700/40 dark:bg-amber-950/30 dark:hover:bg-amber-900/40"
+              >
+                <StickyNote className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+                <span className="text-xs font-semibold tabular-nums text-amber-700 dark:text-amber-300">
+                  {urgentTodoCount}
+                </span>
+                <span className="text-[10px] font-medium text-amber-600/80 dark:text-amber-400/70">
+                  {urgentTodoCount === 1 ? "promemoria" : "promemoria"}
+                </span>
+              </Link>
             ) : null}
           </div>
         </div>

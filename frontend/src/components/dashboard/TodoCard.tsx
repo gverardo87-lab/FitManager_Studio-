@@ -343,13 +343,27 @@ export function TodoCard({
         </div>
       </div>
 
-      {/* Header */}
+      {/* Header + priority badges inline (compatti per risparmiare spazio verticale) */}
       <div className="mb-3 flex flex-wrap items-center gap-2 pl-7">
         <h2 className="font-[family-name:var(--font-caveat)] text-2xl font-bold text-amber-900/80 sm:text-3xl dark:text-amber-200/80">Promemoria</h2>
-        {todos.length > 0 && (
-          <span className="ml-auto font-[family-name:var(--font-caveat)] text-base font-semibold tabular-nums text-amber-700/60 dark:text-amber-400/60">
-            {activeCount} attivi
-          </span>
+        {activeCount > 0 && (
+          <div className="ml-auto flex items-center gap-1.5">
+            {overdueCount > 0 && (
+              <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold tabular-nums text-red-700 dark:bg-red-900/30 dark:text-red-300">
+                {overdueCount} <span className="ml-0.5 font-semibold uppercase tracking-wide">scad.</span>
+              </span>
+            )}
+            {dueTodayCount > 0 && (
+              <span className="inline-flex items-center rounded-full bg-amber-200/80 px-2 py-0.5 text-[10px] font-bold tabular-nums text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+                {dueTodayCount} <span className="ml-0.5 font-semibold uppercase tracking-wide">oggi</span>
+              </span>
+            )}
+            {upcomingCount > 0 && (
+              <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold tabular-nums text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                {upcomingCount} <span className="ml-0.5 font-semibold uppercase tracking-wide">pross.</span>
+              </span>
+            )}
+          </div>
         )}
       </div>
 
@@ -439,35 +453,6 @@ export function TodoCard({
         )}
       </div>
 
-      {/* Priority counters */}
-      {activeCount > 0 && (
-        <div className="mb-3 grid shrink-0 grid-cols-3 gap-1.5">
-          <div className="rounded-md border border-red-200 bg-red-50/80 px-2 py-1.5 text-center dark:border-red-900/40 dark:bg-red-950/20">
-            <p className="text-base font-extrabold leading-none tabular-nums text-red-700 dark:text-red-300">
-              {overdueCount}
-            </p>
-            <p className="mt-1 text-[10px] font-semibold tracking-wide text-red-700/80 uppercase dark:text-red-300/80">
-              Scaduti
-            </p>
-          </div>
-          <div className="rounded-md border border-amber-200 bg-amber-50/80 px-2 py-1.5 text-center dark:border-amber-900/40 dark:bg-amber-950/20">
-            <p className="text-base font-extrabold leading-none tabular-nums text-amber-700 dark:text-amber-300">
-              {dueTodayCount}
-            </p>
-            <p className="mt-1 text-[10px] font-semibold tracking-wide text-amber-700/80 uppercase dark:text-amber-300/80">
-              Oggi
-            </p>
-          </div>
-          <div className="rounded-md border border-blue-200 bg-blue-50/80 px-2 py-1.5 text-center dark:border-blue-900/40 dark:bg-blue-950/20">
-            <p className="text-base font-extrabold leading-none tabular-nums text-blue-700 dark:text-blue-300">
-              {upcomingCount}
-            </p>
-            <p className="mt-1 text-[10px] font-semibold tracking-wide text-blue-700/80 uppercase dark:text-blue-300/80">
-              Prossimi
-            </p>
-          </div>
-        </div>
-      )}
 
       {/* Todo list — scrollable, fills remaining space */}
       {todos.length === 0 ? (
@@ -479,7 +464,7 @@ export function TodoCard({
           </p>
         </div>
       ) : (
-        <ScrollArea className="min-h-0 min-w-0 flex-1 pr-1">
+        <ScrollArea className="min-h-[100px] min-w-0 flex-1 pr-1">
           <div className="min-w-0 space-y-1.5">
             {todos.map((todo) => (
               <TodoItem

@@ -17,6 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { surfaceRoleClassName } from "@/components/ui/surface-role";
 import { cn } from "@/lib/utils";
 import { useClientAvatars, useSessionPrep, useWorkspaceToday } from "@/hooks/useWorkspace";
+import { useTodos } from "@/hooks/useTodos";
 import { usePageReveal } from "@/lib/page-reveal";
 import type { ClientAvatar, SessionPrepItem } from "@/types/api";
 
@@ -75,6 +76,14 @@ export default function OggiWorkspacePage() {
   }, [prep]);
   const avatarQuery = useClientAvatars(avatarClientIds, Boolean(prep));
   const avatarMap: Map<number, ClientAvatar> = avatarQuery.data ?? new Map();
+
+  // Promemoria urgenti: conteggio per chip minimale nell'hero
+  const { data: todosData } = useTodos();
+  const urgentTodoCount = useMemo(() => {
+    const items = todosData?.items ?? [];
+    const today = new Date().toISOString().slice(0, 10);
+    return items.filter((t) => !t.completato && t.data_scadenza && t.data_scadenza <= today).length;
+  }, [todosData]);
 
   const referenceNowMs = useMemo(() => {
     const rawValue = prep?.current_time ?? today?.agenda.current_time ?? null;
@@ -190,6 +199,7 @@ export default function OggiWorkspacePage() {
           focusStatus={selectedSession ? selectedStatus : null}
           lastUpdatedAt={lastUpdatedAt}
           isRefreshing={prepQuery.isFetching || todayQuery.isFetching}
+          urgentTodoCount={urgentTodoCount}
         />
       </div>
 
