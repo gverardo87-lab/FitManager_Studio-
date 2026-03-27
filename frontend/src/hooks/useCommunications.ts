@@ -20,6 +20,12 @@ export interface CommunicationLogItem {
   created_at: string | null;
 }
 
+export interface CommunicationLogEnriched extends CommunicationLogItem {
+  id_cliente: number;
+  client_nome: string;
+  client_cognome: string;
+}
+
 interface CommunicationCreatePayload {
   id_cliente: number;
   canale: string;
@@ -28,6 +34,17 @@ interface CommunicationCreatePayload {
 }
 
 // ── Hooks ──
+
+export function useAllCommunications(clientId?: number | null) {
+  return useQuery<{ items: CommunicationLogEnriched[]; total: number }>({
+    queryKey: ["communications", "all", clientId ?? "all"],
+    queryFn: async () => {
+      const params = clientId ? { id_cliente: clientId } : {};
+      const { data } = await apiClient.get("/communications", { params });
+      return data;
+    },
+  });
+}
 
 export function useClientCommunications(clientId: number | null, enabled = true) {
   return useQuery<{ items: CommunicationLogItem[]; total: number }>({
@@ -50,6 +67,7 @@ export function useLogCommunication() {
     },
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: ["communications", variables.id_cliente] });
+      qc.invalidateQueries({ queryKey: ["communications", "all"] });
     },
     onError: () => {
       // Silenzioso — il log non deve bloccare l'utente

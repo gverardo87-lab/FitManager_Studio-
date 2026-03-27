@@ -98,6 +98,57 @@ def log_communication(
     }
 
 
+@router.get("")
+def get_all_communications(
+    id_cliente: int | None = None,
+    trainer: Trainer = Depends(get_current_trainer),
+    session: Session = Depends(get_session),
+):
+    """
+    Registro comunicazioni completo (piu' recenti prima).
+
+    Filtro opzionale per cliente via query param ?id_cliente=N.
+    Enriched con nome/cognome cliente per visualizzazione in lista.
+    """
+    from sqlalchemy import text as sa_text
+
+    query = """
+        SELECT cl.id, cl.nome, cl.cognome, cl.canale, cl.template_usato,
+               cl.anteprima, cl.created_at, cl.id_cliente,
+               c.nome as client_nome, c.cognome as client_cognome
+        FROM communication_log cl
+        JOIN clienti c ON c.id = cl.id_cliente
+        WHERE cl.trainer_id = :tid
+          AND cl.deleted_at IS NULL
+    """
+    params: dict = {"tid": trainer.id}
+
+    if id_cliente is not None:
+        query += " AND cl.id_cliente = :cid"
+        params["cid"] = id_cliente
+
+    query += " ORDER BY cl.created_at DESC LIMIT 200"
+
+    rows = session.execute(sa_text(query), params).fetchall()
+
+    return {
+        "items": [
+            {
+                "id": row[0],
+                "canale": row[3],
+                "template_usato": row[4],
+                "anteprima": row[5],
+                "created_at": row[6],
+                "id_cliente": row[7],
+                "client_nome": row[8],
+                "client_cognome": row[9],
+            }
+            for row in rows
+        ],
+        "total": len(rows),
+    }
+
+
 @router.get("/{client_id}")
 def get_client_communications(
     client_id: int,

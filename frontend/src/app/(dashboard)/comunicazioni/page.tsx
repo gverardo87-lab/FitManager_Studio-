@@ -12,6 +12,7 @@
  */
 
 import { useState, useMemo, useCallback } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import {
   MessageCircle,
   Users,
@@ -34,7 +35,7 @@ import {
   FileText,
   UserCheck,
   Heart,
-  Zap,
+  ClipboardList,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -60,6 +61,7 @@ import {
   waProgressUpdate,
   waFreeMessage,
 } from "@/lib/whatsapp-templates";
+import { CommunicationRegistry } from "@/components/communications/CommunicationRegistry";
 import type { ClientEnriched } from "@/types/api";
 
 // ── Filter chip config ──
@@ -185,6 +187,26 @@ const TEMPLATES: TemplateDef[] = [
 
 export default function ComunicazioniPage() {
   const { revealClass, revealStyle } = usePageReveal();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // Tab state from URL
+  const activeTab = searchParams.get("tab") === "registro" ? "registro" : "invia";
+  const urlClienteId = searchParams.get("cliente");
+  const initialRegistryClientId = urlClienteId ? parseInt(urlClienteId, 10) : null;
+
+  const setActiveTab = useCallback((tab: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (tab === "invia") {
+      params.delete("tab");
+      params.delete("cliente");
+    } else {
+      params.set("tab", tab);
+    }
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [searchParams, router, pathname]);
+
   const { data, isLoading } = useClients();
   const trainerName = useTrainerName();
   const logComm = useLogCommunication();
@@ -352,6 +374,44 @@ export default function ComunicazioniPage() {
           </div>
         </div>
       </div>
+
+      {/* ══════════ TAB SWITCHER ══════════ */}
+      <div className={`flex gap-1 rounded-lg bg-muted/50 p-1 ${revealClass(40)}`} style={revealStyle(40)}>
+        <button
+          type="button"
+          onClick={() => setActiveTab("invia")}
+          className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-all ${
+            activeTab === "invia"
+              ? "bg-background text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Send className="h-3.5 w-3.5" />
+          Invia
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("registro")}
+          className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-all ${
+            activeTab === "registro"
+              ? "bg-background text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <ClipboardList className="h-3.5 w-3.5" />
+          Registro
+        </button>
+      </div>
+
+      {/* ══════════ TAB: REGISTRO ══════════ */}
+      {activeTab === "registro" && (
+        <div className={revealClass(80)} style={revealStyle(80)}>
+          <CommunicationRegistry initialClientId={initialRegistryClientId} />
+        </div>
+      )}
+
+      {/* ══════════ TAB: INVIA ══════════ */}
+      {activeTab === "invia" && <>
 
       {/* ══════════ SENDING OVERLAY ══════════ */}
       {isSending && sendQueue.length > 0 && (
@@ -614,6 +674,8 @@ export default function ComunicazioniPage() {
           </div>
         </div>
       </div>
+
+      </>}
     </div>
   );
 }
