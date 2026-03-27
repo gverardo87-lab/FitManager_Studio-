@@ -37,6 +37,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import { surfaceRoleClassName } from "@/components/ui/surface-role";
 import { useClients } from "@/hooks/useClients";
+import { useLogCommunication } from "@/hooks/useCommunications";
 import { useTrainerName } from "@/hooks/useTrainerName";
 import { buildWhatsAppUrl } from "@/lib/format";
 import { usePageReveal } from "@/lib/page-reveal";
@@ -168,6 +169,7 @@ export default function ComunicazioniPage() {
   const { revealClass, revealStyle } = usePageReveal();
   const { data, isLoading } = useClients();
   const trainerName = useTrainerName();
+  const logComm = useLogCommunication();
 
   // State
   const [search, setSearch] = useState("");
@@ -264,6 +266,16 @@ export default function ComunicazioniPage() {
     }
   }, [clients, selectedIds]);
 
+  // Log communication (fire-and-forget)
+  const logSend = useCallback((client: ClientEnriched, msg: string) => {
+    logComm.mutate({
+      id_cliente: client.id,
+      canale: "whatsapp",
+      template_usato: templateKey,
+      anteprima: msg.slice(0, 200),
+    });
+  }, [logComm, templateKey]);
+
   // Start sequential send
   const handleStartSend = useCallback(() => {
     const queue = clients.filter((c) => selectedIds.has(c.id));
@@ -274,8 +286,11 @@ export default function ComunicazioniPage() {
     // Open first
     const msg = buildMessage(queue[0]);
     const url = buildWhatsAppUrl(queue[0].telefono, msg);
-    if (url) window.open(url, "_blank", "noopener,noreferrer");
-  }, [clients, selectedIds, buildMessage]);
+    if (url) {
+      window.open(url, "_blank", "noopener,noreferrer");
+      logSend(queue[0], msg);
+    }
+  }, [clients, selectedIds, buildMessage, logSend]);
 
   // Send next in queue
   const handleSendNext = useCallback(() => {
@@ -290,8 +305,11 @@ export default function ComunicazioniPage() {
     const client = sendQueue[nextIdx];
     const msg = buildMessage(client);
     const url = buildWhatsAppUrl(client.telefono, msg);
-    if (url) window.open(url, "_blank", "noopener,noreferrer");
-  }, [sendIndex, sendQueue, buildMessage]);
+    if (url) {
+      window.open(url, "_blank", "noopener,noreferrer");
+      logSend(client, msg);
+    }
+  }, [sendIndex, sendQueue, buildMessage, logSend]);
 
   // Cancel send
   const handleCancelSend = useCallback(() => {
@@ -509,6 +527,8 @@ export default function ComunicazioniPage() {
                         phone={client.telefono}
                         message={buildMessage(client)}
                         variant="icon"
+                        clientId={client.id}
+                        templateKey={templateKey}
                       />
                     </div>
                   );

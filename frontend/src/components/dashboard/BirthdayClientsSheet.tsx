@@ -150,6 +150,8 @@ export function BirthdayClientsSheet({ open, onOpenChange }: BirthdayClientsShee
                       message={waBirthday(item.nome, trainerName)}
                       variant="compact"
                       label="Auguri"
+                      clientId={item.client_id}
+                      templateKey="birthday"
                     />
                     {item.telefono && (
                       <a

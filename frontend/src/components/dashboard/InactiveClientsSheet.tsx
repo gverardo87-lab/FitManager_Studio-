@@ -169,6 +169,8 @@ export function InactiveClientsSheet({ open, onOpenChange }: InactiveClientsShee
                       message={waCheckIn(item.nome, trainerName, item.giorni_inattivo)}
                       variant="compact"
                       label="Scrivi"
+                      clientId={item.client_id}
+                      templateKey="checkin"
                     />
                     {item.email && (
                       <a

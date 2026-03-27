@@ -13,6 +13,7 @@
 import { Button } from "@/components/ui/button";
 import { buildWhatsAppUrl } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { useLogCommunication } from "@/hooks/useCommunications";
 
 // SVG inline — lucide-react non ha l'icona WhatsApp
 function WhatsAppIcon({ className }: { className?: string }) {
@@ -37,6 +38,10 @@ interface WhatsAppButtonProps {
   variant?: WhatsAppVariant;
   label?: string;
   className?: string;
+  /** Se fornito, il click logga la comunicazione nel CRM. */
+  clientId?: number;
+  /** Chiave del template usato (es. 'birthday', 'checkin'). */
+  templateKey?: string;
 }
 
 export function WhatsAppButton({
@@ -45,14 +50,26 @@ export function WhatsAppButton({
   variant = "icon",
   label,
   className,
+  clientId,
+  templateKey,
 }: WhatsAppButtonProps) {
   const url = buildWhatsAppUrl(phone, message);
+  const logComm = useLogCommunication();
   if (!url) return null;
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
     window.open(url, "_blank", "noopener,noreferrer");
+    // Log trasparente — non blocca l'utente
+    if (clientId) {
+      logComm.mutate({
+        id_cliente: clientId,
+        canale: "whatsapp",
+        template_usato: templateKey,
+        anteprima: (message ?? "").slice(0, 200),
+      });
+    }
   };
 
   // Variante icon: usa <a> nativo invece di <Button> per evitare

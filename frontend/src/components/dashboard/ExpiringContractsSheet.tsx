@@ -139,6 +139,8 @@ export function ExpiringContractsSheet({ open, onOpenChange }: ExpiringContracts
                             item.crediti_residui,
                           )}
                           variant="icon"
+                          clientId={item.client_id}
+                          templateKey="renewal"
                         />
                       </div>
                       <div className={`rounded-md border px-2 py-0.5 text-[10px] font-bold tabular-nums ${countdownColor(item.giorni_rimasti)}`}>

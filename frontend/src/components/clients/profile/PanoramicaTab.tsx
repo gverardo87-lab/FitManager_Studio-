@@ -16,7 +16,7 @@ import { it } from "date-fns/locale";
 import {
   FileText, HeartPulse, Ruler, Dumbbell, Calendar,
   Check, ArrowRight, ClipboardList, TrendingUp,
-  AlertTriangle,
+  AlertTriangle, MessageCircle, Phone, Mail, StickyNote,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,6 +24,7 @@ import { Separator } from "@/components/ui/separator";
 import { ALERT_SEVERITY_STYLES, buildReadinessAlerts } from "@/lib/client-alerts";
 import type { ClientAlert } from "@/lib/client-alerts";
 import type { ClinicalReadinessClientItem } from "@/types/api";
+import { useClientCommunications, type CommunicationLogItem } from "@/hooks/useCommunications";
 
 // ════════════════════════════════════════════════════════════
 // TYPES
@@ -187,7 +188,10 @@ export function PanoramicaTab(props: PanoramicaTabProps) {
         ))}
       </div>
 
-      {/* ── Sezione 3: Dettagli Personali ── */}
+      {/* ── Sezione 3: Comunicazioni recenti ── */}
+      <CommunicationTimeline clientId={clientId} />
+
+      {/* ── Sezione 4: Dettagli Personali ── */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium">Dettagli Personali</CardTitle>
@@ -297,6 +301,96 @@ function PathBar({
           </Link>
         );
       })}
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════
+// COMMUNICATION TIMELINE — ultime comunicazioni
+// ════════════════════════════════════════════════════════════
+
+const CHANNEL_CONFIG: Record<string, { icon: LucideIcon; label: string; color: string }> = {
+  whatsapp: { icon: MessageCircle, label: "WhatsApp", color: "text-emerald-600 bg-emerald-100 dark:text-emerald-400 dark:bg-emerald-900/30" },
+  telefono: { icon: Phone, label: "Telefonata", color: "text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/30" },
+  email: { icon: Mail, label: "Email", color: "text-violet-600 bg-violet-100 dark:text-violet-400 dark:bg-violet-900/30" },
+  nota: { icon: StickyNote, label: "Nota", color: "text-amber-600 bg-amber-100 dark:text-amber-400 dark:bg-amber-900/30" },
+};
+
+const TEMPLATE_LABELS: Record<string, string> = {
+  checkin: "Check-in",
+  birthday: "Auguri",
+  renewal: "Rinnovo",
+  workout: "Scheda",
+  nutrition: "Piano alimentare",
+  appointment: "Appuntamento",
+  class: "Classe",
+  progress: "Progressi",
+  welcome: "Benvenuto",
+  free: "Messaggio libero",
+  rate: "Rata",
+};
+
+function CommunicationTimeline({ clientId }: { clientId: number }) {
+  const { data } = useClientCommunications(clientId);
+  const items = data?.items ?? [];
+
+  if (items.length === 0) return null;
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <MessageCircle className="h-4 w-4 text-muted-foreground" />
+            Comunicazioni recenti
+          </CardTitle>
+          <Link
+            href="/comunicazioni"
+            className="text-xs font-medium text-primary hover:underline"
+          >
+            Vedi tutte
+          </Link>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {items.slice(0, 5).map((item) => (
+          <CommunicationRow key={item.id} item={item} />
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+function CommunicationRow({ item }: { item: CommunicationLogItem }) {
+  const cfg = CHANNEL_CONFIG[item.canale] ?? CHANNEL_CONFIG.nota;
+  const Icon = cfg.icon;
+  const templateLabel = item.template_usato ? TEMPLATE_LABELS[item.template_usato] ?? item.template_usato : null;
+
+  return (
+    <div className="flex items-start gap-3 py-1.5">
+      <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${cfg.color}`}>
+        <Icon className="h-3.5 w-3.5" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium">{cfg.label}</span>
+          {templateLabel && (
+            <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+              {templateLabel}
+            </span>
+          )}
+        </div>
+        {item.anteprima && (
+          <p className="text-xs text-muted-foreground truncate mt-0.5">
+            {item.anteprima}
+          </p>
+        )}
+      </div>
+      {item.created_at && (
+        <span className="shrink-0 text-[10px] text-muted-foreground tabular-nums">
+          {format(new Date(item.created_at), "dd MMM HH:mm", { locale: it })}
+        </span>
+      )}
     </div>
   );
 }
