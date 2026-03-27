@@ -77,17 +77,21 @@ export function ExportButtons({
     }
   };
 
-  /** Scarica PDF + apre WhatsApp con messaggio pre-compilato. */
+  /** Salva PDF (via print) + apre WhatsApp con messaggio pre-compilato. */
   const handleSendWa = async () => {
     if (!clientTelefono || !clientNome) return;
     setSendingWa(true);
     try {
+      // Prima apre la finestra di stampa per salvare il PDF
       await downloadWorkoutClinicalPdf(exportData);
+      // Poi apre WhatsApp con messaggio pre-compilato
       const msg = waWorkoutShare(clientNome.split(" ")[0], trainerName, nome);
       const url = buildWhatsAppUrl(clientTelefono, msg);
       if (url) {
-        window.open(url, "_blank", "noopener,noreferrer");
-        toast.success("PDF scaricato — trascinalo nella chat WhatsApp per allegarlo.");
+        // Piccolo delay per evitare conflitto popup blocker (2 finestre in sequenza)
+        setTimeout(() => {
+          window.open(url, "_blank", "noopener,noreferrer");
+        }, 1500);
       }
     } finally {
       setSendingWa(false);

@@ -476,10 +476,12 @@ export async function downloadWorkoutClinicalHtml(data: ClinicalPdfExportData): 
 }
 
 /**
- * Genera PDF reale dalla scheda clinica HTML.
+ * Genera PDF dalla scheda clinica HTML via print nativo del browser.
  *
- * Usa html2pdf.js (html2canvas + jsPDF) per convertire l'HTML
- * gia' generato in un PDF scaricabile direttamente.
+ * Apre l'HTML in una finestra popup e auto-lancia window.print().
+ * L'utente seleziona "Salva come PDF" nel dialogo di stampa.
+ * Questo approccio supporta tutti i colori CSS moderni (lab, oklch)
+ * a differenza di html2canvas che crasha su Tailwind CSS 4.
  */
 export async function downloadWorkoutClinicalPdf(data: ClinicalPdfExportData): Promise<void> {
   const exerciseIds = collectExerciseIds(data.sessioni);
@@ -490,52 +492,35 @@ export async function downloadWorkoutClinicalPdf(data: ClinicalPdfExportData): P
   const html = buildHtml(data, imageMap);
   const filename = `${sanitizeFilename(data.nome)}_clinico.pdf`;
 
-  // Render HTML in un iframe isolato — NECESSARIO perche' html2canvas
-  // non supporta le funzioni CSS lab()/oklch() di Tailwind CSS 4.
-  // Un <div> nel body eredita quegli stili e crasha il parser colori.
-  // L'iframe ha il suo documento isolato con solo gli stili inline dell'HTML generato.
-  const iframe = document.createElement("iframe");
-  iframe.style.cssText = "position:fixed;left:-9999px;top:0;width:210mm;height:297mm;border:none;";
-  document.body.appendChild(iframe);
-
-  try {
-    const iframeDoc = iframe.contentDocument ?? iframe.contentWindow?.document;
-    if (!iframeDoc) throw new Error("Cannot access iframe document");
-    iframeDoc.open();
-    iframeDoc.write(html);
-    iframeDoc.close();
-
-    // Attendi che le immagini embedded (data URL) vengano renderizzate
-    await new Promise((r) => { setTimeout(r, 300); });
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const mod: any = await import("html2pdf.js");
-    const html2pdf = typeof mod.default === "function" ? mod.default
-      : typeof mod === "function" ? mod
-      : null;
-
-    if (!html2pdf) {
-      throw new Error(`html2pdf.js: unable to resolve callable (keys: ${Object.keys(mod).join(",")})`);
-    }
-
-    await html2pdf()
-      .set({
-        margin: [5, 5, 5, 5],
-        filename,
-        image: { type: "jpeg", quality: 0.92 },
-        html2canvas: { scale: 2, useCORS: true, logging: false },
-        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-      })
-      .from(iframeDoc.body)
-      .save();
-    toast.success("PDF clinico scaricato!");
-  } catch (err) {
-    console.error("PDF generation failed, falling back to HTML:", err);
+  // Apre l'HTML in una finestra popup e auto-lancia print().
+  // Il browser nativo gestisce tutti i colori CSS moderni (lab, oklch)
+  // e il dialogo "Salva come PDF" produce un PDF perfetto.
+  // html2canvas non supporta lab()/oklch() di Tailwind CSS 4 —
+  // il print nativo e' l'unica via affidabile.
+  const printWindow = window.open("", "_blank");
+  if (!printWindow) {
+    // Popup bloccato dal browser — fallback a download HTML
     downloadHtml(html, `${sanitizeFilename(data.nome)}_clinico.html`);
-    toast.warning("PDF non generabile — scaricato file HTML. Aprilo e stampa come PDF.");
-  } finally {
-    iframe.remove();
+    toast.warning("Popup bloccato — scaricato file HTML. Aprilo e stampa come PDF.");
+    return;
   }
+  printWindow.document.write(html);
+  printWindow.document.close();
+
+  // Attendi che le immagini embedded vengano caricate prima di stampare
+  printWindow.onload = () => {
+    setTimeout(() => {
+      printWindow.focus();
+      printWindow.print();
+    }, 500);
+  };
+  // Fallback se onload non scatta (data URL images caricano sincronamente)
+  setTimeout(() => {
+    printWindow.focus();
+    printWindow.print();
+  }, 1000);
+
+  toast.success("Usa 'Salva come PDF' nel dialogo di stampa.");
 }
 
 // Alias compatibilita
