@@ -1,6 +1,6 @@
 # FitManager Studio+ — Business Plan
 
-**Versione:** 4.2 — 26 marzo 2026
+**Versione:** 4.3 — 27 marzo 2026
 **Autore:** Giacomo Verardo
 **Stato:** Confidenziale
 
@@ -52,6 +52,8 @@ Marco non è un caso isolato. È la norma.
 
 Il competitor di FitManager non è un altro software. È l'abitudine. Il trainer usa WhatsApp ed Excel perché "ha sempre fatto così" — non perché funzioni, ma perché nessuno gli ha offerto qualcosa di meglio che rispetti il suo modo di lavorare.
 
+WhatsApp è il centro del workflow di ogni trainer. È lì che conferma appuntamenti, manda schede, sollecita pagamenti, tiene i rapporti con i clienti. Ma lo fa manualmente — riscrive gli stessi messaggi 20 volte al giorno, dimentica promemoria, perde il filo delle conversazioni. Qualunque soluzione che chieda al trainer di abbandonare WhatsApp parte sconfitta. La soluzione giusta non sostituisce WhatsApp — lo potenzia.
+
 ---
 
 ## 3. La soluzione
@@ -66,6 +68,8 @@ Un unico strumento che permette al personal trainer di gestire clienti, schede d
 
 **Schede di allenamento.** 500 esercizi con progressioni, regressioni e varianti. Crea una scheda professionale in 5 minuti, non in 30. Ogni esercizio è collegato ai muscoli coinvolti e alle articolazioni interessate.
 
+Il database è progettato per crescere con il contributo diretto di professionisti del settore. Esercizi validati da migliaia di ore di pratica 1:1, varianti testate su clienti reali con patologie specifiche, progressioni e regressioni affinate sul campo. Questo trasforma il catalogo da raccolta scientifica a patrimonio di conoscenza clinica pratica — un differenziatore che nessun competitor può replicare acquistando un dataset.
+
 **Protezione dagli errori clinici.** Il Safety Engine monitora 47 condizioni cliniche con 80 regole automatiche. Se assegni un esercizio controindicato per le patologie di quel cliente, il sistema ti avvisa.
 
 **Nutrizione italiana.** 880 alimenti dal database CREA (Consiglio per la Ricerca in Agricoltura e l'Analisi dell'Economia Agraria), l'ente ufficiale italiano. Piani alimentari settimanali basati sui LARN (Livelli di Assunzione di Riferimento di Nutrienti).
@@ -73,6 +77,14 @@ Un unico strumento che permette al personal trainer di gestire clienti, schede d
 **Anamnesi strutturata.** Percorso guidato in 6 passaggi. Il cliente può compilare la propria anamnesi da solo, dal proprio telefono, tramite un portale web sicuro.
 
 **Pagamenti e cassa.** Registra pagamenti, gestisci rate, visualizza lo stato finanziario di ogni cliente e del tuo business in tempo reale.
+
+**Comunicazione integrata con i clienti.**
+
+**WhatsApp semi-automatico.** Un click e il messaggio parte — con il nome del cliente, la data, l'orario, l'importo già compilati. Promemoria appuntamento, sollecito pagamento, invio nuova scheda, messaggio di benvenuto. FitManager prepara il messaggio, tu lo mandi dal tuo WhatsApp. Zero configurazione, funziona dal giorno uno.
+
+**Email automatiche.** Il sistema invia automaticamente conferme appuntamento, promemoria pagamento, notifiche di nuova scheda e messaggi di benvenuto. Il trainer configura una volta, poi il sistema lavora da solo. SMTP standard — funziona con qualunque provider email.
+
+Il trainer non deve cambiare il modo in cui comunica con i clienti. FitManager si inserisce nel suo workflow esistente e lo rende professionale.
 
 ### La FitManager Box
 
@@ -94,6 +106,7 @@ Il prodotto è completo e funzionante (versione 1.0.4). La prima utilizzatrice r
 |---|---|---|---|---|
 | Dati nel tuo studio | Sì | No (cloud) | No (cloud) | Sì |
 | Accesso da telefono/tablet | Sì | Sì | Sì | Parziale |
+| Comunicazione cliente integrata | Sì (WhatsApp + email) | Parziale (notifiche in-app) | Parziale (notifiche in-app) | Manuale |
 | Segnala errori su patologie | Sì (47 condizioni) | No | No | No |
 | Nutrizione italiana (CREA) | Sì (880 alimenti) | No | No | No |
 | Scienza allenamento integrata | Sì | No | Base | No |
@@ -107,6 +120,8 @@ Il prodotto è completo e funzionante (versione 1.0.4). La prima utilizzatrice r
 | FitManager Box (Box + assistenza) | €449 | €79 | €79 | €607 |
 | Mangofit Pro (€40/mese) | €480 | €480 | €480 | €1.440 |
 | EvolutionFit (€60/mese) | €720 | €720 | €720 | €2.160 |
+
+Il database esercizi non è statico. È progettato per essere arricchito da professionisti certificati con esperienza pratica validata — varianti, regressioni per patologie specifiche, progressioni testate su migliaia di sessioni reali. Questo crea un asset che cresce in valore nel tempo e che un competitor non può replicare con la sola tecnologia.
 
 Nessun prodotto sul mercato combina accesso locale, scienza integrata e assenza di abbonamento.
 
@@ -137,6 +152,24 @@ La domanda di personalizzazione aumenta: il cliente del trainer è più esigente
 ### Perché il mercato è vuoto
 
 Nessun prodotto combina architettura locale, scienza dell'allenamento integrata, nutrizione italiana e modello perpetuo. Questo posizionamento richiede competenze di dominio profonde (scienza dell'allenamento + nutrizione + compliance clinica) combinate con competenze tecniche specifiche (architettura locale-first, distribuzione desktop/embedded). FitManager è l'unico prodotto costruito all'intersezione di queste competenze.
+
+### Oltre l'Italia: il mercato internazionale
+
+FitManager nasce in italiano per il mercato italiano, ma l'architettura è progettata per l'internazionalizzazione. Il mercato fitness professionale anglofono — Scandinavia, UK, Nord Europa — presenta le stesse carenze: nessun prodotto combina architettura locale, scienza integrata e modello perpetuo.
+
+La versione inglese è in roadmap entro i primi 6 mesi di attività. L'internazionalizzazione procede per blocchi, in ordine di complessità:
+
+**Blocco 1 — Interfaccia e core (complessità bassa).** Traduzione dell'interfaccia utente, dei template e della documentazione. Adattamento formati data, valuta, unità di misura. Fattibile in poche settimane.
+
+**Blocco 2 — Database esercizi e Safety Engine (complessità media).** I 500+ esercizi e le 80 regole cliniche si basano su scienza universale (biomeccanica, fisiologia dell'esercizio). La traduzione richiede adattamento terminologico professionale, non riscrittura. Il contributo di professionisti che operano in contesto internazionale accelera questo processo.
+
+**Blocco 3 — Nutrizione e compliance locale (complessità alta).** Il database CREA e le tabelle LARN sono standard italiani. Per il mercato internazionale servono database nutrizionali locali (USDA, McCance & Widdowson, EuroFIR) e linee guida specifiche per giurisdizione. Questo blocco richiede ricerca e sviluppo dedicato ed è pianificato per la fase di espansione (Anno 2+).
+
+**Blocco 4 — Moduli fiscali e contrattuali (complessità variabile).** Pagamenti, fatturazione e contratti sono attualmente configurati per il regime fiscale italiano. L'adattamento per altre giurisdizioni è modulare — ogni mercato richiede la propria configurazione.
+
+L'approccio è incrementale: la versione inglese parte con i Blocchi 1 e 2 (gestione clienti, schede, Safety Engine), che rappresentano il valore core del prodotto. La nutrizione localizzata e la compliance fiscale seguono man mano che il mercato internazionale si sviluppa.
+
+Il mercato italiano resta la priorità dell'Anno 1 — è qui che il prodotto viene validato, il modello affinato, e la base installata costruita. L'internazionalizzazione è la leva di crescita che trasforma un prodotto verticale italiano in un prodotto scalabile.
 
 ---
 
@@ -184,6 +217,8 @@ Nessun costo server. I dati sono locali. Ogni vendita aggiuntiva è quasi intera
 | Da potenziale a demo | 50-60% | Lead già qualificati (network, referral) |
 | Da demo ad acquisto | 20-25% | Benchmark software B2B early stage con prodotto funzionante |
 | **Da potenziale a cliente** | **10-15%** | Combinazione dei due passaggi |
+
+La demo include un momento di dimostrazione live: il trainer vede il proprio nome, il proprio cliente e un messaggio WhatsApp pronto da inviare con un click. Questo è il punto di conversione emotiva — il trainer capisce il valore di FitManager in 3 secondi, senza bisogno di spiegazioni tecniche. Tutto il resto (scienza, nutrizione, Safety Engine) è la profondità che scopre dopo.
 
 ### Break-even
 
@@ -258,6 +293,8 @@ I primi 10 non sono solo tester del software. Sono i primi studenti del Metodo P
 
 Se non funziona, lo scopriamo con 10 persone e ~€1.000 — su tutti i fronti contemporaneamente.
 
+La comunicazione WhatsApp è attiva dal giorno uno. È la prima feature che i Fondatori usano — non serve imparare il sistema per trarne valore immediato. Inserisci un cliente, clicchi "manda promemoria", WhatsApp si apre col messaggio pronto. Fatto. Il resto si scopre nei giorni successivi.
+
 ### Cosa ricevono i 10 Fondatori
 
 I Fondatori non ricevono solo il software. Ricevono il percorso completo per 12 mesi:
@@ -276,6 +313,8 @@ Il prezzo Fondatore (€99 licenza / €199 Box) copre i costi vivi. Il valore r
 **Fase A — Setup, baseline e primo contatto col metodo (giorni 1-14).**
 
 10 professionisti selezionati. Questionario baseline: come gestiscono i clienti oggi, quante ore perdono in admin, quanto si sentono organizzati, quanto sarebbero disposti a pagare (prima di rivelare il prezzo). Installazione e inserimento dei primi clienti.
+
+KPI di attivazione: primo messaggio WhatsApp pre-compilato inviato entro 24 ore dall'installazione. Se il Fondatore manda il primo messaggio il giorno 1, è agganciato.
 
 **Fase B — Adozione, feedback e masterclass (giorni 15-75).**
 
@@ -309,6 +348,8 @@ La POC misura sia il prodotto sia il percorso:
 | "Le masterclass hanno cambiato il tuo approccio?" | — | 7+ su 10 sì | Percorso/categoria |
 | "I tuoi clienti hanno notato una differenza?" | — | 5+ su 10 sì | Volano PT Evoluto |
 | "Ti definiresti un PT Evoluto?" | — | 6+ su 10 sì | Category creation |
+| Messaggi WhatsApp pre-compilati usati/settimana | — | 15+ | Adozione comunicazione |
+| Tempo risparmiato percepito in comunicazione | — | 30+ min/giorno | Valore feature |
 
 Le ultime 3 metriche sono nuove rispetto a una POC solo-software. Sono quelle che validano la categoria e il volano.
 
@@ -513,7 +554,7 @@ Costo totale se ci fermiamo al giorno 90: 3 mesi di tempo e circa €1.000.
 
 Il founder (Giacomo Verardo) copre sviluppo prodotto, vendite dirette, supporto clienti, marketing organico e gestione operativa.
 
-L'Industry Partner è una figura con esperienza pluriennale nel settore fitness, un network attivo di professionisti, e la credibilità per presentare il prodotto come voce del settore. Il suo ruolo è commerciale e strategico: seleziona i Fondatori per la POC, presenta il prodotto al proprio network, conduce masterclass e webinar, e valida il posizionamento "PT Evoluto" nel mercato. Impegno stimato: 8-10 ore al mese.
+L'Industry Partner è una figura con esperienza pluriennale nel settore fitness, un network attivo di professionisti, e la credibilità per presentare il prodotto come voce del settore. Il suo ruolo è commerciale e strategico: seleziona i Fondatori per la POC, presenta il prodotto al proprio network, conduce masterclass e webinar, e valida il posizionamento "PT Evoluto" nel mercato, e contribuisce all'arricchimento del database esercizi con varianti e progressioni validate dalla propria esperienza pratica. Impegno stimato: 8-10 ore al mese.
 
 ### Struttura di compenso del partner
 
@@ -562,11 +603,11 @@ L'analisi costi-benefici: il compenso partner nel triennio ammonta a €14.075 (
 
 **Fase 1 — POC con percorso completo (mesi 1-3).** 10 Fondatori selezionati ricevono software/Box + Inner Circle incluso 12 mesi. Il partner conduce 3 masterclass durante la POC. Validazione simultanea di: prodotto, percorso formativo, concetto PT Evoluto, ruolo del partner. Risultato al mese 4: 10 storie reali, 10 testimonial, 3 masterclass registrate, dati aggregati, community funzionante.
 
-**Fase 2 — Early Adopter con Inner Circle attivo (mesi 4-6).** Testimonial e contenuti della POC come leva di vendita. Network del partner apre le porte. Inner Circle disponibile per chi vuole il percorso completo. Webinar gratuito mensile come strumento di acquisizione (il partner conduce). Target: 15-20 clienti paganti, di cui 30% con Inner Circle.
+**Fase 2 — Early Adopter con Inner Circle attivo (mesi 4-6).** Testimonial e contenuti della POC come leva di vendita. Il pitch ai nuovi clienti parte dal tangibile: "un click e il promemoria parte su WhatsApp. Vuoi vedere cosa fa il resto?" Il Fondatore che mostra a un collega come gestisce i promemoria con un click è il miglior venditore possibile — più efficace di qualunque demo tecnica. Network del partner apre le porte. Inner Circle disponibile per chi vuole il percorso completo. Webinar gratuito mensile come strumento di acquisizione (il partner conduce). Target: 15-20 clienti paganti, di cui 30% con Inner Circle.
 
 **Fase 3 — Prezzo pieno e scala (mesi 7-12).** Tutti i canali attivi: contenuti educativi, community, webinar mensili, SEO, referral. Inner Circle consolidato con masterclass mensili esclusive. Il concetto PT Evoluto inizia a circolare nel settore. Target: 3-5 vendite al mese, base Inner Circle in crescita.
 
-**Fase 4 — Espansione (Anno 2+).** Inner Circle a pieno regime. Presenza alle fiere di settore (RiminiWellness). Partnership con enti di formazione. Bundle Box + Tablet. Primo collaboratore operativo. Certificazione PT Evoluto come credenziale riconosciuta.
+**Fase 4 — Espansione (Anno 2+).** Inner Circle a pieno regime. Presenza alle fiere di settore (RiminiWellness). Partnership con enti di formazione. Bundle Box + Tablet. Primo collaboratore operativo. Certificazione PT Evoluto come credenziale riconosciuta. Lancio versione inglese (Blocchi 1-2: interfaccia, esercizi, Safety Engine). Primi clienti internazionali tramite network del partner o canali diretti. Valutazione database nutrizionale per mercati target.
 
 Il motore a lungo termine: il volano parte dalla POC, non dall'Anno 2. Le masterclass del partner creano il concetto di PT Evoluto. I Fondatori lo vivono e lo raccontano. I loro clienti notano la differenza. I colleghi chiedono "come fai?". Il passaparola parte. Ogni nuovo membro Inner Circle rafforza la community, che produce contenuto, che attrae nuovi membri. I costi di acquisizione scendono, il ricavo ricorrente sale. Dall'Anno 3 il ricorrente (PRO + Inner Circle) copre i costi operativi.
 
@@ -592,10 +633,11 @@ Dopo che i dati della POC confermano il modello (NPS, disponibilità a pagare, a
 |---|---|---|
 | CRM | Clienti, contratti, pagamenti, agenda, cassa — tutto in un profilo unico | Completo |
 | Clinico | Anamnesi guidata 6 step, misurazioni, avatar 6 viste, punteggio prontezza | Completo |
-| Allenamento | Workout builder 3 modalità, drag & drop, blocchi esercizi, export PDF | Completo |
+| Allenamento | Workout builder 3 modalità, drag & drop, blocchi esercizi, export PDF. Database progettato per arricchimento continuo con contributi di professionisti certificati. | Completo |
 | Nutrizione | 880 alimenti CREA, 210 ricette, 12 template LARN, piano settimanale | Completo |
 | Operativo | Setup guidato, licenza HW-bound, backup/ripristino, diagnostica | Completo |
 | Accesso | Portale anamnesi self-service, accesso remoto Tailscale | Completo |
+| Comunicazione | WhatsApp semi-auto (wa.me), email SMTP automatiche, template messaggi | Completo |
 
 500 esercizi, 940 relazioni (progressioni, regressioni, varianti), 47 condizioni cliniche, 80 regole Safety Engine.
 
@@ -673,6 +715,10 @@ Il margine lordo migliora nel tempo perché il ricavo ricorrente (PRO + IC) ha m
 | M2 | Segmento target 10-15.000 PT | Stima | Primi 6 mesi di vendita |
 | IC1 | Inner Circle raggiunge 20% della base (base) | Ipotesi | Dato reale mesi 7-12 |
 | IC2 | Le masterclass del partner generano adozione della categoria | Ipotesi forte | Metriche POC (vedi sezione 9) |
+| WA1 | WhatsApp semi-auto riduce frizione iniziale e accelera adozione | Ipotesi forte | KPI attivazione POC (msg entro 24h) |
+| WA2 | Trainer usano 15+ messaggi pre-compilati/settimana | Ipotesi | Dato reale POC giorni 15-75 |
+| DB1 | Professionisti del settore disponibili a contribuire al database esercizi | Ipotesi forte | Primo contributo durante partnership/POC |
+| INT1 | Versione inglese core (Blocchi 1-2) completabile entro 6 mesi dal lancio | Ipotesi | Valutazione tecnica in corso |
 
 Ogni proiezione è conservativa. I ricavi Inner Circle sono inclusi dal mese 4 (post-POC) nelle configurazioni con partner. Senza partner, l'Inner Circle non è attivabile.
 
@@ -771,5 +817,5 @@ POC ridotta a 5 Fondatori reclutati via LinkedIn e community fitness online. Go-
 
 ---
 
-*Business Plan FitManager Studio+ v4.2 — 26 marzo 2026*
+*Business Plan FitManager Studio+ v4.3 — 27 marzo 2026*
 *Tutti i numeri sono proiezioni basate su assunzioni dichiarate. Le assunzioni critiche verranno validate nella POC nei primi 90 giorni.*

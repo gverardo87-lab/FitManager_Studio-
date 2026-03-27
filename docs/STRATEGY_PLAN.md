@@ -1,8 +1,8 @@
 # FitManager Studio+ — Strategy Plan
 
-**Versione:** 3.0 — 26 marzo 2026
+**Versione:** 3.1 — 27 marzo 2026
 **Contesto:** Piano strategico di lancio, category creation e definizione operativa della partnership.
-**Riferimento:** Business Plan v4.2 (fonte di verità per tutti i numeri e le assunzioni).
+**Riferimento:** Business Plan v4.3 (fonte di verità per tutti i numeri e le assunzioni).
 
 ---
 
@@ -22,7 +22,11 @@ Un prodotto completo e funzionante. Versione 1.0.5, in uso quotidiano dalla prim
 
 ### Cosa è cambiato rispetto alla presentazione prodotto
 
-Tre evoluzioni significative, maturate nelle ultime settimane.
+Quattro evoluzioni significative, maturate nelle ultime settimane.
+
+**La comunicazione integrata.** Il trainer vive su WhatsApp — è lì che conferma appuntamenti, sollecita pagamenti, tiene i rapporti con i clienti. FitManager ora si inserisce in questo workflow invece di sostituirlo. Un click e il messaggio WhatsApp parte con nome del cliente, data, orario, importo già compilati. Promemoria, solleciti, conferme, benvenuto — tutto pre-compilato dal sistema, inviato dal WhatsApp del trainer. In parallelo, le email automatiche (conferme appuntamento, promemoria pagamento, notifica nuova scheda) partono da sole via SMTP standard.
+
+Il risultato: il trainer ottiene valore dal primo giorno, senza imparare nulla di nuovo. Questo risolve frontalmente il problema della complessità percepita — l'obiezione più frequente verso qualunque software professionale.
 
 **La FitManager Box.** Il limite più citato del modello offline — niente mobile, niente multi-device — è stato risolto. Non con il cloud, ma con un dispositivo dedicato che il trainer mette nel suo studio. Lo attacca alla corrente e al WiFi, e da quel momento accede da qualunque dispositivo: telefono in palestra, tablet durante le sessioni, PC a casa. I dati restano nel suo studio. Il dispositivo è sempre acceso — non dipende dal computer del trainer.
 
@@ -37,6 +41,8 @@ Il ricorrente sale dal 19% al 34% del fatturato in 3 anni. Copre progressivament
 
 **L'ecosistema e la community.** Il prodotto non è più solo. Intorno si costruisce un percorso professionale completo: formazione, community tra pari, certificazione, contenuti. Il software è lo strumento operativo. L'ecosistema è il contesto che dà valore al software e al professionista che lo usa.
 
+**La direzione internazionale.** FitManager nasce per il mercato italiano, ma l'architettura è pronta per l'internazionalizzazione. La versione inglese è in roadmap: interfaccia, database esercizi e Safety Engine entro i primi 6 mesi (la scienza dell'allenamento è universale); nutrizione e compliance locale per i mercati target nella fase di espansione. L'italiano resta la priorità dell'Anno 1 — l'inglese è la leva che trasforma la crescita da lineare a esponenziale.
+
 ---
 
 ## 2. La visione: il Personal Trainer Evoluto
@@ -44,6 +50,8 @@ Il ricorrente sale dal 19% al 34% del fatturato in 3 anni. Copre progressivament
 ### Il problema di fondo
 
 Il prodotto è pronto. Il mercato non lo è. I personal trainer non cercano un gestionale — la maggior parte non sa di averne bisogno. Usano WhatsApp ed Excel perché "ha sempre fatto così." Non percepiscono il problema. Non sentono urgenza.
+
+Per questo FitManager non chiede di smettere di usare WhatsApp. Lo potenzia. Il PT Evoluto non abbandona i suoi strumenti — li evolve. L'adozione non è una rivoluzione spaventosa ma un'evoluzione naturale del modo in cui il trainer già lavora. Il primo passo è un click su un messaggio pre-compilato. Il secondo è scoprire cos'altro il sistema fa per lui.
 
 Questo non è un limite — è l'opportunità più grande. Un mercato poco evoluto è un mercato dove chi arriva primo e definisce le regole lo possiede.
 
@@ -73,6 +81,12 @@ Quando il cliente riceve un report con range OMS/ACSM, una scheda con analisi bi
 
 Il circolo virtuoso: risparmio tempo → servizio migliore → qualità visibile al cliente → tariffe più alte → più clienti per passaparola.
 
+La comunicazione integrata aggiunge un passaggio concreto al circolo: il cliente del trainer riceve promemoria professionali, conferme puntuali, comunicazioni strutturate via WhatsApp. Percepisce un servizio superiore prima ancora di entrare in palestra. Quando il trainer dice "il mio cliente mi ha detto che sembro più organizzato" — è il segnale che il volano funziona.
+
+### Il PT Evoluto non ha confini geografici
+
+Il concetto di Personal Trainer Evoluto non è italiano — è universale. Un PT a Göteborg ha gli stessi problemi di uno a Genova: gestione clienti artigianale, nessuno strumento scientifico integrato, rischio errori clinici. La differenza è che in Scandinavia e nel mercato anglofono la propensione a pagare per strumenti professionali è più alta e il mercato è più maturo. La versione inglese di FitManager non è un adattamento — è un'espansione naturale di un prodotto che risolve un problema universale.
+
 I numeri dalla presentazione prodotto: un aumento tariffa del 10-15% (da €40 a €45-46/sessione) con 20 clienti genera +€400/mese di fatturato aggiuntivo. FitManager si ripaga in 30-60 giorni. Questo è il frame di vendita più potente: non "quanto costa FitManager" ma "quanto ti costa NON averlo."
 
 ### Il collegamento con il mental coaching
@@ -96,7 +110,7 @@ Non vendiamo subito. Prima dimostriamo il pacchetto completo: prodotto + percors
 | Attività | Chi | Impegno |
 |---|---|---|
 | Selezione dei 10 Fondatori dal network | Partner (con founder) | 3-4 ore |
-| Installazione e setup tecnico | Founder | 15-20 ore |
+| Installazione, setup tecnico e configurazione template WhatsApp | Founder | 15-20 ore |
 | Check-in bisettimanali con ogni Fondatore | Founder | 20 ore in 90gg |
 | Masterclass mese 1: "Il Metodo PT Evoluto" | Partner | 2-3 ore (prep + live) |
 | Webinar mese 2: "Le prime 4 settimane — risultati e domande" | Partner + Founder | 2 ore |
@@ -109,6 +123,8 @@ Non vendiamo subito. Prima dimostriamo il pacchetto completo: prodotto + percors
 ### Cosa ricevono i 10 Fondatori
 
 Software o Box + Inner Circle 12 mesi — tutto incluso nel prezzo Fondatore (€99 licenza / €199 Box). Il valore reale del pacchetto è €498-698. I Fondatori lo ricevono a una frazione perché sono l'investimento strategico del progetto.
+
+La comunicazione WhatsApp è operativa dal giorno dell'installazione. Il Fondatore inserisce il primo cliente, clicca "manda promemoria", WhatsApp si apre col messaggio pronto. KPI di attivazione: primo messaggio WhatsApp inviato entro 24 ore dall'installazione.
 
 ### Le 3 masterclass durante la POC
 
@@ -127,12 +143,16 @@ Le 3 sessioni vengono registrate e diventano il nucleo della libreria Inner Circ
 | Metrica | Target | Cosa valida |
 |---|---|---|
 | Ore admin risparmiate | Da 3-5h a meno di 2h | Il prodotto |
+| Messaggi WhatsApp pre-compilati usati/settimana | 15+ | Adozione comunicazione |
+| Tempo risparmiato percepito in comunicazione | 30+ min/giorno | Valore feature chiave |
 | NPS sopra 50 | Eccellente | Prodotto + percorso |
 | 8/10 "lo ricomprerei a prezzo pieno" | Pricing validato | Modello economico |
 | 5/10 "i miei clienti hanno notato la differenza" | Il circolo virtuoso | Il volano PT Evoluto |
 | 6/10 "mi definirei un PT Evoluto" | La categoria risuona | Category creation |
 
 Se le ultime due metriche sono positive, la prova è completa. Non solo il software funziona — il percorso trasforma il professionista e il suo cliente lo nota. Questo è il segnale per lanciare a pieno regime.
+
+Se i Fondatori usano massicciamente i link wa.me, è il segnale che WhatsApp è il gancio d'adozione. Questo dato informa direttamente la struttura della demo per gli Early Adopter (mesi 4-6): la demo aprirà con il momento WhatsApp, non con il database esercizi.
 
 ### Cosa abbiamo al mese 4
 
@@ -146,7 +166,7 @@ Questo pacchetto è la leva per tutto ciò che segue. Non vendiamo "un software.
 
 ### Mesi 4-6 — Early Adopter con Inner Circle attivo
 
-I testimonial e i contenuti della POC diventano la leva commerciale. Il network del partner apre le porte. L'Inner Circle è disponibile per chi vuole il percorso completo.
+I testimonial e i contenuti della POC diventano la leva commerciale. Il pitch ai nuovi clienti ha un hook concreto: "un click e il promemoria parte su WhatsApp al tuo cliente. Vuoi vedere cos'altro fa?" Il Fondatore che mostra questo gesto a un collega è il venditore più efficace possibile — non sta vendendo un software, sta mostrando un gesto quotidiano fatto meglio. Il network del partner apre le porte. L'Inner Circle è disponibile per chi vuole il percorso completo.
 
 **Il ritmo:**
 
@@ -173,11 +193,27 @@ Tutti i canali attivi. Il webinar gratuito mensile continua (è il meccanismo di
 
 Target: 3-5 vendite al mese, base Inner Circle in crescita.
 
+### L'apertura internazionale (mesi 4-6: preparazione, mesi 7+: primi contatti)
+
+Mentre il mercato italiano viene validato nella POC e nella fase Early Adopter, la versione inglese viene sviluppata in parallelo. Timeline:
+
+**Mesi 1-3:** Nessun lavoro sull'internazionalizzazione. Focus totale sulla POC italiana.
+
+**Mesi 4-6:** Traduzione interfaccia e database esercizi (Blocchi 1-2). Il contributo di un Industry Partner con esperienza internazionale accelera l'adattamento terminologico. Primi contatti esplorativi con il mercato anglofono tramite network.
+
+**Mesi 7-12:** Versione inglese core disponibile. Primi utenti pilota internazionali (5-10, selezionati, non una POC formale — un test di mercato). Feedback per calibrare l'offerta internazionale.
+
+**Anno 2+:** Lancio strutturato sul mercato internazionale. Database nutrizionale localizzato. Adattamento moduli fiscali. Pricing specifico per mercato.
+
+L'internazionalizzazione non è un progetto separato — è la stessa roadmap prodotto con una dimensione in più. Ogni feature sviluppata per il mercato italiano viene sviluppata bilingue da quel momento in poi.
+
 ### Il volano completo
 
 Il meccanismo è circolare e si autoalimenta:
 
-Il partner conduce il webinar gratuito → i PT vedono il valore → comprano la licenza/Box → scoprono l'Inner Circle → entrano nel percorso → le masterclass li trasformano → i loro clienti notano la differenza → i loro clienti parlano → i colleghi chiedono "come fai?" → i colleghi vengono al prossimo webinar gratuito.
+Il partner conduce il webinar gratuito → i PT vedono il valore → comprano la licenza/Box → **il primo giorno mandano il promemoria WhatsApp e capiscono il valore** → scoprono il resto del sistema → entrano nell'Inner Circle → le masterclass li trasformano → i loro clienti ricevono comunicazioni professionali e notano la differenza → i colleghi vedono il messaggio strutturato e chiedono "come fai?" → i colleghi vengono al prossimo webinar gratuito.
+
+WhatsApp è il primo ingranaggio del volano dopo l'acquisto. Riempie il gap tra "ho comprato" e "ho capito il valore" — senza quel passaggio, il rischio è che il trainer compri, non usi, e non rinnovi.
 
 Ogni giro del volano rafforza il precedente: più membri Inner Circle → più contenuti → più social proof → più webinar potenti → più vendite → più membri Inner Circle.
 
@@ -215,7 +251,7 @@ Il valore è duplice: per il PT è differenziazione (giustifica tariffe più alt
 
 La certificazione è possibile solo dall'Anno 2, quando la libreria di contenuti è sufficientemente ampia. Ma va annunciata dal mese 1 come parte della visione — il PT che entra nell'Inner Circle sa che sta costruendo verso una credenziale.
 
-### Proiezione ricavi community (scenario base, da BP v4.2)
+### Proiezione ricavi community (scenario base, da BP v4.3)
 
 | | Anno 1 | Anno 2 | Anno 3 |
 |---|---|---|---|
@@ -256,7 +292,7 @@ Il partner porta network, credibilità, masterclass. L'Inner Circle si attiva da
 
 Questo è lo scenario dove il progetto può diventare qualcosa di grosso. Il partner non porta solo PT individuali — apre porte a catene di palestre, enti di formazione, gruppi professionali. Un centro con 30 trainer dove il 30% adotta è un blocco di 9 vendite in un colpo. Due centri l'anno e il volume raddoppia.
 
-Le masterclass diventano eventi riconosciuti nel settore. La certificazione PT Evoluto diventa una credenziale citata. Il webinar mensile attira 50-100 partecipanti, non 20-30.
+Le masterclass diventano eventi riconosciuti nel settore. Se il partner opera anche in contesto internazionale, lo Scenario 3 include l'apertura di mercati esteri — catene fitness nordeuropee, reti di PT anglofone, contatti corporate internazionali. La versione inglese del prodotto (disponibile dai mesi 7-12) diventa la leva per trasformare un network internazionale in clienti reali. La certificazione PT Evoluto diventa una credenziale citata. Il webinar mensile attira 50-100 partecipanti, non 20-30.
 
 Questo scenario non è stimabile con le assunzioni conservative del BP — dipende interamente dal calibro delle connessioni e dalla capacità di attivarle. Ma la logica è chiara:
 
@@ -293,13 +329,14 @@ La differenza tra Scenario 2 e 3 non è lineare — è esponenziale. Dipende da 
 | Vendite da network | 20% | Ogni licenza/Box da referral tracciato | Il partner apre la porta |
 | PRO + Inner Circle | 25% | Tutti i rinnovi e abbonamenti | Il partner crea il contenuto che giustifica il rinnovo |
 | Masterclass condotte | 30% | Ogni sessione live e registrata | Il partner è l'autore e il volto |
+| Contributo al database | Da definire | Esercizi, varianti, progressioni validate | Il partner arricchisce l'asset core del prodotto |
 | Equity | 5-8% | Valore del progetto | Matura in 4 anni, cliff 12 mesi |
 
 Zero costo fisso. Il partner guadagna solo se il progetto genera ricavi. Se il progetto non funziona, nessuno perde denaro — solo tempo investito.
 
 ### Proiezione guadagno partner
 
-**Scenario base (da BP v4.2):**
+**Scenario base (da BP v4.3):**
 
 | | Anno 1 | Anno 2 | Anno 3 | Cumulativo |
 |---|---|---|---|---|
@@ -362,6 +399,8 @@ Il marketing in questa fase è interno — focalizzato sui 10 Fondatori. Ma gene
 
 **Customer language mining.** In ogni check-in, annotare le frasi esatte dei Fondatori. "Finalmente so chi ha pagato senza aprire Excel." "Mi ha salvato con quel cliente con l'ernia." Queste parole valgono più di qualsiasi copy scritto a tavolino.
 
+Annotare specificamente le reazioni alla comunicazione WhatsApp. Frasi come "non devo più riscrivere il messaggio ogni volta" o "il mio cliente mi ha detto che sembro più organizzato" sono gli asset di copy più potenti per il marketing successivo.
+
 **Contenuto behind-the-scenes.** Post LinkedIn settimanali del founder: "Settimana 3 della POC, ecco cosa stiamo scoprendo..." Non promozionale — autentico. Costruisce l'attesa.
 
 **Powered-by nel portale anamnesi.** Ogni volta che un Fondatore manda il link anamnesi a un cliente, il cliente vede "Powered by FitManager Studio+." Con 10 trainer × 15 clienti = 150 esposizioni/mese a costo zero. Alcune verso persone che sono trainer o che conoscono trainer.
@@ -370,12 +409,13 @@ Il marketing in questa fase è interno — focalizzato sui 10 Fondatori. Ma gene
 
 Il materiale della POC diventa la macchina di vendita.
 
-**Da ogni Fondatore, 5 asset:**
+**Da ogni Fondatore, 6 asset:**
 1. Pagina caso studio sul sito (problema → soluzione → numeri)
 2. Video 60 secondi (il Fondatore racconta in prima persona)
 3. 3 post LinkedIn (problema, cambiamento, numeri)
 4. 1 email nella sequenza nurturing
 5. 1 dato per la pagina "risultati aggregati"
+6. Screenshot o screen recording del messaggio WhatsApp pre-compilato in azione (l'asset marketing più immediatamente comprensibile — un trainer che lo vede capisce FitManager in 2 secondi)
 
 **Pagine confronto competitor.** "FitManager vs Mangofit", "FitManager vs EvolutionFit", "FitManager vs Excel." SEO su keyword ad alta intenzione: "gestionale personal trainer", "Mangofit alternativa." Tono: onesto, non denigratorio. 10-30 visite organiche/mese per pagina.
 
@@ -389,7 +429,11 @@ Il materiale della POC diventa la macchina di vendita.
 
 **Calcolatore ROI interattivo.** Pagina web: "Quanto ti costa Excel?" Il PT inserisce ore admin e tariffa oraria → vede il costo annuo → CTA demo. Trasforma il prezzo da "€449 è tanto" a "sto perdendo €7.000/anno."
 
+Il calcolatore include anche la comunicazione: "Quanti messaggi WhatsApp mandi al giorno ai tuoi clienti? × 3 minuti ciascuno = X ore al mese perse in messaggi manuali." Questo rende il risparmio di tempo tangibile e personale.
+
 **Podcast tour.** Il partner ospite su podcast fitness italiani. Non per vendere — per parlare del PT Evoluto. 1 episodio/mese dal mese 7. 50-100 visite/episodio.
+
+**Primi contenuti in inglese.** Quando la versione inglese è disponibile: 1 post LinkedIn/settimana in inglese, landing page dedicata al mercato internazionale, 2-3 screenshot/video demo in inglese. L'investimento è minimo (traduzione contenuti esistenti) ma posiziona FitManager come prodotto internazionale prima ancora di avere clienti internazionali.
 
 **Programma affiliato.** Ogni cliente soddisfatto riceve un link personale. Per ogni vendita generata: 3 mesi di upgrade PRO gratis. Il referrer è motivato, l'amico compra a prezzo pieno.
 
@@ -412,12 +456,13 @@ Quasi interamente organico. Il marketing a pagamento parte solo quando la social
 | Rischio | Risposta | Quando lo sappiamo |
 |---|---|---|
 | I trainer non percepiscono il problema | La POC misura esattamente questo. Se 8/10 Fondatori confermano il dolore, il mercato c'è. | Giorno 14 (baseline) |
-| La complessità percepita blocca l'adozione | Progressive disclosure: il trainer vede solo CRM + schede + pagamenti. La scienza emerge quando serve. Onboarding guidato in 10 minuti. | Mesi 1-3 (POC) |
+| La complessità percepita blocca l'adozione | Progressive disclosure: il trainer vede solo CRM + schede + pagamenti. La scienza emerge quando serve. Onboarding guidato in 10 minuti. La comunicazione WhatsApp è il primo punto di valore: il trainer ottiene un risultato concreto al primo click, senza imparare nulla di nuovo. Se la complessità percepita è il muro, WhatsApp è la porta che lo aggira. | Mesi 1-3 (POC) |
 | Il prezzo €249/€449 è percepito alto | WTP misurata nel questionario baseline PRIMA di rivelare il prezzo. Se esce bassa, aggiustiamo. Frame: "€1,23/giorno" e "stai perdendo €150/settimana." | Giorno 14 |
 | La Box non convince | 2 Fondatori la testano nella POC. Se non funziona, il software su PC con Tailscale resta la base. La Box diventa opzionale, non pilastro. | Mese 2-3 |
 | Il concept PT Evoluto non risuona | Metrica nella POC: "ti definiresti PT Evoluto?" Se <5/10, la narrativa va ripensata. Ma il prodotto funziona indipendentemente dalla narrativa. | Giorno 90 |
 | Il partner non genera lead | Primo trimestre = test. Se i lead dal network sono <5/mese per 3 mesi, il modello va ripensato (retainer? profilo diverso?). | Mesi 4-6 |
 | I rinnovi sono bassi | Rapporto valore/prezzo 3,8:1 (PRO) e 3,4:1 (IC). Se sotto il 40% al primo ciclo, il contenuto non ha abbastanza valore percepito — rivedere. | Mese 13 |
+| L'internazionalizzazione è prematura o troppo costosa | L'approccio a blocchi limita il rischio: i Blocchi 1-2 (interfaccia + esercizi) costano settimane di sviluppo, non mesi. Se il mercato internazionale non risponde, il costo è contenuto e il prodotto italiano non ne risente. La nutrizione localizzata (Blocco 3) parte solo con domanda validata. | Mesi 7-12 (primi feedback internazionali) |
 
 Il meccanismo di protezione è lo stesso per ogni rischio: **la POC lo rivela prima che sia costoso.** 90 giorni e ~€300 per scoprire cosa funziona e cosa no.
 
@@ -431,7 +476,7 @@ Implementabili questa settimana, prima ancora di formalizzare la partnership.
 |---|---|---|---|
 | 1 | **Powered-by nel portale anamnesi** — aggiungere "Powered by FitManager Studio+" con link. | 10 min | 150+ esposizioni/mese gratuite (già con la prima utente) |
 | 2 | **Landing page con waiting list + referral virale** — pagina singola: problema, soluzione, pricing, CTA. | 1 settimana | Raccoglie lead prima della POC |
-| 3 | **Video teaser 60 secondi** — screen recording del software reale, voce del founder. | 4 ore | Primo asset condivisibile per il partner e la waiting list |
+| 3 | **Video teaser 60 secondi** — apre con il momento WhatsApp (un click, il promemoria parte), poi mostra il resto del sistema. Screen recording del software reale, voce del founder. | 4 ore | Primo asset condivisibile per il partner e la waiting list |
 
 ---
 
@@ -439,7 +484,7 @@ Implementabili questa settimana, prima ancora di formalizzare la partnership.
 
 ### Da mostrare
 
-- [ ] Demo live del prodotto (5 min: nuovo cliente → anamnesi → scheda → pagamento → Safety Engine)
+- [ ] Demo live del prodotto (5 min: nuovo cliente → **manda promemoria WhatsApp** [wow immediato] → anamnesi → scheda → pagamento → Safety Engine)
 - [ ] La FitManager Box (concept + rendering, o prototipo se disponibile)
 - [ ] I numeri del BP: i 3 scenari, il confronto senza/con partner, la vista cumulativa
 - [ ] La struttura community (3 livelli, il suo ruolo nell'Inner Circle)
@@ -452,6 +497,7 @@ Implementabili questa settimana, prima ancora di formalizzare la partnership.
 - [ ] "Conosci catene, centri fitness, enti formativi dove potremmo entrare come gruppo?"
 - [ ] "Le masterclass: che temi vedresti per i primi 3 mesi?"
 - [ ] "Quanto pensi che un PT investirebbe all'anno in formazione professionale?"
+- [ ] "I trainer del tuo network: quanti messaggi WhatsApp mandano al giorno ai clienti? Come gestiscono promemoria e solleciti?"
 
 ### Da non fare
 
@@ -466,5 +512,5 @@ Implementabili questa settimana, prima ancora di formalizzare la partnership.
 
 ---
 
-*Strategy Plan FitManager Studio+ v3.0 — 26 marzo 2026*
-*Allineato al Business Plan v4.2. Da aggiornare con feedback dal primo incontro e risultati della POC.*
+*Strategy Plan FitManager Studio+ v3.1 — 27 marzo 2026*
+*Allineato al Business Plan v4.3. Da aggiornare con feedback dal primo incontro e risultati della POC.*
