@@ -560,11 +560,14 @@ def get_dashboard_alerts(
     """
     Warning proattivi — "Cosa richiede la mia attenzione ORA?"
 
-    4 categorie di alert (query SQL aggregate, zero N+1):
+    Categorie di alert (query SQL aggregate, zero N+1):
     1. ghost_events: eventi passati ancora 'Programmato'
-    2. expiring_contracts: contratti in scadenza (30gg) con crediti residui
-    3. overdue_rates: rate scadute (data_scadenza < oggi)
-    4. inactive_clients: clienti attivi senza eventi da >14 giorni
+    2. orphan_contracts: contratti attivi con prezzo > 0 e zero rate
+    3. expiring_contracts: contratti in scadenza (30gg) con crediti residui
+    4. overdue_rates: rate scadute (data_scadenza < oggi)
+    5. inactive_clients: clienti attivi senza eventi da >14 giorni
+    6. stale_schede / stale_measurements: dati clinici non aggiornati (>35gg)
+    7. birthdays: compleanni oggi + prossimi 7 giorni
     """
     today = date.today()
     items: list[AlertItem] = []
@@ -590,7 +593,31 @@ def get_dashboard_alerts(
             link="/agenda",
         ))
 
-    # ── 2. Contratti in scadenza con crediti inutilizzati ──
+    # ── 2. Contratti senza piano pagamento (orfani) ──
+    orphan_count = session.execute(text("""
+        SELECT COUNT(*) FROM contratti c
+        WHERE c.trainer_id = :tid
+          AND c.deleted_at IS NULL
+          AND c.chiuso = 0
+          AND COALESCE(c.prezzo_totale, 0) > 0
+          AND NOT EXISTS (
+              SELECT 1 FROM rate_programmate r
+              WHERE r.id_contratto = c.id
+                AND r.deleted_at IS NULL
+          )
+    """), {"tid": trainer.id}).scalar() or 0
+
+    if orphan_count > 0:
+        items.append(AlertItem(
+            severity="warning",
+            category="orphan_contracts",
+            title=f"{orphan_count} {'contratto senza piano' if orphan_count == 1 else 'contratti senza piano'}",
+            detail="Genera il piano rate per iniziare a incassare",
+            count=orphan_count,
+            link="/contratti",
+        ))
+
+    # ── 3. Contratti in scadenza con crediti inutilizzati ──
     deadline_30 = today + timedelta(days=30)
 
     # Wrapped subquery: SQLite non accetta HAVING senza GROUP BY.

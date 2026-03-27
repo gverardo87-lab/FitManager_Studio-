@@ -1037,7 +1037,7 @@ export interface BirthdayClientItem {
 /** Singolo alert con severity, categoria e contesto navigabile */
 export interface AlertItem {
   severity: "critical" | "warning" | "info";
-  category: "ghost_events" | "expiring_contracts" | "overdue_rates" | "inactive_clients" | "birthdays";
+  category: "ghost_events" | "orphan_contracts" | "expiring_contracts" | "overdue_rates" | "inactive_clients" | "stale_schede" | "stale_measurements" | "birthdays";
   title: string;
   detail: string;
   count: number;

@@ -39,6 +39,7 @@ interface PanoramicaTabProps {
   clientId: number;
   readiness: ClinicalReadinessClientItem | null;
   hasContracts: boolean;
+  hasContractWithRates: boolean;
   hasEvents: boolean;
   onTabChange: (tab: string) => void;
 }
@@ -60,7 +61,7 @@ const JOURNEY_PHASES: JourneyPhase[] = [
     key: "contratto",
     label: "Contratto",
     icon: FileText,
-    getCompleted: (p) => p.hasContracts,
+    getCompleted: (p) => p.hasContractWithRates,
     getAction: () => ({ type: "tab", tab: "contratti" }),
   },
   {

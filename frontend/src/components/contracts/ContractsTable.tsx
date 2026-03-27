@@ -117,7 +117,14 @@ function getPaymentBadge(contract: ContractListItem) {
     );
   }
 
-  // Nessuna rata creata
+  // Nessuna rata creata — warning, non stato neutro
+  if ((contract.prezzo_totale ?? 0) > 0) {
+    return (
+      <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 dark:bg-amber-900/40 dark:text-amber-400">
+        Piano mancante
+      </Badge>
+    );
+  }
   return (
     <Badge className="bg-zinc-100 text-zinc-600 hover:bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-400">
       Nessuna rata

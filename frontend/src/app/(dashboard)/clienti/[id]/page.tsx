@@ -103,13 +103,19 @@ export default function ClientProfilePage({
 
   // Onboarding steps from real data — contratto opens sheet inline
   const onboardingSteps = useMemo(() => {
+    const contracts = contractsData?.items ?? [];
+    const activeContracts = contracts.filter((c) => !c.chiuso);
+    const orphan = activeContracts.find((c) => c.rate_totali === 0 && (c.prezzo_totale ?? 0) > 0);
     const steps = computeOnboardingSteps(clientId, readiness, {
-      hasContracts: (contractsData?.items?.length ?? 0) > 0,
+      hasContracts: contracts.length > 0,
+      hasContractWithRates: activeContracts.some((c) => c.rate_totali > 0),
+      orphanContractId: orphan?.id ?? null,
       hasEvents: (eventsData?.items?.length ?? 0) > 0,
     });
-    // Contratto step: apre la ContractSheet precompilata invece di navigare
+    // Contratto step senza contratti: apre la ContractSheet precompilata
+    // Contratto step con contratto orfano: naviga al dettaglio (href gia' impostato)
     const contrattoStep = steps.find((s) => s.key === "contratto");
-    if (contrattoStep && !contrattoStep.completed) {
+    if (contrattoStep && !contrattoStep.completed && !orphan) {
       contrattoStep.onAction = () => setContractSheetOpen(true);
     }
     return steps;
@@ -184,6 +190,7 @@ export default function ClientProfilePage({
             clientId={clientId}
             readiness={readiness}
             hasContracts={(contractsData?.items?.length ?? 0) > 0}
+            hasContractWithRates={(contractsData?.items ?? []).some((c) => !c.chiuso && c.rate_totali > 0)}
             hasEvents={(eventsData?.items?.length ?? 0) > 0}
             onTabChange={handleTabChange}
           />

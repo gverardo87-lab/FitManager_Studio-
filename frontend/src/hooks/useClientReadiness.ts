@@ -34,6 +34,10 @@ export interface OnboardingStep {
 
 interface OnboardingContext {
   hasContracts: boolean;
+  /** true se almeno un contratto attivo ha rate generate */
+  hasContractWithRates: boolean;
+  /** ID del primo contratto attivo senza rate (per deep-link al piano pagamento) */
+  orphanContractId: number | null;
   hasEvents: boolean;
 }
 
@@ -47,15 +51,36 @@ export function computeOnboardingSteps(
   const measurementsDone = readiness?.has_measurements ?? false;
   const workoutDone = readiness?.has_workout_plan ?? false;
 
+  // Contratto: 3 stati — nessuno, esiste ma senza rate, completo con rate
+  const contractStep: OnboardingStep = ctx.hasContractWithRates
+    ? {
+        key: "contratto",
+        label: "Contratto",
+        description: "Pacchetto e piano pagamento attivo",
+        completed: true,
+        href: `/contratti?new=1&cliente=${clientId}`,
+        icon: FileText,
+      }
+    : ctx.orphanContractId
+      ? {
+          key: "contratto",
+          label: "Piano pagamento",
+          description: "Il contratto esiste — genera le rate",
+          completed: false,
+          href: `/contratti/${ctx.orphanContractId}`,
+          icon: FileText,
+        }
+      : {
+          key: "contratto",
+          label: "Contratto",
+          description: "Pacchetto e piano pagamento — da qui parte tutto",
+          completed: false,
+          href: `/contratti?new=1&cliente=${clientId}`,
+          icon: FileText,
+        };
+
   return [
-    {
-      key: "contratto",
-      label: "Contratto",
-      description: "Pacchetto e piano pagamento — da qui parte tutto",
-      completed: ctx.hasContracts,
-      href: `/contratti?new=1&cliente=${clientId}`,
-      icon: FileText,
-    },
+    contractStep,
     {
       key: "anamnesi",
       label: "Anamnesi",
