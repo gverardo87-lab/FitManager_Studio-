@@ -151,9 +151,9 @@ export default function ClientProfilePage({
         <OnboardingChecklist steps={onboardingSteps} />
       </div>
 
-      {/* Tabs con completion dots */}
+      {/* Tabs con completion dots — sticky per visibilita' permanente */}
       <Tabs value={activeTab} onValueChange={handleTabChange}>
-        <TabsList className="w-full overflow-x-auto">
+        <TabsList className="sticky top-0 z-20 w-full overflow-x-auto bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
           <TabsTrigger value="panoramica">
             <User className="mr-2 h-4 w-4" />
             Panoramica
