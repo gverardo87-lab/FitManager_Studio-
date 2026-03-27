@@ -475,7 +475,51 @@ export async function downloadWorkoutClinicalHtml(data: ClinicalPdfExportData): 
   toast.success("File clinico scaricato. Aprilo e usa Stampa > Salva come PDF.");
 }
 
-// Alias compatibilita: ora export clinico avviene via download file locale.
-export async function exportWorkoutClinicalPdf(data: ClinicalPdfExportData): Promise<void> {
+/**
+ * Genera PDF reale dalla scheda clinica HTML.
+ *
+ * Usa html2pdf.js (html2canvas + jsPDF) per convertire l'HTML
+ * gia' generato in un PDF scaricabile direttamente.
+ */
+export async function downloadWorkoutClinicalPdf(data: ClinicalPdfExportData): Promise<void> {
+  const exerciseIds = collectExerciseIds(data.sessioni);
+  const imageMap = exerciseIds.length > 0 ? await prefetchExerciseImages(exerciseIds) : new Map<number, ExerciseImagePair>();
+  if (exerciseIds.length > 0 && imageMap.size === 0) {
+    toast.warning("Nessuna foto trovata per gli esercizi della scheda.");
+  }
+  const html = buildHtml(data, imageMap);
+  const filename = `${sanitizeFilename(data.nome)}_clinico.pdf`;
+
+  // Render HTML in un container temporaneo off-screen
+  const container = document.createElement("div");
+  container.style.cssText = "position:fixed;left:-9999px;top:0;width:210mm;";
+  container.innerHTML = html;
+  document.body.appendChild(container);
+
+  try {
+    const html2pdf = (await import("html2pdf.js")).default;
+    await html2pdf()
+      .set({
+        margin: 0,
+        filename,
+        image: { type: "jpeg", quality: 0.92 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+      })
+      .from(container)
+      .save();
+    toast.success("PDF clinico scaricato!");
+  } catch (err) {
+    console.error("PDF generation failed, falling back to HTML:", err);
+    // Fallback: scarica HTML se il PDF fallisce
+    downloadHtml(html, `${sanitizeFilename(data.nome)}_clinico.html`);
+    toast.warning("PDF non disponibile — scaricato file HTML. Aprilo e stampa come PDF.");
+  } finally {
+    container.remove();
+  }
+}
+
+// Alias compatibilita
+export async function exportWorkoutClinicalPdf_legacy(data: ClinicalPdfExportData): Promise<void> {
   return downloadWorkoutClinicalHtml(data);
 }

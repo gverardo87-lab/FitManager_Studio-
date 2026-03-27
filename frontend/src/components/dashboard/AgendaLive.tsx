@@ -15,6 +15,8 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
+import { useTrainerName } from "@/hooks/useTrainerName";
+import { waAppointmentReminder } from "@/lib/whatsapp-templates";
 import {
   Select,
   SelectContent,
@@ -33,6 +35,7 @@ interface AgendaLiveProps {
 }
 
 export function AgendaLive({ events, isLoading }: AgendaLiveProps) {
+  const trainerName = useTrainerName();
   const updateEvent = useUpdateEvent();
   const [clockTime, setClockTime] = useState(new Date(0));
   const [updatingEventId, setUpdatingEventId] = useState<number | null>(null);
@@ -161,7 +164,18 @@ export function AgendaLive({ events, isLoading }: AgendaLiveProps) {
                           <p className="truncate text-xs text-muted-foreground">
                             {event.cliente_nome} {event.cliente_cognome}
                           </p>
-                          <WhatsAppButton phone={event.cliente_telefono} variant="icon" className="h-5 w-5 shrink-0" />
+                          <WhatsAppButton
+                            phone={event.cliente_telefono}
+                            message={waAppointmentReminder(
+                              event.cliente_nome,
+                              trainerName,
+                              event.data_inizio.toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" }),
+                              time,
+                              event.titolo || undefined,
+                            )}
+                            variant="icon"
+                            className="h-5 w-5 shrink-0"
+                          />
                         </div>
                       )}
                     </div>

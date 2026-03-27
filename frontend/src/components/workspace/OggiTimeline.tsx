@@ -8,6 +8,8 @@ import {
   type SurfaceTone,
 } from "@/components/ui/surface-role";
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
+import { useTrainerName } from "@/hooks/useTrainerName";
+import { waAppointmentReminder } from "@/lib/whatsapp-templates";
 import { cn } from "@/lib/utils";
 import type { ClientAvatar, SessionPrepItem } from "@/types/api";
 
@@ -117,6 +119,7 @@ function SessionItem({
   selected,
   onSelect,
   avatar,
+  trainerName,
   staggerIndex = 0,
 }: {
   session: SessionPrepItem;
@@ -124,6 +127,7 @@ function SessionItem({
   selected: boolean;
   onSelect: () => void;
   avatar?: ClientAvatar | null;
+  trainerName: string;
   staggerIndex?: number;
 }) {
   const meta = PREFLIGHT_META[status];
@@ -175,8 +179,19 @@ function SessionItem({
               {TIME_FMT.format(new Date(session.starts_at))}
             </span>
             <p className="truncate text-sm font-bold text-foreground">{name}</p>
-            {session.client_phone ? (
-              <WhatsAppButton phone={session.client_phone} variant="icon" className="h-5 w-5 shrink-0" />
+            {session.client_phone && session.client_name ? (
+              <WhatsAppButton
+                phone={session.client_phone}
+                message={waAppointmentReminder(
+                  session.client_name.split(" ")[0],
+                  trainerName,
+                  new Date(session.starts_at).toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" }),
+                  TIME_FMT.format(new Date(session.starts_at)),
+                  session.event_title || undefined,
+                )}
+                variant="icon"
+                className="h-5 w-5 shrink-0"
+              />
             ) : null}
           </div>
           <p className="mt-1 truncate pl-1 text-[11px] text-muted-foreground/80">{subline}</p>
@@ -252,6 +267,7 @@ export function OggiTimeline({
   avatarMap,
   className,
 }: OggiTimelineProps) {
+  const trainerName = useTrainerName();
   if (sessions.length === 0) {
     return (
       <div
@@ -320,6 +336,7 @@ export function OggiTimeline({
                       selected={s.event_id === selectedEventId}
                       onSelect={() => onSelect(s.event_id)}
                       avatar={s.client_id ? avatarMap?.get(s.client_id) : null}
+                      trainerName={trainerName}
                       staggerIndex={idx++}
                     />
                   ))}
@@ -341,6 +358,7 @@ export function OggiTimeline({
                       selected={s.event_id === selectedEventId}
                       onSelect={() => onSelect(s.event_id)}
                       avatar={s.client_id ? avatarMap?.get(s.client_id) : null}
+                      trainerName={trainerName}
                       staggerIndex={idx++}
                     />
                   ))}
@@ -362,6 +380,7 @@ export function OggiTimeline({
                       selected={s.event_id === selectedEventId}
                       onSelect={() => onSelect(s.event_id)}
                       avatar={null}
+                      trainerName={trainerName}
                       staggerIndex={idx++}
                     />
                   ))}

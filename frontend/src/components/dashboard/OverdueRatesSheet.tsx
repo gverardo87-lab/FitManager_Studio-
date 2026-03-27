@@ -13,7 +13,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   ShieldAlert,
   CheckCircle2,
@@ -44,6 +44,7 @@ import {
 } from "@/components/ui/sheet";
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import { useOverdueRates } from "@/hooks/useDashboard";
+import { useTrainerName } from "@/hooks/useTrainerName";
 import { usePayRate } from "@/hooks/useRates";
 import { formatCurrency, formatShortDate } from "@/lib/format";
 import { waRateReminder } from "@/lib/whatsapp-templates";
@@ -70,16 +71,7 @@ export function OverdueRatesSheet({ open, onOpenChange }: OverdueRatesSheetProps
   const [paying, setPaying] = useState<Set<number>>(new Set());
   const [methods, setMethods] = useState<Record<number, string>>({});
 
-  const [trainerName, setTrainerName] = useState("");
-  useEffect(() => {
-    try {
-      const raw = document.cookie.match(/fitmanager_trainer=([^;]+)/)?.[1];
-      if (raw) {
-        const t = JSON.parse(decodeURIComponent(raw));
-        setTrainerName(`${t.nome} ${t.cognome}`);
-      }
-    } catch { /* noop */ }
-  }, []);
+  const trainerName = useTrainerName();
 
   const items = data?.items ?? [];
 

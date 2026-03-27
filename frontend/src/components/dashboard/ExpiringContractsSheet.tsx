@@ -11,7 +11,6 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   CreditCard,
@@ -35,6 +34,7 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { useExpiringContracts } from "@/hooks/useDashboard";
+import { useTrainerName } from "@/hooks/useTrainerName";
 import { formatCurrency, formatShortDate } from "@/lib/format";
 import { waRenewalReminder } from "@/lib/whatsapp-templates";
 
@@ -63,16 +63,7 @@ export function ExpiringContractsSheet({ open, onOpenChange }: ExpiringContracts
   const { data, isLoading } = useExpiringContracts(open);
   const items = data?.items ?? [];
 
-  const [trainerName, setTrainerName] = useState("");
-  useEffect(() => {
-    try {
-      const raw = document.cookie.match(/fitmanager_trainer=([^;]+)/)?.[1];
-      if (raw) {
-        const t = JSON.parse(decodeURIComponent(raw));
-        setTrainerName(`${t.nome} ${t.cognome}`);
-      }
-    } catch { /* noop */ }
-  }, []);
+  const trainerName = useTrainerName();
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>

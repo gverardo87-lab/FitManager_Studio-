@@ -12,7 +12,6 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   UserX,
@@ -37,6 +36,7 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { useInactiveClients } from "@/hooks/useDashboard";
+import { useTrainerName } from "@/hooks/useTrainerName";
 import { formatShortDate } from "@/lib/format";
 import { waCheckIn } from "@/lib/whatsapp-templates";
 
@@ -72,16 +72,7 @@ export function InactiveClientsSheet({ open, onOpenChange }: InactiveClientsShee
   const { data, isLoading } = useInactiveClients(open);
   const items = data?.items ?? [];
 
-  const [trainerName, setTrainerName] = useState("");
-  useEffect(() => {
-    try {
-      const raw = document.cookie.match(/fitmanager_trainer=([^;]+)/)?.[1];
-      if (raw) {
-        const t = JSON.parse(decodeURIComponent(raw));
-        setTrainerName(`${t.nome} ${t.cognome}`);
-      }
-    } catch { /* noop */ }
-  }, []);
+  const trainerName = useTrainerName();
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
