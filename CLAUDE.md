@@ -259,6 +259,7 @@ Skills installate in `.agents/skills/` — knowledge base attive per audit e cod
 | `docs/FITSCAN_ARCHITECTURE.md` | Spec tecnica FitScan: DB schema, Biomechanical Engine, Pose Provider, exercise profiles, privacy | Quando implementi FitScan — leggere SEMPRE prima di scrivere codice |
 | `docs/adr/ADR-008-builder-fullscreen-science-panel.md` | Builder full-screen: sidebar nascosta, Science Panel 320px con Safety+Score+Coverage+Balance live | Quando tocchi il builder, il layout, o la sidebar |
 | `docs/TAILSCALE_FUNNEL_SETUP.md` | Setup Tailscale Funnel, auto-start launcher, architettura proxy, troubleshooting, roadmap accesso remoto | Quando tocchi portale pubblico, anamnesi self-service, accesso remoto clienti |
+| `docs/incidents/INC-2026-03-28-safety-engine-blind-spot.md` | Incidente P0: 3 bug combinati che hanno reso il profilo clinico invisibile durante demo investitore | Quando tocchi safety engine, cache anamnesi, visibilita' builder, funzioni dual-session |
 
 ## Commit
 
@@ -267,7 +268,7 @@ Formato: `area: descrizione` — es. `api: ...`, `nutrizione: ...`, `dashboard: 
 Quality gate obbligatorio: `bash tools/scripts/check-all.sh` (ruff + next build).
 Ogni commit deve lasciare il branch rilasciabile per il proprio scope.
 
-## Pitfalls ricorrenti (top 6)
+## Pitfalls ricorrenti (top 9)
 
 1. **`toISOString()` perde timezone**: usare `toISOLocal()` da `lib/format.ts` per ogni payload API con date.
 2. **`extra: "forbid"` + campo typo = 422**: verificare nomi campo con curl vs schema Pydantic dopo ogni refactor.
@@ -275,6 +276,9 @@ Ogni commit deve lasciare il branch rilasciabile per il proprio scope.
 4. **Radix: no `<label>` + Checkbox**: causa double-toggle. Usare `<div onClick>` + `stopPropagation`.
 5. **`useState(() => browserAPI())`**: hydration mismatch. Usare `useState(false)` + `useEffect`.
 6. **Tailscale Funnel su porta FRONTEND, mai backend**: il funnel deve puntare a 3000 (Next.js), non 8000 (FastAPI). Le route `/public/*` sono pagine Next.js. Se punta al backend → `{"detail":"Not Found"}`. Dettagli in `docs/TAILSCALE_FUNNEL_SETUP.md`.
+7. **Cross-DB session mismatch**: funzioni dual-session (`safety_engine`, `profile_resolver`, `session_prep`) devono usare `catalog_session` per tabelle catalog.db (esercizi, muscoli, condizioni) e `session` per crm.db. Test in-memory con engine singolo NON copre questo bug. Verificare SEMPRE dopo modifiche a funzioni dual-session. Incidente: `docs/incidents/INC-2026-03-28-safety-engine-blind-spot.md`.
+8. **Cache safety map non invalidata**: ogni mutation che modifica anamnesi (direttamente o indirettamente) DEVE invalidare `["exercise-safety-map", clientId]`. Include `useUpdateAnamnesi`, `useUpdateClient`, futuro polling portale pubblico.
+9. **Informazioni cliniche MAI dietro toggle**: la BuilderSafetyCard e' non negoziabile quando `condition_count > 0`. Zero condizioni responsive, zero toggle, zero tab. La visibilita' dipende SOLO da `safetyMap.condition_count > 0`.
 
 ## Credenziali sviluppo
 

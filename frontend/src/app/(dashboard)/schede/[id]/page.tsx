@@ -170,9 +170,9 @@ export default function SchedaDetailPage({ params }: { params: Promise<{ id: str
           showAdvanced={showAdvanced} onToggleAdvanced={() => setShowAdvanced((v) => !v)} hasSessions={builder.sessions.length > 0}
         />
 
-        {/* Safety card — mobile only (desktop ha il SciencePanel) */}
+        {/* Safety card — SEMPRE visibile se ci sono condizioni (profilo clinico è core) */}
         {safetyMap && safetyMap.condition_count > 0 && (
-          <div className="lg:hidden mb-3">
+          <div className="mb-3">
             <BuilderSafetyCard safetyMap={safetyMap} safetyStats={safetyStats} safetyConditionStats={safetyConditionStats} groupedConditions={groupedConditions} uniqueConditionsForMap={uniqueConditionsForMap} clientId={plan.id_cliente} onNavigateToClient={(cid) => guardedNavigate(`/clienti/${cid}`)} />
           </div>
         )}

@@ -346,6 +346,34 @@ Pattern condiviso per endpoint inline resolution:
 - **Date parse**: SQLite restituisce date come stringhe — `date.fromisoformat()` per confronti
 - **Ordinamento urgenza**: record piu' vecchi/urgenti prima
 
+## Safety Engine — Regole Dual-Session (INC-2026-03-28)
+
+`api/services/safety_engine.py` costruisce la safety map per-esercizio incrociando anamnesi cliente (crm.db) con catalogo condizioni (catalog.db). Riceve due session:
+- `session` → crm.db (Client, schede, contratti)
+- `catalog_session` → catalog.db (Exercise, MedicalCondition, ExerciseCondition, muscoli)
+
+**REGOLA FERREA**: la tabella `esercizi` vive in catalog.db. Ogni `select(Exercise...)` DEVE usare `catalog_session`, MAI `session`. Stessa regola per muscoli, articolazioni, condizioni mediche. Violazione = crash 500 silenzioso in produzione (mascherato da errore CORS al frontend).
+
+Pipeline completa:
+```
+Client.anamnesi_json (crm.db, session)
+  → extract_client_conditions() → set[condition_id]
+  → condizioni_mediche (catalog.db, catalog_session)
+  → esercizi_condizioni (catalog.db, catalog_session)
+  → esercizi attivi (catalog.db, catalog_session)  ← BUG era qui: usava session
+  → SafetyMapResponse { condition_count, entries, medication_flags }
+```
+
+Funzioni dual-session da verificare dopo ogni modifica:
+- `safety_engine.build_safety_map()` — 4 query (1 crm + 3 catalog)
+- `profile_resolver.resolve_plan_context()` — chiama build_safety_map
+- `session_prep.py` — chiama build_safety_map
+- `client_avatar.py` — chiama extract_client_conditions
+
+Test in-memory con engine singolo NON copre bug session mismatch. Verificare manualmente con `python -c` sui database fisici separati.
+
+Incidente completo: `docs/incidents/INC-2026-03-28-safety-engine-blind-spot.md`
+
 ## Test
 
 Due famiglie di test:

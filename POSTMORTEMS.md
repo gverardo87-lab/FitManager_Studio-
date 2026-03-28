@@ -3,6 +3,21 @@
 Questa non e' una fonte di regole nuove.
 Raccoglie solo lezioni concrete da errori gia' emersi, per evitare che la memoria orale torni a guidare il progetto.
 
+## 2026-03-28 - Safety Engine Blind Spot (P0 — demo investitore)
+
+Problema:
+- 3 bug indipendenti (cross-DB session mismatch + cache invalidation gap + UX visibility) hanno reso il profilo clinico completamente invisibile nel builder schede
+- la generazione Scheda Smart crashava 500 per ogni cliente con condizioni mediche (mascherato da errore CORS)
+- la BuilderSafetyCard era nascosta su desktop dietro un toggle opzionale (default OFF)
+- la cache safety map non veniva invalidata dopo modifica anamnesi
+
+Lezioni:
+- `safety_engine.py` usava `session` (crm.db) per cercare `esercizi` che vivono in `catalog.db` — test in-memory con engine singolo non copre questo tipo di bug
+- ogni mutation che modifica anamnesi DEVE invalidare `["exercise-safety-map", clientId]`
+- informazioni cliniche MAI dietro toggle opzionale — la BuilderSafetyCard e' non negoziabile quando `condition_count > 0`
+- crash 500 mascherati da CORS: guardare SEMPRE i log backend prima di diagnosticare come errore CORS
+- report completo: `docs/incidents/INC-2026-03-28-safety-engine-blind-spot.md`
+
 ## 2026-03-11 - Governance sprawl
 
 Problema:

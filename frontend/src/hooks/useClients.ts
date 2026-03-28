@@ -102,6 +102,7 @@ export function useUpdateClient() {
       queryClient.invalidateQueries({ queryKey: ["clients"] });
       queryClient.invalidateQueries({ queryKey: ["client", client.id] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["exercise-safety-map", client.id] });
       toast.success(`${client.nome} ${client.cognome} aggiornato`);
     },
     onError: (error) => {
@@ -127,6 +128,7 @@ export function useUpdateAnamnesi() {
       queryClient.invalidateQueries({ queryKey: ["clients"] });
       queryClient.invalidateQueries({ queryKey: ["client", client.id] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["exercise-safety-map", client.id] });
       toast.success("Anamnesi aggiornata");
     },
     onError: (error) => {

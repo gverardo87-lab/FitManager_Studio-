@@ -232,8 +232,8 @@ def build_safety_map(
     conditions_list = catalog_session.exec(cond_stmt).all()
     condition_names = sorted([c.nome for c in conditions_list])
 
-    # ── Query: ID esercizi attivi (business — cross-DB split) ──
-    active_ids = session.exec(
+    # ── Query: ID esercizi attivi (catalog — esercizi vivono in catalog.db) ──
+    active_ids = catalog_session.exec(
         select(Exercise.id).where(
             Exercise.in_subset == True,  # noqa: E712
             Exercise.deleted_at == None,  # noqa: E711
