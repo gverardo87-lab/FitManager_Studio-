@@ -197,3 +197,12 @@ htmlcov/
 
 # Video output (generati da tools/scripts/video-*.js)
 data/videos/
+
+# Claude Code (config locale per progetto)
+.claude/
+
+# DB backup manuali (data/*.bak.* pattern)
+data/*.db.bak.*
+
+# Office lock files
+~$*
