@@ -7,6 +7,7 @@
 import type { SessionCardData } from "@/components/workouts/SessionCard";
 import type { BlockCardData } from "@/components/workouts/BlockCard";
 import type { WorkoutExerciseRow, WorkoutSessionInput, Exercise, BlockType } from "@/types/api";
+import { MUSCLE_LABELS } from "@/components/exercises/exercise-constants";
 
 // ════════════════════════════════════════════════════════════
 // LABELS
@@ -59,6 +60,33 @@ export const SAVE_ISSUE_CATEGORY_LABELS: Record<SaveIssueCategory, string> = {
 const VALID_BLOCK_TYPES: Set<BlockType> = new Set([
   "circuit", "superset", "tabata", "amrap", "emom", "for_time",
 ]);
+
+const TEMPLATE_NAME_RE = /^(full body|upper|lower|push|pull|legs|sessione\s+\d)/i;
+
+/** Derive session name from top-3 primary muscles of its exercises. */
+function deriveSessionName(
+  session: SessionCardData,
+  exerciseMap: Map<number, Exercise>,
+): string | null {
+  const counts = new Map<string, number>();
+  const allExercises = [
+    ...session.esercizi,
+    ...session.blocchi.flatMap((b) => b.esercizi),
+  ];
+  for (const ex of allExercises) {
+    const data = exerciseMap.get(ex.id_esercizio);
+    if (!data?.muscoli_primari) continue;
+    for (const m of data.muscoli_primari) {
+      counts.set(m, (counts.get(m) ?? 0) + 1);
+    }
+  }
+  if (counts.size === 0) return null;
+  const top3 = [...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([slug]) => MUSCLE_LABELS[slug] ?? slug);
+  return `Sessione ${session.numero_sessione} — ${top3.join(", ")}`;
+}
 const HIGH_LOAD_WARNING_KG = 150;
 
 export const HISTORY_LIMIT = 60;
@@ -213,7 +241,9 @@ export function prepareSessionsInputForSave(
     const sessionLabel = `Sessione ${si + 1}`;
     const sessionNumber = s.numero_sessione > 0 ? s.numero_sessione : si + 1;
 
-    const nomeSessione = (s.nome_sessione ?? "").trim() || sessionLabel;
+    const rawName = (s.nome_sessione ?? "").trim() || sessionLabel;
+    const derived = TEMPLATE_NAME_RE.test(rawName) ? deriveSessionName(s, exerciseMap) : null;
+    const nomeSessione = derived ?? rawName;
     if ((s.nome_sessione ?? "").trim() === "") {
       issues.push({
         level: "warning",

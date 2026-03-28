@@ -3,6 +3,20 @@
 Questa non e' una fonte di regole nuove.
 Raccoglie solo lezioni concrete da errori gia' emersi, per evitare che la memoria orale torni a guidare il progetto.
 
+## 2026-03-28b - FK Cascade mancante su replace_sessions (P1)
+
+Problema:
+- `_delete_sessions_cascade` in `workouts.py` eliminava logs → esercizi → blocchi → sessioni, ma NON eliminava `WorkoutScheduleSlot` (FK su `id_sessione`)
+- il PUT `/workouts/{id}/sessions` (full-replace) crashava 500 su qualsiasi scheda con schedule generato
+- errore mascherato da CORS al frontend (crash prima del middleware CORS → no header `Access-Control-Allow-Origin`)
+- bug presente sin dall'introduzione degli schedule slots, ma emerso solo quando un utente ha generato e poi ri-salvato la scheda
+
+Lezioni:
+- ogni nuova tabella con FK su `sessioni_scheda.id` DEVE essere aggiunta a `_delete_sessions_cascade` — non basta aggiungere il modello e il router
+- crash 500 mascherato da CORS: SEMPRE guardare stderr/log uvicorn prima di diagnosticare come errore CORS (stessa lezione di INC-2026-03-28)
+- il dominio workout aveva ZERO test (337 test totali, nessuno sul CRUD schede) — ora 12 test specifici in `test_workouts_crud.py`
+- test chiave: `test_replace_sessions_with_schedule_no_500` riproduce esattamente il bug
+
 ## 2026-03-28 - Safety Engine Blind Spot (P0 — demo investitore)
 
 Problema:

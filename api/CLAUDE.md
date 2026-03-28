@@ -305,6 +305,17 @@ Tutte le tabelle business hanno `deleted_at: Optional[datetime]`.
 - Sync engine: il NOT EXISTS filtra `AND deleted_at IS NULL`
 - UNIQUE index: `uq_recurring_per_month` esclude record con `deleted_at IS NOT NULL`
 
+### Workout Session Cascade (INC-2026-03-28b)
+
+`_delete_sessions_cascade()` in `workouts.py` — ordine FK rigoroso:
+```
+schedule_slots → workout_logs → esercizi_sessione → blocchi → sessioni
+```
+Chiamata da `replace_sessions()` (PUT full-replace) e `delete_workout()`.
+**Regola**: ogni nuova tabella con FK su `sessioni_scheda.id` DEVE essere aggiunta al cascade
+PRIMA del delete sessioni. Violazione = 500 mascherato da errore CORS al frontend.
+Test regressione: `test_workouts_crud.py::test_replace_sessions_with_schedule_no_500`.
+
 ## Audit Trail
 
 Tabella `audit_log` + helper `log_audit()` in `api/routers/_audit.py`.
@@ -378,7 +389,7 @@ Incidente completo: `docs/incidents/INC-2026-03-28-safety-engine-blind-spot.md`
 
 Due famiglie di test:
 
-**pytest** (`tests/`):
+**pytest** (`tests/`, 349 test):
 - DB SQLite in-memory, isolamento totale (StaticPool)
 - `test_pay_rate.py` (12): pagamento atomico, overpayment, deep IDOR, storico pagamenti parziali
 - `test_unpay_rate.py` (4): revoca pagamento, decrements, soft delete movement
@@ -388,6 +399,7 @@ Due famiglie di test:
 - `test_contract_integrity.py` (16): residual, chiuso guard, auto-close, delete guards + cascade
 - `test_aging_report.py` (4): bucket assignment, exclude saldate/chiusi, empty zeroes
 - `test_dashboard_clinical_readiness.py`: readiness score, priority, timeline, CTA generation
+- `test_workouts_crud.py` (12): create, replace_sessions, schedule generation, FK cascade (schedule slots + logs), bouncer IDOR, delete con cascade completo
 - Run: `pytest tests/ -v`
 
 **E2E** (`tools/admin_scripts/test_*.py`):

@@ -56,7 +56,7 @@ SSoT numeri e proiezioni: `docs/BUSINESS_PLAN.md` (v4.3). Strategia operativa: `
 cd frontend && npm run dev                                         # frontend dev (porta 3001)
 
 # --- Test ---
-./venv/Scripts/python -m pytest tests/ -v                          # 326 test backend
+./venv/Scripts/python -m pytest tests/ -v                          # 349 test backend
 cd frontend && npm test                                            # 69 vitest (data protection)
 
 # --- Quality gate (obbligatorio prima di commit) ---
@@ -268,7 +268,7 @@ Formato: `area: descrizione` — es. `api: ...`, `nutrizione: ...`, `dashboard: 
 Quality gate obbligatorio: `bash tools/scripts/check-all.sh` (ruff + next build).
 Ogni commit deve lasciare il branch rilasciabile per il proprio scope.
 
-## Pitfalls ricorrenti (top 9)
+## Pitfalls ricorrenti (top 10)
 
 1. **`toISOString()` perde timezone**: usare `toISOLocal()` da `lib/format.ts` per ogni payload API con date.
 2. **`extra: "forbid"` + campo typo = 422**: verificare nomi campo con curl vs schema Pydantic dopo ogni refactor.
@@ -279,6 +279,7 @@ Ogni commit deve lasciare il branch rilasciabile per il proprio scope.
 7. **Cross-DB session mismatch**: funzioni dual-session (`safety_engine`, `profile_resolver`, `session_prep`) devono usare `catalog_session` per tabelle catalog.db (esercizi, muscoli, condizioni) e `session` per crm.db. Test in-memory con engine singolo NON copre questo bug. Verificare SEMPRE dopo modifiche a funzioni dual-session. Incidente: `docs/incidents/INC-2026-03-28-safety-engine-blind-spot.md`.
 8. **Cache safety map non invalidata**: ogni mutation che modifica anamnesi (direttamente o indirettamente) DEVE invalidare `["exercise-safety-map", clientId]`. Include `useUpdateAnamnesi`, `useUpdateClient`, futuro polling portale pubblico.
 9. **Informazioni cliniche MAI dietro toggle**: la BuilderSafetyCard e' non negoziabile quando `condition_count > 0`. Zero condizioni responsive, zero toggle, zero tab. La visibilita' dipende SOLO da `safetyMap.condition_count > 0`.
+10. **Cascade FK su delete/replace sessioni**: `_delete_sessions_cascade` DEVE eliminare TUTTE le tabelle che referenziano `id_sessione` (schedule slots, logs, esercizi, blocchi) PRIMA di eliminare le sessioni. Aggiungere nuove tabelle con FK su `sessioni_scheda.id` → aggiornare SEMPRE il cascade. Test regressione: `test_workouts_crud.py::test_replace_sessions_with_schedule_no_500`. Incidente: INC-2026-03-28b.
 
 ## Credenziali sviluppo
 

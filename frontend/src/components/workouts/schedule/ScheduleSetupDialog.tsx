@@ -31,6 +31,8 @@ interface ScheduleSetupDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onGenerated?: () => void;
+  /** session_id → derived name (overrides template names in preview) */
+  sessionNameMap?: Map<number, string>;
 }
 
 export function ScheduleSetupDialog({
@@ -38,6 +40,7 @@ export function ScheduleSetupDialog({
   open,
   onOpenChange,
   onGenerated,
+  sessionNameMap,
 }: ScheduleSetupDialogProps) {
   const [selectedDays, setSelectedDays] = useState<number[]>([0, 2, 4]); // L/M/V default
   const [dataInizio, setDataInizio] = useState(
@@ -65,7 +68,7 @@ export function ScheduleSetupDialog({
         const s = sessions[sIdx % sessions.length];
         slots.push({
           giorno: GIORNI_SETTIMANA[day].label,
-          sessione: s.nome_sessione,
+          sessione: sessionNameMap?.get(s.id) ?? s.nome_sessione,
         });
         sIdx++;
       }

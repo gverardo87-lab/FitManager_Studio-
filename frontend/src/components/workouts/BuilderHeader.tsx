@@ -11,7 +11,7 @@
  */
 
 import { useState, useCallback } from "react";
-import { ArrowLeft, Pencil, Check, X, Save, FlaskConical } from "lucide-react";
+import { ArrowLeft, Pencil, Check, X, Save, FlaskConical, CalendarDays } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -135,7 +135,13 @@ export function BuilderHeader({
         </Select>
 
         {plan.id_cliente && clientNome && (
-          <button onClick={() => onNavigate(`/clienti/${plan.id_cliente}`)} className="text-[11px] text-primary hover:underline shrink-0">Profilo</button>
+          <>
+            <button onClick={() => onNavigate(`/clienti/${plan.id_cliente}`)} className="text-[11px] text-primary hover:underline shrink-0">Profilo</button>
+            <button onClick={() => onNavigate(`/allenamenti/${plan.id}?from=scheda-${plan.id}`)} className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline shrink-0">
+              <CalendarDays className="h-3 w-3" />
+              <span className="hidden sm:inline">Pianifica</span>
+            </button>
+          </>
         )}
 
         <div className="h-3.5 w-px bg-border/50 shrink-0" />

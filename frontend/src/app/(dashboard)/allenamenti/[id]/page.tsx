@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { ArrowLeft, CalendarDays, Settings2, Dumbbell, Target } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useWorkout } from "@/hooks/useWorkouts";
+import { useExercises } from "@/hooks/useExercises";
 import {
   useWorkoutSchedule,
   useCompleteScheduleSlot,
@@ -19,7 +20,37 @@ import { ScheduleSetupDialog } from "@/components/workouts/schedule/ScheduleSetu
 import { SlotDetailSheet } from "@/components/workouts/schedule/SlotDetailSheet";
 import { usePageReveal } from "@/lib/page-reveal";
 import { resolveBackNavigation } from "@/lib/url-state";
-import type { ScheduleSlot } from "@/types/api";
+import { MUSCLE_LABELS } from "@/components/exercises/exercise-constants";
+import type { ScheduleSlot, WorkoutPlan, Exercise } from "@/types/api";
+
+const TEMPLATE_NAME_RE = /^(full body|upper|lower|push|pull|legs|sessione\s+\d)/i;
+
+/** Build session_id → derived name map from plan exercises + catalog muscles. */
+function buildSessionNameMap(
+  plan: WorkoutPlan,
+  exerciseMap: Map<number, Exercise>,
+): Map<number, string> {
+  const map = new Map<number, string>();
+  for (const s of plan.sessioni) {
+    if (!TEMPLATE_NAME_RE.test(s.nome_sessione)) continue;
+    const counts = new Map<string, number>();
+    const allEx = [...s.esercizi, ...s.blocchi.flatMap((b) => b.esercizi)];
+    for (const ex of allEx) {
+      const data = exerciseMap.get(ex.id_esercizio);
+      if (!data?.muscoli_primari) continue;
+      for (const m of data.muscoli_primari) {
+        counts.set(m, (counts.get(m) ?? 0) + 1);
+      }
+    }
+    if (counts.size === 0) continue;
+    const top3 = [...counts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([slug]) => MUSCLE_LABELS[slug] ?? slug);
+    map.set(s.id, `Sessione ${s.numero_sessione} — ${top3.join(", ")}`);
+  }
+  return map;
+}
 
 const OBIETTIVO_LABELS: Record<string, string> = {
   forza: "Forza",
@@ -38,10 +69,17 @@ const LIVELLO_LABELS: Record<string, string> = {
 export default function WorkoutSchedulePage() {
   const params = useParams();
   const workoutId = Number(params.id);
+  const fromParam = useSearchParams().get("from");
   const { revealClass, revealStyle } = usePageReveal();
+  const backNav = resolveBackNavigation(fromParam, { href: "/allenamenti", label: "Allenamenti" });
 
   const { data: plan, isLoading: planLoading } = useWorkout(workoutId);
   const { data: scheduleData, isLoading: scheduleLoading } = useWorkoutSchedule(workoutId);
+  const { data: exerciseData } = useExercises();
+  const exerciseMap = useMemo(
+    () => new Map((exerciseData?.items ?? []).map((e) => [e.id, e])),
+    [exerciseData],
+  );
 
   const [setupOpen, setSetupOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<ScheduleSlot | null>(null);
@@ -50,7 +88,20 @@ export default function WorkoutSchedulePage() {
   const updateMutation = useUpdateScheduleSlot(workoutId);
   const deleteMutation = useDeleteScheduleSlot(workoutId);
 
-  const slots = scheduleData?.items ?? [];
+  // Derive real session names from exercises when DB has template names
+  const sessionNameMap = useMemo(
+    () => (plan ? buildSessionNameMap(plan, exerciseMap) : new Map<number, string>()),
+    [plan, exerciseMap],
+  );
+
+  const slots = useMemo(() => {
+    const raw = scheduleData?.items ?? [];
+    if (sessionNameMap.size === 0) return raw;
+    return raw.map((s) => {
+      const derived = sessionNameMap.get(s.id_sessione);
+      return derived ? { ...s, sessione_nome: derived } : s;
+    });
+  }, [scheduleData, sessionNameMap]);
   const hasSchedule = slots.length > 0;
 
   // Compliance stats + week progress (single pass)
@@ -147,8 +198,9 @@ export default function WorkoutSchedulePage() {
       <div className={revealClass(0)} style={revealStyle(0)}>
         <div className="flex items-center gap-2 mb-1">
           <Link
-            href={resolveBackNavigation(null, { href: "/allenamenti", label: "Allenamenti" }).href}
+            href={backNav.href}
             className="text-muted-foreground hover:text-foreground transition-colors"
+            title={backNav.label}
           >
             <ArrowLeft className="h-4 w-4" />
           </Link>
@@ -264,6 +316,7 @@ export default function WorkoutSchedulePage() {
         open={setupOpen}
         onOpenChange={setSetupOpen}
         onGenerated={() => {}}
+        sessionNameMap={sessionNameMap}
       />
 
       {selectedSlot && (
