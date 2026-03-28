@@ -447,6 +447,14 @@ def create_contract(
     _check_client_ownership(session, data.id_cliente, trainer.id)
 
     # 2. Crea contratto con trainer_id iniettato
+    # stato_pagamento determinato dall'acconto
+    if data.acconto >= data.prezzo_totale:
+        stato_iniziale = "SALDATO"
+    elif data.acconto > 0:
+        stato_iniziale = "PARZIALE"
+    else:
+        stato_iniziale = "PENDENTE"
+
     contract = Contract(
         trainer_id=trainer.id,
         id_cliente=data.id_cliente,
@@ -457,7 +465,7 @@ def create_contract(
         data_scadenza=data.data_scadenza,
         acconto=data.acconto,
         totale_versato=data.acconto,
-        stato_pagamento="PENDENTE",
+        stato_pagamento=stato_iniziale,
         note=data.note,
     )
     session.add(contract)
@@ -466,13 +474,16 @@ def create_contract(
     session.flush()
 
     # 3. Se acconto > 0, registra nel libro mastro (CashMovement ENTRATA)
+    # data_effettiva: il denaro è ricevuto al momento della firma, non alla data inizio.
+    # Per contratti backdatati si rispetta data_inizio; per contratti futuri si usa oggi.
     if data.acconto > 0:
         client = session.get(Client, data.id_cliente)
         client_label = f"{client.nome} {client.cognome}" if client else f"Cliente #{data.id_cliente}"
+        acconto_date = min(data.data_inizio, date.today())
 
         movement = CashMovement(
             trainer_id=trainer.id,
-            data_effettiva=data.data_inizio,
+            data_effettiva=acconto_date,
             tipo="ENTRATA",
             categoria=CATEGORIA_ACCONTO,
             importo=data.acconto,
@@ -753,6 +764,13 @@ def renew_contract(
     _check_client_ownership(session, data.id_cliente, trainer.id)
 
     # 3. Crea contratto rinnovato con link al precedente
+    if data.acconto >= data.prezzo_totale:
+        stato_iniziale = "SALDATO"
+    elif data.acconto > 0:
+        stato_iniziale = "PARZIALE"
+    else:
+        stato_iniziale = "PENDENTE"
+
     renewed = Contract(
         trainer_id=trainer.id,
         id_cliente=data.id_cliente,
@@ -763,7 +781,7 @@ def renew_contract(
         data_scadenza=data.data_scadenza,
         acconto=data.acconto,
         totale_versato=data.acconto,
-        stato_pagamento="PENDENTE",
+        stato_pagamento=stato_iniziale,
         note=data.note,
         rinnovo_di=contract_id,
     )
@@ -774,10 +792,11 @@ def renew_contract(
     if data.acconto > 0:
         client = session.get(Client, data.id_cliente)
         client_label = f"{client.nome} {client.cognome}" if client else f"Cliente #{data.id_cliente}"
+        acconto_date = min(data.data_inizio, date.today())
 
         movement = CashMovement(
             trainer_id=trainer.id,
-            data_effettiva=data.data_inizio,
+            data_effettiva=acconto_date,
             tipo="ENTRATA",
             categoria=CATEGORIA_ACCONTO,
             importo=data.acconto,
