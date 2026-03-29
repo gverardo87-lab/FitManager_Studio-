@@ -34,7 +34,7 @@ Usa questa procedura quando:
 - stai aggiornando il programma senza cambiare macchina.
 
 Se invece stai installando FitManager su un nuovo PC o devi ripristinare da zero una
-macchina guasta, usa prima [SUPPORT_RUNBOOK.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/SUPPORT_RUNBOOK.md).
+macchina guasta, usa prima [SUPPORT_RUNBOOK.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/operations/SUPPORT_RUNBOOK.md).
 
 ---
 
@@ -231,12 +231,12 @@ Nota pratica:
   segnala `license key not found`, il primo controllo da fare non e il restore:
   e il riposizionamento corretto di `data\\license.key`.
 - per i comandi shell esatti e la matrice di interpretazione, usare
-  [RUNTIME_DIAGNOSTICS_PLAYBOOK.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/RUNTIME_DIAGNOSTICS_PLAYBOOK.md).
+  [RUNTIME_DIAGNOSTICS_PLAYBOOK.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/operations/RUNTIME_DIAGNOSTICS_PLAYBOOK.md).
 
 Se la licenza continua a non risultare valida:
 - fermati;
 - non fare restore come prima mossa;
-- usa [SUPPORT_RUNBOOK.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/SUPPORT_RUNBOOK.md).
+- usa [SUPPORT_RUNBOOK.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/operations/SUPPORT_RUNBOOK.md).
 
 ---
 
@@ -326,9 +326,9 @@ Questo ti lascia una baseline pulita anche per il supporto successivo.
 
 ## 14. Riferimenti
 
-- [SUPPORT_RUNBOOK.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/SUPPORT_RUNBOOK.md)
-- [RELEASE_CHECKLIST.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/RELEASE_CHECKLIST.md)
-- [TAILSCALE_FUNNEL_SETUP.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/TAILSCALE_FUNNEL_SETUP.md)
+- [SUPPORT_RUNBOOK.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/operations/SUPPORT_RUNBOOK.md)
+- [RELEASE_CHECKLIST.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/operations/RELEASE_CHECKLIST.md)
+- [TAILSCALE_FUNNEL_SETUP.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/technical/TAILSCALE_FUNNEL_SETUP.md)
 
 ---
 

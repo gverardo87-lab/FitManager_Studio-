@@ -35,8 +35,8 @@ Usa questi comandi se succede almeno uno di questi casi:
 - vuoi raccogliere evidenze rapide prima di fare restore o reinstallazione.
 
 Questo playbook non sostituisce il runbook completo:
-- per recovery operativa usa anche [SUPPORT_RUNBOOK.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/SUPPORT_RUNBOOK.md)
-- per aggiornamenti usa anche [UPGRADE_PROCEDURE.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/UPGRADE_PROCEDURE.md)
+- per recovery operativa usa anche [SUPPORT_RUNBOOK.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/operations/SUPPORT_RUNBOOK.md)
+- per aggiornamenti usa anche [UPGRADE_PROCEDURE.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/operations/UPGRADE_PROCEDURE.md)
 
 ---
 

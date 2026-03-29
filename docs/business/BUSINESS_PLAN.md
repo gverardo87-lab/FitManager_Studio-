@@ -18,7 +18,7 @@ Ogni numero è tracciabile a un'assunzione dichiarata (Appendice A4). Le proiezi
 
 FitManager Studio+ è un sistema completo — software e dispositivo dedicato — che permette al personal trainer di gestire clienti, schede di allenamento, pagamenti e anamnesi da qualunque dispositivo, con la scienza integrata e i dati che restano nel suo studio. Si compra una volta, non si paga ogni mese.
 
-Il prodotto è completo e funzionante (v1.0.4). La prima utilizzatrice reale lo usa quotidianamente. Il mercato target — oltre 100.000 professionisti fitness P.IVA in Italia — non è servito da nessun prodotto che combini architettura locale, scienza dell'allenamento e nutrizione italiana.
+Il prodotto è completo e funzionante (v1.0.5). La prima utilizzatrice reale lo usa quotidianamente. Il mercato target — oltre 100.000 professionisti fitness P.IVA in Italia — non è servito da nessun prodotto che combini architettura locale, scienza dell'allenamento e nutrizione italiana.
 
 Il lancio avviene con una Proof of Concept strutturata (10 professionisti, 90 giorni, metriche misurabili) che valida il prodotto e il modello prima di scalare. Il business non richiede investimento esterno nell'Anno 1 e non genera debito in nessuno scenario.
 
@@ -86,6 +86,10 @@ Il database è progettato per crescere con il contributo diretto di professionis
 
 Il trainer non deve cambiare il modo in cui comunica con i clienti. FitManager si inserisce nel suo workflow esistente e lo rende professionale.
 
+**Portale Allenamento Clienti.** Il cliente del trainer accede dal proprio telefono — nessuna app da scaricare. Vede la sessione del giorno, ogni esercizio con i parametri prescritti e le foto di esecuzione. Esegue, registra serie e ripetizioni, conferma o modifica il prescritto con un tap. A fine sessione: feedback rapido su energia, soddisfazione e difficoltà percepita.
+
+**Workout Intelligence.** Il sistema analizza automaticamente l'esecuzione rispetto al piano: compliance esercizio per esercizio, volume effettivo per ogni gruppo muscolare confrontato con i target scientifici (MEV/MAV/MRV), equilibri biomeccanici su 5 rapporti (Push:Pull, Quad:Hamstring, Anteriore:Posteriore). Il trainer si siede col cliente e gli mostra esattamente dove il suo corpo risponde e dove serve aggiustare — muscolo per muscolo, con target personalizzati per sesso, età e obiettivo. Nessun competitor al mondo offre questo livello di analisi.
+
 ### La FitManager Box
 
 Un piccolo dispositivo dedicato che il trainer mette nel suo studio. Lo attacca alla corrente e al WiFi — fine. Da quel momento accede a FitManager da qualunque dispositivo: il computer a casa, il telefono in palestra, il tablet durante le sessioni.
@@ -94,7 +98,7 @@ I dati non vanno mai in cloud. Restano fisicamente nello studio del trainer. Il 
 
 ### Stato del prodotto
 
-Il prodotto è completo e funzionante (versione 1.0.4). La prima utilizzatrice reale — una chinesiologia di Genova — lo usa quotidianamente per gestire i propri clienti. Le sue clienti ricevono schede professionali e compilano le anamnesi dal proprio telefono.
+Il prodotto è completo e funzionante (versione 1.0.5). La prima utilizzatrice reale — una chinesiologia di Genova — lo usa quotidianamente per gestire i propri clienti. Le sue clienti ricevono schede professionali, compilano le anamnesi dal proprio telefono e registrano l'allenamento in tempo reale dal portale dedicato.
 
 ---
 
@@ -110,6 +114,7 @@ Il prodotto è completo e funzionante (versione 1.0.4). La prima utilizzatrice r
 | Segnala errori su patologie | Sì (47 condizioni) | No | No | No |
 | Nutrizione italiana (CREA) | Sì (880 alimenti) | No | No | No |
 | Scienza allenamento integrata | Sì | No | Base | No |
+| Monitoraggio allenamento live | Sì (portale + analytics muscolo×muscolo) | No | No | No |
 | Si paga una volta sola | Sì | No (abbonamento) | No (abbonamento) | Sì (€0) |
 
 ### Quanto costa in 3 anni
@@ -350,8 +355,9 @@ La POC misura sia il prodotto sia il percorso:
 | "Ti definiresti un PT Evoluto?" | — | 6+ su 10 sì | Category creation |
 | Messaggi WhatsApp pre-compilati usati/settimana | — | 15+ | Adozione comunicazione |
 | Tempo risparmiato percepito in comunicazione | — | 30+ min/giorno | Valore feature |
+| Clienti usano portale allenamento | — | 7+ su 10 attivi | Workout Intelligence |
 
-Le ultime 3 metriche sono nuove rispetto a una POC solo-software. Sono quelle che validano la categoria e il volano.
+Le ultime 4 metriche sono nuove rispetto a una POC solo-software. Sono quelle che validano la categoria, il volano e il fossato competitivo.
 
 ### I profili dei 10 Fondatori
 
@@ -388,7 +394,7 @@ Questo pacchetto è la leva di vendita per la fase Early Adopter. Non vendiamo "
 | Tempo partner (selezione Fondatori, 3 masterclass, partecipazione webinar) | ~15-20 ore in 90 giorni |
 | **Investimento netto in cash** | **~€300** |
 
-Il partner viene compensato con il 25% dei ricavi POC (€298) e con la proprietà condivisa delle registrazioni: le 3 masterclass entrano nella libreria Inner Circle e generano il 30% di revenue share standard per ogni futuro membro che le fruisce.
+Il partner viene compensato con il 20% dei ricavi POC (€238) e con la proprietà condivisa delle registrazioni: le 3 masterclass entrano nella libreria Inner Circle e generano il 35% di revenue share standard per ogni futuro membro che le fruisce.
 
 ---
 
@@ -417,7 +423,7 @@ Il business sopravvive. Non genera debito. Ma la crescita è lenta e il founder 
 
 Il partner aggiunge: network, credibilità, masterclass dal mese 1 (durante la POC), effetto di autorità nel funnel. Lead a regime: 22-35/mese. Vendite a regime: 3-6/mese. Inner Circle attivo dal mese 4 (il partner conduce le masterclass, primo contenuto creato durante la POC).
 
-Il compenso del partner ha una struttura differenziata: 25% sui ricavi POC, 20% sulle vendite generate dal suo network, 25% sui ricavi assistenza PRO e Inner Circle, 30% sulle masterclass condotte personalmente. Nelle tabelle seguenti il compenso è presentato come totale calcolato dalla struttura differenziata.
+Il compenso del partner ha una struttura semplificata a due percentuali: 20% su tutte le vendite prodotto (licenze e Box, senza distinguere la fonte) e 35% su tutto il ricorrente e contenuto (PRO, Inner Circle, masterclass). Due percentuali, nessuna zona grigia — un lead arrivato dal webinar del partner ma convertito da un post LinkedIn del founder non genera dispute.
 
 I ricavi sono suddivisi in tre flussi: vendite prodotto (licenze + Box), assistenza PRO (€79/anno, aggiornamenti e supporto), Inner Circle (€249/anno, include PRO + masterclass + mastermind + certificazione PT Evoluto).
 
@@ -432,10 +438,10 @@ I ricavi sono suddivisi in tre flussi: vendite prodotto (licenze + Box), assiste
 | Inner Circle | €996 | €2.040 | €4.388 |
 | **Fatturato** | **€10.715** | **€17.086** | **€27.441** |
 | Costi diretti + operativi | €6.970 | €9.330 | €12.990 |
-| Compenso partner (struttura differenziata) | €1.735 | €2.782 | €4.590 |
+| Compenso partner (20% prodotto + 35% ricorrente) | €2.117 | €4.085 | €6.889 |
 | Tasse | €2.250 | €3.588 | €6.467 |
-| **Netto founder** | **-€240** | **€1.386** | **€3.394** |
-| **Netto partner (cash)** | **€1.735** | **€2.782** | **€4.590** |
+| **Netto founder** | **-€622** | **€83** | **€1.095** |
+| **Netto partner (cash)** | **€2.117** | **€4.085** | **€6.889** |
 
 **Scenario base — partner operativo dal mese 2, conversione 25%, IC al 20% della base:**
 
@@ -448,10 +454,10 @@ I ricavi sono suddivisi in tre flussi: vendite prodotto (licenze + Box), assiste
 | Inner Circle | €2.250 | €4.500 | €9.500 |
 | **Fatturato** | **€17.150** | **€29.650** | **€49.650** |
 | Costi diretti + operativi | €8.560 | €14.325 | €22.865 |
-| Compenso partner (struttura differenziata) | €2.375 | €4.200 | €7.500 |
+| Compenso partner (20% prodotto + 35% ricorrente) | €3.910 | €7.160 | €12.450 |
 | Tasse | €3.600 | €6.230 | €6.750 |
-| **Netto founder** | **€2.615** | **€4.895** | **€12.535** |
-| **Netto partner (cash)** | **€2.375** | **€4.200** | **€7.500** |
+| **Netto founder** | **€1.080** | **€1.935** | **€7.585** |
+| **Netto partner (cash)** | **€3.910** | **€7.160** | **€12.450** |
 
 Nota: dall'Anno 3, con fatturato superiore a €40.000, è prevista la transizione a regime ordinario/SRL. Le tasse sono calcolate al ~35% sul reddito netto (non sul fatturato), il che rende deducibili i costi hardware e operativi.
 
@@ -466,10 +472,10 @@ Nota: dall'Anno 3, con fatturato superiore a €40.000, è prevista la transizio
 | Inner Circle | €2.990 | €7.380 | €15.200 |
 | **Fatturato** | **€27.973** | **€49.140** | **€81.500** |
 | Costi diretti + operativi | €11.050 | €22.130 | €38.250 |
-| Compenso partner (struttura differenziata) | €4.500 | €8.100 | €13.900 |
+| Compenso partner (20% prodotto + 35% ricorrente) | €6.284 | €11.600 | €19.873 |
 | Tasse | €5.874 | €6.620 | €10.270 |
-| **Netto founder** | **€6.549** | **€12.290** | **€19.080** |
-| **Netto partner (cash)** | **€4.500** | **€8.100** | **€13.900** |
+| **Netto founder** | **€4.765** | **€8.790** | **€13.107** |
+| **Netto partner (cash)** | **€6.284** | **€11.600** | **€19.873** |
 
 ### Il confronto diretto: cosa cambia con il partner
 
@@ -479,10 +485,10 @@ Nota: dall'Anno 3, con fatturato superiore a €40.000, è prevista la transizio
 | Clienti Anno 3 | 108 | 191 | 1,8x |
 | Fatturato Anno 1 | €7.200 | €17.150 | 2,4x |
 | Fatturato Anno 3 | €22.000 | €49.650 | 2,3x |
-| Netto founder Anno 3 | €3.600 | €12.535 | 3,5x |
+| Netto founder Anno 3 | €3.600 | €7.585 | 2,1x |
 | Fatturato cumulativo 3 anni | €42.700 | €96.450 | 2,3x |
 
-Senza partner, l'Inner Circle non è attivabile (mancano le masterclass e la voce credibile). Il partner non solo raddoppia le vendite — abilita un intero flusso di ricavo (Inner Circle) che non esiste nella configurazione senza partner. Questo spiega il moltiplicatore 3,5x sul netto founder: l'Inner Circle è ad alto margine e cresce con la base installata.
+Senza partner, l'Inner Circle non è attivabile (mancano le masterclass e la voce credibile). Il partner non solo raddoppia le vendite — abilita un intero flusso di ricavo (Inner Circle) che non esiste nella configurazione senza partner. Il moltiplicatore 2,1x sul netto founder riflette una struttura di compenso più generosa per il partner (20% prodotto + 35% ricorrente), calibrata sul suo contributo diretto alla crescita del ricavo ricorrente.
 
 Il business funziona senza partner. Con il partner, decolla. Non è una dipendenza — è una leva che abilita un flusso di ricavo altrimenti impossibile.
 
@@ -496,16 +502,18 @@ Il business funziona senza partner. Con il partner, decolla. Non è una dipenden
 | Fatturato | €17.150 | €29.650 | €49.650 | **€96.450** |
 | Di cui ricorrente (PRO + IC) | €3.200 | €8.200 | €16.800 | €28.200 |
 | **Founder** | | | | |
-| Netto cash | €2.615 | €4.895 | €12.535 | **€20.045** |
-| Equity detenuta | 92-95% | 92-95% | 92-95% | — |
+| Netto cash | €1.080 | €1.935 | €7.585 | **€10.600** |
+| Equity detenuta | 95% | 88-92% | 88% | — |
 | **Partner** | | | | |
-| Cash (compenso differenziato) | €2.375 | €4.200 | €7.500 | **€14.075** |
-| Equity detenuta | 5-8% | 5-8% | 5-8% | — |
-| Valore equity stimato | €1.600 | €4.100 | €8.400 | — |
-| **Totale partner (cash + equity)** | **€3.975** | **€8.300** | **€15.900** | **€28.175** |
+| Cash (20% prodotto + 35% ricorrente) | €3.910 | €7.160 | €12.450 | **€23.520** |
+| Equity maturata (milestone) | 5% | 8-12% | 12% | — |
+| Valore equity stimato (12%) | €3.120 | €8.160 | €16.800 | — |
+| **Totale partner (cash + equity)** | **€7.030** | **€15.320** | **€29.250** | **€39.520** |
 | **Valore stimato progetto** | **€26.000** | **€68.000** | **€140.000** | — |
 
 Nota sulla valutazione: multiplo 2x sul ricavo ricorrente annualizzato (€16.800 × 2 = €33.600) + valore base installata (191 × €200 = €38.200) + valore IP (€35.000) + valore community e brand (€33.200). Metodo conservativo per software B2B verticali con community attiva. Il ricavo ricorrente (PRO + Inner Circle) rappresenta il 34% del fatturato Anno 3 e cresce ogni anno — è il driver principale della valutazione.
+
+L'equity del partner è legata a milestone concrete: 5% al completamento POC (GO al giorno 90), 3% al raggiungimento di 50 clienti attivi, 4% al primo accordo internazionale firmato. Se la POC fallisce: 0% equity, 0 costi.
 
 ---
 
@@ -540,7 +548,7 @@ Costo totale se ci fermiamo al giorno 90: 3 mesi di tempo e circa €1.000.
 
 **"I trainer non vogliono pagare per un software."** La POC include la misurazione della disponibilità a pagare prima di rivelare il prezzo. Se il dato esce basso, lo sappiamo con 10 persone, non con 100.
 
-**"Il partner si disimpegna."** L'equity ha cliff di 12 mesi. Il business parte anche senza partner — più lentamente, ma parte (vedi Configurazione A nelle proiezioni).
+**"Il partner si disimpegna."** L'equity è a milestone — se non raggiunge i risultati, non matura. Il business parte anche senza partner — più lentamente, ma parte (vedi Configurazione A nelle proiezioni).
 
 **"Un competitor copia."** Il database scientifico (500 esercizi, 940 relazioni, Safety Engine, nutrizione CREA) richiede 6+ mesi di lavoro specializzato. L'architettura locale non è replicabile da un SaaS senza riscrittura totale.
 
@@ -558,26 +566,33 @@ L'Industry Partner è una figura con esperienza pluriennale nel settore fitness,
 
 ### Struttura di compenso del partner
 
-Il partner non riceve un compenso fisso. Riceve una quota dei ricavi con struttura differenziata per tipo di attività:
+Il partner non riceve un compenso fisso. Riceve una quota dei ricavi con struttura semplificata a due percentuali:
 
 | Componente | Percentuale | Applicata a |
 |---|---|---|
-| Ricavi POC | 25% | Licenze e Box Fondatori |
-| Vendite dal suo network | 20% | Licenze e Box generate tramite referral tracciato |
-| Assistenza PRO e Inner Circle | 25% | Tutti i rinnovi e gli abbonamenti |
-| Masterclass condotte | 30% | Sessioni live e registrate che conduce personalmente |
+| Vendite prodotto | 20% | Tutte le licenze e Box, senza distinguere la fonte |
+| Ricorrente + contenuto | 35% | PRO, Inner Circle, masterclass |
 
-Questa struttura allinea il compenso alle attività: il partner guadagna di più sulle attività dove il suo contributo è diretto (masterclass 30%, vendite network 20%) e partecipa alla crescita del ricavo ricorrente (PRO + Inner Circle 25%). Ai fini delle proiezioni, il compenso totale è calcolato dalla struttura differenziata (vedi sezione 10).
+Due percentuali, nessuna zona grigia. Un lead arrivato dal webinar del partner ma convertito da un post LinkedIn del founder non genera dispute — il 20% si applica a tutte le vendite. Il 35% sul ricorrente riflette il contributo diretto del partner: il contenuto che giustifica il rinnovo è suo.
 
 | | Anno 1 | Anno 2 | Anno 3 |
 |---|---|---|---|
 | Fatturato (scenario base) | €17.150 | €29.650 | €49.650 |
-| Compenso partner (differenziato) | €2.375 | €4.200 | €7.500 |
+| Compenso partner (20% prodotto + 35% ricorrente) | €3.910 | €7.160 | €12.450 |
 | Costo fisso partner | €0 | €0 | €0 |
 
-In aggiunta, il partner riceve equity (5-8%) con maturazione progressiva in 4 anni e cliff di 12 mesi. Le 3 masterclass registrate durante la POC restano di proprietà condivisa e generano revenue share standard ogni volta che un nuovo membro Inner Circle le fruisce.
+In aggiunta, il partner riceve equity fino al 12%, legata a milestone concrete:
 
-L'analisi costi-benefici: il compenso partner nel triennio ammonta a €14.075 (scenario base). Il fatturato aggiuntivo rispetto alla configurazione senza partner è €53.750. Ritorno: 3,8x per ogni euro investito in compenso partner.
+| Milestone | Equity | Quando |
+|---|---|---|
+| Completamento POC — decisione GO al giorno 90 | 5% | Mese 3 |
+| 50 clienti attivi nella base installata | 3% | ~Mese 8-12 |
+| Primo accordo internazionale firmato | 4% | Quando accade |
+| **Totale potenziale** | **12%** | — |
+
+Se la POC fallisce: 0% equity, 0 costi. L'equity si guadagna con i risultati, non con la permanenza. Le 3 masterclass registrate durante la POC restano di proprietà condivisa e generano il 35% di revenue share standard ogni volta che un nuovo membro Inner Circle le fruisce.
+
+L'analisi costi-benefici: il compenso partner nel triennio ammonta a €23.520 (scenario base). Il fatturato aggiuntivo rispetto alla configurazione senza partner è €53.750. Ritorno: 2,3x per ogni euro investito in compenso partner.
 
 ### Evoluzione del team
 
@@ -593,7 +608,7 @@ L'analisi costi-benefici: il compenso partner nel triennio ammonta a €14.075 (
 
 **Competenza tecnologica ereditata.** Due anni a fianco del padre, pioniere delle applicazioni di intelligenza artificiale in Italia. Sistemi di visione artificiale per l'industria.
 
-**FitManager.** 6 mesi di sviluppo full-time. Prodotto completo e funzionante: 45.000 righe di codice, 395 test automatici, 5 motori scientifici. In uso quotidiano da una professionista reale.
+**FitManager.** 6 mesi di sviluppo full-time. Prodotto completo e funzionante: 47.000+ righe di codice, 395 test automatici, 7 motori scientifici. In uso quotidiano da una professionista reale.
 
 **Competenza di dominio.** Conoscenza diretta del settore fitness come praticante e istruttore. FitManager è l'intersezione tra competenza tecnica e conoscenza del dominio.
 
@@ -619,9 +634,17 @@ Il motore a lungo termine: il volano parte dalla POC, non dall'Anno 2. Le master
 
 Un professionista del settore fitness con esperienza, credibilità e un network attivo. Non un dipendente, non un consulente — un partner con incentivi allineati al progetto (equity + revenue share, zero costi fissi). Il suo ruolo: selezionare i Fondatori, presentare il prodotto al mercato, condurre masterclass, validare il posizionamento PT Evoluto.
 
+### Sostenibilità personale del founder — NASpI anticipata
+
+Il founder ha diritto alla liquidazione anticipata della NASpI (18-20 mesi residui, ~€900-1.000/mese). Dal 2026 l'erogazione avviene in due tranche (70% + 30%), per un totale netto stimato di €13.000-16.000. Questo importo copre interamente le riserve personali necessarie per i primi 24 mesi in tutti gli scenari, rendendo il business avviabile senza risparmi propri significativi. Dettaglio completo in `docs/business/FINANCIAL_MODEL.md` §8.
+
 ### Finanziamento (dopo la validazione della POC)
 
-Dopo che i dati della POC confermano il modello (NPS, disponibilità a pagare, adozione), un finanziamento contenuto (€20.000-40.000) per accelerare: marketing strutturato, presenza a fiere, primo collaboratore. Con 46+ clienti e dati reali, non con promesse.
+Dopo che i dati della POC confermano il modello (NPS, disponibilità a pagare, adozione), il canale prioritario è **Smart&Start Italia** (Invitalia): finanziamento a tasso zero fino a €1.5M, copertura 80-90%, a sportello (niente graduatorie). Richiede iscrizione come startup innovativa — FitManager qualifica per IP proprietaria (47K+ LOC, 7 motori scientifici) e spese R&D >15%.
+
+Importo realistico: €50.000-100.000 per marketing strutturato, primo collaboratore, sviluppo Box, internazionalizzazione. Con dati POC reali, non con promesse. Roadmap: domanda al mese 6-7, erogazione al mese 10+.
+
+La NASpI anticipata e Smart&Start sono cumulabili: la NASpI copre il founder, Smart&Start copre il business. Mappa completa dei fondi disponibili in `docs/business/FINANCIAL_MODEL.md` §9.
 
 ---
 
@@ -638,6 +661,8 @@ Dopo che i dati della POC confermano il modello (NPS, disponibilità a pagare, a
 | Operativo | Setup guidato, licenza HW-bound, backup/ripristino, diagnostica | Completo |
 | Accesso | Portale anamnesi self-service, accesso remoto Tailscale | Completo |
 | Comunicazione | WhatsApp semi-auto (wa.me), email SMTP automatiche, template messaggi | Completo |
+| Portale Allenamento | Portale cliente: sessione del giorno, registrazione esecuzione, feedback, zero app | Completo |
+| Workout Intelligence | Compliance, dose-response muscolo×muscolo, equilibri biomeccanici, alert predittivi | Completo |
 
 500 esercizi, 940 relazioni (progressioni, regressioni, varianti), 47 condizioni cliniche, 80 regole Safety Engine.
 
@@ -687,8 +712,8 @@ Il margine lordo migliora nel tempo perché il ricavo ricorrente (PRO + IC) ha m
 |---|---|---|---|
 | Fissi (commercialista, tool, varie) | €4.300 | €4.500 | €4.800 |
 | Tirocinante/collaboratore | — | €4.000 | €9.200 |
-| Ufficio/coworking | — | — | €3.600 |
-| Marketing | — | — | €2.400 |
+
+Nota: ufficio/coworking (~€3.600) e marketing strutturato (~€2.400) sono previsti dalla Fase 4 (Anno 2+) e verranno inclusi quando i volumi lo giustificano. Non sono nelle proiezioni base per coerenza con le tabelle scenario.
 
 **Riepilogo:**
 
@@ -696,11 +721,11 @@ Il margine lordo migliora nel tempo perché il ricavo ricorrente (PRO + IC) ha m
 |---|---|---|---|
 | Fatturato | €17.150 | €29.650 | €49.650 |
 | Margine lordo | €12.890 | €23.825 | €40.785 |
-| Costi operativi | €4.300 | €8.500 | €20.000 |
-| Compenso partner (differenziato) | €2.375 | €4.200 | €7.500 |
-| EBITDA | €6.215 | €11.125 | €13.285 |
+| Costi operativi | €4.300 | €8.500 | €14.000 |
+| Compenso partner (20% prodotto + 35% ricorrente) | €3.910 | €7.160 | €12.450 |
+| EBITDA | €4.680 | €8.165 | €14.335 |
 | Tasse | €3.600 | €6.230 | €6.750 |
-| **Netto founder** | **€2.615** | **€4.895** | **€12.535** |
+| **Netto founder** | **€1.080** | **€1.935** | **€7.585** |
 
 ### A4 — Le assunzioni chiave
 
@@ -719,6 +744,8 @@ Il margine lordo migliora nel tempo perché il ricavo ricorrente (PRO + IC) ha m
 | WA2 | Trainer usano 15+ messaggi pre-compilati/settimana | Ipotesi | Dato reale POC giorni 15-75 |
 | DB1 | Professionisti del settore disponibili a contribuire al database esercizi | Ipotesi forte | Primo contributo durante partnership/POC |
 | INT1 | Versione inglese core (Blocchi 1-2) completabile entro 6 mesi dal lancio | Ipotesi | Valutazione tecnica in corso |
+| WI1 | Clienti usano portale allenamento (7/10 attivi nella POC) | Ipotesi forte | Dato reale POC giorni 15-75 |
+| WI2 | Workout Intelligence differenzia FitManager da ogni competitor | Ipotesi forte | Feedback POC + analisi competitor |
 
 Ogni proiezione è conservativa. I ricavi Inner Circle sono inclusi dal mese 4 (post-POC) nelle configurazioni con partner. Senza partner, l'Inner Circle non è attivabile.
 

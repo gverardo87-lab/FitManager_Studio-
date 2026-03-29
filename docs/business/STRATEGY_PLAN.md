@@ -18,11 +18,11 @@ Non ripete i numeri del BP (sono referenziati dove servono). Si concentra su tre
 
 ### Cosa c'è
 
-Un prodotto completo e funzionante. Versione 1.0.5, in uso quotidiano dalla prima utilizzatrice reale. 5 motori scientifici, 500 esercizi, 880 alimenti CREA, Safety Engine con 47 condizioni, analisi biomeccanica 4D, range OMS/ACSM. Installer pronto, licenza funzionante. La presentazione prodotto mostra tutto questo.
+Un prodotto completo e funzionante. Versione 1.0.5, in uso quotidiano dalla prima utilizzatrice reale. 7 motori scientifici, 500 esercizi, 880 alimenti CREA, Safety Engine con 47 condizioni, analisi biomeccanica 4D, range OMS/ACSM. Installer pronto, licenza funzionante. La presentazione prodotto mostra tutto questo.
 
 ### Cosa è cambiato rispetto alla presentazione prodotto
 
-Quattro evoluzioni significative, maturate nelle ultime settimane.
+Cinque evoluzioni significative, maturate nelle ultime settimane.
 
 **La comunicazione integrata.** Il trainer vive su WhatsApp — è lì che conferma appuntamenti, sollecita pagamenti, tiene i rapporti con i clienti. FitManager ora si inserisce in questo workflow invece di sostituirlo. Un click e il messaggio WhatsApp parte con nome del cliente, data, orario, importo già compilati. Promemoria, solleciti, conferme, benvenuto — tutto pre-compilato dal sistema, inviato dal WhatsApp del trainer. In parallelo, le email automatiche (conferme appuntamento, promemoria pagamento, notifica nuova scheda) partono da sole via SMTP standard.
 
@@ -40,6 +40,8 @@ Costo di produzione: ~€150. Prezzo di vendita: €449 (include il software). M
 Il ricorrente sale dal 19% al 34% del fatturato in 3 anni. Copre progressivamente i costi operativi e rende il business indipendente dalle sole nuove vendite.
 
 **L'ecosistema e la community.** Il prodotto non è più solo. Intorno si costruisce un percorso professionale completo: formazione, community tra pari, certificazione, contenuti. Il software è lo strumento operativo. L'ecosistema è il contesto che dà valore al software e al professionista che lo usa.
+
+**Il Portale Allenamento e la Workout Intelligence.** Il cliente del trainer accede dal proprio telefono — nessuna app da scaricare. Vede la sessione del giorno, esegue, registra serie e ripetizioni con un tap, lascia feedback. Il sistema analizza automaticamente: compliance esercizio per esercizio, volume effettivo per gruppo muscolare confrontato con target scientifici (MEV/MAV/MRV), equilibri biomeccanici su 5 rapporti. Il trainer si siede col cliente e gli mostra esattamente dove il suo corpo risponde — muscolo per muscolo. Nessun competitor al mondo offre questo livello di analisi. Questo è il fossato competitivo più profondo del progetto e il motore del passaparola: "il mio trainer ha un sistema dove io registro quello che faccio e lui analizza tutto muscolo per muscolo."
 
 **La direzione internazionale.** FitManager nasce per il mercato italiano, ma l'architettura è pronta per l'internazionalizzazione. La versione inglese è in roadmap: interfaccia, database esercizi e Safety Engine entro i primi 6 mesi (la scienza dell'allenamento è universale); nutrizione e compliance locale per i mercati target nella fase di espansione. L'italiano resta la priorità dell'Anno 1 — l'inglese è la leva che trasforma la crescita da lineare a esponenziale.
 
@@ -136,7 +138,7 @@ Queste sessioni non sono un accessorio. Sono il test della categoria PT Evoluto.
 
 **Mese 3 — "Da 25 a 45 clienti senza lavorare più ore."** Il partner mostra come il metodo scala. Casi concreti (dai dati raccolti nelle 10 settimane precedenti). I Fondatori hanno i numeri: ore risparmiate, clienti gestiti, reazioni dei clienti. La sessione si chiude con: "vi riconoscete come PT Evoluti?"
 
-Le 3 sessioni vengono registrate e diventano il nucleo della libreria Inner Circle. Ogni futuro membro le vede. Il partner genera revenue share (30%) su ogni fruizione.
+Le 3 sessioni vengono registrate e diventano il nucleo della libreria Inner Circle. Ogni futuro membro le vede. Il partner genera revenue share (35%) su ogni fruizione.
 
 ### Le metriche che decidono tutto
 
@@ -149,8 +151,9 @@ Le 3 sessioni vengono registrate e diventano il nucleo della libreria Inner Circ
 | 8/10 "lo ricomprerei a prezzo pieno" | Pricing validato | Modello economico |
 | 5/10 "i miei clienti hanno notato la differenza" | Il circolo virtuoso | Il volano PT Evoluto |
 | 6/10 "mi definirei un PT Evoluto" | La categoria risuona | Category creation |
+| Clienti usano portale allenamento | 7+ su 10 attivi | Workout Intelligence |
 
-Se le ultime due metriche sono positive, la prova è completa. Non solo il software funziona — il percorso trasforma il professionista e il suo cliente lo nota. Questo è il segnale per lanciare a pieno regime.
+Se le ultime tre metriche sono positive, la prova è completa. Non solo il software funziona — il percorso trasforma il professionista e il suo cliente lo nota. Questo è il segnale per lanciare a pieno regime.
 
 Se i Fondatori usano massicciamente i link wa.me, è il segnale che WhatsApp è il gancio d'adozione. Questo dato informa direttamente la struttura della demo per gli Early Adopter (mesi 4-6): la demo aprirà con il momento WhatsApp, non con il database esercizi.
 
@@ -278,15 +281,15 @@ Il business sta in piedi. 24 clienti Anno 1, crescita lenta. Nessun Inner Circle
 
 ### Scenario 2 — Founder + Partner
 
-Il partner porta network, credibilità, masterclass. L'Inner Circle si attiva dal mese 4. La community parte dalla POC. Il concept PT Evoluto inizia a vivere nel mercato. Il fatturato raddoppia, il netto founder quasi triplica — e il partner ha un flusso di ricavo crescente.
+Il partner porta network, credibilità, masterclass. L'Inner Circle si attiva dal mese 4. La community parte dalla POC. Il concept PT Evoluto inizia a vivere nel mercato. Il fatturato raddoppia e il partner ha un flusso di ricavo crescente, con struttura semplificata (20% prodotto + 35% ricorrente).
 
 | | Anno 1 | Anno 2 | Anno 3 |
 |---|---|---|---|
 | Clienti | 46 | 104 | 191 |
 | Di cui Inner Circle | 9 | 18 | 38 |
 | Fatturato | €17.150 | €29.650 | €49.650 |
-| Netto founder | €2.615 | €4.895 | €12.535 |
-| **Netto partner (cash)** | **€2.375** | **€4.200** | **€7.500** |
+| Netto founder | €1.080 | €1.935 | €7.585 |
+| **Netto partner (cash)** | **€3.910** | **€7.160** | **€12.450** |
 
 ### Scenario 3 — Founder + Partner con leva network alto
 
@@ -303,7 +306,7 @@ Questo scenario non è stimabile con le assunzioni conservative del BP — dipen
 | Fatturato | €35.000-50.000 | €80.000-120.000 | €150.000-250.000+ |
 | Partner cash | €6.000-9.000 | €15.000-25.000 | €30.000-50.000+ |
 
-A questi volumi, FitManager non è più un prodotto di un solo founder. È un'azienda con team, presenza di settore, e un brand riconosciuto. Il valore dell'equity del partner (5-8%) diventa significativo.
+A questi volumi, FitManager non è più un prodotto di un solo founder. È un'azienda con team, presenza di settore, e un brand riconosciuto. Il valore dell'equity del partner (fino al 12%) diventa significativo.
 
 ### Il confronto visivo
 
@@ -313,7 +316,7 @@ A questi volumi, FitManager non è più un prodotto di un solo founder. È un'az
 | Concept PT Evoluto nel mercato | Teoria | Inizia a vivere | Standard di settore |
 | Community | Non parte | Parte dalla POC | Diventa il hub del settore |
 | Fatturato Anno 3 | €22.000 | €49.650 | €150.000-250.000 |
-| Partner cash Anno 3 | €0 | €7.500 | €30.000-50.000 |
+| Partner cash Anno 3 | €0 | €12.450 | €30.000-50.000 |
 
 La differenza tra Scenario 2 e 3 non è lineare — è esponenziale. Dipende da una variabile sola: quanto del network ad alto livello il partner può attivare.
 
@@ -325,14 +328,21 @@ La differenza tra Scenario 2 e 3 non è lineare — è esponenziale. Dipende da 
 
 | Componente | % | Su cosa | Logica |
 |---|---|---|---|
-| Ricavi POC | 25% | Licenze e Box Fondatori | Il partner co-seleziona e co-conduce |
-| Vendite da network | 20% | Ogni licenza/Box da referral tracciato | Il partner apre la porta |
-| PRO + Inner Circle | 25% | Tutti i rinnovi e abbonamenti | Il partner crea il contenuto che giustifica il rinnovo |
-| Masterclass condotte | 30% | Ogni sessione live e registrata | Il partner è l'autore e il volto |
-| Contributo al database | Da definire | Esercizi, varianti, progressioni validate | Il partner arricchisce l'asset core del prodotto |
-| Equity | 5-8% | Valore del progetto | Matura in 4 anni, cliff 12 mesi |
+| Vendite prodotto | 20% | Tutte le licenze e Box, senza distinguere la fonte | Nessuna disputa sull'attribuzione |
+| Ricorrente + contenuto | 35% | PRO, Inner Circle, masterclass | Il contenuto che giustifica il rinnovo è suo |
 
-Zero costo fisso. Il partner guadagna solo se il progetto genera ricavi. Se il progetto non funziona, nessuno perde denaro — solo tempo investito.
+Due percentuali, nessuna zona grigia. Il 35% sul ricorrente è la componente che cresce di più nel tempo (dal 19% al 34% del fatturato in 3 anni) e dove il contributo del partner è più diretto.
+
+**Equity a milestone (fino al 12%):**
+
+| Milestone | Equity | Quando |
+|---|---|---|
+| Completamento POC — decisione GO al giorno 90 | 5% | Mese 3 |
+| 50 clienti attivi nella base installata | 3% | ~Mese 8-12 |
+| Primo accordo internazionale firmato | 4% | Quando accade |
+| **Totale potenziale** | **12%** | — |
+
+Zero costo fisso. Il partner guadagna solo se il progetto genera ricavi. Se il progetto non funziona, nessuno perde denaro — solo tempo investito. Se la POC fallisce: 0% equity, 0 costi.
 
 ### Proiezione guadagno partner
 
@@ -340,20 +350,20 @@ Zero costo fisso. Il partner guadagna solo se il progetto genera ricavi. Se il p
 
 | | Anno 1 | Anno 2 | Anno 3 | Cumulativo |
 |---|---|---|---|---|
-| Cash (compenso differenziato) | €2.375 | €4.200 | €7.500 | €14.075 |
-| Valore equity stimato (6%) | €1.600 | €4.100 | €8.400 | — |
-| **Totale (cash + equity)** | **€3.975** | **€8.300** | **€15.900** | **€28.175** |
+| Cash (20% prodotto + 35% ricorrente) | €3.910 | €7.160 | €12.450 | €23.520 |
+| Valore equity stimato (12%) | €3.120 | €8.160 | €16.800 | — |
+| **Totale (cash + equity)** | **€7.030** | **€15.320** | **€29.250** | **€39.520** |
 
 **Scenario con leva network (stima):**
 
 | | Anno 1 | Anno 2 | Anno 3 | Cumulativo |
 |---|---|---|---|---|
-| Cash | €6.000-9.000 | €15.000-25.000 | €30.000-50.000 | €51.000-84.000 |
-| Valore equity | €3.000-5.000 | €10.000-18.000 | €25.000-45.000 | — |
+| Cash | €8.000-12.000 | €22.000-38.000 | €50.000-90.000 | €80.000-140.000 |
+| Valore equity (12%) | €6.000-10.000 | €16.000-25.000 | €36.000-60.000+ | — |
 
 ### Le masterclass come asset
 
-Le 3 masterclass della POC e tutte le sessioni successive restano di proprietà condivisa (progetto + partner). Ogni registrazione entra nella libreria Inner Circle e genera il 30% di revenue share ogni volta che un nuovo membro la fruisce. In pratica: il partner investe ore oggi e crea un asset che genera ricavo per anni.
+Le 3 masterclass della POC e tutte le sessioni successive restano di proprietà condivisa (progetto + partner). Ogni registrazione entra nella libreria Inner Circle e genera il 35% di revenue share ogni volta che un nuovo membro la fruisce. In pratica: il partner investe ore oggi e crea un asset che genera ricavo per anni.
 
 Con 38 membri Inner Circle all'Anno 3 che accedono alla libreria, una masterclass registrata può generare €50-80/anno in perpetuo. 20 masterclass in libreria = €1.000-1.600/anno di ricavo passivo per il partner, solo dalle registrazioni.
 
@@ -369,7 +379,7 @@ Con 38 membri Inner Circle all'Anno 3 che accedono alla libreria, una masterclas
 | Attività di rete e referral | 20-30 ore | Distribuito |
 | **Totale Anno 1** | **~80-110 ore** | ~8-10 ore al mese |
 
-In cambio di 8-10 ore al mese: €2.375-9.000 in cash Anno 1 (a seconda dello scenario), equity in crescita, e un asset di contenuto che genera ricavo ricorrente.
+In cambio di 8-10 ore al mese: €3.910-12.000 in cash Anno 1 (a seconda dello scenario), equity fino al 12% a milestone, e un asset di contenuto che genera ricavo ricorrente.
 
 ---
 

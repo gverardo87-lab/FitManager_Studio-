@@ -34,10 +34,10 @@ Usare questo documento se il problema riguarda almeno uno di questi casi:
 - c'e un dubbio su ambiente `dev/prod`, runtime `source/installer` o stato del portale pubblico
 
 Per problemi di rete/Tailscale/Funnel usare questo runbook come ingresso rapido e poi
-passare a [TAILSCALE_FUNNEL_SETUP.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/TAILSCALE_FUNNEL_SETUP.md).
+passare a [TAILSCALE_FUNNEL_SETUP.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/technical/TAILSCALE_FUNNEL_SETUP.md).
 
 Per diagnosi shell rapide su porte locali, `health` e `license.key`, usare anche
-[RUNTIME_DIAGNOSTICS_PLAYBOOK.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/RUNTIME_DIAGNOSTICS_PLAYBOOK.md).
+[RUNTIME_DIAGNOSTICS_PLAYBOOK.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/operations/RUNTIME_DIAGNOSTICS_PLAYBOOK.md).
 
 Nota aggiornata sul prodotto:
 - da `Impostazioni -> Connettivita` FitManager sa ora anche generare un link anamnesi
@@ -91,7 +91,7 @@ Se l'app non arriva nemmeno alla UI:
 - raccogliere comunque `data/logs/fitmanager.log`;
 - verificare che esistano `data/crm.db`, `data/catalog.db`, `data/.env`;
 - usare la sezione 7 di questo runbook e il playbook shell
-  [RUNTIME_DIAGNOSTICS_PLAYBOOK.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/RUNTIME_DIAGNOSTICS_PLAYBOOK.md).
+  [RUNTIME_DIAGNOSTICS_PLAYBOOK.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/operations/RUNTIME_DIAGNOSTICS_PLAYBOOK.md).
 
 Se il problema riguarda il portale anamnesi pubblico ma l'app arriva alla UI:
 1. Aprire `Impostazioni -> Connettivita`.
@@ -190,7 +190,7 @@ In questo scenario:
 - riposizionare prima `data\\license.key`, poi riaprire FitManager.
 
 Per i comandi esatti di conferma su `3000`, `8000` e file licenza, usare
-[RUNTIME_DIAGNOSTICS_PLAYBOOK.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/RUNTIME_DIAGNOSTICS_PLAYBOOK.md).
+[RUNTIME_DIAGNOSTICS_PLAYBOOK.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/operations/RUNTIME_DIAGNOSTICS_PLAYBOOK.md).
 
 ### 5.3 Avvio corretto in produzione
 
@@ -373,7 +373,7 @@ La procedura corretta e:
 3. Annotare la versione corrente.
 
 Per la procedura sequenziale lato utente/installatore durante un upgrade reale usare:
-- [UPGRADE_PROCEDURE.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/UPGRADE_PROCEDURE.md)
+- [UPGRADE_PROCEDURE.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/operations/UPGRADE_PROCEDURE.md)
 
 Questo runbook resta invece la fonte tecnica per recovery, restore ed escalation.
 
@@ -434,10 +434,10 @@ Per ogni ticket serio raccogliere:
 
 ## 11. Collegamenti Operativi
 
-- [RELEASE_CHECKLIST.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/RELEASE_CHECKLIST.md)
-- [TAILSCALE_FUNNEL_SETUP.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/TAILSCALE_FUNNEL_SETUP.md)
-- [UPGRADE_PROCEDURE.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/UPGRADE_PROCEDURE.md)
-- [DEPLOYMENT_PLAN.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/DEPLOYMENT_PLAN.md)
+- [RELEASE_CHECKLIST.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/operations/RELEASE_CHECKLIST.md)
+- [TAILSCALE_FUNNEL_SETUP.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/technical/TAILSCALE_FUNNEL_SETUP.md)
+- [UPGRADE_PROCEDURE.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/operations/UPGRADE_PROCEDURE.md)
+- [DEPLOYMENT_PLAN.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/technical/DEPLOYMENT_PLAN.md)
 - [UPG-2026-03-10-09-launch-operations-plan-v1.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/upgrades/specs/UPG-2026-03-10-09-launch-operations-plan-v1.md)
 
 ---

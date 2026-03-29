@@ -89,7 +89,7 @@ Request → LicenseMiddleware → check_license()
 
 ### Documentazione operativa
 Guida completa per generazione, attivazione, trasferimento e rinnovo:
-`docs/LICENSE_ACTIVATION.md`
+`docs/technical/LICENSE_ACTIVATION.md`
 
 ---
 
@@ -228,7 +228,7 @@ Le protezioni tecniche sono una barriera, non una garanzia. Per tutela completa:
 | `api/services/system_runtime.py` | Enforcement toggle + health |
 | `api/main.py` | LicenseMiddleware |
 | `tools/admin_scripts/generate_license.py` | CLI generazione licenze |
-| `docs/LICENSE_ACTIVATION.md` | Guida operativa attivazione |
+| `docs/technical/LICENSE_ACTIVATION.md` | Guida operativa attivazione |
 | `docs/adr/ADR-005-license-hardening-anti-tampering.md` | Decisione architetturale hardening |
 | `tests/test_license_hardening.py` | 9 test copertura hardening |
 | `tests/test_license_service.py` | 9 test servizio licenza |

@@ -263,7 +263,7 @@ Body Scan             Form Analysis (3 ex)  Form Analysis (20 ex) Movement Scree
 - History chart       - Form score          - Client trends       - Clinical Analysis
 ```
 
-Spec tecnica completa: `docs/FITSCAN_ARCHITECTURE.md`
+Spec tecnica completa: `docs/product/FITSCAN_ARCHITECTURE.md`
 Decisione architetturale: `docs/adr/ADR-007-fitscan-computer-vision-biomechanics.md`
 
 ---
@@ -334,10 +334,10 @@ Decisione architetturale: `docs/adr/ADR-007-fitscan-computer-vision-biomechanics
 ## Riferimenti
 
 - ADR-006: `docs/adr/ADR-006-fitmanager-box-multi-platform.md`
-- Security Model: `docs/SECURITY_MODEL.md`
-- License Activation: `docs/LICENSE_ACTIVATION.md`
-- Competitive Analysis: `docs/COMPETITIVE_ANALYSIS.md`
+- Security Model: `docs/technical/SECURITY_MODEL.md`
+- License Activation: `docs/technical/LICENSE_ACTIVATION.md`
+- Competitive Analysis: `docs/business/COMPETITIVE_ANALYSIS.md`
 - Launch Scope: `LAUNCH_SCOPE.md`
 - Manifesto: `MANIFESTO.md`
 - ADR-007 FitScan: `docs/adr/ADR-007-fitscan-computer-vision-biomechanics.md`
-- FitScan Architecture: `docs/FITSCAN_ARCHITECTURE.md`
+- FitScan Architecture: `docs/product/FITSCAN_ARCHITECTURE.md`

@@ -86,7 +86,7 @@
 
 ## 8. Operativita e Supporto
 
-- [x] `docs/SUPPORT_RUNBOOK.md` disponibile come runbook unico per supporto, licenza, backup/restore e recovery post-update
+- [x] `docs/operations/SUPPORT_RUNBOOK.md` disponibile come runbook unico per supporto, licenza, backup/restore e recovery post-update
 - [x] `Impostazioni` espone `Stato installazione` + `Snapshot diagnostico`
 - [x] Logging locale attivo in `data/logs/fitmanager.log`
 

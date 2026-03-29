@@ -41,7 +41,7 @@ Principi:
 - Privacy assoluta: i frame video sono processati in locale, mai trasmessi. Solo keypoints e metriche persistiti.
 - L'AI amplifica l'occhio del trainer, non lo sostituisce.
 
-Architettura tecnica: `docs/FITSCAN_ARCHITECTURE.md`. Decisione: `docs/adr/ADR-007`.
+Architettura tecnica: `docs/product/FITSCAN_ARCHITECTURE.md`. Decisione: `docs/adr/ADR-007`.
 
 ## Principi UX
 

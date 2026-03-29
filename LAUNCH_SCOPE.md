@@ -48,7 +48,7 @@ Prima del lancio allargato servono evidenze su:
 - nuove macro-feature AI non necessarie al CRM core
 - redesign trasversali che non spostano affidabilita' o supportabilita'
 
-> **Post-launch**: la roadmap 90 giorni (ADR-006 + `docs/POST_LAUNCH_ROADMAP_90D.md`) definisce
+> **Post-launch**: la roadmap 90 giorni (ADR-006 + `docs/product/POST_LAUNCH_ROADMAP_90D.md`) definisce
 > la strategia di accesso mobile (PWA + Tailscale full-app) e il modello hardware FitManager Box.
 > Queste iniziative partono DOPO il lancio Windows, non lo rallentano.
 
@@ -62,10 +62,10 @@ Prima del lancio allargato servono evidenze su:
 
 Per la procedura concreta usare:
 
-- `docs/SUPPORT_RUNBOOK.md`
-- `docs/UPGRADE_PROCEDURE.md`
-- `docs/TAILSCALE_FUNNEL_SETUP.md`
-- `docs/RELEASE_CHECKLIST.md`
+- `docs/operations/SUPPORT_RUNBOOK.md`
+- `docs/operations/UPGRADE_PROCEDURE.md`
+- `docs/technical/TAILSCALE_FUNNEL_SETUP.md`
+- `docs/operations/RELEASE_CHECKLIST.md`
 
 Per la storia dettagliata dei microstep:
 

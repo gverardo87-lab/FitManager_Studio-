@@ -25,7 +25,7 @@ Mentorship:       €499-599/anno (futuro Anno 3+, max 15-20 membri)
 
 4 livelli community: Base (gratuita) → PRO → Inner Circle → Mentorship.
 PRO = solo aggiornamenti software e supporto. Masterclass e formazione = esclusivi Inner Circle.
-SSoT numeri e proiezioni: `docs/BUSINESS_PLAN.md` (v4.3). Strategia operativa: `docs/STRATEGY_PLAN.md`.
+SSoT numeri e proiezioni: `docs/business/BUSINESS_PLAN.md` (v4.3). Strategia operativa: `docs/business/STRATEGY_PLAN.md`. Modello finanziario analitico: `docs/business/FINANCIAL_MODEL.md`.
 
 ## Architettura
 
@@ -141,8 +141,8 @@ Tutte con PRAGMA: `journal_mode=WAL`, `foreign_keys=ON`, `busy_timeout=5000`.
 - **`extra: "forbid"` su Pydantic**: un campo typo nel payload = 422 silenzioso. Dopo refactor payload, verificare sempre nomi campo vs schema.
 - **Proxy Next.js intercetta PRIMA dei rewrite**: `/api` in `PUBLIC_ROUTES` (auth JWT gestita dal backend).
 - **Seed data**: 500 esercizi + 940 relazioni + 1788 media in `data/exercises/`, seed idempotente al startup in catalog.db.
-- **Licenza con hardware binding**: JWT RS256 con `machine_id` (SHA-256 di CPU+Board+BIOS via PowerShell). Generazione via CLI (`tools/admin_scripts/generate_license.py`). Flusso completo in `docs/LICENSE_ACTIVATION.md`. `/licenza` NON e' in `AUTH_ONLY_PAGES` (il trainer loggato senza licenza deve vederla).
-- **Anti-tampering (ADR-005)**: in frozen mode (PyInstaller) la chiave pubblica e' embedded nel codice (non da file), enforcement sempre ON (no env bypass), fingerprint fail-closed. Modello completo in `docs/SECURITY_MODEL.md`.
+- **Licenza con hardware binding**: JWT RS256 con `machine_id` (SHA-256 di CPU+Board+BIOS via PowerShell). Generazione via CLI (`tools/admin_scripts/generate_license.py`). Flusso completo in `docs/technical/LICENSE_ACTIVATION.md`. `/licenza` NON e' in `AUTH_ONLY_PAGES` (il trainer loggato senza licenza deve vederla).
+- **Anti-tampering (ADR-005)**: in frozen mode (PyInstaller) la chiave pubblica e' embedded nel codice (non da file), enforcement sempre ON (no env bypass), fingerprint fail-closed. Modello completo in `docs/technical/SECURITY_MODEL.md`.
 
 ## Motori scientifici
 
@@ -237,31 +237,36 @@ Skills installate in `.agents/skills/` — knowledge base attive per audit e cod
 
 ## Struttura file governance
 
-| File | Scopo | Quando leggerlo |
-|------|-------|-----------------|
-| `CLAUDE.md` (questo) | Entry point, regole cross-layer | Sempre — e' il primo file da leggere |
-| `api/CLAUDE.md` | Pattern backend, schema, endpoint, test | Quando tocchi `api/` |
-| `frontend/CLAUDE.md` | Pattern frontend, componenti, pitfalls | Quando tocchi `frontend/` |
-| `core/CLAUDE.md` | Moduli AI dormenti, stato legacy | Quando tocchi `core/` |
-| `docs/BUSINESS_PLAN.md` | **SSoT** numeri, pricing, proiezioni, modello community 4 livelli | Quando tocchi pricing, community, partner, proiezioni — BP v4.3 e' la fonte di verita' |
-| `docs/STRATEGY_PLAN.md` | Piano operativo lancio, category creation, ruolo partner | Quando pianifichi azioni di go-to-market o partnership |
-| `MANIFESTO.md` | Missione prodotto, visual identity, principi UX | Quando serve contesto di prodotto |
-| `LAUNCH_SCOPE.md` | Cosa e' in scope per il lancio | Quando prioritizzi feature |
-| `POSTMORTEMS.md` | Lezioni da errori passati | Quando incontri un pattern sospetto |
-| `AGENTS.md` | Delivery loop, quality gates, commit standard | Quando serve contesto operativo agenti |
-| `docs/SECURITY_MODEL.md` | Threat model, 5 livelli protezione, roadmap sicurezza | Quando tocchi licenza, auth, anti-tampering |
-| `docs/LICENSE_ACTIVATION.md` | Attivazione licenza, hardware binding, CLI admin | Quando tocchi licenza, fingerprint, setup |
-| `docs/adr/ADR-004-release-pipeline-sicuro.md` | Pipeline release 5 fasi, version SSoT, safety gate, smoke test | Quando fai una release o tocchi il build pipeline |
-| `docs/adr/ADR-005-license-hardening-anti-tampering.md` | Hardening licenza: embedded key, env bypass block, fail-closed | Quando tocchi sistema licenza o anti-tampering |
-| `docs/VIDEO_PRODUCTION.md` | Pipeline video blindata: manifest SSoT, flusso continuo, selettori verificati, errori critici | Quando crei o modifichi video — leggere §5.1 + §8 SEMPRE prima di scriptare |
-| `docs/VIDEO_GUIDE_STRATEGY.md` | Sistema video-guide contestuali: 4 livelli (hub, header, bussola, palette), regole, mapping | Quando integri video nell'interfaccia |
-| `docs/adr/ADR-006-fitmanager-box-multi-platform.md` | FitManager Box: strategia multi-platform, modello hardware+software, BOM, pricing | Quando tocchi deploy, licensing cross-platform, o strategia prodotto |
-| `docs/POST_LAUNCH_ROADMAP_90D.md` | Roadmap 90 giorni post-lancio: PWA, mobile UX, Box, science nudges, GTM | Quando pianifichi lavoro post-lancio |
-| `docs/adr/ADR-007-fitscan-computer-vision-biomechanics.md` | FitScan: architettura a strati (pose commodity + engine proprietario), 3 livelli, integrazione motori | Quando tocchi FitScan, CV, misurazioni automatiche |
-| `docs/FITSCAN_ARCHITECTURE.md` | Spec tecnica FitScan: DB schema, Biomechanical Engine, Pose Provider, exercise profiles, privacy | Quando implementi FitScan — leggere SEMPRE prima di scrivere codice |
-| `docs/adr/ADR-008-builder-fullscreen-science-panel.md` | Builder full-screen: sidebar nascosta, Science Panel 320px con Safety+Score+Coverage+Balance live | Quando tocchi il builder, il layout, o la sidebar |
-| `docs/TAILSCALE_FUNNEL_SETUP.md` | Setup Tailscale Funnel, auto-start launcher, architettura proxy, troubleshooting, roadmap accesso remoto | Quando tocchi portale pubblico, anamnesi self-service, accesso remoto clienti |
-| `docs/incidents/INC-2026-03-28-safety-engine-blind-spot.md` | Incidente P0: 3 bug combinati che hanno reso il profilo clinico invisibile durante demo investitore | Quando tocchi safety engine, cache anamnesi, visibilita' builder, funzioni dual-session |
+### Layer 1 — Codice (CLAUDE.md per dominio)
+
+| File | Dominio | Quando leggerlo |
+|------|---------|-----------------|
+| `CLAUDE.md` (questo) | Entry point, regole cross-layer | Sempre |
+| `api/CLAUDE.md` | Backend: pattern, schema, endpoint, test | Quando tocchi `api/` |
+| `frontend/CLAUDE.md` | Frontend: componenti, hook, pitfalls | Quando tocchi `frontend/` |
+| `core/CLAUDE.md` | Moduli AI dormenti | Quando tocchi `core/` |
+
+### Layer 2 — Documentazione (organizzata per dominio in `docs/`)
+
+| Directory | Contenuto | Quando leggerlo |
+|-----------|-----------|-----------------|
+| `docs/business/` | BP, Strategy Plan, Financial Model, Partner, Legal, Competitive | Pricing, proiezioni, partner, fondi, NASpI |
+| `docs/product/` | Roadmap post-lancio, FitScan, Video production/strategy | Pianificazione feature, video, post-lancio |
+| `docs/technical/` | Security, License, Tailscale, Deploy, Nutrition Engine | Architettura, sicurezza, infra |
+| `docs/operations/` | Release checklist, Diagnostics, Support, Upgrade | Release, troubleshooting, supporto |
+| `docs/adr/` | Architecture Decision Records (9 ADR) | Decisioni architetturali |
+| `docs/incidents/` | Post-mortem incidenti | Pattern sospetti, regressioni |
+
+Indice completo con ogni file: `docs/INDEX.md`.
+
+### Layer 3 — Governance di progetto (root)
+
+| File | Scopo |
+|------|-------|
+| `MANIFESTO.md` | Missione, visual identity, principi UX |
+| `LAUNCH_SCOPE.md` | Cosa e' in scope per il lancio |
+| `POSTMORTEMS.md` | Lezioni da errori passati |
+| `AGENTS.md` | Delivery loop, quality gates, commit standard |
 
 ## Commit
 
@@ -277,7 +282,7 @@ Ogni commit deve lasciare il branch rilasciabile per il proprio scope.
 3. **PyInstaller `Path(__file__)`**: non funziona in bundle → usare `DATA_DIR` da `config.py`.
 4. **Radix: no `<label>` + Checkbox**: causa double-toggle. Usare `<div onClick>` + `stopPropagation`.
 5. **`useState(() => browserAPI())`**: hydration mismatch. Usare `useState(false)` + `useEffect`.
-6. **Tailscale Funnel su porta FRONTEND, mai backend**: il funnel deve puntare a 3000 (Next.js), non 8000 (FastAPI). Le route `/public/*` sono pagine Next.js. Se punta al backend → `{"detail":"Not Found"}`. Dettagli in `docs/TAILSCALE_FUNNEL_SETUP.md`.
+6. **Tailscale Funnel su porta FRONTEND, mai backend**: il funnel deve puntare a 3000 (Next.js), non 8000 (FastAPI). Le route `/public/*` sono pagine Next.js. Se punta al backend → `{"detail":"Not Found"}`. Dettagli in `docs/technical/TAILSCALE_FUNNEL_SETUP.md`.
 7. **Cross-DB session mismatch**: funzioni dual-session (`safety_engine`, `profile_resolver`, `session_prep`) devono usare `catalog_session` per tabelle catalog.db (esercizi, muscoli, condizioni) e `session` per crm.db. Test in-memory con engine singolo NON copre questo bug. Verificare SEMPRE dopo modifiche a funzioni dual-session. Incidente: `docs/incidents/INC-2026-03-28-safety-engine-blind-spot.md`.
 8. **Cache safety map non invalidata**: ogni mutation che modifica anamnesi (direttamente o indirettamente) DEVE invalidare `["exercise-safety-map", clientId]`. Include `useUpdateAnamnesi`, `useUpdateClient`, futuro polling portale pubblico.
 9. **Informazioni cliniche MAI dietro toggle**: la BuilderSafetyCard e' non negoziabile quando `condition_count > 0`. Zero condizioni responsive, zero toggle, zero tab. La visibilita' dipende SOLO da `safetyMap.condition_count > 0`.

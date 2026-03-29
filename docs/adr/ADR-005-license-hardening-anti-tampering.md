@@ -3,7 +3,7 @@
 - Date: 2026-03-24
 - Status: accepted
 - Deciders: gvera
-- Related: ADR-004 (release pipeline), docs/SECURITY_MODEL.md
+- Related: ADR-004 (release pipeline), docs/technical/SECURITY_MODEL.md
 
 ## Context
 
@@ -85,7 +85,7 @@ Nessun comportamento cambia in dev mode (non-frozen):
 - Positive: i 4 vettori piu' accessibili sono chiusi; nessun impatto UX, build, dev workflow
 - Negative: un attaccante determinato con competenze di reverse engineering Python puo'
   ancora bypassare (ma il costo e' molto piu' alto del valore della copia)
-- Follow-up: aggiornare `LICENSE_ACTIVATION.md`, creare `docs/SECURITY_MODEL.md`,
+- Follow-up: aggiornare `LICENSE_ACTIVATION.md`, creare `docs/technical/SECURITY_MODEL.md`,
   aggiornare indice ADR
 
 ## Rollback / Exit Strategy

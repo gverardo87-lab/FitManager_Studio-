@@ -120,7 +120,7 @@ LAYER 2 — Biomechanical Analysis Engine (proprietario)
 
 ### Follow-up actions
 
-1. Documentazione tecnica completa: `docs/FITSCAN_ARCHITECTURE.md`
+1. Documentazione tecnica completa: `docs/product/FITSCAN_ARCHITECTURE.md`
 2. DB schema: tabelle `body_scans`, `body_scan_metrics`, `exercise_form_sessions`
 3. Prototipo L1 (Body Scan) come primo deliverable
 4. Aggiornamento roadmap con Phase 4 FitScan

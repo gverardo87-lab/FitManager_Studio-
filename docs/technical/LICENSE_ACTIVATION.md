@@ -161,4 +161,4 @@ In build PyInstaller (frozen mode), sono attive 4 protezioni aggiuntive:
 
 In dev mode (non-frozen) il comportamento resta invariato per comodita' sviluppo.
 
-Per il modello di sicurezza completo e la roadmap: `docs/SECURITY_MODEL.md`
+Per il modello di sicurezza completo e la roadmap: `docs/technical/SECURITY_MODEL.md`
