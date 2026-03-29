@@ -110,6 +110,31 @@ export function useCompleteScheduleSlot(workoutId: number | null) {
 }
 
 // ════════════════════════════════════════════════════════════
+// MUTATION: Riapri slot (reset stato + elimina log)
+// ════════════════════════════════════════════════════════════
+
+export function useReopenScheduleSlot(workoutId: number | null) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (slotId: number) => {
+      const { data } = await apiClient.put<ScheduleSlot>(
+        `/workout-schedule/${slotId}/reopen`,
+      );
+      return data;
+    },
+    onSuccess: (slot) => {
+      queryClient.invalidateQueries({ queryKey: ["workout-schedule", workoutId] });
+      queryClient.invalidateQueries({ queryKey: ["workout-logs"] });
+      queryClient.invalidateQueries({ queryKey: ["workout-analytics", slot.id_cliente] });
+      toast.success(`${slot.sessione_nome} riaperta — dati resettati`);
+    },
+    onError: (error) => {
+      toast.error(extractErrorMessage(error, "Errore nella riapertura della sessione"));
+    },
+  });
+}
+
+// ════════════════════════════════════════════════════════════
 // MUTATION: Soft-delete slot
 // ════════════════════════════════════════════════════════════
 

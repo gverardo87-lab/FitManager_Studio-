@@ -401,6 +401,64 @@ def complete_slot(
     return _build_slot_response(slot, session_map)
 
 
+@router.put(
+    "/workout-schedule/{slot_id}/reopen",
+    response_model=ScheduleSlotResponse,
+    summary="Riapri sessione: reset stato + elimina log e dati effettivi",
+)
+def reopen_slot(
+    slot_id: int,
+    trainer: Trainer = Depends(get_current_trainer),
+    session: Session = Depends(get_session),
+):
+    """
+    Riapre una sessione completata/parziale → stato 'pianificato'.
+
+    Elimina TUTTI i dati associati:
+    - ExerciseLog (dati effettivi per-esercizio)
+    - WorkoutLog (record esecuzione sessione + feedback)
+    - Reset slot: stato='pianificato', id_log=null
+    """
+    from api.models.exercise_log import ExerciseLog
+
+    slot = _bouncer_slot(session, slot_id, trainer.id)
+
+    if slot.stato == "pianificato":
+        raise HTTPException(422, "La sessione e' gia' in stato pianificato")
+
+    # 1. Elimina exercise_logs per questo slot
+    ex_logs = session.exec(
+        select(ExerciseLog).where(
+            ExerciseLog.id_schedule_slot == slot_id,
+            ExerciseLog.deleted_at == None,  # noqa: E711
+        )
+    ).all()
+    for el in ex_logs:
+        session.delete(el)
+
+    # 2. Elimina WorkoutLog collegato
+    if slot.id_log:
+        wl = session.get(WorkoutLog, slot.id_log)
+        if wl:
+            session.delete(wl)
+
+    # 3. Reset slot
+    slot.stato = "pianificato"
+    slot.id_log = None
+
+    log_audit(session, "workout_schedule", slot.id, "REOPEN", trainer.id)
+    session.commit()
+    session.refresh(slot)
+
+    ws = session.exec(
+        select(WorkoutSession).where(WorkoutSession.id == slot.id_sessione)
+    ).first()
+    session_map = {ws.id: ws} if ws else {}
+
+    logger.info("Slot %d riaperto (logs eliminati: %d)", slot_id, len(ex_logs))
+    return _build_slot_response(slot, session_map)
+
+
 @router.delete(
     "/workout-schedule/{slot_id}",
     status_code=status.HTTP_204_NO_CONTENT,
