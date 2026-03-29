@@ -122,15 +122,19 @@ export function useReopenScheduleSlot(workoutId: number | null) {
       );
       return data;
     },
-    onSuccess: (slot) => {
-      // Invalida TUTTO ciò che dipende da slot/log/analytics
-      queryClient.invalidateQueries({ queryKey: ["workout-schedule"] });
-      queryClient.invalidateQueries({ queryKey: ["workout-logs"] });
-      queryClient.invalidateQueries({ queryKey: ["workout-analytics"] });
+    onSuccess: async (slot) => {
+      // refetchQueries (non invalidate) → forza ri-fetch IMMEDIATO,
+      // anche se staleTime non è scaduto. Critico perché i dati
+      // eliminati devono sparire subito da tutte le viste.
+      await Promise.all([
+        queryClient.refetchQueries({ queryKey: ["workout-schedule"] }),
+        queryClient.refetchQueries({ queryKey: ["workout-logs"] }),
+        queryClient.refetchQueries({ queryKey: ["workout-analytics"] }),
+      ]);
       queryClient.invalidateQueries({ queryKey: ["client-avatar", slot.id_cliente] });
       queryClient.invalidateQueries({ queryKey: ["session-prep"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-      toast.success(`${slot.sessione_nome} riaperta — dati resettati`);
+      toast.success(`${slot.sessione_nome} riaperta — tutti i dati eliminati`);
     },
     onError: (error) => {
       toast.error(extractErrorMessage(error, "Errore nella riapertura della sessione"));

@@ -7,6 +7,16 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useWorkout } from "@/hooks/useWorkouts";
 import { useExercises } from "@/hooks/useExercises";
 import {
@@ -84,6 +94,7 @@ export default function WorkoutSchedulePage() {
 
   const [setupOpen, setSetupOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<ScheduleSlot | null>(null);
+  const [reopenTarget, setReopenTarget] = useState<number | null>(null);
 
   const completeMutation = useCompleteScheduleSlot(workoutId);
   const updateMutation = useUpdateScheduleSlot(workoutId);
@@ -168,9 +179,16 @@ export default function WorkoutSchedulePage() {
   );
 
   const handleReopen = useCallback(
-    (slotId: number) => reopenMutation.mutate(slotId),
-    [reopenMutation],
+    (slotId: number) => setReopenTarget(slotId),
+    [],
   );
+
+  const confirmReopen = useCallback(() => {
+    if (reopenTarget) {
+      reopenMutation.mutate(reopenTarget);
+      setReopenTarget(null);
+    }
+  }, [reopenTarget, reopenMutation]);
 
   const handleSlotClick = useCallback((slot: ScheduleSlot) => {
     setSelectedSlot(slot);
@@ -333,6 +351,29 @@ export default function WorkoutSchedulePage() {
           onReopen={handleReopen}
         />
       )}
+
+      {/* Conferma riapertura sessione — azione distruttiva */}
+      <AlertDialog open={reopenTarget !== null} onOpenChange={(open) => { if (!open) setReopenTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Riaprire questa sessione?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tutti i dati inseriti dal cliente per questa sessione verranno
+              eliminati definitivamente: serie, ripetizioni, carichi, RPE,
+              note e feedback. Questa azione non e' reversibile.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annulla</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={confirmReopen}
+            >
+              Riapri ed elimina dati
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
