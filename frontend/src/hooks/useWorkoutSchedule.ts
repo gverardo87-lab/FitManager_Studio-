@@ -123,9 +123,13 @@ export function useReopenScheduleSlot(workoutId: number | null) {
       return data;
     },
     onSuccess: (slot) => {
-      queryClient.invalidateQueries({ queryKey: ["workout-schedule", workoutId] });
+      // Invalida TUTTO ciò che dipende da slot/log/analytics
+      queryClient.invalidateQueries({ queryKey: ["workout-schedule"] });
       queryClient.invalidateQueries({ queryKey: ["workout-logs"] });
-      queryClient.invalidateQueries({ queryKey: ["workout-analytics", slot.id_cliente] });
+      queryClient.invalidateQueries({ queryKey: ["workout-analytics"] });
+      queryClient.invalidateQueries({ queryKey: ["client-avatar", slot.id_cliente] });
+      queryClient.invalidateQueries({ queryKey: ["session-prep"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success(`${slot.sessione_nome} riaperta — dati resettati`);
     },
     onError: (error) => {
