@@ -3005,6 +3005,95 @@ export interface AnamnesiValidateResponse {
   scope: string;
 }
 
+// ── Portale Scheda Allenamento Interattiva (ADR-009) ────────────────────────
+
+export interface WorkoutValidateResponse {
+  client_name: string;          // "Marco R."
+  trainer_name: string;         // "Chiara B."
+  workout_name: string;
+  data_inizio: string | null;   // ISO date
+  data_fine: string | null;
+  sessioni_per_settimana: number;
+  total_slots: number;
+  completed_slots: number;
+  scope: string;                // "workout"
+}
+
+export interface WorkoutSlotItem {
+  id: number;
+  data_pianificata: string;     // ISO date
+  stato: "pianificato" | "completato" | "saltato" | "parziale";
+  sessione_nome: string;
+  focus_muscolare: string | null;
+  has_log: boolean;
+}
+
+export interface WorkoutSessionsResponse {
+  slots: WorkoutSlotItem[];
+}
+
+export interface ExerciseLogData {
+  serie_effettive: number | null;
+  ripetizioni_effettive: string | null;
+  carico_effettivo_kg: number | null;
+  rpe: number | null;
+  note_cliente: string | null;
+}
+
+export interface WorkoutExerciseItem {
+  id: number;                   // esercizi_sessione.id
+  nome_esercizio: string;
+  gruppo_muscolare: string | null;
+  categoria: string | null;     // avviamento/stretching/mobilita/etc → sezione
+  ordine: number;
+  serie: number;
+  ripetizioni: string;
+  carico_kg: number | null;
+  tempo_riposo_sec: number;
+  tempo_esecuzione: string | null;
+  note_trainer: string | null;
+  blocco_nome: string | null;
+  blocco_tipo: string | null;   // circuit/superset/tabata/amrap/emom
+  foto_start: string | null;    // URL media
+  foto_end: string | null;      // URL media
+  // Info esercizio dal catalogo scientifico
+  setup: string | null;
+  esecuzione: string | null;
+  respirazione: string | null;
+  coaching_cues: string | null;
+  errori_comuni: string | null;
+  log: ExerciseLogData | null;
+}
+
+export interface WorkoutExercisesResponse {
+  slot_id: number;
+  data_pianificata: string;
+  stato: string;
+  sessione_nome: string;
+  exercises: WorkoutExerciseItem[];
+}
+
+export interface ExerciseLogInput {
+  id_esercizio_sessione: number;
+  serie_effettive?: number | null;
+  ripetizioni_effettive?: string | null;
+  carico_effettivo_kg?: number | null;
+  rpe?: number | null;
+  note_cliente?: string | null;
+}
+
+export interface WorkoutLogRequest {
+  token: string;
+  exercises: ExerciseLogInput[];
+  note_sessione?: string | null;
+}
+
+export interface WorkoutLogResponse {
+  success: boolean;
+  message: string;
+  completion_pct: number;
+}
+
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // NUTRITION â€” catalogo alimenti + piani alimentari
 // Mirror di api/schemas/nutrition.py

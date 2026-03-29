@@ -20,7 +20,8 @@ const TOKEN_COOKIE = "fitmanager_token";
 // Rotte pubbliche — accessibili senza autenticazione (pagine + API pubbliche).
 // /api è incluso perché le API sono proxiate via Next.js rewrite al backend FastAPI
 // che gestisce autonomamente l'auth JWT. Il proxy non deve interferire.
-const PUBLIC_ROUTES = ["/login", "/register", "/licenza", "/setup", "/public", "/api", "/health"];
+// /media incluso per permettere al portale pubblico di caricare le foto esercizi
+const PUBLIC_ROUTES = ["/login", "/register", "/licenza", "/setup", "/public", "/api", "/health", "/media"];
 
 // Rotte da cui ridirigere gli utenti già autenticati (solo pagine auth, non API).
 // /licenza NON è qui: un trainer loggato ma senza licenza valida deve poterla vedere.

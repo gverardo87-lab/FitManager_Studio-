@@ -18,6 +18,7 @@ from .measurement import Metric, ClientMeasurement, MeasurementValue
 from .goal import ClientGoal
 from .workout_log import WorkoutLog
 from .workout_schedule import WorkoutScheduleSlot
+from .exercise_log import ExerciseLog
 from .communication_log import CommunicationLog
 
 __all__ = [
@@ -48,5 +49,6 @@ __all__ = [
     "ClientGoal",
     "WorkoutLog",
     "WorkoutScheduleSlot",
+    "ExerciseLog",
     "CommunicationLog",
 ]

@@ -229,6 +229,24 @@ export function waProgressUpdate(
   );
 }
 
+/** Portale scheda interattiva — link per il cliente. */
+export function waWorkoutPortal(
+  clientName: string,
+  trainerName: string,
+  schedaNome: string,
+  url: string,
+  dataFine: string,
+): string {
+  return (
+    `Ciao ${clientName}!\n\n` +
+    `La tua scheda "${schedaNome}" e' pronta con il calendario delle sessioni.\n\n` +
+    `Dopo ogni allenamento, apri questo link e inserisci i tuoi dati:\n` +
+    `${url}\n\n` +
+    `Il link e' valido fino al ${formatShortDate(dataFine)}. Buon allenamento!\n` +
+    `— ${trainerName}`
+  );
+}
+
 /** Messaggio libero (solo numero pre-compilato, testo vuoto). */
 export function waFreeMessage(trainerName: string): string {
   return `\n— ${trainerName}`;

@@ -337,11 +337,27 @@ def _collect_exercise_ids(sessions: list[WorkoutSessionInput]) -> set[int]:
 
 
 def _delete_sessions_cascade(session: Session, session_ids: list[int]) -> None:
-    """Elimina schedule_slots → log → esercizi → blocchi → sessioni in ordine corretto (FK)."""
+    """Elimina exercise_logs → schedule_slots → log → esercizi → blocchi → sessioni in ordine corretto (FK)."""
     if not session_ids:
         return
 
+    from api.models.exercise_log import ExerciseLog
     from api.models.workout_schedule import WorkoutScheduleSlot
+
+    # 0-pre. Elimina exercise_logs (FK su workout_schedule.id + esercizi_sessione.id)
+    slot_ids = list(session.exec(
+        select(WorkoutScheduleSlot.id).where(
+            WorkoutScheduleSlot.id_sessione.in_(session_ids)
+        )
+    ).all())
+    if slot_ids:
+        old_exercise_logs = session.exec(
+            select(ExerciseLog).where(ExerciseLog.id_schedule_slot.in_(slot_ids))
+        ).all()
+        for el in old_exercise_logs:
+            session.delete(el)
+        if old_exercise_logs:
+            session.flush()
 
     # 0a. Elimina schedule slots che referenziano queste sessioni
     old_slots = session.exec(

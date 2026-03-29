@@ -1,13 +1,14 @@
 # api/models/share_token.py
 """
-Modello ShareToken — link monouso per portale clienti self-service.
+Modello ShareToken — link per portale clienti self-service.
 
 Un trainer genera un token UUID4 per permettere al proprio cliente
-di compilare l'anamnesi senza autenticazione. Il token e':
-- monouso (used_at traccia il consumo)
-- temporaneo (expires_at = created_at + 48h)
+di accedere a funzionalita' senza autenticazione. Il token e':
+- monouso (scope=anamnesi: used_at traccia il consumo)
+- multi-uso (scope=workout: used_at NON viene settato, il cliente torna ogni giorno)
+- temporaneo (expires_at varia per scope: 48h anamnesi, data_fine+7gg workout)
 - revocabile (il trainer puo' eliminarlo)
-- scope-based (estendibile: "anamnesi", in futuro "misurazioni", ecc.)
+- scope-based (estendibile: "anamnesi", "workout", in futuro "misurazioni", ecc.)
 """
 
 from datetime import datetime, timezone
@@ -25,9 +26,14 @@ class ShareToken(SQLModel, table=True):
     token: str = Field(index=True, unique=True)               # UUID4 opaco
     trainer_id: int = Field(foreign_key="trainers.id", index=True)
     client_id: int = Field(foreign_key="clienti.id", index=True)
-    scope: str = Field(default="anamnesi")                    # estendibile
+    scope: str = Field(default="anamnesi")                    # anamnesi | workout
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc)
     )
-    expires_at: datetime                                       # created_at + 48h
-    used_at: Optional[datetime] = None                        # None = non usato
+    expires_at: datetime                                       # 48h (anamnesi) o data_fine+7gg (workout)
+    used_at: Optional[datetime] = None                        # None = non usato (solo scope=anamnesi)
+
+    # Collegamento a scheda allenamento (solo scope=workout)
+    id_scheda: Optional[int] = Field(
+        default=None, foreign_key="schede_allenamento.id"
+    )

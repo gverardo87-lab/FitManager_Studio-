@@ -10,17 +10,23 @@
  * ADR-008: workspace professionale. Flask toggle controlla SciencePanel.
  */
 
-import { useState, useCallback } from "react";
-import { ArrowLeft, Pencil, Check, X, Save, FlaskConical, CalendarDays } from "lucide-react";
+import { useState, useCallback, useEffect } from "react";
+import { ArrowLeft, Pencil, Check, X, Save, FlaskConical, CalendarDays, Share2, Copy, CheckCircle2, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ExportButtons } from "@/components/workouts/ExportButtons";
 import { OBIETTIVO_LABELS, LIVELLO_LABELS } from "@/lib/builder-utils";
 import type { SafetyExportData } from "@/lib/export-workout-pdf";
 import type { SessionCardData } from "@/components/workouts/SessionCard";
 import { OBIETTIVI_SCHEDA, LIVELLI_SCHEDA, type WorkoutPlan } from "@/types/api";
+import apiClient from "@/lib/api-client";
+import { buildWhatsAppUrl, formatShortDate } from "@/lib/format";
+import { waWorkoutPortal } from "@/lib/whatsapp-templates";
+import { getStoredTrainer } from "@/lib/auth";
 
 interface BuilderHeaderProps {
   plan: WorkoutPlan;
@@ -58,6 +64,7 @@ export function BuilderHeader({
 }: BuilderHeaderProps) {
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
+  const [shareOpen, setShareOpen] = useState(false);
 
   const startEdit = useCallback((field: string, value: string) => {
     setEditingField(field);
@@ -167,7 +174,184 @@ export function BuilderHeader({
         <div className="flex-1" />
 
         <ExportButtons nome={plan.nome} obiettivo={plan.obiettivo} livello={plan.livello} clientNome={clientNome} clientTelefono={clientTelefono} durata_settimane={plan.durata_settimane} sessioni_per_settimana={plan.sessioni_per_settimana} sessioni={sessions} safety={safetyExportData} logoDataUrl={exportLogoDataUrl} onLogoChange={onLogoChange} />
+
+        {/* Share workout portal button */}
+        {plan.id_cliente && plan.data_fine ? (
+          <>
+            <Button variant="outline" size="sm" className="h-7 text-xs shrink-0 gap-1" onClick={() => setShareOpen(true)}>
+              <Share2 className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Condividi</span>
+            </Button>
+            <ShareWorkoutDialog
+              open={shareOpen}
+              onOpenChange={setShareOpen}
+              planId={plan.id}
+              clientId={plan.id_cliente}
+              clientNome={clientNome}
+              clientTelefono={clientTelefono}
+              planNome={plan.nome}
+              dataFine={plan.data_fine}
+            />
+          </>
+        ) : null}
       </div>
     </div>
+  );
+}
+
+// ── Share Workout Dialog ─────────────────────────────────────────────────────
+
+function ShareWorkoutDialog({
+  open,
+  onOpenChange,
+  planId,
+  clientId,
+  clientNome,
+  clientTelefono,
+  planNome,
+  dataFine,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  planId: number;
+  clientId: number;
+  clientNome?: string;
+  clientTelefono?: string | null;
+  planNome: string;
+  dataFine: string | null;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Trainer name per template WhatsApp
+  const [tName, setTName] = useState("Il tuo trainer");
+  useEffect(() => {
+    try { const t = getStoredTrainer(); if (t) setTName(`${t.nome} ${t.cognome}`); }
+    catch { /* noop */ }
+  }, []);
+
+  const generateLink = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await apiClient.post(`/clients/${clientId}/share-workout`, null, {
+        params: { id_scheda: planId },
+      });
+      setShareUrl(res.data.url);
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? "Errore nella generazione del link";
+      setError(msg);
+    } finally {
+      setLoading(false);
+    }
+  }, [clientId, planId]);
+
+  const copyLink = useCallback(async () => {
+    if (!shareUrl) return;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      toast.success("Link copiato!");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Impossibile copiare il link");
+    }
+  }, [shareUrl]);
+
+  // Messaggio WhatsApp pre-compilato con template
+  const waUrl = shareUrl && clientTelefono
+    ? buildWhatsAppUrl(
+        clientTelefono,
+        waWorkoutPortal(
+          clientNome?.split(" ")[0] ?? "Ciao",
+          tName,
+          planNome,
+          shareUrl,
+          dataFine ?? "",
+        ),
+      )
+    : null;
+
+  const handleWhatsApp = useCallback(() => {
+    if (!waUrl) return;
+    window.open(waUrl, "_blank");
+    // Auto-log comunicazione (fire-and-forget)
+    apiClient.post("/communications", {
+      id_cliente: clientId,
+      canale: "whatsapp",
+      template_usato: "workout_portal",
+      anteprima: `Scheda "${planNome}" condivisa con link portale`,
+    }).catch(() => {});
+  }, [waUrl, clientId, planNome]);
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) { setShareUrl(null); setError(null); } }}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Condividi scheda con il cliente</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Genera un link per <strong>{clientNome ?? "il cliente"}</strong> per compilare i dati
+            di ogni sessione direttamente dal proprio smartphone.
+          </p>
+
+          {!shareUrl && !error ? (
+            <Button onClick={generateLink} disabled={loading} className="w-full">
+              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Share2 className="h-4 w-4 mr-2" />}
+              Genera link
+            </Button>
+          ) : null}
+
+          {error ? (
+            <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md p-3">
+              {error}
+            </div>
+          ) : null}
+
+          {shareUrl ? (
+            <div className="space-y-3">
+              {/* Link copiabile */}
+              <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
+                <Input readOnly value={shareUrl} className="text-xs h-8 bg-white" />
+                <Button variant="outline" size="sm" className="shrink-0 h-8" onClick={copyLink}>
+                  {copied ? <CheckCircle2 className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
+                </Button>
+              </div>
+
+              {/* Bottone WhatsApp diretto */}
+              {waUrl ? (
+                <Button
+                  className="w-full bg-[#25D366] hover:bg-[#1DA851] text-white"
+                  onClick={handleWhatsApp}
+                >
+                  <svg viewBox="0 0 24 24" className="h-5 w-5 mr-2 fill-current" aria-hidden="true">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                  </svg>
+                  Invia su WhatsApp
+                </Button>
+              ) : !clientTelefono ? (
+                <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-md p-2">
+                  Il cliente non ha un numero di telefono. Aggiungilo dal profilo per inviare via WhatsApp.
+                </p>
+              ) : null}
+
+              <p className="text-xs text-muted-foreground">
+                Il link e' valido fino alla fine della scheda + 7 giorni.
+              </p>
+
+              {shareUrl.startsWith("http://localhost") || shareUrl.startsWith("/public") ? (
+                <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-md p-2">
+                  Il link usa localhost. Per renderlo accessibile dal cellulare del cliente,
+                  configura Tailscale Funnel o accedi da IP LAN.
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
