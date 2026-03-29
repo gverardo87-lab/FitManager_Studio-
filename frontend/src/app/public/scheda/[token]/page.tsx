@@ -32,6 +32,7 @@ import { LogoIcon } from "@/components/ui/logo";
 import { formatShortDate } from "@/lib/format";
 import type {
   ExerciseLogInput,
+  SessionFeedback,
   WorkoutExerciseItem,
   WorkoutExercisesResponse,
   WorkoutLogResponse,
@@ -116,6 +117,7 @@ export default function PublicWorkoutPage({
   const [exercises, setExercises] = useState<WorkoutExerciseItem[]>([]);
   const [formData, setFormData] = useState<Record<number, ExerciseLogInput>>({});
   const [noteSessione, setNoteSessione] = useState("");
+  const [feedback, setFeedback] = useState<SessionFeedback>({});
   const [saving, setSaving] = useState(false);
   const [saveResult, setSaveResult] = useState<WorkoutLogResponse | null>(null);
   const [showCompleted, setShowCompleted] = useState(false);
@@ -150,6 +152,7 @@ export default function PublicWorkoutPage({
       setExercises(res.exercises);
       setSaveResult(null);
       setNoteSessione("");
+      setFeedback({});
       const fd: Record<number, ExerciseLogInput> = {};
       for (const ex of res.exercises) {
         fd[ex.id] = {
@@ -178,7 +181,12 @@ export default function PublicWorkoutPage({
     try {
       const result = await apiPost<WorkoutLogResponse>(
         `/api/public/workout/session/${activeSlot.id}/log`,
-        { token, exercises: Object.values(formData), note_sessione: noteSessione || null }
+        {
+          token,
+          exercises: Object.values(formData),
+          note_sessione: noteSessione || null,
+          feedback: Object.values(feedback).some((v) => v != null) ? feedback : null,
+        }
       );
       setSaveResult(result);
       setSlots((prev) => prev.map((s) =>
@@ -192,7 +200,7 @@ export default function PublicWorkoutPage({
     } finally {
       setSaving(false);
     }
-  }, [activeSlot, formData, noteSessione, token, info]);
+  }, [activeSlot, formData, noteSessione, feedback, token, info]);
 
   const updateField = useCallback(
     (exId: number, field: keyof ExerciseLogInput, value: string | number | null) => {
@@ -334,6 +342,32 @@ export default function PublicWorkoutPage({
                 value={noteSessione}
                 onChange={(e) => setNoteSessione(e.target.value)}
               />
+            </div>
+
+            {/* Feedback sessione — 5 quick-tap */}
+            <div className="bg-white rounded-lg border p-3 space-y-3">
+              <p className="text-[11px] font-bold text-teal-700 tracking-wider">COME E' ANDATA?</p>
+
+              <div className="grid grid-cols-2 gap-3">
+                <RatingRow label="Energia prima" value={feedback.energia_pre} onChange={(v) => setFeedback((p) => ({ ...p, energia_pre: v }))} emoji={["😴", "😕", "😐", "😊", "⚡"]} />
+                <RatingRow label="Energia dopo" value={feedback.energia_post} onChange={(v) => setFeedback((p) => ({ ...p, energia_post: v }))} emoji={["😵", "😕", "😐", "💪", "🔥"]} />
+                <RatingRow label="Soddisfazione" value={feedback.soddisfazione} onChange={(v) => setFeedback((p) => ({ ...p, soddisfazione: v }))} emoji={["😞", "😕", "😐", "😊", "🤩"]} />
+                <RatingRow label="Difficolta'" value={feedback.difficolta_percepita} onChange={(v) => setFeedback((p) => ({ ...p, difficolta_percepita: v }))} emoji={["😴", "🙂", "😤", "😰", "🥵"]} />
+              </div>
+
+              <div>
+                <label className="text-[10px] uppercase text-muted-foreground font-medium">Durata effettiva (minuti)</label>
+                <Input
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={300}
+                  className="h-9 !text-base md:!text-sm text-center tabular-nums font-semibold mt-0.5 w-24"
+                  placeholder="es. 55"
+                  value={feedback.durata_effettiva_min ?? ""}
+                  onChange={(e) => setFeedback((p) => ({ ...p, durata_effettiva_min: e.target.value ? Number(e.target.value) : null }))}
+                />
+              </div>
             </div>
 
             {/* Save */}
@@ -735,6 +769,41 @@ function InputField({ label, type, inputMode, value, onChange, placeholder, step
         value={value ?? ""}
         onChange={(e) => onChange(e.target.value)}
       />
+    </div>
+  );
+}
+
+/** Rating row — 5 emoji tap per feedback */
+function RatingRow({ label, value, onChange, emoji }: {
+  label: string;
+  value: number | null | undefined;
+  onChange: (v: number | null) => void;
+  emoji: string[];
+}) {
+  return (
+    <div>
+      <label className="text-[10px] uppercase text-muted-foreground font-medium block mb-1">{label}</label>
+      <div className="flex gap-1">
+        {emoji.map((e, i) => {
+          const rating = i + 1;
+          const isSelected = value === rating;
+          return (
+            <button
+              key={rating}
+              type="button"
+              className={`w-9 h-9 rounded-lg text-base flex items-center justify-center transition-all ${
+                isSelected
+                  ? "bg-teal-100 ring-2 ring-teal-500 scale-110"
+                  : "bg-gray-100 hover:bg-gray-200"
+              }`}
+              onClick={() => onChange(isSelected ? null : rating)}
+              aria-label={`${label} ${rating} di 5`}
+            >
+              {e}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

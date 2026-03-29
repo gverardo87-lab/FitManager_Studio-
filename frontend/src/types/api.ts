@@ -3082,10 +3082,19 @@ export interface ExerciseLogInput {
   note_cliente?: string | null;
 }
 
+export interface SessionFeedback {
+  durata_effettiva_min?: number | null;
+  energia_pre?: number | null;       // 1-5
+  energia_post?: number | null;      // 1-5
+  soddisfazione?: number | null;     // 1-5
+  difficolta_percepita?: number | null; // 1-5
+}
+
 export interface WorkoutLogRequest {
   token: string;
   exercises: ExerciseLogInput[];
   note_sessione?: string | null;
+  feedback?: SessionFeedback | null;
 }
 
 export interface WorkoutLogResponse {

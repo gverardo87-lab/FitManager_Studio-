@@ -769,6 +769,7 @@ def log_workout_session(
     if existing_wl and existing_wl.data_esecuzione == slot.data_pianificata:
         wl_for_slot = existing_wl
 
+    fb = body.feedback
     if not wl_for_slot:
         wl = WorkoutLog(
             id_scheda=share.id_scheda,
@@ -777,13 +778,26 @@ def log_workout_session(
             trainer_id=share.trainer_id,
             data_esecuzione=slot.data_pianificata,
             note=body.note_sessione,
+            source="client_portal",
+            durata_effettiva_min=fb.durata_effettiva_min if fb else None,
+            energia_pre=fb.energia_pre if fb else None,
+            energia_post=fb.energia_post if fb else None,
+            soddisfazione=fb.soddisfazione if fb else None,
+            difficolta_percepita=fb.difficolta_percepita if fb else None,
             created_at=datetime.now(timezone.utc).isoformat(),
         )
         session.add(wl)
         session.flush()
         slot.id_log = wl.id
-    elif body.note_sessione:
-        wl_for_slot.note = body.note_sessione
+    else:
+        if body.note_sessione:
+            wl_for_slot.note = body.note_sessione
+        if fb:
+            wl_for_slot.durata_effettiva_min = fb.durata_effettiva_min
+            wl_for_slot.energia_pre = fb.energia_pre
+            wl_for_slot.energia_post = fb.energia_post
+            wl_for_slot.soddisfazione = fb.soddisfazione
+            wl_for_slot.difficolta_percepita = fb.difficolta_percepita
         session.add(wl_for_slot)
 
     # Determina stato: completato se tutti compilati, parziale se solo alcuni

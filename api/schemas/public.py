@@ -147,6 +147,17 @@ class ExerciseLogInput(BaseModel):
     note_cliente: Optional[str] = Field(default=None, max_length=500)
 
 
+class SessionFeedback(BaseModel):
+    """Feedback soggettivo sessione — 5 quick-tap dal cliente."""
+    model_config = {"extra": "forbid"}
+
+    durata_effettiva_min: Optional[int] = Field(default=None, ge=1, le=300)
+    energia_pre: Optional[int] = Field(default=None, ge=1, le=5)
+    energia_post: Optional[int] = Field(default=None, ge=1, le=5)
+    soddisfazione: Optional[int] = Field(default=None, ge=1, le=5)
+    difficolta_percepita: Optional[int] = Field(default=None, ge=1, le=5)
+
+
 class WorkoutLogRequest(BaseModel):
     """Payload per salvare i dati di una sessione."""
     model_config = {"extra": "forbid"}
@@ -154,6 +165,7 @@ class WorkoutLogRequest(BaseModel):
     token: str
     exercises: list[ExerciseLogInput]
     note_sessione: Optional[str] = Field(default=None, max_length=1000)
+    feedback: Optional[SessionFeedback] = None
 
 
 class WorkoutLogResponse(BaseModel):
