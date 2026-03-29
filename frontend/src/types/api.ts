@@ -3103,6 +3103,68 @@ export interface WorkoutLogResponse {
   completion_pct: number;
 }
 
+// ── Workout Analytics (GET /clients/{id}/workout-analytics) ─────────────────
+
+export interface VolumePoint {
+  data: string;
+  volume_kg: number;
+  sessione_nome: string | null;
+}
+
+export interface ProgressionPoint {
+  data: string;
+  carico_kg: number;
+  serie: number;
+  ripetizioni: string;
+}
+
+export interface ExerciseProgression {
+  id_esercizio: number;
+  nome_esercizio: string;
+  punti: ProgressionPoint[];
+}
+
+export interface PersonalRecord {
+  id_esercizio: number;
+  nome_esercizio: string;
+  max_carico_kg: number;
+  data_pr: string;
+  estimated_1rm: number | null;
+}
+
+export interface RPEPoint {
+  data: string;
+  rpe_medio: number;
+  sessione_nome: string | null;
+}
+
+export interface FeedbackPoint {
+  data: string;
+  soddisfazione: number | null;
+  energia_pre: number | null;
+  energia_post: number | null;
+  difficolta_percepita: number | null;
+}
+
+export interface AderenzaStats {
+  totale_pianificate: number;
+  totale_completate: number;
+  totale_parziali: number;
+  totale_saltate: number;
+  percentuale: number;
+  streak_corrente: number;
+  streak_massimo: number;
+}
+
+export interface WorkoutAnalyticsResponse {
+  volume: VolumePoint[];
+  progressione: ExerciseProgression[];
+  personal_records: PersonalRecord[];
+  rpe_trend: RPEPoint[];
+  feedback_trend: FeedbackPoint[];
+  aderenza: AderenzaStats;
+}
+
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // NUTRITION â€” catalogo alimenti + piani alimentari
 // Mirror di api/schemas/nutrition.py

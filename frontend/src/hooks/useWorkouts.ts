@@ -18,6 +18,7 @@ import type {
   WorkoutLog,
   WorkoutLogCreate,
   WorkoutLogListResponse,
+  WorkoutAnalyticsResponse,
 } from "@/types/api";
 
 // ════════════════════════════════════════════════════════════
@@ -274,5 +275,24 @@ export function useDeleteWorkoutLog(clientId: number | null) {
         extractErrorMessage(error, "Errore nella rimozione della registrazione"),
       );
     },
+  });
+}
+
+// ════════════════════════════════════════════════════════════
+// QUERY: Workout Analytics per cliente
+// ════════════════════════════════════════════════════════════
+
+export function useWorkoutAnalytics(clientId: number | null, mesi = 3) {
+  return useQuery<WorkoutAnalyticsResponse>({
+    queryKey: ["workout-analytics", clientId, mesi],
+    queryFn: async () => {
+      const { data } = await apiClient.get<WorkoutAnalyticsResponse>(
+        `/clients/${clientId}/workout-analytics`,
+        { params: { mesi } },
+      );
+      return data;
+    },
+    enabled: clientId !== null,
+    staleTime: 60_000,
   });
 }

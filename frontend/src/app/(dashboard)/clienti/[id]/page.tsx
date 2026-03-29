@@ -16,7 +16,7 @@ import { use, useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import {
   FileText, Calendar, Wallet, User,
-  ClipboardList, UtensilsCrossed,
+  ClipboardList, TrendingUp, UtensilsCrossed,
 } from "lucide-react";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -31,6 +31,7 @@ import { ContrattiTab } from "@/components/clients/profile/ContrattiTab";
 import { SessioniTab } from "@/components/clients/profile/SessioniTab";
 import { MovimentiTab } from "@/components/clients/profile/MovimentiTab";
 import { SchedeTab } from "@/components/clients/profile/SchedeTab";
+import { AllenamentoTab } from "@/components/clients/profile/AllenamentoTab";
 import { NutrizioneTab } from "@/components/clients/profile/NutrizioneTab";
 import { ProfileSkeleton, NotFoundState } from "@/components/clients/profile/ProfileShared";
 
@@ -177,6 +178,10 @@ export default function ClientProfilePage({
             Schede
             {tabComplete.schede && <CompletionDot />}
           </TabsTrigger>
+          <TabsTrigger value="allenamento">
+            <TrendingUp className="mr-2 h-4 w-4" />
+            Allenamento
+          </TabsTrigger>
           <TabsTrigger value="nutrizione">
             <UtensilsCrossed className="mr-2 h-4 w-4" />
             Nutrizione
@@ -206,6 +211,9 @@ export default function ClientProfilePage({
         </TabsContent>
         <TabsContent value="schede" className="mt-4">
           <SchedeTab clientId={clientId} onNewScheda={() => setTemplateSelectorOpen(true)} fromContext={searchParams.get("from") ?? undefined} />
+        </TabsContent>
+        <TabsContent value="allenamento" className="mt-4">
+          <AllenamentoTab clientId={clientId} />
         </TabsContent>
         <TabsContent value="nutrizione" className="mt-4">
           <NutrizioneTab clientId={clientId} />
