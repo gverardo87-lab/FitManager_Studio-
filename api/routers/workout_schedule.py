@@ -306,18 +306,12 @@ def update_slot(
         if data.stato not in VALID_STATI:
             raise HTTPException(status_code=422, detail=f"Stato non valido: {data.stato}")
 
-        # Reopen: quando si torna a pianificato da completato, soft-delete il log collegato
-        if data.stato == "pianificato" and slot.stato == "completato" and slot.id_log:
-            linked_log = session.exec(
-                select(WorkoutLog).where(
-                    WorkoutLog.id == slot.id_log,
-                    WorkoutLog.deleted_at == None,
-                )
-            ).first()
-            if linked_log:
-                linked_log.deleted_at = datetime.now(timezone.utc)
-                log_audit(session, "workout_log", linked_log.id, "DELETE", trainer.id)
-            slot.id_log = None
+        # Riapertura: usare PUT /workout-schedule/{id}/reopen (elimina log + exercise_logs)
+        if data.stato == "pianificato" and slot.stato in ("completato", "parziale"):
+            raise HTTPException(
+                status_code=422,
+                detail="Per riaprire una sessione completata usa l'endpoint dedicato /reopen",
+            )
 
         slot.stato = data.stato
 

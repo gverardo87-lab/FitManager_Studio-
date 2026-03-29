@@ -13,6 +13,7 @@ import {
   useWorkoutSchedule,
   useCompleteScheduleSlot,
   useUpdateScheduleSlot,
+  useReopenScheduleSlot,
   useDeleteScheduleSlot,
 } from "@/hooks/useWorkoutSchedule";
 import { ScheduleCalendar } from "@/components/workouts/schedule/ScheduleCalendar";
@@ -86,6 +87,7 @@ export default function WorkoutSchedulePage() {
 
   const completeMutation = useCompleteScheduleSlot(workoutId);
   const updateMutation = useUpdateScheduleSlot(workoutId);
+  const reopenMutation = useReopenScheduleSlot(workoutId);
   const deleteMutation = useDeleteScheduleSlot(workoutId);
 
   // Derive real session names from exercises when DB has template names
@@ -166,9 +168,8 @@ export default function WorkoutSchedulePage() {
   );
 
   const handleReopen = useCallback(
-    (slotId: number) =>
-      updateMutation.mutate({ slotId, stato: "pianificato" }),
-    [updateMutation],
+    (slotId: number) => reopenMutation.mutate(slotId),
+    [reopenMutation],
   );
 
   const handleSlotClick = useCallback((slot: ScheduleSlot) => {
