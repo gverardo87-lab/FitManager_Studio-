@@ -239,7 +239,10 @@ function ShareWorkoutDialog({
       const res = await apiClient.post(`/clients/${clientId}/share-workout`, null, {
         params: { id_scheda: planId },
       });
-      setShareUrl(res.data.url);
+      // Costruisci URL con l'origin del browser (non PUBLIC_BASE_URL del backend)
+      // per garantire che il link punti alla stessa istanza (dev/prod/LAN/Tailscale)
+      const origin = typeof window !== "undefined" ? window.location.origin : "";
+      setShareUrl(`${origin}/public/scheda/${res.data.token}`);
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? "Errore nella generazione del link";
       setError(msg);
@@ -342,10 +345,10 @@ function ShareWorkoutDialog({
                 Il link e' valido fino alla fine della scheda + 7 giorni.
               </p>
 
-              {shareUrl.startsWith("http://localhost") || shareUrl.startsWith("/public") ? (
+              {typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") ? (
                 <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-md p-2">
-                  Il link usa localhost. Per renderlo accessibile dal cellulare del cliente,
-                  configura Tailscale Funnel o accedi da IP LAN.
+                  Stai usando localhost. Per inviare il link al cliente,
+                  accedi al CRM tramite IP LAN (es. 192.168.1.23:3000) o Tailscale.
                 </p>
               ) : null}
             </div>

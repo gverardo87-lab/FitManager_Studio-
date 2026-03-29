@@ -270,10 +270,10 @@ function ShareAnamnesiDialog({
     });
   }, [createToken]);
 
+  // Costruisci URL con l'origin del browser (non PUBLIC_BASE_URL del backend)
+  // per garantire che il link punti alla stessa istanza (dev/prod/LAN/Tailscale)
   const fullUrl = result
-    ? result.url.startsWith("http")
-      ? result.url
-      : `${typeof window !== "undefined" ? window.location.origin : ""}${result.url}`
+    ? `${typeof window !== "undefined" ? window.location.origin : ""}/public/anamnesi/${result.token}`
     : "";
 
   const handleCopy = useCallback(() => {

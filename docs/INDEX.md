@@ -64,6 +64,7 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 | File | Scopo |
 |------|-------|
 | `INC-2026-03-28-safety-engine-blind-spot.md` | P0: Safety Engine blind spot durante demo investitore |
+| `INC-2026-03-29-portal-url-origin-mismatch.md` | P1: Link portale clienti inaccessibili — URL hardcoded da PUBLIC_BASE_URL invece di browser origin |
 
 ## Altre directory
 
