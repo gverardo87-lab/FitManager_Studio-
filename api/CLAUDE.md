@@ -65,6 +65,8 @@ api/
 │   ├── workouts.py      CRUD schede + sessioni + esercizi (deep IDOR chain)
 │   ├── workspace.py     Cockpit operativo: today + session-prep + cases (4 GET read-only)
 │   ├── communications.py Log comunicazioni WhatsApp/tel/email (POST log + GET registro all/per-cliente)
+│   ├── training_intelligence.py Training Intelligence: dose-response muscolo×muscolo, balance, intensity, recovery, alert (1 GET, dual session)
+│   ├── workout_diff.py  Workout Diff: piano vs eseguito per esercizio, compliance %, punti deboli/forti (1 GET, dual session)
 │   └── public_portal.py Portale pubblico anamnesi: generate token (JWT) + validate + submit (2 endpoint pubblici, rate limiter IP-based, feature flag PUBLIC_PORTAL_ENABLED)
 ├── schemas/             Pydantic v2 — schema dominio + runtime/system contracts
 │   ├── assistant.py     ParseRequest/Response, CommitRequest/Response (6 schema)

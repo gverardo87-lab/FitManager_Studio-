@@ -8,12 +8,6 @@ qui abbiamo i dati REALI.
 
 Endpoint:
   GET /api/clients/{id}/workout-analytics  → WorkoutAnalyticsResponse
-    - volume_per_sessione: volume totale (serie×reps×kg) per sessione nel tempo
-    - progressione: carico per esercizio nel tempo (curva di forza)
-    - personal_records: PR (max carico) per esercizio
-    - rpe_trend: RPE medio per sessione nel tempo
-    - aderenza: completate/pianificate + streak
-    - feedback_trend: soddisfazione/energia/difficolta nel tempo
 """
 
 import logging
@@ -30,6 +24,7 @@ from api.models.client import Client
 from api.models.exercise import Exercise
 from api.models.exercise_log import ExerciseLog
 from api.models.trainer import Trainer
+from api.models.workout import WorkoutExercise, WorkoutSession
 from api.models.workout_log import WorkoutLog
 from api.models.workout_schedule import WorkoutScheduleSlot
 
@@ -196,7 +191,6 @@ def get_workout_analytics(
     # Map slot_id → data for joining logs to dates
     slot_date_map: dict[int, date] = {s.id: s.data_pianificata for s in slots}
     # Map slot_id → sessione nome (from workout session)
-    from api.models.workout import WorkoutSession
     sess_ids = list({s.id_sessione for s in slots})
     sess_map: dict[int, str] = {}
     if sess_ids:
@@ -233,7 +227,6 @@ def get_workout_analytics(
     # ── 2. Progressione carico per esercizio ──────────────────────────
 
     # Map esercizio_sessione.id → id_esercizio (catalog)
-    from api.models.workout import WorkoutExercise
     ex_sess_ids = list({log.id_esercizio_sessione for log in logs})
     catalog_id_map: dict[int, int] = {}
     if ex_sess_ids:

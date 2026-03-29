@@ -67,6 +67,8 @@ from api.routers.nutrition import router as nutrition_router
 from api.routers.client_avatar import router as client_avatar_router
 from api.routers.workout_schedule import router as workout_schedule_router
 from api.routers.workout_analytics import router as workout_analytics_router
+from api.routers.training_intelligence import router as training_intelligence_router
+from api.routers.workout_diff import router as workout_diff_router
 from api.routers.communications import router as communications_router
 from api.services.system_runtime import (
     BACKUP_DIR,
@@ -388,6 +390,8 @@ app.include_router(nutrition_router, prefix=API_PREFIX)
 app.include_router(client_avatar_router, prefix=API_PREFIX)
 app.include_router(workout_schedule_router, prefix=API_PREFIX)
 app.include_router(workout_analytics_router, prefix=API_PREFIX)
+app.include_router(training_intelligence_router, prefix=API_PREFIX)
+app.include_router(workout_diff_router, prefix=API_PREFIX)
 app.include_router(communications_router, prefix=API_PREFIX)
 
 

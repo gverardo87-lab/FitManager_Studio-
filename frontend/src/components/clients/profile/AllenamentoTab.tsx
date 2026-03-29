@@ -2,14 +2,20 @@
 "use client";
 
 /**
- * Tab "Allenamento" nel profilo cliente — centro di comando atletico.
+ * Tab "Allenamento" nel profilo cliente — Training Intelligence Dashboard.
  *
- * 5 sezioni scroll verticale:
- *   1. Aderenza — barra % + streak + stats
- *   2. Progressione — grafici carico per esercizio nel tempo
- *   3. Personal Records — PR con 1RM stimato
- *   4. Feedback — soddisfazione/energia/difficolta trend
- *   5. Volume — volume per sessione nel tempo
+ * 7 sezioni scroll verticale:
+ *   1. Panoramica Esecuzione (aderenza + tonnage + densita)
+ *   2. Mappa Muscolare (heatmap MEV/MAV/MRV)
+ *   3. Dose-Response (volume effettivo vs target per muscolo)
+ *   4. Progressione Intelligente (carico per esercizio nel tempo)
+ *   5. Equilibrio Biomeccanico (5 rapporti con target)
+ *   6. Intensita & Recovery (zone NSCA + overlap warnings)
+ *   7. Alert & Insight (predittivi dal motore scientifico)
+ *
+ * Dati da 2 endpoint paralleli:
+ *   - /workout-analytics (aderenza, volume, progressione, PR, RPE, feedback)
+ *   - /training-intelligence (muscoli, balance, intensity, recovery, alerts)
  */
 
 import { useState } from "react";
@@ -34,17 +40,22 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-
 import { formatShortDate } from "@/lib/format";
-import { useWorkoutAnalytics } from "@/hooks/useWorkouts";
+import { useWorkoutAnalytics, useTrainingIntelligence, useWorkoutDiff } from "@/hooks/useWorkouts";
 import { EmptyTab, TabSkeleton } from "@/components/clients/profile/ProfileShared";
+import { MuscleHeatmap } from "./training-intelligence/MuscleHeatmap";
+import { DoseResponseSection } from "./training-intelligence/DoseResponseSection";
+import { BalanceSection } from "./training-intelligence/BalanceSection";
+import { IntensityRecoverySection } from "./training-intelligence/IntensityRecoverySection";
+import { AlertsSection } from "./training-intelligence/AlertsSection";
+import { WorkoutDiffSection } from "./training-intelligence/WorkoutDiffSection";
 import type {
   AderenzaStats,
   ExerciseProgression,
   FeedbackPoint,
   PersonalRecord,
   RPEPoint,
-  VolumePoint,
+  TonnagePoint,
 } from "@/types/api";
 
 interface AllenamentoTabProps {
@@ -59,11 +70,16 @@ const PERIOD_OPTIONS = [
 
 export function AllenamentoTab({ clientId }: AllenamentoTabProps) {
   const [mesi, setMesi] = useState(3);
-  const { data, isLoading } = useWorkoutAnalytics(clientId, mesi);
+  const { data: analytics, isLoading: loadingAnalytics } = useWorkoutAnalytics(clientId, mesi);
+  const { data: intelligence, isLoading: loadingIntel } = useTrainingIntelligence(clientId, mesi);
+  const { data: diff } = useWorkoutDiff(clientId, mesi);
 
-  if (isLoading) return <TabSkeleton />;
+  if (loadingAnalytics && loadingIntel) return <TabSkeleton />;
 
-  if (!data || (data.aderenza.totale_pianificate === 0 && data.personal_records.length === 0)) {
+  const hasAnalytics = analytics && (analytics.aderenza.totale_pianificate > 0 || analytics.personal_records.length > 0);
+  const hasIntelligence = intelligence && intelligence.sessioni_completate > 0;
+
+  if (!hasAnalytics && !hasIntelligence) {
     return (
       <EmptyTab
         icon={Dumbbell}
@@ -90,23 +106,65 @@ export function AllenamentoTab({ clientId }: AllenamentoTabProps) {
             {opt.label}
           </button>
         ))}
+        {intelligence?.obiettivo_cliente ? (
+          <span className="ml-auto text-[10px] bg-teal-50 text-teal-700 font-medium px-2 py-1 rounded-full">
+            {intelligence.obiettivo_cliente} / {intelligence.livello_cliente ?? "intermedio"}
+          </span>
+        ) : null}
       </div>
 
-      {/* 1. Aderenza */}
-      <AderenzaSection stats={data.aderenza} />
+      {/* 1. Panoramica Esecuzione */}
+      {analytics ? <PanoramicaEsecuzione analytics={analytics} intelligence={intelligence ?? null} /> : null}
 
-      {/* 2. Volume */}
-      {data.volume.length > 0 ? <VolumeSection points={data.volume} /> : null}
+      {/* 2. Workout Diff — il dato piu' importante per il PT */}
+      {diff && diff.sessioni.length > 0 ? <WorkoutDiffSection data={diff} /> : null}
 
-      {/* 3. Progressione */}
-      {data.progressione.length > 0 ? <ProgressioneSection exercises={data.progressione} /> : null}
+      {/* 3. Alert (top position for visibility) */}
+      {intelligence && intelligence.alerts.length > 0 ? (
+        <AlertsSection alerts={intelligence.alerts} />
+      ) : null}
 
-      {/* 4. Personal Records */}
-      {data.personal_records.length > 0 ? <PRSection records={data.personal_records} /> : null}
+      {/* 3. Mappa Muscolare */}
+      {intelligence && intelligence.muscle_analysis.length > 0 ? (
+        <MuscleHeatmap muscles={intelligence.muscle_analysis} />
+      ) : null}
 
-      {/* 5. Feedback + RPE */}
-      {data.feedback_trend.length > 0 || data.rpe_trend.length > 0 ? (
-        <FeedbackSection feedback={data.feedback_trend} rpe={data.rpe_trend} />
+      {/* 4. Dose-Response */}
+      {intelligence && intelligence.muscle_analysis.length > 0 ? (
+        <DoseResponseSection muscles={intelligence.muscle_analysis} />
+      ) : null}
+
+      {/* 5. Tonnage Trend */}
+      {intelligence && intelligence.tonnage_trend.length > 0 ? (
+        <TonnageSection points={intelligence.tonnage_trend} />
+      ) : null}
+
+      {/* 6. Progressione carico */}
+      {analytics && analytics.progressione.length > 0 ? (
+        <ProgressioneSection exercises={analytics.progressione} />
+      ) : null}
+
+      {/* 7. Equilibrio Biomeccanico */}
+      {intelligence && intelligence.balance_ratios.length > 0 ? (
+        <BalanceSection ratios={intelligence.balance_ratios} />
+      ) : null}
+
+      {/* 8. Intensita & Recovery */}
+      {intelligence ? (
+        <IntensityRecoverySection
+          intensity={intelligence.intensity_distribution}
+          recoveryWarnings={intelligence.recovery_warnings}
+        />
+      ) : null}
+
+      {/* 9. Personal Records */}
+      {analytics && analytics.personal_records.length > 0 ? (
+        <PRSection records={analytics.personal_records} />
+      ) : null}
+
+      {/* 10. Feedback + RPE */}
+      {analytics && (analytics.feedback_trend.length > 0 || analytics.rpe_trend.length > 0) ? (
+        <FeedbackSection feedback={analytics.feedback_trend} rpe={analytics.rpe_trend} />
       ) : null}
     </div>
   );
@@ -116,15 +174,21 @@ export function AllenamentoTab({ clientId }: AllenamentoTabProps) {
 // SECTIONS
 // ═════════════════════════════════════════════════════════════════════════════
 
-function AderenzaSection({ stats }: { stats: AderenzaStats }) {
+function PanoramicaEsecuzione({
+  analytics,
+  intelligence,
+}: {
+  analytics: { aderenza: AderenzaStats };
+  intelligence: { tonnage_totale_periodo: number; densita_media: number; sessioni_completate: number } | null;
+}) {
+  const stats = analytics.aderenza;
   const pct = stats.percentuale;
   const barColor = pct >= 80 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-500" : "bg-red-500";
 
   return (
     <section className="space-y-3">
-      <SectionHeader icon={Target} title="Aderenza" />
+      <SectionHeader icon={Target} title="Panoramica Esecuzione" />
 
-      {/* Progress bar */}
       <div className="space-y-1.5">
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Sessioni completate</span>
@@ -137,45 +201,61 @@ function AderenzaSection({ stats }: { stats: AderenzaStats }) {
         </div>
       </div>
 
-      {/* Stats grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         <StatCard icon={<Dumbbell className="h-4 w-4 text-emerald-600" />} label="Completate" value={stats.totale_completate} />
-        <StatCard icon={<BarChart3 className="h-4 w-4 text-amber-600" />} label="Parziali" value={stats.totale_parziali} />
-        <StatCard icon={<Flame className="h-4 w-4 text-orange-500" />} label="Streak corrente" value={stats.streak_corrente} suffix="sessioni" />
-        <StatCard icon={<Award className="h-4 w-4 text-violet-600" />} label="Streak record" value={stats.streak_massimo} suffix="sessioni" />
+        <StatCard icon={<Flame className="h-4 w-4 text-orange-500" />} label="Streak" value={stats.streak_corrente} suffix="sessioni" />
+        {intelligence && intelligence.tonnage_totale_periodo > 0 ? (
+          <StatCard
+            icon={<Zap className="h-4 w-4 text-violet-600" />}
+            label="Tonnellaggio"
+            value={Math.round(intelligence.tonnage_totale_periodo)}
+            suffix="kg totali"
+          />
+        ) : (
+          <StatCard icon={<BarChart3 className="h-4 w-4 text-amber-600" />} label="Parziali" value={stats.totale_parziali} />
+        )}
+        {intelligence && intelligence.densita_media > 0 ? (
+          <StatCard
+            icon={<TrendingUp className="h-4 w-4 text-blue-600" />}
+            label="Densita media"
+            value={intelligence.densita_media}
+            suffix="kg/min"
+          />
+        ) : (
+          <StatCard icon={<Award className="h-4 w-4 text-violet-600" />} label="Streak record" value={stats.streak_massimo} suffix="sessioni" />
+        )}
       </div>
     </section>
   );
 }
 
-function VolumeSection({ points }: { points: VolumePoint[] }) {
+function TonnageSection({ points }: { points: TonnagePoint[] }) {
   const chartData = points.map((p) => ({
     data: formatShortDate(p.data, false),
-    volume: Math.round(p.volume_kg),
+    tonnage: Math.round(p.tonnage_kg),
     nome: p.sessione_nome ?? "",
   }));
 
   return (
     <section className="space-y-3">
-      <SectionHeader icon={BarChart3} title="Volume per sessione" subtitle="Serie x Reps x Kg" />
+      <SectionHeader icon={Zap} title="Tonnellaggio per sessione" subtitle="Volume-Load (serie x reps x kg) — NSCA 2016" />
       <div className="h-[200px] sm:h-[240px]">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData}>
             <defs>
-              <linearGradient id="volGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#009688" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#009688" stopOpacity={0} />
+              <linearGradient id="tonGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="#7c3aed" stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
             <XAxis dataKey="data" tick={{ fontSize: 10 }} />
-            <YAxis tick={{ fontSize: 10 }} width={45} />
+            <YAxis tick={{ fontSize: 10 }} width={50} />
             <Tooltip
               contentStyle={{ fontSize: 12, borderRadius: 8 }}
-              formatter={(value: number) => [`${value.toLocaleString("it-IT")} kg`, "Volume"]}
-              labelFormatter={(label) => label}
+              formatter={(value: number) => [`${value.toLocaleString("it-IT")} kg`, "Tonnellaggio"]}
             />
-            <Area type="monotone" dataKey="volume" stroke="#009688" fill="url(#volGrad)" strokeWidth={2} dot={{ r: 3 }} />
+            <Area type="monotone" dataKey="tonnage" stroke="#7c3aed" fill="url(#tonGrad)" strokeWidth={2} dot={{ r: 3 }} />
           </AreaChart>
         </ResponsiveContainer>
       </div>
@@ -184,7 +264,6 @@ function VolumeSection({ points }: { points: VolumePoint[] }) {
 }
 
 function ProgressioneSection({ exercises }: { exercises: ExerciseProgression[] }) {
-  // Mostra top 6 esercizi per numero di data points
   const top = exercises
     .filter((e) => e.punti.length >= 2)
     .sort((a, b) => b.punti.length - a.punti.length)
@@ -201,12 +280,7 @@ function ProgressioneSection({ exercises }: { exercises: ExerciseProgression[] }
         <ResponsiveContainer width="100%" height="100%">
           <LineChart>
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-            <XAxis
-              dataKey="data"
-              type="category"
-              allowDuplicatedCategory={false}
-              tick={{ fontSize: 10 }}
-            />
+            <XAxis dataKey="data" type="category" allowDuplicatedCategory={false} tick={{ fontSize: 10 }} />
             <YAxis tick={{ fontSize: 10 }} width={40} unit=" kg" />
             <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
             {top.map((ex, i) => (
@@ -224,7 +298,6 @@ function ProgressioneSection({ exercises }: { exercises: ExerciseProgression[] }
           </LineChart>
         </ResponsiveContainer>
       </div>
-      {/* Legend */}
       <div className="flex flex-wrap gap-3">
         {top.map((ex, i) => (
           <span key={ex.id_esercizio} className="flex items-center gap-1.5 text-xs">
@@ -270,7 +343,6 @@ function FeedbackSection({ feedback, rpe }: { feedback: FeedbackPoint[]; rpe: RP
   const feedbackData = feedback.map((f) => ({
     data: formatShortDate(f.data, false),
     soddisfazione: f.soddisfazione,
-    energia_pre: f.energia_pre,
     energia_post: f.energia_post,
     difficolta: f.difficolta_percepita,
   }));
@@ -283,7 +355,6 @@ function FeedbackSection({ feedback, rpe }: { feedback: FeedbackPoint[]; rpe: RP
   return (
     <section className="space-y-3">
       <SectionHeader icon={Heart} title="Feedback & RPE" subtitle="Percezione del cliente nel tempo" />
-
       {feedbackData.length > 0 ? (
         <div className="h-[180px] sm:h-[220px]">
           <ResponsiveContainer width="100%" height="100%">
@@ -299,7 +370,6 @@ function FeedbackSection({ feedback, rpe }: { feedback: FeedbackPoint[]; rpe: RP
           </ResponsiveContainer>
         </div>
       ) : null}
-
       {rpeData.length > 0 ? (
         <>
           <p className="text-xs font-semibold text-muted-foreground">RPE medio per sessione</p>

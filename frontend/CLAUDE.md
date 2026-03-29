@@ -42,7 +42,10 @@ frontend/src/
 │   │                        ProgressiTab, AnamnesiWizard (6-step v2), AnamnesiStepsSalute,
 │   │                        InteractiveBodyMap, SessionComparison
 │   │   └── profile/         OnboardingChecklist (5-step + hero CTA), PanoramicaTab (Journey Hub + Path Bar),
-│   │                        ContrattiTab, SessioniTab, MovimentiTab, SchedeTab, ProfileShared (skeletons+empty+CTA)
+│   │                        ContrattiTab, SessioniTab, MovimentiTab, SchedeTab, ProfileShared (skeletons+empty+CTA),
+│   │                        AllenamentoTab (Training Intelligence Dashboard, 10 sezioni orchestrate),
+│   │                        training-intelligence/ (MuscleHeatmap, DoseResponseSection, BalanceSection,
+│   │                                               IntensityRecoverySection, AlertsSection, WorkoutDiffSection)
 │   ├── contracts/           ContractsTable, ContractSheet (renewal mode: renewContractId+renewalDefaults),
 │   │                        ContractForm (RenewalDefaults pre-fill), ContractFinancialHero,
 │   │                        PaymentPlanTab (RateCard, PayRateForm, PaymentHistory, AddRateForm),
@@ -70,6 +73,7 @@ frontend/src/
 │   │                        useConnectivityStatus, useConnectivityConfig, useVerifyConnectivity,
 │   │                        usePortalValidation, useUnsavedChanges, useGuideProgress
 │   ├── useTrainingScience   Hook per 5 endpoint Training Science Engine backend
+│   ├── useWorkouts          Extended: useWorkoutAnalytics, useTrainingIntelligence (2min cache), useWorkoutDiff (1min cache)
 │   ├── useWorkspace         4 hook workspace: useWorkspaceToday, useWorkspaceCases, useWorkspaceCaseDetail, useSessionPrep (refetch 60s)
 │   ├── useCommunications    Log comunicazioni: useAllCommunications, useClientCommunications, useLogCommunication
 │   ├── useClientReadiness   Readiness singolo cliente (wraps useClinicalReadiness) + computeOnboardingSteps
@@ -107,9 +111,10 @@ export function useDeleteClient() { return useMutation({...}) }    // DELETE
 ```
 Ogni mutation: `invalidateQueries` sulle key correlate + `toast.success/error`.
 
-Moduli: useAgenda, useClients, useContracts, useRates, useMovements, useExercises, useWorkouts,
-useMeasurements, useGoals, useRecurringExpenses, useTodos, useDashboard, useBackup,
-useAssistant, useSmartProgramming, useUnsavedChanges, useGuideProgress,
+Moduli: useAgenda, useClients, useContracts, useRates, useMovements, useExercises,
+useWorkouts (analytics + intelligence + diff), useMeasurements, useGoals,
+useRecurringExpenses, useTodos, useDashboard, useBackup, useAssistant,
+useSmartProgramming, useUnsavedChanges, useGuideProgress,
 useTrainingScience, useClientReadiness, useCommunications.
 
 ### Query Key Convention
@@ -138,6 +143,9 @@ useTrainingScience, useClientReadiness, useCommunications.
 ["communications", "all", clientId]  // registro comunicazioni (all o per cliente)
 ["communications", clientId]         // comunicazioni singolo cliente (profilo)
 ["dashboard", "birthday-clients"]    // compleanni oggi + 7gg
+["workout-analytics", clientId, mesi] // metriche base (volume, progressione, PR, RPE)
+["training-intelligence", clientId, mesi] // analisi scientifica post-esecuzione (2min cache)
+["workout-diff", clientId, mesi]     // compliance piano vs eseguito (1min cache)
 ```
 
 ### Invalidazione Simmetrica (Regola Ferrea)

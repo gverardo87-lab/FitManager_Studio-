@@ -3165,6 +3165,137 @@ export interface WorkoutAnalyticsResponse {
   aderenza: AderenzaStats;
 }
 
+// -- Training Intelligence (GET /clients/{id}/training-intelligence) ----------
+
+export interface MuscleAnalysis {
+  muscolo: string;
+  volume_effettivo: number;
+  mev: number;
+  mav_min: number;
+  mav_max: number;
+  mrv: number;
+  stato: "sotto_mev" | "mev_mav" | "ottimale" | "sopra_mav" | "sopra_mrv";
+  trend: "crescente" | "stabile" | "calante";
+  pianificato: number | null;
+}
+
+export interface FrequencyAnalysis {
+  muscolo: string;
+  freq_effettiva: number;
+  freq_target_min: number;
+  freq_target_max: number;
+}
+
+export interface BalanceRatioAnalysis {
+  nome: string;
+  valore_corrente: number;
+  target: number;
+  tolleranza: number;
+  in_tolleranza: boolean;
+  trend: string;
+}
+
+export interface IntensityDistribution {
+  massimale: number;
+  sub_massimale: number;
+  ipertrofia: number;
+  resistenza: number;
+  attivazione: number;
+}
+
+export interface RecoveryWarning {
+  sessione_a: string;
+  sessione_b: string;
+  muscoli_overlap: string[];
+}
+
+export interface TonnagePoint {
+  data: string;
+  tonnage_kg: number;
+  sessione_nome: string | null;
+}
+
+export interface DensityPoint {
+  data: string;
+  tonnage_per_min: number;
+  sessione_nome: string | null;
+}
+
+export interface TrainingAlert {
+  tipo: "sotto_mev" | "sopra_mrv" | "squilibrio" | "recovery";
+  muscolo: string | null;
+  settimane: number;
+  severity: "warning" | "danger" | "info";
+  messaggio: string;
+}
+
+export interface TrainingIntelligenceResponse {
+  tonnage_trend: TonnagePoint[];
+  density_trend: DensityPoint[];
+  tonnage_totale_periodo: number;
+  densita_media: number;
+  muscle_analysis: MuscleAnalysis[];
+  frequency_analysis: FrequencyAnalysis[];
+  balance_ratios: BalanceRatioAnalysis[];
+  intensity_distribution: IntensityDistribution;
+  recovery_warnings: RecoveryWarning[];
+  alerts: TrainingAlert[];
+  settimane_analizzate: number;
+  sessioni_completate: number;
+  obiettivo_cliente: string | null;
+  livello_cliente: string | null;
+  sesso_cliente: string | null;
+  eta_cliente: number | null;
+}
+
+// -- Workout Diff (GET /clients/{id}/workout-diff) ----------------------------
+
+export interface ExerciseDiff {
+  id_esercizio: number;
+  nome_esercizio: string;
+  serie_piano: number;
+  reps_piano: string;
+  reps_piano_avg: number;
+  kg_piano: number | null;
+  serie_fatto: number | null;
+  reps_fatto: string | null;
+  reps_fatto_avg: number | null;
+  kg_fatto: number | null;
+  rpe: number | null;
+  delta_serie: number | null;
+  delta_reps: number | null;
+  delta_kg: number | null;
+  compliance_pct: number | null;
+  note_cliente: string | null;
+}
+
+export interface SessionDiff {
+  data: string;
+  nome_sessione: string;
+  stato: string;
+  esercizi: ExerciseDiff[];
+  compliance_media: number;
+  esercizi_completati: number;
+  esercizi_totali: number;
+  durata_effettiva_min: number | null;
+  note_sessione: string | null;
+}
+
+export interface ComplianceSummary {
+  compliance_media_globale: number;
+  sessioni_analizzate: number;
+  esercizi_sopra_piano: number;
+  esercizi_sotto_piano: number;
+  esercizi_in_linea: number;
+  punti_deboli: string[];
+  punti_forti: string[];
+}
+
+export interface WorkoutDiffResponse {
+  sessioni: SessionDiff[];
+  summary: ComplianceSummary;
+}
+
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // NUTRITION â€” catalogo alimenti + piani alimentari
 // Mirror di api/schemas/nutrition.py

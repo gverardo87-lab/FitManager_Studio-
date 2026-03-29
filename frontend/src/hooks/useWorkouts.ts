@@ -19,6 +19,8 @@ import type {
   WorkoutLogCreate,
   WorkoutLogListResponse,
   WorkoutAnalyticsResponse,
+  TrainingIntelligenceResponse,
+  WorkoutDiffResponse,
 } from "@/types/api";
 
 // ════════════════════════════════════════════════════════════
@@ -288,6 +290,44 @@ export function useWorkoutAnalytics(clientId: number | null, mesi = 3) {
     queryFn: async () => {
       const { data } = await apiClient.get<WorkoutAnalyticsResponse>(
         `/clients/${clientId}/workout-analytics`,
+        { params: { mesi } },
+      );
+      return data;
+    },
+    enabled: clientId !== null,
+    staleTime: 60_000,
+  });
+}
+
+// ════════════════════════════════════════════════════════════
+// QUERY: Training Intelligence per cliente
+// ════════════════════════════════════════════════════════════
+
+export function useTrainingIntelligence(clientId: number | null, mesi = 3) {
+  return useQuery<TrainingIntelligenceResponse>({
+    queryKey: ["training-intelligence", clientId, mesi],
+    queryFn: async () => {
+      const { data } = await apiClient.get<TrainingIntelligenceResponse>(
+        `/clients/${clientId}/training-intelligence`,
+        { params: { mesi } },
+      );
+      return data;
+    },
+    enabled: clientId !== null,
+    staleTime: 120_000, // 2min — dati pesanti, cambiano poco
+  });
+}
+
+// ════════════════════════════════════════════════════════════
+// QUERY: Workout Diff (piano vs eseguito)
+// ════════════════════════════════════════════════════════════
+
+export function useWorkoutDiff(clientId: number | null, mesi = 3) {
+  return useQuery<WorkoutDiffResponse>({
+    queryKey: ["workout-diff", clientId, mesi],
+    queryFn: async () => {
+      const { data } = await apiClient.get<WorkoutDiffResponse>(
+        `/clients/${clientId}/workout-diff`,
         { params: { mesi } },
       );
       return data;

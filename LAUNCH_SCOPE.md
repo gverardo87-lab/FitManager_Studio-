@@ -17,6 +17,7 @@ con installazione ripetibile, supporto gestibile e flussi core affidabili.
   - agenda
   - cassa
   - schede/workout
+  - training intelligence (analisi scientifica post-esecuzione + workout diff piano vs eseguito)
   - misurazioni/anamnesi
 - backup, restore e diagnostica locale
 - connettivita' guidata per:
