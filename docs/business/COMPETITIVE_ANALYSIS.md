@@ -1,7 +1,8 @@
 # FitManager AI Studio — Analisi Competitiva
 
-> Ultimo aggiornamento: 2026-03-11
+> Ultimo aggiornamento: 2026-03-29
 > Intelligence di prodotto per posizionamento commerciale.
+> Versione prodotto di riferimento: 1.0.5
 
 ---
 
@@ -14,10 +15,13 @@ Il mercato del software per personal trainer e' dominato da piattaforme cloud an
 3. **Safety engine con mapping condizioni mediche** — nessuno incrocia anamnesi con esercizi
 4. **Periodizzazione evidence-based integrata** — solo parametri generici, mai modelli Israetel/Helms
 5. **Lingua italiana nativa** — il 90% dei competitor e' solo inglese, chi supporta italiano lo fa come traduzione generica
-6. **Computer vision integrata per body scan e analisi biomeccanica** — nessun competitor integra pose estimation con safety engine + training science per feedback real-time sulla forma degli esercizi (FitScan, ADR-007)
-7. **Hardware dedicato always-on** — FitManager Box (Raspberry Pi 5) elimina la dipendenza dal PC. Nessun competitor offre un modello hardware+software privacy-first (ADR-006)
+6. **Nutrizione italiana CREA/LARN** — 880 alimenti da database ufficiale italiano, piani settimanali basati su LARN. Nessun competitor ha nutrizione italiana evidence-based
+7. **Workout Intelligence** — analisi post-esecuzione muscolo×muscolo, compliance, dose-response, equilibri biomeccanici. Nessun competitor offre analytics di questo livello
+8. **Comunicazione WhatsApp integrata** — 15 template pre-compilati, auto-log, invio multiplo. Non sostituisce WhatsApp, lo potenzia
+9. **Hardware dedicato always-on** (roadmap) — FitManager Box (Raspberry Pi 5) elimina la dipendenza dal PC (ADR-006)
+10. **Computer vision per body scan** (roadmap) — FitScan: pose estimation + safety engine + training science (ADR-007)
 
-FitManager occupa una **nicchia vuota**: CRM scientifico con computer vision integrata, privacy-first, italiano, per PT a P.IVA.
+FitManager occupa una **nicchia vuota**: CRM scientifico con nutrizione italiana, privacy-first, per PT a P.IVA.
 
 ---
 
@@ -265,7 +269,25 @@ Non trovato come prodotto specifico nel mercato italiano. Il nome potrebbe rifer
 | **Italiano** | SI — Supporta italiano |
 | **Target** | PT singoli e piccoli studi. Focus su online coaching e personal brand |
 
-### 4.5 Altre Soluzioni Italiane Minori
+### 4.5 Mangofit
+
+| Aspetto | Dettaglio |
+|---------|-----------|
+| **Pricing** | Da €10/mese (5 clienti). Piani scalabili. Trial 30gg gratuito |
+| **Features** | Schede allenamento, gestione clienti, comunicazione in-app, pagamenti integrati, monitoraggio progressi (peso, misure, performance), report personalizzati |
+| **Exercise Library** | Database esercizi (dimensione non specificata). Custom exercises supportati |
+| **Scientific Tools** | Nessuna periodizzazione. Nessuna analisi biomeccanica. Nessun safety engine. Tracking progressi basico |
+| **Mobile** | App nativa iOS/Android per trainer e clienti |
+| **Integrations** | Pagamenti online integrati |
+| **Data** | Cloud-only |
+| **Italiano** | SI — Prodotto nativo italiano. Si posiziona come "#1 Software per PT in Italia" |
+| **Target** | PT singoli italiani. 300+ trainer dichiarati |
+| **Reviews** | Presenti su App Store/Google Play. Limitata presenza su Capterra/G2 |
+
+**Competitor diretto nel segmento PT singolo italiano.** Punti di forza: pricing aggressivo (€10/mese), app native, italiano nativo, UX moderna, onboarding semplice.
+**Debolezze vs FitManager**: cloud-only, zero scienza (no safety engine, no periodizzazione, no EMG, no LARN), nessuna nutrizione italiana strutturata, nessun portale anamnesi, nessuna analisi biomeccanica, modello SaaS (costo cumulativo superiore). A 5 anni: €600+ vs €249-407 (FitManager licenza + assistenza).
+
+### 4.6 Altre Soluzioni Italiane Minori
 
 | Nome | Focus | Prezzo | Note |
 |------|-------|--------|------|
@@ -335,34 +357,35 @@ Non trovato come prodotto specifico nel mercato italiano. Il nome potrebbe rifer
 
 ### 6.1 Core Features
 
-| Feature | FitManager | Trainerize | My PT Hub | TrueCoach | PT Distinction | Virtuagym | EvolutionFit | Hevy Coach |
-|---------|-----------|------------|-----------|-----------|---------------|-----------|-------------|------------|
-| Client CRM | **Full** | Base | Base | Base | Avanzato | Enterprise | Base | Base |
-| Workout Builder | **3-tab + DnD + blocchi** | Buono | Medio | **Ottimo** | Buono | Buono | Buono | Buono |
-| Scheduling/Agenda | **Full** | Si | Si | Limitato | Si | Si (enterprise) | Si | No |
-| Pagamenti/Rate | **Full (rate, rinnovi, running balance)** | Si | Si | Stripe | Si | Enterprise | Limitato | No |
-| Nutrition | No | Si (macro) | Si | MFP | Si (MFP) | Si | **Si (piani + alimenti)** | No |
-| Progress Tracking | **Clinico (5 moduli)** | Base | Base | Base | Base + Habits | Base | **Plicometria + BIA** | Base |
-| Messaging | No (WhatsApp esterno) | In-app | In-app | In-app | In-app | In-app | In-app | In-app |
-| Habit Coaching | No | Base | No | No | **Avanzato** | No | No | No |
-| Forms/Questionari | **Anamnesi v2 (6 step, self-service)** | No | No | No | **Custom forms** | No | Valutazioni | No |
+| Feature | FitManager | Trainerize | My PT Hub | TrueCoach | PT Distinction | EvolutionFit | Mangofit |
+|---------|-----------|------------|-----------|-----------|---------------|-------------|----------|
+| Client CRM | **Full (journey hub, avatar, semaforo)** | Base | Base | Base | Avanzato | Base | Base |
+| Workout Builder | **3-tab + DnD + blocchi + schedule** | Buono | Medio | **Ottimo** | Buono | Buono | Base |
+| Portale Allenamento Cliente | **Si (zero app, log esecuzione, feedback)** | App | App | App | App | App | App |
+| Workout Intelligence | **Compliance + dose-response + diff** | No | No | No | No | No | No |
+| Scheduling/Agenda | **Full** | Si | Si | Limitato | Si | Si | Si |
+| Pagamenti/Rate | **Full (rate, rinnovi, running balance)** | Si | Si | Stripe | Si | Limitato | Si |
+| Nutrition | **880 alimenti CREA, piani LARN 7gg** | Si (macro) | Si | MFP | Si (MFP) | **Piani + alimenti** | No |
+| Progress Tracking | **Clinico (5 moduli, range OMS/ACSM)** | Base | Base | Base | Base + Habits | **Plicometria + BIA** | Base |
+| Comunicazione | **WhatsApp semi-auto (15 template + registro)** | In-app | In-app | In-app | In-app | In-app | In-app |
+| Forms/Questionari | **Anamnesi v2 (6 step, self-service, portale)** | No | No | No | **Custom forms** | Valutazioni | No |
 
 ### 6.2 Profondita' Scientifica (Il Differenziante)
 
-| Feature Scientifica | FitManager | Trainerize | My PT Hub | TrueCoach | PT Distinction | EvolutionFit | Hevy Coach |
-|--------------------|-----------|------------|-----------|-----------|---------------|-------------|------------|
-| Exercise Library (n.) | **391 attivi + 720 archivio** | ~1,000+ | **7,500+** | 3,000+ | 1,200+ | 1,000+ | 400 |
-| Tassonomia muscoli | **53 muscoli, 3,370 FK** | No | No | No | No | Gruppi generici | No |
-| Tassonomia articolazioni | **15 articolazioni, 858 FK** | No | No | No | No | No | No |
-| Condizioni mediche | **47 condizioni, 3,600 FK** | No | No | No | No | No | No |
-| Safety Engine | **80 pattern rules, 3 severity** | No | No | No | No | No | No |
+| Feature Scientifica | FitManager | Trainerize | My PT Hub | TrueCoach | PT Distinction | EvolutionFit | Mangofit |
+|--------------------|-----------|------------|-----------|-----------|---------------|-------------|----------|
+| Exercise Library (n.) | **500 attivi + 940 relazioni** | ~1,000+ | **7,500+** | 3,000+ | 1,200+ | 1,000+ | N/S |
+| Tassonomia muscoli | **53 muscoli, mapping per esercizio** | No | No | No | No | Gruppi generici | No |
+| Tassonomia articolazioni | **15 articolazioni, mapping per esercizio** | No | No | No | No | No | No |
+| Condizioni mediche | **47 condizioni, 80 pattern rules** | No | No | No | No | No | No |
+| Safety Engine | **80 regole, 3 severita', alert in builder** | No | No | No | No | No | No |
 | Matrice EMG | **18x15 muscle contribution** | No | No | No | No | No | No |
 | Volume MEV/MAV/MRV | **15 muscoli x 3 livelli** | No | No | No | No | No | No |
-| Balance Ratios | **Push:Pull, Quad:Ham, Ant:Post** | No | No | No | No | No | No |
+| Balance Ratios | **Push:Pull, Quad:Ham, Ant:Post (5 rapporti)** | No | No | No | No | No | No |
 | Periodizzazione | **Blocchi (acc/int/OR/deload)** | No | No | No | No | No | No |
-| Plan Builder | **4 fasi volume-driven** | No | No | No | No | AI generica | No |
-| Analisi 4D | **Volume + Balance + Freq + Recovery** | No | No | No | No | No | No |
-| 1RM % Display | **Automatico (squat/panca/stacco)** | No | No | Manuale | No | No | No |
+| Workout Intelligence | **Dose-response muscolo×muscolo, compliance, diff piano vs eseguito** | No | No | No | No | No | No |
+| Nutrizione LARN | **880 alimenti CREA, 210 ricette, 12 template, piano 7gg** | No | No | No | No | No | No |
+| 1RM % Display | **Automatico** | No | No | Manuale | No | No | No |
 | Muscle Map Anatomico | **Silhouette 3-colori live** | No | No | No | No | No | No |
 | Range Normativi | **OMS/ACSM/AHA/ESH** | No | No | No | No | Plicometria ACSM | No |
 | Analisi Clinica | **5 moduli (BMI, FFMI, WHR, MAP, simmetria)** | No | No | No | No | Limitata | No |
@@ -370,23 +393,24 @@ Non trovato come prodotto specifico nel mercato italiano. Il nome potrebbe rifer
 
 ### 6.3 Approccio ai Dati e Privacy
 
-| Aspetto | FitManager | Trainerize | My PT Hub | TrueCoach | PT Distinction | Virtuagym | EvolutionFit |
-|---------|-----------|------------|-----------|-----------|---------------|-----------|-------------|
-| Hosting | **Locale (PC trainer)** | Cloud (US/CA/FR) | Cloud | Cloud | Cloud | Cloud (EU) | Cloud (IT) |
-| Dati dove | **PC del trainer** | Server terzi | Server terzi | Server terzi | Server terzi | Server EU | Server TeamSystem IT |
-| Export dati | **JSON + Backup SQLite** | CSV | Limitato | Limitato | Limitato | CSV | Non specificato |
-| GDPR | **Zero trasferimento = zero rischio** | Dichiarato | Dichiarato | Non dettagliato | Dichiarato | Server EU | Server IT |
-| Offline | **SI** | No | No | No | No | No | No |
-| Backup autonomo | **Atomico + SHA-256 + restore** | No | No | No | No | No | No |
+| Aspetto | FitManager | Trainerize | My PT Hub | TrueCoach | EvolutionFit | Mangofit |
+|---------|-----------|------------|-----------|-----------|-------------|----------|
+| Hosting | **Locale (PC trainer)** | Cloud (US/CA/FR) | Cloud | Cloud | Cloud (IT) | Cloud |
+| Dati dove | **PC del trainer** | Server terzi | Server terzi | Server terzi | Server TeamSystem IT | Server terzi |
+| Export dati | **JSON + Backup SQLite** | CSV | Limitato | Limitato | Non specificato | Non specificato |
+| GDPR | **Zero trasferimento = zero rischio** | Dichiarato | Dichiarato | Non dettagliato | Server IT | Dichiarato |
+| Offline | **SI** | No | No | No | No | No |
+| Backup autonomo | **Atomico + SHA-256 + restore** | No | No | No | No | No |
 
-### 6.4 Lingua e Target
+### 6.4 Lingua, Target e Costo Totale
 
-| Aspetto | FitManager | Trainerize | My PT Hub | TrueCoach | PT Distinction | Virtuagym | EvolutionFit |
-|---------|-----------|------------|-----------|-----------|---------------|-----------|-------------|
-| Italiano | **Nativo** | No | No | No | No | Si (traduzione) | **Nativo** |
-| Target | **PT singolo P.IVA** | PT + studi + chains | PT + studi | PT + S&C coaches | PT online | Gym + health clubs | **PT + palestre IT** |
-| Prezzo per PT singolo | **Una tantum** | $9-20/mese | $14.40/mese | $20-107/mese | $20-90/mese | $29+/mese | EUR 25/mese |
-| Costo 5 anni | **Una tantum** | $1,188-12,000 | $864 | $1,200-6,420 | $1,194-5,394 | $1,740+ | EUR 1,500 |
+| Aspetto | FitManager | Trainerize | My PT Hub | TrueCoach | EvolutionFit | Mangofit |
+|---------|-----------|------------|-----------|-----------|-------------|----------|
+| Italiano | **Nativo** | No | No | No | **Nativo** | **Nativo** |
+| Target | **PT singolo P.IVA** | PT + studi + chains | PT + studi | PT + S&C coaches | **PT + palestre IT** | **PT singoli IT** |
+| Prezzo per PT singolo | **€249 una tantum** | $9-20/mese | $14.40/mese | $20-107/mese | €25/mese | €10+/mese |
+| Costo 3 anni (con assistenza) | **€407** | $324-720 | $518 | $720-3,852 | **€900** | **€360+** |
+| Costo 5 anni (con assistenza) | **€565** | $540-1,200 | $864 | $1,200-6,420 | €1,500 | €600+ |
 
 ---
 
@@ -394,39 +418,43 @@ Non trovato come prodotto specifico nel mercato italiano. Il nome potrebbe rifer
 
 ### Strengths (Punti di Forza Unici)
 
-1. **Unico CRM con motore scientifico evidence-based** — Nessun competitor ha matrice EMG, volume model, safety engine, periodizzazione. E' un vantaggio competitivo incolmabile nel breve termine
+1. **Unico CRM con motore scientifico evidence-based** — 7 motori scientifici (Training Science, Workout Intelligence, Safety Engine, Nutrition Science, Clinical Analysis, Smart Programming, Workout Diff). Nessun competitor ha nulla di paragonabile
 2. **Privacy-first / dati locali** — Zero cloud, zero trasferimento, zero rischio GDPR. Argomento di vendita potentissimo nel mercato italiano post-GDPR
-3. **Italiano nativo** — UI, messaggi, unita' di misura, terminologia clinica in italiano
-4. **Una tantum vs SaaS** — Il PT compra una volta, il software e' suo. In 12-18 mesi ripaga il costo vs qualsiasi SaaS
-5. **Safety Engine** — Nessun competitor incrocia anamnesi con esercizi. Valore medico-legale per il trainer
-6. **Offline capability** — Funziona senza internet. Nessun competitor lo offre
-7. **Backup autonomo** — Il trainer controlla i propri backup. Nessuna dipendenza da terzi
+3. **Italiano nativo** — UI, messaggi, unita' di misura, terminologia clinica, nutrizione CREA/LARN
+4. **Una tantum vs SaaS** — €249 una volta. In 12 mesi ripaga il costo vs qualsiasi SaaS. A 3 anni: €407 vs €900+ (EvolutionFit) o €360+ (Mangofit)
+5. **Safety Engine** — 47 condizioni, 80 regole. Nessun competitor incrocia anamnesi con esercizi. Valore medico-legale per il trainer
+6. **Nutrizione italiana CREA** — 880 alimenti, 210 ricette, 12 template LARN. L'unico software con nutrizione evidence-based italiana
+7. **WhatsApp integrato (non sostituito)** — 15 template pre-compilati, auto-log, invio multiplo. Non chiede al trainer di cambiare abitudini
+8. **Workout Intelligence** — Dose-response muscolo×muscolo, compliance, diff piano vs eseguito. Nessun competitor al mondo offre questo livello di analisi
+9. **Offline capability** — Funziona senza internet. Nessun competitor lo offre
+10. **Portale clienti zero-app** — Il cliente del trainer accede dal browser, registra esecuzione, da feedback. Zero download
 
 ### Weaknesses (Aree da Rafforzare)
 
-1. **In-app messaging assente** — Tutti i competitor hanno chat integrata. FitManager delega a WhatsApp
-2. **Nutrition module assente** — La maggior parte dei competitor ha tracking nutrizione/macro
-3. **Exercise library numericamente inferiore** — 391 vs 7,500 (My PT Hub) o 4,000 (Virtuagym). Compensato dalla qualita' scientifica dei metadati
-4. **No app mobile nativa** — Solo web responsive. I competitor hanno app dedicate iOS/Android
-5. **Utente singolo** — No team/collaboratori. Limitante per piccoli studi con 2-3 trainer
-6. **Brand awareness zero** — Prodotto nuovo vs brand consolidati
+1. **No app mobile nativa** — Solo web responsive + Tailscale per accesso remoto. I competitor hanno app dedicate iOS/Android. Mitigato dal Portale Allenamento (browser-based, zero install)
+2. **Utente singolo** — No team/collaboratori. Limitante per piccoli studi con 2-3 trainer
+3. **Brand awareness zero** — Prodotto nuovo vs brand consolidati (TeamSystem, ABC Fitness)
+4. **Exercise library numericamente inferiore** — 500 vs 7,500 (My PT Hub). Compensato dalla qualita' scientifica: 940 relazioni, tassonomia muscoli/articolazioni/condizioni, matrice EMG. Cresce con contributi professionisti
+5. **FitManager Box non ancora disponibile** — Il dispositivo dedicato richiede 3-6 mesi di sviluppo post-POC + certificazioni
 
 ### Opportunities (Opportunita')
 
 1. **Nicchia vuota in Italia** — Nessun CRM italiano scientifico per PT singoli a P.IVA
 2. **GDPR come leva commerciale** — "I tuoi dati sul tuo PC, non su server americani"
-3. **Margine prezzo** — Posizionamento EUR 149-299 una tantum vs EUR 180-720/anno SaaS
+3. **Margine prezzo** — €249 una tantum vs €300-900/anno SaaS
 4. **Community PT CONI** — Federazioni, corsi formazione, eventi (Rimini Wellness)
-5. **Integrazione fiscale italiana** — Regime forfettario, codice ATECO 85.51.09
-6. **AI locale come differenziante** — Ollama per suggerimenti senza cloud (roadmap)
+5. **Smart&Start Italia** — Finanziamento a tasso zero fino a €1.5M per startup innovative (post-POC)
+6. **Internazionalizzazione** — Nessun competitor globale combina scienza + privacy + perpetuo. Versione inglese Blocchi 1-2 in roadmap Anno 2
+7. **AI locale come differenziante** — Ollama per suggerimenti senza cloud (roadmap)
+8. **Database esercizi arricchito da professionisti** — Il contributo di trainer certificati crea un asset che cresce nel tempo e che un competitor non puo' replicare comprando un dataset
 
 ### Threats (Minacce)
 
 1. **EvolutionFit (TeamSystem)** — Competitor italiano diretto con brand TeamSystem alle spalle
-2. **ABC Fitness consolidamento** — Trainerize + potenziali acquisizioni = ecosystem lock-in
-3. **AI cloud dei competitor** — Trainerize/PT Distinction stanno aggiungendo AI assistant
-4. **Abitudine WhatsApp** — PT italiani abituati a gestire tutto via WhatsApp, resistenza al cambio
-5. **Adozione tecnologica bassa** — Una parte significativa dei PT usa ancora carta/Excel
+2. **Mangofit** — Pricing aggressivo (€10/mese), app native, posizionamento "#1 in Italia". Manca la scienza ma ha la distribuzione
+3. **ABC Fitness consolidamento** — Trainerize + potenziali acquisizioni = ecosystem lock-in
+4. **AI cloud dei competitor** — Trainerize/PT Distinction stanno aggiungendo AI assistant
+5. **Abitudine WhatsApp/Excel** — Resistenza al cambio. Mitigato dall'integrazione WhatsApp nativa di FitManager
 
 ---
 
@@ -447,17 +475,28 @@ Non trovato come prodotto specifico nel mercato italiano. Il nome potrebbe rifer
 | Virtuagym | SaaS | EUR 348+/anno |
 | Mindbody | SaaS | EUR 1,548+/anno |
 
-### Posizionamento Prezzo Suggerito
+### Modello di Pricing Attuale (confermato BP v4.3)
 
-**Modello**: Licenza perpetua + aggiornamenti inclusi per 12 mesi.
+| Prodotto | Prezzo | Include |
+|----------|--------|---------|
+| **Licenza software** | **€249 una tantum** | Software completo, 500 esercizi, 7 motori scientifici, 880 alimenti CREA, WhatsApp, portale clienti |
+| **FitManager Box** | **€449 una tantum** | Dispositivo dedicato + software preinstallato. Dati nel tuo studio. Plug & play |
+| **Assistenza PRO** | **€79/anno** | Aggiornamenti, nuovi esercizi/alimenti, template, supporto. Inclusa 12 mesi per i primi 30 clienti |
+| **Inner Circle** | **€249/anno** | PRO + masterclass, webinar, mastermind, certificazione PT Evoluto |
 
-| Tier | Prezzo | Include |
-|------|--------|---------|
-| **Starter** | EUR 149 una tantum | Core CRM + workout builder + safety engine |
-| **Pro** | EUR 249 una tantum | Tutto + Training Science Engine + analisi clinica + portale clienti |
-| **Aggiornamento annuale** | EUR 49/anno (opzionale) | Nuove features + supporto |
+**Confronto costo totale 3 anni (PT singolo)**:
 
-**Argomento di vendita**: "In 8 mesi hai gia' risparmiato rispetto a qualsiasi SaaS. E i tuoi dati restano tuoi."
+| Software | Anno 1 | Anno 2 | Anno 3 | Totale |
+|----------|--------|--------|--------|--------|
+| **FitManager (licenza)** | €249 | €79 | €79 | **€407** |
+| **FitManager (Box)** | €449 | €79 | €79 | **€607** |
+| Mangofit (€10/mese) | €120 | €120 | €120 | €360 |
+| EvolutionFit (€25/mese) | €300 | €300 | €300 | €900 |
+| TrueCoach Starter ($20/mese) | ~€240 | ~€240 | ~€240 | ~€720 |
+| PT Distinction Basic ($20/mese) | ~€240 | ~€240 | ~€240 | ~€720 |
+| Trainerize Pro ($20/mese) | ~€240 | ~€240 | ~€240 | ~€720 |
+
+**Argomento di vendita**: "In 12 mesi hai gia' risparmiato rispetto a qualsiasi SaaS. In 3 anni risparmi €300-500. E i tuoi dati restano tuoi, con la scienza dell'allenamento inclusa."
 
 ---
 
