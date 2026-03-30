@@ -169,8 +169,9 @@ def build_session_prep(
     *,
     trainer_id: int,
     session: Session,
+    reference_dt: datetime | None = None,
 ) -> SessionPrepResponse:
-    now_dt = datetime.now()
+    now_dt = reference_dt or datetime.now()
     today = now_dt.date()
 
     # ── 1. Eventi del giorno (non cancellati, non passati) ──

@@ -9,6 +9,7 @@ from api.models.contract import Contract
 from api.models.measurement import ClientMeasurement
 from api.models.trainer import Trainer
 from api.models.workout import WorkoutPlan
+from api.services.session_prep import build_session_prep
 from api.services.workspace_engine import (
     build_workspace_case_detail,
     build_workspace_case_list,
@@ -246,7 +247,7 @@ def test_workspace_today_aggregates_real_sources(client, auth_headers):
     assert overdue_case["finance_context"]["total_due_amount"] == 600.0
 
 
-def test_session_prep_counts_only_pt_sessions_and_skips_client_colloqui(client, auth_headers):
+def test_session_prep_counts_only_pt_sessions_and_skips_client_colloqui(client, auth_headers, session):
     pt_client = _create_client(
         client,
         auth_headers,
@@ -261,12 +262,15 @@ def test_session_prep_counts_only_pt_sessions_and_skips_client_colloqui(client, 
         "Colloquio",
     )
 
+    # Use fixed date + reference_dt to avoid time-sensitive failures (events
+    # must be "today" AND "in the future" relative to reference_dt).
+    reference_dt = datetime(2026, 3, 9, 9, 0)
     pt_event = _create_event(
         client,
         auth_headers,
         client_id=pt_client["id"],
         title="PT Paolo Sessione",
-        start_at=datetime.now() + timedelta(minutes=45),
+        start_at=datetime(2026, 3, 9, 10, 0),
     )
     consult_event = _create_event(
         client,
@@ -274,25 +278,27 @@ def test_session_prep_counts_only_pt_sessions_and_skips_client_colloqui(client, 
         client_id=consult_client["id"],
         title="Colloquio Lucia",
         category="COLLOQUIO",
-        start_at=datetime.now() + timedelta(hours=2),
+        start_at=datetime(2026, 3, 9, 12, 0),
     )
     internal_event = _create_event(
         client,
         auth_headers,
         title="Blocca agenda staff",
         category="PERSONALE",
-        start_at=datetime.now() + timedelta(hours=3),
+        start_at=datetime(2026, 3, 9, 14, 0),
     )
 
-    response = client.get("/api/workspace/today/session-prep", headers=auth_headers)
-    assert response.status_code == 200, response.text
-    data = response.json()
+    data = build_session_prep(
+        trainer_id=_trainer_id(session),
+        session=session,
+        reference_dt=reference_dt,
+    )
 
-    assert data["total_sessions"] == 1
-    assert [item["event_id"] for item in data["sessions"]] == [pt_event["id"]]
-    assert consult_event["id"] not in [item["event_id"] for item in data["sessions"]]
-    assert internal_event["id"] in [item["event_id"] for item in data["non_client_events"]]
-    assert consult_event["id"] not in [item["event_id"] for item in data["non_client_events"]]
+    assert data.total_sessions == 1
+    assert [item.event_id for item in data.sessions] == [pt_event["id"]]
+    assert consult_event["id"] not in [item.event_id for item in data.sessions]
+    assert internal_event["id"] in [item.event_id for item in data.non_client_events]
+    assert consult_event["id"] not in [item.event_id for item in data.non_client_events]
 
 
 def test_workspace_renewals_cash_includes_payment_due_soon_but_keeps_it_out_of_today(client, auth_headers):
