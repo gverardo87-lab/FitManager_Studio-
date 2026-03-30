@@ -14,8 +14,9 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 | `DOCUMENTO_OPERATIVO_PARTNER.md` | Accordo partner: compenso, equity, milestone, obblighi | Termini partnership |
 | `LEGAL_REGULATORY_REPORT.md` | Normativa, certificazioni, privacy, requisiti legali | Compliance |
 | `COMPETITIVE_ANALYSIS.md` | Competitor, posizionamento, differenziatori | Analisi mercato |
+| `REVENUE_ACCELERATION_STRATEGY.md` | 5 leve per accelerare ricavi senza compromettere conquista mercato | Gap reddito founder, pricing internazionale, upsell |
 
-**Gerarchia**: BP e' la fonte di verita' strategica. SP operativizza il BP. FM quantifica il BP. Partner Doc e Legal sono satelliti.
+**Gerarchia**: BP e' la fonte di verita' strategica. SP operativizza il BP. FM quantifica il BP. RAS identifica leve incrementali. Partner Doc e Legal sono satelliti.
 
 ---
 
