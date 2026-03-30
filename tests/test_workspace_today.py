@@ -809,7 +809,8 @@ def test_workspace_today_keeps_payment_overdue_visible_without_session_pressure(
         overdue_client["id"],
     )
 
-    reference_dt = datetime(2026, 3, 9, 9, 0)
+    # reference_dt deve essere dopo le rate scadute (today - 20gg) per trovarle overdue
+    reference_dt = datetime.now().replace(hour=9, minute=0, second=0, microsecond=0)
     today_workspace = build_workspace_today(
         trainer_id=_trainer_id(session),
         session=session,
@@ -852,16 +853,19 @@ def test_workspace_today_hides_payment_overdue_when_session_pressure_exists(
         auth_headers,
         mixed_client["id"],
     )
+    # reference_dt deve essere dopo le rate scadute (today - 20gg)
+    # e l'evento deve essere 1h nel futuro rispetto a reference_dt per essere imminent
+    reference_dt = datetime.now().replace(hour=9, minute=0, second=0, microsecond=0)
+    event_start = reference_dt + timedelta(hours=1)
     _create_event(
         client,
         auth_headers,
         client_id=mixed_client["id"],
         contract_id=contract["id"],
         title="PT Giulia Mista",
-        start_at=datetime(2026, 3, 9, 10, 0),
+        start_at=event_start,
     )
 
-    reference_dt = datetime(2026, 3, 9, 9, 0)
     today_workspace = build_workspace_today(
         trainer_id=_trainer_id(session),
         session=session,
