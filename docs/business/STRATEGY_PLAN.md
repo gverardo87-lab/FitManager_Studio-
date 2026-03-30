@@ -297,14 +297,14 @@ Questo è lo scenario dove il progetto può diventare qualcosa di grosso. Il par
 
 Le masterclass diventano eventi riconosciuti nel settore. Se il partner opera anche in contesto internazionale, lo Scenario 3 include l'apertura di mercati esteri — catene fitness nordeuropee, reti di PT anglofone, contatti corporate internazionali. La versione inglese del prodotto (disponibile dai mesi 7-12) diventa la leva per trasformare un network internazionale in clienti reali. La certificazione PT Evoluto diventa una credenziale citata. Il webinar mensile attira 50-100 partecipanti, non 20-30.
 
-Questo scenario non è stimabile con le assunzioni conservative del BP — dipende interamente dal calibro delle connessioni e dalla capacità di attivarle. Ma la logica è chiara:
+Questo scenario non è stimabile con le assunzioni conservative del BP — dipende interamente dal calibro delle connessioni e dalla capacità di attivarle. I numeri sotto sono calcolati con le formule del Financial Model (mix 80/65/50, PRO 70%, IC 25%, pricing INT €349-549):
 
 | | Anno 1 | Anno 2 | Anno 3 |
 |---|---|---|---|
-| Clienti | 80-120 | 200-300 | 400-600+ |
-| Inner Circle | 20-30 | 50-80 | 100-150 |
-| Fatturato | €35.000-50.000 | €80.000-120.000 | €150.000-250.000+ |
-| Partner cash | €6.000-9.000 | €15.000-25.000 | €30.000-50.000+ |
+| Clienti IT / INT | 80-100 / — | 150-200 / 30-60 | 250-350 / 100-200 |
+| Inner Circle (25%) | 20-25 | 45-65 | 88-138 |
+| Fatturato | €29.000-37.000 | €55.000-85.000 | €100.000-165.000 |
+| Partner cash | €7.000-9.000 | €14.000-21.000 | €25.000-42.000 |
 
 A questi volumi, FitManager non è più un prodotto di un solo founder. È un'azienda con team, presenza di settore, e un brand riconosciuto. Il valore dell'equity del partner (fino al 12%) diventa significativo.
 
@@ -315,8 +315,8 @@ A questi volumi, FitManager non è più un prodotto di un solo founder. È un'az
 | Inner Circle possibile | No | Sì | Sì, su scala |
 | Concept PT Evoluto nel mercato | Teoria | Inizia a vivere | Standard di settore |
 | Community | Non parte | Parte dalla POC | Diventa il hub del settore |
-| Fatturato Anno 3 | €22.000 | €49.650 | €150.000-250.000 |
-| Partner cash Anno 3 | €0 | €12.450 | €30.000-50.000 |
+| Fatturato Anno 3 | €22.000 | €49.650 | €100.000-165.000 |
+| Partner cash Anno 3 | €0 | €12.450 | €25.000-42.000 |
 
 La differenza tra Scenario 2 e 3 non è lineare — è esponenziale. Dipende da una variabile sola: quanto del network ad alto livello il partner può attivare.
 
@@ -337,9 +337,9 @@ Due percentuali, nessuna zona grigia. Il 35% sul ricorrente è la componente che
 
 | Milestone | Equity | Quando |
 |---|---|---|
-| Completamento POC — decisione GO al giorno 90 | 5% | Mese 3 |
-| 50 clienti attivi nella base installata | 3% | ~Mese 8-12 |
-| Primo accordo internazionale firmato | 4% | Quando accade |
+| Completamento POC — decisione GO al giorno 90 | 3% | Mese 3 |
+| 50 clienti attivi nella base installata | 3% | Quando accade |
+| Primo accordo internazionale firmato | 6% | Quando accade |
 | **Totale potenziale** | **12%** | — |
 
 Zero costo fisso. Il partner guadagna solo se il progetto genera ricavi. Se il progetto non funziona, nessuno perde denaro — solo tempo investito. Se la POC fallisce: 0% equity, 0 costi.
@@ -354,12 +354,12 @@ Zero costo fisso. Il partner guadagna solo se il progetto genera ricavi. Se il p
 | Valore equity stimato (12%) | €3.120 | €8.160 | €16.800 | — |
 | **Totale (cash + equity)** | **€7.030** | **€15.320** | **€29.250** | **€39.520** |
 
-**Scenario con leva network (stima):**
+**Scenario con leva network (calcolato con FM, IC 25%, pricing INT €349-549):**
 
 | | Anno 1 | Anno 2 | Anno 3 | Cumulativo |
 |---|---|---|---|---|
-| Cash | €8.000-12.000 | €22.000-38.000 | €50.000-90.000 | €80.000-140.000 |
-| Valore equity (12%) | €6.000-10.000 | €16.000-25.000 | €36.000-60.000+ | — |
+| Cash | €7.000-9.000 | €14.000-21.000 | €25.000-42.000 | €46.000-72.000 |
+| Valore equity (12%) | €2.000-3.000 | €8.000-11.000 | €22.000-34.000 | — |
 
 ### Le masterclass come asset
 

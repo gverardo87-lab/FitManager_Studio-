@@ -503,17 +503,17 @@ Il business funziona senza partner. Con il partner, decolla. Non è una dipenden
 | Di cui ricorrente (PRO + IC) | €3.200 | €8.200 | €16.800 | €28.200 |
 | **Founder** | | | | |
 | Netto cash | €1.080 | €1.935 | €7.585 | **€10.600** |
-| Equity detenuta | 95% | 88-92% | 88% | — |
+| Equity detenuta | 97% | 88-94% | 88% | — |
 | **Partner** | | | | |
 | Cash (20% prodotto + 35% ricorrente) | €3.910 | €7.160 | €12.450 | **€23.520** |
-| Equity maturata (milestone) | 5% | 8-12% | 12% | — |
+| Equity maturata (milestone) | 3% | 6-12% | 12% | — |
 | Valore equity stimato (12%) | €3.120 | €8.160 | €16.800 | — |
 | **Totale partner (cash + equity)** | **€7.030** | **€15.320** | **€29.250** | **€39.520** |
 | **Valore stimato progetto** | **€26.000** | **€68.000** | **€140.000** | — |
 
 Nota sulla valutazione: multiplo 2x sul ricavo ricorrente annualizzato (€16.800 × 2 = €33.600) + valore base installata (191 × €200 = €38.200) + valore IP (€35.000) + valore community e brand (€33.200). Metodo conservativo per software B2B verticali con community attiva. Il ricavo ricorrente (PRO + Inner Circle) rappresenta il 34% del fatturato Anno 3 e cresce ogni anno — è il driver principale della valutazione.
 
-L'equity del partner è legata a milestone concrete: 5% al completamento POC (GO al giorno 90), 3% al raggiungimento di 50 clienti attivi, 4% al primo accordo internazionale firmato. Se la POC fallisce: 0% equity, 0 costi.
+L'equity del partner è legata a milestone concrete: 3% al completamento POC (GO al giorno 90), 3% al raggiungimento di 50 clienti attivi, 6% al primo accordo internazionale firmato. Se la POC fallisce: 0% equity, 0 costi.
 
 ---
 
@@ -585,9 +585,9 @@ In aggiunta, il partner riceve equity fino al 12%, legata a milestone concrete:
 
 | Milestone | Equity | Quando |
 |---|---|---|
-| Completamento POC — decisione GO al giorno 90 | 5% | Mese 3 |
-| 50 clienti attivi nella base installata | 3% | ~Mese 8-12 |
-| Primo accordo internazionale firmato | 4% | Quando accade |
+| Completamento POC — decisione GO al giorno 90 | 3% | Mese 3 |
+| 50 clienti attivi nella base installata | 3% | Quando accade |
+| Primo accordo internazionale firmato | 6% | Quando accade |
 | **Totale potenziale** | **12%** | — |
 
 Se la POC fallisce: 0% equity, 0 costi. L'equity si guadagna con i risultati, non con la permanenza. Le 3 masterclass registrate durante la POC restano di proprietà condivisa e generano il 35% di revenue share standard ogni volta che un nuovo membro Inner Circle le fruisce.
