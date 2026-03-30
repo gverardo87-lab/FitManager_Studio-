@@ -5,6 +5,10 @@ const nextConfig: NextConfig = {
   // Per distribuzione (installer) non serve Node.js di sistema — solo node.exe bundled.
   output: "standalone",
 
+  // Consenti richieste cross-origin da Tailscale Funnel in dev.
+  // Next.js 16 blocca richieste da host diversi da localhost senza questa config.
+  allowedDevOrigins: ["*.ts.net"],
+
   // Turbopack workspace root: evita che Next.js inferisca la root dal package-lock.json
   // nella cartella padre (monorepo), dove react-big-calendar non è installato.
   turbopack: {
