@@ -2,7 +2,7 @@
 ; FitManager AI Studio — Inno Setup Script
 ; ══════════════════════════════════════════════════════════════
 ;
-; Produce: FitManager_Setup_1.0.4.exe (~100 MB)
+; Produce: FitManager_Setup_1.0.5.exe (~100 MB)
 ; Requisiti: Inno Setup 6+ (winget install JRSoftware.InnoSetup)
 ;
 ; Compilazione:
@@ -20,7 +20,7 @@
 ; Versione iniettata da build-installer.sh via /DMyAppVersion=X.Y.Z (SSoT: api/__init__.py)
 ; Il #define sotto serve come fallback per compilazione manuale diretta.
 #ifndef MyAppVersion
-  #define MyAppVersion "1.0.4"
+  #define MyAppVersion "1.0.5"
 #endif
 
 [Setup]
