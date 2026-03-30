@@ -287,6 +287,8 @@ Ogni commit deve lasciare il branch rilasciabile per il proprio scope.
 8. **Cache safety map non invalidata**: ogni mutation che modifica anamnesi (direttamente o indirettamente) DEVE invalidare `["exercise-safety-map", clientId]`. Include `useUpdateAnamnesi`, `useUpdateClient`, futuro polling portale pubblico.
 9. **Informazioni cliniche MAI dietro toggle**: la BuilderSafetyCard e' non negoziabile quando `condition_count > 0`. Zero condizioni responsive, zero toggle, zero tab. La visibilita' dipende SOLO da `safetyMap.condition_count > 0`.
 10. **Cascade FK su delete/replace sessioni**: `_delete_sessions_cascade` DEVE eliminare TUTTE le tabelle che referenziano `id_sessione` (schedule slots, logs, esercizi, blocchi) PRIMA di eliminare le sessioni. Aggiungere nuove tabelle con FK su `sessioni_scheda.id` → aggiornare SEMPRE il cascade. Test regressione: `test_workouts_crud.py::test_replace_sessions_with_schedule_no_500`. Incidente: INC-2026-03-28b.
+11. **Pagine pubbliche: ZERO CSS variables del tema**: `app/public/*` (anamnesi, workout) DEVONO usare SOLO colori Tailwind espliciti (`text-gray-900`, `text-gray-500`, `bg-gray-100`). MAI `text-muted-foreground`, `text-foreground`, `bg-muted`, `border-input`. Il dispositivo del cliente ha configurazione sconosciuta (dark mode). Forzare `style={{ colorScheme: "light" }}` + `text-gray-900` sul div root. Incidente: INC-2026-03-30.
+12. **Rate limiter endpoint pubblici**: calibrato per UX reale (page load = 2 req simultanee, 1 sessione = 4 req). Il frontend DEVE distinguere HTTP 429 da errori reali e mostrare UI "Riprova" dedicata, MAI "Link non valido". Incidente: INC-2026-03-30.
 
 ## Credenziali sviluppo
 

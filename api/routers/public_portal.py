@@ -78,8 +78,11 @@ def _require_enabled() -> None:
 _rate_log: dict[str, list[float]] = defaultdict(list)
 _WINDOW_MIN = 60.0    # 1 minuto in secondi
 _WINDOW_HOUR = 3600.0
-_MAX_PER_MIN = 10
-_MAX_PER_HOUR = 30
+
+# Limiti generosi: la page load fa 2 req simultanee, ogni apertura sessione +1.
+# Un cliente reale fa max ~20 req in un'ora di allenamento.
+_MAX_PER_MIN = 30
+_MAX_PER_HOUR = 120
 
 
 def _check_rate_limit(request: Request) -> None:

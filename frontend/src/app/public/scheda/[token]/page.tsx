@@ -43,11 +43,26 @@ import type {
 
 // ── API helpers ──────────────────────────────────────────────────────────────
 
+function extractDetail(data: Record<string, unknown>, fallback: string): string {
+  const d = data?.detail;
+  if (typeof d === "string") return d;
+  if (Array.isArray(d)) return d.map((e: { msg?: string }) => e.msg ?? "errore").join("; ");
+  return fallback;
+}
+
+class ApiError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+  }
+}
+
 async function apiGet<T>(url: string): Promise<T> {
   const res = await fetch(url);
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
-    throw new Error(data?.detail ?? "Errore di connessione");
+    throw new ApiError(extractDetail(data, "Errore di connessione"), res.status);
   }
   return res.json();
 }
@@ -60,7 +75,7 @@ async function apiPost<T>(url: string, body: unknown): Promise<T> {
   });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
-    throw new Error(data?.detail ?? "Errore durante il salvataggio");
+    throw new ApiError(extractDetail(data, "Errore durante il salvataggio"), res.status);
   }
   return res.json();
 }
@@ -124,7 +139,10 @@ export default function PublicWorkoutPage({
 
   // ── Load ───────────────────────────────────────────────────────────────
 
+  const [rateLimited, setRateLimited] = useState(false);
+
   const loadData = useCallback(async () => {
+    setRateLimited(false);
     try {
       const [infoRes, sessionsRes] = await Promise.all([
         apiGet<WorkoutValidateResponse>(`/api/public/workout/validate?token=${encodeURIComponent(token)}`),
@@ -134,8 +152,14 @@ export default function PublicWorkoutPage({
       setSlots(sessionsRes.slots);
       setPhase("main");
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : "Link non valido");
-      setPhase("error");
+      if (err instanceof ApiError && err.status === 429) {
+        setRateLimited(true);
+        setPhase("error");
+        setErrorMsg("Troppe richieste. Riprova tra qualche minuto.");
+      } else {
+        setErrorMsg(err instanceof Error ? err.message : "Link non valido");
+        setPhase("error");
+      }
     }
   }, [token]);
 
@@ -225,10 +249,10 @@ export default function PublicWorkoutPage({
 
   if (phase === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-teal-50 to-white">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-teal-50 to-white text-gray-900" style={{ colorScheme: "light" }}>
         <div className="text-center space-y-4">
           <LogoIcon className="h-12 w-12 mx-auto text-teal-600 animate-pulse" />
-          <p className="text-muted-foreground">Caricamento scheda...</p>
+          <p className="text-gray-500">Caricamento scheda...</p>
         </div>
       </div>
     );
@@ -238,12 +262,25 @@ export default function PublicWorkoutPage({
 
   if (phase === "error") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-red-50 to-white px-4">
+      <div className={`min-h-screen flex items-center justify-center bg-gradient-to-b ${rateLimited ? "from-amber-50" : "from-red-50"} to-white px-4 text-gray-900`} style={{ colorScheme: "light" }}>
         <div className="max-w-sm w-full bg-white rounded-xl shadow-sm border p-6 text-center space-y-4">
-          <XCircle className="h-12 w-12 mx-auto text-red-400" />
-          <h2 className="text-lg font-semibold">Link non valido</h2>
-          <p className="text-sm text-muted-foreground">{errorMsg}</p>
-          <p className="text-xs text-muted-foreground">Contatta il tuo trainer per ricevere un nuovo link.</p>
+          {rateLimited ? (
+            <>
+              <Loader2 className="h-12 w-12 mx-auto text-amber-500" />
+              <h2 className="text-lg font-semibold text-gray-900">Attendi un momento</h2>
+              <p className="text-sm text-gray-600">{errorMsg}</p>
+              <Button variant="outline" size="sm" onClick={() => { setPhase("loading"); loadData(); }}>
+                Riprova
+              </Button>
+            </>
+          ) : (
+            <>
+              <XCircle className="h-12 w-12 mx-auto text-red-400" />
+              <h2 className="text-lg font-semibold text-gray-900">Link non valido</h2>
+              <p className="text-sm text-gray-500">{errorMsg}</p>
+              <p className="text-xs text-gray-500">Contatta il tuo trainer per ricevere un nuovo link.</p>
+            </>
+          )}
         </div>
       </div>
     );
@@ -253,7 +290,7 @@ export default function PublicWorkoutPage({
 
   if (phase === "session" && activeSlot) {
     return (
-      <div className="min-h-screen bg-[#f3f4f6]">
+      <div className="min-h-screen bg-[#f3f4f6] text-gray-900" style={{ colorScheme: "light" }}>
         {/* Session header — stile PDF */}
         <header className="bg-white border-b shadow-sm">
           <div className="max-w-2xl mx-auto px-4 py-3">
@@ -264,15 +301,15 @@ export default function PublicWorkoutPage({
               <ArrowLeft className="h-4 w-4" /> Torna alla scheda
             </button>
             <h2 className="text-base font-bold text-[#00695c]">{info?.workout_name}</h2>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-gray-500">
               {info?.client_name} &middot; {info?.trainer_name}
             </p>
           </div>
           {/* Session title bar — like PDF */}
           <div className="bg-[#eef2f7] border-t border-l-[3px] border-l-[#009688]">
             <div className="max-w-2xl mx-auto px-4 py-2 flex justify-between items-center">
-              <span className="font-semibold text-sm">{activeSlot.sessione_nome}</span>
-              <span className="text-xs text-muted-foreground">
+              <span className="font-semibold text-sm text-gray-900">{activeSlot.sessione_nome}</span>
+              <span className="text-xs text-gray-500">
                 {formatWeekday(activeSlot.data_pianificata)} {formatShortDate(activeSlot.data_pianificata)}
               </span>
             </div>
@@ -303,7 +340,7 @@ export default function PublicWorkoutPage({
               return (
                 <section key={section}>
                   {/* Section header — like PDF */}
-                  <h3 className={`text-[11px] font-bold tracking-wide px-2.5 py-1.5 mb-2 ${meta.color} ${meta.bg}`}>
+                  <h3 className={`text-xs font-bold tracking-wide px-3 py-2 mb-2 rounded ${meta.color} ${meta.bg}`}>
                     {meta.title}
                   </h3>
 
@@ -334,10 +371,10 @@ export default function PublicWorkoutPage({
 
             {/* Session note */}
             <div className="bg-white rounded-lg border p-3">
-              <label className="text-xs font-medium text-muted-foreground">Note sessione</label>
+              <label className="text-xs font-medium text-gray-500">Note sessione</label>
               <Textarea
                 placeholder="Come e' andata la sessione?"
-                className="mt-1 text-sm"
+                className="mt-1 !text-base md:!text-sm"
                 rows={2}
                 value={noteSessione}
                 onChange={(e) => setNoteSessione(e.target.value)}
@@ -346,9 +383,9 @@ export default function PublicWorkoutPage({
 
             {/* Feedback sessione — 5 quick-tap */}
             <div className="bg-white rounded-lg border p-3 space-y-3">
-              <p className="text-[11px] font-bold text-teal-700 tracking-wider">COME E' ANDATA?</p>
+              <p className="text-xs font-bold text-teal-700 tracking-wider">COME E' ANDATA?</p>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <RatingRow label="Energia prima" value={feedback.energia_pre} onChange={(v) => setFeedback((p) => ({ ...p, energia_pre: v }))} emoji={["😴", "😕", "😐", "😊", "⚡"]} />
                 <RatingRow label="Energia dopo" value={feedback.energia_post} onChange={(v) => setFeedback((p) => ({ ...p, energia_post: v }))} emoji={["😵", "😕", "😐", "💪", "🔥"]} />
                 <RatingRow label="Soddisfazione" value={feedback.soddisfazione} onChange={(v) => setFeedback((p) => ({ ...p, soddisfazione: v }))} emoji={["😞", "😕", "😐", "😊", "🤩"]} />
@@ -356,13 +393,13 @@ export default function PublicWorkoutPage({
               </div>
 
               <div>
-                <label className="text-[10px] uppercase text-muted-foreground font-medium">Durata effettiva (minuti)</label>
+                <label className="text-xs uppercase text-gray-600 font-medium">Durata effettiva (minuti)</label>
                 <Input
                   type="number"
                   inputMode="numeric"
                   min={1}
                   max={300}
-                  className="h-9 !text-base md:!text-sm text-center tabular-nums font-semibold mt-0.5 w-24"
+                  className="h-10 !text-base md:!text-sm text-center font-semibold mt-1 w-full max-w-[140px]"
                   placeholder="es. 55"
                   value={feedback.durata_effettiva_min ?? ""}
                   onChange={(e) => setFeedback((p) => ({ ...p, durata_effettiva_min: e.target.value ? Number(e.target.value) : null }))}
@@ -379,7 +416,7 @@ export default function PublicWorkoutPage({
         )}
 
         <footer className="text-center py-4">
-          <p className="text-[11px] text-muted-foreground">Powered by FitManager</p>
+          <p className="text-[11px] text-gray-500">Powered by FitManager</p>
         </footer>
       </div>
     );
@@ -388,39 +425,39 @@ export default function PublicWorkoutPage({
   // ── RENDER: Main view (session list) ───────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-[#f3f4f6]">
+    <div className="min-h-screen bg-[#f3f4f6] text-gray-900" style={{ colorScheme: "light" }}>
       {/* Cover — like PDF cover page */}
       <header className="bg-white border-b shadow-sm">
         <div className="max-w-2xl mx-auto px-4 py-5 text-center space-y-3">
           <p className="text-[#00796b] font-bold text-lg tracking-wide">FitManager Studio+</p>
           <h1 className="text-xl font-bold text-[#004d40]">{info?.workout_name}</h1>
-          <p className="text-xs text-muted-foreground tracking-widest uppercase">Scheda di Allenamento</p>
-          <div className="max-w-xs mx-auto text-sm space-y-1 pt-2">
-            <div className="flex justify-between border-b border-gray-100 py-1.5">
-              <span className="text-muted-foreground">Cliente</span>
-              <strong>{info?.client_name}</strong>
+          <p className="text-xs text-gray-500 tracking-widest uppercase">Scheda di Allenamento</p>
+          <div className="max-w-sm mx-auto text-sm space-y-1 pt-2">
+            <div className="grid grid-cols-[auto_1fr] gap-x-3 border-b border-gray-100 py-1.5">
+              <span className="text-gray-500 text-left">Cliente</span>
+              <strong className="text-right truncate text-gray-900">{info?.client_name}</strong>
             </div>
-            <div className="flex justify-between border-b border-gray-100 py-1.5">
-              <span className="text-muted-foreground">Trainer</span>
-              <strong>{info?.trainer_name}</strong>
+            <div className="grid grid-cols-[auto_1fr] gap-x-3 border-b border-gray-100 py-1.5">
+              <span className="text-gray-500 text-left">Trainer</span>
+              <strong className="text-right truncate text-gray-900">{info?.trainer_name}</strong>
             </div>
             {info?.data_inizio && info?.data_fine ? (
-              <div className="flex justify-between border-b border-gray-100 py-1.5">
-                <span className="text-muted-foreground">Periodo</span>
-                <strong>{formatShortDate(info.data_inizio)} — {formatShortDate(info.data_fine)}</strong>
+              <div className="grid grid-cols-[auto_1fr] gap-x-3 border-b border-gray-100 py-1.5">
+                <span className="text-gray-500 text-left">Periodo</span>
+                <strong className="text-right text-gray-900">{formatShortDate(info.data_inizio)} — {formatShortDate(info.data_fine)}</strong>
               </div>
             ) : null}
-            <div className="flex justify-between py-1.5">
-              <span className="text-muted-foreground">Frequenza</span>
-              <strong>{info?.sessioni_per_settimana}x / settimana</strong>
+            <div className="grid grid-cols-[auto_1fr] gap-x-3 py-1.5">
+              <span className="text-gray-500 text-left">Frequenza</span>
+              <strong className="text-right text-gray-900">{info?.sessioni_per_settimana}x / settimana</strong>
             </div>
           </div>
 
           {/* Progress bar */}
-          <div className="max-w-xs mx-auto pt-2 space-y-1">
+          <div className="max-w-sm mx-auto pt-2 space-y-1">
             <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Aderenza</span>
-              <span className="font-semibold tabular-nums">{info?.completed_slots ?? 0}/{info?.total_slots ?? 0} ({completionPct}%)</span>
+              <span className="text-gray-500">Aderenza</span>
+              <span className="font-semibold tabular-nums text-gray-900">{info?.completed_slots ?? 0}/{info?.total_slots ?? 0} ({completionPct}%)</span>
             </div>
             <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
               <div className="h-full bg-[#009688] rounded-full transition-all duration-500" style={{ width: `${completionPct}%` }} />
@@ -447,7 +484,7 @@ export default function PublicWorkoutPage({
         {/* Prossime */}
         {upcomingSlots.length > 0 ? (
           <section>
-            <h2 className="text-sm font-semibold mb-2 text-muted-foreground">Prossime sessioni</h2>
+            <h2 className="text-sm font-semibold mb-2 text-gray-500">Prossime sessioni</h2>
             <div className="space-y-1.5">
               {upcomingSlots.map((slot) => (
                 <SlotButton key={slot.id} slot={slot} onClick={() => openSession(slot)} />
@@ -459,7 +496,7 @@ export default function PublicWorkoutPage({
         {/* Completate */}
         {completedSlots.length > 0 ? (
           <section>
-            <button className="flex items-center gap-2 text-sm font-semibold text-muted-foreground mb-2" onClick={() => setShowCompleted((p) => !p)}>
+            <button className="flex items-center gap-2 text-sm font-semibold text-gray-500 mb-2" onClick={() => setShowCompleted((p) => !p)}>
               Completate ({completedSlots.length})
               {showCompleted ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </button>
@@ -483,7 +520,7 @@ export default function PublicWorkoutPage({
         ) : null}
 
         <footer className="text-center py-4">
-          <p className="text-[11px] text-muted-foreground">Powered by FitManager</p>
+          <p className="text-[11px] text-gray-500">Powered by FitManager</p>
         </footer>
       </main>
     </div>
@@ -507,8 +544,8 @@ function SlotButton({ slot, accent, completed, onClick }: {
         accent
           ? "bg-white border-2 border-teal-300 hover:border-teal-500 shadow-sm"
           : completed
-            ? "bg-white hover:bg-muted/30"
-            : "bg-white hover:bg-muted/30"
+            ? "bg-white hover:bg-gray-100"
+            : "bg-white hover:bg-gray-100"
       }`}
       onClick={onClick}
     >
@@ -516,13 +553,13 @@ function SlotButton({ slot, accent, completed, onClick }: {
         ? <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
         : <Dumbbell className="h-4 w-4 text-teal-600 shrink-0" />}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium">{slot.sessione_nome}</p>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-sm font-medium text-gray-900">{slot.sessione_nome}</p>
+        <p className="text-xs text-gray-500">
           {formatWeekday(slot.data_pianificata)} {formatShortDate(slot.data_pianificata, false)}
           {slot.focus_muscolare ? ` · ${slot.focus_muscolare}` : ""}
         </p>
       </div>
-      <span className={`text-xs font-medium ${accent ? "text-teal-600" : "text-muted-foreground"}`}>
+      <span className={`text-xs font-medium ${accent ? "text-teal-600" : "text-gray-500"}`}>
         {accent ? "Compila" : completed ? "Dettagli" : "Apri"}
       </span>
     </button>
@@ -560,7 +597,7 @@ function PrincipalExerciseCard({ ex, idx, fd, onUpdate }: {
             {ex.foto_start ? (
               <img src={ex.foto_start} alt={`${ex.nome_esercizio} — posizione iniziale`} className="w-full h-full object-cover" />
             ) : (
-              <div className="flex items-center justify-center h-full text-xs text-muted-foreground">Start</div>
+              <div className="flex items-center justify-center h-full text-xs text-gray-500">Start</div>
             )}
             <span className="absolute bottom-1 left-1 bg-black/60 text-white text-[9px] px-1.5 py-0.5 rounded">START</span>
           </div>
@@ -568,7 +605,7 @@ function PrincipalExerciseCard({ ex, idx, fd, onUpdate }: {
             {ex.foto_end ? (
               <img src={ex.foto_end} alt={`${ex.nome_esercizio} — posizione finale`} className="w-full h-full object-cover" />
             ) : (
-              <div className="flex items-center justify-center h-full text-xs text-muted-foreground">End</div>
+              <div className="flex items-center justify-center h-full text-xs text-gray-500">End</div>
             )}
             <span className="absolute bottom-1 left-1 bg-black/60 text-white text-[9px] px-1.5 py-0.5 rounded">END</span>
           </div>
@@ -576,19 +613,22 @@ function PrincipalExerciseCard({ ex, idx, fd, onUpdate }: {
       ) : null}
 
       <div className="p-3 space-y-3">
-        {/* Metriche pianificate */}
-        <div className="grid grid-cols-4 gap-1.5">
-          <MetricBox label="Serie" value={String(ex.serie)} />
-          <MetricBox label="Rip" value={ex.ripetizioni} />
-          <MetricBox label="Kg" value={ex.carico_kg != null ? String(ex.carico_kg) : "—"} />
-          <MetricBox label="Riposo" value={`${ex.tempo_riposo_sec}s`} />
-          {ex.tempo_esecuzione ? <MetricBox label="Tempo" value={ex.tempo_esecuzione} span2 /> : null}
-          {ex.note_trainer ? <MetricBox label="Note PT" value={ex.note_trainer} span2 /> : null}
+        {/* Metriche pianificate dal trainer */}
+        <div>
+          <p className="text-xs font-bold text-gray-500 tracking-wider mb-1.5">PIANO TRAINER</p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+            <MetricBox label="Serie" value={String(ex.serie)} />
+            <MetricBox label="Rip" value={ex.ripetizioni} />
+            <MetricBox label="Kg" value={ex.carico_kg != null ? String(ex.carico_kg) : "—"} />
+            <MetricBox label="Riposo" value={`${ex.tempo_riposo_sec}s`} />
+            {ex.tempo_esecuzione ? <MetricBox label="Tempo" value={ex.tempo_esecuzione} span2 /> : null}
+            {ex.note_trainer ? <MetricBox label="Note PT" value={ex.note_trainer} span2 /> : null}
+          </div>
         </div>
 
         {/* Blocco badge */}
         {ex.blocco_nome ? (
-          <span className="inline-block text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded font-medium">
+          <span className="inline-block text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded font-medium">
             {ex.blocco_tipo ? ex.blocco_tipo.toUpperCase() : "BLOCCO"}: {ex.blocco_nome}
           </span>
         ) : null}
@@ -597,17 +637,17 @@ function PrincipalExerciseCard({ ex, idx, fd, onUpdate }: {
         {hasInfo ? (
           <div className="border rounded-lg overflow-hidden">
             <button
-              className="w-full text-left text-[11px] font-bold text-blue-700 bg-blue-50 flex items-center justify-between px-3 py-2"
+              className="w-full text-left text-xs font-bold text-blue-700 bg-blue-50 flex items-center justify-between px-3 py-2.5"
               onClick={() => setShowInfo((p) => !p)}
             >
               <span className="flex items-center gap-1.5">
-                <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5" aria-hidden="true"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clipRule="evenodd" /></svg>
+                <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4" aria-hidden="true"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clipRule="evenodd" /></svg>
                 COME ESEGUIRLO
               </span>
               {showInfo ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </button>
             {showInfo ? (
-              <div className="px-3 py-2.5 space-y-2 text-xs bg-white">
+              <div className="px-3 py-2.5 space-y-2 text-sm bg-white">
                 {/* Foto anche qui dentro se non c'erano in hero */}
                 {!hasPhotos && (ex.foto_start || ex.foto_end) ? (
                   <div className="grid grid-cols-2 gap-2 mb-2">
@@ -627,19 +667,19 @@ function PrincipalExerciseCard({ ex, idx, fd, onUpdate }: {
 
         {/* I TUOI DATI — sempre visibili */}
         <div className="border-t pt-3">
-          <p className="text-[11px] font-bold text-teal-700 tracking-wider mb-2">I TUOI DATI</p>
+          <p className="text-xs font-bold text-teal-700 tracking-wider mb-2">I TUOI DATI</p>
           <div className="grid grid-cols-3 gap-2">
             <InputField label="Serie" type="number" inputMode="numeric" value={fd?.serie_effettive} onChange={(v) => onUpdate(ex.id, "serie_effettive", v ? Number(v) : null)} />
             <InputField label="Reps" type="text" inputMode="text" placeholder="10,10,8" value={fd?.ripetizioni_effettive} onChange={(v) => onUpdate(ex.id, "ripetizioni_effettive", v || null)} />
             <InputField label="Kg" type="number" inputMode="decimal" step="0.5" value={fd?.carico_effettivo_kg} onChange={(v) => onUpdate(ex.id, "carico_effettivo_kg", v ? Number(v) : null)} />
           </div>
-          <div className="grid grid-cols-2 gap-2 mt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
             <InputField label="RPE (1-10)" type="number" inputMode="decimal" min={0} max={10} step={0.5} value={fd?.rpe} onChange={(v) => onUpdate(ex.id, "rpe", v ? Number(v) : null)} />
             <div>
-              <label className="text-[10px] uppercase text-muted-foreground font-medium">Note</label>
+              <label className="text-xs uppercase text-gray-600 font-medium">Note</label>
               <Textarea
                 placeholder="Come ti sei sentito?"
-                className="text-xs min-h-[32px] resize-none mt-0.5"
+                className="!text-base md:!text-sm min-h-[44px] resize-none mt-1"
                 rows={1}
                 value={fd?.note_cliente ?? ""}
                 onChange={(e) => onUpdate(ex.id, "note_cliente", e.target.value || null)}
@@ -663,71 +703,46 @@ const INFO_COLORS: Record<string, string> = {
 
 function InfoBlock({ title, text, color }: { title: string; text: string; color: string }) {
   return (
-    <div className={`rounded-md px-2.5 py-2 ${INFO_COLORS[color] ?? "bg-gray-50 text-gray-900"}`}>
-      <p className="font-bold text-[11px] mb-0.5">{title}</p>
-      <p className="text-[12px] leading-relaxed">{text}</p>
+    <div className={`rounded-md px-3 py-2.5 ${INFO_COLORS[color] ?? "bg-gray-50 text-gray-900"}`}>
+      <p className="font-bold text-xs mb-0.5 text-inherit">{title}</p>
+      <p className="text-sm leading-relaxed text-inherit">{text}</p>
     </div>
   );
 }
 
-/** Compact table for avviamento/stretching — mirrors PDF compact-table */
+/** Compact card for avviamento/stretching — input always visible, mobile-first */
 function CompactSectionTable({ exercises, formData, onUpdate }: {
   exercises: WorkoutExerciseItem[];
   formData: Record<number, ExerciseLogInput>;
   onUpdate: (exId: number, field: keyof ExerciseLogInput, value: string | number | null) => void;
 }) {
-  const [expandedId, setExpandedId] = useState<number | null>(null);
-
   return (
-    <div className="bg-white rounded-lg border overflow-hidden shadow-sm">
-      <table className="w-full text-xs">
-        <thead>
-          <tr className="bg-gray-50 text-left">
-            <th className="px-2 py-1.5 text-center w-8">#</th>
-            <th className="px-2 py-1.5">Esercizio</th>
-            <th className="px-2 py-1.5 text-center w-12">Serie</th>
-            <th className="px-2 py-1.5 text-center w-14">Rip</th>
-            <th className="px-2 py-1.5 hidden sm:table-cell">Note</th>
-          </tr>
-        </thead>
-        <tbody>
-          {exercises.map((ex, idx) => {
-            const isExpanded = expandedId === ex.id;
-            const fd = formData[ex.id];
-            return (
-              <tr key={ex.id} className="border-t cursor-pointer hover:bg-muted/30" onClick={() => setExpandedId(isExpanded ? null : ex.id)}>
-                <td className="px-2 py-2 text-center font-medium">{idx + 1}</td>
-                <td className="px-2 py-2">
-                  <span className="font-medium">{ex.nome_esercizio}</span>
-                  {isExpanded ? (
-                    <div className="mt-2 grid grid-cols-3 gap-1.5" onClick={(e) => e.stopPropagation()}>
-                      <InputField label="Serie" type="number" inputMode="numeric" value={fd?.serie_effettive} onChange={(v) => onUpdate(ex.id, "serie_effettive", v ? Number(v) : null)} />
-                      <InputField label="Reps" type="text" inputMode="text" value={fd?.ripetizioni_effettive} onChange={(v) => onUpdate(ex.id, "ripetizioni_effettive", v || null)} />
-                      <InputField label="Note" type="text" inputMode="text" value={fd?.note_cliente} onChange={(v) => onUpdate(ex.id, "note_cliente", v || null)} />
-                    </div>
-                  ) : null}
-                </td>
-                <td className="px-2 py-2 text-center tabular-nums">{ex.serie}</td>
-                <td className="px-2 py-2 text-center tabular-nums">{ex.ripetizioni}</td>
-                <td className="px-2 py-2 text-muted-foreground hidden sm:table-cell">{ex.note_trainer ?? ""}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-/** Photo slot */
-function PhotoSlot({ src, alt, label }: { src: string | null; alt: string; label: string }) {
-  return (
-    <div className="border rounded overflow-hidden bg-gray-50 aspect-[4/3] relative">
-      {src ? (
-        <img src={src} alt={alt} className="w-full h-full object-cover" />
-      ) : (
-        <div className="flex items-center justify-center h-full text-xs text-muted-foreground">{label}</div>
-      )}
+    <div className="space-y-2.5">
+      {exercises.map((ex, idx) => {
+        const fd = formData[ex.id];
+        return (
+          <div key={ex.id} className="bg-white rounded-lg border shadow-sm">
+            {/* Header */}
+            <div className="flex items-center gap-2 px-3 py-2.5 bg-gray-50 border-b">
+              <span className="bg-gray-300 text-gray-700 rounded-full w-6 h-6 flex items-center justify-center font-bold text-xs shrink-0">{idx + 1}</span>
+              <span className="text-sm font-semibold flex-1 min-w-0 text-gray-900">{ex.nome_esercizio}</span>
+            </div>
+            {/* Metriche trainer + input */}
+            <div className="px-3 py-3 space-y-2.5">
+              <div className="flex gap-2 text-xs">
+                <span className="text-gray-500 font-medium">Piano:</span>
+                <span className="font-semibold text-gray-900">{ex.serie} × {ex.ripetizioni}</span>
+                {ex.note_trainer ? <span className="text-gray-500 truncate">· {ex.note_trainer}</span> : null}
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <InputField label="Serie" type="number" inputMode="numeric" value={fd?.serie_effettive} onChange={(v) => onUpdate(ex.id, "serie_effettive", v ? Number(v) : null)} />
+                <InputField label="Reps" type="text" inputMode="text" value={fd?.ripetizioni_effettive} onChange={(v) => onUpdate(ex.id, "ripetizioni_effettive", v || null)} />
+                <InputField label="Note" type="text" inputMode="text" value={fd?.note_cliente} onChange={(v) => onUpdate(ex.id, "note_cliente", v || null)} />
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -735,14 +750,16 @@ function PhotoSlot({ src, alt, label }: { src: string | null; alt: string; label
 /** Metric box — like PDF metrics cell */
 function MetricBox({ label, value, span2 }: { label: string; value: string; span2?: boolean }) {
   return (
-    <div className={`border rounded px-2 py-1.5 bg-gray-50 ${span2 ? "col-span-2" : ""}`}>
-      <span className="text-[10px] text-muted-foreground block">{label}</span>
-      <strong className="text-xs">{value}</strong>
+    <div className={`border rounded px-2.5 py-2 bg-gray-50 ${span2 ? "col-span-2" : ""}`}>
+      <span className="text-[11px] text-gray-500 block leading-tight">{label}</span>
+      <strong className="text-sm text-gray-900">{value}</strong>
     </div>
   );
 }
 
-/** Input field for actual data — highlighted when pre-filled */
+/** Input field for actual data — highlighted when pre-filled.
+ *  Mobile-first: min 16px font (prevents iOS auto-zoom), generous padding,
+ *  explicit colors (no reliance on theme variables for visibility). */
 function InputField({ label, type, inputMode, value, onChange, placeholder, step, min, max }: {
   label: string;
   type: string;
@@ -757,14 +774,18 @@ function InputField({ label, type, inputMode, value, onChange, placeholder, step
   const hasValue = value != null && value !== "";
   return (
     <div>
-      <label className="text-[10px] uppercase text-muted-foreground font-medium">{label}</label>
+      <label className="text-xs uppercase text-gray-600 font-medium">{label}</label>
       <Input
         type={type}
         inputMode={inputMode}
         step={step}
         min={min}
         max={max}
-        className={`!text-base md:!text-sm h-10 px-1.5 text-center tabular-nums font-semibold mt-0.5 ${hasValue ? "border-teal-400 bg-teal-50 text-teal-900" : ""}`}
+        className={`!text-base md:!text-sm h-11 px-2.5 text-center font-semibold mt-1 ${
+          hasValue
+            ? "border-teal-400 bg-teal-50 text-teal-900"
+            : "text-gray-900"
+        }`}
         placeholder={placeholder}
         value={value ?? ""}
         onChange={(e) => onChange(e.target.value)}
@@ -782,8 +803,8 @@ function RatingRow({ label, value, onChange, emoji }: {
 }) {
   return (
     <div>
-      <label className="text-[10px] uppercase text-muted-foreground font-medium block mb-1">{label}</label>
-      <div className="flex gap-1">
+      <label className="text-xs uppercase text-gray-600 font-medium block mb-1.5">{label}</label>
+      <div className="flex gap-2">
         {emoji.map((e, i) => {
           const rating = i + 1;
           const isSelected = value === rating;
@@ -791,7 +812,7 @@ function RatingRow({ label, value, onChange, emoji }: {
             <button
               key={rating}
               type="button"
-              className={`w-9 h-9 rounded-lg text-base flex items-center justify-center transition-all ${
+              className={`w-11 h-11 rounded-lg text-xl flex items-center justify-center transition-all ${
                 isSelected
                   ? "bg-teal-100 ring-2 ring-teal-500 scale-110"
                   : "bg-gray-100 hover:bg-gray-200"
