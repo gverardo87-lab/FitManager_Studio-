@@ -414,6 +414,70 @@ Dispositivi Tailscale:
 
 ---
 
+## Sviluppo con Funnel
+
+### Problema: HMR reload loop via Funnel
+
+Accedendo a `https://giacomo.tail8a3bc3.ts.net` con `npm run dev`, la pagina si ricarica
+ogni pochi secondi. Il WebSocket HMR (`_next/webpack-hmr`) fallisce per due motivi combinati:
+
+1. **Tailscale Funnel non proxya WebSocket upgrade** — il tunnel e' HTTP-only, la richiesta
+   `wss://giacomo.ts.net/_next/webpack-hmr` ritorna 502.
+2. **Next.js 16 blocca Origin cross-site** — anche redirectando il WebSocket a
+   `ws://localhost:3001`, la funzione `blockCrossSite()` in `router-server.js` rifiuta
+   il handshake perche' l'header `Origin: https://giacomo.tail8a3bc3.ts.net` non matcha
+   localhost → risposta HTTP 403 → browser interpreta come `ERR_INVALID_HTTP_RESPONSE`.
+
+Dopo N retry falliti, Next.js esegue full page reload → loop infinito.
+
+### Soluzione: mock WebSocket (dev-only)
+
+`layout.tsx` inietta un `<script>` che intercetta la creazione di WebSocket HMR.
+Quando l'hostname non e' `localhost` ne' `127.0.0.1` e l'URL contiene `_next/webpack-hmr`,
+invece di aprire una connessione reale, restituisce un **oggetto mock** che:
+
+- Simula `readyState: OPEN` (1) e fire `onopen` dopo un tick
+- Non invia ne' riceve messaggi (`send()` = no-op)
+- Non chiude ne' genera errori (`onclose`/`onerror` mai invocati)
+- Implementa l'interfaccia WebSocket completa (inclusi `addEventListener`/`removeEventListener`)
+
+Next.js HMR crede di essere connesso ma non riceve update → **zero reload, zero retry,
+pagina stabile**. Lo sviluppatore usa `localhost:3001` per HMR attivo e il Funnel
+esclusivamente per verificare flussi client-facing (anamnesi, scheda allenamento, etc.).
+
+Lo script viene incluso SOLO con `NODE_ENV === "development"` (tree-shaken in prod build).
+Su `localhost`/`127.0.0.1` non ha effetto — il WebSocket reale viene creato normalmente.
+
+### Font locali (eliminano 403 su `/__nextjs_font/`)
+
+I font (Inter, Caveat) sono serviti da file locali in `frontend/src/fonts/` invece che da
+Google Fonts CDN. Questo elimina l'endpoint `/__nextjs_font/` che Funnel bloccava con 403.
+
+Vantaggi collaterali: zero richieste a Google, funziona offline, coerente con privacy-first.
+
+**Nota**: dopo un cambio di font o pulizia della cache, eseguire `rm -rf .next .next-dev`
+e hard refresh nel browser (Ctrl+Shift+R) per eliminare riferimenti stale a file `.woff2`
+ormai inesistenti.
+
+### Script `dev:funnel`
+
+```bash
+npm run dev:funnel   # next build && next start -p 3000 -H 0.0.0.0
+```
+
+Per testare esattamente cio' che vede il cliente (prod build, zero HMR) via Funnel su porta 3000.
+
+### Troubleshooting sviluppo con Funnel
+
+| Problema | Causa | Soluzione |
+|----------|-------|-----------|
+| Pagina si ricarica ogni 3-5 sec via Funnel | Mock WebSocket non attivo (script mancante in `<head>`) | Verificare in DevTools → Elements che lo script mock sia presente. Se manca: `NODE_ENV` non e' `development` |
+| Console mostra `ERR_INVALID_HTTP_RESPONSE` | Mock non intercetta il WebSocket (hostname check fallito) | Verificare che l'URL del Funnel non sia `localhost`. DevTools → Console: il mock logga zero errori se attivo |
+| Font 403 via Funnel (`geist-latin.woff2` o simili) | Cache stale con riferimenti a font rimossi | `rm -rf .next .next-dev` + Ctrl+Shift+R (hard refresh browser) |
+| Font 403 via Funnel (`/__nextjs_font/`) | Font serviti da Google Fonts CDN | Verificare che `layout.tsx` usi `next/font/local`, non `next/font/google` |
+| HMR non funziona via Funnel | **Comportamento atteso**: il mock disabilita HMR via Funnel by design | Usare `localhost:3001` per sviluppo con HMR. Il Funnel serve solo per test flussi client-facing |
+| `dev:funnel` non parte | Build fallisce | Risolvere errori TypeScript con `npx next build` |
+
 ## Note per Sviluppo Futuro
 
 - **Custom domain**: Tailscale supporta custom domain su Funnel (piano a pagamento).
