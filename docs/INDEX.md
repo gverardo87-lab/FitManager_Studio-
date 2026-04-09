@@ -32,14 +32,24 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 
 ---
 
+## security/ — Strategia anti-reverse engineering
+
+| File | Scopo |
+|------|-------|
+| `ANTI_REVERSE_ENGINEERING_STRATEGY.md` | Strategia anti-RE v2.0: 4 step, 6 anelli, threat model, TTC, checklist (implementato) |
+
+---
+
 ## technical/ — Architettura, sicurezza, infrastruttura
 
 | File | Scopo |
 |------|-------|
-| `SECURITY_MODEL.md` | Threat model, 5 livelli protezione, roadmap sicurezza |
+| `SECURITY_MODEL.md` | Threat model, 6 livelli protezione (L1-L6 + L3b), roadmap sicurezza |
+| `SECURITY_AUDIT_BASELINE.md` | Red Team audit pre-hardening (7 test, TTC per Crown Jewel) |
+| `SECURITY_AUDIT_POST_HARDENING.md` | Re-test post-hardening (4 step anti-RE, confronto pre/post) |
 | `LICENSE_ACTIVATION.md` | Attivazione licenza, hardware binding, CLI admin |
 | `TAILSCALE_FUNNEL_SETUP.md` | Setup Tailscale Funnel, proxy, troubleshooting |
-| `DEPLOYMENT_PLAN.md` | Piano deploy: PyInstaller, standalone, Inno Setup |
+| `DEPLOYMENT_PLAN.md` | Piano deploy: PyInstaller/Nuitka, standalone, Inno Setup |
 | `NUTRITION_ENGINE_V3.md` | Architettura Nutrition Engine v3 |
 | `nutrition-v2-strategy.md` | Strategia migrazione nutrition v2 (storico) |
 
@@ -58,7 +68,7 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 
 ## adr/ — Architecture Decision Records
 
-9 ADR attivi. Indice in `adr/README.md`.
+7 ADR attivi. Indice in `adr/README.md`.
 
 ## incidents/ — Post-mortem
 

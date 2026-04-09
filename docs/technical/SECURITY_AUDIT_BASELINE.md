@@ -11,10 +11,11 @@
 
 | Verdetto | Dettaglio |
 |----------|-----------|
-| **Rischio globale** | **CRITICO** — un L2 (sviluppatore esperto) estrae tutto in < 1 giorno |
+| **Rischio globale (pre-hardening)** | **CRITICO** — un L2 (sviluppatore esperto) estrae tutto in < 1 giorno |
+| **Rischio globale (post-hardening)** | **MITIGATO** — tutti i 4 step anti-RE implementati (2026-04-09) |
 | **Anello più debole** | Database cataloghi (5 secondi) e migrations Alembic (in chiaro nel bundle) |
 | **Anello più forte** | Frontend standalone (source map vuote, no sorgente recuperabile) |
-| **Azione raccomandata** | Implementare Anelli 4-5 (obfuscation + compilation) prima della consegna |
+| **Azione raccomandata** | ~~Implementare Anelli 4-5~~ **COMPLETATO** — vedi `SECURITY_AUDIT_POST_HARDENING.md` |
 
 ---
 
@@ -220,28 +221,30 @@ op.create_table('communication_log',
 
 ## Matrice Riassuntiva
 
-| # | Test | Target | TTC Attuale | TTC Target (L2) | Verdetto |
-|---|------|--------|-------------|------------------|----------|
-| 1 | PyInstaller bundle | Bytecode Python | **30 sec** | > 4 ore | **FAIL** |
-| 2 | Database cataloghi | Patrimonio scientifico | **5 sec** | > 1 ora | **FAIL CRITICO** |
-| 3 | Seed + Migrations | Schema + dati esercizi | **0 sec** | > 1 ora | **FAIL** |
-| 4 | String extraction | Stringhe sensibili | N/A (post-PYZ) | N/A | PASS parziale |
-| 5 | Frontend build | Codice TypeScript | 1-2 giorni | 1-2 giorni | **PASS** |
-| 6 | License bypass | Sistema licenza | **1-2 ore** | > 8 ore | PASS condizionato |
-| 7 | Decompilation | Codice proprietario | **< 15 min** | > 1 giorno | **FAIL** |
+| # | Test | Target | TTC Pre | TTC Post-Hardening | Verdetto Pre | Verdetto Post |
+|---|------|--------|---------|-------------------|-------------|--------------|
+| 1 | PyInstaller bundle | Bytecode Python | **30 sec** | **N/A** (Nuitka) | **FAIL** | **PASS** |
+| 2 | Database cataloghi | Patrimonio scientifico | **5 sec** | **> 1 settimana** | **FAIL CRITICO** | **PASS** |
+| 3 | Seed + Migrations | Schema + dati esercizi | **0 sec** | **N/A** (rimossi) | **FAIL** | **PASS** |
+| 4 | String extraction | Stringhe sensibili | N/A (post-PYZ) | **PASS** (nativo) | PASS parziale | **PASS** |
+| 5 | Frontend build | Codice TypeScript | 1-2 giorni | 1-2 giorni | **PASS** | **PASS** |
+| 6 | License bypass | Sistema licenza | **1-2 ore** | **> 3 giorni** | PASS condizionato | PASS condizionato |
+| 7 | Decompilation | Codice proprietario | **< 15 min** | **> 1 settimana** | **FAIL** | **PASS** |
+
+> **Nota post-hardening (2026-04-09)**: Tutti i 4 step anti-RE implementati (ADR-007). Re-test completo in `SECURITY_AUDIT_POST_HARDENING.md`.
 
 ---
 
 ## Gap Analysis — Anelli di Protezione
 
-| Anello | Descrizione | Stato | Gap |
-|--------|-------------|-------|-----|
-| 1. Legal | NDA + non-compete + penale | **NON FIRMATO** | Bloccante per consegna |
-| 2. Licensing | JWT RS256 + HW binding | Buono (ADR-005) | OK se bytecode protetto |
-| 3. Integrity | Verifica integrità binario | Minimale (hash chiave) | Serve CRC/self-hash |
-| 4. Obfuscation | Codice illeggibile | **ASSENTE** | Serve PyArmor o Nuitka |
-| 5. Virtualization | Compilazione nativa | **ASSENTE** | Nuitka elimina il vettore |
-| 6. Environmental | Anti-debug runtime | **ASSENTE** | Bassa priorità per L2 |
+| Anello | Descrizione | Stato Pre | Stato Post (2026-04-09) |
+|--------|-------------|-----------|------------------------|
+| 1. Legal | NDA + non-compete + penale | **NON FIRMATO** | **DA FIRMARE** |
+| 2. Licensing | JWT RS256 + HW binding | Buono (ADR-005) | **IMPLEMENTATO** |
+| 3. Integrity | DB cifrati + hash chiave | Minimale | **IMPLEMENTATO** (AES-256-GCM) |
+| 4. Obfuscation | Bundle sanitizzato | **ASSENTE** | **IMPLEMENTATO** (zero .py/.json/.pyc) |
+| 5. Virtualization | Compilazione nativa | **ASSENTE** | **IMPLEMENTATO** (Nuitka) |
+| 6. Environmental | Anti-debug runtime | **ASSENTE** | **FUORI SCOPE** Phase 1 |
 
 ---
 
@@ -300,4 +303,6 @@ Questo audit segue il framework:
 - **Skill di riferimento**: `anti-reversing-techniques` (3.5K install), `ctf-reverse` (1.1K install)
 - **Standard di riferimento**: OWASP MASVS-R (adattato da mobile a desktop)
 
-Il re-test post-hardening sarà documentato in `SECURITY_AUDIT_POST_HARDENING.md`.
+Il re-test post-hardening e' documentato in `SECURITY_AUDIT_POST_HARDENING.md` (2026-04-09).
+Strategia completa: `docs/security/ANTI_REVERSE_ENGINEERING_STRATEGY.md` (v2.0).
+Decisione architetturale: `docs/adr/ADR-007-anti-reverse-engineering.md`.

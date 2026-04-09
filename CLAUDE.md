@@ -11,7 +11,8 @@ Next.js 16 + React 19 + TypeScript 5 + shadcn/ui    → frontend/ (293 file)
 Langchain + Ollama (moduli AI dormenti)              → core/    (27 file)
 ```
 
-Distribuzione: PyInstaller + Next.js standalone + Inno Setup (Windows installer).
+Distribuzione: Nuitka (Python→C→nativo) + Next.js standalone + Inno Setup (Windows installer).
+Fallback build: PyInstaller (`fitmanager.spec` preservato per rollback).
 
 ## Modello di business (contesto per lo sviluppo)
 
@@ -142,7 +143,10 @@ Tutte con PRAGMA: `journal_mode=WAL`, `foreign_keys=ON`, `busy_timeout=5000`.
 - **Proxy Next.js intercetta PRIMA dei rewrite**: `/api` in `PUBLIC_ROUTES` (auth JWT gestita dal backend).
 - **Seed data**: 500 esercizi + 940 relazioni + 1788 media in `data/exercises/`, seed idempotente al startup in catalog.db.
 - **Licenza con hardware binding**: JWT RS256 con `machine_id` (SHA-256 di CPU+Board+BIOS via PowerShell). Generazione via CLI (`tools/admin_scripts/generate_license.py`). Flusso completo in `docs/technical/LICENSE_ACTIVATION.md`. `/licenza` NON e' in `AUTH_ONLY_PAGES` (il trainer loggato senza licenza deve vederla).
-- **Anti-tampering (ADR-005)**: in frozen mode (PyInstaller) la chiave pubblica e' embedded nel codice (non da file), enforcement sempre ON (no env bypass), fingerprint fail-closed. Modello completo in `docs/technical/SECURITY_MODEL.md`.
+- **Anti-tampering (ADR-005)**: in compiled mode (Nuitka/PyInstaller) la chiave pubblica e' embedded nel codice (non da file), enforcement sempre ON (no env bypass), fingerprint fail-closed.
+- **Anti-reverse engineering (ADR-007)**: 4 step layered hardening — bundle sanitization (zero Alembic/seed/pyc), DB encryption (AES-256-GCM su catalog.db + nutrition.db), Nuitka native compilation (Python→C→x86-64). TTC da 5sec/15min a giorni/settimane. Modello completo in `docs/technical/SECURITY_MODEL.md`.
+- **`is_compiled()` helper** (`api/config.py`): rileva sia `sys.frozen` (PyInstaller) che `__compiled__` (Nuitka). Usato da tutti i componenti di enforcement e detection runtime.
+- **DB cifrati** (`api/services/db_crypto.py`): AES-256-GCM con PBKDF2-HMAC-SHA256 e seed embedded. Build-time: `encrypt_db()`. Runtime: `decrypt_db_to_bytes()` → `sqlite3.deserialize()` → in-memory engine. Dev mode: `.db` plain invariato.
 
 ## Motori scientifici
 

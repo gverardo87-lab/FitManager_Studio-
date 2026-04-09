@@ -3,7 +3,7 @@
 Modello di sicurezza del prodotto. Copre: threat model, protezioni implementate,
 limitazioni note, roadmap futuri interventi.
 
-Ultimo aggiornamento: 2026-03-24 (ADR-005 hardening).
+Ultimo aggiornamento: 2026-04-09 (ADR-007 anti-reverse engineering).
 
 ## Principi
 
@@ -23,15 +23,24 @@ Ultimo aggiornamento: 2026-03-24 (ADR-005 hardening).
 │  L2 — Licenza & Hardware Binding                           │
 │  JWT RS256, machine fingerprint SHA-256, enforcement       │
 ├─────────────────────────────────────────────────────────────┤
-│  L3 — Anti-Tampering (frozen mode)                         │
+│  L3 — Anti-Tampering (compiled mode)                       │
 │  Embedded key, integrity hash, env bypass block,           │
-│  fingerprint fail-closed                                   │
+│  fingerprint fail-closed (PyInstaller + Nuitka)            │
+├─────────────────────────────────────────────────────────────┤
+│  L3b — Database Encryption                                 │
+│  AES-256-GCM su catalog.db + nutrition.db,                 │
+│  PBKDF2-HMAC-SHA256, in-memory loading via deserialize()   │
 ├─────────────────────────────────────────────────────────────┤
 │  L4 — Data Integrity                                       │
 │  Soft delete, audit trail, atomic transactions, WAL        │
 ├─────────────────────────────────────────────────────────────┤
 │  L5 — Build & Release Safety                               │
-│  ADR-004 pipeline, 3 safety gates, smoke test, manifest    │
+│  ADR-004 pipeline, 3 safety gates, bundle sanitization,    │
+│  Nuitka native compilation, smoke test, manifest           │
+├─────────────────────────────────────────────────────────────┤
+│  L6 — Anti-Reverse Engineering                             │
+│  Bundle sanitization (zero Alembic/seed/pyc),              │
+│  DB encryption (AES-256-GCM), Nuitka (Python→C→x86-64)    │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -93,33 +102,64 @@ Guida completa per generazione, attivazione, trasferimento e rinnovo:
 
 ---
 
-## L3 — Anti-Tampering (frozen mode only)
+## L3 — Anti-Tampering (compiled mode)
 
-Introdotto con ADR-005 (2026-03-24). Attivo SOLO in build PyInstaller.
+Introdotto con ADR-005 (2026-03-24). Attivo in compiled mode (PyInstaller o Nuitka).
 
 ### Cosa protegge
 Manomissione del sistema licenza: sostituzione chiave, bypass via env var,
-blocco fingerprint, patching bytecode.
+blocco fingerprint, patching.
 
 ### Meccanismi
 
 | Vettore chiuso | Protezione | Effetto |
 |---------------|-----------|--------|
-| Sostituzione `license_public.pem` | Chiave pubblica embedded nel codice Python | File su disco ignorato in frozen |
-| Env `LICENSE_ENFORCEMENT_ENABLED=false` | `is_license_enforcement_enabled()` ritorna sempre `True` in frozen | Env var ignorata |
+| Sostituzione `license_public.pem` | Chiave pubblica embedded nel codice | File su disco ignorato in compiled mode |
+| Env `LICENSE_ENFORCEMENT_ENABLED=false` | `is_license_enforcement_enabled()` ritorna sempre `True` in compiled mode | Env var ignorata |
 | PowerShell bloccato / WMI disabilitato | Fingerprint `"unavailable"` → `wrong_machine` | Blocco con messaggio supporto |
-| Bytecode patching della chiave embedded | SHA-256 integrity hash verificato a runtime | Chiave alterata → `unconfigured` → blocco |
+| Patching chiave embedded | SHA-256 integrity hash verificato a runtime | Chiave alterata → `unconfigured` → blocco |
+
+### Detection compiled mode
+Helper `is_compiled()` in `api/config.py` rileva sia PyInstaller (`sys.frozen`) che Nuitka (`__compiled__`). Usato da tutti i componenti di enforcement.
 
 ### Invariante dev mode
-In dev mode (non-frozen) tutto resta come prima: file/env resolution, enforcement toggle,
+In dev mode (non-compiled) tutto resta come prima: file/env resolution, enforcement toggle,
 fingerprint graceful degradation. Zero impatto su workflow sviluppo.
 
-### Limitazioni note
-- Un reverse engineer esperto puo' decompilare il bytecode PyInstaller e patchare
-  sia la chiave che l'hash. Richiede competenze significative e tempo.
-- PyInstaller non e' un vero obfuscator — il bytecode Python e' recuperabile.
-- Queste protezioni sono una barriera proporzionata contro copia opportunistica,
-  non contro attaccanti dedicati.
+---
+
+## L3b — Database Encryption (AES-256-GCM)
+
+Introdotto con ADR-007 (2026-04-09). Protegge catalog.db e nutrition.db.
+
+### Cosa protegge
+Patrimonio scientifico (500 esercizi × 43 colonne, 880 alimenti CREA, 12 template LARN) da estrazione diretta con client SQLite.
+
+### Meccanismi
+
+| Meccanismo | Implementazione | File chiave |
+|-----------|----------------|-------------|
+| Cifratura | AES-256-GCM (nonce 12B, tag 16B) | `api/services/db_crypto.py` |
+| Key derivation | PBKDF2-HMAC-SHA256 (100K iter) da seed embedded | `api/services/db_crypto.py` |
+| Seed integrity | SHA-256 hash del seed verificato prima di ogni derivazione | `api/services/db_crypto.py` |
+| In-memory loading | `sqlite3.deserialize()` → StaticPool engine | `api/database.py` |
+
+### Architettura
+
+```
+BUILD TIME:  catalog.db  ──encrypt_db()──> catalog.db.enc  (shipped nell'installer)
+RUNTIME:     catalog.db.enc ──decrypt()──> sqlite3.deserialize() ──> in-memory SQLAlchemy engine
+DEV MODE:    catalog.db (plain) ──> engine normale (zero cambiamenti)
+```
+
+### Formato file .enc
+
+```
+[salt: 16 bytes][nonce: 12 bytes][ciphertext: N bytes (include GCM tag)]
+```
+
+### Invariante dev mode
+In dev mode i file `.db` plain sono usati direttamente. La cifratura e' attiva solo in compiled mode quando i file `.enc` esistono.
 
 ---
 
@@ -147,15 +187,49 @@ Perdita, corruzione o cancellazione accidentale di dati business.
 ### Cosa protegge
 Rilascio di build corrotte, con dati sensibili o con componenti mancanti.
 
-### Meccanismi (ADR-004)
+### Meccanismi (ADR-004 + ADR-007)
 
 | Fase | Cosa verifica |
 |------|--------------|
 | PREFLIGHT | Git clean, pytest pass, ruff clean, next build OK |
-| BUILD | 3 safety gates: CRM leak check, ISS ref check, nutrition integrity |
+| BUILD | Backend Nuitka (Python → C → nativo), frontend standalone, 3 safety gates |
 | VERIFY | Smoke test su exe: /health, invarianti |
 | SEAL | manifest.json con SHA-256, commit, metadata |
 | TAG | git tag vX.Y.Z |
+
+### Bundle sanitization (ADR-007)
+- Zero Alembic migrations nel bundle (rimossi da spec)
+- Zero seed JSON nel bundle (rimossi da spec + ISS)
+- Zero `.db` plain per cataloghi (solo `.db.enc` cifrati)
+
+---
+
+## L6 — Anti-Reverse Engineering
+
+Introdotto con ADR-007 (2026-04-09). Difesa stratificata contro estrazione IP.
+
+### Cosa protegge
+Proprieta' intellettuale: codice sorgente (Training Science ~9K LOC, Nutrition Science ~2.5K LOC, Safety Engine 80 rules) e patrimonio scientifico (cataloghi DB).
+
+### Meccanismi (4 step indipendenti)
+
+| Step | Protezione | Effetto |
+|------|-----------|--------|
+| 1. Bundle sanitization (Alembic) | Rimossi migrations dal bundle | Schema DB nascosto |
+| 2. Bundle sanitization (Seed) | Rimossi JSON dal bundle | Dati esercizi non in chiaro |
+| 3. DB encryption | AES-256-GCM su catalog.db + nutrition.db | Cataloghi illeggibili |
+| 4. Native compilation | Nuitka (Python → C → x86-64) | Zero bytecode decompilabile |
+
+### Impatto TTC (Time-to-Crack)
+
+| Asset | Pre-hardening | Post-hardening |
+|-------|--------------|----------------|
+| Catalogo 500 esercizi | 5 sec | > 1 settimana |
+| 880 alimenti CREA | 5 sec | > 1 settimana |
+| Training Science (9K LOC) | 15 min | > 1 settimana |
+| License bypass | 1-2 ore | > 3 giorni |
+
+Audit completo: `docs/technical/SECURITY_AUDIT_POST_HARDENING.md`
 
 ---
 
@@ -165,10 +239,10 @@ Rilascio di build corrotte, con dati sensibili o con componenti mancanti.
 
 | Rischio | Probabilita' | Impatto | Mitigazione attuale | Stato |
 |---------|-------------|---------|-------------------|-------|
-| Decompilazione PyInstaller + patching | Bassa | Alto | Integrity hash (L3) | Accettato |
+| RE binario nativo (Ghidra/IDA) | Molto bassa | Alto | Nuitka nativo + crittografia DB (L6) | Accettato |
 | Copia crm.db su altra istanza | Media | Medio | Hardware binding blocca l'app, dati inutili senza app | Accettato |
 | Keylogger/screen capture su PC trainer | Bassa | Alto | Fuori scope (sicurezza OS) | Accettato |
-| Distribuzione installer a terzi | Media | Alto | NDA + hardware binding | Parziale |
+| Distribuzione installer a terzi | Media | Alto | NDA + hardware binding + codice nativo | Mitigato |
 | JWT replay (license.key copiata) | Bassa | Medio | machine_id impedisce uso su altra macchina | Mitigato |
 
 ### Roadmap sicurezza — prossimi interventi possibili
@@ -176,24 +250,26 @@ Rilascio di build corrotte, con dati sensibili o con componenti mancanti.
 Ordinati per rapporto impatto/costo. Non tutti necessari — valutare in base all'evoluzione
 del prodotto e del modello di distribuzione.
 
-#### Fase 1 — Pre-lancio (gia' implementato)
+#### Fase 1 — Pre-lancio (IMPLEMENTATO)
 
-- [x] JWT RS256 + hardware binding
-- [x] Enforcement middleware
-- [x] Embedded public key (anti file-replacement)
-- [x] Env var bypass block (frozen mode)
-- [x] Fingerprint fail-closed (frozen mode)
-- [x] Integrity hash chiave pubblica
-- [x] 5-phase release pipeline con safety gates
+- [x] JWT RS256 + hardware binding (L2)
+- [x] Enforcement middleware (L2)
+- [x] Embedded public key anti file-replacement (L3)
+- [x] Env var bypass block in compiled mode (L3)
+- [x] Fingerprint fail-closed in compiled mode (L3)
+- [x] Integrity hash chiave pubblica (L3)
+- [x] AES-256-GCM su catalog.db + nutrition.db (L3b)
+- [x] Bundle sanitization — zero Alembic/seed/pyc (L5/L6)
+- [x] Nuitka native compilation — Python → C → x86-64 (L5/L6)
+- [x] 5-phase release pipeline con safety gates (L5)
 
-#### Fase 2 — Post-lancio (quando necessario)
+#### Fase 2 — Post-lancio (trigger-based)
 
 | Intervento | Costo | Impatto | Quando |
 |-----------|-------|---------|--------|
-| **Nuitka compilation** | Medio | Alto — codice nativo, molto piu' difficile da decompilare | Se distribuzione cresce oltre trial partner |
+| **Code signing Authenticode** | Basso | Medio — certificato digitale sull'exe, previene tampering binario | Prima di distribuzione > 50 clienti |
 | **License revocation list** | Basso | Medio — blacklist licenze compromesse (file locale o check opzionale) | Se emerge abuso licenze |
 | **Telemetria anonima opt-in** | Medio | Medio — heartbeat periodico per rilevare cloni | Se modello diventa SaaS-like |
-| **Code signing** (Authenticode) | Basso | Medio — certificato digitale sull'exe, previene tampering binario | Prima di distribuzione su larga scala |
 | **Watermark nel DB** | Basso | Basso — record nascosto in crm.db per tracciare provenienza | Per trial partner specifici |
 
 #### Fase 3 — Evoluzione architetturale (se il business lo richiede)
@@ -201,7 +277,8 @@ del prodotto e del modello di distribuzione.
 | Intervento | Costo | Impatto | Quando |
 |-----------|-------|---------|--------|
 | **License server** | Alto | Molto alto — verifica online, revoca remota, analytics | Se modello SaaS/subscription |
-| **Encrypted SQLite** (SQLCipher) | Medio | Alto — DB illeggibile senza chiave | Se dati clinici diventano regolamentati |
+| **Anti-debug runtime** (Frida detection) | Medio | Alto — Anello 6 ambientale | Se emerge piracy attiva |
+| **SQLCipher su crm.db** | Medio | Alto — DB illeggibile senza chiave | Se dati clinici diventano regolamentati |
 | **DRM nativo** (Widevine/custom) | Alto | Molto alto — protezione a livello OS | Probabilmente mai necessario |
 
 ---
@@ -223,13 +300,22 @@ Le protezioni tecniche sono una barriera, non una garanzia. Per tutela completa:
 
 | File | Contenuto |
 |------|----------|
-| `api/services/license.py` | Servizio verifica licenza + hardening L3 |
+| `api/services/license.py` | Servizio verifica licenza JWT RSA (4-tier key resolution) |
 | `api/services/machine_fingerprint.py` | Fingerprint hardware SHA-256 |
 | `api/services/system_runtime.py` | Enforcement toggle + health |
+| `api/services/db_crypto.py` | AES-256-GCM encrypt/decrypt per cataloghi |
+| `api/config.py` | `is_compiled()` helper + path encrypted DB |
+| `api/database.py` | `_load_encrypted_db()` + engine condizionale |
 | `api/main.py` | LicenseMiddleware |
+| `tools/build/build-backend-nuitka.sh` | Build script Nuitka |
+| `tools/build/fitmanager.spec` | Build spec PyInstaller (backup/rollback) |
 | `tools/admin_scripts/generate_license.py` | CLI generazione licenze |
 | `docs/technical/LICENSE_ACTIVATION.md` | Guida operativa attivazione |
-| `docs/adr/ADR-005-license-hardening-anti-tampering.md` | Decisione architetturale hardening |
+| `docs/security/ANTI_REVERSE_ENGINEERING_STRATEGY.md` | Strategia anti-RE completa |
+| `docs/technical/SECURITY_AUDIT_BASELINE.md` | Audit pre-hardening |
+| `docs/technical/SECURITY_AUDIT_POST_HARDENING.md` | Audit post-hardening |
+| `docs/adr/ADR-005-license-hardening-anti-tampering.md` | Decisione architetturale hardening licenza |
+| `docs/adr/ADR-007-anti-reverse-engineering.md` | Decisione architetturale anti-RE |
 | `tests/test_license_hardening.py` | 9 test copertura hardening |
 | `tests/test_license_service.py` | 9 test servizio licenza |
 | `tests/test_license_middleware.py` | 8 test middleware enforcement |
