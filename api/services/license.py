@@ -17,7 +17,6 @@ from __future__ import annotations
 
 import hashlib
 import os
-import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Literal
@@ -53,7 +52,8 @@ PUBLIC_KEY_FILE = DATA_DIR / "license_public.pem"
 
 
 def _is_frozen() -> bool:
-    return getattr(sys, "frozen", False)
+    from api.config import is_compiled
+    return is_compiled()
 
 
 LicenseStatus = Literal["valid", "missing", "invalid", "expired", "unconfigured", "wrong_machine"]

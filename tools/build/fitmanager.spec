@@ -24,16 +24,7 @@ a = Analysis(
     [str(ROOT / 'tools' / 'build' / 'entry_point.py')],
     pathex=[str(ROOT)],
     binaries=[],
-    datas=[
-        # Alembic migrations (upgrade DB automatico)
-        (str(ROOT / 'alembic'), 'alembic'),
-        (str(ROOT / 'alembic.ini'), '.'),
-        # Seed esercizi (caricato al primo avvio)
-        (str(ROOT / 'data' / 'exercises' / 'seed_exercises.json'), 'data/exercises'),
-        (str(ROOT / 'data' / 'exercises' / 'seed_exercise_relations.json'), 'data/exercises'),
-        (str(ROOT / 'data' / 'exercises' / 'seed_exercise_progressions.json'), 'data/exercises'),
-        (str(ROOT / 'data' / 'exercises' / 'seed_exercise_media.json'), 'data/exercises'),
-    ],
+    datas=[],
     hiddenimports=[
         # ── SQLModel / SQLAlchemy ──
         'sqlmodel',
@@ -68,6 +59,10 @@ a = Analysis(
         'cryptography.hazmat.primitives.asymmetric.rsa',
         'cryptography.hazmat.primitives.asymmetric.padding',
         'cryptography.hazmat.primitives.hashes',
+        'cryptography.hazmat.primitives.kdf',
+        'cryptography.hazmat.primitives.kdf.pbkdf2',
+        'cryptography.hazmat.primitives.ciphers',
+        'cryptography.hazmat.primitives.ciphers.aead',
 
         # ── Upload / Multipart ──
         'multipart',
@@ -75,12 +70,6 @@ a = Analysis(
 
         # ── Validation ──
         'email_validator',
-
-        # ── Alembic ──
-        'alembic',
-        'alembic.migration',
-        'alembic.operations',
-        'alembic.script',
 
         # ── Data / Export ──
         'openpyxl',

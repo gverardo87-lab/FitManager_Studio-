@@ -11,6 +11,11 @@
       "sourceType": "github",
       "computedHash": "5c0ed6420ad2a8aa97b9d964141df8700a69118dd3ae2d3f71bca5ade22aaaa6"
     },
+    "docx": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "computedHash": "150be87ff7b18f273ad07da303adb1cf2ca21cc3e76db7a2cf0373405178a278"
+    },
     "infsh-cli": {
       "source": "inference-sh/skills",
       "sourceType": "github",

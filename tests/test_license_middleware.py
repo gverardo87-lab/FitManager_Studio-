@@ -125,22 +125,20 @@ def test_health_route_stays_exempt_and_reports_negative_license_status(
 
 
 def test_license_enforcement_default_true_when_frozen(monkeypatch):
-    """PyInstaller (sys.frozen=True) → enforcement ON di default."""
+    """Compiled mode (PyInstaller/Nuitka) → enforcement ON di default."""
     from api.services.system_runtime import is_license_enforcement_enabled
 
     monkeypatch.delenv("LICENSE_ENFORCEMENT_ENABLED", raising=False)
-    monkeypatch.setattr("api.services.system_runtime.sys", type("sys", (), {"frozen": True}))
+    monkeypatch.setattr("api.config.is_compiled", lambda: True)
     assert is_license_enforcement_enabled() is True
 
 
 def test_license_enforcement_default_false_when_not_frozen(monkeypatch):
-    """Source run (no sys.frozen) → enforcement OFF di default."""
+    """Source run (not compiled) → enforcement OFF di default."""
     from api.services.system_runtime import is_license_enforcement_enabled
 
     monkeypatch.delenv("LICENSE_ENFORCEMENT_ENABLED", raising=False)
-    import sys as real_sys
-
-    monkeypatch.setattr("api.services.system_runtime.sys", real_sys)
+    monkeypatch.setattr("api.config.is_compiled", lambda: False)
     assert is_license_enforcement_enabled() is False
 
 

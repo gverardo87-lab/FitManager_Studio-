@@ -38,7 +38,13 @@ from api.config import (
     DATABASE_URL,
     NUTRITION_DATABASE_URL,
 )
-from api.database import create_catalog_tables, create_db_and_tables, create_nutrition_tables, engine, catalog_engine
+from api.database import (
+    create_catalog_tables,
+    create_db_and_tables,
+    create_nutrition_tables,
+    engine,
+    catalog_engine,
+)
 from api.logging_config import configure_app_logging
 from api.seed_exercises import seed_builtin_exercises, seed_exercise_media, seed_exercise_relations
 from api.services.license import check_license
@@ -228,22 +234,31 @@ async def lifespan(app: FastAPI):
     sync_schema(engine)
 
     # ── 3. Catalog DB ──
-    catalog_path = CATALOG_DATABASE_URL.replace("sqlite:///", "")
-    if not Path(catalog_path).exists():
-        logger.warning("catalog.db non trovato — creo tabelle vuote. "
-                       "Eseguire: python -m tools.admin_scripts.build_catalog")
-    _purge_stale_wal(catalog_path, "catalog")
+    from api.database import is_catalog_encrypted, is_nutrition_encrypted
+    if is_catalog_encrypted():
+        catalog_path = "(encrypted in-memory)"
+        logger.info(f"  CATALOG_DB = {catalog_path}")
+    else:
+        catalog_path = CATALOG_DATABASE_URL.replace("sqlite:///", "")
+        if not Path(catalog_path).exists():
+            logger.warning("catalog.db non trovato — creo tabelle vuote. "
+                           "Eseguire: python -m tools.admin_scripts.build_catalog")
+        _purge_stale_wal(catalog_path, "catalog")
+        logger.info(f"  CATALOG_DB = {catalog_path}")
     create_catalog_tables()
-    logger.info(f"  CATALOG_DB = {catalog_path}")
 
     # ── 3b. Nutrition DB ──
-    nutrition_path = NUTRITION_DATABASE_URL.replace("sqlite:///", "")
-    if not Path(nutrition_path).exists():
-        logger.warning("nutrition.db non trovato — creo tabelle vuote. "
-                       "Eseguire: python -m tools.admin_scripts.build_nutrition")
-    _purge_stale_wal(nutrition_path, "nutrition")
+    if is_nutrition_encrypted():
+        nutrition_path = "(encrypted in-memory)"
+        logger.info(f"  NUTRITION_DB = {nutrition_path}")
+    else:
+        nutrition_path = NUTRITION_DATABASE_URL.replace("sqlite:///", "")
+        if not Path(nutrition_path).exists():
+            logger.warning("nutrition.db non trovato — creo tabelle vuote. "
+                           "Eseguire: python -m tools.admin_scripts.build_nutrition")
+        _purge_stale_wal(nutrition_path, "nutrition")
+        logger.info(f"  NUTRITION_DB = {nutrition_path}")
     create_nutrition_tables()
-    logger.info(f"  NUTRITION_DB = {nutrition_path}")
 
     # ── 4. Seed esercizi builtin + relazioni in CATALOG DB (idempotente) ──
     # Pattern identico a nutrition.db: catalogo scientifico separato da crm.db
@@ -254,7 +269,7 @@ async def lifespan(app: FastAPI):
         seed_exercise_media(catalog_seed_session)
 
     # ── 4b. Nutrition template check (warning, non bloccante) ──
-    if Path(nutrition_path).exists():
+    if not is_nutrition_encrypted() and Path(nutrition_path).exists():
         try:
             conn = sqlite3.connect(nutrition_path)
             template_count = conn.execute(
@@ -272,9 +287,12 @@ async def lifespan(app: FastAPI):
             logger.warning(f"Impossibile verificare template nutrizione: {e}")
 
     # ── 5. Integrity check ──
-    _integrity_check_on_startup(DATABASE_URL, CATALOG_DATABASE_URL)
+    if not is_catalog_encrypted():
+        _integrity_check_on_startup(DATABASE_URL, CATALOG_DATABASE_URL)
+    else:
+        _integrity_check_on_startup(DATABASE_URL, DATABASE_URL)
     # Integrity check nutrition.db (separato, non blocca se mancante)
-    if Path(nutrition_path).exists():
+    if not is_nutrition_encrypted() and Path(nutrition_path).exists():
         _integrity_check_on_startup(NUTRITION_DATABASE_URL, NUTRITION_DATABASE_URL)
 
     logger.info("API pronta")

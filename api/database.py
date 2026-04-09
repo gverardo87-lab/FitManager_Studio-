@@ -2,24 +2,26 @@
 """
 Database layer con SQLModel (SQLAlchemy + Pydantic).
 
-Architettura dual-database:
+Architettura tri-database:
   - business engine (data.db / crm.db): dati trainer, clienti, contratti, workout
   - catalog engine (catalog.db): tassonomia scientifica (muscoli, articolazioni, condizioni, metriche)
+  - nutrition engine (nutrition.db): catalogo alimenti CREA/USDA
 
-Perche' SQLModel e non sqlite3 raw:
-- Cambi DATABASE_URL e passi a PostgreSQL senza toccare una query
-- I modelli ORM SONO modelli Pydantic (zero conversione)
-- Session management con dependency injection
-- Connection pooling automatico (importante per multi-utente)
+In frozen mode (compiled binary), catalog e nutrition vengono decifrati da .db.enc
+e caricati in memoria (AES-256-GCM). In dev mode, usano i file .db plain.
 """
 
 import logging
+import sqlite3 as sqlite3_stdlib
+import sys
+from pathlib import Path
 from typing import Generator
 
 from sqlalchemy import event
+from sqlalchemy.pool import StaticPool
 from sqlmodel import SQLModel, Session, create_engine
 
-from api.config import CATALOG_DATABASE_URL, DATABASE_URL, NUTRITION_DATABASE_URL
+from api.config import CATALOG_DATABASE_URL, DATA_DIR, DATABASE_URL, NUTRITION_DATABASE_URL
 import api.models.share_token  # noqa: F401 — registra ShareToken nel metadata SQLModel
 import api.models.nutrition  # noqa: F401 — registra modelli nutrition nel metadata SQLModel
 
@@ -43,6 +45,24 @@ def _setup_sqlite_pragmas(dbapi_conn, connection_record):
     cursor.close()
 
 
+def _load_encrypted_db(enc_path: Path, label: str):
+    """Load an AES-256-GCM encrypted SQLite DB into an in-memory engine."""
+    from api.services.db_crypto import decrypt_db_to_bytes
+
+    db_bytes = decrypt_db_to_bytes(enc_path)
+    conn = sqlite3_stdlib.connect(":memory:")
+    conn.deserialize(db_bytes)
+    conn.execute("PRAGMA foreign_keys=ON")
+    logger.info(f"Loaded encrypted {label} ({len(db_bytes):,} bytes) into memory")
+
+    return create_engine(
+        "sqlite://",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+        creator=lambda: conn,
+    )
+
+
 # --- Business Engine (data.db / crm.db) ---
 
 _connect_args = {}
@@ -58,35 +78,55 @@ engine = create_engine(
 if DATABASE_URL.startswith("sqlite"):
     event.listen(engine, "connect", _setup_sqlite_pragmas)
 
-# --- Catalog Engine (catalog.db) ---
+# --- Catalog Engine (catalog.db or catalog.db.enc) ---
 
-_catalog_connect_args = {}
-if CATALOG_DATABASE_URL.startswith("sqlite"):
-    _catalog_connect_args = {"check_same_thread": False}
+_catalog_enc = DATA_DIR / "catalog.db.enc"
+if (getattr(sys, "frozen", False) or "__compiled__" in dir()) and _catalog_enc.exists():
+    catalog_engine = _load_encrypted_db(_catalog_enc, "catalog")
+    _catalog_encrypted = True
+else:
+    _catalog_connect_args = {}
+    if CATALOG_DATABASE_URL.startswith("sqlite"):
+        _catalog_connect_args = {"check_same_thread": False}
 
-catalog_engine = create_engine(
-    CATALOG_DATABASE_URL,
-    echo=False,
-    connect_args=_catalog_connect_args,
-)
+    catalog_engine = create_engine(
+        CATALOG_DATABASE_URL,
+        echo=False,
+        connect_args=_catalog_connect_args,
+    )
 
-if CATALOG_DATABASE_URL.startswith("sqlite"):
-    event.listen(catalog_engine, "connect", _setup_sqlite_pragmas)
+    if CATALOG_DATABASE_URL.startswith("sqlite"):
+        event.listen(catalog_engine, "connect", _setup_sqlite_pragmas)
+    _catalog_encrypted = False
 
-# --- Nutrition Engine (nutrition.db) ---
+# --- Nutrition Engine (nutrition.db or nutrition.db.enc) ---
 
-_nutrition_connect_args = {}
-if NUTRITION_DATABASE_URL.startswith("sqlite"):
-    _nutrition_connect_args = {"check_same_thread": False}
+_nutrition_enc = DATA_DIR / "nutrition.db.enc"
+if (getattr(sys, "frozen", False) or "__compiled__" in dir()) and _nutrition_enc.exists():
+    nutrition_engine = _load_encrypted_db(_nutrition_enc, "nutrition")
+    _nutrition_encrypted = True
+else:
+    _nutrition_connect_args = {}
+    if NUTRITION_DATABASE_URL.startswith("sqlite"):
+        _nutrition_connect_args = {"check_same_thread": False}
 
-nutrition_engine = create_engine(
-    NUTRITION_DATABASE_URL,
-    echo=False,
-    connect_args=_nutrition_connect_args,
-)
+    nutrition_engine = create_engine(
+        NUTRITION_DATABASE_URL,
+        echo=False,
+        connect_args=_nutrition_connect_args,
+    )
 
-if NUTRITION_DATABASE_URL.startswith("sqlite"):
-    event.listen(nutrition_engine, "connect", _setup_sqlite_pragmas)
+    if NUTRITION_DATABASE_URL.startswith("sqlite"):
+        event.listen(nutrition_engine, "connect", _setup_sqlite_pragmas)
+    _nutrition_encrypted = False
+
+
+def is_catalog_encrypted() -> bool:
+    return _catalog_encrypted
+
+
+def is_nutrition_encrypted() -> bool:
+    return _nutrition_encrypted
 
 
 # --- Table creation ---
@@ -144,7 +184,10 @@ def create_catalog_tables() -> None:
 
     Usato da build_catalog.py per creare catalog.db da zero.
     In produzione, catalog.db viene shippato pre-costruito.
+    Skipped if loaded from encrypted in-memory DB (tables already present).
     """
+    if _catalog_encrypted:
+        return
     tables = [
         t for t in SQLModel.metadata.sorted_tables
         if t.name in CATALOG_TABLE_NAMES
@@ -158,7 +201,10 @@ def create_nutrition_tables() -> None:
 
     Usato da build_nutrition.py per creare nutrition.db da zero.
     In produzione, nutrition.db viene shippato pre-costruito con dati CREA 2019.
+    Skipped if loaded from encrypted in-memory DB (tables already present).
     """
+    if _nutrition_encrypted:
+        return
     tables = [
         t for t in SQLModel.metadata.sorted_tables
         if t.name in NUTRITION_TABLE_NAMES

@@ -13,8 +13,10 @@ from dotenv import load_dotenv
 
 # Paths (prima di load_dotenv per poter caricare data/.env)
 # PyInstaller frozen: exe e' in {app}/backend/fitmanager.exe → parent.parent = {app}/
+# Nuitka compiled: __compiled__ presente, stesso layout directory di PyInstaller
 # Source tree: config.py e' in {project}/api/config.py → parents[1] = {project}/
-if getattr(sys, "frozen", False):
+_is_bundled = getattr(sys, "frozen", False) or "__compiled__" in dir()
+if _is_bundled:
     PROJECT_ROOT = Path(sys.executable).resolve().parent.parent
 else:
     PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -70,6 +72,16 @@ NUTRITION_DATABASE_URL: str = os.getenv(
     "NUTRITION_DATABASE_URL",
     f"sqlite:///{DATA_DIR / 'nutrition.db'}",
 )
+
+# Encrypted catalog paths (used by database.py for frozen mode)
+CATALOG_DB_ENC: Path = DATA_DIR / "catalog.db.enc"
+NUTRITION_DB_ENC: Path = DATA_DIR / "nutrition.db.enc"
+
+
+def is_compiled() -> bool:
+    """Detect compiled binary (PyInstaller frozen OR Nuitka compiled)."""
+    return getattr(sys, "frozen", False) or "__compiled__" in dir()
+
 
 # Logging locale applicativo
 LOG_DIR: Path = DATA_DIR / "logs"

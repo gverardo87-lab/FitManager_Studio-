@@ -121,6 +121,7 @@ mkdir -p "$RELEASE_DATA_DIR"
 cp "$ROOT/data/catalog.db" "$RELEASE_DATA_DIR/catalog.db"
 cp "$ROOT/data/nutrition.db" "$RELEASE_DATA_DIR/nutrition.db"
 cp "$ROOT/data/license_public.pem" "$RELEASE_DATA_DIR/license_public.pem"
+RELEASE_DATA_DIR_W="$(cygpath -w "$RELEASE_DATA_DIR" 2>/dev/null || echo "$RELEASE_DATA_DIR")"
 
 # ── Safety Gate 1: CRM data leak prevention ──
 echo "Safety gate: verifico assenza crm.db in dist/..."
@@ -164,6 +165,19 @@ if [ $? -ne 0 ]; then
   echo "ERRORE CRITICO: nutrition.db integrity check fallito!"
   exit 1
 fi
+
+# ── Encrypt catalog databases (AES-256-GCM) ──
+echo "Encrypting catalog databases..."
+python3 -c "
+import sys; sys.path.insert(0, r'$ROOTW')
+from pathlib import Path
+from api.services.db_crypto import encrypt_db
+encrypt_db(Path(r'$RELEASE_DATA_DIR_W/catalog.db'), Path(r'$RELEASE_DATA_DIR_W/catalog.db.enc'))
+encrypt_db(Path(r'$RELEASE_DATA_DIR_W/nutrition.db'), Path(r'$RELEASE_DATA_DIR_W/nutrition.db.enc'))
+print('  catalog.db.enc + nutrition.db.enc created')
+"
+rm "$RELEASE_DATA_DIR/catalog.db" "$RELEASE_DATA_DIR/nutrition.db"
+echo "  Plain .db files removed from staging"
 
 echo "Tutti i safety gate superati."
 

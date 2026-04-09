@@ -16,6 +16,7 @@ Legge da data/exercises/:
 
 import json
 import logging
+import sys
 
 from sqlmodel import Session, select, func
 
@@ -25,6 +26,20 @@ from api.models.exercise import Exercise
 logger = logging.getLogger("fitmanager.api")
 
 SEED_FILE = DATA_DIR / "exercises" / "seed_exercises.json"
+
+
+def _frozen_guard(seed_file, label: str) -> bool:
+    """Check seed file existence. In frozen mode, missing file is expected.
+
+    Returns True if the caller should return early (file missing).
+    """
+    if seed_file.exists():
+        return False
+    if getattr(sys, "frozen", False) or "__compiled__" in dir():
+        logger.info(f"Seed {label}: file non presente in bundle (atteso in compiled mode)")
+    else:
+        logger.warning(f"Seed {label}: file non trovato {seed_file}")
+    return True
 
 
 def seed_builtin_exercises(session: Session) -> int:
@@ -41,8 +56,7 @@ def seed_builtin_exercises(session: Session) -> int:
         logger.info(f"Seed esercizi: gia' presenti {count} builtin, skip")
         return 0
 
-    if not SEED_FILE.exists():
-        logger.warning(f"Seed esercizi: file non trovato {SEED_FILE}")
+    if _frozen_guard(SEED_FILE, "esercizi"):
         return 0
 
     with open(SEED_FILE, "r", encoding="utf-8") as f:
@@ -120,8 +134,7 @@ def seed_exercise_relations(session: Session) -> int:
         logger.info(f"Seed relazioni: gia' presenti {count}, skip")
         return 0
 
-    if not RELATIONS_SEED_FILE.exists():
-        logger.warning(f"Seed relazioni: file non trovato {RELATIONS_SEED_FILE}")
+    if _frozen_guard(RELATIONS_SEED_FILE, "relazioni"):
         return 0
 
     # Carica ID esercizi effettivamente presenti nel DB
@@ -173,8 +186,7 @@ def seed_exercise_media(session: Session) -> int:
         logger.info(f"Seed media: gia' presenti {count}, skip")
         return 0
 
-    if not MEDIA_SEED_FILE.exists():
-        logger.warning(f"Seed media: file non trovato {MEDIA_SEED_FILE}")
+    if _frozen_guard(MEDIA_SEED_FILE, "media"):
         return 0
 
     # Carica ID esercizi effettivamente presenti nel DB

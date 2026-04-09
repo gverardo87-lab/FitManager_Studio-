@@ -1,7 +1,6 @@
 """Helper runtime condivisi per surface salute e snapshot di supporto."""
 
 import os
-import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -22,8 +21,9 @@ APP_STARTED_AT = datetime.now(timezone.utc)
 
 
 def is_license_enforcement_enabled() -> bool:
-    # Frozen mode (PyInstaller): enforcement SEMPRE ON, nessun env var bypass.
-    if getattr(sys, "frozen", False):
+    from api.config import is_compiled
+    # Compiled mode (PyInstaller/Nuitka): enforcement SEMPRE ON, nessun env var bypass.
+    if is_compiled():
         return True
     # Dev mode: configurabile via env (default OFF per comodita' sviluppo).
     value = os.getenv("LICENSE_ENFORCEMENT_ENABLED", "false").strip().lower()
@@ -49,7 +49,8 @@ def get_app_mode() -> str:
 
 
 def get_distribution_mode() -> str:
-    return "installer" if getattr(sys, "frozen", False) else "source"
+    from api.config import is_compiled
+    return "installer" if is_compiled() else "source"
 
 
 def _ping(session: Session) -> bool:

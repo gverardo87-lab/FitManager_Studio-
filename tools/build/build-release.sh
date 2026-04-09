@@ -278,8 +278,8 @@ echo "━━━ FASE 4/5: SEAL ━━━"
 INSTALLER_SHA256=$(sha256sum "$INSTALLER_PATH" | cut -d' ' -f1)
 INSTALLER_SIZE=$(stat -c%s "$INSTALLER_PATH" 2>/dev/null || wc -c < "$INSTALLER_PATH" | tr -d ' ')
 
-# Conteggi nutrition.db per il manifest
-NUTRITION_DB_W="$(cygpath -w "$ROOT/dist/release-data/nutrition.db" 2>/dev/null || echo "$ROOT/dist/release-data/nutrition.db")"
+# Conteggi nutrition.db per il manifest (from source, staging is encrypted)
+NUTRITION_DB_W="$(cygpath -w "$ROOT/data/nutrition.db" 2>/dev/null || echo "$ROOT/data/nutrition.db")"
 NUTRITION_COUNTS=$(python3 -c "
 import sqlite3, json
 db = sqlite3.connect(r'$NUTRITION_DB_W')

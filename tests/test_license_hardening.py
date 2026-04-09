@@ -2,8 +2,8 @@
 
 Copre i 4 vettori di attacco chiusi:
 1. Embedded public key + integrity hash (anti file-replacement)
-2. Enforcement sempre ON in frozen mode (anti env var bypass)
-3. Fingerprint fail-closed in frozen mode (anti PowerShell block)
+2. Enforcement sempre ON in compiled mode (anti env var bypass)
+3. Fingerprint fail-closed in compiled mode (anti PowerShell block)
 4. Key integrity check (anti bytecode patching)
 """
 
@@ -66,10 +66,7 @@ def test_embedded_key_integrity_fails_on_tampered_hash(monkeypatch):
 
 
 def test_frozen_mode_uses_embedded_key_ignores_file(tmp_path, monkeypatch):
-    """In frozen mode, la chiave da file viene ignorata — usa solo embedded."""
-    # Crea un token firmato con la chiave embedded reale (non possibile senza
-    # private key), quindi usiamo una chiave di test e verifichiamo che in
-    # frozen mode il file viene ignorato (= invalid perche' firma non corrisponde).
+    """In compiled mode, la chiave da file viene ignorata — usa solo embedded."""
     private_key, fake_public = _generate_rsa_keypair()
     token = jwt.encode(
         {
@@ -88,16 +85,16 @@ def test_frozen_mode_uses_embedded_key_ignores_file(tmp_path, monkeypatch):
     pub_file.write_text(fake_public, encoding="utf-8")
     monkeypatch.setattr("api.services.license.PUBLIC_KEY_FILE", pub_file)
 
-    # Simula frozen mode
-    monkeypatch.setattr("api.services.license.sys", type("sys", (), {"frozen": True}))
+    # Simula compiled mode
+    monkeypatch.setattr("api.services.license._is_frozen", lambda: True)
 
-    # In frozen mode, la chiave embedded (diversa) viene usata → invalid
+    # In compiled mode, la chiave embedded (diversa) viene usata → invalid
     result = check_license(token_path=license_file)
     assert result.status == "invalid"
 
 
 def test_frozen_mode_blocks_on_tampered_embedded_key(tmp_path, monkeypatch):
-    """In frozen mode, se la chiave embedded e' stata alterata → unconfigured."""
+    """In compiled mode, se la chiave embedded e' stata alterata → unconfigured."""
     private_key, _ = _generate_rsa_keypair()
     token = jwt.encode(
         {
@@ -111,8 +108,8 @@ def test_frozen_mode_blocks_on_tampered_embedded_key(tmp_path, monkeypatch):
     license_file = tmp_path / "license.key"
     license_file.write_text(token, encoding="utf-8")
 
-    # Simula frozen + chiave alterata
-    monkeypatch.setattr("api.services.license.sys", type("sys", (), {"frozen": True}))
+    # Simula compiled + chiave alterata
+    monkeypatch.setattr("api.services.license._is_frozen", lambda: True)
     monkeypatch.setattr(
         "api.services.license.EMBEDDED_PUBLIC_KEY_PEM",
         "-----BEGIN PUBLIC KEY-----\nTAMPERED\n-----END PUBLIC KEY-----",
@@ -122,27 +119,23 @@ def test_frozen_mode_blocks_on_tampered_embedded_key(tmp_path, monkeypatch):
     assert result.status == "unconfigured"
 
 
-# --- Hardening #2: Enforcement always ON in frozen ---
+# --- Hardening #2: Enforcement always ON in compiled ---
 
 
 def test_enforcement_always_on_in_frozen_ignores_env(monkeypatch):
-    """In frozen mode, LICENSE_ENFORCEMENT_ENABLED=false viene ignorato."""
+    """In compiled mode, LICENSE_ENFORCEMENT_ENABLED=false viene ignorato."""
     from api.services.system_runtime import is_license_enforcement_enabled
 
     monkeypatch.setenv("LICENSE_ENFORCEMENT_ENABLED", "false")
-    monkeypatch.setattr(
-        "api.services.system_runtime.sys",
-        type("sys", (), {"frozen": True}),
-    )
+    monkeypatch.setattr("api.config.is_compiled", lambda: True)
     assert is_license_enforcement_enabled() is True
 
 
 def test_enforcement_respects_env_in_dev(monkeypatch):
     """In dev mode, LICENSE_ENFORCEMENT_ENABLED e' rispettato."""
     from api.services.system_runtime import is_license_enforcement_enabled
-    import sys as real_sys
 
-    monkeypatch.setattr("api.services.system_runtime.sys", real_sys)
+    monkeypatch.setattr("api.config.is_compiled", lambda: False)
     monkeypatch.setenv("LICENSE_ENFORCEMENT_ENABLED", "true")
     assert is_license_enforcement_enabled() is True
 
@@ -150,11 +143,11 @@ def test_enforcement_respects_env_in_dev(monkeypatch):
     assert is_license_enforcement_enabled() is False
 
 
-# --- Hardening #3: Fingerprint fail-closed in frozen ---
+# --- Hardening #3: Fingerprint fail-closed in compiled ---
 
 
 def test_frozen_fingerprint_unavailable_blocks_license(tmp_path, monkeypatch):
-    """In frozen mode, fingerprint 'unavailable' = wrong_machine (fail-closed)."""
+    """In compiled mode, fingerprint 'unavailable' = wrong_machine (fail-closed)."""
     private_key, public_key = _generate_rsa_keypair()
     token = jwt.encode(
         {
@@ -169,8 +162,8 @@ def test_frozen_fingerprint_unavailable_blocks_license(tmp_path, monkeypatch):
     license_file = tmp_path / "license.key"
     license_file.write_text(token, encoding="utf-8")
 
-    # Simula frozen mode + fingerprint non disponibile
-    monkeypatch.setattr("api.services.license.sys", type("sys", (), {"frozen": True}))
+    # Simula compiled mode + fingerprint non disponibile
+    monkeypatch.setattr("api.services.license._is_frozen", lambda: True)
     with patch(
         "api.services.machine_fingerprint.get_machine_fingerprint",
         return_value="unavailable",
@@ -197,9 +190,8 @@ def test_dev_fingerprint_unavailable_still_allows(tmp_path, monkeypatch):
     license_file = tmp_path / "license.key"
     license_file.write_text(token, encoding="utf-8")
 
-    # Dev mode (non frozen) + fingerprint non disponibile
-    import sys as real_sys
-    monkeypatch.setattr("api.services.license.sys", real_sys)
+    # Dev mode (not compiled) + fingerprint non disponibile
+    monkeypatch.setattr("api.services.license._is_frozen", lambda: False)
     with patch(
         "api.services.machine_fingerprint.get_machine_fingerprint",
         return_value="unavailable",

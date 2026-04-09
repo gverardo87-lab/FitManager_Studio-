@@ -59,17 +59,11 @@ Source: "node\node.exe"; DestDir: "{app}\node"; Flags: ignoreversion
 ; Launcher
 Source: "launcher.bat"; DestDir: "{app}"; Flags: ignoreversion
 
-; Seed esercizi (prima installazione)
-Source: "..\data\exercises\seed_exercises.json"; DestDir: "{app}\data\exercises"; Flags: ignoreversion
-Source: "..\data\exercises\seed_exercise_relations.json"; DestDir: "{app}\data\exercises"; Flags: ignoreversion
-Source: "..\data\exercises\seed_exercise_progressions.json"; DestDir: "{app}\data\exercises"; Flags: ignoreversion
-Source: "..\data\exercises\seed_exercise_media.json"; DestDir: "{app}\data\exercises"; Flags: ignoreversion
+; Catalog DB (encrypted AES-256-GCM — tassonomia scientifica)
+Source: "..\dist\release-data\catalog.db.enc"; DestDir: "{app}\data"; Flags: ignoreversion
 
-; Catalog DB (tassonomia scientifica - muscoli, articolazioni, condizioni, metriche)
-Source: "..\dist\release-data\catalog.db"; DestDir: "{app}\data"; Flags: ignoreversion
-
-; Nutrition DB (catalogo alimenti CREA/USDA - 880 alimenti, 210 ricette, 12 template)
-Source: "..\dist\release-data\nutrition.db"; DestDir: "{app}\data"; Flags: ignoreversion
+; Nutrition DB (encrypted AES-256-GCM — catalogo alimenti CREA/USDA)
+Source: "..\dist\release-data\nutrition.db.enc"; DestDir: "{app}\data"; Flags: ignoreversion
 
 ; Chiave pubblica licenza (verifica firma JWT RSA)
 ; Fonte canonica: data/license_public.pem, stageata in dist/release-data per evitare lock sul file live.
