@@ -153,7 +153,7 @@ async function fetchImageAsBuffer(url: string): Promise<ArrayBuffer | null> {
     if (!res.ok) return null;
     return await res.arrayBuffer();
   } catch (err) {
-    console.warn(`[Export] Fetch immagine fallita: ${url}`, err);
+    // Fetch immagine fallita — continua export senza immagine
     return null;
   }
 }
@@ -661,7 +661,7 @@ export async function exportWorkoutExcel({
 
   // Diagnostica: avvisa se immagini richieste ma non trovate
   if (requestedCount > 0 && !hasImages) {
-    console.warn(`[Export] 0/${requestedCount} immagini trovate. Backend attivo?`);
+    // 0 immagini trovate — export procede senza illustrazioni
     toast.info("Export senza immagini — nessuna illustrazione trovata per gli esercizi");
   } else if (requestedCount > 0) {
     console.info(`[Export] ${imageMap.size}/${requestedCount} esercizi con immagini`);

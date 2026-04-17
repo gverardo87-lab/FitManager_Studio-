@@ -7,27 +7,29 @@
 ## 1. Quality Gates
 
 - [x] `bash tools/scripts/check-all.sh` - ruff (0 errori) + next build (0 errori TS)
-- [x] `bash tools/build/build-installer.sh` - quality gate + frontend + backend + media + Inno Setup
+- [x] `bash tools/build/build-release.sh` - preflight + build + verify + seal + tag (ADR-004)
+- [x] Audit pre-consegna completato (`docs/technical/PRE_DELIVERY_AUDIT_2026_04_17.md`)
 - [x] ESLint: 0 errori, 5 warning residui (non-actionable `react-hooks/incompatible-library`)
-- [x] `pytest tests/ -v` - 269 test verdi, 0 falliti
+- [x] `pytest tests/ -v` - 361 test verdi, 0 falliti
 - [x] Frontend vitest: 69 test data protection verdi
 - [x] E2E business rehearsal: 36/36 PASS (client, contract, rate, pay/unpay, ledger, agenda, credits, backup, restore)
 - [x] E2E distribution rehearsal: 62/62 PASS (artifacts, license, enforcement, network, backup, portal, config)
 
 ## 2. Build Artifacts
 
-- [x] PyInstaller backend exe: `dist/fitmanager/fitmanager.exe` (bundle ~100 MB)
+- [x] Nuitka backend exe: binario nativo x86-64 (Python->C->nativo, zero bytecode)
 - [x] Next.js standalone: `frontend/.next/standalone/server.js`
-- [x] Inno Setup installer: `dist/FitManager_Setup_1.0.4.exe`
+- [x] Inno Setup installer: `dist/FitManager_Setup_1.0.6.exe`
 - [x] Launcher: `installer/launcher.bat` con `LICENSE_ENFORCEMENT_ENABLED=true`
-- [x] License enforcement default ON in PyInstaller (non dipende piu' solo da launcher.bat)
+- [x] License enforcement default ON in compiled mode (Nuitka + PyInstaller)
 - [x] Node runtime: `installer/node/node.exe`
-- [x] Seed data in bundle: esercizi JSON + relazioni + media
-- [x] Versione `1.0.4` riallineata in `api/__init__.py`, `frontend/package.json` e `installer/fitmanager.iss`
+- [x] DB cifrati nel bundle: `catalog.db.enc` + `nutrition.db.enc` (AES-256-GCM)
+- [x] Versione `1.0.6` riallineata in `api/__init__.py`, `frontend/package.json` e `installer/fitmanager.iss`
 - [x] Build pipeline safety gates: CRM data leak + ISS reference + nutrition.db integrity
 - [x] Nome output installer versionato e tracciabile, non solo `FitManager_Setup.exe`
-- [x] Packaging di `catalog.db` e `license_public.pem` tramite snapshot immutabili in `dist/release-data`
-- [x] Rebuild del setup dopo il fix rewrite loopback: `frontend/.next/standalone/server.js` non contiene host LAN/Tailscale/developer nei rewrite `/api`, `/health`, `/media`
+- [x] Packaging di `catalog.db.enc` e `license_public.pem` tramite snapshot immutabili in `dist/release-data`
+- [x] Bundle sanitizzato: zero Alembic, zero seed JSON, zero `.pyc` (ADR-007)
+- [x] Backup restore con size limit 500 MB
 
 ## 3. License System
 
@@ -36,7 +38,7 @@
 - [x] `license.key` cliente tenuta fuori dal repository e fuori da `installer/assets`, con copia solo verso `data/license.key` sulla macchina target
 - [x] Health endpoint riporta `license_status: valid`
 - [x] Launcher impone `LICENSE_ENFORCEMENT_ENABLED=true` in produzione
-- [x] PyInstaller default: enforcement ON anche senza launcher (v1.0.4)
+- [x] Nuitka + PyInstaller default: enforcement ON anche senza launcher (v1.0.4+)
 - [x] Verifica manuale post-install/post-upgrade: `data/license.key` presente nella cartella installata finale prima di interpretare errori pagina come bug runtime
 - [ ] Test enforcement negativo manuale: rimuovere `license.key` su installazione reale e verificare pagina `/licenza`
 
@@ -94,10 +96,11 @@
 
 ## Baseline
 
-- **Branch**: `fit_launch_01`
-- **Versione corrente**: `1.0.4`
-- **Data**: 2026-03-21
-- **Release candidate artifact**: `dist/FitManager_Setup_1.0.4.exe`
+- **Branch**: `FitManager_Studio`
+- **Versione corrente**: `1.0.6`
+- **Data**: 2026-04-17
+- **Release candidate artifact**: `dist/FitManager_Setup_1.0.6.exe`
+- **Build system**: Nuitka (Python->C->nativo) + Next.js standalone + Inno Setup
 
 ### Storico versioni
 | Versione | Data | Note |
@@ -105,6 +108,8 @@
 | 1.0.2 | 2026-03-11 | Prima RC distribuibile (fix rewrite loopback) |
 | 1.0.3 | 2026-03-20 | Fix build pipeline + pitch deck + seed dev realistico |
 | 1.0.4 | 2026-03-21 | License enforcement frozen default + safety gates build + nutrition integrity |
+| 1.0.5 | 2026-03-25 | License hardening (ADR-005) + identity fields + stale cookie cleanup + video guide infra |
+| 1.0.6 | 2026-04-17 | Anti-RE 4 step (ADR-007) + Nuitka build + DB encryption + audit pre-consegna |
 
 ## Rollback
 

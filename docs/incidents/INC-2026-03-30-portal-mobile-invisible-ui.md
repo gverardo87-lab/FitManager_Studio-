@@ -138,9 +138,44 @@ Il rate limiter su endpoint pubblici deve considerare:
 
 ---
 
+## Recurrence — 2026-04-17 (Pagina Anamnesi Pubblica)
+
+### Contesto
+
+Durante l'audit tecnico pre-consegna (2026-04-17), lo **stesso bug CSS dark mode** e' stato trovato sulla pagina anamnesi pubblica (`/public/anamnesi/[token]/page.tsx`).
+
+### Dettaglio
+
+- **9 istanze** di CSS variables del tema trovate: `text-muted-foreground`, `bg-primary`, `text-primary`, `bg-muted`, `border-input`, `text-foreground`
+- Mancava `style={{ colorScheme: "light" }}` sul div root
+- Mancava `text-gray-900` come colore base ereditato
+
+### Fix applicata
+
+Stesso pattern della scheda workout:
+1. Aggiunto `style={{ colorScheme: "light" }}` sul div root
+2. Aggiunto `text-gray-900` come colore base sul div root
+3. Sostituzione di tutte le CSS variables con colori Tailwind espliciti
+4. Verificato con grep: 0 classi tema-dipendenti residue
+
+### Lezione rafforzata
+
+La fix originale (2026-03-30) fu applicata solo a `/public/scheda/[token]`. La pagina `/public/anamnesi/[token]` era gia' in produzione ma non fu controllata — **mancava un audit proattivo su TUTTE le pagine `app/public/`**.
+
+**Regola aggiornata**: dopo ogni fix CSS su una pagina pubblica, verificare con grep TUTTE le pagine in `app/public/` per la stessa classe di bug. Le pagine pubbliche condividono lo stesso rischio (dispositivo del cliente con configurazione sconosciuta).
+
+### File coinvolto
+
+| File | Modifiche |
+|------|-----------|
+| `frontend/src/app/public/anamnesi/[token]/page.tsx` | 9 CSS variables sostituite + colorScheme lock |
+
+---
+
 ## Verifica
 
 - [x] `next build` zero errori
 - [x] `ruff check api/` zero errori
 - [x] Link testato e funzionante dopo fix
-- [x] grep conferma 0 classi tema-dipendenti nel file
+- [x] grep conferma 0 classi tema-dipendenti in `/public/scheda/`
+- [x] grep conferma 0 classi tema-dipendenti in `/public/anamnesi/` (2026-04-17)

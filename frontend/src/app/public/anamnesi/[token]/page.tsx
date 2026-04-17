@@ -165,7 +165,7 @@ export default function PublicAnamnesiPage({
   const isLast = step === STEPS.length - 1;
 
   return (
-    <div className="min-h-screen bg-mesh-login flex flex-col items-center justify-start px-4 py-8 gap-6">
+    <div className="min-h-screen bg-mesh-login flex flex-col items-center justify-start px-4 py-8 gap-6 text-gray-900" style={{ colorScheme: "light" }}>
 
       {/* Logo professionista */}
       <div className="flex flex-col items-center gap-1">
@@ -181,26 +181,26 @@ export default function PublicAnamnesiPage({
 
       {/* ── Loading ── */}
       {phase === "loading" && (
-        <Card className="w-full max-w-lg">
+        <Card className="w-full max-w-lg bg-white text-gray-900 border-gray-200">
           <CardContent className="flex flex-col items-center gap-4 py-12">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-            <p className="text-sm text-muted-foreground">Verifica del link in corso...</p>
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-teal-600 border-t-transparent" />
+            <p className="text-sm text-gray-500">Verifica del link in corso...</p>
           </CardContent>
         </Card>
       )}
 
       {/* ── Errore ── */}
       {phase === "error" && (
-        <Card className="w-full max-w-lg">
+        <Card className="w-full max-w-lg bg-white text-gray-900 border-gray-200">
           <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
             <XCircle className="h-12 w-12 text-red-500" />
             <div>
               <p className="font-semibold text-lg">Link non disponibile</p>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="text-sm text-gray-500 mt-1">
                 {errorMsg || "Il link potrebbe essere scaduto o gia' utilizzato."}
               </p>
             </div>
-            <p className="text-xs text-muted-foreground max-w-sm">
+            <p className="text-xs text-gray-500 max-w-sm">
               Contatta il tuo personal trainer per ricevere un nuovo link.
             </p>
           </CardContent>
@@ -209,29 +209,29 @@ export default function PublicAnamnesiPage({
 
       {/* ── Successo ── */}
       {phase === "success" && (
-        <Card className="w-full max-w-lg">
+        <Card className="w-full max-w-lg bg-white text-gray-900 border-gray-200">
           <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
             <CheckCircle2 className="h-14 w-14 text-emerald-500" />
             <div>
               <p className="font-bold text-xl">Questionario inviato!</p>
-              <p className="text-sm text-muted-foreground mt-2">
+              <p className="text-sm text-gray-500 mt-2">
                 Grazie {info?.client_name}. Il tuo trainer ricever&agrave; le informazioni
                 e le utilizzer&agrave; per personalizzare il tuo programma.
               </p>
             </div>
-            <p className="text-xs text-muted-foreground">Puoi chiudere questa pagina.</p>
+            <p className="text-xs text-gray-500">Puoi chiudere questa pagina.</p>
           </CardContent>
         </Card>
       )}
 
       {/* ── Form wizard ── */}
       {phase === "form" && info && (
-        <Card className="w-full max-w-lg">
+        <Card className="w-full max-w-lg bg-white text-gray-900 border-gray-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">
+            <CardTitle className="text-base text-gray-900">
               Questionario Anamnesi
             </CardTitle>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-gray-500">
               {info.has_existing
                 ? `Aggiorna il tuo questionario per ${info.trainer_name}`
                 : `Compila il questionario per ${info.trainer_name}`}
@@ -251,19 +251,19 @@ export default function PublicAnamnesiPage({
                     onClick={() => setStep(i)}
                     className={`flex flex-1 flex-col items-center gap-1 rounded-lg p-1.5 text-xs transition-colors ${
                       isActive
-                        ? "bg-primary/10 text-primary font-medium"
+                        ? "bg-teal-50 text-teal-700 font-medium"
                         : isDone
-                          ? "text-primary/60"
-                          : "text-muted-foreground"
+                          ? "text-teal-600/60"
+                          : "text-gray-400"
                     }`}
                   >
                     <div
                       className={`flex h-7 w-7 items-center justify-center rounded-full transition-colors ${
                         isActive
-                          ? "bg-primary text-primary-foreground"
+                          ? "bg-teal-600 text-white"
                           : isDone
-                            ? "bg-primary/20 text-primary"
-                            : "bg-muted text-muted-foreground"
+                            ? "bg-teal-100 text-teal-700"
+                            : "bg-gray-100 text-gray-400"
                       }`}
                     >
                       <Icon className="h-3.5 w-3.5" />
@@ -280,7 +280,7 @@ export default function PublicAnamnesiPage({
             </div>
 
             {/* Navigation */}
-            <div className="flex items-center justify-between border-t pt-3">
+            <div className="flex items-center justify-between border-t border-gray-200 pt-3">
               <Button
                 variant="outline"
                 size="sm"
@@ -291,7 +291,7 @@ export default function PublicAnamnesiPage({
                 Indietro
               </Button>
 
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-gray-500">
                 {step + 1} / {STEPS.length}
               </span>
 

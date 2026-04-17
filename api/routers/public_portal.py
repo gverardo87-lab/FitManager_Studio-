@@ -78,6 +78,7 @@ def _require_enabled() -> None:
 _rate_log: dict[str, list[float]] = defaultdict(list)
 _WINDOW_MIN = 60.0    # 1 minuto in secondi
 _WINDOW_HOUR = 3600.0
+_MAX_IPS = 10_000     # Cap massimo chiavi IP per evitare memory leak
 
 # Limiti generosi: la page load fa 2 req simultanee, ogni apertura sessione +1.
 # Un cliente reale fa max ~20 req in un'ora di allenamento.
@@ -94,6 +95,18 @@ def _check_rate_limit(request: Request) -> None:
 
     # Pulizia: mantieni solo ultimi 60 minuti
     timestamps[:] = [t for t in timestamps if now - t < _WINDOW_HOUR]
+
+    # Rimuovi chiavi vuote dopo pruning (previene memory leak da IP diversi)
+    if not timestamps:
+        _rate_log.pop(ip, None)
+
+    # Cap difensivo: se troppe chiavi IP, svuota le piu' vecchie
+    if len(_rate_log) > _MAX_IPS:
+        oldest_ips = sorted(
+            _rate_log, key=lambda k: _rate_log[k][-1] if _rate_log[k] else 0
+        )
+        for old_ip in oldest_ips[: len(_rate_log) - _MAX_IPS]:
+            del _rate_log[old_ip]
 
     per_min = sum(1 for t in timestamps if now - t < _WINDOW_MIN)
     per_hour = len(timestamps)

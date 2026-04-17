@@ -116,22 +116,12 @@ pkg = json.load(open(os.path.join(r'$ROOTW', 'frontend', 'package.json')))
 print(pkg.get('version', ''))
 ")
 if [ "$FRONTEND_VERSION" != "$VERSION" ]; then
-  echo "  frontend/package.json: $FRONTEND_VERSION -> $VERSION (auto-sync)"
-  python3 -c "
-import json, os
-pkg_path = os.path.join(r'$ROOTW', 'frontend', 'package.json')
-pkg = json.load(open(pkg_path))
-pkg['version'] = '$VERSION'
-json.dump(pkg, open(pkg_path, 'w'), indent=2, ensure_ascii=False)
-with open(pkg_path, 'a') as f:
-    f.write('\n')
-"
-  # La modifica rende il tree sporco — committa automaticamente
-  git -C "$ROOT" add frontend/package.json
-  git -C "$ROOT" commit -m "build: sync frontend version to $VERSION" --no-verify
-  BUILD_COMMIT=$(git -C "$ROOT" rev-parse --short HEAD)
-  BUILD_COMMIT_FULL=$(git -C "$ROOT" rev-parse HEAD)
-  echo "  auto-commit: $BUILD_COMMIT"
+  echo ""
+  echo "ERRORE: frontend/package.json version ($FRONTEND_VERSION) non allineata con api/__init__.py ($VERSION)."
+  echo "  Allinea manualmente e committa prima del build:"
+  echo "    cd frontend && npm version $VERSION --no-git-tag-version && cd .."
+  echo "    git add frontend/package.json && git commit -m 'build: sync frontend version to $VERSION'"
+  exit 1
 else
   echo "  frontend/package.json: $VERSION (gia' allineato)"
 fi
@@ -200,6 +190,20 @@ EXE_PATH="$ROOT/dist/fitmanager/fitmanager.exe"
 if [ ! -f "$EXE_PATH" ]; then
   echo "ERRORE: fitmanager.exe non trovato per smoke test."
   exit 1
+fi
+
+# Verifica che la porta smoke test sia libera
+if command -v ss &>/dev/null; then
+  if ss -tln | grep -q ":$SMOKE_PORT "; then
+    echo "ERRORE: Porta $SMOKE_PORT gia' occupata. Liberala o usa un'altra porta."
+    echo "  Processi sulla porta: $(ss -tlnp | grep ":$SMOKE_PORT " || echo 'N/A')"
+    exit 1
+  fi
+elif command -v netstat &>/dev/null; then
+  if netstat -an | grep -q "LISTENING.*:$SMOKE_PORT"; then
+    echo "ERRORE: Porta $SMOKE_PORT gia' occupata. Liberala o usa un'altra porta."
+    exit 1
+  fi
 fi
 
 # Avvia backend su porta effimera

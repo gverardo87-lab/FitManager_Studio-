@@ -310,7 +310,14 @@ def restore_backup(
       funziona anche con connessioni aperte, nessun lock file-level.
     - Dopo backup + engine.dispose(), le nuove connessioni vedono i dati ripristinati.
     """
-    content = file.file.read()
+    # Limite dimensione: 500 MB (crm.db non dovrebbe mai superare questa soglia)
+    max_size = 500 * 1024 * 1024
+    content = file.file.read(max_size + 1)
+    if len(content) > max_size:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"File troppo grande (max {max_size // (1024*1024)} MB)",
+        )
 
     # Check magic bytes SQLite
     if not content[:16].startswith(b"SQLite format 3\x00"):

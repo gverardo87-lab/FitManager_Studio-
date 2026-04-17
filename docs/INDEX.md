@@ -29,6 +29,7 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 | `FITSCAN_ARCHITECTURE.md` | Spec tecnica FitScan: DB schema, Biomechanical Engine, Pose Provider |
 | `VIDEO_GUIDE_STRATEGY.md` | Sistema video-guide contestuali: 4 livelli, mapping pagine |
 | `VIDEO_PRODUCTION.md` | Pipeline video: manifest SSoT, flusso continuo, selettori |
+| `RECURRING_SESSIONS_SPEC.md` | Spec sessioni ricorrenti (pianificazione, aderenza, calendario) |
 
 ---
 
@@ -51,6 +52,7 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 | `TAILSCALE_FUNNEL_SETUP.md` | Setup Tailscale Funnel, proxy, troubleshooting |
 | `DEPLOYMENT_PLAN.md` | Piano deploy: PyInstaller/Nuitka, standalone, Inno Setup |
 | `NUTRITION_ENGINE_V3.md` | Architettura Nutrition Engine v3 |
+| `PRE_DELIVERY_AUDIT_2026_04_17.md` | Audit tecnico 360° pre-consegna ad Alessio (2026-04-17) |
 | `nutrition-v2-strategy.md` | Strategia migrazione nutrition v2 (storico) |
 
 ---
@@ -68,7 +70,7 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 
 ## adr/ — Architecture Decision Records
 
-7 ADR attivi. Indice in `adr/README.md`.
+9 ADR attivi. Indice in `adr/README.md`.
 
 ## incidents/ — Post-mortem
 
