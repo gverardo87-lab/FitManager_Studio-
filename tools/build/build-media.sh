@@ -59,16 +59,9 @@ if not src.exists():
     sys.exit(1)
 
 query = """
-SELECT DISTINCT r.id_esercizio
-FROM (
-    SELECT id_esercizio FROM esercizi_muscoli
-    UNION
-    SELECT id_esercizio FROM esercizi_articolazioni
-    UNION
-    SELECT id_esercizio FROM esercizi_condizioni
-) r
-JOIN esercizi e ON e.id = r.id_esercizio
-ORDER BY r.id_esercizio
+SELECT id FROM esercizi
+WHERE is_builtin = 1 AND deleted_at IS NULL
+ORDER BY id
 """
 
 with sqlite3.connect(str(catalog_db)) as conn:
