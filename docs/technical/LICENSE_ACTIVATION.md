@@ -135,7 +135,7 @@ Questi endpoint funzionano anche senza licenza valida (necessari per setup e att
 /api/auth/login            → login
 /api/auth/register         → registrazione primo trainer
 /api/auth/setup-status     → check primo avvio
-/api/auth/reset-password   → reset password
+/api/auth/reset-password   → cambio password (richiede current_password)
 /media/*                   → file statici
 /api/public/*              → portale anamnesi pubblico
 ```

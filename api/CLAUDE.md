@@ -11,16 +11,16 @@ A fine task: verifiche reali e note sui rischi residui.
 
 ```
 api/
-├── main.py              App factory, CORS, lifespan (backup+seed+integrity), runtime logging, router mount
+├── main.py              App factory, CORS (HTTPS), lifespan (backup+seed+integrity), security headers, Swagger gating (compiled), router mount
 ├── config.py            DATABASE_URL (env/port-auto), CATALOG_DATABASE_URL, JWT_SECRET, DATA_DIR (sys.frozen-aware), log env
 ├── database.py          Tri-engine (business + catalog + nutrition) + session factories + CATALOG/NUTRITION_TABLE_NAMES
 ├── logging_config.py    Bootstrap logging locale (`data/logs/fitmanager.log`, rotazione idempotente)
 ├── dependencies.py      get_current_trainer() → JWT validation
 ├── seed_exercises.py    Seed builtin in catalog.db: 500 esercizi + 940 relazioni + 1788 media (idempotente, FK guard)
 ├── auth/
-│   ├── router.py        POST /login, /register, /setup/status, /setup/create
+│   ├── router.py        POST /login, /register, /reset-password, /setup-status (rate-limited via auth_limiter)
 │   ├── service.py       bcrypt hash, JWT create/validate
-│   └── schemas.py       TokenResponse, LoginRequest
+│   └── schemas.py       TokenResponse, LoginRequest, PasswordResetRequest (con current_password)
 ├── models/              SQLModel ORM (table=True) — 20 modelli
 │   ├── trainer.py       trainers (tenant root, saldo_iniziale_cassa)
 │   ├── client.py        clienti
@@ -67,7 +67,7 @@ api/
 │   ├── communications.py Log comunicazioni WhatsApp/tel/email (POST log + GET registro all/per-cliente)
 │   ├── training_intelligence.py Training Intelligence: dose-response muscolo×muscolo, balance, intensity, recovery, alert (1 GET, dual session)
 │   ├── workout_diff.py  Workout Diff: piano vs eseguito per esercizio, compliance %, punti deboli/forti (1 GET, dual session)
-│   └── public_portal.py Portale pubblico anamnesi: generate token (JWT) + validate + submit (2 endpoint pubblici, rate limiter IP-based, feature flag PUBLIC_PORTAL_ENABLED)
+│   └── public_portal.py Portale pubblico anamnesi + workout: generate token (JWT) + validate + submit (7 endpoint pubblici, portal_limiter via rate_limiter.py, feature flag PUBLIC_PORTAL_ENABLED)
 ├── schemas/             Pydantic v2 — schema dominio + runtime/system contracts
 │   ├── assistant.py     ParseRequest/Response, CommitRequest/Response (6 schema)
 │   ├── exercise.py      ExerciseCreate/Update/Response + media/relazioni/tassonomia
@@ -89,6 +89,7 @@ api/
     ├── connectivity_config.py  Apply idempotente `PUBLIC_PORTAL_ENABLED` / `PUBLIC_BASE_URL`
     ├── connectivity_verify.py  Verify end-to-end dell'origine pubblica via `{PUBLIC_BASE_URL}/health`
     ├── connectivity_portal_validation.py Validazione funzionale link anamnesi pubblico reale
+    ├── rate_limiter.py     RateLimiter IP-based riusabile: auth_limiter (5/min, 20/h) + portal_limiter (30/min, 120/h)
     ├── safety_engine.py    Safety map per-esercizio (extract conditions + build map)
     ├── session_prep.py     Session Prep cockpit: 7-step pipeline (events + readiness + safety + contracts)
     ├── workspace_engine.py Workspace operativo: today/cases/detail + ranking + dominance matrix (~3000 LOC)
@@ -391,7 +392,7 @@ Incidente completo: `docs/incidents/INC-2026-03-28-safety-engine-blind-spot.md`
 
 Due famiglie di test:
 
-**pytest** (`tests/`, 349 test):
+**pytest** (`tests/`, 361 test):
 - DB SQLite in-memory, isolamento totale (StaticPool)
 - `test_pay_rate.py` (12): pagamento atomico, overpayment, deep IDOR, storico pagamenti parziali
 - `test_unpay_rate.py` (4): revoca pagamento, decrements, soft delete movement

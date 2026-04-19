@@ -58,7 +58,7 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 
 | File | Scopo |
 |------|-------|
-| `SECURITY_MODEL.md` | Threat model, 6 livelli protezione (L1-L6 + L3b), roadmap sicurezza |
+| `SECURITY_MODEL.md` | Threat model, 6 livelli protezione (L1-L6 + L3b), network hardening pre-Funnel, roadmap sicurezza |
 | `SECURITY_AUDIT_BASELINE.md` | Red Team audit pre-hardening (7 test, TTC per Crown Jewel) |
 | `SECURITY_AUDIT_POST_HARDENING.md` | Re-test post-hardening (4 step anti-RE, confronto pre/post) |
 | `LICENSE_ACTIVATION.md` | Attivazione licenza, hardware binding, CLI admin |

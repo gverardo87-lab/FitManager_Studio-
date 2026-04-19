@@ -57,7 +57,7 @@ SSoT numeri e proiezioni: `docs/business/BUSINESS_PLAN.md` (v4.3). Strategia ope
 cd frontend && npm run dev                                         # frontend dev (porta 3001)
 
 # --- Test ---
-./venv/Scripts/python -m pytest tests/ -v                          # 349 test backend
+./venv/Scripts/python -m pytest tests/ -v                          # 361 test backend
 cd frontend && npm test                                            # 69 vitest (data protection)
 
 # --- Quality gate (obbligatorio prima di commit) ---
@@ -147,6 +147,9 @@ Tutte con PRAGMA: `journal_mode=WAL`, `foreign_keys=ON`, `busy_timeout=5000`.
 - **Anti-reverse engineering (ADR-007)**: 4 step layered hardening — bundle sanitization (zero Alembic/seed/pyc), DB encryption (AES-256-GCM su catalog.db + nutrition.db), Nuitka native compilation (Python→C→x86-64). TTC da 5sec/15min a giorni/settimane. Modello completo in `docs/technical/SECURITY_MODEL.md`.
 - **`is_compiled()` helper** (`api/config.py`): rileva sia `sys.frozen` (PyInstaller) che `__compiled__` (Nuitka). Usato da tutti i componenti di enforcement e detection runtime.
 - **DB cifrati** (`api/services/db_crypto.py`): AES-256-GCM con PBKDF2-HMAC-SHA256 e seed embedded. Build-time: `encrypt_db()`. Runtime: `decrypt_db_to_bytes()` → `sqlite3.deserialize()` → in-memory engine. Dev mode: `.db` plain invariato.
+- **Network hardening (pre-Funnel)**: backend binda su `127.0.0.1` in produzione (entry_point.py), Swagger/Redoc/OpenAPI disabilitati in compiled mode, CORS supporta HTTPS, security headers (HSTS, Referrer-Policy, Permissions-Policy, X-Content-Type-Options, X-Frame-Options) su frontend e backend, version mascherata in `/health` in compiled mode.
+- **Rate limiting auth** (`api/services/rate_limiter.py`): `auth_limiter` (5 req/min, 20 req/ora) su login, register, reset-password. `portal_limiter` (30 req/min, 120 req/ora) su endpoint pubblici portale. Classe `RateLimiter` riusabile, IP-based, zero dipendenze.
+- **Reset password con verifica**: `POST /auth/reset-password` richiede `current_password` obbligatorio. Verifica bcrypt prima di aggiornare. Trasforma "reset" in "cambio password con verifica".
 
 ## Motori scientifici
 

@@ -3,7 +3,7 @@
 Modello di sicurezza del prodotto. Copre: threat model, protezioni implementate,
 limitazioni note, roadmap futuri interventi.
 
-Ultimo aggiornamento: 2026-04-09 (ADR-007 anti-reverse engineering).
+Ultimo aggiornamento: 2026-04-19 (pre-Funnel network hardening).
 
 ## Principi
 
@@ -18,7 +18,7 @@ Ultimo aggiornamento: 2026-04-09 (ADR-007 anti-reverse engineering).
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  L1 — Autenticazione & Autorizzazione                      │
-│  JWT + bcrypt, Bouncer Pattern, Deep Relational IDOR       │
+│  JWT + bcrypt, Bouncer Pattern, Deep IDOR, rate limiting   │
 ├─────────────────────────────────────────────────────────────┤
 │  L2 — Licenza & Hardware Binding                           │
 │  JWT RS256, machine fingerprint SHA-256, enforcement       │
@@ -61,6 +61,21 @@ Accesso non autorizzato ai dati del trainer (clienti, contratti, dati clinici, f
 | Deep IDOR | Catena FK per ownership (Rate → Contract → `trainer_id`) | `api/routers/rates.py` |
 | Mass assignment | `extra: "forbid"`, `trainer_id`/`id` mai in Create schema | `api/schemas/*.py` |
 | Error masking | 404 (mai 403) per dati non propri | Tutti i bouncer |
+| Rate limiting auth | 5 req/min, 20 req/ora su login/register/reset-password | `api/services/rate_limiter.py` |
+| Rate limiting portal | 30 req/min, 120 req/ora su endpoint pubblici | `api/services/rate_limiter.py` |
+| Reset password | Richiede `current_password` (bcrypt verify) + email | `api/auth/router.py` |
+| Email enumeration | Register ritorna 400 generico (mai 409 "gia' registrata") | `api/auth/router.py` |
+
+### Network hardening (pre-Funnel, 2026-04-19)
+
+| Meccanismo | Implementazione | File chiave |
+|-----------|----------------|-------------|
+| Backend bind loopback | `host = "127.0.0.1"` in produzione (zero accesso diretto da LAN) | `tools/build/entry_point.py` |
+| Swagger/Redoc disabilitati | `docs_url=None` quando `is_compiled()` | `api/main.py` |
+| Version masking | `/health` ritorna `"ok"` invece di versione in compiled mode | `api/services/system_runtime.py` |
+| CORS HTTPS | Regex `^https?://` (supporta Funnel HTTPS) | `api/main.py` |
+| Security headers (backend) | `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy` | `api/main.py` |
+| Security headers (frontend) | HSTS, Referrer-Policy, Permissions-Policy, X-Content-Type-Options, X-Frame-Options | `frontend/next.config.ts` |
 
 ### Regole non negoziabili
 - Ogni query filtra per `trainer_id` — mai bypassare ownership
@@ -262,6 +277,14 @@ del prodotto e del modello di distribuzione.
 - [x] Bundle sanitization — zero Alembic/seed/pyc (L5/L6)
 - [x] Nuitka native compilation — Python → C → x86-64 (L5/L6)
 - [x] 5-phase release pipeline con safety gates (L5)
+- [x] Backend bind 127.0.0.1 in produzione (L1)
+- [x] Swagger/Redoc/OpenAPI disabilitati in compiled mode (L1)
+- [x] Rate limiting auth: 5 req/min, 20 req/ora (L1)
+- [x] Reset password con verifica current_password (L1)
+- [x] Email enumeration eliminata su register (L1)
+- [x] Security headers HSTS + Referrer-Policy + Permissions-Policy (L1)
+- [x] CORS esteso a HTTPS per Tailscale Funnel (L1)
+- [x] Version masking in /health compiled mode (L1)
 
 #### Fase 2 — Post-lancio (trigger-based)
 
@@ -302,7 +325,8 @@ Le protezioni tecniche sono una barriera, non una garanzia. Per tutela completa:
 |------|----------|
 | `api/services/license.py` | Servizio verifica licenza JWT RSA (4-tier key resolution) |
 | `api/services/machine_fingerprint.py` | Fingerprint hardware SHA-256 |
-| `api/services/system_runtime.py` | Enforcement toggle + health |
+| `api/services/rate_limiter.py` | RateLimiter IP-based: auth (5/min) + portal (30/min) |
+| `api/services/system_runtime.py` | Enforcement toggle + health (version masking) |
 | `api/services/db_crypto.py` | AES-256-GCM encrypt/decrypt per cataloghi |
 | `api/config.py` | `is_compiled()` helper + path encrypted DB |
 | `api/database.py` | `_load_encrypted_db()` + engine condizionale |
