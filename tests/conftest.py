@@ -16,6 +16,19 @@ from api.main import app
 from api.database import get_session
 
 
+@pytest.fixture(autouse=True)
+def disable_auth_rate_limit():
+    """Disabilita rate limiting auth per i test (molte chiamate register/login)."""
+    from api.services.rate_limiter import auth_limiter
+    old_min, old_hour = auth_limiter.max_per_min, auth_limiter.max_per_hour
+    auth_limiter.max_per_min = 9999
+    auth_limiter.max_per_hour = 9999
+    auth_limiter._log.clear()
+    yield
+    auth_limiter.max_per_min = old_min
+    auth_limiter.max_per_hour = old_hour
+
+
 @pytest.fixture
 def test_engine():
     """Engine SQLite in-memory — isolamento totale tra test.

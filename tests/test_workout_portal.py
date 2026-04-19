@@ -85,14 +85,14 @@ def enable_portal():
     """Abilita feature flag portale pubblico e disabilita rate limit per test."""
     os.environ["PUBLIC_PORTAL_ENABLED"] = "true"
     # Disabilita rate limit per i test (alza limiti)
-    import api.routers.public_portal as pp
-    old_min, old_hour = pp._MAX_PER_MIN, pp._MAX_PER_HOUR
-    pp._MAX_PER_MIN = 9999
-    pp._MAX_PER_HOUR = 9999
-    pp._rate_log.clear()
+    from api.services.rate_limiter import portal_limiter
+    old_min, old_hour = portal_limiter.max_per_min, portal_limiter.max_per_hour
+    portal_limiter.max_per_min = 9999
+    portal_limiter.max_per_hour = 9999
+    portal_limiter._log.clear()
     yield
-    pp._MAX_PER_MIN = old_min
-    pp._MAX_PER_HOUR = old_hour
+    portal_limiter.max_per_min = old_min
+    portal_limiter.max_per_hour = old_hour
     os.environ.pop("PUBLIC_PORTAL_ENABLED", None)
 
 

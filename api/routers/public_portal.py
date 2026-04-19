@@ -26,11 +26,10 @@ Architettura sicurezza:
 import json
 import logging
 import os
-from collections import defaultdict
 from datetime import date, datetime, timedelta, timezone
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
 from sqlmodel import Session, func, select
 
 from api.database import get_catalog_session, get_session
@@ -57,6 +56,7 @@ from api.schemas.public import (
     WorkoutSlotItem,
     WorkoutValidateResponse,
 )
+from api.services.rate_limiter import portal_limiter
 
 logger = logging.getLogger(__name__)
 
@@ -73,51 +73,9 @@ def _require_enabled() -> None:
         raise HTTPException(status_code=404, detail="Not Found")
 
 
-# ── Rate limiting in-process (zero dipendenze) ──────────────────────────────
-
-_rate_log: dict[str, list[float]] = defaultdict(list)
-_WINDOW_MIN = 60.0    # 1 minuto in secondi
-_WINDOW_HOUR = 3600.0
-_MAX_IPS = 10_000     # Cap massimo chiavi IP per evitare memory leak
-
-# Limiti generosi: la page load fa 2 req simultanee, ogni apertura sessione +1.
-# Un cliente reale fa max ~20 req in un'ora di allenamento.
-_MAX_PER_MIN = 30
-_MAX_PER_HOUR = 120
-
-
 def _check_rate_limit(request: Request) -> None:
-    """Rate limiting IP-based leggero per endpoint pubblici."""
-    ip = request.client.host if request.client else "unknown"
-    now = datetime.now(timezone.utc).timestamp()
-
-    timestamps = _rate_log[ip]
-
-    # Pulizia: mantieni solo ultimi 60 minuti
-    timestamps[:] = [t for t in timestamps if now - t < _WINDOW_HOUR]
-
-    # Rimuovi chiavi vuote dopo pruning (previene memory leak da IP diversi)
-    if not timestamps:
-        _rate_log.pop(ip, None)
-
-    # Cap difensivo: se troppe chiavi IP, svuota le piu' vecchie
-    if len(_rate_log) > _MAX_IPS:
-        oldest_ips = sorted(
-            _rate_log, key=lambda k: _rate_log[k][-1] if _rate_log[k] else 0
-        )
-        for old_ip in oldest_ips[: len(_rate_log) - _MAX_IPS]:
-            del _rate_log[old_ip]
-
-    per_min = sum(1 for t in timestamps if now - t < _WINDOW_MIN)
-    per_hour = len(timestamps)
-
-    if per_min >= _MAX_PER_MIN or per_hour >= _MAX_PER_HOUR:
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Troppe richieste. Riprova tra qualche minuto.",
-        )
-
-    timestamps.append(now)
+    """Rate limiting IP-based via shared RateLimiter (30 req/min, 120 req/h)."""
+    portal_limiter.check(request)
 
 
 # ── Helper: bouncer token pubblico ───────────────────────────────────────────
