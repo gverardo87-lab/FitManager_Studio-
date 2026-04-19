@@ -80,10 +80,26 @@ if DATABASE_URL.startswith("sqlite"):
 
 # --- Catalog Engine (catalog.db or catalog.db.enc) ---
 
+_is_compiled = getattr(sys, "frozen", False) or "__compiled__" in dir()
 _catalog_enc = DATA_DIR / "catalog.db.enc"
-if (getattr(sys, "frozen", False) or "__compiled__" in dir()) and _catalog_enc.exists():
-    catalog_engine = _load_encrypted_db(_catalog_enc, "catalog")
-    _catalog_encrypted = True
+logger.info(
+    "Catalog DB init: compiled=%s, enc_path=%s, enc_exists=%s",
+    _is_compiled, _catalog_enc, _catalog_enc.exists(),
+)
+
+if _is_compiled and _catalog_enc.exists():
+    try:
+        catalog_engine = _load_encrypted_db(_catalog_enc, "catalog")
+        _catalog_encrypted = True
+        logger.info("Catalog DB: loaded from encrypted in-memory")
+    except Exception as e:
+        logger.error("Catalog DB: encrypted load FAILED: %s — fallback to file", e)
+        _catalog_connect_args = {"check_same_thread": False}
+        catalog_engine = create_engine(
+            CATALOG_DATABASE_URL, echo=False, connect_args=_catalog_connect_args,
+        )
+        event.listen(catalog_engine, "connect", _setup_sqlite_pragmas)
+        _catalog_encrypted = False
 else:
     _catalog_connect_args = {}
     if CATALOG_DATABASE_URL.startswith("sqlite"):
@@ -98,6 +114,7 @@ else:
     if CATALOG_DATABASE_URL.startswith("sqlite"):
         event.listen(catalog_engine, "connect", _setup_sqlite_pragmas)
     _catalog_encrypted = False
+    logger.info("Catalog DB: file-based at %s", CATALOG_DATABASE_URL)
 
 # --- Nutrition Engine (nutrition.db or nutrition.db.enc) ---
 
