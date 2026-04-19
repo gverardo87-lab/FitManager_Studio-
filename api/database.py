@@ -46,21 +46,45 @@ def _setup_sqlite_pragmas(dbapi_conn, connection_record):
 
 
 def _load_encrypted_db(enc_path: Path, label: str):
-    """Load an AES-256-GCM encrypted SQLite DB into an in-memory engine."""
+    """Load an AES-256-GCM encrypted SQLite DB.
+
+    Strategy 1: deserialize into in-memory DB (fastest, zero I/O).
+    Strategy 2: write to temp file (fallback if bundled sqlite3 lacks deserialize).
+    """
     from api.services.db_crypto import decrypt_db_to_bytes
 
     db_bytes = decrypt_db_to_bytes(enc_path)
-    conn = sqlite3_stdlib.connect(":memory:")
-    conn.deserialize(db_bytes)
-    conn.execute("PRAGMA foreign_keys=ON")
-    logger.info(f"Loaded encrypted {label} ({len(db_bytes):,} bytes) into memory")
 
-    return create_engine(
-        "sqlite://",
+    # Strategy 1: in-memory deserialize
+    try:
+        conn = sqlite3_stdlib.connect(":memory:")
+        conn.deserialize(db_bytes)
+        conn.execute("PRAGMA foreign_keys=ON")
+        # Verify it actually works (deserialize can silently fail)
+        conn.execute("SELECT name FROM sqlite_master WHERE type='table' LIMIT 1").fetchone()
+        logger.info("Loaded encrypted %s (%d bytes) via deserialize", label, len(db_bytes))
+        return create_engine(
+            "sqlite://",
+            connect_args={"check_same_thread": False},
+            poolclass=StaticPool,
+            creator=lambda: conn,
+        )
+    except Exception:
+        pass
+
+    # Strategy 2: temp file (bundled sqlite3 without SQLITE_ENABLE_DESERIALIZE)
+    import tempfile
+    tmp = Path(tempfile.mkdtemp()) / f"{label}.db"
+    tmp.write_bytes(db_bytes)
+    db_url = f"sqlite:///{tmp}"
+    logger.info("Loaded encrypted %s (%d bytes) via temp file: %s", label, len(db_bytes), tmp)
+    eng = create_engine(
+        db_url,
+        echo=False,
         connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-        creator=lambda: conn,
     )
+    event.listen(eng, "connect", _setup_sqlite_pragmas)
+    return eng
 
 
 # --- Business Engine (data.db / crm.db) ---
@@ -82,24 +106,11 @@ if DATABASE_URL.startswith("sqlite"):
 
 _is_compiled = getattr(sys, "frozen", False) or "__compiled__" in dir()
 _catalog_enc = DATA_DIR / "catalog.db.enc"
-logger.info(
-    "Catalog DB init: compiled=%s, enc_path=%s, enc_exists=%s",
-    _is_compiled, _catalog_enc, _catalog_enc.exists(),
-)
+logger.info("Catalog DB init: compiled=%s, enc_exists=%s", _is_compiled, _catalog_enc.exists())
 
 if _is_compiled and _catalog_enc.exists():
-    try:
-        catalog_engine = _load_encrypted_db(_catalog_enc, "catalog")
-        _catalog_encrypted = True
-        logger.info("Catalog DB: loaded from encrypted in-memory")
-    except Exception as e:
-        logger.error("Catalog DB: encrypted load FAILED: %s — fallback to file", e)
-        _catalog_connect_args = {"check_same_thread": False}
-        catalog_engine = create_engine(
-            CATALOG_DATABASE_URL, echo=False, connect_args=_catalog_connect_args,
-        )
-        event.listen(catalog_engine, "connect", _setup_sqlite_pragmas)
-        _catalog_encrypted = False
+    catalog_engine = _load_encrypted_db(_catalog_enc, "catalog")
+    _catalog_encrypted = True
 else:
     _catalog_connect_args = {}
     if CATALOG_DATABASE_URL.startswith("sqlite"):
