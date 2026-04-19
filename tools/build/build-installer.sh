@@ -13,9 +13,15 @@ INSTALLER_VERSION=""
 ISCC_PATH=""
 SKIP_CHECKS=0
 
+# Python della venv (ha tutte le dipendenze incluso cryptography)
+VENV_PYTHON="$ROOT/venv/Scripts/python"
+if [ ! -x "$VENV_PYTHON" ]; then
+  VENV_PYTHON="python3"
+fi
+
 # ── Leggi versione da SSoT (api/__init__.py) ──
 read_version_from_ssot() {
-  python3 -c "
+  "$VENV_PYTHON" -c "
 import sys, os
 for line in open(os.path.join(r'$ROOTW', 'api', '__init__.py')):
     if line.strip().startswith('__version__'):
@@ -139,7 +145,7 @@ fi
 # ── Safety Gate 3: nutrition.db integrity check ──
 echo "Safety gate: verifico integrita' nutrition.db..."
 NUTRITION_DB="$(cygpath -w "$RELEASE_DATA_DIR/nutrition.db" 2>/dev/null || echo "$RELEASE_DATA_DIR/nutrition.db")"
-python3 -c "
+"$VENV_PYTHON" -c "
 import sqlite3, sys
 db = sqlite3.connect(r'$NUTRITION_DB')
 checks = {
@@ -168,7 +174,7 @@ fi
 
 # ── Encrypt catalog databases (AES-256-GCM) ──
 echo "Encrypting catalog databases..."
-python3 -c "
+"$VENV_PYTHON" -c "
 import sys; sys.path.insert(0, r'$ROOTW')
 from pathlib import Path
 from api.services.db_crypto import encrypt_db

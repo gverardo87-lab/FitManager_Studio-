@@ -29,6 +29,12 @@ NO_TAG=0
 ISCC_ARGS=""
 SMOKE_PORT=9999
 
+# Python della venv
+VENV_PYTHON="$ROOT/venv/Scripts/python"
+if [ ! -x "$VENV_PYTHON" ]; then
+  VENV_PYTHON="python3"
+fi
+
 usage() {
   cat <<EOF
 Usage: bash tools/build/build-release.sh [--skip-lint] [--no-tag] [--iscc /path/to/ISCC.exe]
@@ -65,7 +71,7 @@ while [ $# -gt 0 ]; do
 done
 
 # ── Leggi versione da SSoT (api/__init__.py) ──
-VERSION=$(python3 -c "
+VERSION=$("$VENV_PYTHON" -c "
 import sys, os
 for line in open(os.path.join(r'$ROOTW', 'api', '__init__.py')):
     if line.strip().startswith('__version__'):
@@ -110,7 +116,7 @@ echo "  git: clean (commit $BUILD_COMMIT su $BUILD_BRANCH)"
 
 # 1b. Sync versione frontend
 echo "[preflight] Sync versione frontend..."
-FRONTEND_VERSION=$(python3 -c "
+FRONTEND_VERSION=$("$VENV_PYTHON" -c "
 import json, os
 pkg = json.load(open(os.path.join(r'$ROOTW', 'frontend', 'package.json')))
 print(pkg.get('version', ''))
@@ -230,7 +236,7 @@ fi
 # Verifica 5 invarianti
 echo "[verify] Verifico invarianti su /health..."
 SMOKE_RESULT=$(curl -sf "http://localhost:$SMOKE_PORT/health")
-SMOKE_STATUS=$(python3 -c "
+SMOKE_STATUS=$("$VENV_PYTHON" -c "
 import json, sys
 h = json.loads('''$SMOKE_RESULT''')
 checks = {
@@ -255,7 +261,7 @@ sys.exit(0 if all_ok else 1)
 echo "$SMOKE_STATUS"
 
 # Raccogli conteggi catalogo
-CATALOG_COUNTS=$(python3 -c "
+CATALOG_COUNTS=$("$VENV_PYTHON" -c "
 import json
 h = json.loads('''$SMOKE_RESULT''')
 print(json.dumps({'version': h.get('version'), 'db': h.get('db'), 'catalog': h.get('catalog')}))
@@ -284,7 +290,7 @@ INSTALLER_SIZE=$(stat -c%s "$INSTALLER_PATH" 2>/dev/null || wc -c < "$INSTALLER_
 
 # Conteggi nutrition.db per il manifest (from source, staging is encrypted)
 NUTRITION_DB_W="$(cygpath -w "$ROOT/data/nutrition.db" 2>/dev/null || echo "$ROOT/data/nutrition.db")"
-NUTRITION_COUNTS=$(python3 -c "
+NUTRITION_COUNTS=$("$VENV_PYTHON" -c "
 import sqlite3, json
 db = sqlite3.connect(r'$NUTRITION_DB_W')
 counts = {
@@ -300,7 +306,7 @@ print(json.dumps(counts))
 # Genera manifest.json
 MANIFEST_PATH="$ROOT/dist/manifest.json"
 MANIFEST_PATH_W="$(cygpath -w "$MANIFEST_PATH" 2>/dev/null || echo "$MANIFEST_PATH")"
-python3 -c "
+"$VENV_PYTHON" -c "
 import json
 manifest = {
     'version': '$VERSION',
