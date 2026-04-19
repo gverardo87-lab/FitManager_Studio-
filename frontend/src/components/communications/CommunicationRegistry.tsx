@@ -51,7 +51,6 @@ const TEMPLATE_LABELS: Record<string, string> = {
   birthday: "Auguri",
   renewal: "Rinnovo",
   workout: "Scheda",
-  nutrition: "Piano alimentare",
   appointment: "Appuntamento",
   class: "Classe",
   progress: "Progressi",

@@ -186,21 +186,6 @@ export function waClassReminder(
   );
 }
 
-/** Piano alimentare pronto — invito a consultarlo. */
-export function waNutritionPlan(
-  clientName: string,
-  trainerName: string,
-  pianoNome?: string,
-): string {
-  const nome = pianoNome ? ` "${pianoNome}"` : "";
-  return (
-    `Ciao ${clientName}, il tuo piano alimentare${nome} e' pronto! ` +
-    `Ho preparato un programma personalizzato per supportare i tuoi obiettivi. ` +
-    `Se hai domande su qualche pasto o sostituzione, scrivimi pure. ` +
-    `Buon appetito!\n— ${trainerName}`
-  );
-}
-
 /** Classe annullata — avviso tempestivo. */
 export function waClassCancelled(
   clientName: string,

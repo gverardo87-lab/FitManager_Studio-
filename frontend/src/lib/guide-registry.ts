@@ -164,20 +164,6 @@ const REGISTRY: PageGuideEntry[] = [
     ],
   },
 
-  // ── Nutrizione ──
-  {
-    pagePath: "/nutrizione",
-    pageLabel: "Nutrizione",
-    tips: [
-      { text: "Genera un piano alimentare a 7 giorni basato sulle linee guida LARN italiane.", minLevel: 3, maxLevel: 4 },
-      { text: "Il pannello LARN mostra l'adeguatezza nutrizionale per ogni nutriente con semaforo.", minLevel: 3, maxLevel: 5 },
-    ],
-    faqs: [
-      { question: "Cos'e' il LARN?", answer: "Livelli di Assunzione di Riferimento di Nutrienti — le linee guida ufficiali italiane (CREA 2019) per l'alimentazione. Il piano li usa come target." },
-    ],
-    videoId: "piano-alimentare",
-  },
-
   // ── Impostazioni ──
   {
     pagePath: "/impostazioni",

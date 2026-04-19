@@ -37,7 +37,6 @@ import {
   MessageCircle,
   Moon,
   Sun,
-  UtensilsCrossed,
   ChevronRight,
 } from "lucide-react";
 
@@ -103,7 +102,6 @@ const NAV_TOP: NavEntry[] = [
       { href: "/allenamenti", label: "Aderenza", icon: Activity },
     ],
   },
-  { href: "/nutrizione", label: "Nutrizione", icon: UtensilsCrossed, activeMatch: (p) => p.startsWith("/nutrizione") },
 ];
 
 const NAV_BOTTOM: NavLink[] = [

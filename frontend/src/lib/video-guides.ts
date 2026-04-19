@@ -130,18 +130,6 @@ export const VIDEO_GUIDES: VideoGuide[] = [
     ready: false,
   },
   {
-    id: "piano-alimentare",
-    title: "Piano Alimentare LARN",
-    description:
-      "Genera un piano alimentare a 7 giorni basato sulle linee guida LARN italiane.",
-    src: "/videos/08-piano-alimentare/piano-alimentare.mp4",
-    poster: "/videos/08-piano-alimentare/poster.png",
-    durationSec: 60,
-    pages: ["/nutrizione"],
-    iconName: "utensils",
-    ready: false,
-  },
-  {
     id: "backup-dati",
     title: "Backup e Protezione Dati",
     description:

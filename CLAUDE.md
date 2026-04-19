@@ -43,7 +43,7 @@ SSoT numeri e proiezioni: `docs/business/BUSINESS_PLAN.md` (v4.3). Strategia ope
         (business)  (tassonomia) (alimenti CREA)
 ```
 
-- **crm.db**: 26 tabelle business (clienti, contratti, workout, piani alimentari, communication_log). Tenant-isolated via `trainer_id`. SACRO — dati del trainer, backup/restore.
+- **crm.db**: 26 tabelle business (clienti, contratti, workout, communication_log). Tenant-isolated via `trainer_id`. SACRO — dati del trainer, backup/restore.
 - **catalog.db**: 10 tabelle catalogo scientifico (500 esercizi builtin + tassonomia muscoli/articolazioni/condizioni + relazioni + media). Read-only, shipped con installer. Zero `trainer_id`.
 - **nutrition.db**: 8 tabelle catalogo alimenti (CREA 2019 + USDA). Read-only, shipped con installer. 880 alimenti attivi, 210 ricette pietanze, 12 template dieta.
 - **Dual env**: prod (porta 8000/3000, crm.db) + dev (porta 8001/3001, crm_dev.db).
@@ -156,7 +156,7 @@ Tutte con PRAGMA: `journal_mode=WAL`, `foreign_keys=ON`, `busy_timeout=5000`.
 | Training Intelligence | `api/routers/training_intelligence.py` | Analisi post-esecuzione: dose-response muscolo×muscolo, balance ratios, intensity zones, recovery, alert predittivi |
 | Workout Diff | `api/routers/workout_diff.py` | "Git diff" allenamento: piano vs eseguito per esercizio, compliance %, punti deboli/forti |
 | Safety Engine | `api/services/condition_rules.py` | 47 condizioni, 80 pattern rules |
-| Nutrition Science | `api/services/nutrition_science/` (~2100 LOC) | Piano LARN 7gg, scoring 3 assi |
+| Nutrition Science | `api/services/nutrition_science/` (~2100 LOC) | Piano LARN 7gg, scoring 3 assi — **UI RIMOSSA** (backend preservato per futuro prodotto dedicato nutrizionisti) |
 | Clinical Analysis | `frontend/src/lib/clinical-analysis.ts` | Range normativi OMS/ACSM (client-side) |
 | Smart Programming | `frontend/src/lib/smart-programming/` | Scoring 14D (consumer del backend SSoT) |
 
@@ -168,7 +168,7 @@ Il trainer controlla ogni messaggio prima dell'invio. Ogni click logga in `commu
 ```
 ┌─────────────────┐     ┌──────────────────┐     ┌──────────────┐
 │  WhatsAppButton │────>│  wa.me deep-link  │────>│  WhatsApp    │
-│  (15 template)  │     │  (browser/app)    │     │  del trainer │
+│  (14 template)  │     │  (browser/app)    │     │  del trainer │
 └────────┬────────┘     └──────────────────┘     └──────────────┘
          │ fire-and-forget
          v
@@ -208,7 +208,6 @@ Il trainer controlla ogni messaggio prima dell'invio. Ogni click logga in `commu
 | `waBirthday` | Auguri compleanno | BirthdayClientsSheet, Comunicazioni |
 | `waMilestone` | Traguardo N sedute | Comunicazioni |
 | `waClassReminder` | Reminder lezione di gruppo | Comunicazioni |
-| `waNutritionPlan` | Piano alimentare pronto | Nutrizione [id], Comunicazioni |
 | `waClassCancelled` | Classe annullata | Comunicazioni |
 | `waProgressUpdate` | Check mensile progressi | Comunicazioni |
 | `waFreeMessage` | Messaggio libero (solo firma) | Comunicazioni |
