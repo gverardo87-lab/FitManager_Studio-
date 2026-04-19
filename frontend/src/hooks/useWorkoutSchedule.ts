@@ -87,12 +87,31 @@ export function useUpdateScheduleSlot(workoutId: number | null) {
 // MUTATION: Completa slot → crea WorkoutLog automatico
 // ════════════════════════════════════════════════════════════
 
+export interface CompleteSlotPayload {
+  slotId: number;
+  exerciseData?: ExerciseLogTrainerInput[];
+}
+
+export interface ExerciseLogTrainerInput {
+  id_esercizio_sessione: number;
+  serie_effettive?: number | null;
+  ripetizioni_effettive?: string | null;
+  carico_effettivo_kg?: number | null;
+  rpe?: number | null;
+  note_cliente?: string | null;
+}
+
 export function useCompleteScheduleSlot(workoutId: number | null) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (slotId: number) => {
+    mutationFn: async (payload: number | CompleteSlotPayload) => {
+      const slotId = typeof payload === "number" ? payload : payload.slotId;
+      const body = typeof payload === "number" ? undefined : payload.exerciseData
+        ? { exercise_data: payload.exerciseData }
+        : undefined;
       const { data } = await apiClient.put<ScheduleSlot>(
         `/workout-schedule/${slotId}/complete`,
+        body,
       );
       return data;
     },
@@ -100,6 +119,9 @@ export function useCompleteScheduleSlot(workoutId: number | null) {
       queryClient.invalidateQueries({ queryKey: ["workout-schedule", workoutId] });
       queryClient.invalidateQueries({ queryKey: ["workout-logs"] });
       queryClient.invalidateQueries({ queryKey: ["session-prep"] });
+      queryClient.invalidateQueries({ queryKey: ["workout-analytics"] });
+      queryClient.invalidateQueries({ queryKey: ["training-intelligence"] });
+      queryClient.invalidateQueries({ queryKey: ["workout-diff"] });
       queryClient.invalidateQueries({ queryKey: ["client-avatar", slot.id_cliente] });
       toast.success(`${slot.sessione_nome} completata`);
     },

@@ -161,6 +161,12 @@ export default function WorkoutSchedulePage() {
     [completeMutation],
   );
 
+  const handleCompleteWithData = useCallback(
+    (slotId: number, exerciseData: import("@/hooks/useWorkoutSchedule").ExerciseLogTrainerInput[]) =>
+      completeMutation.mutate({ slotId, exerciseData }),
+    [completeMutation],
+  );
+
   const handleSkip = useCallback(
     (slotId: number) =>
       updateMutation.mutate({ slotId, stato: "saltato" }),
@@ -336,6 +342,7 @@ export default function WorkoutSchedulePage() {
         onOpenChange={setSetupOpen}
         onGenerated={() => {}}
         sessionNameMap={sessionNameMap}
+        existingSlots={slots}
       />
 
       {selectedSlot && (
@@ -347,6 +354,7 @@ export default function WorkoutSchedulePage() {
             if (!open) setSelectedSlot(null);
           }}
           onComplete={handleComplete}
+          onCompleteWithData={handleCompleteWithData}
           onSkip={handleSkip}
           onReopen={handleReopen}
         />

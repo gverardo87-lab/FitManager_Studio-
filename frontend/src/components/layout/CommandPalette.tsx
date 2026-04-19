@@ -93,7 +93,7 @@ const NAV_ITEMS = [
   { id: "nav-contratti", href: "/contratti", label: "Contratti", icon: FileText },
   { id: "nav-esercizi", href: "/esercizi", label: "Esercizi", icon: Dumbbell },
   { id: "nav-schede", href: "/schede", label: "Schede Allenamento", icon: Dumbbell },
-  { id: "nav-monitoraggio", href: "/monitoraggio", label: "Monitoraggio Clienti", icon: BarChart3 },
+  { id: "nav-monitoraggio", href: "/monitoraggio", label: "Salute Clienti", icon: BarChart3 },
   { id: "nav-allenamenti", href: "/allenamenti", label: "Aderenza Allenamenti", icon: Activity },
   { id: "nav-cassa", href: "/cassa", label: "Cassa", icon: Wallet },
   { id: "nav-guida", href: "/guida", label: "Guida", icon: BookOpen },

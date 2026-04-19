@@ -24,7 +24,7 @@ from api.database import get_session
 from api.dependencies import get_current_trainer
 from api.models.trainer import Trainer
 from api.models.client import Client
-from api.models.workout import WorkoutPlan, WorkoutSession
+from api.models.workout import WorkoutExercise, WorkoutPlan, WorkoutSession
 from api.models.workout_log import WorkoutLog
 from api.models.workout_schedule import WorkoutScheduleSlot
 from api.schemas.workout_schedule import (
@@ -34,6 +34,8 @@ from api.schemas.workout_schedule import (
     ScheduleSlotResponse,
     ScheduleListResponse,
 )
+from api.schemas.workout_log import CompleteSlotRequest
+from api.models.exercise_log import ExerciseLog
 from api.routers._audit import log_audit
 
 logger = logging.getLogger(__name__)
@@ -180,36 +182,65 @@ def generate_schedule(
     except ValueError:
         raise HTTPException(status_code=422, detail="Data inizio non valida")
 
-    # Soft-delete slot futuri esistenti (rigenerazione)
+    # ── Rigenerazione: soft-delete vecchi + protezione completati ──
     now = datetime.now(timezone.utc)
-    today = date_type.today()
-    existing_future = session.exec(
+
+    # 1. Soft-delete TUTTI i pianificati di questa scheda (passati E futuri)
+    #    Risolve bug: se data_inizio < today, i vecchi slot passati
+    #    sopravvivevano e si duplicavano con i nuovi.
+    existing_pianificati = session.exec(
         select(WorkoutScheduleSlot).where(
             WorkoutScheduleSlot.id_scheda == workout_id,
             WorkoutScheduleSlot.trainer_id == trainer.id,
             WorkoutScheduleSlot.deleted_at == None,
             WorkoutScheduleSlot.stato == "pianificato",
-            WorkoutScheduleSlot.data_pianificata >= today,
         )
     ).all()
-    for old_slot in existing_future:
+    for old_slot in existing_pianificati:
         old_slot.deleted_at = now
 
-    # Genera slot round-robin
+    # 2. Raccogli date con slot completati/parziali (dati reali, sacri)
+    #    I nuovi slot NON sovrascrivono sessioni già eseguite.
+    existing_done = session.exec(
+        select(WorkoutScheduleSlot).where(
+            WorkoutScheduleSlot.id_scheda == workout_id,
+            WorkoutScheduleSlot.trainer_id == trainer.id,
+            WorkoutScheduleSlot.deleted_at == None,
+            WorkoutScheduleSlot.stato.in_(["completato", "parziale"]),
+        )
+    ).all()
+    done_dates: set[date_type] = {s.data_pianificata for s in existing_done}
+
+    # 3. Soft-delete slot saltati (non contengono dati, ripianificabili)
+    existing_saltati = session.exec(
+        select(WorkoutScheduleSlot).where(
+            WorkoutScheduleSlot.id_scheda == workout_id,
+            WorkoutScheduleSlot.trainer_id == trainer.id,
+            WorkoutScheduleSlot.deleted_at == None,
+            WorkoutScheduleSlot.stato == "saltato",
+        )
+    ).all()
+    for old_slot in existing_saltati:
+        old_slot.deleted_at = now
+
+    # ── Genera slot round-robin ──
     pattern_sorted = sorted(data.pattern_giorni)
     new_slots: list[WorkoutScheduleSlot] = []
     session_index = 0
 
     for week in range(data.settimane):
         week_start = start_date + timedelta(weeks=week)
-        # Trova il lunedi della settimana
         monday = week_start - timedelta(days=week_start.weekday())
 
         for day_of_week in pattern_sorted:
             slot_date = monday + timedelta(days=day_of_week)
 
-            # Skip date prima della data inizio
             if slot_date < start_date:
+                continue
+
+            # Skip date con sessioni gia' completate (dati sacri)
+            if slot_date in done_dates:
+                session_index += 1
                 continue
 
             ws = sessions_list[session_index % len(sessions_list)]
@@ -227,10 +258,13 @@ def generate_schedule(
             session.add(new_slot)
             new_slots.append(new_slot)
 
-    # Aggiorna date piano
-    if new_slots:
-        plan.data_inizio = new_slots[0].data_pianificata
-        plan.data_fine = new_slots[-1].data_pianificata
+    # Aggiorna date piano (considerando anche slot completati preservati)
+    all_active_dates = [s.data_pianificata for s in new_slots]
+    all_active_dates.extend(s.data_pianificata for s in existing_done)
+    if all_active_dates:
+        all_active_dates.sort()
+        plan.data_inizio = all_active_dates[0]
+        plan.data_fine = all_active_dates[-1]
         plan.sessioni_per_settimana = len(pattern_sorted)
         plan.durata_settimane = data.settimane
 
@@ -243,9 +277,18 @@ def generate_schedule(
     for slot in new_slots:
         session.refresh(slot)
 
-    # Build response
+    logger.info(
+        "Schedule rigenerato per workout %d: %d nuovi slot, %d completati preservati, "
+        "%d pianificati rimossi, %d saltati rimossi",
+        workout_id, len(new_slots), len(existing_done),
+        len(existing_pianificati), len(existing_saltati),
+    )
+
+    # Build response (nuovi + completati preservati, per vista completa)
     session_map = {s.id: s for s in sessions_list}
-    items = [_build_slot_response(s, session_map) for s in new_slots]
+    all_slots = list(existing_done) + new_slots
+    all_slots.sort(key=lambda s: s.data_pianificata)
+    items = [_build_slot_response(s, session_map) for s in all_slots]
     return ScheduleListResponse(items=items, total=len(items))
 
 
@@ -336,14 +379,19 @@ def update_slot(
 )
 def complete_slot(
     slot_id: int,
+    body: CompleteSlotRequest | None = None,
     trainer: Trainer = Depends(get_current_trainer),
     session: Session = Depends(get_session),
 ):
     """
-    Completa slot → crea WorkoutLog automaticamente.
+    Completa slot → crea WorkoutLog + ExerciseLog automaticamente.
 
-    Atomico: aggiorna slot + crea log in un singolo commit.
+    Atomico: aggiorna slot + crea log + exercise_logs in un singolo commit.
     data_esecuzione = oggi (o data_pianificata se nel passato).
+
+    Body opzionale:
+    - Assente/null/exercise_data=null → crea ExerciseLog con valori dal piano (source='trainer_assumed')
+    - exercise_data=[...] → crea ExerciseLog con dati inseriti dal trainer (source='trainer')
     """
     slot = _bouncer_slot(session, slot_id, trainer.id)
 
@@ -382,10 +430,62 @@ def complete_slot(
     slot.stato = "completato"
     slot.id_log = log.id
 
+    # Crea ExerciseLog per ogni esercizio della sessione
+    exercise_data_map: dict[int, object] = {}
+    if body and body.exercise_data:
+        exercise_data_map = {ed.id_esercizio_sessione: ed for ed in body.exercise_data}
+
+    # Fetch esercizi della sessione (straight + blocchi)
+    plan_exercises = session.exec(
+        select(WorkoutExercise).where(
+            WorkoutExercise.id_sessione == slot.id_sessione,
+        )
+    ).all()
+
+    for ex in plan_exercises:
+        trainer_input = exercise_data_map.get(ex.id)
+        if trainer_input:
+            # Trainer ha inserito dati effettivi
+            el = ExerciseLog(
+                id_schedule_slot=slot.id,
+                id_esercizio_sessione=ex.id,
+                trainer_id=trainer.id,
+                id_cliente=slot.id_cliente,
+                serie_effettive=trainer_input.serie_effettive,
+                ripetizioni_effettive=trainer_input.ripetizioni_effettive,
+                carico_effettivo_kg=trainer_input.carico_effettivo_kg,
+                rpe=trainer_input.rpe,
+                note_cliente=trainer_input.note_cliente,
+                source="trainer",
+                created_at=now.isoformat(),
+            )
+        else:
+            # Assume piano come valori effettivi
+            el = ExerciseLog(
+                id_schedule_slot=slot.id,
+                id_esercizio_sessione=ex.id,
+                trainer_id=trainer.id,
+                id_cliente=slot.id_cliente,
+                serie_effettive=ex.serie,
+                ripetizioni_effettive=ex.ripetizioni,
+                carico_effettivo_kg=ex.carico_kg,
+                rpe=None,
+                note_cliente=None,
+                source="trainer_assumed",
+                created_at=now.isoformat(),
+            )
+        session.add(el)
+
     log_audit(session, "workout_log", log.id, "CREATE", trainer.id)
     log_audit(session, "workout_schedule", slot.id, "UPDATE", trainer.id)
     session.commit()
     session.refresh(slot)
+
+    logger.info(
+        "Slot %d completato: %d exercise_logs creati (source=%s)",
+        slot_id, len(plan_exercises),
+        "trainer" if exercise_data_map else "trainer_assumed",
+    )
 
     # Response
     ws = session.exec(
@@ -413,7 +513,6 @@ def reopen_slot(
     - WorkoutLog (record esecuzione sessione + feedback)
     - Reset slot: stato='pianificato', id_log=null
     """
-    from api.models.exercise_log import ExerciseLog
 
     slot = _bouncer_slot(session, slot_id, trainer.id)
 

@@ -52,3 +52,32 @@ class WorkoutLogListResponse(BaseModel):
 
     items: List[WorkoutLogResponse]
     total: int
+
+
+# ════════════════════════════════════════════════════════════
+# SCHEDULE COMPLETION (body opzionale per complete_slot)
+# ════════════════════════════════════════════════════════════
+
+class ExerciseLogTrainerInput(BaseModel):
+    """Dati effettivi per singolo esercizio inseriti dal trainer."""
+
+    model_config = {"extra": "forbid"}
+
+    id_esercizio_sessione: int = Field(gt=0)
+    serie_effettive: Optional[int] = Field(None, ge=1)
+    ripetizioni_effettive: Optional[str] = Field(None, max_length=50)
+    carico_effettivo_kg: Optional[float] = Field(None, ge=0)
+    rpe: Optional[float] = Field(None, ge=0, le=10)
+    note_cliente: Optional[str] = Field(None, max_length=500)
+
+
+class CompleteSlotRequest(BaseModel):
+    """Body opzionale per PUT /workout-schedule/{id}/complete.
+
+    - exercise_data = None → assume piano (source = 'trainer_assumed')
+    - exercise_data = [...] → dati inseriti dal trainer (source = 'trainer')
+    """
+
+    model_config = {"extra": "forbid"}
+
+    exercise_data: Optional[List[ExerciseLogTrainerInput]] = None
