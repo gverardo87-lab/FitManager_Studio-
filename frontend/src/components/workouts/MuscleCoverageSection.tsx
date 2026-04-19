@@ -14,7 +14,7 @@
  */
 
 import { useState, useRef, useCallback, forwardRef } from "react";
-import { ChevronDown, Target, HelpCircle } from "lucide-react";
+import { ChevronDown, Target, HelpCircle, Zap } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
@@ -274,8 +274,28 @@ const MuscleRow = forwardRef<HTMLDivElement, { muscolo: TSDettaglioMuscolo }>(
             <Tooltip><TooltipTrigger asChild><span className="cursor-help">MEV {muscolo.target_mev}</span></TooltipTrigger><TooltipContent side="top" className="max-w-xs text-xs">Volume Minimo Efficace: set minimi per stimolare adattamento</TooltipContent></Tooltip>
             <Tooltip><TooltipTrigger asChild><span className="cursor-help">MAV {muscolo.target_mav_min}-{muscolo.target_mav_max}</span></TooltipTrigger><TooltipContent side="top" className="max-w-xs text-xs">Volume Massimo di Adattamento: range ottimale di set settimanali</TooltipContent></Tooltip>
             <Tooltip><TooltipTrigger asChild><span className="cursor-help">MRV {muscolo.target_mrv}</span></TooltipTrigger><TooltipContent side="top" className="max-w-xs text-xs">Volume Massimo Recuperabile: oltre questo limite il recupero e' compromesso</TooltipContent></Tooltip>
-            <span className="ml-auto">Freq: {muscolo.frequenza}x/sett</span>
           </div>
+
+          {/* Frequenza stimoli/settimana */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className={`flex items-center gap-1.5 text-[10px] cursor-help ${
+                muscolo.frequenza >= 2
+                  ? "text-emerald-600 dark:text-emerald-400"
+                  : muscolo.frequenza === 1
+                    ? "text-amber-600 dark:text-amber-400"
+                    : "text-red-600 dark:text-red-400"
+              }`}>
+                <Zap className="h-3 w-3" />
+                <span className="font-medium">
+                  Frequenza: {muscolo.frequenza} stimol{muscolo.frequenza === 1 ? "o" : "i"}/sett
+                </span>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-xs text-xs">
+              Schoenfeld 2017: la frequenza ottimale e&apos; 2-3 stimoli per muscolo per settimana
+            </TooltipContent>
+          </Tooltip>
 
           {/* Contributi per esercizio */}
           {muscolo.contributi.length > 0 && (

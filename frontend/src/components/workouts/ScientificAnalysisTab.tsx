@@ -19,8 +19,10 @@ import { Loader2 } from "lucide-react";
 
 import { useAnalyzePlan } from "@/hooks/useTrainingScience";
 import { VALID_PATTERNS } from "@/lib/training-science-display";
+import { PlanReasoningSection } from "./PlanReasoningSection";
 import { MuscleCoverageSection } from "./MuscleCoverageSection";
 import { BiomechanicalBalance } from "./BiomechanicalBalance";
+import { RecoveryOverlapSection } from "./RecoveryOverlapSection";
 import { ClinicalSafetySection } from "./ClinicalSafetySection";
 import { ActionableSummary } from "./ActionableSummary";
 import { Badge } from "@/components/ui/badge";
@@ -218,6 +220,9 @@ export function ScientificAnalysisTab({
         <ScoreBadge score={analysis.score} />
       </div>
 
+      {/* Sezione 0: Ragionamento Scientifico */}
+      <PlanReasoningSection warnings={analysis.warnings} />
+
       {/* Sezione 1: Copertura Muscolare */}
       <MuscleCoverageSection analysis={analysis} />
 
@@ -228,14 +233,17 @@ export function ScientificAnalysisTab({
         exerciseMap={exerciseMap}
       />
 
-      {/* Sezione 3: Profilo Clinico-Safety */}
+      {/* Sezione 3: Recupero Muscolare */}
+      <RecoveryOverlapSection overlaps={analysis.recovery_overlaps} />
+
+      {/* Sezione 4: Profilo Clinico-Safety */}
       <ClinicalSafetySection
         safetyMap={safetyMap}
         sessions={sessions}
         exerciseMap={exerciseMap}
       />
 
-      {/* Sezione 4: Riepilogo Operativo */}
+      {/* Sezione 5: Riepilogo Operativo */}
       <ActionableSummary
         analysis={analysis}
         safetyMap={safetyMap}

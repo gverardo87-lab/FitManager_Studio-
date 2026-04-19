@@ -17,7 +17,8 @@ import { useMemo, useEffect, useRef, useState } from "react";
 import {
   Shield, Loader2, ChevronDown, Scale,
   AlertTriangle, CheckCircle2, XCircle, Pill,
-  Zap, Dumbbell, HelpCircle,
+  Zap, Dumbbell, HelpCircle, BookOpen,
+  Clock, RefreshCw,
 } from "lucide-react";
 import { useAnalyzePlan } from "@/hooks/useTrainingScience";
 import { VALID_PATTERNS } from "@/lib/training-science-display";
@@ -198,6 +199,39 @@ export function SciencePanel({
                   <ScoreBar label="Frequenza" value={computeSubScore(analysis, "frequency")} icon="frq" />
                   <ScoreBar label="Recupero" value={computeSubScore(analysis, "recovery")} icon="rec" />
                 </div>
+              </div>
+            )}
+
+            {/* ═══ 1b. RAGIONAMENTO SCIENTIFICO (compatto) ═══ */}
+            {analysis && (
+              <div className="border-b">
+                <CollapsibleSection
+                  title="Ragionamento"
+                  icon={<BookOpen className="h-3.5 w-3.5" />}
+                  badge={`${analysis.warnings.length}`}
+                  badgeVariant={analysis.warnings.length > 0 ? "warning" : "success"}
+                  defaultOpen={false}
+                >
+                  {analysis.warnings.length === 0 ? (
+                    <div className="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      Piano bilanciato
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {analysis.warnings.map((w, i) => {
+                        const Icon = categorizeWarningIcon(w);
+                        const color = categorizeWarningColor(w);
+                        return (
+                          <div key={i} className="text-[11px] text-muted-foreground flex items-start gap-1.5">
+                            <Icon className={`h-3 w-3 mt-0.5 shrink-0 ${color}`} />
+                            {w}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </CollapsibleSection>
               </div>
             )}
 
@@ -488,6 +522,35 @@ function RatioRow({ ratio }: { ratio: TSDettaglioRapporto }) {
       <span className="text-muted-foreground/40 text-[10px]">/{ratio.target.toFixed(2)}</span>
     </div>
   );
+}
+
+// ════════════════════════════════════════════════════════════
+// WARNING CATEGORIZATION (compact panel)
+// ════════════════════════════════════════════════════════════
+
+type IconComponent = React.ComponentType<{ className?: string }>;
+
+function categorizeWarningIcon(w: string): IconComponent {
+  const lower = w.toLowerCase();
+  if (lower.includes("volume") || lower.includes("serie/sett")) return Dumbbell;
+  if (lower.includes("frequenza")) return Clock;
+  if (lower.includes("recupero") || lower.includes("recovery") || lower.includes("sovrapposizione")) return RefreshCw;
+  if (lower.includes("squilibrio") || lower.includes("push") || lower.includes("pull") ||
+      lower.includes("quad") || lower.includes("ham") || lower.includes("target") ||
+      lower.includes("troppo") || lower.includes("anteriore") || lower.includes("posteriore")) return Scale;
+  return AlertTriangle;
+}
+
+function categorizeWarningColor(w: string): string {
+  const lower = w.toLowerCase();
+  if (lower.includes("recupero") || lower.includes("recovery") || lower.includes("sovrapposizione")) {
+    return "text-red-500";
+  }
+  if (lower.includes("volume") || lower.includes("frequenza") || lower.includes("squilibrio") ||
+      lower.includes("push") || lower.includes("pull") || lower.includes("target") || lower.includes("troppo")) {
+    return "text-amber-500";
+  }
+  return "text-zinc-500";
 }
 
 // ════════════════════════════════════════════════════════════

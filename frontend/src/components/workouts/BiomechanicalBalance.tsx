@@ -14,7 +14,7 @@
  */
 
 import { useState, useMemo } from "react";
-import { ChevronDown, Scale, BarChart3 } from "lucide-react";
+import { ChevronDown, Scale, BarChart3, BookOpenText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -346,11 +346,17 @@ function RatioRow({
 
       {expanded && (
         <div className="px-3 pb-2 space-y-1.5">
-          {/* Volume dettaglio */}
-          <div className="text-[10px] text-muted-foreground flex gap-4">
-            <span>Numeratore: {ratio.volume_numeratore} serie</span>
-            <span>Denominatore: {ratio.volume_denominatore} serie</span>
-            <span>Tolleranza: ±{ratio.tolleranza.toFixed(2)}</span>
+          {/* Volume dettaglio — compatto con visual bar */}
+          <div className="flex items-center gap-3 text-[10px]">
+            <div className="flex items-center gap-1.5">
+              <span className="text-muted-foreground">Numeratore:</span>
+              <span className="font-semibold tabular-nums">{ratio.volume_numeratore} serie</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-muted-foreground">Denominatore:</span>
+              <span className="font-semibold tabular-nums">{ratio.volume_denominatore} serie</span>
+            </div>
+            <span className="text-muted-foreground/60 ml-auto">±{ratio.tolleranza.toFixed(2)}</span>
           </div>
 
           {/* Spiegazione clinica */}
@@ -382,8 +388,11 @@ function RatioRow({
             </div>
           )}
 
-          {/* Fonte */}
-          <p className="text-[9px] text-muted-foreground italic">{ratio.fonte}</p>
+          {/* Fonte scientifica con icona */}
+          <div className="flex items-start gap-1.5 text-[9px] text-muted-foreground">
+            <BookOpenText className="h-3 w-3 mt-0.5 shrink-0" />
+            <span className="italic">{ratio.fonte}</span>
+          </div>
         </div>
       )}
     </div>

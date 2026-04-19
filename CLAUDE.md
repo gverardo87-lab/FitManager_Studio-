@@ -152,7 +152,7 @@ Tutte con PRAGMA: `journal_mode=WAL`, `foreign_keys=ON`, `busy_timeout=5000`.
 
 | Motore | Path | Funzione |
 |--------|------|----------|
-| Training Science | `api/services/training_science/` (~3500 LOC) | Periodizzazione, EMG, volume MEV/MAV/MRV |
+| Training Science | `api/services/training_science/` (~3500 LOC) | Periodizzazione, EMG, volume MEV/MAV/MRV. Frontend: 6 sezioni trasparenza (reasoning, copertura, equilibrio, recupero, safety, azioni) |
 | Training Intelligence | `api/routers/training_intelligence.py` | Analisi post-esecuzione: dose-response muscolo×muscolo, balance ratios, intensity zones, recovery, alert predittivi |
 | Workout Diff | `api/routers/workout_diff.py` | "Git diff" allenamento: piano vs eseguito per esercizio, compliance %, punti deboli/forti |
 | Safety Engine | `api/services/condition_rules.py` | 47 condizioni, 80 pattern rules |

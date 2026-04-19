@@ -63,7 +63,8 @@ frontend/src/
 │   │                        connectivity-wizard-state, system-status-utils
 │   ├── workspace/           SessionPrepCard (client+non-client), workspace-ui.ts (config/metadata)
 │   ├── workouts/            SessionCard, SortableExerciseRow, BlockCard, ExerciseSelector (dynamic),
-│   │                        TemplateSelector, ExportButtons, ExerciseDetailPanel, RiskBodyMap
+│   │                        TemplateSelector, ExportButtons, ExerciseDetailPanel, RiskBodyMap,
+│   │                        PlanReasoningSection (warning categorizzati), RecoveryOverlapSection (overlap muscolare)
 │   └── ui/                  shadcn/ui (33 primitives + AnimatedNumber + Skeleton shimmer + LogoIcon + WhatsAppButton)
 ├── hooks/                   React Query + app hooks — 28 moduli
 │   ├── useAgenda, useClients, useContracts, useRates, useMovements
@@ -583,9 +584,18 @@ Griglia: [nome_con_icone 1fr] [S 44px] [Rip 52px] [Kg 48px] [Rec 44px] [del 24px
 ### SciencePanel (320px, toggle)
 
 - Visibile quando `showAdvanced = true` + viewport >= lg.
-- Score Ring SVG animato → 4 barre sub-score → Safety → Mappa Anatomica → Equilibrio → Azioni.
+- Score Ring SVG animato → 4 barre sub-score → Ragionamento → Safety → Mappa Anatomica → Equilibrio → Azioni.
 - Debounce analisi: 1s su fingerprint change.
 - Consuma `useAnalyzePlan()` (stesso backend della ScientificAnalysisTab).
+
+### ScientificAnalysisTab — 6 sezioni orchestrate
+
+1. **PlanReasoningSection** — Warning categorizzati (volume/frequenza/recupero/equilibrio) con icone e colori semantici
+2. **MuscleCoverageSection** — Body map + drill-down volume per muscolo + frequenza stimoli/sett con color-coding
+3. **BiomechanicalBalance** — Profilo di carico + rapporti di forza con volume per lato e fonte scientifica
+4. **RecoveryOverlapSection** — Overlap muscolare tra sessioni consecutive con tabella serie per sessione
+5. **ClinicalSafetySection** — Condizioni × esercizi
+6. **ActionableSummary** — Azioni prioritizzate aggregate
 
 ### BuilderModeContext
 
