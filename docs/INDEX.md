@@ -41,6 +41,19 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 
 ---
 
+## scientific/ — Certificazione motori deterministici
+
+| File | Scopo | SSoT per |
+|------|-------|----------|
+| `PARAMETER_REGISTRY.md` | ~717 parametri con confidenza e fonti | Ogni numero nei 5 motori |
+| `TRAINING_SCIENCE_CERTIFICATION.md` | Training Science + Intelligence + Diff | EMG, volume, balance, scoring, compliance |
+| `SAFETY_ENGINE_CERTIFICATION.md` | Safety Engine | 47 condizioni, 80 regole, 5 farmaci |
+| `NUTRITION_SCIENCE_CERTIFICATION.md` | Nutrition Science Engine | LARN, CREA, porzioni, scoring 3 assi |
+
+**Gerarchia**: Registry e' la fondazione (ogni numero ha riga di codice). I 3 documenti di certificazione lo referenziano per i valori, aggiungono architettura, algoritmi e zone di incertezza.
+
+---
+
 ## technical/ — Architettura, sicurezza, infrastruttura
 
 | File | Scopo |
