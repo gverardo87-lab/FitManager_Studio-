@@ -32,6 +32,20 @@ const nextConfig: NextConfig = {
     ],
   },
 
+  // Security headers per HTTPS (Tailscale Funnel)
+  headers: async () => [
+    {
+      source: "/(.*)",
+      headers: [
+        { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" },
+        { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+        { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+        { key: "X-Content-Type-Options", value: "nosniff" },
+        { key: "X-Frame-Options", value: "DENY" },
+      ],
+    },
+  ],
+
   // Proxy /media/* al backend — rende i fetch same-origin (evita CORS su StaticFiles).
   // Mapping generico: porta frontend - 3000 + 8000 = porta backend.
   // 3000→8000 (prod), 3001→8001 (dev), 3002→8002 (installer test).

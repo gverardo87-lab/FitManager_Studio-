@@ -104,9 +104,10 @@ def build_health_response(
     license_result = check_license()
     healthy = db_ok and catalog_ok
 
+    from api.config import is_compiled
     return HealthResponse(
         status="ok" if healthy else "degraded",
-        version=__version__,
+        version="ok" if is_compiled() else __version__,
         db="connected" if db_ok else "disconnected",
         catalog="connected" if catalog_ok else "disconnected",
         license_status=license_result.status,
