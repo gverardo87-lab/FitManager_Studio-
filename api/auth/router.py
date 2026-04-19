@@ -6,13 +6,14 @@ POST /auth/register  -> crea nuovo trainer, ritorna JWT
 POST /auth/login     -> verifica credenziali, ritorna JWT
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlmodel import Session, select, func as sa_func
 
 from api.database import get_session
 from api.models.trainer import Trainer
 from api.auth.schemas import TrainerRegister, TrainerLogin, TokenResponse, PasswordResetRequest
 from api.auth.service import hash_password, verify_password, create_access_token
+from api.services.rate_limiter import auth_limiter
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -30,7 +31,11 @@ def setup_status(session: Session = Depends(get_session)):
 
 
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
-def register(data: TrainerRegister, session: Session = Depends(get_session)):
+def register(
+    data: TrainerRegister,
+    request: Request,
+    session: Session = Depends(get_session),
+):
     """
     Registra un nuovo trainer.
 
@@ -39,13 +44,15 @@ def register(data: TrainerRegister, session: Session = Depends(get_session)):
     3. Salva nel DB
     4. Ritorna JWT token (il trainer e' gia' loggato)
     """
+    auth_limiter.check(request)
+
     existing = session.exec(
         select(Trainer).where(sa_func.lower(Trainer.email) == data.email)
     ).first()
     if existing:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Email gia' registrata",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Registrazione non possibile",
         )
 
     trainer = Trainer(
@@ -69,13 +76,19 @@ def register(data: TrainerRegister, session: Session = Depends(get_session)):
 
 
 @router.post("/reset-password")
-def reset_password(data: PasswordResetRequest, session: Session = Depends(get_session)):
+def reset_password(
+    data: PasswordResetRequest,
+    request: Request,
+    session: Session = Depends(get_session),
+):
     """
-    Reset password per app locale (single-user, no email server).
+    Cambio password con verifica della password attuale.
 
-    Sicurezza: richiede accesso fisico al PC + conoscenza dell'email.
+    Sicurezza: richiede conoscenza della password corrente + email.
     L'endpoint e' pubblico (no JWT) — il trainer non puo' fare login.
     """
+    auth_limiter.check(request)
+
     trainer = session.exec(
         select(Trainer).where(Trainer.email == data.email)
     ).first()
@@ -84,6 +97,11 @@ def reset_password(data: PasswordResetRequest, session: Session = Depends(get_se
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Nessun account trovato con questa email",
         )
+    if not verify_password(data.current_password, trainer.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Password attuale non corretta",
+        )
     trainer.hashed_password = hash_password(data.new_password)
     session.add(trainer)
     session.commit()
@@ -91,7 +109,11 @@ def reset_password(data: PasswordResetRequest, session: Session = Depends(get_se
 
 
 @router.post("/login", response_model=TokenResponse)
-def login(data: TrainerLogin, session: Session = Depends(get_session)):
+def login(
+    data: TrainerLogin,
+    request: Request,
+    session: Session = Depends(get_session),
+):
     """
     Login trainer esistente.
 
@@ -99,6 +121,8 @@ def login(data: TrainerLogin, session: Session = Depends(get_session)):
     2. Verifica password con bcrypt
     3. Ritorna JWT token
     """
+    auth_limiter.check(request)
+
     trainer = session.exec(
         select(Trainer).where(Trainer.email == data.email.strip().lower())
     ).first()

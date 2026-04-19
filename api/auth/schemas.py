@@ -42,8 +42,9 @@ class TokenResponse(BaseModel):
 
 
 class PasswordResetRequest(BaseModel):
-    """Payload per reset password (app locale, no email server)."""
+    """Payload per cambio password con verifica (app locale, no email server)."""
     email: str
+    current_password: str = Field(min_length=1, max_length=128)
     new_password: str = Field(min_length=8, max_length=128)
 
     @field_validator("email")

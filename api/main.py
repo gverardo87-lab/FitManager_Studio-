@@ -37,6 +37,7 @@ from api.config import (
     DATA_DIR,
     DATABASE_URL,
     NUTRITION_DATABASE_URL,
+    is_compiled,
 )
 from api.database import (
     create_catalog_tables,
@@ -90,18 +91,19 @@ APP_LOG_PATH = configure_app_logging(
 )
 logger = logging.getLogger("fitmanager.api")
 
+_COMPILED = is_compiled()
 MAX_AUTO_BACKUPS = 5  # solo gli ultimi 5 backup automatici
 
 LICENSE_EXEMPT_PATHS = {
     "/health",
-    "/docs",
-    "/redoc",
-    "/openapi.json",
     f"{API_PREFIX}/auth/login",
     f"{API_PREFIX}/auth/register",
     f"{API_PREFIX}/auth/setup-status",
     f"{API_PREFIX}/auth/reset-password",
 }
+# Swagger/Redoc exempt solo in dev (in compiled mode sono gia' disabilitati)
+if not _COMPILED:
+    LICENSE_EXEMPT_PATHS |= {"/docs", "/redoc", "/openapi.json"}
 LICENSE_EXEMPT_PREFIXES = ("/media/", "/videos/", f"{API_PREFIX}/public/")
 
 
@@ -312,6 +314,10 @@ app = FastAPI(
     version=__version__,
     description="REST API per il CRM fitness. Multi-tenant, JWT auth, database-agnostic.",
     lifespan=lifespan,
+    # Security: disabilita Swagger/Redoc in compiled mode (esporrebbero schema API completo)
+    docs_url=None if _COMPILED else "/docs",
+    redoc_url=None if _COMPILED else "/redoc",
+    openapi_url=None if _COMPILED else "/openapi.json",
 )
 
 def _is_license_exempt_path(path: str) -> bool:
@@ -360,19 +366,20 @@ class LicenseMiddleware(BaseHTTPMiddleware):
 app.add_middleware(LicenseMiddleware)
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r"^http://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|100\.\d+\.\d+\.\d+)(:\d+)?$",
+    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|100\.\d+\.\d+\.\d+)(:\d+)?$",
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Content-Type", "Authorization"],
 )
 
 
-# Security headers middleware — previene MIME-sniffing e clickjacking
+# Security headers middleware — previene MIME-sniffing, clickjacking, referrer leak
 @app.middleware("http")
 async def add_security_headers(request, call_next):
     response = await call_next(request)
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     return response
 
 

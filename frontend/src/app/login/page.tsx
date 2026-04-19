@@ -67,6 +67,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 const resetSchema = z.object({
   email: z.string().min(1, "L'email e' obbligatoria").email("Inserisci un'email valida"),
+  current_password: z.string().min(1, "La password attuale e' obbligatoria"),
   new_password: z.string().min(8, "La password deve avere almeno 8 caratteri"),
   confirm_password: z.string().min(1, "Conferma la password"),
 }).refine((d) => d.new_password === d.confirm_password, {
@@ -129,11 +130,11 @@ export default function LoginPage() {
 
   const resetForm = useForm<ResetFormValues>({
     resolver: zodResolver(resetSchema),
-    defaultValues: { email: "", new_password: "", confirm_password: "" },
+    defaultValues: { email: "", current_password: "", new_password: "", confirm_password: "" },
   });
 
   const resetMutation = useMutation({
-    mutationFn: (data: { email: string; new_password: string }) =>
+    mutationFn: (data: { email: string; current_password: string; new_password: string }) =>
       apiClient.post("/auth/reset-password", data),
     onSuccess: () => {
       setResetSuccess(true);
@@ -148,7 +149,7 @@ export default function LoginPage() {
   function onResetSubmit(values: ResetFormValues) {
     setResetError(null);
     setResetSuccess(false);
-    resetMutation.mutate({ email: values.email, new_password: values.new_password });
+    resetMutation.mutate({ email: values.email, current_password: values.current_password, new_password: values.new_password });
   }
 
   function onSubmit(values: LoginFormValues) {
@@ -324,6 +325,18 @@ export default function LoginPage() {
                 />
                 {resetForm.formState.errors.email && (
                   <p className="text-xs text-destructive">{resetForm.formState.errors.email.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Password attuale</label>
+                <Input
+                  type="password"
+                  placeholder="La tua password attuale"
+                  {...resetForm.register("current_password")}
+                />
+                {resetForm.formState.errors.current_password && (
+                  <p className="text-xs text-destructive">{resetForm.formState.errors.current_password.message}</p>
                 )}
               </div>
 

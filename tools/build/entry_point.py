@@ -14,9 +14,9 @@ import uvicorn
 
 
 def main():
-    # Default: porta 8000, ascolta su tutte le interfacce
+    # Default: porta 8000, bind a loopback (Next.js proxy su 127.0.0.1)
     port = 8000
-    host = "0.0.0.0"
+    host = "127.0.0.1"
 
     # Supporta --port NNNN da command line
     if "--port" in sys.argv:
