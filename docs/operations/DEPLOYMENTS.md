@@ -9,7 +9,7 @@ Ogni riga = un installer consegnato e installato su macchina del cliente.
 
 | Data | Cliente | Email | Versione | Machine ID | Tier | Scadenza licenza | SHA-256 installer | Note |
 |------|---------|-------|----------|------------|------|-------------------|-------------------|------|
-| 2026-04-19 | Alessio Crociani | — | v1.0.7 | *(da compilare)* | Partner | *(da compilare)* | *(da compilare)* | Primo install — primo partner ufficiale |
+| 2026-04-19 | Alessio Crociani | alessio@crocianicoaching.com | v1.0.7 | `4c06bb47ead1...9d0f37` | pro | 2027-04-14 | `7085add53826...09922` | Primo install — primo partner ufficiale |
 
 ---
 
