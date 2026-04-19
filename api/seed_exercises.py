@@ -17,6 +17,7 @@ Legge da data/exercises/:
 import json
 import logging
 import sys
+from datetime import datetime  # noqa: F401 — usato in seed_builtin_exercises
 
 from sqlmodel import Session, select, func
 
@@ -104,6 +105,19 @@ def seed_builtin_exercises(session: Session) -> int:
             respirazione=ex.get("respirazione"),
             coaching_cues=_json_field(ex.get("coaching_cues")),
             errori_comuni=_json_field(ex.get("errori_comuni")),
+            deleted_at=(datetime.fromisoformat(ex["deleted_at"])
+                       if ex.get("deleted_at") else None),
+            # Demand vector 10D (DB-backed override, None = fallback a registry)
+            skill_demand=ex.get("skill_demand"),
+            coordination_demand=ex.get("coordination_demand"),
+            stability_demand=ex.get("stability_demand"),
+            ballistic_demand=ex.get("ballistic_demand"),
+            impact_demand=ex.get("impact_demand"),
+            axial_load_demand=ex.get("axial_load_demand"),
+            shoulder_complex_demand=ex.get("shoulder_complex_demand"),
+            lumbar_load_demand=ex.get("lumbar_load_demand"),
+            grip_demand=ex.get("grip_demand"),
+            metabolic_demand=ex.get("metabolic_demand"),
         )
         session.add(exercise)
 
