@@ -3,6 +3,21 @@
 Questa non e' una fonte di regole nuove.
 Raccoglie solo lezioni concrete da errori gia' emersi, per evitare che la memoria orale torni a guidare il progetto.
 
+## 2026-04-19 - catalog.db tassonomia vuota dopo consegna v1.0.7 (P0)
+
+Problema:
+- 6 tabelle tassonomiche di catalog.db consegnate vuote al primo partner (Alessio Crociani, v1.0.7)
+- Safety Engine rilevava condizioni cliniche dall'anamnesi ma trovava zero esercizi associati — note di sicurezza completamente vuote
+- causa: rebuild di catalog.db durante audit esercizi senza riesecuzione dei 3 script manuali di tassonomia (`seed_taxonomy`, `populate_taxonomy`, `populate_conditions`)
+- i 3 script non erano ne' nel seed al startup ne' nel build pipeline ne' nella release checklist
+
+Lezioni:
+- ogni tabella di catalog.db DEVE avere un seed al startup o un check nel build pipeline — se il popolamento dipende da esecuzione manuale, prima o poi verra' dimenticato
+- rebuild di catalog.db = riesecuzione COMPLETA della pipeline seed (3 step in ordine: tassonomia base → junction muscoli/articolazioni → junction condizioni)
+- il build pipeline DEVE verificare l'integrita' completa di catalog.db (count > 0 per OGNI tabella tassonomica), non solo esercizi
+- audit pre-consegna DEVE includere conteggio tabelle tassonomiche con soglia minima attesa
+- report completo: `docs/incidents/INC-2026-04-19-catalog-taxonomy-empty.md`
+
 ## 2026-03-28b - FK Cascade mancante su replace_sessions (P1)
 
 Problema:

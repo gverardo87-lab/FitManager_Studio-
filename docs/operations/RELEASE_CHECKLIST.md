@@ -46,6 +46,7 @@
 
 - [ ] `data/crm.db` nel bundle release candidate vuoto e first-run-safe
 - [x] `data/catalog.db` congelato al catalogo canonico corrente (500 esercizi attivi) per il bundle
+- [ ] `data/catalog.db` tassonomia completa verificata: muscoli (>=53), articolazioni (>=15), condizioni_mediche (>=47), esercizi_muscoli (>=1000), esercizi_articolazioni (>=200), esercizi_condizioni (>=1000). **INC-2026-04-19: consegnato vuoto al primo partner per mancata verifica.**
 - [x] `data/nutrition.db` con integrity check automatico nel build (>= 8 template, >= 800 alimenti)
 - [x] `data/.env` - JWT_SECRET (52 char), PUBLIC_PORTAL_ENABLED, PUBLIC_BASE_URL
 - [x] `data/media/exercises/` - 1788 foto esercizi

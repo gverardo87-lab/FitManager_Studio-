@@ -275,6 +275,15 @@ async def lifespan(app: FastAPI):
     with SyncSession(catalog_engine) as catalog_seed_session:
         seed_metrics(catalog_seed_session)
 
+    # ── 4d. Seed tassonomia scientifica in CATALOG DB (idempotente) ──
+    # Safety net: se catalog.db e' stato ricreato, ripopola muscoli, articolazioni,
+    # condizioni_mediche e le 3 junction tables (esercizi_muscoli/articolazioni/condizioni).
+    # Skip in compiled mode (catalog.db pre-costruito, tools/ non nel bundle).
+    if not is_catalog_encrypted():
+        from api.seed_taxonomy import seed_taxonomy_all
+        _catalog_path = CATALOG_DATABASE_URL.replace("sqlite:///", "")
+        seed_taxonomy_all(_catalog_path)
+
     # ── 4b. Nutrition template check (warning, non bloccante) ──
     if not is_nutrition_encrypted() and Path(nutrition_path).exists():
         try:
