@@ -78,6 +78,7 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 | `RUNTIME_DIAGNOSTICS_PLAYBOOK.md` | Diagnostica runtime: log, errori, recovery |
 | `SUPPORT_RUNBOOK.md` | Runbook supporto: licenza, backup, restore, troubleshoot |
 | `UPGRADE_PROCEDURE.md` | Procedura upgrade: in-place, fallback, checklist |
+| `DEPLOYMENTS.md` | Registro consegne: chi ha quale versione, SHA-256, licenza |
 
 ---
 
