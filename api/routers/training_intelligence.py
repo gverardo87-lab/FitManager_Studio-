@@ -561,8 +561,14 @@ def get_training_intelligence(
         reps = _parse_reps_avg(log.ripetizioni_effettive)
         if reps <= 0:
             continue
-        # Estimate 1RM via Epley then compute %1RM
-        e1rm = log.carico_effettivo_kg * (1 + reps / 30)
+        # Estimate 1RM: Epley per 1-15 reps (validato), Brzycki per 16-36 reps
+        # (migliore per endurance — Brzycki 1993). Skip reps >= 37 (formula diverge).
+        if reps >= 37:
+            continue
+        if reps <= 15:
+            e1rm = log.carico_effettivo_kg * (1 + reps / 30)  # Epley 1985
+        else:
+            e1rm = log.carico_effettivo_kg * 36 / (37 - reps)  # Brzycki 1993
         pct = log.carico_effettivo_kg / e1rm if e1rm > 0 else 0
         zona, _ = classify_intensity_zone(pct)
         serie = log.serie_effettive or 1

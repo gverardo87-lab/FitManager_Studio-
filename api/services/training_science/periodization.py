@@ -102,8 +102,12 @@ DURATA_MESOCICLO: dict[Livello, int] = {
 
 FATTORI_VOLUME: dict[Livello, dict[str, float]] = {
     Livello.PRINCIPIANTE: {
+        # Design choice: base 0.85 intenzionalmente sotto MAV per introduzione
+        # graduale al volume. Il mesociclo progredisce a 1.10 (picco).
         "base": 0.85,      # Settimana 1: partenza bassa (sotto MAV)
         "picco": 1.10,     # Settimana N-1: leggero overreaching
+        # Helms 2019: deload a 40-60% del volume di picco. 0.50 = centro range.
+        # Da discutere: differenziare per livello (principiante 0.60, avanzato 0.40)?
         "deload": 0.50,    # Settimana N: 50% del base (Helms 2019)
     },
     Livello.INTERMEDIO: {

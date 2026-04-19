@@ -152,7 +152,11 @@ _MAX_ISOLATION_SESSIONE: dict[Livello, int] = {
 # Evita sessioni con 8+ serie sullo stesso pattern (NSCA 2016:
 # oltre 5-6 serie per esercizio nella stessa sessione, la qualita'
 # delle ultime serie degrada significativamente).
+# NSCA 2016 cap. 17: oltre 5-6 serie per esercizio nella stessa sessione,
+# la qualita' delle ultime serie degrada significativamente (fatica neuromuscolare).
 _MAX_SERIE_PER_SLOT = 6
+# Design choice: limita l'aggressivita' del boost compound per sessione.
+# Da validare empiricamente con professionista.
 _MAX_COMPOUND_BOOST_PER_SESSION = 2
 
 # Volume ceiling settimanale per livello (serie totali per settimana).
@@ -167,6 +171,9 @@ _MAX_WEEKLY_SERIES: dict[Livello, int] = {
 _BALANCE_RATIO_BY_NAME = {ratio.nome: ratio for ratio in BALANCE_RATIOS}
 _PUSH_PATTERNS = {P.PUSH_H, P.PUSH_V}
 _POSTERIOR_CHAIN_ISOLATION_MUSCLES = {M.FEMORALI, M.GLUTEI}
+# Design choice: soglia minima di serie ipertrofiche per-seduta per considerare
+# un muscolo "stimolato". Sotto questa soglia, il volume non produce adattamento
+# significativo per singola esposizione. Da validare empiricamente.
 _FREQUENCY_STIMULUS_THRESHOLD = 2.0
 _BEGINNER_FULL_BODY_FREQUENCY_MUSCLES = (
     M.DELT_LAT,
@@ -878,6 +885,21 @@ def build_plan(
     note: list[str] = []
     if freq_warning:
         note.append(freq_warning)
+
+    # ── H5 fix: Warning per muscoli ancora sotto MEV dopo feedback loop ──
+    final_volume = _compute_plan_hypertrophy_volume(sessioni)
+    for muscolo in M:
+        target = get_scaled_volume_target(muscolo, livello, obiettivo)
+        if target.mev == 0:
+            continue
+        serie = final_volume.get(muscolo, 0.0)
+        if serie < target.mev:
+            deficit = round(target.mev - serie, 1)
+            note.append(
+                f"Attenzione: {muscolo.value} sotto MEV ({serie:.1f}/{target.mev} serie) "
+                f"— deficit di {deficit} serie. Il volume per questo muscolo potrebbe "
+                f"essere insufficiente per produrre stimolo ipertrofico."
+            )
 
     return TemplatePiano(
         frequenza=frequenza,

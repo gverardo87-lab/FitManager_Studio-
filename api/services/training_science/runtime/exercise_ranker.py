@@ -26,10 +26,16 @@ _SEVERITY_BUCKET = {
     "modify": "allowed",
     "avoid": "discouraged",
 }
+# Design choice: penalita' di sicurezza per severita' condizione medica.
+# "avoid" = -80 (aggressivo intenzionalmente: protezione cliente prioritaria).
+# Da validare empiricamente con professionista.
 _SEVERITY_PENALTY = {None: 0, "caution": 20, "modify": 40, "avoid": 80}
 _BUCKET_ORDER = {"recommended": 0, "allowed": 1, "discouraged": 2}
 _FREQUENCY_BONUS_CAP = 12
 _RECOVERY_PENALTY_CAP = 12
+# Design choice: allineamento livello trainer × difficolta' esercizio.
+# beginner×advanced = -24: fortemente penalizzato per evitare esercizi complessi
+# a principianti (rischio infortunio). Da validare empiricamente.
 _LEVEL_DIFFICULTY_SCORE: dict[str, dict[str, int]] = {
     "beginner": {"beginner": 12, "intermediate": 2, "advanced": -24},
     "intermedio": {"beginner": 6, "intermediate": 12, "advanced": 5},
@@ -93,24 +99,30 @@ def _resolve_target_muscles(slot: TSCanonicalSlot) -> set[str]:
 
 
 def _pattern_score(slot: TSCanonicalSlot, exercise: RankableExercise) -> int:
+    """Design choice: pattern match = peso dominante (50pt) per garantire
+    che il pattern corretto sia il criterio principale di selezione.
+    Pattern compatibile (36pt) per varianti accettabili. Da validare."""
     allowed_patterns = PATTERN_TO_CATALOG_PATTERNS.get(slot.pattern, set())
     if exercise.pattern_movimento == slot.pattern.value:
-        return 50
+        return 50  # Design choice: match esatto = peso dominante
     if exercise.pattern_movimento in allowed_patterns:
-        return 36
+        return 36  # Design choice: pattern compatibile
     return 0
 
 
 def _muscle_score(slot: TSCanonicalSlot, exercise: RankableExercise) -> int:
+    """Design choice: muscle target = secondario (25pt) rispetto a pattern (50pt).
+    Garantisce che il muscolo target sia considerato ma non sovrascriva il pattern.
+    Da validare empiricamente."""
     target_muscles = _resolve_target_muscles(slot)
     if not target_muscles:
         return 0
     primaries = set(exercise.muscoli_primari)
     secondaries = set(exercise.muscoli_secondari)
     if primaries & target_muscles:
-        return 25
+        return 25  # Design choice: primario = pieno punteggio muscolare
     if secondaries & target_muscles:
-        return 12
+        return 12  # Design choice: secondario = punteggio dimezzato
     return 0
 
 

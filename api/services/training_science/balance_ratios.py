@@ -88,8 +88,8 @@ BALANCE_RATIOS: list[RapportoBiomeccanico] = [
     # EMG combinata con il principio di bilanciamento squat/hinge.
     RapportoBiomeccanico(
         nome="Quad : Ham",
-        numeratore=["quadricipiti"],
-        denominatore=["femorali"],
+        numeratore=[M.QUADRICIPITI.value],
+        denominatore=[M.FEMORALI.value],
         target=0.80,
         tolleranza=0.30,
         fonte="NSCA 2016 cap. 21: il lower body richiede pattern squat "
@@ -110,8 +110,8 @@ BALANCE_RATIOS: list[RapportoBiomeccanico] = [
     # Evidenza: FORTE — prescrizione clinica diretta.
     RapportoBiomeccanico(
         nome="Anteriore : Posteriore",
-        numeratore=["petto", "deltoide_anteriore", "quadricipiti"],
-        denominatore=["dorsali", "deltoide_posteriore", "femorali"],
+        numeratore=[M.PETTO.value, M.DELT_ANT.value, M.QUADRICIPITI.value],
+        denominatore=[M.DORSALI.value, M.DELT_POST.value, M.FEMORALI.value],
         target=0.80,
         tolleranza=0.25,
         fonte="Sahrmann 2002: upper crossed syndrome (pettorali + deltoide "
@@ -206,7 +206,11 @@ def analyze_balance(
         elif num_val > 0:
             computed = 99.0  # denominatore zero con numeratore presente = squilibrio totale
         else:
-            computed = ratio.target  # entrambi zero = neutro
+            # H3 fix: entrambi zero = volume assente, segnalare invece di mascherare
+            computed = ratio.target
+            squilibri.append(
+                f"{ratio.nome}: VOLUME ZERO — nessun dato per calcolare il rapporto"
+            )
 
         rapporti[ratio.nome] = computed
         target[ratio.nome] = ratio.target

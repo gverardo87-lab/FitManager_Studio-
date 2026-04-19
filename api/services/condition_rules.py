@@ -69,7 +69,10 @@ ANAMNESI_KEYWORD_RULES: list[tuple[list[str], int]] = [
       "lassita caviglia"], 19),
 
     # ── CARDIOVASCOLARE ──
-    (["ipertensione", "pressione sanguigna", "pressione"], 20),
+    # C4 fix: "pressione" nudo rimosso — troppo generico, matchava anche
+    # "pressione al petto" (angina) e "sensazione di pressione" (ansia).
+    (["ipertensione", "pressione sanguigna", "pressione alta",
+      "ipertensione arteriosa"], 20),
     (["cardiopatia", "cardiaci gravi", "cardiovascol"], 21),
     (["problemi cardiaci"], 20),
     (["insufficienza cardiaca", "scompenso cardiaco", "scompenso"], 22),
@@ -152,6 +155,11 @@ ANAMNESI_KEYWORD_RULES: list[tuple[list[str], int]] = [
     (["frattura gomito", "intervento gomito", "operato gomito"], 37),
     (["gomito"], 37),
 
+    # ── Spondilite Anchilosante (→ condizione 36, colonna generica) ──
+    # H6 fix: condizione comune in maschi 20-40 anni, rilevante per
+    # esercizi di estensione spinale. Assente dalle 47 condizioni originali.
+    (["spondilite", "anchilosante", "morbo di bechterew", "bechterew"], 36),
+
     # ═══════════════════════════════════════════════════════
     # CONDIZIONI GENERICHE SINTOMATOLOGICHE (38-39)
     # Keyword: sintomi generici (cervicalgia, lombalgia)
@@ -162,8 +170,11 @@ ANAMNESI_KEYWORD_RULES: list[tuple[list[str], int]] = [
       "rigidita' cervicale"], 38),
 
     # ── Lombalgia (39) ──
+    # H4 fix: "schiena" nudo rimosso — troppo generico.
+    # Sostituito con compound keywords specifici per lombalgia.
     (["lombalgia", "mal di schiena", "dolore lombare",
-      "rigidita' lombare", "schiena"], 39),
+      "rigidita' lombare", "dolore alla schiena", "problemi di schiena",
+      "schiena bloccata"], 39),
 ]
 
 # ═══════════════════════════════════════════════════════════════

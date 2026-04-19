@@ -801,6 +801,11 @@ def _compute_score(
     #   "mev_mav"   = 0.5 — sopra MEV, stimolo presente ma sub-ottimale
     #   "sotto_mev" = 0.0 — nessuno stimolo
     #   "sopra_mrv" = 0.0 — overtraining, penalizzato (non e' copertura utile)
+    # Design choice: pesi differenziati per qualita' della copertura.
+    # sopra_mav (0.8): volume alto ma recuperabile — meno di ottimale perche'
+    # avvicinarsi a MRV aumenta il rischio di overtraining.
+    # mev_mav (0.5): stimolo presente ma sub-ottimale — mezzo credito.
+    # Da validare empiricamente con professionista.
     _COVERAGE_WEIGHT = {
         "ottimale": 1.0,
         "sopra_mav": 0.8,
@@ -820,10 +825,12 @@ def _compute_score(
     balance_score = (balanced / total_ratios) * 25 if total_ratios > 0 else 0
 
     # Frequency (20 punti)
+    # Design choice: -4pt per warning frequenza. Arbitrario, da validare.
     freq_warnings = sum(1 for w in warnings if "Frequenza bassa" in w)
     freq_score = max(0, 20 - freq_warnings * 4)
 
     # Recovery (15 punti)
+    # Design choice: -5pt per warning recupero. Arbitrario, da validare.
     recovery_warnings = sum(1 for w in warnings if "Recupero:" in w)
     recovery_score = max(0, 15 - recovery_warnings * 5)
 

@@ -147,7 +147,12 @@ def _compute_compliance(
         return 0
 
     serie_ratio = min((serie_fatto / serie_piano), 1.2) if serie_piano > 0 else 1.0
-    reps_ratio = min((reps_fatto_avg / reps_piano_avg), 1.2) if reps_piano_avg > 0 and reps_fatto_avg else 1.0
+    # C3 fix: 0.0 e' falsy in Python — check esplicito per evitare 0 reps = 100%
+    reps_ratio = (
+        min((reps_fatto_avg / reps_piano_avg), 1.2)
+        if reps_piano_avg > 0 and reps_fatto_avg is not None and reps_fatto_avg > 0
+        else (0.0 if reps_fatto_avg is not None and reps_fatto_avg == 0 else 1.0)
+    )
 
     if kg_piano and kg_piano > 0 and kg_fatto is not None and kg_fatto > 0:
         kg_ratio = min((kg_fatto / kg_piano), 1.2)

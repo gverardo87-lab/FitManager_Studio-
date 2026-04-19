@@ -181,8 +181,11 @@ _VOLUME_TABLE: dict[M, dict[Livello, tuple[float, float, float, float, str]]] = 
     },
     M.GLUTEI: {
         # hinge(1.0) + squat(0.5) + hip_thrust(1.0). Volume indiretto forte.
-        Livello.PRINCIPIANTE: (0, 4, 6, 10, "Volume indiretto da squat/hinge"),
-        Livello.INTERMEDIO: (0, 6, 10, 14, ""),
+        # H2 fix: MEV 0→2 per principiante/intermedio — hinge e hip_thrust sono
+        # pattern primari (1.0), la regola interna richiede MEV > 0.
+        # Conservativo dato il forte volume indiretto da squat e hinge.
+        Livello.PRINCIPIANTE: (2, 4, 6, 10, "Volume indiretto da squat/hinge"),
+        Livello.INTERMEDIO: (2, 6, 10, 14, ""),
         Livello.AVANZATO: (0, 8, 14, 18, ""),
     },
     M.POLPACCI: {
@@ -207,9 +210,11 @@ _VOLUME_TABLE: dict[M, dict[Livello, tuple[float, float, float, float, str]]] = 
         # carry(1.0) + pull_h/pull_v/curl(0.25). Carry = primario.
         # MRV piu' alto: avambracci hanno alta densita' fibre lente,
         # recuperano piu' velocemente (Israetel RP 2020).
-        Livello.PRINCIPIANTE: (0, 2, 4, 10, "Volume indiretto da pull/carry"),
-        Livello.INTERMEDIO: (0, 4, 8, 12, "Carry conta come volume primario (Israetel RP 2020)"),
-        Livello.AVANZATO: (0, 6, 10, 14, "Carry conta come volume primario (Israetel RP 2020)"),
+        # H1 fix: MEV 0→2 — carry e' pattern primario (1.0), la regola interna
+        # richiede MEV > 0 per muscoli con contribuzione primaria.
+        Livello.PRINCIPIANTE: (2, 2, 4, 10, "Volume indiretto da pull/carry"),
+        Livello.INTERMEDIO: (2, 4, 8, 12, "Carry conta come volume primario (Israetel RP 2020)"),
+        Livello.AVANZATO: (2, 6, 10, 14, "Carry conta come volume primario (Israetel RP 2020)"),
     },
     M.ADDUTTORI: {
         # adductor(1.0) + squat(0.25). Volume indiretto minimo.
