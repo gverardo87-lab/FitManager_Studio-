@@ -47,6 +47,7 @@ CONTRIBUTION_MATRIX: dict[P, ContributionMap] = {
         M.DELT_LAT: 0.7,
         M.TRICIPITI: 0.7,
         M.TRAPEZIO: 0.4,
+        M.PETTO: 0.2,     # Clavicular head ~30% MVC (Trebs 2010)
         M.CORE: 0.2,
     },
     # ── Compound Pull ──
@@ -55,7 +56,7 @@ CONTRIBUTION_MATRIX: dict[P, ContributionMap] = {
         M.TRAPEZIO: 0.7,
         M.DELT_POST: 0.7,
         M.BICIPITI: 0.7,
-        M.AVAMBRACCI: 0.4,
+        M.AVAMBRACCI: 0.7,  # Grip essenziale 50-70% MVC (Contreras 2010)
     },
     P.PULL_V: {
         M.DORSALI: 1.0,
@@ -71,15 +72,15 @@ CONTRIBUTION_MATRIX: dict[P, ContributionMap] = {
         M.FEMORALI: 0.4,
         M.ADDUTTORI: 0.4,
         M.CORE: 0.4,
-        M.POLPACCI: 0.2,
+        M.POLPACCI: 0.4,   # Soleus attivo nella stabilizzazione caviglia (Ebben 2009)
     },
     P.HINGE: {
         M.FEMORALI: 1.0,
         M.GLUTEI: 1.0,
-        M.DORSALI: 0.4,
+        M.DORSALI: 0.7,     # Erector spinae 70-80% MVC nel deadlift (NSCA 2016)
         M.TRAPEZIO: 0.4,
         M.CORE: 0.4,
-        M.AVAMBRACCI: 0.2,
+        M.AVAMBRACCI: 0.4,  # Grip necessario nel deadlift (Contreras 2010)
     },
     # ── Compound Functional ──
     P.CORE: {

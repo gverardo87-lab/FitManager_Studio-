@@ -125,10 +125,10 @@ _VOLUME_TABLE: dict[M, dict[Livello, tuple[float, float, float, float, str]]] = 
         Livello.AVANZATO: (6, 12, 16, 20, ""),
     },
     M.DORSALI: {
-        # pull_h(1.0) + pull_v(1.0) + hinge(0.25). Hub muscle: 2 pattern primari.
-        # Piano 4x: 2×(4+3) + 2×3×0.25 = 15.5.
+        # pull_h(1.0) + pull_v(1.0) + hinge(0.5). Hub muscle: 3 pattern con contributo.
+        # Piano 4x: 2×(4+3) + 2×3×0.5 = 17.0.
         # MRV alto: dorsali tollerano volume elevato (Israetel RP 2020).
-        # MAV rialzato +2 per riflettere il doppio pattern primario.
+        # MAV rialzato +2 per riflettere il triplo contributo pattern.
         Livello.PRINCIPIANTE: (4, 8, 12, 18, "Include lat + romboidi"),
         Livello.INTERMEDIO: (4, 12, 18, 25, ""),
         Livello.AVANZATO: (6, 16, 22, 28, ""),
@@ -189,7 +189,7 @@ _VOLUME_TABLE: dict[M, dict[Livello, tuple[float, float, float, float, str]]] = 
         Livello.AVANZATO: (0, 8, 14, 18, ""),
     },
     M.POLPACCI: {
-        # calf_raise(1.0) solo. Piano 4x: 2×(3-6) = 6-12.
+        # calf_raise(1.0) + squat(0.25). Piano 4x: 2×(3-6) + 2×(3-4)×0.25 = 7.5-14.
         Livello.PRINCIPIANTE: (4, 6, 8, 12, "Richiedono alta frequenza e rep"),
         Livello.INTERMEDIO: (4, 8, 12, 16, ""),
         Livello.AVANZATO: (6, 10, 14, 18, ""),
@@ -207,7 +207,8 @@ _VOLUME_TABLE: dict[M, dict[Livello, tuple[float, float, float, float, str]]] = 
         Livello.AVANZATO: (0, 8, 14, 18, ""),
     },
     M.AVAMBRACCI: {
-        # carry(1.0) + pull_h/pull_v/curl(0.25). Carry = primario.
+        # carry(1.0) + pull_h(0.5) + pull_v/curl/hinge(0.25). Carry = primario.
+        # Pull_h grip essenziale 50-70% MVC → 0.7 EMG → 0.5 hyp weight.
         # MRV piu' alto: avambracci hanno alta densita' fibre lente,
         # recuperano piu' velocemente (Israetel RP 2020).
         # H1 fix: MEV 0→2 — carry e' pattern primario (1.0), la regola interna

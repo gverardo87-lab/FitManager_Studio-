@@ -352,10 +352,11 @@ ALL_PLANS = _build_all_plans()
 # Dettaglio calcolo per muscolo (ogni riga: slot × hyp_weight = contributo):
 
 EXPECTED_HYPERTROPHY_M25_UL4X: dict[str, float] = {
-    # PETTO: PUSH_H(4×1.0) + PUSH_H(3×1.0) = 7.0
+    # PETTO: PUSH_H(4×1.0) + PUSH_H(3×1.0) = 7.0  (PUSH_V 0.2 → hyp 0.0)
     "petto": 7.0,
-    # DORSALI: PULL_H(4×1.0) + PULL_V(4×1.0) + PULL_H(3×1.0) + HINGE(4×0.25) = 12.0
-    "dorsali": 12.0,
+    # DORSALI: PULL_H(4×1.0) + PULL_V(4×1.0) + PULL_H(3×1.0) + HINGE(4×0.5) = 13.0
+    # (hinge→dorsali 0.7 EMG → 0.5 hyp, erector spinae NSCA 2016)
+    "dorsali": 13.0,
     # DELT_ANT: PUSH_H(4×0.5) + PUSH_V(3×1.0) + PUSH_H(3×0.5) = 6.5
     "deltoide_anteriore": 6.5,
     # DELT_LAT: PUSH_V(3×0.5) + LAT_RAISE(3×1.0) = 4.5
@@ -373,8 +374,9 @@ EXPECTED_HYPERTROPHY_M25_UL4X: dict[str, float] = {
     "femorali": 12.5,
     # GLUTEI: SQUAT(4×0.5) + HIP_THRUST(3×1.0) + HINGE(4×1.0) + SQUAT(3×0.5) = 10.5
     "glutei": 10.5,
-    # POLPACCI: CALF(3×1.0) + CALF(3×1.0) = 6.0  (SQUAT 0.2 → hyp 0.0)
-    "polpacci": 6.0,
+    # POLPACCI: SQUAT(4×0.25) + CALF(3×1.0) + SQUAT(3×0.25) + CALF(3×1.0) = 7.75
+    # (squat→polpacci 0.4 EMG → 0.25 hyp, soleus Ebben 2009)
+    "polpacci": 7.75,
     # TRAPEZIO: PULL_H(4×0.5) + PUSH_V(3×0.25) + FACE_PULL(3×0.25)
     #           + PULL_V(4×0.25) + PULL_H(3×0.5) + HINGE(4×0.25) + CARRY(2×0.5) = 8.0
     #           (LAT_RAISE 0.2 → hyp 0.0)
@@ -382,10 +384,10 @@ EXPECTED_HYPERTROPHY_M25_UL4X: dict[str, float] = {
     # CORE: SQUAT(4×0.25) + HINGE(4×0.25) + SQUAT(3×0.25) + CARRY(2×0.5) + CORE(3×1.0) = 6.75
     #       (PUSH_H 0.2 → 0, PUSH_V 0.2 → 0, HIP_THRUST 0.2 → 0)
     "core": 6.75,
-    # AVAMBRACCI: PULL_H(4×0.25) + CURL(3×0.25) + PULL_V(4×0.25)
-    #             + PULL_H(3×0.25) + CURL(2×0.25) + CARRY(2×1.0) = 6.0
-    #             (HINGE 0.2 → 0)
-    "avambracci": 6.0,
+    # AVAMBRACCI: PULL_H(4×0.5) + CURL(3×0.25) + PULL_V(4×0.25) + HINGE(4×0.25)
+    #             + PULL_H(3×0.5) + CURL(2×0.25) + CARRY(2×1.0) = 8.75
+    # (pull_h→avambracci 0.7 EMG → 0.5 hyp grip, hinge→avambracci 0.4 → 0.25)
+    "avambracci": 8.75,
     # ADDUTTORI: SQUAT(4×0.25) + ADDUCTOR(2×1.0) + SQUAT(3×0.25) = 3.75
     "adduttori": 3.75,
 }
@@ -394,7 +396,7 @@ EXPECTED_HYPERTROPHY_M25_UL4X: dict[str, float] = {
 # Target letti da _VOLUME_TABLE[M][INTERMEDIO] senza scaling
 EXPECTED_STATES_M25_UL4X: dict[str, str] = {
     "petto": "mev_mav",          # 7.0: MEV=4, MAV_min=8 → 4 ≤ 7.0 < 8
-    "dorsali": "ottimale",       # 12.0: MAV_min=12, MAV_max=18 → 12 ≤ 12 ≤ 18
+    "dorsali": "ottimale",       # 13.0: MAV_min=12, MAV_max=18 → 12 ≤ 13 ≤ 18
     "deltoide_anteriore": "ottimale",  # 6.5: MEV=0, MAV_min=0, MAV_max=8 → 0 ≤ 6.5 ≤ 8
     "deltoide_laterale": "mev_mav",    # 4.5: MEV=4, MAV_min=8 → 4 ≤ 4.5 < 8
     "deltoide_posteriore": "ottimale", # 7.5: MAV_min=6, MAV_max=10 → 6 ≤ 7.5 ≤ 10
@@ -403,10 +405,10 @@ EXPECTED_STATES_M25_UL4X: dict[str, str] = {
     "quadricipiti": "ottimale",  # 10.0: MAV_min=10, MAV_max=16 → 10 ≤ 10 ≤ 16
     "femorali": "sopra_mav",     # 12.5: MAV_max=12, MRV=16 → 12 < 12.5 ≤ 16
     "glutei": "sopra_mav",       # 10.5: MAV_max=10, MRV=14 → 10 < 10.5 ≤ 14
-    "polpacci": "mev_mav",      # 6.0: MEV=4, MAV_min=8 → 4 ≤ 6 < 8
+    "polpacci": "mev_mav",      # 7.8: MEV=4, MAV_min=8 → 4 ≤ 7.8 < 8
     "trapezio": "ottimale",      # 8.0: MAV_min=6, MAV_max=10 → 6 ≤ 8 ≤ 10
     "core": "ottimale",          # 6.8: MAV_min=6, MAV_max=10 → 6 ≤ 6.8 ≤ 10
-    "avambracci": "ottimale",    # 6.0: MAV_min=4, MAV_max=8 → 4 ≤ 6 ≤ 8
+    "avambracci": "sopra_mav",   # 8.8: MAV_max=8, MRV=12 → 8 < 8.8 ≤ 12
     "adduttori": "mev_mav",     # 3.8: MEV=0, MAV_min=4 → 0 ≤ 3.8 < 4
 }
 
@@ -414,7 +416,7 @@ EXPECTED_STATES_M25_UL4X: dict[str, str] = {
 # MAV_min/MAV_max/MRV scalati × 0.722, MEV × obj solo
 EXPECTED_STATES_F55_UL4X: dict[str, str] = {
     "petto": "ottimale",              # 7.0: MAV_min=5.8, MAV_max=8.7 → ottimale
-    "dorsali": "ottimale",            # 12.0: MAV_min=8.7, MAV_max=13.0
+    "dorsali": "ottimale",            # 13.0: MAV_min=8.7, MAV_max=13.0 → 8.7 ≤ 13.0 ≤ 13.0
     "deltoide_anteriore": "sopra_mav",  # 6.5: MAV_max=5.8, MRV=10.1 → 5.8 < 6.5 ≤ 10.1
     "deltoide_laterale": "mev_mav",   # 4.5: MEV=4, MAV_min=5.8 → 4 ≤ 4.5 < 5.8
     "deltoide_posteriore": "sopra_mav",  # 7.5: MAV_max=7.2, MRV=10.1 → 7.2 < 7.5
@@ -423,10 +425,10 @@ EXPECTED_STATES_F55_UL4X: dict[str, str] = {
     "quadricipiti": "ottimale",       # 10.0: MAV_min=7.2, MAV_max=11.6
     "femorali": "sopra_mrv",          # 12.5: MRV=11.6 → sopra_mrv
     "glutei": "sopra_mrv",            # 10.5: MRV=10.1 → sopra_mrv
-    "polpacci": "ottimale",           # 6.0: MAV_min=5.8, MAV_max=8.7
+    "polpacci": "ottimale",           # 7.8: MAV_min=5.8, MAV_max=8.7 → 5.8 ≤ 7.8 ≤ 8.7
     "trapezio": "sopra_mav",          # 8.0: MAV_max=7.2, MRV=11.6
     "core": "ottimale",               # 6.8: MAV_min=4.3, MAV_max=7.2
-    "avambracci": "sopra_mav",        # 6.0: MAV_max=5.8, MRV=8.7
+    "avambracci": "sopra_mrv",        # 8.8: MRV=8.7 → sopra_mrv
     "adduttori": "ottimale",          # 3.8: MAV_min=2.9, MAV_max=5.8
 }
 
@@ -653,13 +655,14 @@ class TestBalanceRatiosCalibrated:
         )
 
     def test_ant_post_uses_hypertrophy_volume(self):
-        """Ant:Post = 0.73 con volume ipertrofico — in range."""
+        """Ant:Post = ~0.54 con volume ipertrofico + glutei nel posteriore — in range."""
         piano = _build_upper_lower_4x("M", 25)
         result = analyze_plan(piano)
         ratio = result.balance.rapporti.get("Anteriore : Posteriore")
         assert ratio is not None
-        assert abs(ratio - 0.73) < 0.05, (
-            f"Ant:Post = {ratio}, atteso ~0.73 da calcolo ipertrofico"
+        # Con glutei nel denominatore (Janda 1983), il ratio scende
+        assert abs(ratio - 0.54) < 0.05, (
+            f"Ant:Post = {ratio}, atteso ~0.54 da calcolo ipertrofico con glutei"
         )
 
     def test_well_designed_plan_few_squilibri(self):
@@ -1043,16 +1046,17 @@ class TestBugFixTargets:
         )
 
     def test_ant_post_balanced_plan_not_flagged(self):
-        """Ant:Post = 0.73 per piano bilanciato — in range [0.55, 1.05].
+        """Ant:Post = ~0.54 per piano bilanciato — in range [0.40, 0.90].
 
         Sahrmann 2002 + Janda 1983: posteriore >= anteriore.
+        Con glutei nel denominatore (catena posteriore), target = 0.65.
         """
         piano = _build_upper_lower_4x("M", 25)
         result = analyze_plan(piano)
         ratio = result.balance.rapporti.get("Anteriore : Posteriore", 0)
-        is_balanced = abs(ratio - 0.80) <= 0.25
+        is_balanced = abs(ratio - 0.65) <= 0.25
         assert is_balanced, (
-            f"Ant:Post = {ratio:.2f}, fuori dal range [0.55, 1.05]."
+            f"Ant:Post = {ratio:.2f}, fuori dal range [0.40, 0.90]."
         )
 
     def test_push_h_v_not_flagged(self):

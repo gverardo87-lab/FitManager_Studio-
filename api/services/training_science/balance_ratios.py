@@ -111,8 +111,8 @@ BALANCE_RATIOS: list[RapportoBiomeccanico] = [
     RapportoBiomeccanico(
         nome="Anteriore : Posteriore",
         numeratore=[M.PETTO.value, M.DELT_ANT.value, M.QUADRICIPITI.value],
-        denominatore=[M.DORSALI.value, M.DELT_POST.value, M.FEMORALI.value],
-        target=0.80,
+        denominatore=[M.DORSALI.value, M.DELT_POST.value, M.FEMORALI.value, M.GLUTEI.value],
+        target=0.65,
         tolleranza=0.25,
         fonte="Sahrmann 2002: upper crossed syndrome (pettorali + deltoide "
         "anteriore iperattivi) e lower crossed syndrome (flessori anca + "
@@ -121,11 +121,12 @@ BALANCE_RATIOS: list[RapportoBiomeccanico] = [
         "Janda 1983: i muscoli 'tonici' (catena anteriore) tendono ad "
         "accorciarsi e ipertivarsi, i muscoli 'fasici' (catena posteriore) "
         "tendono a indebolirsi — il volume deve favorire la catena posteriore. "
+        "I glutei sono motore primario della catena posteriore (Janda 1983). "
         "NSCA 2016: i compound posteriori (hinge, pull) accumulano "
         "naturalmente piu' volume muscolo-specifico per sinergie "
-        "multi-articolari. Target 0.80: la catena anteriore e' ~80%% della "
-        "posteriore (Sahrmann/Janda: posteriore >= anteriore). "
-        "Range [0.55, 1.05].",
+        "multi-articolari. Target 0.65: la catena anteriore e' ~65%% della "
+        "posteriore includendo glutei (Sahrmann/Janda: posteriore >= anteriore). "
+        "Range [0.40, 0.90].",
     ),
 ]
 
