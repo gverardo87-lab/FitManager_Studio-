@@ -268,6 +268,11 @@ async def lifespan(app: FastAPI):
         seed_exercise_relations(catalog_seed_session)
         seed_exercise_media(catalog_seed_session)
 
+    # ── 4c. Seed metriche corporee in CATALOG DB (idempotente) ──
+    from api.seed_metrics import seed_metrics
+    with SyncSession(catalog_engine) as catalog_seed_session:
+        seed_metrics(catalog_seed_session)
+
     # ── 4b. Nutrition template check (warning, non bloccante) ──
     if not is_nutrition_encrypted() and Path(nutrition_path).exists():
         try:
