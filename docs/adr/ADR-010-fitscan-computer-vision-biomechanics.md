@@ -1,4 +1,4 @@
-# ADR-007 — FitScan: Computer Vision per Analisi Corporea e Biomeccanica
+# ADR-010 — FitScan: Computer Vision per Analisi Corporea e Biomeccanica
 
 - Date: 2026-03-25
 - Status: accepted

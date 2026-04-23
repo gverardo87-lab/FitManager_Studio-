@@ -66,7 +66,6 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 | `DEPLOYMENT_PLAN.md` | Piano deploy: PyInstaller/Nuitka, standalone, Inno Setup |
 | `NUTRITION_ENGINE_V3.md` | Architettura Nutrition Engine v3 |
 | `PRE_DELIVERY_AUDIT_2026_04_17.md` | Audit tecnico 360° pre-consegna ad Alessio (2026-04-17) |
-| `nutrition-v2-strategy.md` | Strategia migrazione nutrition v2 (storico) |
 
 ---
 
@@ -84,7 +83,7 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 
 ## adr/ — Architecture Decision Records
 
-9 ADR attivi. Indice in `adr/README.md`.
+10 ADR attivi (ADR-001 → ADR-010, senza ADR-002). Indice in `adr/README.md`.
 
 ## incidents/ — Post-mortem
 
@@ -100,5 +99,6 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 | Directory | Contenuto |
 |-----------|-----------|
 | `archive/specs/` | 100+ spec storiche (frozen, non modificare) |
+| `archive/nutrition-v2-strategy.md` | Strategia nutrition v2 (obsoleta, 226 alimenti → ora 880) |
 | `upgrades/` | Spec upgrade attive |
 | `videos/` | Script video-pillole |

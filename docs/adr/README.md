@@ -32,6 +32,9 @@ Esempio:
 | [ADR-005](ADR-005-license-hardening-anti-tampering.md) | 2026-03-24 | Accettata | License hardening: embedded key, env bypass block, fingerprint fail-closed |
 | [ADR-006](ADR-006-fitmanager-box-multi-platform.md) | 2026-03-27 | Accettata | FitManager Box multi-platform (Raspberry Pi 5 always-on) |
 | [ADR-007](ADR-007-anti-reverse-engineering.md) | 2026-04-09 | Accettata | Anti-reverse engineering: 4-step layered hardening (bundle sanitization, DB encryption, Nuitka) |
+| [ADR-008](ADR-008-builder-fullscreen-science-panel.md) | 2026-03-26 | Accettata | Builder fullscreen con Science Panel live |
+| [ADR-009](ADR-009-client-workout-portal.md) | 2026-03-29 | Accettata | Client Workout Portal: token multi-uso, ExerciseLog, 5 endpoint pubblici |
+| [ADR-010](ADR-010-fitscan-computer-vision-biomechanics.md) | 2026-03-25 | Accettata | FitScan: Computer Vision per analisi corporea e biomeccanica |
 
 ## Flusso
 
