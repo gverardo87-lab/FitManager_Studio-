@@ -73,36 +73,113 @@ Non nascondere i rischi. Se emergono, esplicitarli presto.
 - Preferire la soluzione piu' semplice e robusta compatibile con il launch scope.
 - Evitare refactor larghi, nuove astrazioni o nuova documentazione se non richiesti dal task.
 
-## 5) Collaborazione e documentazione
+## 5) Branching Strategy
+
+| Branch | Scopo | Regole |
+|--------|-------|--------|
+| `FitManager_Studio` | Sviluppo attivo | Tutti i commit vanno qui |
+| `main` | Backup stabile | Allineato a FitManager_Studio dopo ogni milestone |
+
+**Workflow**:
+1. Lavorare sempre su `FitManager_Studio`.
+2. Push dopo ogni step completato (commit intermedi frequenti).
+3. Allineare `main` dopo ogni release o milestone significativa.
+4. Non creare feature branch senza coordinamento esplicito.
+
+## 6) Collaborazione e documentazione
 
 Quando la task tocca codice condiviso o piu' layer, coordinare esplicitamente per evitare conflitti.
 A fine task: verifiche reali e note sui rischi residui.
 
-## 6) Quality Gates
+Per nuovi collaboratori: leggere `CONTRIBUTING.md` come entry point.
 
-Baseline:
+## 7) Quality Gates
 
-- eseguire lint/test rilevanti per lo scope toccato
+### Automatici (pre-commit hook)
 
-Quando rilevante:
+Il pre-commit hook blocca il commit se:
+- `ruff check api/` fallisce (sempre eseguito)
+- `next build` fallisce (eseguito solo se file in `frontend/` sono staged)
 
-- DB/schema -> migrazione + test backend pertinenti
-- cash/ledger -> controlli mirati di integrita' contabile
-- safety engine -> QA clinica dedicata
-- backup/installer -> backup -> mutate -> restore
-- guide/help -> audit copertura + link integrity + responsive pass
-- docs/process -> review manuale di coerenza cross-doc
+### Manuali (per scope specifico)
+
+| Scope toccato | Verifica richiesta |
+|---------------|-------------------|
+| DB/schema | Migrazione + test backend pertinenti |
+| Cash/ledger | Controlli integrita' contabile |
+| Safety engine | QA clinica dedicata |
+| Backup/installer | Backup → mutate → restore |
+| Guide/help | Audit copertura + link integrity + responsive |
+| Docs/process | Review coerenza cross-doc |
 
 Mai dichiarare "done" senza evidenza di verifica.
 
-## 7) Commit Standard
+### Pre-release (build-release.sh PREFLIGHT)
+
+1. `pytest tests/ -v` — tutti i 361+ test devono passare
+2. `ruff check api/` — zero warning
+3. `next build` — zero errori TypeScript
+4. Version sync — `api/__init__.py` == `frontend/package.json`
+
+## 8) Commit Standard
 
 Commit solo di unita' coese e verificabili.
-Formato messaggio:
 
-- `dashboard: ...`
-- `api: ...`
-- `docs: ...`
-- `installer: ...`
+### Formato
 
-Ogni commit deve lasciare il branch rilasciabile per il proprio scope.
+```
+area: descrizione concisa
+```
+
+### Aree
+
+| Prefisso | Quando |
+|----------|--------|
+| `api:` | Backend (endpoint, modelli, servizi) |
+| `frontend:` | Frontend (componenti, hook, pagine) |
+| `dashboard:` | Dashboard e workspace |
+| `fix:` | Bug fix cross-layer |
+| `docs:` | Documentazione |
+| `security:` | Sicurezza, hardening |
+| `build:` | Pipeline build, installer |
+| `ux:` | Miglioramenti UX |
+| `chore:` | Manutenzione, cleanup |
+| `release:` | Release (solo per tag version) |
+
+### Regole
+
+- Ogni commit deve lasciare il branch rilasciabile per il proprio scope.
+- Commit atomici: una unita' coesa per commit, non accumulare.
+- Formato release: `release: vX.Y.Z — descrizione breve`.
+
+## 9) Release Workflow
+
+Pipeline 5 fasi (ADR-004):
+
+```
+1. PREFLIGHT  — git clean, version sync, pytest, ruff, next build
+2. BUILD      — frontend standalone + backend exe + media staging + encryption
+3. VERIFY     — smoke test su porta 9999, 5 health invariants
+4. SEAL       — manifest.json con SHA-256, git info, safety gates
+5. TAG        — git tag vX.Y.Z
+```
+
+**Procedura**:
+1. Aggiornare `__version__` in `api/__init__.py`
+2. Sync: `cd frontend && npm version X.Y.Z --no-git-tag-version`
+3. Commit: `release: vX.Y.Z — descrizione`
+4. Build: `bash tools/build/build-release.sh`
+5. Aggiornare `CHANGELOG.md` con la nuova sezione
+
+Dettagli: `docs/operations/RELEASE_CHECKLIST.md`.
+
+## 10) Incident Response
+
+Quando si scopre un bug in produzione o un problema critico:
+
+1. **Documentare** in `docs/incidents/INC-YYYY-MM-DD-titolo.md` (severita', root cause, fix)
+2. **Aggiornare** `POSTMORTEMS.md` con la lezione appresa
+3. **Aggiornare** checklist/guardrail se il bug era prevenibile
+4. **Hotfix**: commit diretto su `FitManager_Studio`, release patch (bump Z)
+
+Severita': P0 (sistema inutilizzabile) → P3 (cosmetico).
