@@ -7,25 +7,101 @@ ed esegue ALTER TABLE ADD COLUMN per le colonne mancanti.
 Garanzie:
 - Solo ADD, mai DROP/MODIFY
 - Idempotente (safe da chiamare a ogni startup)
-- Funziona in PyInstaller (zero dipendenze Alembic)
+- Funziona in PyInstaller/Nuitka (zero dipendenze Alembic)
 - Solo crm.db (business), mai catalog.db o nutrition.db
+- Versione DB tracciata in tabella _schema_version
+- Data migration eseguibili una sola volta per versione
 """
 
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, Callable
 
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 from sqlmodel import SQLModel
 
+from api import __version__  # noqa: F811
 from api.database import CATALOG_TABLE_NAMES, NUTRITION_TABLE_NAMES
 
 logger = logging.getLogger("fitmanager.schema_sync")
 
 # Tabelle gestite da altri DB — non toccare
 _EXCLUDED_TABLE_NAMES = CATALOG_TABLE_NAMES | NUTRITION_TABLE_NAMES
+
+
+# ── Schema Version Tracking ──────────────────────────────────────────
+
+
+def _ensure_version_table(connection: Any) -> None:
+    """Crea la tabella _schema_version se non esiste."""
+    connection.execute(text("""
+        CREATE TABLE IF NOT EXISTS _schema_version (
+            id INTEGER PRIMARY KEY CHECK (id = 1),
+            version TEXT NOT NULL,
+            updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+    """))
+
+
+def _get_db_version(connection: Any) -> str | None:
+    """Legge la versione corrente del DB. None = mai registrata."""
+    _ensure_version_table(connection)
+    row = connection.execute(text(
+        "SELECT version FROM _schema_version WHERE id = 1"
+    )).fetchone()
+    return row[0] if row else None
+
+
+def _set_db_version(connection: Any, version: str) -> None:
+    """Registra la versione corrente nel DB."""
+    connection.execute(text(
+        "INSERT INTO _schema_version (id, version, updated_at) VALUES (1, :v, datetime('now')) "
+        "ON CONFLICT(id) DO UPDATE SET version = :v, updated_at = datetime('now')"
+    ), {"v": version})
+
+
+# ── Data Migrations ──────────────────────────────────────────────────
+
+# Registro migrazioni dati: (from_version, to_version, funzione).
+# Ogni funzione riceve connection (gia' in transazione) e ritorna messaggio.
+# Eseguita UNA SOLA VOLTA: quando db_version < to_version.
+#
+# Esempio:
+#   def _migrate_1_0_8_to_1_1_0(connection: Any) -> str:
+#       connection.execute(text("UPDATE clienti SET nuovo_campo = 'default' WHERE nuovo_campo IS NULL"))
+#       return "clienti.nuovo_campo populated with defaults"
+#
+#   DATA_MIGRATIONS = [
+#       ("1.0.8", "1.1.0", _migrate_1_0_8_to_1_1_0),
+#   ]
+
+DATA_MIGRATIONS: list[tuple[str, str, Callable]] = []
+
+
+def _version_tuple(v: str) -> tuple[int, ...]:
+    """Converte '1.0.8' in (1, 0, 8) per confronto."""
+    return tuple(int(x) for x in v.split("."))
+
+
+def _run_data_migrations(connection: Any, from_version: str | None) -> list[str]:
+    """Esegue le data migration pendenti in ordine."""
+    if not DATA_MIGRATIONS:
+        return []
+
+    messages: list[str] = []
+    from_tuple = _version_tuple(from_version) if from_version else (0, 0, 0)
+
+    for mig_from, mig_to, fn in DATA_MIGRATIONS:
+        mig_to_tuple = _version_tuple(mig_to)
+        if from_tuple < mig_to_tuple:
+            logger.info("  schema_sync: running data migration %s → %s", mig_from, mig_to)
+            msg = fn(connection)
+            messages.append(f"migration {mig_from}→{mig_to}: {msg}")
+            logger.info("  schema_sync: %s", messages[-1])
+
+    return messages
 
 
 def _get_db_columns(connection: Any, table_name: str) -> set[str]:
@@ -185,6 +261,7 @@ def _fix_cross_db_fk(db_engine: Engine) -> list[str]:
 def sync_schema(db_engine: Engine) -> list[str]:
     """
     Confronta modelli ORM vs DB reale e aggiunge colonne mancanti.
+    Traccia la versione del DB ed esegue data migration pendenti.
 
     Ritorna lista di messaggi con le modifiche effettuate.
     Solo crm.db (business tables), mai catalog/nutrition.
@@ -201,6 +278,16 @@ def sync_schema(db_engine: Engine) -> list[str]:
     columns_added = 0
 
     with db_engine.connect() as connection:
+        # ── Version tracking ──
+        prev_version = _get_db_version(connection)
+        app_version = __version__
+
+        if prev_version and prev_version != app_version:
+            logger.info("  schema_sync: upgrade %s → %s", prev_version, app_version)
+        elif not prev_version:
+            logger.info("  schema_sync: first version tracking — registering %s", app_version)
+
+        # ── Column sync ──
         for table in SQLModel.metadata.sorted_tables:
             if table.name in _EXCLUDED_TABLE_NAMES:
                 continue
@@ -240,6 +327,13 @@ def sync_schema(db_engine: Engine) -> list[str]:
                     idx_msg = f"{table.name} — created index '{idx_name}'"
                     messages.append(idx_msg)
                     logger.info("  schema_sync: %s", idx_msg)
+
+        # ── Data migrations ──
+        mig_messages = _run_data_migrations(connection, prev_version)
+        messages.extend(mig_messages)
+
+        # ── Stamp version ──
+        _set_db_version(connection, app_version)
 
         connection.commit()
 
