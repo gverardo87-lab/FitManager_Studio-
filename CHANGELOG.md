@@ -5,6 +5,23 @@ Tutte le modifiche rilevanti al progetto FitManager AI Studio sono documentate i
 Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/)
 e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
+<!-- TEMPLATE per nuove release (copiare e compilare):
+
+## [X.Y.Z] — YYYY-MM-DD
+
+### Aggiunto
+### Modificato
+### Corretto
+### Sicurezza
+
+### Upgrade (da vA.B.C)
+- **DB**: schema_sync aggiunge automaticamente N colonne / nessuna migrazione
+- **Backup**: automatico al primo avvio
+- **Azioni manuali**: nessuna / descrivere
+- **Breaking**: nessuno / descrivere
+- **Licenza**: compatibile / richiede rinnovo
+-->
+
 ## [1.0.8] — 2026-04-19
 
 ### Aggiunto
@@ -26,6 +43,13 @@ e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 ### Sicurezza
 - Swagger/Redoc/OpenAPI disabilitati in compiled mode
 - 9 interventi pre-Funnel network hardening (P0/P1/P2)
+
+### Upgrade (da v1.0.7)
+- **DB**: schema_sync automatico, nessuna migrazione manuale
+- **Backup**: automatico al primo avvio
+- **Azioni manuali**: reinstallare da nuovo installer (sovrascrive exe + frontend + catalog.db)
+- **Breaking**: nessuno
+- **Licenza**: compatibile (non richiede rinnovo)
 
 ## [1.0.7] — 2026-04-19
 
@@ -51,6 +75,13 @@ e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
 ### Primo deployment
 - v1.0.7 consegnata ad Alessio Crociani (primo partner, tier PRO)
+
+### Upgrade (da v1.0.6)
+- **DB**: schema_sync automatico, nessuna migrazione manuale
+- **Backup**: automatico al primo avvio
+- **Azioni manuali**: nessuna (prima installazione per tutti i deployment)
+- **Breaking**: UI nutrizione rimossa (backend preservato)
+- **Licenza**: prima attivazione (non applicabile upgrade)
 
 ## [1.0.6] — 2026-03-30
 

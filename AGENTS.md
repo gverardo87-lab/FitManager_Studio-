@@ -78,13 +78,60 @@ Non nascondere i rischi. Se emergono, esplicitarli presto.
 | Branch | Scopo | Regole |
 |--------|-------|--------|
 | `FitManager_Studio` | Sviluppo attivo | Tutti i commit vanno qui |
-| `main` | Backup stabile | Allineato a FitManager_Studio dopo ogni milestone |
+| `main` | Release stabile | Allineato a FitManager_Studio dopo ogni release |
+| `hotfix/vX.Y.Z` | Fix urgente campo | Creato dal tag, merge back, poi eliminato |
 
-**Workflow**:
+### Workflow normale
+
 1. Lavorare sempre su `FitManager_Studio`.
 2. Push dopo ogni step completato (commit intermedi frequenti).
-3. Allineare `main` dopo ogni release o milestone significativa.
-4. Non creare feature branch senza coordinamento esplicito.
+3. Non creare feature branch senza coordinamento esplicito.
+
+### Release
+
+1. Bump `__version__` in `api/__init__.py`.
+2. Sync: `cd frontend && npm version X.Y.Z --no-git-tag-version`.
+3. Commit: `release: vX.Y.Z — descrizione`.
+4. Build: `bash tools/build/build-release.sh` (preflight+build+verify+seal+tag).
+5. Aggiornare `CHANGELOG.md` con sezione nuova release (inclusa sezione `### Upgrade`).
+6. Allineare main:
+   ```bash
+   git checkout main && git merge FitManager_Studio --ff-only && git push origin main
+   git checkout FitManager_Studio
+   ```
+
+### Hotfix (bug critico da partner/campo)
+
+Scenario: Alessio segnala un bug bloccante, ma su `FitManager_Studio` c'e' lavoro in corso non rilasciabile.
+
+```bash
+# 1. Creare branch dal tag dell'ultima release consegnata
+git checkout -b hotfix/v1.0.9 v1.0.8
+
+# 2. Fix + test
+# ... applicare fix minimale ...
+pytest tests/ -v
+
+# 3. Bump version + release
+# ... bump __version__, npm version ...
+git commit -m "release: v1.0.9 — hotfix descrizione"
+bash tools/build/build-release.sh
+
+# 4. Merge back in FitManager_Studio
+git checkout FitManager_Studio
+git merge hotfix/v1.0.9
+
+# 5. Allineare main + cleanup
+git checkout main && git merge FitManager_Studio --ff-only && git push origin main
+git checkout FitManager_Studio
+git branch -d hotfix/v1.0.9
+```
+
+**Regole hotfix**:
+- Solo fix minimale — nessuna feature, nessun refactor.
+- Deve passare tutti i quality gate (pytest + ruff + next build).
+- Merge back in `FitManager_Studio` OBBLIGATORIO (evita divergenza).
+- Branch hotfix eliminato dopo merge (non resta nel repo).
 
 ## 6) Collaborazione e documentazione
 
@@ -154,7 +201,7 @@ area: descrizione concisa
 
 ## 9) Release Workflow
 
-Pipeline 5 fasi (ADR-004):
+Pipeline 5 fasi (ADR-004). Procedura completa nella sezione 5 "Branching Strategy → Release".
 
 ```
 1. PREFLIGHT  — git clean, version sync, pytest, ruff, next build
@@ -164,14 +211,7 @@ Pipeline 5 fasi (ADR-004):
 5. TAG        — git tag vX.Y.Z
 ```
 
-**Procedura**:
-1. Aggiornare `__version__` in `api/__init__.py`
-2. Sync: `cd frontend && npm version X.Y.Z --no-git-tag-version`
-3. Commit: `release: vX.Y.Z — descrizione`
-4. Build: `bash tools/build/build-release.sh`
-5. Aggiornare `CHANGELOG.md` con la nuova sezione
-
-Dettagli: `docs/operations/RELEASE_CHECKLIST.md`.
+Dettagli tecnici: `docs/operations/RELEASE_CHECKLIST.md`.
 
 ## 10) Incident Response
 
@@ -180,6 +220,6 @@ Quando si scopre un bug in produzione o un problema critico:
 1. **Documentare** in `docs/incidents/INC-YYYY-MM-DD-titolo.md` (severita', root cause, fix)
 2. **Aggiornare** `POSTMORTEMS.md` con la lezione appresa
 3. **Aggiornare** checklist/guardrail se il bug era prevenibile
-4. **Hotfix**: commit diretto su `FitManager_Studio`, release patch (bump Z)
+4. **Hotfix**: seguire procedura in sezione 5 "Branching Strategy → Hotfix"
 
 Severita': P0 (sistema inutilizzabile) → P3 (cosmetico).
