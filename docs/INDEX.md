@@ -12,7 +12,7 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 | `STRATEGY_PLAN.md` | Piano operativo lancio, category creation PT Evoluto, ruolo partner | Go-to-market |
 | `FINANCIAL_MODEL.md` | Modello analitico — ogni euro tracciabile, formule, 3 scenari, NASpI (§8), fondi (§9) | Proiezioni finanziarie |
 | `DOCUMENTO_OPERATIVO_PARTNER.md` | Accordo partner: compenso, equity, milestone, obblighi | Termini partnership |
-| `LEGAL_REGULATORY_REPORT.md` | Normativa, certificazioni, privacy, requisiti legali | Compliance |
+| `LEGAL_REGULATORY_REPORT.md` | Report legale-regolamentare v1.3: GDPR (modello distribuito), fiscale, IP, EAA, SBOM, PSD2 | Compliance |
 | `COMPETITIVE_ANALYSIS.md` | Competitor, posizionamento, differenziatori | Analisi mercato |
 | `REVENUE_ACCELERATION_STRATEGY.md` | 5 leve per accelerare ricavi senza compromettere conquista mercato | Gap reddito founder, pricing internazionale, upsell |
 
@@ -62,7 +62,9 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 | `SECURITY_AUDIT_BASELINE.md` | Red Team audit pre-hardening (7 test, TTC per Crown Jewel) |
 | `SECURITY_AUDIT_POST_HARDENING.md` | Re-test post-hardening (4 step anti-RE, confronto pre/post) |
 | `LICENSE_ACTIVATION.md` | Attivazione licenza, hardware binding, CLI admin |
-| `TAILSCALE_FUNNEL_SETUP.md` | Setup Tailscale Funnel, proxy, troubleshooting |
+| `CRM_ACCESS_ARCHITECTURE.md` | Architettura accesso v2.0: doppio piano (LAN/tunnel), FRP data-blind, TLS e2e, criteri accettazione | Blueprint infra tunnel |
+| `TUNNEL_MIGRATION_STRATEGY.md` | Strategia migrazione Tailscale -> FRP: 4 fasi, gap analysis, piano esecuzione | Esecuzione migrazione |
+| `TAILSCALE_FUNNEL_SETUP.md` | Setup Tailscale Funnel, proxy, troubleshooting (da archiviare post-migrazione) |
 | `DEPLOYMENT_PLAN.md` | Piano deploy: PyInstaller/Nuitka, standalone, Inno Setup |
 | `NUTRITION_ENGINE_V3.md` | Architettura Nutrition Engine v3 |
 | `PRE_DELIVERY_AUDIT_2026_04_17.md` | Audit tecnico 360° pre-consegna ad Alessio (2026-04-17) |
