@@ -68,6 +68,7 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 | `DEPLOYMENT_PLAN.md` | Piano deploy: PyInstaller/Nuitka, standalone, Inno Setup |
 | `NUTRITION_ENGINE_V3.md` | Architettura Nutrition Engine v3 |
 | `PRE_DELIVERY_AUDIT_2026_04_17.md` | Audit tecnico 360° pre-consegna ad Alessio (2026-04-17) |
+| `ARCHITECTURE_OVERVIEW.md` | Mappa narrata dell'architettura tunnel: problema, centralino, VPS, 3 attori, 4 fasi. Punto d'ingresso prima di leggere CRM_ACCESS e TUNNEL_MIGRATION |
 
 ---
 
@@ -95,6 +96,20 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 | `INC-2026-03-29-portal-url-origin-mismatch.md` | P1: Link portale clienti inaccessibili — URL hardcoded da PUBLIC_BASE_URL invece di browser origin |
 | `INC-2026-03-30-portal-mobile-invisible-ui.md` | P1: Portale workout invisibile su mobile — CSS variables dark mode + rate limiter bloccante |
 | `INC-2026-04-19-catalog-taxonomy-empty.md` | P0: catalog.db tassonomia vuota dopo consegna v1.0.7 — Safety Engine cieco, 6 tabelle vuote, gap pipeline seed/build |
+
+## learning/ — Diario di apprendimento personale
+
+Formazione del founder-developer in parallelo allo sviluppo. Concetti tecnici studiati, diario cronologico, metodo di studio.
+
+**NON vincolante per il codice** — materiale didattico personale, ignorato durante l'implementazione. Dettagli in `learning/README.md`.
+
+| File | Ambito |
+|------|--------|
+| `LEARNING_METHOD.md` | Metodo di studio: 4 principi, flusso cattura/elaborazione, ponte con Claude Code |
+| `BUILD_LOG.md` | Diario cronologico: cosa ho fatto e quando (Fase 0 tunnel in corso) |
+| `LEARNING_LINUX_SYSADMIN.md` | Concetti: crittografia asimmetrica, chiavi SSH, passphrase |
+
+---
 
 ## Altre directory
 

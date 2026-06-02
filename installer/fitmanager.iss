@@ -27,7 +27,7 @@
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher=FitManager
-AppPublisherURL=https://fitmanager.it
+AppPublisherURL=https://fitmanagerstudio.com
 DefaultDirName={autopf}\FitManager
 DefaultGroupName=FitManager
 OutputBaseFilename=FitManager_Setup_{#MyAppVersion}

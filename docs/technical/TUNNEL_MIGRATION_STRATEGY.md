@@ -5,7 +5,7 @@
 **Data:** 2026-06-01
 **Stato:** Approvato per esecuzione
 **Prerequisito:** `CRM_ACCESS_ARCHITECTURE.md` v2.0 (blueprint architetturale)
-**Obiettivo:** Migrare da Tailscale Funnel a tunnel FRP self-hosted con dominio `*.fitmanager.it`
+**Obiettivo:** Migrare da Tailscale Funnel a tunnel FRP self-hosted con dominio `*.fitmanagerstudio.com`
 
 ---
 
@@ -33,7 +33,7 @@ Trainer installa FitManager
 ```
 Trainer installa FitManager
   -> Tutto automatico (tunnel, DNS, certificato TLS)
-    -> URL: trainer-slug.fitmanager.it (brandizzato)
+    -> URL: trainer-slug.fitmanagerstudio.com (brandizzato)
       -> Solo route /public/* esposte (CRM inaccessibile da Internet)
 ```
 
@@ -50,7 +50,7 @@ Trainer installa FitManager
 | Maturita' | 40K+ stars, Go, 8+ anni | Affidabile per produzione |
 | Binario | ~15MB, cross-platform | Bundlabile in Nuitka |
 | TLS e2e | TCP proxy mode (passthrough) | Preserva P2 (data-blind) |
-| Brand | `*.fitmanager.it` | Dominio AVGV |
+| Brand | `*.fitmanagerstudio.com` | Dominio AVGV |
 | GDPR | Nessun sub-processor per dati clinici | Solo VPS provider (Hetzner UE) |
 
 Cloudflare Tunnel escluso: viola P2 (CF termina TLS, vede il traffico).
@@ -67,7 +67,7 @@ Rathole considerato come alternativa futura se serve binario piu' leggero (~3MB)
 
 - `instance_id` e' un nuovo claim nel JWT della licenza (es. `"instance_id": "alessio-crociani"`)
 - Al primo avvio, FitManager legge l'instance_id dalla licenza
-- AVGV crea il record DNS `instance_id.fitmanager.it -> IP VPS` al momento della generazione licenza
+- AVGV crea il record DNS `instance_id.fitmanagerstudio.com -> IP VPS` al momento della generazione licenza
 - Nessuna chiamata di rete al primo avvio per registrazione (solo per tunnel + cert)
 
 ### D4. Separazione piani di accesso
@@ -129,7 +129,7 @@ Il codebase mantiene `trainer_id` come defense-in-depth anche se l'isolamento e'
 **Obiettivo:** VPS edge funzionante, test manuale con FRP client.
 
 **Prerequisiti:**
-- Dominio `fitmanager.it` acquistato (verificare stato)
+- Dominio `fitmanagerstudio.com` acquistato (verificare stato)
 - Account Hetzner (o provider VPS equivalente UE)
 
 **Attivita':**
@@ -138,7 +138,7 @@ Il codebase mantiene `trainer_id` come defense-in-depth anche se l'isolamento e'
 |---|------|-----------|--------|
 | 0.1 | Provisioning VPS | Hetzner CX22 (2 vCPU, 4GB RAM, 40GB SSD, ~4.5 euro/mese) | IP pubblico |
 | 0.2 | Hardening VPS | SSH key-only, fail2ban, ufw (443+frps port), unattended-upgrades | VPS sicuro |
-| 0.3 | DNS setup | `fitmanager.it` + wildcard `*.fitmanager.it` -> IP VPS | DNS funzionante |
+| 0.3 | DNS setup | `fitmanagerstudio.com` + wildcard `*.fitmanagerstudio.com` -> IP VPS | DNS funzionante |
 | 0.4 | FRP server | Deploy `frps` con config TCP passthrough su porta 443 | frps in ascolto |
 | 0.5 | SNI routing | Caddy o HAProxy in TCP mode per routing SNI -> FRP | Routing funzionante |
 | 0.6 | Pagina offline | Pagina statica per subdomain senza tunnel attivo | "Studio offline" |
@@ -164,13 +164,13 @@ level = "info"
 maxDays = 30
 ```
 
-**Deliverable Fase 0:** `test.fitmanager.it` raggiungibile da Internet, traffico forwarded al PC dev via tunnel FRP.
+**Deliverable Fase 0:** `test.fitmanagerstudio.com` raggiungibile da Internet, traffico forwarded al PC dev via tunnel FRP.
 
 ---
 
 ### Fase 1 -- Tunnel client nel prodotto
 
-**Obiettivo:** Trainer installa -> tunnel si apre automaticamente -> `slug.fitmanager.it` raggiungibile.
+**Obiettivo:** Trainer installa -> tunnel si apre automaticamente -> `slug.fitmanagerstudio.com` raggiungibile.
 
 **Attivita':**
 
@@ -190,13 +190,13 @@ maxDays = 30
 
 ```toml
 # frpc.toml (generato da tunnel_manager.py)
-serverAddr = "edge.fitmanager.it"
+serverAddr = "edge.fitmanagerstudio.com"
 serverPort = 7000
 
 [[proxies]]
 name = "<instance_id>"
 type = "https"
-customDomains = ["<instance_id>.fitmanager.it"]
+customDomains = ["<instance_id>.fitmanagerstudio.com"]
 [proxies.plugin]
 type = "https2https"
 localAddr = "127.0.0.1:3000"
@@ -204,7 +204,7 @@ crtPath = "data/tunnel/cert.pem"
 keyPath = "data/tunnel/key.pem"
 ```
 
-**Deliverable Fase 1:** Installazione con licenza contenente instance_id -> tunnel automatico -> `slug.fitmanager.it` raggiunge il frontend.
+**Deliverable Fase 1:** Installazione con licenza contenente instance_id -> tunnel automatico -> `slug.fitmanagerstudio.com` raggiunge il frontend.
 
 ---
 
@@ -217,7 +217,7 @@ keyPath = "data/tunnel/key.pem"
 | # | Task | File | Dettaglio |
 |---|------|------|-----------|
 | 2.1 | Cert manager | `api/services/cert_manager.py` (nuovo) | Genera/rinnova certificato Let's Encrypt via DNS-01. Usa libreria acme Python o shell-out a acme.sh bundlato. |
-| 2.2 | Credenziali DNS scoped | `tools/admin_scripts/provision_instance.py` | Genera API token DNS con scope limitato a `_acme-challenge.<instance_id>.fitmanager.it`. |
+| 2.2 | Credenziali DNS scoped | `tools/admin_scripts/provision_instance.py` | Genera API token DNS con scope limitato a `_acme-challenge.<instance_id>.fitmanagerstudio.com`. |
 | 2.3 | Storage credenziali | `data/tunnel/` | Credenziali DNS-01, cert, key in `data/tunnel/`. Esclusi da backup/export. |
 | 2.4 | Rinnovo automatico | `api/services/cert_manager.py` | Scheduler: check scadenza ogni 12h, rinnovo 30gg prima della scadenza. |
 | 2.5 | Route separation middleware | `frontend/src/middleware.ts` | Se header `X-Forwarded-For` presente (o header custom FRP) E route non e' `/public/*` -> redirect a 404. |

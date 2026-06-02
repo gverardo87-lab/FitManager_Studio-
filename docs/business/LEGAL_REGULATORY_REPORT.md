@@ -447,7 +447,7 @@ L'esenzione **non riguarda i prodotti** (rilevante solo se Phase 2 includerà ap
 
 ### 7.4 Checklist WCAG 2.1 AA – livello sostanziale per POC
 
-Da implementare sulle pagine pubbliche di anamnesi e feedback (riferimento: `link.fitmanager.it/l/:token`):
+Da implementare sulle pagine pubbliche di anamnesi e feedback (riferimento: `link.fitmanagerstudio.com/l/:token`):
 
 - [ ] **Testo alternativo per immagini** (`alt` per ogni `<img>`)
 - [ ] **Struttura semantica HTML**: `<header>`, `<main>`, `<nav>`, `<button>` (non `<div onclick>`)
@@ -733,7 +733,7 @@ Da affrontare in fase di pianificazione Phase 2 con consulente prodotto/CE.
 | Registrazione marchio UE EUIPO (1 classe) | €850 + onorari | — (rinnovo dopo 10 anni) |
 | Registrazione marchi italiani UIBM (alternativa) | €101–250 + onorari per marchio | — |
 | Deposito SIAE software (opzionale) | €129 | — |
-| Dominio fitmanager.it | — | €10–20 |
+| Dominio fitmanagerstudio.com | — | €10–20 |
 | VPS edge tunnel (Hetzner CX22 o eq.) | — | ~€50–80 |
 | Tool SCA/license audit (POC con tool free) | 0 | 0 |
 | **Totale POC indicativo** | **€2.000–4.500** | **€500–1.200** |

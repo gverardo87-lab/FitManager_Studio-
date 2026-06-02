@@ -171,7 +171,7 @@ Poiche' ogni trainer ha una propria istanza FitManager con proprio SQLite isolat
 ### P8. HTTPS ovunque, end-to-end
 
 - Trasporto trainer<->CRM in LAN: HTTPS con certificato locale autogestito (mkcert o equivalente bundlato nell'installer), oppure HTTP solo su `localhost` (loopback interface)
-- Trasporto cliente finale<->PC del trainer attraverso tunnel: TLS end-to-end, certificato pubblico (Let's Encrypt) emesso e rinnovato automaticamente sul PC del trainer per il suo subdomain `<slug>.fitmanager.it`
+- Trasporto cliente finale<->PC del trainer attraverso tunnel: TLS end-to-end, certificato pubblico (Let's Encrypt) emesso e rinnovato automaticamente sul PC del trainer per il suo subdomain `<slug>.fitmanagerstudio.com`
 - Nessun "TLS termination sul VPS edge" -- questo violerebbe P2
 
 ### P9. Identita' di istanza e onboarding zero-touch
@@ -183,7 +183,7 @@ Ogni istanza FitManager ha un identificatore univoco (`instance_id` o `slug`) ge
 
 L'`instance_id` determina:
 
-- Il subdomain pubblico assegnato: `<instance_id>.fitmanager.it`
+- Il subdomain pubblico assegnato: `<instance_id>.fitmanagerstudio.com`
 - L'identita' del tunnel client verso l'edge AVGV
 - Il certificato Let's Encrypt da richiedere
 
@@ -221,7 +221,7 @@ Componenti minimi sul VPS edge (esempio per FRP, indicativo):
 
 - **Server tunnel** (`frps` o `rathole-server`) in ascolto su porta dedicata
 - **Reverse proxy** (Caddy raccomandato per gestione automatica wildcard cert se serve TLS in mezzo, oppure TCP passthrough puro se TLS end-to-end e' preservato)
-- **DNS wildcard** `*.fitmanager.it` -> IP del VPS
+- **DNS wildcard** `*.fitmanagerstudio.com` -> IP del VPS
 - **Firewall** che espone solo porte necessarie (443 pubblica, porta tunnel server)
 - **Monitoring** uptime e banda (es. Uptime Kuma, Netdata)
 - **Backup configurazione** automatico
@@ -236,11 +236,11 @@ Opzioni:
 
 | Opzione | Pro | Contro |
 |---------|-----|--------|
-| **DNS-01 challenge** con API del provider DNS di `fitmanager.it` | Funziona sempre, no requisiti di esposizione porta 80 | Richiede credenziali API DNS sul PC trainer (gestire con cura, scope minimo) |
+| **DNS-01 challenge** con API del provider DNS di `fitmanagerstudio.com` | Funziona sempre, no requisiti di esposizione porta 80 | Richiede credenziali API DNS sul PC trainer (gestire con cura, scope minimo) |
 | **HTTP-01 attraverso il tunnel** | Riutilizza l'infrastruttura tunnel | Richiede coordinazione tunnel attivo durante challenge |
 | **Wildcard cert centralizzato gestito da AVGV** | Trainer non gestisce nulla | **VIOLA P2** (TLS terminerebbe altrove): NON ACCETTABILE |
 
-**Raccomandazione**: DNS-01 con API token scoped solo per record `_acme-challenge.<instance_id>.fitmanager.it`, distribuito dall'installer o richiesto al primo avvio tramite servizio AVGV di issuance.
+**Raccomandazione**: DNS-01 con API token scoped solo per record `_acme-challenge.<instance_id>.fitmanagerstudio.com`, distribuito dall'installer o richiesto al primo avvio tramite servizio AVGV di issuance.
 
 ### 5.4 Autenticazione trainer (accesso al CRM locale)
 
@@ -266,7 +266,7 @@ Opzioni:
 Flusso suggerito (indicativo, implementazione libera):
 
 1. Trainer acquista licenza -> AVGV genera `instance_id` univoco + token di onboarding
-2. AVGV emette record DNS `<instance_id>.fitmanager.it` puntante al VPS edge (automatizzato via API)
+2. AVGV emette record DNS `<instance_id>.fitmanagerstudio.com` puntante al VPS edge (automatizzato via API)
 3. AVGV consegna al trainer installer personalizzato (o installer generico + codice di attivazione)
 4. Al primo avvio: l'installer/software si registra presso AVGV con il token, riceve la configurazione tunnel, richiede certificato Let's Encrypt via DNS-01, apre tunnel
 5. Trainer crea account locale (email + password) per accedere al CRM
@@ -291,14 +291,14 @@ Flusso suggerito (indicativo, implementazione libera):
         +--------+--------+             +--------+--------+
                  |                                |
                  | richieste a                    |
-                 | trainerA.fitmanager.it         | trainerB.fitmanager.it
+                 | trainerA.fitmanagerstudio.com         | trainerB.fitmanagerstudio.com
                  |                                |
                  +------------+-------------------+
                               |
                               v
               +-------------------------------+
               |     VPS EDGE (AVGV)            |
-              |  - DNS wildcard *.fitmanager.it|
+              |  - DNS wildcard *.fitmanagerstudio.com|
               |  - Server tunnel (frps)        |
               |  - Routing SNI -> instance_id  |
               |  - NO TLS termination          |
@@ -345,7 +345,7 @@ Flusso suggerito (indicativo, implementazione libera):
 
 1. La route `/admin/*` accetta richieste **solo** se l'interfaccia di rete sorgente e' la LAN del trainer (localhost o IP della rete locale). Le richieste arrivate via tunnel verso `/admin/*` sono **rifiutate con 404**.
 2. La route `/l/:token` accetta richieste **solo** dal tunnel pubblico (o opzionalmente anche da LAN per testing). Le richieste senza token valido sono rifiutate.
-3. Il certificato TLS del subdomain `<instance_id>.fitmanager.it` e' generato, conservato e usato **esclusivamente sul PC del trainer**. AVGV non possiede ne' custodisce chiavi private dei trainer.
+3. Il certificato TLS del subdomain `<instance_id>.fitmanagerstudio.com` e' generato, conservato e usato **esclusivamente sul PC del trainer**. AVGV non possiede ne' custodisce chiavi private dei trainer.
 4. Il VPS edge AVGV instrada per SNI hostname senza ispezione ne' decifratura del traffico applicativo.
 
 ---
@@ -358,7 +358,7 @@ L'implementazione e' considerata conforme se e solo se soddisfa tutti i criteri 
 
 - [ ] Una richiesta a `/admin/*` arrivata via tunnel pubblico riceve 404 (non 401, non 403: il path non esiste dal piano pubblico).
 - [ ] Una richiesta a `/l/:token` arrivata da LAN funziona normalmente (per facilitare test) ma non espone alcun dato di admin.
-- [ ] Troncando un link cliente finale fino al solo subdomain (`https://<instance_id>.fitmanager.it/`), non si raggiunge alcuna pagina di login trainer ne' alcuna pagina admin.
+- [ ] Troncando un link cliente finale fino al solo subdomain (`https://<instance_id>.fitmanagerstudio.com/`), non si raggiunge alcuna pagina di login trainer ne' alcuna pagina admin.
 
 ### 7.2 Autenticazione trainer
 
@@ -386,7 +386,7 @@ L'implementazione e' considerata conforme se e solo se soddisfa tutti i criteri 
 
 ### 7.5 Routing tunnel e isolamento istanze
 
-- [ ] Una richiesta a `<trainerA>.fitmanager.it` raggiunge esclusivamente il PC del trainer A.
+- [ ] Una richiesta a `<trainerA>.fitmanagerstudio.com` raggiunge esclusivamente il PC del trainer A.
 - [ ] Manipolare l'Host header non permette di raggiungere l'istanza di altri trainer.
 - [ ] Il VPS edge non termina TLS: il certificato sul PC del trainer e' quello servito al cliente finale.
 - [ ] Test di interruzione del tunnel su un'istanza: solo quella istanza diventa irraggiungibile, le altre continuano a funzionare.
@@ -427,10 +427,10 @@ L'implementazione e' considerata conforme se e solo se soddisfa tutti i criteri 
 ## 8. Roadmap migrazione da Tailscale Funnel
 
 **Fase A -- Setup infrastruttura AVGV (interno, prima della POC)**
-- Acquisto dominio `fitmanager.it` (se non gia' fatto)
+- Acquisto dominio `fitmanagerstudio.com` (se non gia' fatto)
 - Provisioning VPS edge (Hetzner CX22 o equivalente)
 - Deploy server tunnel (FRP) + reverse proxy SNI-routing
-- Configurazione wildcard DNS `*.fitmanager.it`
+- Configurazione wildcard DNS `*.fitmanagerstudio.com`
 - Sistema di issuance `instance_id` e provisioning DNS automatico
 - Monitoring infrastruttura
 

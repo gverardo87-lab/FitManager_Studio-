@@ -481,7 +481,7 @@ Per testare esattamente cio' che vede il cliente (prod build, zero HMR) via Funn
 ## Note per Sviluppo Futuro
 
 - **Custom domain**: Tailscale supporta custom domain su Funnel (piano a pagamento).
-  Es. `https://studio-chiara.fitmanager.it` invece di `*.ts.net`
+  Es. `https://studio-chiara.fitmanagerstudio.com` invece di `*.ts.net`
 - **Auto-start FitManager**: configurare launcher.bat in Startup di Windows
   per avvio automatico al login del trainer
 - **Monitoring uptime**: potenziale feature futura — notifica push se il PC e' offline

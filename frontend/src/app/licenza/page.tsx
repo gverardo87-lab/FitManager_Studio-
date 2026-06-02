@@ -198,7 +198,7 @@ function LicenzaContent() {
             onClick={() => {
               const subject = encodeURIComponent("Richiesta Attivazione FitManager")
               const body = encodeURIComponent(activationText)
-              window.location.href = `mailto:supporto@fitmanager.it?subject=${subject}&body=${body}`
+              window.location.href = `mailto:supporto@fitmanagerstudio.com?subject=${subject}&body=${body}`
             }}
           >
             <Mail className="mr-2 h-4 w-4" />
