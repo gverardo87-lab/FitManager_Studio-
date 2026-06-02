@@ -545,9 +545,81 @@ Il dominio `fitmanagerstudio.com` e' registrato su Cloudflare con auto-rinnovo. 
 | 0.7 | FRP server installato (v0.61.1) | OK | 2026-06-02 |
 | 0.8 | FRP server configurato e attivo (systemd) | OK | 2026-06-02 |
 | 0.9 | FRP server auto-start al boot | OK | 2026-06-02 |
-| 0.10 | Test e2e tunnel con FRP client | PENDENTE | — |
+| 0.10 | Test e2e tunnel con FRP client | OK | 2026-06-02 |
 
-**Fase 0.10** (test e2e) sara' eseguito come prima attivita' della Fase 1, quando il FRP client sara' integrato nel codebase FitManager.
+### Test e2e Fase 0.10 (2026-06-02)
+
+**Obiettivo:** verificare che il tunnel FRP trasporta traffico dal VPS edge al PC di sviluppo (Windows) e che il frontend risponde attraverso il tunnel.
+
+**Prerequisiti del test:**
+- Frontend dev attivo su `localhost:3001` (PC Windows AVGV)
+- FRP server attivo sul VPS (`frps` su porta 7000)
+- Porta 8080 aperta temporaneamente sul firewall VPS (`ufw allow 8080/tcp`)
+
+**Setup FRP client di test:**
+
+1. Scaricato `frpc.exe` v0.61.1 (Windows amd64, ~15MB) in `tools/bin/frpc.exe`
+2. Creato file di configurazione test `data/tunnel/frpc-test.toml`:
+
+```toml
+serverAddr = "128.140.91.39"
+serverPort = 7000
+
+[[proxies]]
+name = "test-tunnel"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = 3001
+remotePort = 8080
+```
+
+Questa configurazione dice al client FRP: "collegati al server FRP sul VPS (128.140.91.39:7000) e apri un proxy TCP che mappa la porta 8080 del VPS alla porta 3001 del mio PC locale (dove gira Next.js)".
+
+3. Avviato il client FRP dal PC Windows:
+
+```bash
+tools/bin/frpc.exe -c data/tunnel/frpc-test.toml
+```
+
+Output:
+```
+2026-06-02 21:16:17 [I] login to server success, get run id [3dc73bde2c21cd86]
+2026-06-02 21:16:17 [I] proxy added: [test-tunnel]
+```
+
+Il client si e' connesso al server e ha registrato il proxy `test-tunnel`.
+
+**Esecuzione del test:**
+
+Dal VPS, eseguito:
+
+```bash
+curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8080
+```
+
+Risposta: `307` (HTTP redirect al login di FitManager).
+
+**Interpretazione:** la richiesta ha percorso il cammino completo:
+
+```
+curl sul VPS (127.0.0.1:8080)
+  → frps riceve sulla porta 8080
+    → frps inoltra via tunnel al frpc sul PC Windows
+      → frpc passa a localhost:3001
+        → Next.js risponde con 307 (redirect a /login)
+          → la risposta torna indietro per lo stesso percorso
+            → curl riceve HTTP 307
+```
+
+Il frontend del PC Windows e' stato raggiunto dal VPS attraverso il tunnel FRP. Il traffico ha attraversato Internet (VPS in Germania → PC in Italia) in modo trasparente.
+
+**Cleanup post-test:**
+- Fermato `frpc.exe` sul PC Windows
+- Fermato frontend dev
+- Rimossa porta 8080 dal firewall VPS (`ufw delete allow 8080/tcp`)
+- Il file `data/tunnel/frpc-test.toml` e `tools/bin/frpc.exe` restano per test futuri
+
+**Nota:** questo test usa un proxy TCP senza TLS (tipo `tcp`, porta HTTP 8080). Il test completo con TLS end-to-end (tipo `https`, porta 443, certificato Let's Encrypt) sara' eseguito nella Fase 2 quando il cert manager sara' implementato. Il test attuale valida la connettivita' di base del tunnel: FRP client si collega al server, il traffico viene inoltrato correttamente, e il frontend risponde.
 
 ---
 

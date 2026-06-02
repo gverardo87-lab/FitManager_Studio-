@@ -209,3 +209,9 @@ data/*.db.bak.*
 
 # Office lock files
 ~$*
+
+# FRP binaries (scaricati, non committare)
+tools/bin/
+
+# Tunnel config e certificati locali
+data/tunnel/
