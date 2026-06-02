@@ -69,6 +69,7 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 | `NUTRITION_ENGINE_V3.md` | Architettura Nutrition Engine v3 |
 | `PRE_DELIVERY_AUDIT_2026_04_17.md` | Audit tecnico 360° pre-consegna ad Alessio (2026-04-17) |
 | `ARCHITECTURE_OVERVIEW.md` | Mappa narrata dell'architettura tunnel: problema, centralino, VPS, 3 attori, 4 fasi. Punto d'ingresso prima di leggere CRM_ACCESS e TUNNEL_MIGRATION |
+| `VPS_EDGE_SETUP.md` | Setup completo infra edge: dominio Cloudflare, VPS Hetzner, hardening, FRP server, DNS wildcard. Fase 0 completata. |
 
 ---
 
