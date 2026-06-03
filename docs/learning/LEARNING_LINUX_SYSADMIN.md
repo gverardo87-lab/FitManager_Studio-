@@ -12,6 +12,9 @@
 - [Crittografia asimmetrica (chiave pubblica/privata)](#crittografia-asimmetrica)
 - [Coppia di chiavi SSH: i due file](#coppia-di-chiavi-ssh)
 - [La passphrase della chiave privata](#passphrase-chiave-privata)
+- [Il kernel e perche' serve il reboot dopo l'aggiornamento](#kernel-reboot)
+- [L'estensione di un file e' solo un'etichetta](#estensione-etichetta)
+- [Quando AI/documento e sistema divergono, vince il sistema](#fonte-di-verita)
 
 ---
 
@@ -89,4 +92,78 @@ Il prezzo della passphrase e' digitarla all'uso. Ma `ssh-agent` e' un processo c
 Se salto la passphrase "per comodita'" e poi perdo il controllo del PC -> accesso pieno al VPS senza ulteriori barriere. Se invece dimentico la passphrase -> non recupero la chiave, ne genero una nuova e aggiorno la pubblica sul server (non e' una catastrofe perche' la pubblica e' sostituibile).
 
 **Domande aperte:**
-- [ ] Configurare ssh-agent su Windows perche' non chieda la passphrase a ogni connessione
+- [ ] Configurare ssh-agent su Windows perche' non chieda la passphrase a ogni connessione (incontrato dal vivo 03/06: la passphrase viene chiesta a ogni `ssh`, a volte due volte)
+
+---
+
+<a name="kernel-reboot"></a>
+## Il kernel e perche' serve il reboot dopo l'aggiornamento — 03/06/2026
+
+**Contesto:** dopo `apt upgrade` sul VPS, il documento diceva kernel `7.0.0-22` ma `uname -r` rispondeva `7.0.0-15`. In `/boot` c'erano DUE kernel (`-15` e `-22`). Capito perche' e risolto con reboot. Fondamentale Unix incontrato dal vivo: livello 3 pieno.
+
+**Livello 1 — Cosa fa:**
+Il kernel e' il programma centrale del sistema operativo: parla con l'hardware, gestisce memoria e processi, controlla accesso a file e rete. Quando lo aggiorno con `apt`, il file nuovo viene messo sul disco (`/boot`) ma NON sostituisce quello attualmente in esecuzione. Serve un reboot perche' il nuovo entri in funzione.
+
+**Livello 2 — Perche' mi importa:**
+Gli aggiornamenti di kernel sono spesso patch di sicurezza nel cuore del sistema. Un kernel di sicurezza installato ma non attivo NON protegge: la patch e' sul disco ma il sistema gira ancora sul codice vecchio e vulnerabile (serratura nuova lasciata nella scatola). Quindi "kernel aggiornato" e' vero solo dopo il reboot. La Fase 0 non era chiusa al 100% finche' non ho riavviato.
+
+**Livello 3 — Perche' funziona cosi' sotto:**
+Il kernel viene caricato in memoria (RAM) UNA volta sola, all'avvio, e ci resta finche' il sistema e' acceso. Tutti gli altri programmi girano *sopra* quel kernel in memoria. Non si puo' scambiare il kernel attivo mentre regge il sistema in tempo reale ("non sostituisci il pavimento mentre ci cammini sopra"). Per questo `apt` puo' solo depositare il nuovo kernel in `/boot`: i due file convivono apposta (`-15` in esecuzione, `-22` in attesa). Al boot successivo il bootloader carica in RAM il piu' recente (`-22`) e da li' `uname -r` lo conferma. Differenza con un programma normale (es. `nano`): quello al prossimo lancio parte gia' aggiornato, perche' non e' caricato permanentemente in memoria come il kernel.
+
+**Comandi reali:**
+```bash
+uname -r                  # kernel attualmente in esecuzione (in RAM)
+ls -t /boot/vmlinuz-*     # kernel presenti sul disco, piu' recente per primo
+reboot                    # riavvia: il bootloader carichera' il kernel piu' recente
+# dopo riconnessione:
+uname -r                  # ora conferma il kernel nuovo
+```
+
+**Failure mode:**
+Se installo un kernel di sicurezza e non riavvio mai -> resto vulnerabile pur "credendo" di essere aggiornato. Sintomo diagnostico: `uname -r` (in esecuzione) diverso dal piu' recente in `/boot` (installato) = reboot pendente. Su un server con utenti reali il reboot va pianificato (cade la connessione ~30-60s); su questo VPS era a basso rischio perche' nessun trainer in produzione e FRP riparte da solo via systemd.
+
+**Domande aperte:**
+- [ ] Capire `unattended-upgrades` e se/come gestisce i reboot automatici per le patch di sicurezza
+
+---
+
+<a name="estensione-etichetta"></a>
+## L'estensione di un file e' solo un'etichetta — 02/06/2026
+
+**Contesto:** Esplora risorse di Windows mostrava `id_ed25519.pub` come "Microsoft Publisher Document". Non lo e'.
+
+**Livello 1 — Cosa fa:**
+Windows associa l'estensione `.pub` al programma Publisher e mostra quell'icona/tipo. Ma il file e' un semplice file di testo contenente la chiave pubblica. L'estensione non determina il contenuto.
+
+**Livello 2 — Perche' mi importa:**
+Mi ha quasi confuso facendomi pensare che la chiave fosse un documento Publisher. Sapere che l'estensione e' solo un'etichetta evita errori (es. aprire la chiave col doppio clic -> Windows lancia Publisher e fa pasticci). La pubblica va letta come testo, da terminale.
+
+**Livello 3 — Perche' funziona cosi' sotto:**
+Su Windows l'associazione e' guidata dall'estensione (mappa estensione -> programma). Il contenuto reale e' un'altra cosa: i byte del file non cambiano per via dell'estensione. Su Linux le estensioni contano molto meno: cosa sia un file si deduce dal contenuto, non dal suffisso (un'altra differenza nel modo in cui Unix e Windows ragionano).
+
+**Failure mode:**
+Doppio clic su file con estensione "ingannevole" -> il programma sbagliato prova ad aprirlo. Per file tecnici (chiavi, config) leggere sempre da terminale con `Get-Content` (PowerShell) o `cat` (Linux), non col doppio clic.
+
+---
+
+<a name="fonte-di-verita"></a>
+## Quando AI/documento e sistema divergono, vince il sistema — 03/06/2026
+
+**Contesto:** Claude (chat) ha dubitato che "Ubuntu 26.04 / kernel 7.0.0" fossero reali (sembravano troppo recenti). `lsb_release -a` ha confermato: 26.04 "Resolute" e' reale. Aveva ragione il sistema, torto l'AI.
+
+**Livello 1 — Cosa fa (come principio operativo):**
+Di fronte a un fatto verificabile (versione, stato di un servizio, contenuto di un file), non scegliere tra due opinioni (documento vs AI): interroga la fonte autorevole, cioe' il sistema stesso.
+
+**Livello 2 — Perche' mi importa:**
+- Claude (chat) ha una data di taglio delle conoscenze: non e' aggiornato sul presente (Ubuntu 26.04 e' uscita dopo il suo orizzonte). E' utile per ragionare, NON e' fonte di verita' sul presente.
+- Un documento descrive il sistema in un certo momento e puo' divergere (refusi, stato cambiato dopo la stesura — vedi il kernel -22 scritto ma non ancora attivo).
+- Il sistema, interrogato, dice la verita' su se stesso adesso.
+
+**Livello 3 — Perche' funziona cosi' (gerarchia delle fonti):**
+Gerarchia di affidabilita' per un fatto sul presente: sistema reale > documento recente > memoria/AI. Comandi di verita': `lsb_release -a` (distro), `uname -r` (kernel in esecuzione), `systemctl status <servizio>` (stato reale di un servizio), `ufw status verbose` (firewall reale). Corollario del metodo (Principio: il sistema vince sul documento): quando divergono, si aggiorna il documento al sistema, mai il contrario.
+
+**Failure mode:**
+Fidarsi del documento o dell'AI su un fatto verificabile -> portarsi dietro un'imprecisione (es. credere il kernel aggiornato quando non lo e'). L'antidoto e' gratis: un comando di verifica.
+
+**Domande aperte:**
+- [ ] Tenere a mente: questo vale anche per il codice che Claude Code genera — gira davvero? lo verifico, non lo assumo.

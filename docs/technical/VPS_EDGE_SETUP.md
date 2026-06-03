@@ -233,7 +233,7 @@ vhostHTTPSPort = 443
 addr = "127.0.0.1"
 port = 7500
 user = "admin"
-password = "FitMgr-Edge-2026!"
+password = "<vedi password manager AVGV>"
 
 [log]
 to = "/var/log/frps/frps.log"
@@ -526,9 +526,9 @@ Il dominio `fitmanagerstudio.com` e' registrato su Cloudflare con auto-rinnovo. 
 | Cloudflare | dash.cloudflare.com | G.verardo87@gmail.com | Registrar + DNS |
 | Hetzner Cloud | console.hetzner.cloud | G.verardo87@gmail.com | VPS |
 | VPS SSH | 128.140.91.39:22 | root | Chiave Ed25519 con passphrase |
-| FRP Dashboard | 127.0.0.1:7500 (via SSH tunnel) | admin | Password: FitMgr-Edge-2026! |
+| FRP Dashboard | 127.0.0.1:7500 (via SSH tunnel) | admin | Password in password manager (vedi sotto) |
 
-**IMPORTANTE:** queste credenziali devono essere conservate in un password manager sicuro (es. 1Password, Bitwarden). La password della dashboard FRP dovra' essere cambiata prima del go-live con i primi trainer.
+**IMPORTANTE:** le password operative (dashboard FRP, eventuali credenziali DNS-01) NON sono archiviate in questo documento ne' in alcun file versionato nel repository. Sono conservate esclusivamente nel password manager di AVGV Technologies. La password della dashboard FRP e' stata cambiata rispetto a quella usata durante il setup iniziale.
 
 ---
 
