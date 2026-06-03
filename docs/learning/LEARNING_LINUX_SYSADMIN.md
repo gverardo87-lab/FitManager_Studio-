@@ -15,6 +15,7 @@
 - [Il kernel e perche' serve il reboot dopo l'aggiornamento](#kernel-reboot)
 - [L'estensione di un file e' solo un'etichetta](#estensione-etichetta)
 - [Quando AI/documento e sistema divergono, vince il sistema](#fonte-di-verita)
+- [systemd: servizi, enabled, restart e rilettura della config](#systemd)
 
 ---
 
@@ -167,3 +168,37 @@ Fidarsi del documento o dell'AI su un fatto verificabile -> portarsi dietro un'i
 
 **Domande aperte:**
 - [ ] Tenere a mente: questo vale anche per il codice che Claude Code genera — gira davvero? lo verifico, non lo assumo.
+
+---
+
+<a name="systemd"></a>
+## systemd: servizi, enabled, restart e rilettura della config — 03/06/2026
+
+**Contesto:** incontrato dal vivo tre volte: (1) FRP tornato su da solo dopo il reboot del server; (2) `systemctl restart frps` per applicare la nuova password; (3) `systemctl status frps` per verificare. Fondamentale che rivedro' a ogni modifica di configurazione di un servizio.
+
+**Livello 1 — Cosa fa:**
+systemd e' il "direttore d'orchestra" del sistema Linux: gestisce i servizi (programmi che girano in background, detti demoni), occupandosi di avviarli, fermarli, riavviarli e farli ripartire al boot. Si comanda con `systemctl <azione> <servizio>`.
+
+**Livello 2 — Perche' mi importa:**
+- `enabled` = il servizio parte automaticamente all'accensione del server. E' perche' FRP e' tornato su da solo dopo il reboot, senza che io fossi connesso. Vitale: il VPS deve funzionare per i trainer anche senza la mia sessione SSH (vedi LEARNING_NETWORKING §piani di accesso).
+- `restart` = ferma e riavvia il servizio, e nel farlo gli fa RILEGGERE il file di configurazione. E' il modo di applicare una modifica alla config (es. la nuova password in frps.toml). Stesso principio del kernel/reboot ma su scala servizio: il programma legge la config all'avvio e la tiene in memoria; il file cambiato non ha effetto finche' non rilegge.
+
+**Livello 3 — Perche' funziona cosi' sotto:**
+Un servizio e' definito da un file unit (es. `/etc/systemd/system/frps.service`) che dice a systemd: quale comando eseguire, con quale config, se riavviare in caso di crash, se partire al boot. Quando lancio `restart`, systemd termina il processo attuale (che ha in memoria la vecchia config) e ne avvia uno nuovo che rilegge il file da zero. Lo `status` mostra la verita' sul processo: `active (running)` = vivo; il `Main PID` e la riga di comando (`frps -c /opt/frp/frps.toml`) confermano CHE config sta leggendo. `since 18s ago` conferma che il restart e' avvenuto davvero (PID nuovo, non il vecchio processo).
+
+**Comandi reali:**
+```bash
+systemctl status frps    # stato reale: cerco "active (running)"
+systemctl restart frps   # ferma+riavvia, rilegge la config
+systemctl enable frps    # parte al boot
+systemctl stop/start frps
+```
+
+**Failure mode:**
+- Modificare un file di config e dimenticare il `restart` -> il servizio gira ancora con la vecchia config, "credo" di aver applicato la modifica ma non e' vero. Sintomo: il comportamento non cambia. (Analogo al kernel non riavviato.)
+- `restart` interrompe per un istante il servizio: sul VPS senza trainer in produzione e' indolore, ma con trainer collegati e' un micro-disservizio (i tunnel si riconnettono in pochi secondi ma c'e' una finestra). Consapevolezza operativa: `restart` non e' gratis quando c'e' gente collegata.
+- Se la config modificata ha un errore di sintassi, dopo il restart lo status mostra `failed`: qui il backup `.bak` salva (ripristino e riavvio mentre studio l'errore con calma).
+
+**Domande aperte:**
+- [ ] Differenza tra `restart` e `reload` (alcuni servizi rileggono la config senza interruzione con `reload`; frps supporta reload?)
+- [ ] Cosa c'e' dentro un file `.service` (struttura unit di systemd)
