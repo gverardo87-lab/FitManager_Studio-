@@ -128,8 +128,31 @@ Claude (chat e Code) e' utile per accelerare la comprensione, ma il salto a prog
 
 ---
 
-## 8. Changelog
+## 8. Regola di cattura automatica (Claude Code)
+
+**Problema:** se la cattura di concetti nuovi dipende dal founder che si ricorda di chiederla, fallira'. Serve un trigger automatico lato agente.
+
+**Regola per Claude Code (attiva in ogni conversazione):**
+
+Quando durante una sessione di lavoro emergono **concetti tecnici nuovi o approfondimenti non banali** (casi edge, pattern architetturali, failure mode, meccanismi sotto la superficie), Claude Code:
+
+1. **Identifica** il materiale didattico nella conversazione — tutto cio' che soddisfa almeno uno dei 3 livelli del template (sez. 4).
+2. **Propone** l'aggiornamento al file `LEARNING_*.md` appropriato (per dominio, non per sessione). Se il dominio non ha ancora un file, ne propone la creazione.
+3. **Scrive** il contenuto seguendo il template a 3 livelli, includendo failure mode e domande aperte.
+4. **Aggiorna** il README se necessario (nuovo file aggiunto).
+
+**Quando NON scatta:**
+- Dettagli di implementazione pura (sintassi, API call, config) che non contengono concetti trasferibili.
+- Informazioni gia' presenti nei file learning esistenti.
+- Sessioni di puro bugfix dove non emerge niente di nuovo.
+
+**Il trigger e' intrinseco alla conversazione, non alla richiesta.** Se il founder e Claude Code discutono di health check end-to-end e poi passano a implementarlo, il concetto va catturato anche se nessuno ha detto "scrivi nel learning". La cattura e' parte del workflow, non un'azione separata.
+
+---
+
+## 9. Changelog
 
 | Versione | Data | Modifiche |
 |----------|------|-----------|
 | 1.0 | 2026-06-02 | Prima emissione. Metodo a tre principi, flusso cattura/elaborazione, ponte con Claude Code. |
+| 1.1 | 2026-06-05 | Aggiunta sez. 8: regola di cattura automatica Claude Code. Il trigger e' intrinseco alla conversazione, non alla richiesta. |

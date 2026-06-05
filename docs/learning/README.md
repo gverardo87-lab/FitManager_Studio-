@@ -27,6 +27,9 @@ non contengono requisiti, non sono SSoT per nessun componente del sistema.
 | `LEARNING_METHOD.md` | Metodo di studio: 4 principi, flusso cattura/elaborazione, ponte con Claude Code |
 | `BUILD_LOG.md` | Diario cronologico: cosa ho fatto e quando, checklist per fase |
 | `LEARNING_LINUX_SYSADMIN.md` | Concetti Linux/Unix: crittografia asimmetrica, chiavi SSH, passphrase |
+| `LEARNING_NETWORKING.md` | DNS, reverse proxy, TLS, SNI, tunnel, NAT, FRP |
+| `LEARNING_FASE1_BASI_TEORICHE.md` | Preparazione Fase 1: JWT, instance_id, tunnel_manager, bundling |
+| `LEARNING_TUNNEL_MANAGER.md` | Casi edge processo figlio: sleep/wake, rete, backoff, health check e2e |
 
 ## Convenzioni
 

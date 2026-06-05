@@ -262,8 +262,13 @@ Skills installate in `.agents/skills/` — knowledge base attive per audit e cod
 | `docs/operations/` | Release checklist, Diagnostics, Support, Upgrade | Release, troubleshooting, supporto |
 | `docs/adr/` | Architecture Decision Records (9 ADR) | Decisioni architetturali |
 | `docs/incidents/` | Post-mortem incidenti | Pattern sospetti, regressioni |
+| `docs/learning/` | Apprendimento founder-developer (concetti, metodo, build log) | Mai — materiale didattico, non spec |
 
 Indice completo con ogni file: `docs/INDEX.md`.
+
+### Regola di cattura learning (automatica)
+
+Quando durante una sessione di lavoro emergono concetti tecnici nuovi o approfondimenti non banali (casi edge, pattern architetturali, failure mode, meccanismi sotto la superficie), Claude Code cattura il materiale nel file `docs/learning/LEARNING_*.md` appropriato per dominio, seguendo il template a 3 livelli definito in `docs/learning/LEARNING_METHOD.md` sez. 4. Il trigger e' intrinseco alla conversazione: la cattura avviene anche se non richiesta esplicitamente. Non scatta per dettagli di implementazione pura, informazioni gia' presenti, o sessioni di puro bugfix senza concetti nuovi.
 
 ### Layer 3 — Governance di progetto (root)
 
