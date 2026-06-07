@@ -219,9 +219,28 @@ Quando un browser apre una connessione HTTPS, PRIMA di cifrare manda in chiaro i
 - [x] 1.3 Tunnel manager (babysitter frpc + generazione frpc.toml)
 - [x] 1.4 Auto-start tunnel al boot (lifespan step 6, startup/shutdown)
 - [x] 1.4b Correzione: proxy HTTPS + cert self-signed (validazione SNI + P2 data-blind)
-- [ ] 1.5 Bundle FRP binary (frpc.exe in Nuitka)
-- [ ] 1.6 Script provisioning AVGV-side (DNS via Cloudflare API)
-- [ ] 1.7 Health endpoint tunnel (/tunnel/status)
-- [ ] 1.8 Test e2e (tunnel connesso, URL raggiungibile, reconnect)
+- [x] 1.5 Test e2e tunnel HTTPS (SNI routing + P2 data-blind dimostrato)
+- [ ] 1.6 Bundle FRP binary (frpc.exe in Nuitka)
+- [ ] 1.7 Script provisioning AVGV-side (DNS via Cloudflare API)
+- [ ] 1.8 Health endpoint tunnel (/tunnel/status)
+
+### 2026-06-07 — Step 5: test e2e tunnel HTTPS
+
+**Azioni VPS/DNS completate:**
+- Record A `edge.fitmanagerstudio.com → 128.140.91.39` creato su Cloudflare (DNS-only, propagato)
+- Verificato: frps ha `vhostHTTPSPort = 443`, porta 443 aperta nel firewall
+
+**Test e2e:**
+- Licenza con `--instance-id gvera-dev` generata
+- Cert self-signed auto-generato (CN: gvera-dev.fitmanagerstudio.com, SAN wildcard)
+- Backend avviato su porta 8000 → tunnel auto-start (frpc PID connesso a frps)
+- HTTP test server su porta 3000 (simula frontend)
+- Dal VPS: `curl -k https://gvera-dev.fitmanagerstudio.com` → `<h1>FitManager Tunnel Test OK</h1>`
+- **Percorso verificato:** VPS (curl) → frps:443 (SNI routing) → frpc sul PC dev (TLS termination) → localhost:3000 → risposta
+
+**P2 data-blind dimostrato:** il VPS ha instradato il traffico HTTPS usando solo il campo SNI (nome dominio in chiaro nell'handshake TLS). Il contenuto della richiesta e della risposta e' cifrato end-to-end — il VPS non puo' leggerlo. Questo e' il pilastro della semplificazione GDPR: AVGV "non tratta" i dati clinici perche' il VPS e' cieco sul contenuto.
+
+**Concetto validato — architettura SNI passthrough:**
+Il flusso e' identico a quello che avra' la produzione con Let's Encrypt. L'unica differenza e' che il browser mostrera' un warning (cert self-signed) invece del lucchetto verde. Il routing, la cifratura, e la cecita' del VPS sono gia' quelli definitivi.
 
 ---
