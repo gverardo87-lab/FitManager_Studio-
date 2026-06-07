@@ -94,6 +94,9 @@ logger = logging.getLogger("fitmanager.api")
 _COMPILED = is_compiled()
 MAX_AUTO_BACKUPS = 5  # solo gli ultimi 5 backup automatici
 
+# Tunnel manager globale (inizializzato nel lifespan se instance_id presente)
+_tunnel_manager = None
+
 LICENSE_EXEMPT_PATHS = {
     "/health",
     f"{API_PREFIX}/auth/login",
@@ -311,8 +314,33 @@ async def lifespan(app: FastAPI):
     if not is_nutrition_encrypted() and Path(nutrition_path).exists():
         _integrity_check_on_startup(NUTRITION_DATABASE_URL, NUTRITION_DATABASE_URL)
 
+    # ── 6. Tunnel FRP (auto-start se licenza con instance_id + frpc presente) ──
+    global _tunnel_manager
+    try:
+        from api.services.tunnel_config import get_tunnel_config
+        from api.services.tunnel_manager import TunnelManager
+
+        tunnel_config = get_tunnel_config()
+        if tunnel_config:
+            _tunnel_manager = TunnelManager(tunnel_config)
+            _tunnel_manager.start()
+            logger.info(
+                "  TUNNEL = %s (frpc PID %s)",
+                tunnel_config.public_url,
+                _tunnel_manager.get_status().get("pid"),
+            )
+        else:
+            logger.info("  TUNNEL = disabilitato (nessun instance_id o frpc assente)")
+    except Exception as e:
+        logger.warning("Tunnel startup fallito (non bloccante): %s", e)
+
     logger.info("API pronta")
     yield
+
+    # Shutdown: ferma tunnel prima di chiudere
+    if _tunnel_manager:
+        _tunnel_manager.stop()
+        _tunnel_manager = None
     logger.info("API shutdown")
 
 

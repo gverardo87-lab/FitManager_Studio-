@@ -156,14 +156,35 @@ Il config layer e' un "contratto" tra il sistema di identita' (licenza JWT) e il
 4. **Output draining**: subprocess.PIPE ha un buffer finito. Se nessuno lo legge e si riempie, il processo figlio si blocca in attesa di scrivere (deadlock). Il thread `_drain_output` lo svuota continuamente.
 5. **CREATE_NO_WINDOW**: flag Windows che impedisce a frpc di aprire una finestra console visibile al trainer.
 
-**Prossimo step:** Step 4 — auto-start tunnel al boot (entry_point.py).
+**Prossimo step:** Step 4 — auto-start tunnel al boot dell'app.
+
+### 2026-06-07 — Step 4: auto-start tunnel al boot (INTEGRAZIONE)
+
+**Obiettivo:** il tunnel parte automaticamente quando l'app si avvia, se la licenza ha instance_id e frpc e' presente.
+
+**File modificato:**
+- `api/main.py` — step 6 nel lifespan (asynccontextmanager):
+  - Startup: `get_tunnel_config()` -> se config presente -> `TunnelManager(config).start()`
+  - Shutdown: `tunnel_manager.stop()` (ferma frpc prima di chiudere)
+  - `_tunnel_manager` variabile globale per accesso da health endpoint / router
+  - Try/except: tunnel fallito = warning nel log, non blocca l'app
+
+**Verifiche eseguite:**
+- Licenza dev senza instance_id -> log `TUNNEL = disabilitato`, backend funziona normalmente
+- Licenza con instance_id -> log `TUNNEL = gvera-dev.fitmanagerstudio.com (frpc PID 27308)`, tunnel auto-start
+- Suite completa: 361 test passati, zero regressioni
+
+**Concetto consolidato — lifespan come lifecycle manager:**
+Il `@asynccontextmanager lifespan(app)` e' il pattern FastAPI per gestire startup/shutdown. Tutto prima di `yield` = startup, tutto dopo `yield` = shutdown. Il tunnel si inserisce come step 6 dello startup. Il try/except garantisce che un fallimento del tunnel non blocchi l'app (best-effort, come l'auto-backup). La variabile `_tunnel_manager` globale e' necessaria perche' il lifespan e' un context manager asincrono: le variabili locali spariscono dopo il `yield`, ma la globale sopravvive per l'health endpoint.
+
+**Prossimo step:** Step 5 — bundle frpc.exe nel build Nuitka.
 
 ### Da fare (Fase 1)
 
 - [x] 1.1 Instance ID nella licenza (claim + CLI + lettura)
 - [x] 1.2 Configurazione tunnel (TunnelConfig, risoluzione path, config layer)
 - [x] 1.3 Tunnel manager (babysitter frpc + generazione frpc.toml)
-- [ ] 1.4 Auto-start tunnel (entry_point.py)
+- [x] 1.4 Auto-start tunnel al boot (lifespan step 6, startup/shutdown)
 - [ ] 1.5 Bundle FRP binary (frpc.exe in Nuitka)
 - [ ] 1.6 Script provisioning AVGV-side (DNS via Cloudflare API)
 - [ ] 1.7 Health endpoint tunnel (/tunnel/status)
