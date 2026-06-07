@@ -70,6 +70,7 @@ class LicenseClaims(BaseModel):
     tier: str = Field(min_length=1)
     max_clients: int | None = Field(default=None, ge=1)
     machine_id: str | None = None
+    instance_id: str | None = None  # slug per tunnel (es. "alessio-crociani")
     exp: int
 
 
@@ -84,6 +85,13 @@ class LicenseCheckResult(BaseModel):
     @property
     def is_valid(self) -> bool:
         return self.status == "valid"
+
+    @property
+    def instance_id(self) -> str | None:
+        """Shortcut per tunnel_manager: restituisce instance_id se licenza valida."""
+        if self.is_valid and self.claims:
+            return self.claims.instance_id
+        return None
 
 
 def _verify_embedded_key_integrity() -> bool:

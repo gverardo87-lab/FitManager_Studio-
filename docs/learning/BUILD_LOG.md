@@ -77,8 +77,40 @@ Documento `VPS_EDGE_SETUP.md` prodotto con Claude Code, riletto in chat con occh
 
 ---
 
-## Da fare (Fase 1 — tunnel client nel prodotto)
+## Fase 1 — Tunnel client nel prodotto
 
-Dettagli in `TUNNEL_MIGRATION_STRATEGY.md` sez. 4 Fase 1. In sintesi: claim `instance_id` nella licenza JWT, lettura lato backend, `tunnel_manager.py`, bundle `frpc.exe` in Nuitka, auto-start al boot, test e2e verso `slug.fitmanagerstudio.com`.
+Dettagli in `TUNNEL_MIGRATION_STRATEGY.md` sez. 4 Fase 1.
+
+### 2026-06-07 — Step 1: instance_id nella licenza (IDENTITA')
+
+**Obiettivo:** aggiungere il claim `instance_id` al JWT licenza e renderlo leggibile dal backend.
+
+**File modificati:**
+- `api/services/license.py` — aggiunto campo `instance_id: str | None = None` in `LicenseClaims` + property `instance_id` su `LicenseCheckResult` (scorciatoia per tunnel_manager)
+- `tools/admin_scripts/generate_license.py` — aggiunto argomento `--instance-id` al comando `sign` + stampa instance_id in `sign` e `verify` (con tunnel URL derivato)
+
+**Verifiche eseguite:**
+- Generazione licenza con `--instance-id gvera-dev` -> claim presente nel JWT
+- Verifica: `verify` legge e stampa instance_id + URL tunnel derivato
+- Backward compatibility: licenza SENZA instance_id -> `valid`, campo `None`, zero rotture
+- Property shortcut: `check_license().instance_id` restituisce slug se valida, `None` se no
+- Suite completa: 361 test passati, zero regressioni
+
+**Concetto consolidato (non nuovo — gia' in LEARNING_FASE1 sez. 1-2):**
+Aggiungere un claim JWT = mettere un campo in piu' nel dizionario payload prima di firmare. Il campo `Optional` in Pydantic (`str | None = None`) garantisce backward compatibility: le licenze vecchie non hanno quel campo -> Pydantic lo mette a `None` -> tutto il codice esistente continua a funzionare. Stesso pattern gia' usato per `machine_id`. E' il pattern standard per evolvere un contratto dati senza rompere i consumatori esistenti.
+
+**Prossimo step:** Step 2 — lettura instance_id al boot + preparazione per tunnel_manager.
+
+### Da fare (Fase 1)
+
+- [x] 1.1 Instance ID nella licenza (claim + CLI + lettura)
+- [ ] 1.2 Lettura instance_id al boot (singleton/helper)
+- [ ] 1.3 Script provisioning AVGV-side (DNS via Cloudflare API)
+- [ ] 1.4 Tunnel manager (babysitter frpc)
+- [ ] 1.5 Config FRP client (genera frpc.toml)
+- [ ] 1.6 Bundle FRP binary (frpc.exe in Nuitka)
+- [ ] 1.7 Auto-start tunnel (entry_point.py)
+- [ ] 1.8 Health endpoint tunnel (/tunnel/status)
+- [ ] 1.9 Test e2e (tunnel connesso, URL raggiungibile, reconnect)
 
 ---

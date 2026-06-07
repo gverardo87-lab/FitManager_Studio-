@@ -43,10 +43,10 @@ Struttura di un JWT (tre parti separate da punti): `header.payload.signature`
 **Failure mode da capire:**
 Se la chiave privata di firma di AVGV trapelasse, chiunque potrebbe generare licenze false. E' un segreto critico (come la chiave SSH privata): non va mai nel repo, mai distribuita, custodita con la massima cura.
 
-**Da verificare nel codebase sabato:**
-- Dove e come viene gia' generata la licenza (`tools/admin_scripts/generate_license.py`)
-- Dove viene verificata (`api/services/license.py`)
-- Che algoritmo di firma usa gia'
+**Verificato nel codebase (07/06):**
+- [x] Generazione licenza: `tools/admin_scripts/generate_license.py` — CLI argparse con `sign`, `verify`, `fingerprint`, `generate-keys`
+- [x] Verifica licenza: `api/services/license.py` — `check_license()` con 4-tier key resolution, embedded key in frozen mode
+- [x] Algoritmo: RS256 (RSA 2048 + SHA-256) — stessa famiglia crittografia asimmetrica di SSH Ed25519 ma con RSA
 
 ---
 
@@ -67,9 +67,11 @@ Software identico per tutti + licenza unica per ciascuno = ogni installazione sa
 
 Punto elegante: nessuna chiamata di rete per "registrarsi" al primo avvio. L'identita' e' gia' nella licenza, il DNS e' gia' pronto. Il software deve solo leggere e connettere.
 
-**Da verificare nel codebase sabato:**
-- Come aggiungere il claim `instance_id` alla generazione licenza
-- Come esporre l'instance_id letto come property usabile dal resto del codice
+**Verificato nel codebase (07/06) — Step 1 completato:**
+- [x] Claim `instance_id` aggiunto a `generate_license.py sign --instance-id <slug>`
+- [x] Campo `instance_id: str | None = None` in `LicenseClaims` (Pydantic, backward-compat via Optional)
+- [x] Property `LicenseCheckResult.instance_id` espone lo slug per tunnel_manager
+- [x] Backward compatibility confermata: licenze senza instance_id restano valide (campo = None)
 
 ---
 

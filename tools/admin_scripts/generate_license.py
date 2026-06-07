@@ -91,6 +91,8 @@ def cmd_sign(args: argparse.Namespace) -> None:
         claims["max_clients"] = args.max_clients
     if args.machine_id is not None:
         claims["machine_id"] = args.machine_id
+    if args.instance_id is not None:
+        claims["instance_id"] = args.instance_id
 
     token = jwt.encode(claims, private_key_pem, algorithm=LICENSE_ALGORITHM)
 
@@ -112,6 +114,8 @@ def cmd_sign(args: argparse.Namespace) -> None:
         print(f"  Max clienti: {args.max_clients}")
     if args.machine_id:
         print(f"  Machine ID: {args.machine_id}")
+    if args.instance_id:
+        print(f"  Instance ID: {args.instance_id}")
     print(f"  Output: {output_path}")
 
 
@@ -158,6 +162,9 @@ def cmd_verify(args: argparse.Namespace) -> None:
                 print(f"Machine ID (corrente): {current} -- MATCH")
             else:
                 print(f"Machine ID (corrente): {current} -- MISMATCH!")
+        if result.claims.instance_id:
+            print(f"Instance ID: {result.claims.instance_id}")
+            print(f"Tunnel URL: {result.claims.instance_id}.fitmanagerstudio.com")
 
     sys.exit(0 if result.is_valid else 1)
 
@@ -202,6 +209,7 @@ def main() -> None:
     sign.add_argument("--months", type=int, default=12, help="Durata in mesi (default 12)")
     sign.add_argument("--max-clients", type=int, default=None, help="Limite clienti (default illimitato)")
     sign.add_argument("--machine-id", default=None, help="Fingerprint hardware (SHA-256) per binding macchina")
+    sign.add_argument("--instance-id", default=None, help="Slug tunnel (es. alessio-crociani) per sottodominio FRP")
     sign.add_argument("--output", default="data/license.key", help="Path output (default data/license.key)")
 
     # verify
