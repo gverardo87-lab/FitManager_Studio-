@@ -84,8 +84,10 @@ class BackoffTimer:
 def generate_frpc_toml(config: TunnelConfig) -> str:
     """Genera il contenuto di frpc.toml da TunnelConfig.
 
-    Fase 1: proxy HTTP con subdomain routing (no TLS, aggiunto in Fase 2).
-    Il VPS frps deve avere vhostHTTPPort configurato.
+    Proxy HTTPS con plugin https2http: il VPS fa SNI passthrough (non apre TLS),
+    frpc termina TLS sul PC del trainer e inoltra HTTP a Next.js locale.
+    Fase 1: cert self-signed per validare SNI + P2 data-blind.
+    Fase 2: cert Let's Encrypt (stessi path, zero cambiamenti qui).
     """
     return (
         f'# frpc.toml — generato da FitManager\n'
@@ -97,9 +99,14 @@ def generate_frpc_toml(config: TunnelConfig) -> str:
         f'\n'
         f'[[proxies]]\n'
         f'name = "{config.instance_id}"\n'
-        f'type = "http"\n'
-        f'localPort = 3000\n'
+        f'type = "https"\n'
         f'customDomains = ["{config.public_url}"]\n'
+        f'\n'
+        f'[proxies.plugin]\n'
+        f'type = "https2http"\n'
+        f'localAddr = "127.0.0.1:3000"\n'
+        f'crtPath = "{config.cert_path.as_posix()}"\n'
+        f'keyPath = "{config.key_path.as_posix()}"\n'
     )
 
 

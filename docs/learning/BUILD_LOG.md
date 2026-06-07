@@ -179,12 +179,46 @@ Il `@asynccontextmanager lifespan(app)` e' il pattern FastAPI per gestire startu
 
 **Prossimo step:** Step 5 — bundle frpc.exe nel build Nuitka.
 
+### 2026-06-07 — Step 4b: correzione proxy type HTTP → HTTPS + cert self-signed
+
+**Problema identificato (revisione critica con Claude chat):**
+Il proxy `type = "http"` usato nel Step 3 non valida l'architettura reale:
+- HTTP usa header `Host` per routing, HTTPS usa SNI — meccanismi diversi
+- Con HTTP il VPS vede il traffico in chiaro — P2 (data-blind) non dimostrato
+- Testare con HTTP rischia di scoprire problemi SNI solo in Fase 2
+
+**Decisione: strada B — cert self-signed temporaneo.**
+Valida SNI routing + P2 data-blind con cert finto. In Fase 2 si sostituisce solo il file `.pem`.
+Il cert copre sia il subdomain specifico (`gvera-dev.fitmanagerstudio.com`) sia il wildcard (`*.fitmanagerstudio.com`) via SAN.
+
+**File modificati:**
+- `api/services/tunnel_config.py`:
+  - Aggiunti `cert_path` e `key_path` a `TunnelConfig`
+  - `_ensure_self_signed_cert()`: genera cert RSA 2048 + SHA-256, valido 365gg, idempotente (rigenera solo se scaduto)
+  - `get_tunnel_config()` chiama `_ensure_self_signed_cert()` prima di assemblare il config
+- `api/services/tunnel_manager.py`:
+  - `generate_frpc_toml()`: da `type = "http"` / `localPort` a `type = "https"` / plugin `https2http` con cert path
+  - Path in TOML con forward slash (`as_posix()`) per compatibilita' cross-platform
+
+**Verifiche eseguite:**
+- Cert generato: CN corretto, SAN con 2 DNS names, valido fino 2027-06-07
+- Idempotenza: seconda chiamata = skip (cert gia' presente)
+- frpc.toml: tipo `https`, plugin `https2http`, path cert con forward slash
+- Ciclo completo: licenza con instance_id → cert auto-generato → frpc avviato → stop pulito
+- Suite completa: 361 test passati, zero regressioni
+
+**Concetto nuovo — SNI (Server Name Indication):**
+Quando un browser apre una connessione HTTPS, PRIMA di cifrare manda in chiaro il nome del dominio che vuole raggiungere (SNI). Il VPS legge SOLO questo nome per decidere a quale tunnel inoltrare, senza mai aprire il pacchetto TLS. E' il meccanismo che permette a piu' siti HTTPS di condividere la stessa porta 443 sullo stesso IP. Per FitManager: tutti i trainer condividono la porta 443 del VPS, il routing avviene per nome (SNI), e il VPS non puo' leggere il contenuto (P2 data-blind). Questo funziona identico con cert self-signed e Let's Encrypt — il VPS non vede la differenza.
+
+**Azione DNS rimanente:** creare record A esplicito `edge.fitmanagerstudio.com` → IP VPS su Cloudflare (DNS-only). Il wildcard lo coprirebbe ma un record esplicito e' intenzionale e modificabile indipendentemente.
+
 ### Da fare (Fase 1)
 
 - [x] 1.1 Instance ID nella licenza (claim + CLI + lettura)
 - [x] 1.2 Configurazione tunnel (TunnelConfig, risoluzione path, config layer)
 - [x] 1.3 Tunnel manager (babysitter frpc + generazione frpc.toml)
 - [x] 1.4 Auto-start tunnel al boot (lifespan step 6, startup/shutdown)
+- [x] 1.4b Correzione: proxy HTTPS + cert self-signed (validazione SNI + P2 data-blind)
 - [ ] 1.5 Bundle FRP binary (frpc.exe in Nuitka)
 - [ ] 1.6 Script provisioning AVGV-side (DNS via Cloudflare API)
 - [ ] 1.7 Health endpoint tunnel (/tunnel/status)
