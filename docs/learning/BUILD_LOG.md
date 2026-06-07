@@ -124,16 +124,49 @@ Il config layer e' un "contratto" tra il sistema di identita' (licenza JWT) e il
 
 **Prossimo step:** Step 3 — tunnel_manager.py (babysitter frpc).
 
+### 2026-06-07 — Step 3: tunnel_manager.py (BABYSITTER)
+
+**Obiettivo:** creare il componente che gestisce il ciclo di vita di frpc: avvio, monitoraggio, restart su crash, shutdown pulito.
+
+**File creato:**
+- `api/services/tunnel_manager.py` (~250 LOC) con:
+  - `TunnelState` enum: stopped/starting/connected/reconnecting/error
+  - `BackoffTimer`: backoff esponenziale (1s→2s→4s→...60s) + jitter + reset dopo 5min stabilita'
+  - `generate_frpc_toml()`: genera config FRP client da TunnelConfig (Fase 1: proxy HTTP)
+  - `TunnelManager` classe principale:
+    - `start()`: genera frpc.toml + avvia frpc + avvia monitor daemon thread
+    - `stop()`: ferma frpc con terminate (gentile) + kill (forza dopo 5s)
+    - `get_status()`: dict per health endpoint (state, instance_id, public_url, pid)
+    - `_monitor_loop()`: daemon thread, controlla ogni 5s se frpc e' vivo, restart con backoff
+    - `_drain_output()`: thread che legge stdout frpc (previene deadlock buffer pieno)
+    - `_cleanup()`: handler atexit, uccide frpc alla chiusura app (evita orfani)
+
+**Verifiche eseguite:**
+- Generazione frpc.toml: TOML corretto con instance_id, server, customDomains
+- Backoff timer: delay crescenti (1.4s, 2.6s, 4.2s, 8.8s, 16.9s, 32.1s), cap a 60s
+- Ciclo di vita completo: start -> frpc si connette al VPS (login success) -> stop pulito (PID terminato)
+- Restart automatico: frpc ucciso forzatamente -> monitor rileva exit code 1 -> backoff 2s -> nuovo PID
+- VPS conferma: `vhostHTTPPort` non ancora configurato (atteso, da aggiungere per e2e)
+- Suite completa: 361 test passati, zero regressioni
+
+**Concetti nuovi (cattura per learning):**
+1. **subprocess.Popen**: Python lancia un programma esterno come processo figlio. Il genitore mantiene il controllo (pid, poll(), terminate(), kill()). Stesso pattern di systemd con frps sul VPS.
+2. **Daemon thread**: `threading.Thread(daemon=True)` — thread che muore quando il programma principale esce. Il monitor gira cosi': se FitManager crasha, il thread monitor muore con lui (e frpc viene ucciso dall'atexit handler).
+3. **Backoff esponenziale + jitter**: attesa crescente tra retry (1s, 2s, 4s, ...) per evitare retry storm. Il jitter (ritardo casuale) evita thundering herd: se frps si riavvia, 50 frpc non riprovano tutti allo stesso istante.
+4. **Output draining**: subprocess.PIPE ha un buffer finito. Se nessuno lo legge e si riempie, il processo figlio si blocca in attesa di scrivere (deadlock). Il thread `_drain_output` lo svuota continuamente.
+5. **CREATE_NO_WINDOW**: flag Windows che impedisce a frpc di aprire una finestra console visibile al trainer.
+
+**Prossimo step:** Step 4 — auto-start tunnel al boot (entry_point.py).
+
 ### Da fare (Fase 1)
 
 - [x] 1.1 Instance ID nella licenza (claim + CLI + lettura)
 - [x] 1.2 Configurazione tunnel (TunnelConfig, risoluzione path, config layer)
-- [ ] 1.3 Script provisioning AVGV-side (DNS via Cloudflare API)
-- [ ] 1.4 Tunnel manager (babysitter frpc)
-- [ ] 1.5 Config FRP client (genera frpc.toml)
-- [ ] 1.6 Bundle FRP binary (frpc.exe in Nuitka)
-- [ ] 1.7 Auto-start tunnel (entry_point.py)
-- [ ] 1.8 Health endpoint tunnel (/tunnel/status)
-- [ ] 1.9 Test e2e (tunnel connesso, URL raggiungibile, reconnect)
+- [x] 1.3 Tunnel manager (babysitter frpc + generazione frpc.toml)
+- [ ] 1.4 Auto-start tunnel (entry_point.py)
+- [ ] 1.5 Bundle FRP binary (frpc.exe in Nuitka)
+- [ ] 1.6 Script provisioning AVGV-side (DNS via Cloudflare API)
+- [ ] 1.7 Health endpoint tunnel (/tunnel/status)
+- [ ] 1.8 Test e2e (tunnel connesso, URL raggiungibile, reconnect)
 
 ---

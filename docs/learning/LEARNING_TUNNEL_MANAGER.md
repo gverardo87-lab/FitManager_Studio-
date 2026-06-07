@@ -164,21 +164,21 @@ Questo e' lo stesso principio dei load balancer in produzione: non basta che il 
 
 ## 4. Riepilogo: cosa deve fare il tunnel_manager (checklist di design)
 
-- [ ] Avvio `frpc` come processo figlio con stdout/stderr catturati
-- [ ] Lockfile/PID per impedire doppia istanza
-- [ ] Restart automatico con backoff esponenziale + jitter
-- [ ] Health check periodico end-to-end (non solo "processo vivo?")
-- [ ] Rilevamento sleep/wake Windows -> health check forzato al resume
-- [ ] Shutdown handler: kill `frpc` alla chiusura dell'app
-- [ ] Log strutturato di ogni evento (avvio, restart, errore, health check)
-- [ ] Messaggi diagnostici leggibili per errori firewall/antivirus
+- [x] Avvio `frpc` come processo figlio con stdout/stderr catturati (subprocess.Popen + drain thread)
+- [ ] Lockfile/PID per impedire doppia istanza (rimandato: frps rifiuta tunnel duplicati per name)
+- [x] Restart automatico con backoff esponenziale + jitter (BackoffTimer, testato con kill simulato)
+- [ ] Health check periodico end-to-end (non solo "processo vivo?") — rimandato a dopo e2e funzionante
+- [ ] Rilevamento sleep/wake Windows -> health check forzato al resume — rimandato a raffinamento
+- [x] Shutdown handler: kill `frpc` alla chiusura dell'app (atexit + terminate/kill con timeout 5s)
+- [x] Log strutturato di ogni evento (avvio, restart, errore, health check)
+- [x] Messaggi diagnostici leggibili per errori firewall/antivirus (PermissionError catturato con messaggio)
 
 ---
 
 ## 5. Domande aperte (da chiudere in Fase 1)
 
-- [ ] `frpc` ha un reconnect interno? Quanto e' affidabile? Copre sleep/wake?
-- [ ] FitManager impedisce gia' la doppia istanza a livello app? Se si', il lockfile tunnel e' ridondante?
-- [ ] Come si rilevano gli eventi di power state (sleep/wake) su Windows da Python?
-- [ ] La firma digitale dell'installer copre anche `frpc.exe` bundlato, o serve firma separata?
-- [ ] Qual e' il timeout giusto per l'health check? Troppo frequente = overhead. Troppo raro = tunnel morto a lungo.
+- [x] `frpc` ha un reconnect interno? — Si', frpc rileva disconnessione e riprova. Ma il tunnel_manager aggiunge supervisione extra (process monitor + backoff) per i casi che frpc non copre (crash, sleep/wake).
+- [ ] FitManager impedisce gia' la doppia istanza a livello app? — Da verificare. In ogni caso, frps rifiuta tunnel con lo stesso `name`, quindi doppia istanza frpc = errore pulito (non instabilita').
+- [ ] Come si rilevano gli eventi di power state (sleep/wake) su Windows da Python? — Rimandato a raffinamento post-e2e.
+- [ ] La firma digitale dell'installer copre anche `frpc.exe` bundlato, o serve firma separata? — Da verificare con Inno Setup.
+- [x] Qual e' il timeout giusto per l'health check? — Monitor ogni 5s (MONITOR_INTERVAL). Health check e2e da definire dopo tunnel funzionante.
