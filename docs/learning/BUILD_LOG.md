@@ -220,6 +220,7 @@ Quando un browser apre una connessione HTTPS, PRIMA di cifrare manda in chiaro i
 - [x] 1.4 Auto-start tunnel al boot (lifespan step 6, startup/shutdown)
 - [x] 1.4b Correzione: proxy HTTPS + cert self-signed (validazione SNI + P2 data-blind)
 - [x] 1.5 Test e2e tunnel HTTPS (SNI routing + P2 data-blind dimostrato)
+- [x] 1.5b Route separation middleware (CRM invisibile da tunnel)
 - [ ] 1.6 Bundle FRP binary (frpc.exe in Nuitka)
 - [ ] 1.7 Script provisioning AVGV-side (DNS via Cloudflare API)
 - [ ] 1.8 Health endpoint tunnel (/tunnel/status)
@@ -242,5 +243,30 @@ Quando un browser apre una connessione HTTPS, PRIMA di cifrare manda in chiaro i
 
 **Concetto validato — architettura SNI passthrough:**
 Il flusso e' identico a quello che avra' la produzione con Let's Encrypt. L'unica differenza e' che il browser mostrera' un warning (cert self-signed) invece del lucchetto verde. Il routing, la cifratura, e la cecita' del VPS sono gia' quelli definitivi.
+
+### 2026-06-07 — Step 5b: route separation middleware (SICUREZZA)
+
+**Problema identificato durante test e2e:**
+Accedendo a `https://gvera-dev.fitmanagerstudio.com` dal browser, il tunnel mostrava la pagina di login del CRM. Il CRM intero era esposto su Internet — login, dashboard, clienti. Un attaccante poteva tentare brute-force su `/api/auth/login` (rate limiter aiuta ma non basta).
+
+**Decisione: implementare subito, non rimandare a Fase 2.**
+Gap G5 della strategia era pianificato per Fase 2, ma esporre il login su Internet e' un rischio reale che un programmatore esperto non rimanda.
+
+**File creato:**
+- `frontend/src/middleware.ts` — sostituisce `proxy.ts` (rinominato per convenzione Next.js):
+  - **Layer 1 — Tunnel Guard**: rileva richieste dal tunnel via hostname (non localhost/LAN) → se path non e' `/public/*`, `/api/public/*`, `/health`, `/media` → **404**
+  - **Layer 2 — Auth Guard**: invariato rispetto al vecchio proxy.ts (cookie check, redirect)
+  - Il CRM e' completamente invisibile dal tunnel: `/login`, `/dashboard`, `/clienti` → 404
+
+**File rimosso:**
+- `frontend/src/proxy.ts` — sostituito da `middleware.ts`
+
+**Verifiche eseguite:**
+- Next.js build: passa, middleware riconosciuto (`Proxy (Middleware)`)
+- Test frontend: 81 passed, 1 failed (pre-esistente, non legato alla modifica)
+- Test backend: 361 passed (nessuna modifica backend)
+
+**Concetto — defense in depth:**
+Due layer indipendenti: anche se uno fallisce, l'altro protegge. Il tunnel guard blocca PRIMA dell'auth guard. Un attaccante dal tunnel non vede nemmeno il form di login — riceve 404 come se la pagina non esistesse. E' meglio di un 403 (che rivelerebbe l'esistenza della risorsa).
 
 ---
