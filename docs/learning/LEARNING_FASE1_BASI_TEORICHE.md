@@ -88,9 +88,10 @@ Il `tunnel_manager` avvia il `frpc` come **processo figlio** di FitManager: un p
 
 NOTA collegamento: sul VPS e' systemd a fare da babysitter a `frps`. Sul PC del trainer e' il `tunnel_manager` (dentro FitManager) a fare da babysitter a `frpc`. Stesso ruolo, contesti diversi.
 
-**Da verificare nel codebase sabato:**
-- Come l'app gia' gestisce processi/avvio (`api/entry_point.py`)
-- Dove inserire l'avvio del tunnel_manager al boot dell'app
+**Verificato nel codebase (07/06):**
+- [x] Entry point: `tools/build/entry_point.py` — avvia solo uvicorn, nessuna logica di boot aggiuntiva. Il tunnel_manager si innesta qui.
+- [x] Config layer creato: `api/services/tunnel_config.py` — `TunnelConfig` dataclass con instance_id, server, path frpc. Separa identita' (licenza) da esecuzione (tunnel_manager).
+- [x] frpc.exe gia' presente in `tools/bin/` (~15MB, scaricato in Fase 0). Path risolto da `_resolve_frpc_path()`.
 
 ---
 
@@ -105,9 +106,9 @@ Zero configurazione per il trainer. Se il trainer dovesse scaricare FRP a parte,
 **Livello 3 — Perche' funziona cosi' sotto (concetto: bundling):**
 Il prodotto e' impacchettato con uno strumento (PyInstaller o Nuitka — DA CHIARIRE, la strategia li nomina entrambi in punti diversi: incongruenza da risolvere sabato con Claude Code) che raccoglie codice Python + dipendenze + risorse in un pacchetto installabile. Il `frpc.exe` viene incluso come "risorsa" nel pacchetto: il build lo copia dentro, e a runtime il software sa dove trovarlo per lanciarlo. ~15MB in piu' su un installer gia' grande (~100MB+) = impatto trascurabile.
 
-**Da verificare/risolvere sabato:**
-- **INCONGRUENZA:** PyInstaller o Nuitka? La strategia usa entrambi i termini. Verificare cosa usa DAVVERO il build attuale (`tools/build/build-release.sh`) — il sistema e' la fonte di verita'.
-- Come si includono risorse esterne nel build attuale
+**Verificato nel codebase (07/06):**
+- [x] **INCONGRUENZA RISOLTA:** Nuitka e' il build primario (ADR-007). PyInstaller preservato come fallback (`fitmanager.spec`). `is_compiled()` in `api/config.py` rileva entrambi (`sys.frozen` per PyInstaller, `__compiled__` per Nuitka).
+- [x] `_resolve_frpc_path()` in `tunnel_config.py` gestisce entrambi i casi: dev (`tools/bin/frpc.exe`) e compiled (accanto all'exe).
 
 ---
 

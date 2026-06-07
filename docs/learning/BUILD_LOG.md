@@ -99,12 +99,35 @@ Dettagli in `TUNNEL_MIGRATION_STRATEGY.md` sez. 4 Fase 1.
 **Concetto consolidato (non nuovo — gia' in LEARNING_FASE1 sez. 1-2):**
 Aggiungere un claim JWT = mettere un campo in piu' nel dizionario payload prima di firmare. Il campo `Optional` in Pydantic (`str | None = None`) garantisce backward compatibility: le licenze vecchie non hanno quel campo -> Pydantic lo mette a `None` -> tutto il codice esistente continua a funzionare. Stesso pattern gia' usato per `machine_id`. E' il pattern standard per evolvere un contratto dati senza rompere i consumatori esistenti.
 
-**Prossimo step:** Step 2 — lettura instance_id al boot + preparazione per tunnel_manager.
+**Prossimo step:** Step 2 — configurazione tunnel (layer tra identita' e esecuzione).
+
+### 2026-06-07 — Step 2: configurazione tunnel (CONFIG LAYER)
+
+**Obiettivo:** creare il layer di configurazione che il tunnel_manager consumera'. Separare "sapere chi sono" (licenza, path) da "gestire il processo" (avvio, restart, health check).
+
+**File creato:**
+- `api/services/tunnel_config.py` — modulo dedicato con:
+  - Costanti server FRP: `FRP_SERVER_ADDR`, `FRP_SERVER_PORT`, `TUNNEL_DOMAIN`
+  - `TunnelConfig` dataclass (frozen/immutabile): instance_id, server, path, domain
+  - `_resolve_frpc_path()`: trova frpc.exe in `tools/bin/` (dev) o accanto all'exe (compiled)
+  - `get_tunnel_config()`: legge licenza -> estrae instance_id -> risolve frpc -> assembla config
+
+**Verifiche eseguite:**
+- Licenza senza instance_id -> `get_tunnel_config()` restituisce `None` (tunnel disabilitato)
+- Licenza con instance_id + frpc assente -> `None` con warning nel log
+- Licenza con instance_id + frpc presente -> `TunnelConfig` assemblato, `public_url` corretto
+- frpc.exe gia' presente in `tools/bin/` (~15MB, scaricato in Fase 0)
+- Suite completa: 361 test passati, zero regressioni
+
+**Concetto nuovo — separazione di responsabilita' (separation of concerns):**
+Il config layer e' un "contratto" tra il sistema di identita' (licenza JWT) e il sistema di esecuzione (tunnel_manager). Il tunnel_manager ricevera' un `TunnelConfig` gia' pronto e non dovra' importare `license.py` ne' calcolare path. Ogni modulo fa UNA cosa. E' lo stesso principio per cui nel codebase i router (HTTP) non fanno query al database direttamente ma chiamano service/helper: ogni layer ha la sua responsabilita'. Il dataclass `frozen=True` significa che l'oggetto e' immutabile dopo la creazione — nessuno puo' modificarlo accidentalmente.
+
+**Prossimo step:** Step 3 — tunnel_manager.py (babysitter frpc).
 
 ### Da fare (Fase 1)
 
 - [x] 1.1 Instance ID nella licenza (claim + CLI + lettura)
-- [ ] 1.2 Lettura instance_id al boot (singleton/helper)
+- [x] 1.2 Configurazione tunnel (TunnelConfig, risoluzione path, config layer)
 - [ ] 1.3 Script provisioning AVGV-side (DNS via Cloudflare API)
 - [ ] 1.4 Tunnel manager (babysitter frpc)
 - [ ] 1.5 Config FRP client (genera frpc.toml)
