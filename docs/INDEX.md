@@ -64,6 +64,8 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 | `LICENSE_ACTIVATION.md` | Attivazione licenza, hardware binding, CLI admin |
 | `CRM_ACCESS_ARCHITECTURE.md` | Architettura accesso v2.0: doppio piano (LAN/tunnel), FRP data-blind, TLS e2e, criteri accettazione | Blueprint infra tunnel |
 | `TUNNEL_MIGRATION_STRATEGY.md` | Strategia migrazione Tailscale -> FRP: 4 fasi, gap analysis, piano esecuzione | Esecuzione migrazione |
+| `TUNNEL_SECURITY_BOUNDARY.md` | Acceptance criteria Strada B v2.0: confine JWT, rate limiter, apertura selettiva tunnel, P2 data-blind | Sicurezza tunnel |
+| `STRADA_B_IMPLEMENTATION_PLAN.md` | Piano implementazione Strada B: 4 step (lockout, role JWT, apertura guard, test e2e) | Esecuzione Strada B |
 | `TAILSCALE_FUNNEL_SETUP.md` | Setup Tailscale Funnel, proxy, troubleshooting (da archiviare post-migrazione) |
 | `DEPLOYMENT_PLAN.md` | Piano deploy: PyInstaller/Nuitka, standalone, Inno Setup |
 | `NUTRITION_ENGINE_V3.md` | Architettura Nutrition Engine v3 |

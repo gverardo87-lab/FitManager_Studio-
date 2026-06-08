@@ -2,128 +2,226 @@
 
 **Stato:** binding (`docs/technical/`)
 **Contesto:** Apertura del CRM all'accesso del trainer da qualunque rete, via tunnel FRP.
-**Versione:** 1.0
-**Premessa critica:** fino all'introduzione di questo documento il tunnel serviva *esclusivamente* gli atleti (`/api/public/*`). Strada B espone il CRM su Internet. Il modello di minaccia passa da **"rete locale fidata"** a **"esposto su Internet"**. Ogni assunzione basata sulla fiducia della rete locale è da considerarsi non più valida.
+**Versione:** 2.0
+**Convenzione errori:** in coerenza con il **Bouncer Pattern** del progetto (CLAUDE.md, regola #3: "Non trovato = 404, mai 403"), tutti i rifiuti di autorizzazione sono **404**. Un endpoint CRM colpito da chi non e' un trainer si comporta come se non esistesse.
 
-Questo documento specifica *cosa deve essere vero*, non *come implementarlo*. L'implementazione è libera di adattarsi al codebase reale.
+**Percorso d'ingresso unico (FRP):** il progetto e' in transizione da Tailscale Funnel a FRP. Le due strategie NON devono coesistere a regime. FRP e' l'unico percorso target. Vedi sez. 7.
+
+**Premessa critica:** fino all'introduzione di Strada B il tunnel serviva esclusivamente gli atleti (`/api/public/*`). Strada B espone il CRM su Internet. Il modello di minaccia passa da "rete locale fidata" a "esposto su Internet".
+
+Questo documento specifica *cosa deve essere vero*, non *come implementarlo*.
+
+> **Nota di revisione (v2.0 — 2026-06-08):** revisione completa basata su audit del codice sorgente (Claude Code, non Claude Chat). Principali correzioni rispetto alla v1.1:
+>
+> - **Sezione 0 (principio fondante):** corretto. La v1.1 affermava "un token trainer e un token atleta non sono distinguibili crittograficamente". Falso: il portale atleti usa `ShareToken` (UUID4 in query param), NON JWT. I due formati sono incompatibili — un UUID4 non puo' mai essere decodificato come JWT. Il confine trainer-vs-atleta e' gia' chiuso per costruzione di formato.
+> - **AC-1 (role JWT):** riclassificato da BLOCCANTE a raccomandato (defense in depth). Il rischio "token atleta confuso con trainer" non esiste con l'architettura attuale.
+> - **AC-2 (confine FastAPI):** `get_current_trainer()` e' gia' il confine su tutti gli endpoint CRM. Il gap residuo e' il claim `role`, non la dependency.
+> - **Nuovo BLOCCANTE — rate limiter cieco via tunnel:** `127.0.0.1` di frpc rende `auth_limiter` inefficace. Elevato a bloccante assoluto (sez. 3).
+> - **Nuovo BLOCCANTE — apertura selettiva tunnel guard:** `/auth/register` NON deve essere esposto via tunnel (sez. 4).
+> - **Sezione 6 ripristinata:** scenari operativi (contenuto orfano nella v1.1).
+> - La sez. P2 (data-blind) e la correzione v1.1 restano invariate.
 
 ---
 
 ## 0. Principio fondante
 
-> **L'autorizzazione trainer-vs-atleta è una proprietà del JWT firmato, verificata lato FastAPI. Non è una proprietà del path, dell'header `Host`, della rete di origine, né di alcun meccanismo a livello Next.js.**
+> **L'autorizzazione trainer-vs-anonimo e' una proprieta' del meccanismo di autenticazione verificato lato FastAPI. Non e' una proprieta' del path, dell'header `Host`, della rete di origine, ne' di alcun layer Next.js.**
 
-Tutto ciò che precede FastAPI (Next.js middleware, Tunnel Guard, routing SNI sul VPS) è **difesa in profondità**: utile, ma non è il confine. Il confine è crittografico e vive nel layer applicativo Python, perché è l'unico punto che un client non può aggirare senza possedere la chiave privata di firma.
+Tutto cio' che precede FastAPI (middleware Next.js, Tunnel Guard, routing SNI) e' **difesa in profondita'**.
+
+**Due assi di protezione nel codebase:**
+
+- **Bouncer Pattern -> asse trainer-vs-trainer.** Ogni endpoint filtra per `trainer_id`. Risponde a: *"sei il proprietario di questi dati?"*
+- **`get_current_trainer()` -> asse autenticato-vs-anonimo.** La dependency FastAPI (`api/dependencies.py:29-60`) verifica JWT firmato, cerca trainer in DB, controlla `is_active`. Risponde a: *"hai un JWT valido di un trainer attivo?"*
+
+**Stato del confine oggi (verificato nel codice):**
+
+Il JWT trainer (`api/auth/service.py:28-41`) contiene `{sub: trainer_id, email, exp}`. Il portale atleti usa un meccanismo **completamente diverso**: `ShareToken` (UUID4 in query parameter `?token=`, validato contro DB in `api/routers/public_portal.py:83-112`). I due sistemi sono **incompatibili per formato**: un UUID4 non puo' essere decodificato come JWT HS256, e un JWT non corrisponde a nessun `ShareToken.token` nel DB.
+
+**Conseguenza:** il rischio "un atleta presenta un token che supera il check trainer" **non esiste** nell'architettura attuale. `get_current_trainer()` richiede un JWT HS256 firmato con `JWT_SECRET` -> il portale atleti non ne emette -> confine trainer-vs-atleta chiuso per costruzione di formato.
+
+Il JWT **non** contiene un claim `role`. Questo e' un gap di defense-in-depth (sez. 1), non un gap di sicurezza attivo.
+
+**Rapporto con la v1.1.** La v1.1 affermava: *"un token trainer e un token atleta non sono distinguibili crittograficamente"*. Questa affermazione era **errata** perche' assume che entrambi siano JWT. Il portale atleti non emette JWT: emette UUID4 opachi validati per lookup diretto. I due formati sono distinguibili alla radice (struttura, encoding, meccanismo di verifica).
 
 ---
 
-## 1. Ruolo nel JWT (AC-1) — BLOCCANTE
+## 1. Role nel JWT (AC-1) — raccomandato (defense in depth)
+
+**Riclassificazione v2.0:** da BLOCCANTE a raccomandato. Motivazione: il portale atleti usa `ShareToken` (UUID4), non JWT. Il rischio "token atleta spacciato per trainer" non esiste con l'architettura attuale.
 
 **Cosa deve essere vero:**
 
-- Il JWT emesso da `create_access_token` per un trainer DEVE contenere un claim di ruolo esplicito (es. `role: "trainer"`).
-- I token emessi per gli atleti dal portale pubblico DEVONO contenere un claim di ruolo distinto (es. `role: "athlete"`) e DEVONO avere scope ristretto al solo atleta cui si riferiscono.
-- I due tipi di token NON devono essere intercambiabili: un token atleta non deve mai soddisfare un controllo che richiede ruolo trainer, e viceversa per gli endpoint che eventualmente devono restare athlete-only.
-- Il ruolo DEVE essere dentro il payload firmato (quindi protetto da manomissione), MAI derivato da header, path o hostname.
+- Il JWT emesso da `create_access_token` DOVREBBE contenere un claim `role: "trainer"`.
+- `get_current_trainer()` DOVREBBE verificare `role == "trainer"` dopo la validazione firma.
+- Token senza `role` (emessi prima dell'aggiornamento) trattati come non autorizzati (fail-closed -> forza re-login pulito).
+
+**Perche' farlo nonostante il rischio sia teorico:**
+
+- **Future-proofing:** se in futuro il portale emettesse JWT per gli atleti (es. sessioni persistenti), il claim `role` impedirebbe confusione.
+- **Costo zero:** aggiungere un campo al payload JWT e' una modifica di 1 riga.
+- **Defense-in-depth:** non affidarsi a una sola proprieta' (formato token) per la separazione dei ruoli.
 
 **Criterio di accettazione:**
-Decodificando un token trainer e un token atleta, i rispettivi `role` sono distinti e presenti. Un token a cui venga alterato il campo `role` in chiaro fallisce la verifica di firma.
-
-**Nota su token già emessi:** i trainer registrati prima di AC-1 hanno token senza `role`. La verifica (AC-2) deve trattare l'assenza di `role` come **non autorizzato** (fail-closed), non come "trainer per default". Questo forza un re-login pulito e impedisce che vecchi token diventino un bypass.
+Decodificando un token trainer, `role == "trainer"` e' presente. Token senza `role` -> 401.
 
 ---
 
-## 2. Verifica del ruolo lato FastAPI (AC-2) — BLOCCANTE, è IL confine
+## 2. Confine FastAPI — gia' implementato (AC-2)
 
-**Cosa deve essere vero:**
+**Stato attuale (verificato in `api/dependencies.py:29-60`):**
 
-- Esiste una dependency FastAPI (es. `require_trainer`) che:
-  1. estrae il JWT dalla richiesta,
-  2. ne verifica la firma con la chiave attesa,
-  3. verifica che `role == "trainer"`,
-  4. rifiuta con `401`/`403` in ogni altro caso (firma invalida, token assente, ruolo assente, ruolo diverso).
-- Questa dependency è applicata a **TUTTI** gli endpoint che leggono o scrivono dati del CRM: `clients`, `contracts`, `rates`, `movements`, `recurring_expenses`, `dashboard`, `agenda`, `todos`, `measurements`, `goals`, `workout*`, `nutrition`, `communications`, `backup`, `workspace`, e qualunque altro router non esplicitamente pubblico.
-- Gli endpoint del portale atleti (`/api/public/*`) restano governati dalla loro logica di token tokenizzato, e NON devono mai accettare di esporre dati CRM al di fuori dello scope dell'atleta.
+`get_current_trainer()` e' applicato a **tutti** gli endpoint CRM via `Depends()`. Fa gia':
+1. Estrae JWT dall'header `Authorization: Bearer <token>`
+2. Verifica firma HS256 con `JWT_SECRET`
+3. Ottiene `trainer_id` dal claim `sub`
+4. Lookup trainer nel DB + check `is_active`
+5. Rifiuta con 401 se qualsiasi step fallisce
+
+**Copertura completa:** tutti i router CRM usano questa dependency — clients, contracts, rates, movements, recurring_expenses, dashboard, agenda, todos, measurements, goals, workouts, communications, backup, workspace, training_science, training_intelligence, workout_diff.
+
+**Gap residuo:** il check `role == "trainer"` descritto in AC-1. Non e' un buco attivo (nessun JWT "non-trainer" esiste nel sistema), ma va colmato per coerenza.
 
 **Criterio di accettazione (test obbligatori prima del POC):**
-- Richiesta a un endpoint CRM **senza** token → 401/403.
-- Richiesta a un endpoint CRM con token **atleta** → 403. *(questo è il test che dimostra la separazione dei ruoli)*
-- Richiesta a un endpoint CRM con token **trainer valido** → 200.
-- Richiesta a un endpoint CRM con token trainer **a cui è stato manomesso il payload** → 401 (firma fallita).
-- Tutti e quattro i test devono passare colpendo l'app **attraverso il dominio pubblico del tunnel**, non solo da localhost.
+- Richiesta CRM senza token -> 401.
+- Richiesta CRM con JWT artigianale senza `role` o con `role != "trainer"` -> 401/404.
+- Richiesta CRM con JWT `role: "trainer"` valido -> 200.
+- Richiesta CRM con JWT manomesso nel payload -> 401 (firma fallita).
+- Tutti e 4 i test via dominio pubblico del tunnel, non solo da localhost.
 
-> Se AC-2 è soddisfatto, il CRM è sicuro su Internet **indipendentemente** da cosa fa il middleware Next.js. Questo è il punto: il confine non deve dipendere da nient'altro.
+> Con `get_current_trainer()` gia' in vigore, il CRM e' sicuro su Internet anche **senza** AC-1. AC-1 aggiunge un layer di defense-in-depth.
 
 ---
 
-## 3. Tunnel Guard come difesa in profondità (AC-3)
+## 3. Rate limiter IP reale — BLOCCANTE
+
+**Problema:** `auth_limiter` (`api/services/rate_limiter.py`) e' IP-based: 5 req/min, 20 req/ora per IP. Via tunnel, frpc inoltra le richieste a `localhost:3000` -> Next.js proxya a `localhost:8000` (backend). L'IP visto da FastAPI e' **`127.0.0.1`** per TUTTI gli utenti che passano dal tunnel.
+
+**Conseguenza:** il rate limiter conta tutti i tentativi di login via tunnel come una **sola sorgente**. Un attaccante e il trainer legittimo condividono lo stesso bucket. Un attaccante che martella `/auth/login` blocca anche il trainer dopo 5 tentativi/min. Il rate limiter e' **cieco**.
 
 **Cosa deve essere vero:**
 
-- `TUNNEL_ALLOWED_PREFIXES` in `middleware.ts` viene esteso per consentire l'accesso del trainer al CRM via tunnel (login, dashboard, API CRM). Questo è necessario per Strada B.
-- Il Tunnel Guard **non è più il meccanismo di sicurezza** che impedisce l'accesso al CRM da Internet: quel ruolo passa interamente ad AC-2. Il guard resta solo come strato di riduzione della superficie (es. bloccare path puramente interni/diagnostici che non servono né a trainer né ad atleti via tunnel).
-- **`isTunnelRequest` NON deve basare alcuna decisione di sicurezza sull'header `Host`.** L'header `Host` arriva da `frpc` dopo terminazione TLS ed è influenzabile dal client → spoofabile. Una guardia che classifica come "LAN fidata" sulla base dell'`Host` può essere aggirata inviando `Host: localhost` dal dominio pubblico.
-
-**Conseguenza pratica:** con AC-2 in vigore, la distinzione LAN-vs-tunnel **smette di avere rilevanza di sicurezza**. Un trainer su LAN e un trainer via tunnel presentano lo stesso JWT con `role=trainer` e ottengono lo stesso accesso — che è esattamente il comportamento voluto in Strada B. Il redirect a `/login` (Layer 2) resta una comodità UX, non una protezione.
+- Il rate limiter DEVE distinguere client IP diversi dietro il tunnel.
+- Il layer di ingresso (frpc o frps) DEVE propagare l'IP reale del client via header (`X-Forwarded-For`, `X-Real-IP`, o equivalente).
+- Il rate limiter DEVE estrarre l'IP reale dall'header propagato.
+- L'header NON deve essere fidato ciecamente: solo la prima entry inserita dal layer di fiducia (frpc/frps) e' affidabile. Entry aggiunte a monte dal client sono spoofabili.
+- **Fallback fail-closed:** se l'IP reale non e' disponibile, il rate limiter DEVE restare attivo su `127.0.0.1`. Questo significa che un attaccante potrebbe bloccare anche il trainer (DoS locale), ma e' preferibile a zero protezione.
 
 **Criterio di accettazione:**
-Inviare al dominio pubblico una richiesta con header `Host: localhost` (o `127.0.0.1`) verso un endpoint CRM, **senza** token trainer valido → deve comunque ricevere 401/403. Se riceve 200 o il contenuto del CRM, AC-2 non è correttamente in vigore e il sistema è vulnerabile.
+Due client con IP diversi che colpiscono `/auth/login` via tunnel -> conteggiati come sorgenti separate. Un client che supera 5 tentativi/min -> 429, l'altro client continua a funzionare.
+
+**Nota implementativa (non vincolante):** FRP supporta `proxyProtocol` e header forwarding nella configurazione `https2http`. Verificare quale meccanismo propaga l'IP reale nel setup attuale. L'alternativa e' estrarlo lato frps e iniettarlo come header custom nel tunnel.
 
 ---
 
-## 4. P2 — Data-blind (proprietà GDPR) — BLOCCANTE per la tesi GDPR
+## 4. Apertura selettiva tunnel guard — BLOCCANTE (vincolo di sequenza)
 
-**Problema rilevato:** la configurazione attuale del tunnel usa `type = "https"` + plugin `https2http`. In questa modalità il vhost HTTPS è gestito da `frps` sul VPS, che **termina o ispeziona il TLS**. Il VPS quindi *non è cieco* rispetto al traffico trainer/atleti. La proprietà P2 (data-blind), su cui poggia la semplificazione GDPR, **è falsa come configurato.** Il test TCP della Fase 0 (HTTP 307) non dimostra P2 — dimostra solo connettività.
+**Cosa deve essere vero:**
 
-**Cosa deve essere vero perché P2 sia reale:**
+`TUNNEL_ALLOWED_PREFIXES` in `middleware.ts` viene esteso per consentire l'accesso del trainer al CRM via tunnel. L'apertura e' **selettiva**, non totale.
 
-- Il TLS DEVE iniziare sul client finale (browser del tablet/atleta) e terminare **solo** sul `frpc` del PC del trainer.
-- Il VPS DEVE instradare leggendo **esclusivamente** il campo SNI dell'handshake TLS (metadata di routing, in chiaro per design del protocollo) e inoltrare il flusso applicativo cifrato come byte opachi.
-- Il VPS NON deve possedere alcuna chiave privata né certificato di alcun trainer.
-- Architetturalmente: `type = "tcp"` (transito byte grezzi) con un router/proxy SNI davanti a `frps`, NON `type = "https"`.
+**Route da aprire:**
+- `/login` — pagina login
+- `/api/auth/login` — endpoint autenticazione
+- `/dashboard`, `/clienti/*`, `/contratti/*`, `/cassa/*`, `/esercizi/*`, `/schede/*`, `/agenda/*`, `/comunicazioni/*`, `/rinnovi-incassi/*`, `/oggi/*`, `/impostazioni/*`, `/guida/*` — pagine CRM
+- `/api/*` (la maggior parte) — endpoint CRM (protetti da `get_current_trainer()`)
+- `/_next/*`, `/favicon.ico` — asset statici (gia' aperti)
 
-**Criterio di accettazione (test del data-blind, da eseguire in Fase 1 con cert self-signed):**
-Mentre un client è connesso a `{instance_id}.fitmanagerstudio.com`, catturare sul VPS il traffico in ingresso a `frps` (es. `tcpdump` sulla porta del tunnel). Deve risultare:
-- SNI visibile in chiaro nell'handshake (atteso, è routing).
+**Route da mantenere BLOCCATE dal tunnel:**
+- `/register`, `/api/auth/register` — registrazione trainer solo da LAN (primo setup)
+- `/setup`, `/api/auth/setup-status` — wizard primo avvio, solo LAN
+- `/licenza` — pagina licenza, solo LAN
+
+**Host header:** `isTunnelRequest()` NON deve basare decisioni di sicurezza sull'header `Host` (spoofabile — un `curl -H "Host: localhost"` potrebbe bypassare il guard). Con `get_current_trainer()` su tutti gli endpoint CRM, la distinzione LAN-vs-tunnel **non ha rilevanza di sicurezza per i dati**. Il guard resta utile per:
+- Bloccare `/register` e `/setup` dal tunnel (policy, non sicurezza dati)
+- Ridurre la superficie esposta (meno HTML visibile = meno info su struttura app)
+
+**Criterio di accettazione:**
+- Dal tunnel, senza token: `/login` -> 200 (pagina login). `/dashboard` -> redirect `/login`. `/api/clients` -> 401.
+- Dal tunnel, con token trainer: `/dashboard` -> 200. `/api/clients` -> 200.
+- Dal tunnel: `/register` -> 404. `/setup` -> 404.
+- `curl -H "Host: localhost"` via dominio tunnel + senza token -> 401/404 su endpoint CRM (mai 200).
+
+---
+
+## 5. P2 — Data-blind (proprieta' GDPR) — DIMOSTRATO per il routing; test probatorio raccomandato
+
+*(Invariato rispetto a v1.1 — la correzione del 2026-06-07 e' confermata.)*
+
+**Correzione rispetto alla v1.0.** La v1.0 affermava che `type=https` + `https2http` rompesse il data-blind. Il test e2e del 2026-06-07 (BUILD_LOG, Fase 1 Step 5) ha dimostrato il contrario. Vale il principio: *il sistema e' la source of truth, non l'AI ne' il documento.*
+
+**Cosa e' stato dimostrato (test e2e Step 5):**
+`curl` dal VPS -> `frps:443` (SNI routing) -> `frpc` sul PC trainer (TLS termination) -> `localhost:3000` -> risposta. Il VPS ha instradato leggendo **solo** il campo SNI (nome dominio in chiaro nell'handshake), inoltrando il payload cifrato senza terminarlo. Con `vhostHTTPSPort = 443` + `https2http`, la terminazione TLS avviene su `frpc` lato PC, **non** sul VPS.
+
+**Proprieta' che reggono per costruzione:**
+- TLS termina su frpc (PC trainer), non sul VPS.
+- VPS instrada leggendo esclusivamente l'SNI.
+- VPS non possiede la chiave privata del trainer (cert generato e conservato lato PC).
+
+**Test probatorio raccomandato (dossier GDPR, non bloccante):**
+Cattura `tcpdump` sulla porta del tunnel mentre un client e' connesso. Deve risultare:
+- SNI visibile in chiaro nell'handshake (atteso, e' routing).
 - Payload applicativo **opaco/cifrato** dopo l'handshake.
-- Nessun certificato di trainer presente o richiesto sul VPS per servire la connessione.
+- Nessun certificato trainer presente o richiesto sul VPS.
 
-Se si osserva HTTP leggibile, o se `frps` deve presentare un certificato, **P2 è falso** e va corretto **prima** del POC, non dopo.
-
-> Questo test usa il principio già stabilito: "il sistema è la source of truth". Lo si dimostra sul campo, non sulla carta.
+> **Distinzione per il legale:** "il VPS instrada senza decifrare" -> **dimostrato** (Step 5). "Un osservatore sul VPS vede solo byte opachi" -> **vero per costruzione, da mostrare** col tcpdump. La seconda e' la formulazione che sostiene la tesi "AVGV non tratta i dati".
 
 ---
 
-## 5. Conseguenze operative del passaggio locale → Internet
+## 6. Conseguenze operative del passaggio locale -> Internet
 
-Una volta che il CRM è raggiungibile da Internet, alcune protezioni finora implicite (offerte dalla LAN) vanno rese esplicite:
+Una volta che il CRM e' raggiungibile da Internet, protezioni finora implicite vanno rese esplicite:
 
-- **Rate limiting su login via tunnel.** `auth_limiter` esiste già su `/auth/*`. Verificare che operi correttamente quando l'IP di origine arriva dal tunnel (l'IP visto da FastAPI potrebbe essere `127.0.0.1` di frpc, non l'IP reale del client → il rate limiter potrebbe contare tutti i tentativi come un'unica fonte, o al contrario non distinguere attaccanti). Decidere come ricavare l'IP reale del client (header propagati dal tunnel) **senza fidarsi ciecamente di header spoofabili.**
-- **Brute force su `/auth/login` è ora esposto a Internet.** Il login constant-time c'è già (buono, anti-enumeration). Valutare lockout progressivo o captcha dopo N tentativi falliti, dato che la superficie non è più la sola LAN.
-- **CORS.** Il regex CORS attuale ammette `localhost`/`192.168`/`100.x`. NON deve essere allargato a `*` per "far funzionare il tunnel": le richieste cross-origin dal dominio pubblico vanno gestite consapevolmente. Se l'app è servita *dallo stesso* dominio del tunnel (stesso origin), il CORS non è il meccanismo rilevante e non va toccato; la protezione resta AC-2.
-- **Disponibilità dell'istanza.** Vincolo di prodotto già noto: l'accesso da tablet richiede il PC del trainer acceso. Da comunicare ai trainer del POC.
-
----
-
-## 6. Procedure di supporto (POC, 10 trainer)
-
-- **Trainer cambia PC:** rigenerare `license.key` col nuovo `machine_id` (hardware fingerprint). L'`instance_id` **resta invariato** → l'URL del tablet non cambia.
-- **Trainer cambia macchina ma vuole stesso URL:** garantito da quanto sopra (instance_id disaccoppiato da machine_id).
-- **Onboarding nuovo trainer:** interamente nel control plane (genera licenza → instance_id → config frpc). **Zero interventi su Cloudflare** (il wildcard `*.fitmanagerstudio.com` copre tutti gli instance_id). Nessuna registrazione DNS manuale per-trainer.
+- **Rate limiting via tunnel (sez. 3).** Problema critico: IP tutti `127.0.0.1`. Bloccante, risolto da sez. 3.
+- **Brute force login.** Constant-time compare c'e' gia' (anti-enumeration). Valutare lockout progressivo o captcha dopo N fallimenti, dato che la superficie e' pubblica.
+- **CORS.** Il regex CORS ammette `localhost`/`192.168`/`100.x`. NON allargare a `*`. Se l'app e' servita dallo stesso dominio del tunnel (same origin), CORS non e' il meccanismo rilevante.
+- **Registration exposure.** `/auth/register` DEVE restare bloccato dal tunnel (sez. 4). Registrazione = solo primo setup da LAN.
+- **Disponibilita' dell'istanza.** L'accesso da tablet richiede il PC del trainer acceso. Vincolo di prodotto noto, da comunicare ai trainer del POC.
 
 ---
 
-## 7. Riepilogo gravità (ordine di intervento)
+## 7. Sequenziamento — e dismissione Tailscale
 
-1. **AC-1 + AC-2 (ruolo nel JWT + verifica lato FastAPI).** Senza questi, esporre il CRM su Internet significa esporlo a chiunque sappia spoofare un header. **Bloccante assoluto per Strada B.**
-2. **AC-3 (Host-spoofing).** Eliminare la dipendenza di sicurezza dall'header `Host`. Mitigato automaticamente se AC-2 è solido, ma il guard va comunque corretto per non dare falsa sicurezza.
-3. **P2 / data-blind (sez. 4).** Bloccante per la *tesi GDPR*, non per il funzionamento. Va dimostrato in Fase 1 col self-signed, prima che ci siano atleti reali sopra.
-4. **Operative (sez. 5).** Rate limiting / brute force / IP reale: necessari prima del POC perché la superficie è ora pubblica.
+**Vincolo di ordine (non negoziabile):**
+
+> **Rate limiter IP reale (sez. 3) DEVE essere implementato PRIMA o INSIEME all'apertura selettiva (sez. 4).** Aprire il tunnel senza rate limiter funzionante = brute force illimitato su login.
+
+Ordine consigliato:
+1. Rate limiter IP reale (sez. 3) — prerequisito
+2. `role: "trainer"` nel JWT (sez. 1) — facoltativo ma consigliato prima dell'apertura
+3. Apertura selettiva tunnel guard (sez. 4) — l'atto di apertura
+4. Test e2e attraverso dominio pubblico — i 4 test di sez. 2 + test rate limiter di sez. 3
+
+**Dismissione Tailscale:**
+- FRP e' l'unico percorso target. A transizione completata, Tailscale va **rimosso** (non lasciato dormiente).
+- Finche' Tailscale e' attivo, eredita **tutti** i criteri di questo documento (entrambi terminano su Next.js:3000).
+- `get_current_trainer()`, vivendo in FastAPI a valle di Next.js, protegge entrambi i percorsi automaticamente — ulteriore argomento per cui il confine sta nel JWT lato FastAPI e non nel Tunnel Guard.
+- Acceptance: a transizione completata, una richiesta verso il vecchio endpoint Tailscale non deve raggiungere il CRM.
+
+---
+
+## 8. Scenari operativi
+
+- **Trainer cambia PC:** rigenerare `license.key` col nuovo `machine_id` (hardware fingerprint). L'`instance_id` **resta invariato** -> l'URL del tablet non cambia.
+- **Trainer cambia macchina ma vuole stesso URL:** garantito (instance_id disaccoppiato da machine_id).
+- **Onboarding nuovo trainer:** genera licenza con `instance_id` -> config frpc automatica. **Zero interventi su Cloudflare** (wildcard `*.fitmanagerstudio.com` copre tutti). Nessuna registrazione DNS manuale per-trainer.
+
+---
+
+## 9. Riepilogo gravita' (ordine di intervento)
+
+1. **Rate limiter IP reale (sez. 3).** Senza questo, aprire il tunnel espone login a brute force illimitato. `auth_limiter` vede tutto come `127.0.0.1`. **Bloccante assoluto per Strada B.**
+2. **Apertura selettiva tunnel guard (sez. 4).** `/auth/register` NON deve essere esposto. Apertura mirata, non totale. **Bloccante per Strada B.**
+3. **Sequenziamento (sez. 7).** Rate limiter prima dell'apertura. Vincolo di ordine a costo zero.
+4. **AC-1 — role nel JWT (sez. 1).** Defense in depth. Il gap e' teorico (ShareToken != JWT), ma il costo e' zero e il beneficio e' future-proofing. Raccomandato prima dell'apertura.
+5. **Host header (sez. 4).** Eliminare dipendenza di sicurezza dall'header `Host`. Mitigato da `get_current_trainer()`, ma il guard non deve dare falsa sicurezza.
+6. **Operative (sez. 6).** Brute force lockout, registration blocking — necessari prima del POC.
+7. **P2 test probatorio (sez. 5).** Cattura tcpdump per dossier GDPR — completezza, non blocco.
 
 ---
 
 ## Note di confine (cosa questo documento NON copre)
 
-- Non specifica la struttura esatta dei claim oltre `role` — la lascia all'implementazione, purché firmati.
-- Non specifica il meccanismo di routing SNI sul VPS — lascia a Fase 2 / `cert_manager.py` la scelta, vincolata al criterio della sez. 4.
-- Non sostituisce la verifica con un consulente legale sulla tesi GDPR; fornisce la condizione *tecnica* (P2 reale) necessaria perché quella tesi sia difendibile.
+- Non specifica la struttura esatta dei claim JWT oltre `role` — la lascia all'implementazione, purche' firmati.
+- Non ridiscute il routing SNI (validato, sez. 5). Fase 2 / `cert_manager.py` sostituisce solo il certificato (self-signed -> Let's Encrypt), senza cambiamenti architetturali. **Vincolo Fase 2:** ogni `frpc` mantiene il cert del *proprio* `instance_id`; nessun wildcard cert condiviso sul VPS (rimetterebbe una chiave privata sul VPS e contraddirebbe il data-blind).
+- Non sostituisce la verifica con un consulente legale sulla tesi GDPR; fornisce la condizione tecnica necessaria perche' quella tesi sia difendibile.
