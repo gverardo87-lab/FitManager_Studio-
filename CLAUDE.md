@@ -140,7 +140,7 @@ Tutte con PRAGMA: `journal_mode=WAL`, `foreign_keys=ON`, `busy_timeout=5000`.
 
 ### Cross-layer
 - **`extra: "forbid"` su Pydantic**: un campo typo nel payload = 422 silenzioso. Dopo refactor payload, verificare sempre nomi campo vs schema.
-- **Proxy Next.js intercetta PRIMA dei rewrite**: `/api` in `PUBLIC_ROUTES` (auth JWT gestita dal backend).
+- **Middleware Next.js intercetta PRIMA dei rewrite**: `frontend/src/middleware.ts` — tunnel guard (route separation) + auth guard. `/api` in `PUBLIC_ROUTES` (auth JWT gestita dal backend). Dal tunnel, solo `/public/*` accessibile.
 - **Seed data**: 500 esercizi + 940 relazioni + 1788 media in `data/exercises/`, seed idempotente al startup in catalog.db.
 - **Licenza con hardware binding**: JWT RS256 con `machine_id` (SHA-256 di CPU+Board+BIOS via PowerShell). Generazione via CLI (`tools/admin_scripts/generate_license.py`). Flusso completo in `docs/technical/LICENSE_ACTIVATION.md`. `/licenza` NON e' in `AUTH_ONLY_PAGES` (il trainer loggato senza licenza deve vederla).
 - **Anti-tampering (ADR-005)**: in compiled mode (Nuitka/PyInstaller) la chiave pubblica e' embedded nel codice (non da file), enforcement sempre ON (no env bypass), fingerprint fail-closed.
@@ -224,6 +224,67 @@ Il trainer controlla ogni messaggio prima dell'invio. Ogni click logga in `commu
 - **Birthday alert separato**: banner dedicato sopra AlertHub (non soggetto a `MAX_VISIBLE_ALERTS`). Click apre BirthdayClientsSheet.
 - **Phone sanitization**: `sanitizePhone()` in `format.ts` auto-prefissa `+39` per numeri italiani 10 cifre.
 
+## FRP Tunnel System
+
+Tunnel self-hosted per esporre il portale pubblico su Internet. Sostituisce Tailscale Funnel.
+Zero configurazione per il trainer. Privacy-first: il VPS non vede il contenuto (P2 data-blind).
+
+```
+┌──────────────────┐     ┌──────────────────┐     ┌──────────────────┐
+│  Browser cliente │────>│  VPS edge        │────>│  PC trainer      │
+│  (smartphone)    │     │  frps :443       │     │  frpc → :3000    │
+│                  │     │  SNI passthrough  │     │  (Next.js)       │
+└──────────────────┘     └──────────────────┘     └──────────────────┘
+   HTTPS request          instrada per hostname     termina TLS locale
+                          NON apre il pacchetto     risponde in chiaro
+```
+
+### Stack tunnel
+
+| Layer | File | Funzione |
+|-------|------|----------|
+| Config | `api/services/tunnel_config.py` | TunnelConfig dataclass, risoluzione frpc path, cert self-signed auto-generato |
+| Manager | `api/services/tunnel_manager.py` | Babysitter frpc: subprocess, backoff+jitter, drain output, atexit cleanup |
+| Identity | `api/services/license.py` | Claim `instance_id` nel JWT licenza (determina sottodominio) |
+| CLI | `tools/admin_scripts/generate_license.py` | `--instance-id <slug>` nel comando `sign` |
+| Boot | `api/main.py` lifespan step 6 | Auto-start tunnel + auto-set `PUBLIC_BASE_URL` |
+| Route guard | `frontend/src/middleware.ts` | Tunnel guard: solo `/public/*` accessibile, CRM → 404 |
+| VPS | `edge.fitmanagerstudio.com` | frps v0.61.1, Hetzner CPX22, `vhostHTTPSPort=443` |
+
+### Flusso zero-touch
+
+1. AVGV genera licenza con `--instance-id gvera-dev` + crea record DNS
+2. Trainer installa FitManager (identico per tutti) + inserisce licenza
+3. Al boot: backend legge `instance_id` → genera cert self-signed → avvia frpc → tunnel attivo
+4. `PUBLIC_BASE_URL` settato automaticamente → link pubblici usano `https://slug.fitmanagerstudio.com`
+5. Link anamnesi/schede funzionano via tunnel, CRM accessibile solo da LAN (localhost)
+
+### Route separation (sicurezza)
+
+`frontend/src/middleware.ts` — due layer indipendenti:
+- **Layer 1 — Tunnel Guard**: hostname non locale (non localhost/127.0.0.1/LAN) → solo `/public/*`, `/api/public/*`, `/health`, `/media` permessi. Tutto il resto → **404** (non 403, non rivela esistenza).
+- **Layer 2 — Auth Guard**: richieste LAN senza cookie JWT → redirect `/login`.
+
+Il CRM (login, dashboard, clienti) e' **completamente invisibile** da Internet.
+
+### Pattern architetturali
+
+- **Separazione config/esecuzione**: `tunnel_config.py` assembla il config, `tunnel_manager.py` gestisce il processo. Il manager non sa nulla di licenze o path.
+- **Backoff esponenziale + jitter**: restart frpc con attesa crescente (1s→2s→4s→...60s) + ritardo casuale. Evita retry storm e thundering herd.
+- **Cert self-signed (Fase 1)**: RSA 2048, SAN con subdomain + wildcard, 365gg, rigenerato se scaduto. In Fase 2 sostituito da Let's Encrypt (stessi path, zero cambio codice).
+- **Proxy type HTTPS + plugin `https2http`**: frpc termina TLS e inoltra HTTP a localhost:3000. Il VPS fa SNI passthrough (non apre il pacchetto TLS). P2 data-blind dimostrato.
+- **`PUBLIC_BASE_URL` auto**: se `instance_id` presente, il lifespan setta `PUBLIC_BASE_URL=https://slug.fitmanagerstudio.com` e `PUBLIC_PORTAL_ENABLED=true`. I link generati dal trainer usano l'URL tunnel, non `localhost`.
+
+### Fase di sviluppo
+
+- Fase 0: COMPLETATA (VPS, frps, DNS wildcard)
+- Fase 1: CORE COMPLETATA (instance_id, tunnel_manager, auto-start, route separation, test e2e)
+  - Rimangono: bundle frpc in Nuitka, script provisioning DNS, health endpoint
+- Fase 2: TLS e2e (cert Let's Encrypt DNS-01, pagina offline, token hash)
+- Fase 3: Onboarding zero-touch + dismissione Tailscale
+
+Strategia completa: `docs/technical/TUNNEL_MIGRATION_STRATEGY.md`. Security boundary: `docs/technical/TUNNEL_SECURITY_BOUNDARY.md`.
+
 ## Agent Skills (quality automation)
 
 Skills installate in `.agents/skills/` — knowledge base attive per audit e code generation.
@@ -293,7 +354,7 @@ Ogni commit deve lasciare il branch rilasciabile per il proprio scope.
 3. **PyInstaller `Path(__file__)`**: non funziona in bundle → usare `DATA_DIR` da `config.py`.
 4. **Radix: no `<label>` + Checkbox**: causa double-toggle. Usare `<div onClick>` + `stopPropagation`.
 5. **`useState(() => browserAPI())`**: hydration mismatch. Usare `useState(false)` + `useEffect`.
-6. **Tailscale Funnel su porta FRONTEND, mai backend**: il funnel deve puntare a 3000 (Next.js), non 8000 (FastAPI). Le route `/public/*` sono pagine Next.js. Se punta al backend → `{"detail":"Not Found"}`. Dettagli in `docs/technical/TAILSCALE_FUNNEL_SETUP.md`.
+6. **Tunnel FRP inoltra a porta 3000 (frontend), mai 8000**: il tunnel punta a Next.js (porta 3000) che proxya `/api/*` al backend. Le route `/public/*` sono pagine Next.js. **Route separation**: `frontend/src/middleware.ts` blocca tutto tranne `/public/*` dal tunnel (404). Se il middleware manca o e' bypassato → CRM esposto su Internet.
 7. **Cross-DB session mismatch**: funzioni dual-session (`safety_engine`, `profile_resolver`, `session_prep`) devono usare `catalog_session` per tabelle catalog.db (esercizi, muscoli, condizioni) e `session` per crm.db. Test in-memory con engine singolo NON copre questo bug. Verificare SEMPRE dopo modifiche a funzioni dual-session. Incidente: `docs/incidents/INC-2026-03-28-safety-engine-blind-spot.md`.
 8. **Cache safety map non invalidata**: ogni mutation che modifica anamnesi (direttamente o indirettamente) DEVE invalidare `["exercise-safety-map", clientId]`. Include `useUpdateAnamnesi`, `useUpdateClient`, futuro polling portale pubblico.
 9. **Informazioni cliniche MAI dietro toggle**: la BuilderSafetyCard e' non negoziabile quando `condition_count > 0`. Zero condizioni responsive, zero toggle, zero tab. La visibilita' dipende SOLO da `safetyMap.condition_count > 0`.
