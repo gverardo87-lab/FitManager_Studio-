@@ -220,10 +220,10 @@ def list_contracts(
     )
     all_contracts = session.exec(all_contracts_q).all()
 
-    kpi_attivi = sum(1 for c in all_contracts if not c.chiuso)
-    kpi_chiusi = sum(1 for c in all_contracts if c.chiuso)
-    kpi_fatturato = round(sum(c.prezzo_totale or 0 for c in all_contracts), 2)
-    kpi_incassato = round(sum(c.totale_versato for c in all_contracts), 2)
+    kpi_attivi = sum(1 for c in all_contracts if not c.chiuso)  # STATO: solo aperti
+    kpi_chiusi = sum(1 for c in all_contracts if c.chiuso)  # STATO: solo chiusi
+    kpi_fatturato = round(sum(c.prezzo_totale or 0 for c in all_contracts), 2)  # CUMULATIVO: include chiusi
+    kpi_incassato = round(sum(c.totale_versato for c in all_contracts), 2)  # CUMULATIVO: include chiusi
 
     # Rate scadute: rata individualmente scaduta O su contratto scaduto (modello Stripe)
     # Se il contratto e' scaduto, OGNI rata non pagata e' in ritardo.

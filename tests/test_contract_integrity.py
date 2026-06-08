@@ -426,3 +426,54 @@ def test_credits_include_closed_contracts(client, auth_headers, sample_client):
     # Crediti del cliente devono includere i 5 del contratto chiuso
     cl = client.get(f"/api/clients/{sample_client['id']}", headers=auth_headers)
     assert cl.json()["crediti_residui"] == 5
+
+
+# ── KPI fatturato/incassato: contratti chiusi inclusi (INC-2026-06-08) ──
+
+
+def test_kpi_fatturato_includes_closed_contracts(client, auth_headers, sample_client):
+    """KPI fatturato e incassato devono includere contratti chiusi.
+
+    Regressione INC-2026-06-08: chiudere un contratto saldato faceva
+    calare i KPI, dando l'impressione di fatturato in declino.
+    """
+    # Crea 2 contratti
+    c1 = client.post("/api/contracts", json={
+        "id_cliente": sample_client["id"],
+        "tipo_pacchetto": "Aperto",
+        "prezzo_totale": 1000.0,
+        "crediti_totali": 10,
+        "data_inizio": "2026-01-01",
+        "data_scadenza": "2026-12-31",
+    }, headers=auth_headers)
+    assert c1.status_code == 201
+
+    c2 = client.post("/api/contracts", json={
+        "id_cliente": sample_client["id"],
+        "tipo_pacchetto": "Da chiudere",
+        "prezzo_totale": 500.0,
+        "crediti_totali": 5,
+        "data_inizio": "2026-01-01",
+        "data_scadenza": "2026-12-31",
+    }, headers=auth_headers)
+    assert c2.status_code == 201
+
+    # KPI prima della chiusura
+    r1 = client.get("/api/contracts", headers=auth_headers)
+    assert r1.status_code == 200
+    fatturato_before = r1.json()["kpi_fatturato"]
+
+    # Chiudi il secondo contratto
+    client.put(f"/api/contracts/{c2.json()['id']}", json={
+        "chiuso": True,
+    }, headers=auth_headers)
+
+    # KPI dopo la chiusura — DEVE restare uguale
+    r2 = client.get("/api/contracts", headers=auth_headers)
+    assert r2.status_code == 200
+    fatturato_after = r2.json()["kpi_fatturato"]
+
+    assert fatturato_after == fatturato_before, (
+        f"kpi_fatturato calato da {fatturato_before} a {fatturato_after} "
+        f"dopo chiusura contratto — regressione INC-2026-06-08"
+    )
