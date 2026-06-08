@@ -239,10 +239,15 @@ function ShareWorkoutDialog({
       const res = await apiClient.post(`/clients/${clientId}/share-workout`, null, {
         params: { id_scheda: planId },
       });
-      // Costruisci URL con l'origin del browser (non PUBLIC_BASE_URL del backend)
-      // per garantire che il link punti alla stessa istanza (dev/prod/LAN/Tailscale)
-      const origin = typeof window !== "undefined" ? window.location.origin : "";
-      setShareUrl(`${origin}/public/scheda/${res.data.token}`);
+      // Se il backend restituisce URL assoluto (tunnel FRP con PUBLIC_BASE_URL),
+      // usalo direttamente. Altrimenti fallback a window.location.origin (LAN/dev).
+      const url = res.data.url;
+      if (url && url.startsWith("http")) {
+        setShareUrl(url);
+      } else {
+        const origin = typeof window !== "undefined" ? window.location.origin : "";
+        setShareUrl(`${origin}/public/scheda/${res.data.token}`);
+      }
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? "Errore nella generazione del link";
       setError(msg);

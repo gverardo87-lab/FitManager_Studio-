@@ -221,6 +221,7 @@ Quando un browser apre una connessione HTTPS, PRIMA di cifrare manda in chiaro i
 - [x] 1.4b Correzione: proxy HTTPS + cert self-signed (validazione SNI + P2 data-blind)
 - [x] 1.5 Test e2e tunnel HTTPS (SNI routing + P2 data-blind dimostrato)
 - [x] 1.5b Route separation middleware (CRM invisibile da tunnel)
+- [x] 1.5c Auto PUBLIC_BASE_URL da instance_id (link pubblici usano URL tunnel)
 - [ ] 1.6 Bundle FRP binary (frpc.exe in Nuitka)
 - [ ] 1.7 Script provisioning AVGV-side (DNS via Cloudflare API)
 - [ ] 1.8 Health endpoint tunnel (/tunnel/status)

@@ -329,6 +329,14 @@ async def lifespan(app: FastAPI):
                 tunnel_config.public_url,
                 _tunnel_manager.get_status().get("pid"),
             )
+
+            # Auto-configura PUBLIC_BASE_URL per i link pubblici (anamnesi, schede)
+            # Il trainer non deve configurare nulla: il tunnel determina l'URL.
+            import os
+            public_url = f"https://{tunnel_config.public_url}"
+            os.environ["PUBLIC_PORTAL_ENABLED"] = "true"
+            os.environ["PUBLIC_BASE_URL"] = public_url
+            logger.info("  PUBLIC_BASE_URL = %s (auto da tunnel)", public_url)
         else:
             logger.info("  TUNNEL = disabilitato (nessun instance_id o frpc assente)")
     except Exception as e:

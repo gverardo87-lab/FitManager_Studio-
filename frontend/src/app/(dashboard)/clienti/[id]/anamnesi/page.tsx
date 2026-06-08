@@ -270,10 +270,12 @@ function ShareAnamnesiDialog({
     });
   }, [createToken]);
 
-  // Costruisci URL con l'origin del browser (non PUBLIC_BASE_URL del backend)
-  // per garantire che il link punti alla stessa istanza (dev/prod/LAN/Tailscale)
+  // Se il backend restituisce URL assoluto (PUBLIC_BASE_URL configurato, es. tunnel FRP),
+  // usalo direttamente. Altrimenti fallback a window.location.origin (LAN/dev).
   const fullUrl = result
-    ? `${typeof window !== "undefined" ? window.location.origin : ""}/public/anamnesi/${result.token}`
+    ? result.url.startsWith("http")
+      ? result.url
+      : `${typeof window !== "undefined" ? window.location.origin : ""}${result.url}`
     : "";
 
   const handleCopy = useCallback(() => {
