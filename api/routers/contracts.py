@@ -222,8 +222,8 @@ def list_contracts(
 
     kpi_attivi = sum(1 for c in all_contracts if not c.chiuso)
     kpi_chiusi = sum(1 for c in all_contracts if c.chiuso)
-    kpi_fatturato = round(sum(c.prezzo_totale or 0 for c in all_contracts if not c.chiuso), 2)
-    kpi_incassato = round(sum(c.totale_versato for c in all_contracts if not c.chiuso), 2)
+    kpi_fatturato = round(sum(c.prezzo_totale or 0 for c in all_contracts), 2)
+    kpi_incassato = round(sum(c.totale_versato for c in all_contracts), 2)
 
     # Rate scadute: rata individualmente scaduta O su contratto scaduto (modello Stripe)
     # Se il contratto e' scaduto, OGNI rata non pagata e' in ritardo.
