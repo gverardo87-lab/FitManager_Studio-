@@ -224,7 +224,8 @@ Quando un browser apre una connessione HTTPS, PRIMA di cifrare manda in chiaro i
 - [x] 1.5c Auto PUBLIC_BASE_URL da instance_id (link pubblici usano URL tunnel)
 - [x] 1.6 Bundle FRP binary + licenza reale + rimozione dual-env
 - [~] 1.7 ~~Script provisioning AVGV-side~~ — NON NECESSARIO (wildcard DNS copre tutti i trainer, zero provisioning per-istanza)
-- [ ] 1.8 Health endpoint tunnel (/tunnel/status)
+- [x] 1.8 Health endpoint tunnel (GET /api/system/tunnel-status)
+- [x] 1.9 Test produzione su 2 installazioni reali (v1.0.10)
 
 ### 2026-06-07 — Step 5: test e2e tunnel HTTPS
 
@@ -308,5 +309,33 @@ La vera separazione dev/prod e' tra il PC di sviluppo e il PC del trainer (insta
 
 **Concetto — licenza indipendente dalla versione:**
 La licenza e' un artefatto separato dal software. Si attiva una volta e sopravvive agli aggiornamenti. L'installer non la tocca (non e' nei `[Files]` di Inno Setup). L'unico momento in cui si rigenera e': scadenza, cambio macchina, o cambio tier. Questo e' il pattern standard per software con licenza perpetua: il file `.key` e' un JWT firmato con chiave privata AVGV, verificato dalla chiave pubblica embedded nel bundle.
+
+### 2026-06-09 — Step 7: health endpoint + allineamento strategia
+
+- Health endpoint `GET /api/system/tunnel-status` aggiunto a `system.py` (autenticato, solo LAN)
+- Schema `TunnelStatusResponse`: state, instance_id, public_url, pid
+- Se tunnel non configurato: `{ state: "disabled" }`
+- `TUNNEL_MIGRATION_STRATEGY.md` aggiornata: Fase 1 tutta completata, G12 provisioning eliminato (wildcard DNS), D3/D4 corretti con architettura reale
+- Step 1.7 (provisioning DNS) marcato NON NECESSARIO — il wildcard `*.fitmanagerstudio.com` copre tutti i trainer, zero interventi su Cloudflare per ogni nuovo cliente
+
+### 2026-06-09 — Step 8: release v1.0.10 + test produzione su 2 PC
+
+**Release v1.0.10:**
+- Pipeline ADR-004 completa: preflight (362 test) → build → verify (5/5 smoke) → seal → tag
+- Installer: `FitManager_Setup_1.0.10.exe` (117 MB, SHA-256: `77c5444d...`)
+- frpc.exe bundlato in `{app}\backend\` — primo installer con tunnel FRP integrato
+
+**Licenze emesse:**
+- Giacomo Verardo: `giacomo-verardo`, machine-bound, instance_id `gvera-dev`, pro, scade 2027-06-04
+- Chiara Bassani: `chiara-bassani`, machine-bound, instance_id `chiara-bassani`, pro, scade 2027-06-04
+
+**Test produzione — 2 installazioni reali:**
+- PC Giacomo: installazione v1.0.10 → attivazione licenza → tunnel auto-start → `gvera-dev.fitmanagerstudio.com` raggiungibile. **PASS.**
+- PC Chiara: installazione v1.0.10 → attivazione licenza → tunnel auto-start → `chiara-bassani.fitmanagerstudio.com` raggiungibile. **PASS.**
+
+**Flusso zero-touch validato in produzione:**
+Installa → attiva licenza → tunnel parte automaticamente → URL pubblico raggiungibile. Il trainer non deve configurare nulla (DNS, certificati, porte). Il wildcard DNS e il cert self-signed gestiscono tutto.
+
+**Fase 1 CHIUSA.** Tutti gli step completati, testati in produzione su 2 installazioni reali.
 
 ---
