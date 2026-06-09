@@ -15,9 +15,7 @@ const nextConfig: NextConfig = {
     root: __dirname,
   },
 
-  // Permette di avviare una seconda istanza dev con cache separata:
-  // NEXT_DIST_DIR=.next-dev npm run dev -- -p 3001
-  distDir: process.env.NEXT_DIST_DIR || ".next",
+  distDir: ".next",
 
   // Tree-shake barrel imports di librerie pesanti (lucide-react, recharts, date-fns)
   experimental: {
@@ -47,8 +45,7 @@ const nextConfig: NextConfig = {
   ],
 
   // Proxy /media/* al backend — rende i fetch same-origin (evita CORS su StaticFiles).
-  // Mapping generico: porta frontend - 3000 + 8000 = porta backend.
-  // 3000→8000 (prod), 3001→8001 (dev), 3002→8002 (installer test).
+  // Formula porte: frontend_port - 3000 + 8000 = backend_port (default: 3000→8000).
   // IMPORTANTE: questi rewrite vengono serializzati nel server standalone buildato.
   // Non devono mai dipendere da URL browser-facing o variabili ambiente lato client,
   // altrimenti il bundle installer puo' congelare un host di sviluppo (LAN/Tailscale)

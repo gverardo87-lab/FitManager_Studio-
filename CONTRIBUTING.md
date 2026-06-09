@@ -48,16 +48,14 @@ Dettagli architetturali: `CLAUDE.md` (root) → `api/CLAUDE.md` → `frontend/CL
 ## Avvio sviluppo
 
 ```bash
-# Backend (porta 8001 = dev)
-./venv/Scripts/uvicorn api.main:app --port 8001 --host 0.0.0.0
+# Backend (porta 8000)
+./venv/Scripts/uvicorn api.main:app --port 8000 --host 0.0.0.0
 
-# Frontend (porta 3001 = dev, in un altro terminale)
+# Frontend (porta 3000, in un altro terminale)
 cd frontend && npm run dev
 ```
 
 Formula porte: `frontend_port - 3000 + 8000 = backend_port`.
-
-Prod: 3000/8000. Dev: 3001/8001.
 
 ## Branching
 

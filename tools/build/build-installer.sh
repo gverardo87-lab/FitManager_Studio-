@@ -122,6 +122,17 @@ bash "$ROOT/tools/build/build-frontend.sh"
 bash "$ROOT/tools/build/build-backend.sh"
 bash "$ROOT/tools/build/build-media.sh"
 
+# ── Stage frpc binary (tunnel FRP) into backend bundle ──
+FRPC_SRC="$ROOT/tools/bin/frpc.exe"
+FRPC_DEST="$ROOT/dist/fitmanager/frpc.exe"
+if [ ! -f "$FRPC_SRC" ]; then
+  echo "ERRORE CRITICO: frpc.exe non trovato in tools/bin/."
+  echo "  Scaricare da https://github.com/fatedier/frp/releases e copiare in tools/bin/"
+  exit 1
+fi
+cp "$FRPC_SRC" "$FRPC_DEST"
+echo "frpc.exe staged in dist/fitmanager/ ($(du -h "$FRPC_DEST" | cut -f1))"
+
 echo "Staging immutable release data..."
 mkdir -p "$RELEASE_DATA_DIR"
 cp "$ROOT/data/catalog.db" "$RELEASE_DATA_DIR/catalog.db"

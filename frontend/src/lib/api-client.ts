@@ -5,7 +5,7 @@
  * Architettura:
  * - Base URL DINAMICO: derivato da window.location (hostname + porta)
  *   → Funziona automaticamente da qualsiasi rete (LAN, Tailscale, localhost)
- *   → Regola: porta frontend 3000 → backend 8000, porta 3001 → backend 8001
+ *   → Regola: porta frontend - 3000 + 8000 = porta backend (default: 3000→8000)
  *   → Fallback SSR: env var NEXT_PUBLIC_API_URL
  * - Request interceptor: allega JWT token da cookie ad ogni richiesta
  * - Response interceptor: redirect a /login su 401 Unauthorized
@@ -32,9 +32,9 @@ export const TOKEN_COOKIE = "fitmanager_token";
  * Deriva l'URL del backend dall'hostname e porta del frontend.
  *
  * 3 modalita':
- *   https://giacomo.tail8a3bc3.ts.net  → /api  (Tailscale Funnel — proxy Next.js)
+ *   https://slug.fitmanagerstudio.com  → /api  (tunnel FRP — proxy Next.js)
  *   http://192.168.1.23:3000           → http://192.168.1.23:8000/api  (LAN)
- *   http://localhost:3001              → http://localhost:8001/api      (dev)
+ *   http://localhost:3000              → http://localhost:8000/api      (locale)
  *
  * Logica: se HTTPS o nessuna porta esplicita → siamo dietro un reverse proxy
  * (Funnel/nginx). Le chiamate passano come URL relativi, Next.js proxya al backend.
@@ -46,14 +46,14 @@ function getApiBaseUrl(): string {
   if (typeof window !== "undefined") {
     const { protocol, hostname, port } = window.location;
 
-    // Tailscale Funnel / reverse proxy: HTTPS o nessuna porta esplicita
+    // Tunnel FRP / reverse proxy: HTTPS o nessuna porta esplicita
     // → URL relativo, Next.js rewrite proxya al backend localhost
     if (protocol === "https:" || !port) {
       return "/api";
     }
 
-    // Accesso diretto con porta esplicita (LAN, localhost, Tailscale VPN)
-    // Mapping generico: 3000→8000, 3001→8001, 3002→8002, ecc.
+    // Accesso diretto con porta esplicita (LAN, localhost)
+    // Formula: frontend_port - 3000 + 8000 = backend_port
     const frontPort = parseInt(port) || 3000;
     const apiPort = frontPort - 3000 + 8000;
     return `http://${hostname}:${apiPort}/api`;

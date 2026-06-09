@@ -46,15 +46,14 @@ SSoT numeri e proiezioni: `docs/business/BUSINESS_PLAN.md` (v4.3). Strategia ope
 - **crm.db**: 26 tabelle business (clienti, contratti, workout, communication_log). Tenant-isolated via `trainer_id`. SACRO — dati del trainer, backup/restore.
 - **catalog.db**: 10 tabelle catalogo scientifico (500 esercizi builtin + tassonomia muscoli/articolazioni/condizioni + relazioni + media). Read-only, shipped con installer. Zero `trainer_id`.
 - **nutrition.db**: 8 tabelle catalogo alimenti (CREA 2019 + USDA). Read-only, shipped con installer. 880 alimenti attivi, 210 ricette pietanze, 12 template dieta.
-- **Dual env**: prod (porta 8000/3000, crm.db) + dev (porta 8001/3001, crm_dev.db).
-- **Formula porte**: `frontend_port - 3000 + 8000 = backend_port`.
+- **Porte**: backend 8000, frontend 3000. Formula generica: `frontend_port - 3000 + 8000 = backend_port`.
 
 ## Comandi operativi
 
 ```bash
 # --- Avvio sviluppo ---
-./venv/Scripts/uvicorn api.main:app --port 8001 --host 0.0.0.0    # backend dev
-cd frontend && npm run dev                                         # frontend dev (porta 3001)
+./venv/Scripts/uvicorn api.main:app --port 8000 --host 0.0.0.0    # backend
+cd frontend && npm run dev                                         # frontend (porta 3000)
 
 # --- Test ---
 ./venv/Scripts/python -m pytest tests/ -v                          # 361 test backend

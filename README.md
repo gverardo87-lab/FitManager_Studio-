@@ -20,7 +20,7 @@ Obiettivo attuale: trasformare il repository da "prodotto in sviluppo" a baselin
 | `tests/` | 27 file pytest |
 | `core/` | 27 file Python, moduli AI/legacy fuori dal percorso critico di lancio |
 | `tools/` | 63 script, di cui 48 in `tools/admin_scripts/` |
-| `data/` | `crm.db`, `crm_dev.db`, `catalog.db` |
+| `data/` | `crm.db`, `catalog.db`, `nutrition.db` |
 
 Questi numeri sono stati riallineati con `rg` sul repo. Evitare di reintrodurre conteggi manuali non verificati.
 
@@ -37,43 +37,23 @@ Prerequisiti minimi:
 ### Sviluppo (PowerShell)
 
 ```powershell
-# Terminale 1 - Backend su crm_dev.db
-$env:DATABASE_URL = "sqlite:///data/crm_dev.db"
-uvicorn api.main:app --reload --host 0.0.0.0 --port 8001
+# Terminale 1 - Backend
+uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
 
 # Terminale 2 - Frontend
 cd frontend
 npm run dev
 ```
 
-Apri `http://localhost:3001`.
+Apri `http://localhost:3000`.
 
-### Produzione da sorgente
+### Topologia runtime
 
-Per il lancio reale preferire installer e `installer/launcher.bat`.
-Se il backend viene avviato manualmente da sorgente, il gate licenza va esplicitamente attivato:
+| Frontend | Backend | Database |
+|---|---|---|
+| `3000` | `8000` | `data/crm.db` |
 
-```powershell
-$env:LICENSE_ENFORCEMENT_ENABLED = "true"
-uvicorn api.main:app --host 0.0.0.0 --port 8000
-```
-
-Il frontend di produzione usa:
-
-```powershell
-cd frontend
-npm run build
-npm run prod
-```
-
-## Topologia runtime
-
-| Ambiente | Frontend | Backend | Database |
-|---|---|---|---|
-| Dev | `3001` | `8001` | `data/crm_dev.db` |
-| Prod | `3000` | `8000` | `data/crm.db` |
-
-Il frontend deduce la base URL API dal `window.location` e usa la coppia di porte corretta.
+Il frontend deduce la base URL API dal `window.location` (formula: `frontend_port - 3000 + 8000`).
 
 ## Struttura del progetto
 

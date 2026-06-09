@@ -6,12 +6,11 @@ Quei DB non sono gestiti da Alembic: catalog.db e' costruito da
 build_catalog.py + seed ORM, nutrition.db ha il suo alembic_nutrition.ini.
 
 DATABASE_URL priority:
-  1. Variabile d'ambiente DATABASE_URL (per dual-DB dev/prod)
+  1. Variabile d'ambiente DATABASE_URL (override esplicito)
   2. alembic.ini sqlalchemy.url (default: crm.db)
 
 Uso:
-  alembic upgrade head                                    → crm.db (default)
-  DATABASE_URL=sqlite:///data/crm_dev.db alembic upgrade head  → crm_dev.db
+  alembic upgrade head    → crm.db (default, unico DB business)
 """
 
 import os
