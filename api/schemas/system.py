@@ -137,6 +137,23 @@ class ConnectivityVerifyResponse(BaseModel):
     next_recommended_action_label: str
 
 
+TunnelState = Literal[
+    "disabled",      # licenza senza instance_id o frpc assente
+    "stopped",       # manager creato ma non avviato
+    "starting",      # frpc in avvio
+    "connected",     # frpc connesso al VPS
+    "reconnecting",  # frpc crashato, backoff in corso
+    "error",         # errore fatale (permessi, binario mancante)
+]
+
+
+class TunnelStatusResponse(BaseModel):
+    state: TunnelState
+    instance_id: str | None = None
+    public_url: str | None = None
+    pid: int | None = None
+
+
 class ConnectivityPortalValidationRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

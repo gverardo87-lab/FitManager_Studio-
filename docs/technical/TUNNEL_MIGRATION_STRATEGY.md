@@ -67,13 +67,14 @@ Rathole considerato come alternativa futura se serve binario piu' leggero (~3MB)
 
 - `instance_id` e' un nuovo claim nel JWT della licenza (es. `"instance_id": "alessio-crociani"`)
 - Al primo avvio, FitManager legge l'instance_id dalla licenza
-- AVGV crea il record DNS `instance_id.fitmanagerstudio.com -> IP VPS` al momento della generazione licenza
+- Il wildcard DNS `*.fitmanagerstudio.com -> IP VPS` copre automaticamente tutti i trainer
+- Zero provisioning DNS per-istanza: nessun record da creare, nessuno script da eseguire
 - Nessuna chiamata di rete al primo avvio per registrazione (solo per tunnel + cert)
 
 ### D4. Separazione piani di accesso
 
-- Middleware Next.js ispeziona header custom iniettato da FRP (`X-FRP-Tunnel: true`)
-- Route non `/public/*` + header tunnel presente -> 404
+- Middleware Next.js rileva richieste dal tunnel via hostname (non localhost/LAN)
+- Route non `/public/*` da tunnel -> 404 (non 403, non rivela esistenza)
 - Route `/public/*` accessibili da tunnel E da LAN (per testing)
 - CRM (`/dashboard`, `/clienti`, ecc.) -> solo LAN
 
@@ -117,7 +118,7 @@ Il codebase mantiene `trainer_id` come defense-in-depth anche se l'isolamento e'
 | G9 | UI diagnostica tunnel | Media | 3 | frontend impostazioni |
 | G10 | SBOM + audit licenze | Media | 3 | tools/scripts/ |
 | G11 | Export GDPR dati cliente | Media | 3 | api/routers/clients.py |
-| G12 | Script provisioning AVGV-side | Media | 1 | tools/admin_scripts/provision_instance.py (nuovo) |
+| ~~G12~~ | ~~Script provisioning AVGV-side~~ | ~~Media~~ | ~~1~~ | NON NECESSARIO — wildcard DNS `*.fitmanagerstudio.com` copre tutti i trainer. Zero provisioning per-istanza. Credenziali DNS-01 scoped rimandate a Fase 2 (cert_manager). |
 | G13 | Token hash (share_token hashato, non chiaro) | Media | 2 | api/models/ + api/routers/portal_*.py |
 
 ---
@@ -176,15 +177,16 @@ maxDays = 30
 
 | # | Task | File | Dettaglio |
 |---|------|------|-----------|
-| 1.1 | Instance ID nella licenza | `tools/admin_scripts/generate_license.py` | Nuovo claim `instance_id` nel JWT. Generato da AVGV al momento della vendita. |
-| 1.2 | Lettura instance_id | `api/services/license.py` | Estrarre `instance_id` dal JWT licenza. Esporre come property. |
-| 1.3 | Script provisioning | `tools/admin_scripts/provision_instance.py` | Script AVGV-side: crea record DNS, genera config FRP client, prepara credenziali DNS-01. Input: instance_id. |
-| 1.4 | Tunnel manager | `api/services/tunnel_manager.py` (nuovo) | Gestisce ciclo di vita FRP client: start, stop, reconnect, health check. Processo figlio di entry_point. |
-| 1.5 | Config FRP client | `api/services/tunnel_manager.py` | Genera `frpc.toml` da instance_id + server address. Salva in `data/tunnel/`. |
-| 1.6 | Bundle FRP binary | `tools/build/build-release.sh` | Include `frpc.exe` (Windows) nel build Nuitka come risorsa. |
-| 1.7 | Auto-start tunnel | `api/entry_point.py` | Al boot, se licenza valida e instance_id presente, avvia tunnel_manager. |
-| 1.8 | Health endpoint tunnel | `api/routers/settings.py` (o nuovo) | GET /tunnel/status -> { connected, url, uptime }. Solo da LAN. |
-| 1.9 | Test e2e | `tests/` | Test: tunnel si connette, URL raggiungibile, reconnect dopo interruzione. |
+| 1.1 | Instance ID nella licenza | `tools/admin_scripts/generate_license.py` | Nuovo claim `instance_id` nel JWT. COMPLETATO. |
+| 1.2 | Lettura instance_id | `api/services/license.py` | Estrarre `instance_id` dal JWT licenza. COMPLETATO. |
+| ~~1.3~~ | ~~Script provisioning~~ | — | NON NECESSARIO — wildcard DNS copre tutti i trainer. |
+| 1.4 | Tunnel manager | `api/services/tunnel_manager.py` | Babysitter frpc: subprocess, backoff+jitter, drain, cleanup. COMPLETATO. |
+| 1.5 | Config tunnel + cert | `api/services/tunnel_config.py` | TunnelConfig, frpc path resolution, cert self-signed auto. COMPLETATO. |
+| 1.6 | Bundle FRP binary | `tools/build/build-installer.sh` | frpc.exe staged in dist/fitmanager/ + safety gate. COMPLETATO. |
+| 1.7 | Auto-start tunnel | `api/main.py` lifespan step 6 | Startup/shutdown + auto PUBLIC_BASE_URL. COMPLETATO. |
+| 1.8 | Route separation | `frontend/src/middleware.ts` | Tunnel guard (hostname) + auth guard. CRM 404 dal tunnel. COMPLETATO. |
+| 1.9 | Health endpoint tunnel | `api/routers/system.py` (o nuovo) | GET /tunnel/status -> { connected, url, uptime }. Solo da LAN. DA FARE. |
+| 1.10 | Test e2e | Manuale (2026-06-07) | SNI routing + P2 data-blind dimostrato con curl dal VPS. COMPLETATO. |
 
 **Config FRP client (generata automaticamente):**
 
@@ -217,7 +219,7 @@ keyPath = "data/tunnel/key.pem"
 | # | Task | File | Dettaglio |
 |---|------|------|-----------|
 | 2.1 | Cert manager | `api/services/cert_manager.py` (nuovo) | Genera/rinnova certificato Let's Encrypt via DNS-01. Usa libreria acme Python o shell-out a acme.sh bundlato. |
-| 2.2 | Credenziali DNS scoped | `tools/admin_scripts/provision_instance.py` | Genera API token DNS con scope limitato a `_acme-challenge.<instance_id>.fitmanagerstudio.com`. |
+| 2.2 | Credenziali DNS scoped | `tools/admin_scripts/generate_license.py` o config | API token Cloudflare con scope limitato per challenge DNS-01 `_acme-challenge.<instance_id>.fitmanagerstudio.com`. Da distribuire via licenza o config separato. |
 | 2.3 | Storage credenziali | `data/tunnel/` | Credenziali DNS-01, cert, key in `data/tunnel/`. Esclusi da backup/export. |
 | 2.4 | Rinnovo automatico | `api/services/cert_manager.py` | Scheduler: check scadenza ogni 12h, rinnovo 30gg prima della scadenza. |
 | 2.5 | Route separation middleware | `frontend/src/middleware.ts` | Se header `X-Forwarded-For` presente (o header custom FRP) E route non e' `/public/*` -> redirect a 404. |
@@ -258,7 +260,7 @@ keyPath = "data/tunnel/key.pem"
 | Tunnel client FRP | `api/services/tunnel_manager.py` | Nuovo |
 | Gestione certificati LE | `api/services/cert_manager.py` | Nuovo |
 | Instance identity | `api/services/license.py` (estensione) | Modifica |
-| Instance provisioning | `tools/admin_scripts/provision_instance.py` | Nuovo |
+| ~~Instance provisioning~~ | NON NECESSARIO (wildcard DNS) | — |
 | License con instance_id | `tools/admin_scripts/generate_license.py` | Modifica |
 | Route separation | `frontend/src/middleware.ts` | Modifica |
 | FRP binary bundle | `tools/build/build-release.sh` | Modifica |
@@ -276,7 +278,7 @@ keyPath = "data/tunnel/key.pem"
 | Rischio | Probabilita' | Impatto | Mitigazione |
 |---------|-------------|---------|-------------|
 | FRP client non si connette da reti aziendali restrittive | Media | Alto | FRP supporta websocket transport (fallback su porta 443) |
-| DNS propagation lenta al provisioning | Bassa | Basso | Pre-provisioning DNS 24h prima della consegna licenza |
+| ~~DNS propagation lenta al provisioning~~ | — | — | ELIMINATO — wildcard DNS copre tutti i trainer, zero provisioning per-istanza |
 | Let's Encrypt rate limit (50 cert/settimana per dominio) | Bassa (POC) | Medio | Wildcard cert come fallback; staging env per test |
 | Nuitka bundle size cresce con FRP binary (~15MB) | Certa | Basso | Accettabile; installer gia' ~100MB+ |
 | PC trainer con firewall che blocca connessioni uscenti | Bassa | Alto | FRP via HTTPS su porta 443 (raramente bloccata) |
