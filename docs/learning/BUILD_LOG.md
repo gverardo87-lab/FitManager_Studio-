@@ -222,7 +222,7 @@ Quando un browser apre una connessione HTTPS, PRIMA di cifrare manda in chiaro i
 - [x] 1.5 Test e2e tunnel HTTPS (SNI routing + P2 data-blind dimostrato)
 - [x] 1.5b Route separation middleware (CRM invisibile da tunnel)
 - [x] 1.5c Auto PUBLIC_BASE_URL da instance_id (link pubblici usano URL tunnel)
-- [ ] 1.6 Bundle FRP binary (frpc.exe in Nuitka)
+- [x] 1.6 Bundle FRP binary + licenza reale + rimozione dual-env
 - [ ] 1.7 Script provisioning AVGV-side (DNS via Cloudflare API)
 - [ ] 1.8 Health endpoint tunnel (/tunnel/status)
 
@@ -269,5 +269,44 @@ Gap G5 della strategia era pianificato per Fase 2, ma esporre il login su Intern
 
 **Concetto — defense in depth:**
 Due layer indipendenti: anche se uno fallisce, l'altro protegge. Il tunnel guard blocca PRIMA dell'auth guard. Un attaccante dal tunnel non vede nemmeno il form di login — riceve 404 come se la pagina non esistesse. E' meglio di un 403 (che rivelerebbe l'esistenza della risorsa).
+
+### 2026-06-09 — Step 6: bundle frpc.exe + licenza reale + rimozione dual-env
+
+**Obiettivo:** completare Fase 1.6 (frpc nell'installer) e risolvere la confusione dev/prod.
+
+**Analisi dual-env:**
+Revisione critica ha rivelato che la separazione dual-env (dev 8001/3001 + crm_dev.db, prod 8000/3000 + crm.db) non era mai stata usata nella pratica. `crm.db` era il database di lavoro attivo (ultima modifica 8 giugno), `crm_dev.db` fermo dal 31 maggio. Il codice in `api/config.py` auto-rilevava la porta per scegliere il DB, ma tutto lo sviluppo avveniva sulle porte "prod". Complessita' senza valore.
+
+**Decisione: ambiente unico (8000/3000, crm.db).**
+La vera separazione dev/prod e' tra il PC di sviluppo e il PC del trainer (installazione). Non serve un DB separato sullo stesso PC.
+
+**Licenza reale generata:**
+- Intestata a: Giacomo Verardo (`giacomo-verardo`)
+- Machine binding: SHA-256 di questo PC (MATCH verificato)
+- Instance ID: `gvera-dev` → `gvera-dev.fitmanagerstudio.com`
+- Tier: pro, scadenza 2027-06-04
+- La licenza vive in `data/license.key`, sopravvive agli upgrade dell'installer (directory `data/` ha flag `uninsneveruninstall` in Inno Setup)
+
+**Bundle frpc.exe — intervento nel build pipeline:**
+- `build-installer.sh`: aggiunto safety gate (blocca build se `tools/bin/frpc.exe` mancante) + staging in `dist/fitmanager/`
+- `fitmanager.iss`: nessuna modifica — il wildcard `Source: "..\dist\fitmanager\*"` raccoglie frpc.exe automaticamente
+- `tunnel_config.py`: path resolution gia' implementata (`Path(sys.executable).parent / "frpc.exe"` in compiled mode)
+- Catena verificata: `tools/bin/` → staging → installer → `{app}\backend\frpc.exe` → tunnel_config lo trova
+
+**Pulizia dual-env (10 file, -87/+37 righe):**
+- `api/config.py`: `_resolve_database_url()` semplificata — sempre `crm.db`, niente auto-detect porta
+- `alembic/env.py`: rimosso riferimento a `crm_dev.db` nel docstring
+- `CLAUDE.md`, `README.md`, `CONTRIBUTING.md`, `frontend/CLAUDE.md`: aggiornati comandi e topologia
+- `frontend/next.config.ts`: rimosso `NEXT_DIST_DIR`, aggiornati commenti porte
+- `frontend/tsconfig.json`: rimossi path `.next-dev`
+- `frontend/src/lib/api-client.ts`: aggiornati commenti (Tailscale → FRP, porte aggiornate)
+- `tools/DUAL_ENV.md` → archiviato in `docs/archive/`
+
+**Verifiche eseguite:**
+- 362 test passed (pytest), ruff OK, Next.js build OK
+- Pre-commit hook superato (ruff + next build)
+
+**Concetto — licenza indipendente dalla versione:**
+La licenza e' un artefatto separato dal software. Si attiva una volta e sopravvive agli aggiornamenti. L'installer non la tocca (non e' nei `[Files]` di Inno Setup). L'unico momento in cui si rigenera e': scadenza, cambio macchina, o cambio tier. Questo e' il pattern standard per software con licenza perpetua: il file `.key` e' un JWT firmato con chiave privata AVGV, verificato dalla chiave pubblica embedded nel bundle.
 
 ---
