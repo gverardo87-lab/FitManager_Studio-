@@ -44,7 +44,7 @@ SSoT numeri e proiezioni: `docs/business/BUSINESS_PLAN.md` (v4.3). Strategia ope
 ```
 
 - **crm.db**: 26 tabelle business (clienti, contratti, workout, communication_log). Tenant-isolated via `trainer_id`. SACRO — dati del trainer, backup/restore.
-- **catalog.db**: 10 tabelle catalogo scientifico (500 esercizi builtin + tassonomia muscoli/articolazioni/condizioni + relazioni + media). Read-only, shipped con installer. Zero `trainer_id`.
+- **catalog.db**: 10 tabelle catalogo scientifico (500 esercizi builtin, 466 attivi `in_subset` + tassonomia muscoli/articolazioni/condizioni + relazioni + media). Read-only, shipped con installer. Zero `trainer_id`.
 - **nutrition.db**: 8 tabelle catalogo alimenti (CREA 2019 + USDA). Read-only, shipped con installer. 880 alimenti attivi, 210 ricette pietanze, 12 template dieta.
 - **Porte**: backend 8000, frontend 3000. Formula generica: `frontend_port - 3000 + 8000 = backend_port`.
 
@@ -140,7 +140,7 @@ Tutte con PRAGMA: `journal_mode=WAL`, `foreign_keys=ON`, `busy_timeout=5000`.
 ### Cross-layer
 - **`extra: "forbid"` su Pydantic**: un campo typo nel payload = 422 silenzioso. Dopo refactor payload, verificare sempre nomi campo vs schema.
 - **Middleware Next.js intercetta PRIMA dei rewrite**: `frontend/src/middleware.ts` — tunnel guard (route separation) + auth guard. `/api` in `PUBLIC_ROUTES` (auth JWT gestita dal backend). Dal tunnel, solo `/public/*` accessibile.
-- **Seed data**: 500 esercizi + 940 relazioni + 1788 media in `data/exercises/`, seed idempotente al startup in catalog.db.
+- **Seed data**: 500 esercizi + 940 relazioni + 1788 media nei seed JSON (`data/exercises/`), seed idempotente al startup in catalog.db. In DB dopo filtro FK orfane: 466 attivi, 894 relazioni, 750 media (il seed media referenzia il catalogo pre-rebuild — pruning pianificato, vedi `docs/technical/EXERCISE_LIBRARY_STRATEGY.md` §5.6).
 - **Licenza con hardware binding**: JWT RS256 con `machine_id` (SHA-256 di CPU+Board+BIOS via PowerShell). Generazione via CLI (`tools/admin_scripts/generate_license.py`). Flusso completo in `docs/technical/LICENSE_ACTIVATION.md`. `/licenza` NON e' in `AUTH_ONLY_PAGES` (il trainer loggato senza licenza deve vederla).
 - **Anti-tampering (ADR-005)**: in compiled mode (Nuitka/PyInstaller) la chiave pubblica e' embedded nel codice (non da file), enforcement sempre ON (no env bypass), fingerprint fail-closed.
 - **Anti-reverse engineering (ADR-007)**: 4 step layered hardening — bundle sanitization (zero Alembic/seed/pyc), DB encryption (AES-256-GCM su catalog.db + nutrition.db), Nuitka native compilation (Python→C→x86-64). TTC da 5sec/15min a giorni/settimane. Modello completo in `docs/technical/SECURITY_MODEL.md`.

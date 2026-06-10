@@ -31,6 +31,7 @@ non contengono requisiti, non sono SSoT per nessun componente del sistema.
 | `LEARNING_FASE1_BASI_TEORICHE.md` | Preparazione Fase 1: JWT, instance_id, tunnel_manager, bundling |
 | `LEARNING_TUNNEL_MANAGER.md` | Casi edge processo figlio: sleep/wake, rete, backoff, health check e2e |
 | `LEARNING_PROGRAMMAZIONE.md` | Roadmap 5 layer: fondamenti → Python/JS → web → framework → codebase |
+| `LEARNING_BUILD_DISTRIBUZIONE.md` | Packaging e media pesanti: scope `dir()`/Nuitka, codec e compatibilità mobile, Inno Setup DiskSpanning/nocompression, banda asimmetrica e tunnel |
 
 ## Convenzioni
 
