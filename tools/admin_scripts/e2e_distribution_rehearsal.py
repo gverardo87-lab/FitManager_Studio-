@@ -406,8 +406,10 @@ def phase_7_config():
     # 5. Seed data JSON
     exercises_dir = data_dir / "exercises"
     _log((exercises_dir / "seed_exercises.json").exists(), "seed_exercises.json present")
-    _log((exercises_dir / "seed_exercise_relations.json").exists(),
-         "seed_exercise_relations.json present")
+    _log((exercises_dir / "seed_exercise_progressions.json").exists(),
+         "seed_exercise_progressions.json present")
+    _log((exercises_dir / "seed_taxonomy_junctions.json").exists(),
+         "seed_taxonomy_junctions.json present")
     _log((exercises_dir / "seed_exercise_media.json").exists(),
          "seed_exercise_media.json present")
 

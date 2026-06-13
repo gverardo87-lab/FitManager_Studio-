@@ -9,19 +9,22 @@ Architettura: esercizi builtin vivono in catalog.db (read-only, shipped con inst
 Pattern identico a nutrition.db: catalogo separato da crm.db (business).
 
 Legge da data/exercises/:
-- seed_exercises.json — 500 esercizi attivi con ID preservati
-- seed_exercise_relations.json — 940 relazioni (progressioni/regressioni/varianti)
-- seed_exercise_media.json — 1788 media (foto inizio/fine movimento)
+- seed_exercises.json — 500 esercizi con ID preservati (466 attivi in_subset)
+- seed_exercise_progressions.json — 940 relazioni progressione/regressione/variante (894 in DB dopo FK guard)
+- seed_exercise_media.json — media foto inizio/fine movimento (FK guard filtra orfani)
+
+NOTA naming: seed_taxonomy_junctions.json (ex seed_exercise_relations.json) contiene
+le junction tassonomiche (esercizi_muscoli/articolazioni/condizioni), NON le relazioni —
+non e' letto da questo modulo.
 """
 
 import json
 import logging
-import sys
 from datetime import datetime  # noqa: F401 — usato in seed_builtin_exercises
 
 from sqlmodel import Session, select, func
 
-from api.config import DATA_DIR
+from api.config import DATA_DIR, is_compiled
 from api.models.exercise import Exercise
 
 logger = logging.getLogger("fitmanager.api")
@@ -36,7 +39,7 @@ def _frozen_guard(seed_file, label: str) -> bool:
     """
     if seed_file.exists():
         return False
-    if getattr(sys, "frozen", False) or "__compiled__" in dir():
+    if is_compiled():
         logger.info(f"Seed {label}: file non presente in bundle (atteso in compiled mode)")
     else:
         logger.warning(f"Seed {label}: file non trovato {seed_file}")
@@ -91,6 +94,7 @@ def seed_builtin_exercises(session: Session) -> int:
             is_builtin=True,
             # Campi v2: tassonomia e biomeccanica
             in_subset=ex.get("in_subset", False),
+            is_fondamentale=ex.get("is_fondamentale", False),
             catena_cinetica=ex.get("catena_cinetica"),
             piano_movimento=ex.get("piano_movimento"),
             tipo_contrazione=ex.get("tipo_contrazione"),

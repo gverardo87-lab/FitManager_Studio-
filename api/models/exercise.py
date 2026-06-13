@@ -93,5 +93,11 @@ class Exercise(SQLModel, table=True):
         description="Database attivo. True = esercizio visibile e utilizzabile. "
                     "False = archiviato, reinseribile in futuro.",
     )
+    is_fondamentale: Optional[bool] = Field(
+        default=False,
+        description="Fondamentale (~50-80 esercizi piu' prescritti). Guida il tuning "
+                    "del contenuto scientifico e la metrica di copertura del bundle "
+                    "animazioni. Vedi EXERCISE_LIBRARY_STRATEGY.md.",
+    )
     created_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(timezone.utc))
     deleted_at: Optional[datetime] = None

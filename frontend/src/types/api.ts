@@ -1835,6 +1835,7 @@ export interface Exercise {
   thumbnail_url: string | null;
   muscle_map_url: string | null;
   is_builtin: boolean;
+  is_fondamentale: boolean;
   created_at: string | null;
   media: ExerciseMedia[];
   relazioni: ExerciseRelation[];

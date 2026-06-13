@@ -17,8 +17,10 @@ Ordine critico (le junction dipendono dalle tabelle base):
 
 import logging
 import sqlite3
-import sys
 from pathlib import Path
+
+from api.config import is_compiled
+
 
 logger = logging.getLogger("fitmanager.api")
 
@@ -27,10 +29,6 @@ _TAXONOMY_TABLES = (
     "muscoli", "articolazioni", "condizioni_mediche",
     "esercizi_muscoli", "esercizi_articolazioni", "esercizi_condizioni",
 )
-
-
-def _is_compiled() -> bool:
-    return getattr(sys, "frozen", False) or "__compiled__" in dir()
 
 
 def _get_counts(db_path: str) -> dict[str, int]:
@@ -54,7 +52,7 @@ def seed_taxonomy_all(catalog_db_path: str) -> None:
     Skip in compiled mode (catalog.db pre-costruito, tools/ non nel bundle).
     Attivo solo in sviluppo: invoca i 3 populate script in ordine.
     """
-    if _is_compiled():
+    if is_compiled():
         logger.info("Seed tassonomia: skip in compiled mode (catalog.db pre-costruito)")
         return
 

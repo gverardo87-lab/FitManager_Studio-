@@ -385,6 +385,7 @@ class ExerciseResponse(BaseModel):
     thumbnail_url: Optional[str] = None
     muscle_map_url: Optional[str] = None
     is_builtin: bool = False
+    is_fondamentale: bool = False
     created_at: Optional[datetime] = None
 
     # Populated by GET /{id} (enriched)

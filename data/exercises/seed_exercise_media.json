@@ -1610,20 +1610,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 183,
-    "tipo": "image",
-    "url": "/media/exercises/183/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 183,
-    "tipo": "image",
-    "url": "/media/exercises/183/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 184,
     "tipo": "image",
     "url": "/media/exercises/184/exec_start.jpg",
@@ -1876,34 +1862,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 258,
-    "tipo": "image",
-    "url": "/media/exercises/258/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 258,
-    "tipo": "image",
-    "url": "/media/exercises/258/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 261,
-    "tipo": "image",
-    "url": "/media/exercises/261/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 261,
-    "tipo": "image",
-    "url": "/media/exercises/261/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 267,
     "tipo": "image",
     "url": "/media/exercises/267/exec_start.jpg",
@@ -1914,90 +1872,6 @@
     "exercise_id": 267,
     "tipo": "image",
     "url": "/media/exercises/267/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 268,
-    "tipo": "image",
-    "url": "/media/exercises/268/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 268,
-    "tipo": "image",
-    "url": "/media/exercises/268/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 269,
-    "tipo": "image",
-    "url": "/media/exercises/269/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 269,
-    "tipo": "image",
-    "url": "/media/exercises/269/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 270,
-    "tipo": "image",
-    "url": "/media/exercises/270/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 270,
-    "tipo": "image",
-    "url": "/media/exercises/270/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 271,
-    "tipo": "image",
-    "url": "/media/exercises/271/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 271,
-    "tipo": "image",
-    "url": "/media/exercises/271/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 272,
-    "tipo": "image",
-    "url": "/media/exercises/272/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 272,
-    "tipo": "image",
-    "url": "/media/exercises/272/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 276,
-    "tipo": "image",
-    "url": "/media/exercises/276/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 276,
-    "tipo": "image",
-    "url": "/media/exercises/276/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -2016,34 +1890,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 279,
-    "tipo": "image",
-    "url": "/media/exercises/279/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 279,
-    "tipo": "image",
-    "url": "/media/exercises/279/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 282,
-    "tipo": "image",
-    "url": "/media/exercises/282/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 282,
-    "tipo": "image",
-    "url": "/media/exercises/282/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 283,
     "tipo": "image",
     "url": "/media/exercises/283/exec_start.jpg",
@@ -2054,20 +1900,6 @@
     "exercise_id": 283,
     "tipo": "image",
     "url": "/media/exercises/283/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 284,
-    "tipo": "image",
-    "url": "/media/exercises/284/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 284,
-    "tipo": "image",
-    "url": "/media/exercises/284/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -2114,34 +1946,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 298,
-    "tipo": "image",
-    "url": "/media/exercises/298/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 298,
-    "tipo": "image",
-    "url": "/media/exercises/298/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 303,
-    "tipo": "image",
-    "url": "/media/exercises/303/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 303,
-    "tipo": "image",
-    "url": "/media/exercises/303/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 327,
     "tipo": "image",
     "url": "/media/exercises/327/exec_start.jpg",
@@ -2180,20 +1984,6 @@
     "exercise_id": 347,
     "tipo": "image",
     "url": "/media/exercises/347/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 348,
-    "tipo": "image",
-    "url": "/media/exercises/348/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 348,
-    "tipo": "image",
-    "url": "/media/exercises/348/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -2534,20 +2324,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 373,
-    "tipo": "image",
-    "url": "/media/exercises/373/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 373,
-    "tipo": "image",
-    "url": "/media/exercises/373/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 374,
     "tipo": "image",
     "url": "/media/exercises/374/exec_start.jpg",
@@ -2744,20 +2520,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 388,
-    "tipo": "image",
-    "url": "/media/exercises/388/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 388,
-    "tipo": "image",
-    "url": "/media/exercises/388/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 389,
     "tipo": "image",
     "url": "/media/exercises/389/exec_start.jpg",
@@ -2772,20 +2534,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 390,
-    "tipo": "image",
-    "url": "/media/exercises/390/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 390,
-    "tipo": "image",
-    "url": "/media/exercises/390/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 391,
     "tipo": "image",
     "url": "/media/exercises/391/exec_start.jpg",
@@ -2796,76 +2544,6 @@
     "exercise_id": 391,
     "tipo": "image",
     "url": "/media/exercises/391/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 392,
-    "tipo": "image",
-    "url": "/media/exercises/392/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 392,
-    "tipo": "image",
-    "url": "/media/exercises/392/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 393,
-    "tipo": "image",
-    "url": "/media/exercises/393/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 393,
-    "tipo": "image",
-    "url": "/media/exercises/393/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 394,
-    "tipo": "image",
-    "url": "/media/exercises/394/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 394,
-    "tipo": "image",
-    "url": "/media/exercises/394/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 395,
-    "tipo": "image",
-    "url": "/media/exercises/395/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 395,
-    "tipo": "image",
-    "url": "/media/exercises/395/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 396,
-    "tipo": "image",
-    "url": "/media/exercises/396/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 396,
-    "tipo": "image",
-    "url": "/media/exercises/396/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -2898,48 +2576,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 399,
-    "tipo": "image",
-    "url": "/media/exercises/399/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 399,
-    "tipo": "image",
-    "url": "/media/exercises/399/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 400,
-    "tipo": "image",
-    "url": "/media/exercises/400/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 400,
-    "tipo": "image",
-    "url": "/media/exercises/400/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 401,
-    "tipo": "image",
-    "url": "/media/exercises/401/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 401,
-    "tipo": "image",
-    "url": "/media/exercises/401/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 402,
     "tipo": "image",
     "url": "/media/exercises/402/exec_start.jpg",
@@ -2950,34 +2586,6 @@
     "exercise_id": 402,
     "tipo": "image",
     "url": "/media/exercises/402/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 403,
-    "tipo": "image",
-    "url": "/media/exercises/403/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 403,
-    "tipo": "image",
-    "url": "/media/exercises/403/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 404,
-    "tipo": "image",
-    "url": "/media/exercises/404/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 404,
-    "tipo": "image",
-    "url": "/media/exercises/404/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -3010,90 +2618,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 407,
-    "tipo": "image",
-    "url": "/media/exercises/407/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 407,
-    "tipo": "image",
-    "url": "/media/exercises/407/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 408,
-    "tipo": "image",
-    "url": "/media/exercises/408/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 408,
-    "tipo": "image",
-    "url": "/media/exercises/408/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 409,
-    "tipo": "image",
-    "url": "/media/exercises/409/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 409,
-    "tipo": "image",
-    "url": "/media/exercises/409/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 410,
-    "tipo": "image",
-    "url": "/media/exercises/410/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 410,
-    "tipo": "image",
-    "url": "/media/exercises/410/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 411,
-    "tipo": "image",
-    "url": "/media/exercises/411/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 411,
-    "tipo": "image",
-    "url": "/media/exercises/411/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 412,
-    "tipo": "image",
-    "url": "/media/exercises/412/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 412,
-    "tipo": "image",
-    "url": "/media/exercises/412/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 413,
     "tipo": "image",
     "url": "/media/exercises/413/exec_start.jpg",
@@ -3104,20 +2628,6 @@
     "exercise_id": 413,
     "tipo": "image",
     "url": "/media/exercises/413/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 414,
-    "tipo": "image",
-    "url": "/media/exercises/414/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 414,
-    "tipo": "image",
-    "url": "/media/exercises/414/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -3164,20 +2674,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 418,
-    "tipo": "image",
-    "url": "/media/exercises/418/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 418,
-    "tipo": "image",
-    "url": "/media/exercises/418/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 419,
     "tipo": "image",
     "url": "/media/exercises/419/exec_start.jpg",
@@ -3188,48 +2684,6 @@
     "exercise_id": 419,
     "tipo": "image",
     "url": "/media/exercises/419/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 420,
-    "tipo": "image",
-    "url": "/media/exercises/420/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 420,
-    "tipo": "image",
-    "url": "/media/exercises/420/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 421,
-    "tipo": "image",
-    "url": "/media/exercises/421/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 421,
-    "tipo": "image",
-    "url": "/media/exercises/421/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 422,
-    "tipo": "image",
-    "url": "/media/exercises/422/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 422,
-    "tipo": "image",
-    "url": "/media/exercises/422/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -3248,48 +2702,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 424,
-    "tipo": "image",
-    "url": "/media/exercises/424/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 424,
-    "tipo": "image",
-    "url": "/media/exercises/424/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 425,
-    "tipo": "image",
-    "url": "/media/exercises/425/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 425,
-    "tipo": "image",
-    "url": "/media/exercises/425/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 426,
-    "tipo": "image",
-    "url": "/media/exercises/426/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 426,
-    "tipo": "image",
-    "url": "/media/exercises/426/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 427,
     "tipo": "image",
     "url": "/media/exercises/427/exec_start.jpg",
@@ -3300,34 +2712,6 @@
     "exercise_id": 427,
     "tipo": "image",
     "url": "/media/exercises/427/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 428,
-    "tipo": "image",
-    "url": "/media/exercises/428/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 428,
-    "tipo": "image",
-    "url": "/media/exercises/428/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 429,
-    "tipo": "image",
-    "url": "/media/exercises/429/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 429,
-    "tipo": "image",
-    "url": "/media/exercises/429/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -3356,48 +2740,6 @@
     "exercise_id": 431,
     "tipo": "image",
     "url": "/media/exercises/431/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 432,
-    "tipo": "image",
-    "url": "/media/exercises/432/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 432,
-    "tipo": "image",
-    "url": "/media/exercises/432/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 433,
-    "tipo": "image",
-    "url": "/media/exercises/433/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 433,
-    "tipo": "image",
-    "url": "/media/exercises/433/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 434,
-    "tipo": "image",
-    "url": "/media/exercises/434/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 434,
-    "tipo": "image",
-    "url": "/media/exercises/434/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -3444,48 +2786,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 438,
-    "tipo": "image",
-    "url": "/media/exercises/438/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 438,
-    "tipo": "image",
-    "url": "/media/exercises/438/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 439,
-    "tipo": "image",
-    "url": "/media/exercises/439/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 439,
-    "tipo": "image",
-    "url": "/media/exercises/439/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 440,
-    "tipo": "image",
-    "url": "/media/exercises/440/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 440,
-    "tipo": "image",
-    "url": "/media/exercises/440/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 441,
     "tipo": "image",
     "url": "/media/exercises/441/exec_start.jpg",
@@ -3500,20 +2800,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 442,
-    "tipo": "image",
-    "url": "/media/exercises/442/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 442,
-    "tipo": "image",
-    "url": "/media/exercises/442/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 443,
     "tipo": "image",
     "url": "/media/exercises/443/exec_start.jpg",
@@ -3524,34 +2810,6 @@
     "exercise_id": 443,
     "tipo": "image",
     "url": "/media/exercises/443/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 444,
-    "tipo": "image",
-    "url": "/media/exercises/444/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 444,
-    "tipo": "image",
-    "url": "/media/exercises/444/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 445,
-    "tipo": "image",
-    "url": "/media/exercises/445/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 445,
-    "tipo": "image",
-    "url": "/media/exercises/445/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -3580,48 +2838,6 @@
     "exercise_id": 447,
     "tipo": "image",
     "url": "/media/exercises/447/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 448,
-    "tipo": "image",
-    "url": "/media/exercises/448/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 448,
-    "tipo": "image",
-    "url": "/media/exercises/448/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 449,
-    "tipo": "image",
-    "url": "/media/exercises/449/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 449,
-    "tipo": "image",
-    "url": "/media/exercises/449/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 450,
-    "tipo": "image",
-    "url": "/media/exercises/450/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 450,
-    "tipo": "image",
-    "url": "/media/exercises/450/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -3678,90 +2894,6 @@
     "exercise_id": 454,
     "tipo": "image",
     "url": "/media/exercises/454/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 455,
-    "tipo": "image",
-    "url": "/media/exercises/455/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 455,
-    "tipo": "image",
-    "url": "/media/exercises/455/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 456,
-    "tipo": "image",
-    "url": "/media/exercises/456/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 456,
-    "tipo": "image",
-    "url": "/media/exercises/456/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 457,
-    "tipo": "image",
-    "url": "/media/exercises/457/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 457,
-    "tipo": "image",
-    "url": "/media/exercises/457/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 458,
-    "tipo": "image",
-    "url": "/media/exercises/458/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 458,
-    "tipo": "image",
-    "url": "/media/exercises/458/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 459,
-    "tipo": "image",
-    "url": "/media/exercises/459/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 459,
-    "tipo": "image",
-    "url": "/media/exercises/459/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 460,
-    "tipo": "image",
-    "url": "/media/exercises/460/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 460,
-    "tipo": "image",
-    "url": "/media/exercises/460/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -3878,20 +3010,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 469,
-    "tipo": "image",
-    "url": "/media/exercises/469/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 469,
-    "tipo": "image",
-    "url": "/media/exercises/469/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 470,
     "tipo": "image",
     "url": "/media/exercises/470/exec_start.jpg",
@@ -3916,230 +3034,6 @@
     "exercise_id": 471,
     "tipo": "image",
     "url": "/media/exercises/471/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 472,
-    "tipo": "image",
-    "url": "/media/exercises/472/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 472,
-    "tipo": "image",
-    "url": "/media/exercises/472/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 473,
-    "tipo": "image",
-    "url": "/media/exercises/473/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 473,
-    "tipo": "image",
-    "url": "/media/exercises/473/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 474,
-    "tipo": "image",
-    "url": "/media/exercises/474/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 474,
-    "tipo": "image",
-    "url": "/media/exercises/474/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 475,
-    "tipo": "image",
-    "url": "/media/exercises/475/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 475,
-    "tipo": "image",
-    "url": "/media/exercises/475/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 476,
-    "tipo": "image",
-    "url": "/media/exercises/476/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 476,
-    "tipo": "image",
-    "url": "/media/exercises/476/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 477,
-    "tipo": "image",
-    "url": "/media/exercises/477/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 477,
-    "tipo": "image",
-    "url": "/media/exercises/477/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 478,
-    "tipo": "image",
-    "url": "/media/exercises/478/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 478,
-    "tipo": "image",
-    "url": "/media/exercises/478/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 479,
-    "tipo": "image",
-    "url": "/media/exercises/479/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 479,
-    "tipo": "image",
-    "url": "/media/exercises/479/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 480,
-    "tipo": "image",
-    "url": "/media/exercises/480/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 480,
-    "tipo": "image",
-    "url": "/media/exercises/480/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 481,
-    "tipo": "image",
-    "url": "/media/exercises/481/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 481,
-    "tipo": "image",
-    "url": "/media/exercises/481/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 482,
-    "tipo": "image",
-    "url": "/media/exercises/482/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 482,
-    "tipo": "image",
-    "url": "/media/exercises/482/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 483,
-    "tipo": "image",
-    "url": "/media/exercises/483/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 483,
-    "tipo": "image",
-    "url": "/media/exercises/483/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 484,
-    "tipo": "image",
-    "url": "/media/exercises/484/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 484,
-    "tipo": "image",
-    "url": "/media/exercises/484/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 485,
-    "tipo": "image",
-    "url": "/media/exercises/485/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 485,
-    "tipo": "image",
-    "url": "/media/exercises/485/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 486,
-    "tipo": "image",
-    "url": "/media/exercises/486/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 486,
-    "tipo": "image",
-    "url": "/media/exercises/486/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 487,
-    "tipo": "image",
-    "url": "/media/exercises/487/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 487,
-    "tipo": "image",
-    "url": "/media/exercises/487/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -4228,20 +3122,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 494,
-    "tipo": "image",
-    "url": "/media/exercises/494/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 494,
-    "tipo": "image",
-    "url": "/media/exercises/494/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 495,
     "tipo": "image",
     "url": "/media/exercises/495/exec_start.jpg",
@@ -4252,118 +3132,6 @@
     "exercise_id": 495,
     "tipo": "image",
     "url": "/media/exercises/495/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 496,
-    "tipo": "image",
-    "url": "/media/exercises/496/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 496,
-    "tipo": "image",
-    "url": "/media/exercises/496/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 497,
-    "tipo": "image",
-    "url": "/media/exercises/497/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 497,
-    "tipo": "image",
-    "url": "/media/exercises/497/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 498,
-    "tipo": "image",
-    "url": "/media/exercises/498/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 498,
-    "tipo": "image",
-    "url": "/media/exercises/498/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 499,
-    "tipo": "image",
-    "url": "/media/exercises/499/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 499,
-    "tipo": "image",
-    "url": "/media/exercises/499/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 500,
-    "tipo": "image",
-    "url": "/media/exercises/500/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 500,
-    "tipo": "image",
-    "url": "/media/exercises/500/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 501,
-    "tipo": "image",
-    "url": "/media/exercises/501/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 501,
-    "tipo": "image",
-    "url": "/media/exercises/501/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 502,
-    "tipo": "image",
-    "url": "/media/exercises/502/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 502,
-    "tipo": "image",
-    "url": "/media/exercises/502/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 503,
-    "tipo": "image",
-    "url": "/media/exercises/503/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 503,
-    "tipo": "image",
-    "url": "/media/exercises/503/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -4410,132 +3178,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 507,
-    "tipo": "image",
-    "url": "/media/exercises/507/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 507,
-    "tipo": "image",
-    "url": "/media/exercises/507/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 508,
-    "tipo": "image",
-    "url": "/media/exercises/508/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 508,
-    "tipo": "image",
-    "url": "/media/exercises/508/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 509,
-    "tipo": "image",
-    "url": "/media/exercises/509/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 509,
-    "tipo": "image",
-    "url": "/media/exercises/509/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 510,
-    "tipo": "image",
-    "url": "/media/exercises/510/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 510,
-    "tipo": "image",
-    "url": "/media/exercises/510/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 511,
-    "tipo": "image",
-    "url": "/media/exercises/511/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 511,
-    "tipo": "image",
-    "url": "/media/exercises/511/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 512,
-    "tipo": "image",
-    "url": "/media/exercises/512/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 512,
-    "tipo": "image",
-    "url": "/media/exercises/512/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 513,
-    "tipo": "image",
-    "url": "/media/exercises/513/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 513,
-    "tipo": "image",
-    "url": "/media/exercises/513/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 514,
-    "tipo": "image",
-    "url": "/media/exercises/514/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 514,
-    "tipo": "image",
-    "url": "/media/exercises/514/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 515,
-    "tipo": "image",
-    "url": "/media/exercises/515/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 515,
-    "tipo": "image",
-    "url": "/media/exercises/515/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 516,
     "tipo": "image",
     "url": "/media/exercises/516/exec_start.jpg",
@@ -4546,90 +3188,6 @@
     "exercise_id": 516,
     "tipo": "image",
     "url": "/media/exercises/516/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 517,
-    "tipo": "image",
-    "url": "/media/exercises/517/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 517,
-    "tipo": "image",
-    "url": "/media/exercises/517/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 518,
-    "tipo": "image",
-    "url": "/media/exercises/518/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 518,
-    "tipo": "image",
-    "url": "/media/exercises/518/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 519,
-    "tipo": "image",
-    "url": "/media/exercises/519/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 519,
-    "tipo": "image",
-    "url": "/media/exercises/519/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 520,
-    "tipo": "image",
-    "url": "/media/exercises/520/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 520,
-    "tipo": "image",
-    "url": "/media/exercises/520/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 521,
-    "tipo": "image",
-    "url": "/media/exercises/521/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 521,
-    "tipo": "image",
-    "url": "/media/exercises/521/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 522,
-    "tipo": "image",
-    "url": "/media/exercises/522/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 522,
-    "tipo": "image",
-    "url": "/media/exercises/522/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -4690,20 +3248,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 527,
-    "tipo": "image",
-    "url": "/media/exercises/527/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 527,
-    "tipo": "image",
-    "url": "/media/exercises/527/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 528,
     "tipo": "image",
     "url": "/media/exercises/528/exec_start.jpg",
@@ -4714,34 +3258,6 @@
     "exercise_id": 528,
     "tipo": "image",
     "url": "/media/exercises/528/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 529,
-    "tipo": "image",
-    "url": "/media/exercises/529/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 529,
-    "tipo": "image",
-    "url": "/media/exercises/529/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 530,
-    "tipo": "image",
-    "url": "/media/exercises/530/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 530,
-    "tipo": "image",
-    "url": "/media/exercises/530/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -4760,20 +3276,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 532,
-    "tipo": "image",
-    "url": "/media/exercises/532/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 532,
-    "tipo": "image",
-    "url": "/media/exercises/532/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 533,
     "tipo": "image",
     "url": "/media/exercises/533/exec_start.jpg",
@@ -4784,20 +3286,6 @@
     "exercise_id": 533,
     "tipo": "image",
     "url": "/media/exercises/533/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 534,
-    "tipo": "image",
-    "url": "/media/exercises/534/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 534,
-    "tipo": "image",
-    "url": "/media/exercises/534/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -4830,48 +3318,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 537,
-    "tipo": "image",
-    "url": "/media/exercises/537/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 537,
-    "tipo": "image",
-    "url": "/media/exercises/537/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 538,
-    "tipo": "image",
-    "url": "/media/exercises/538/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 538,
-    "tipo": "image",
-    "url": "/media/exercises/538/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 539,
-    "tipo": "image",
-    "url": "/media/exercises/539/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 539,
-    "tipo": "image",
-    "url": "/media/exercises/539/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 540,
     "tipo": "image",
     "url": "/media/exercises/540/exec_start.jpg",
@@ -4886,20 +3332,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 541,
-    "tipo": "image",
-    "url": "/media/exercises/541/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 541,
-    "tipo": "image",
-    "url": "/media/exercises/541/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 542,
     "tipo": "image",
     "url": "/media/exercises/542/exec_start.jpg",
@@ -4910,20 +3342,6 @@
     "exercise_id": 542,
     "tipo": "image",
     "url": "/media/exercises/542/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 543,
-    "tipo": "image",
-    "url": "/media/exercises/543/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 543,
-    "tipo": "image",
-    "url": "/media/exercises/543/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -4952,20 +3370,6 @@
     "exercise_id": 545,
     "tipo": "image",
     "url": "/media/exercises/545/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 546,
-    "tipo": "image",
-    "url": "/media/exercises/546/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 546,
-    "tipo": "image",
-    "url": "/media/exercises/546/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -5026,20 +3430,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 551,
-    "tipo": "image",
-    "url": "/media/exercises/551/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 551,
-    "tipo": "image",
-    "url": "/media/exercises/551/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 552,
     "tipo": "image",
     "url": "/media/exercises/552/exec_start.jpg",
@@ -5064,34 +3454,6 @@
     "exercise_id": 553,
     "tipo": "image",
     "url": "/media/exercises/553/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 554,
-    "tipo": "image",
-    "url": "/media/exercises/554/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 554,
-    "tipo": "image",
-    "url": "/media/exercises/554/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 555,
-    "tipo": "image",
-    "url": "/media/exercises/555/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 555,
-    "tipo": "image",
-    "url": "/media/exercises/555/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -5134,20 +3496,6 @@
     "exercise_id": 558,
     "tipo": "image",
     "url": "/media/exercises/558/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 559,
-    "tipo": "image",
-    "url": "/media/exercises/559/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 559,
-    "tipo": "image",
-    "url": "/media/exercises/559/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -5222,34 +3570,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 565,
-    "tipo": "image",
-    "url": "/media/exercises/565/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 565,
-    "tipo": "image",
-    "url": "/media/exercises/565/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 566,
-    "tipo": "image",
-    "url": "/media/exercises/566/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 566,
-    "tipo": "image",
-    "url": "/media/exercises/566/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 567,
     "tipo": "image",
     "url": "/media/exercises/567/exec_start.jpg",
@@ -5278,48 +3598,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 569,
-    "tipo": "image",
-    "url": "/media/exercises/569/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 569,
-    "tipo": "image",
-    "url": "/media/exercises/569/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 570,
-    "tipo": "image",
-    "url": "/media/exercises/570/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 570,
-    "tipo": "image",
-    "url": "/media/exercises/570/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 571,
-    "tipo": "image",
-    "url": "/media/exercises/571/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 571,
-    "tipo": "image",
-    "url": "/media/exercises/571/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 572,
     "tipo": "image",
     "url": "/media/exercises/572/exec_start.jpg",
@@ -5334,48 +3612,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 573,
-    "tipo": "image",
-    "url": "/media/exercises/573/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 573,
-    "tipo": "image",
-    "url": "/media/exercises/573/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 574,
-    "tipo": "image",
-    "url": "/media/exercises/574/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 574,
-    "tipo": "image",
-    "url": "/media/exercises/574/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 575,
-    "tipo": "image",
-    "url": "/media/exercises/575/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 575,
-    "tipo": "image",
-    "url": "/media/exercises/575/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 576,
     "tipo": "image",
     "url": "/media/exercises/576/exec_start.jpg",
@@ -5386,48 +3622,6 @@
     "exercise_id": 576,
     "tipo": "image",
     "url": "/media/exercises/576/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 577,
-    "tipo": "image",
-    "url": "/media/exercises/577/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 577,
-    "tipo": "image",
-    "url": "/media/exercises/577/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 578,
-    "tipo": "image",
-    "url": "/media/exercises/578/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 578,
-    "tipo": "image",
-    "url": "/media/exercises/578/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 579,
-    "tipo": "image",
-    "url": "/media/exercises/579/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 579,
-    "tipo": "image",
-    "url": "/media/exercises/579/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -5474,76 +3668,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 583,
-    "tipo": "image",
-    "url": "/media/exercises/583/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 583,
-    "tipo": "image",
-    "url": "/media/exercises/583/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 584,
-    "tipo": "image",
-    "url": "/media/exercises/584/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 584,
-    "tipo": "image",
-    "url": "/media/exercises/584/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 585,
-    "tipo": "image",
-    "url": "/media/exercises/585/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 585,
-    "tipo": "image",
-    "url": "/media/exercises/585/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 586,
-    "tipo": "image",
-    "url": "/media/exercises/586/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 586,
-    "tipo": "image",
-    "url": "/media/exercises/586/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 587,
-    "tipo": "image",
-    "url": "/media/exercises/587/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 587,
-    "tipo": "image",
-    "url": "/media/exercises/587/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 588,
     "tipo": "image",
     "url": "/media/exercises/588/exec_start.jpg",
@@ -5554,34 +3678,6 @@
     "exercise_id": 588,
     "tipo": "image",
     "url": "/media/exercises/588/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 589,
-    "tipo": "image",
-    "url": "/media/exercises/589/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 589,
-    "tipo": "image",
-    "url": "/media/exercises/589/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 590,
-    "tipo": "image",
-    "url": "/media/exercises/590/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 590,
-    "tipo": "image",
-    "url": "/media/exercises/590/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -5614,20 +3710,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 593,
-    "tipo": "image",
-    "url": "/media/exercises/593/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 593,
-    "tipo": "image",
-    "url": "/media/exercises/593/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 594,
     "tipo": "image",
     "url": "/media/exercises/594/exec_start.jpg",
@@ -5656,118 +3738,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 596,
-    "tipo": "image",
-    "url": "/media/exercises/596/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 596,
-    "tipo": "image",
-    "url": "/media/exercises/596/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 597,
-    "tipo": "image",
-    "url": "/media/exercises/597/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 597,
-    "tipo": "image",
-    "url": "/media/exercises/597/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 598,
-    "tipo": "image",
-    "url": "/media/exercises/598/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 598,
-    "tipo": "image",
-    "url": "/media/exercises/598/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 599,
-    "tipo": "image",
-    "url": "/media/exercises/599/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 599,
-    "tipo": "image",
-    "url": "/media/exercises/599/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 600,
-    "tipo": "image",
-    "url": "/media/exercises/600/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 600,
-    "tipo": "image",
-    "url": "/media/exercises/600/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 601,
-    "tipo": "image",
-    "url": "/media/exercises/601/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 601,
-    "tipo": "image",
-    "url": "/media/exercises/601/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 602,
-    "tipo": "image",
-    "url": "/media/exercises/602/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 602,
-    "tipo": "image",
-    "url": "/media/exercises/602/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 603,
-    "tipo": "image",
-    "url": "/media/exercises/603/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 603,
-    "tipo": "image",
-    "url": "/media/exercises/603/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 604,
     "tipo": "image",
     "url": "/media/exercises/604/exec_start.jpg",
@@ -5778,20 +3748,6 @@
     "exercise_id": 604,
     "tipo": "image",
     "url": "/media/exercises/604/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 605,
-    "tipo": "image",
-    "url": "/media/exercises/605/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 605,
-    "tipo": "image",
-    "url": "/media/exercises/605/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -5838,20 +3794,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 609,
-    "tipo": "image",
-    "url": "/media/exercises/609/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 609,
-    "tipo": "image",
-    "url": "/media/exercises/609/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 610,
     "tipo": "image",
     "url": "/media/exercises/610/exec_start.jpg",
@@ -5862,20 +3804,6 @@
     "exercise_id": 610,
     "tipo": "image",
     "url": "/media/exercises/610/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 611,
-    "tipo": "image",
-    "url": "/media/exercises/611/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 611,
-    "tipo": "image",
-    "url": "/media/exercises/611/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -5908,104 +3836,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 614,
-    "tipo": "image",
-    "url": "/media/exercises/614/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 614,
-    "tipo": "image",
-    "url": "/media/exercises/614/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 615,
-    "tipo": "image",
-    "url": "/media/exercises/615/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 615,
-    "tipo": "image",
-    "url": "/media/exercises/615/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 616,
-    "tipo": "image",
-    "url": "/media/exercises/616/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 616,
-    "tipo": "image",
-    "url": "/media/exercises/616/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 617,
-    "tipo": "image",
-    "url": "/media/exercises/617/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 617,
-    "tipo": "image",
-    "url": "/media/exercises/617/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 618,
-    "tipo": "image",
-    "url": "/media/exercises/618/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 618,
-    "tipo": "image",
-    "url": "/media/exercises/618/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 619,
-    "tipo": "image",
-    "url": "/media/exercises/619/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 619,
-    "tipo": "image",
-    "url": "/media/exercises/619/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 620,
-    "tipo": "image",
-    "url": "/media/exercises/620/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 620,
-    "tipo": "image",
-    "url": "/media/exercises/620/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 621,
     "tipo": "image",
     "url": "/media/exercises/621/exec_start.jpg",
@@ -6030,76 +3860,6 @@
     "exercise_id": 622,
     "tipo": "image",
     "url": "/media/exercises/622/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 623,
-    "tipo": "image",
-    "url": "/media/exercises/623/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 623,
-    "tipo": "image",
-    "url": "/media/exercises/623/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 624,
-    "tipo": "image",
-    "url": "/media/exercises/624/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 624,
-    "tipo": "image",
-    "url": "/media/exercises/624/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 625,
-    "tipo": "image",
-    "url": "/media/exercises/625/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 625,
-    "tipo": "image",
-    "url": "/media/exercises/625/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 626,
-    "tipo": "image",
-    "url": "/media/exercises/626/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 626,
-    "tipo": "image",
-    "url": "/media/exercises/626/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 627,
-    "tipo": "image",
-    "url": "/media/exercises/627/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 627,
-    "tipo": "image",
-    "url": "/media/exercises/627/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -6160,20 +3920,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 632,
-    "tipo": "image",
-    "url": "/media/exercises/632/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 632,
-    "tipo": "image",
-    "url": "/media/exercises/632/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 633,
     "tipo": "image",
     "url": "/media/exercises/633/exec_start.jpg",
@@ -6188,20 +3934,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 634,
-    "tipo": "image",
-    "url": "/media/exercises/634/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 634,
-    "tipo": "image",
-    "url": "/media/exercises/634/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 635,
     "tipo": "image",
     "url": "/media/exercises/635/exec_start.jpg",
@@ -6212,34 +3944,6 @@
     "exercise_id": 635,
     "tipo": "image",
     "url": "/media/exercises/635/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 636,
-    "tipo": "image",
-    "url": "/media/exercises/636/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 636,
-    "tipo": "image",
-    "url": "/media/exercises/636/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 637,
-    "tipo": "image",
-    "url": "/media/exercises/637/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 637,
-    "tipo": "image",
-    "url": "/media/exercises/637/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -6272,48 +3976,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 640,
-    "tipo": "image",
-    "url": "/media/exercises/640/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 640,
-    "tipo": "image",
-    "url": "/media/exercises/640/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 641,
-    "tipo": "image",
-    "url": "/media/exercises/641/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 641,
-    "tipo": "image",
-    "url": "/media/exercises/641/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 642,
-    "tipo": "image",
-    "url": "/media/exercises/642/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 642,
-    "tipo": "image",
-    "url": "/media/exercises/642/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 643,
     "tipo": "image",
     "url": "/media/exercises/643/exec_start.jpg",
@@ -6324,48 +3986,6 @@
     "exercise_id": 643,
     "tipo": "image",
     "url": "/media/exercises/643/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 644,
-    "tipo": "image",
-    "url": "/media/exercises/644/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 644,
-    "tipo": "image",
-    "url": "/media/exercises/644/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 645,
-    "tipo": "image",
-    "url": "/media/exercises/645/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 645,
-    "tipo": "image",
-    "url": "/media/exercises/645/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 646,
-    "tipo": "image",
-    "url": "/media/exercises/646/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 646,
-    "tipo": "image",
-    "url": "/media/exercises/646/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -6384,20 +4004,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 648,
-    "tipo": "image",
-    "url": "/media/exercises/648/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 648,
-    "tipo": "image",
-    "url": "/media/exercises/648/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 649,
     "tipo": "image",
     "url": "/media/exercises/649/exec_start.jpg",
@@ -6408,62 +4014,6 @@
     "exercise_id": 649,
     "tipo": "image",
     "url": "/media/exercises/649/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 650,
-    "tipo": "image",
-    "url": "/media/exercises/650/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 650,
-    "tipo": "image",
-    "url": "/media/exercises/650/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 651,
-    "tipo": "image",
-    "url": "/media/exercises/651/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 651,
-    "tipo": "image",
-    "url": "/media/exercises/651/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 652,
-    "tipo": "image",
-    "url": "/media/exercises/652/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 652,
-    "tipo": "image",
-    "url": "/media/exercises/652/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 653,
-    "tipo": "image",
-    "url": "/media/exercises/653/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 653,
-    "tipo": "image",
-    "url": "/media/exercises/653/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -6492,20 +4042,6 @@
     "exercise_id": 655,
     "tipo": "image",
     "url": "/media/exercises/655/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 656,
-    "tipo": "image",
-    "url": "/media/exercises/656/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 656,
-    "tipo": "image",
-    "url": "/media/exercises/656/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -6552,76 +4088,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 660,
-    "tipo": "image",
-    "url": "/media/exercises/660/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 660,
-    "tipo": "image",
-    "url": "/media/exercises/660/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 661,
-    "tipo": "image",
-    "url": "/media/exercises/661/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 661,
-    "tipo": "image",
-    "url": "/media/exercises/661/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 662,
-    "tipo": "image",
-    "url": "/media/exercises/662/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 662,
-    "tipo": "image",
-    "url": "/media/exercises/662/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 663,
-    "tipo": "image",
-    "url": "/media/exercises/663/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 663,
-    "tipo": "image",
-    "url": "/media/exercises/663/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 664,
-    "tipo": "image",
-    "url": "/media/exercises/664/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 664,
-    "tipo": "image",
-    "url": "/media/exercises/664/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 665,
     "tipo": "image",
     "url": "/media/exercises/665/exec_start.jpg",
@@ -6632,132 +4098,6 @@
     "exercise_id": 665,
     "tipo": "image",
     "url": "/media/exercises/665/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 666,
-    "tipo": "image",
-    "url": "/media/exercises/666/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 666,
-    "tipo": "image",
-    "url": "/media/exercises/666/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 667,
-    "tipo": "image",
-    "url": "/media/exercises/667/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 667,
-    "tipo": "image",
-    "url": "/media/exercises/667/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 668,
-    "tipo": "image",
-    "url": "/media/exercises/668/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 668,
-    "tipo": "image",
-    "url": "/media/exercises/668/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 669,
-    "tipo": "image",
-    "url": "/media/exercises/669/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 669,
-    "tipo": "image",
-    "url": "/media/exercises/669/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 670,
-    "tipo": "image",
-    "url": "/media/exercises/670/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 670,
-    "tipo": "image",
-    "url": "/media/exercises/670/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 671,
-    "tipo": "image",
-    "url": "/media/exercises/671/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 671,
-    "tipo": "image",
-    "url": "/media/exercises/671/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 672,
-    "tipo": "image",
-    "url": "/media/exercises/672/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 672,
-    "tipo": "image",
-    "url": "/media/exercises/672/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 673,
-    "tipo": "image",
-    "url": "/media/exercises/673/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 673,
-    "tipo": "image",
-    "url": "/media/exercises/673/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 674,
-    "tipo": "image",
-    "url": "/media/exercises/674/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 674,
-    "tipo": "image",
-    "url": "/media/exercises/674/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -6776,202 +4116,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 676,
-    "tipo": "image",
-    "url": "/media/exercises/676/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 676,
-    "tipo": "image",
-    "url": "/media/exercises/676/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 677,
-    "tipo": "image",
-    "url": "/media/exercises/677/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 677,
-    "tipo": "image",
-    "url": "/media/exercises/677/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 678,
-    "tipo": "image",
-    "url": "/media/exercises/678/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 678,
-    "tipo": "image",
-    "url": "/media/exercises/678/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 679,
-    "tipo": "image",
-    "url": "/media/exercises/679/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 679,
-    "tipo": "image",
-    "url": "/media/exercises/679/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 680,
-    "tipo": "image",
-    "url": "/media/exercises/680/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 680,
-    "tipo": "image",
-    "url": "/media/exercises/680/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 681,
-    "tipo": "image",
-    "url": "/media/exercises/681/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 681,
-    "tipo": "image",
-    "url": "/media/exercises/681/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 682,
-    "tipo": "image",
-    "url": "/media/exercises/682/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 682,
-    "tipo": "image",
-    "url": "/media/exercises/682/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 683,
-    "tipo": "image",
-    "url": "/media/exercises/683/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 683,
-    "tipo": "image",
-    "url": "/media/exercises/683/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 684,
-    "tipo": "image",
-    "url": "/media/exercises/684/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 684,
-    "tipo": "image",
-    "url": "/media/exercises/684/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 685,
-    "tipo": "image",
-    "url": "/media/exercises/685/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 685,
-    "tipo": "image",
-    "url": "/media/exercises/685/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 686,
-    "tipo": "image",
-    "url": "/media/exercises/686/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 686,
-    "tipo": "image",
-    "url": "/media/exercises/686/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 687,
-    "tipo": "image",
-    "url": "/media/exercises/687/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 687,
-    "tipo": "image",
-    "url": "/media/exercises/687/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 688,
-    "tipo": "image",
-    "url": "/media/exercises/688/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 688,
-    "tipo": "image",
-    "url": "/media/exercises/688/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 689,
-    "tipo": "image",
-    "url": "/media/exercises/689/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 689,
-    "tipo": "image",
-    "url": "/media/exercises/689/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 690,
     "tipo": "image",
     "url": "/media/exercises/690/exec_start.jpg",
@@ -6982,62 +4126,6 @@
     "exercise_id": 690,
     "tipo": "image",
     "url": "/media/exercises/690/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 691,
-    "tipo": "image",
-    "url": "/media/exercises/691/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 691,
-    "tipo": "image",
-    "url": "/media/exercises/691/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 692,
-    "tipo": "image",
-    "url": "/media/exercises/692/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 692,
-    "tipo": "image",
-    "url": "/media/exercises/692/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 693,
-    "tipo": "image",
-    "url": "/media/exercises/693/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 693,
-    "tipo": "image",
-    "url": "/media/exercises/693/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 694,
-    "tipo": "image",
-    "url": "/media/exercises/694/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 694,
-    "tipo": "image",
-    "url": "/media/exercises/694/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -7070,34 +4158,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 697,
-    "tipo": "image",
-    "url": "/media/exercises/697/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 697,
-    "tipo": "image",
-    "url": "/media/exercises/697/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 698,
-    "tipo": "image",
-    "url": "/media/exercises/698/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 698,
-    "tipo": "image",
-    "url": "/media/exercises/698/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 699,
     "tipo": "image",
     "url": "/media/exercises/699/exec_start.jpg",
@@ -7108,48 +4168,6 @@
     "exercise_id": 699,
     "tipo": "image",
     "url": "/media/exercises/699/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 700,
-    "tipo": "image",
-    "url": "/media/exercises/700/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 700,
-    "tipo": "image",
-    "url": "/media/exercises/700/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 701,
-    "tipo": "image",
-    "url": "/media/exercises/701/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 701,
-    "tipo": "image",
-    "url": "/media/exercises/701/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 702,
-    "tipo": "image",
-    "url": "/media/exercises/702/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 702,
-    "tipo": "image",
-    "url": "/media/exercises/702/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -7168,160 +4186,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 704,
-    "tipo": "image",
-    "url": "/media/exercises/704/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 704,
-    "tipo": "image",
-    "url": "/media/exercises/704/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 705,
-    "tipo": "image",
-    "url": "/media/exercises/705/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 705,
-    "tipo": "image",
-    "url": "/media/exercises/705/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 706,
-    "tipo": "image",
-    "url": "/media/exercises/706/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 706,
-    "tipo": "image",
-    "url": "/media/exercises/706/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 707,
-    "tipo": "image",
-    "url": "/media/exercises/707/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 707,
-    "tipo": "image",
-    "url": "/media/exercises/707/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 708,
-    "tipo": "image",
-    "url": "/media/exercises/708/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 708,
-    "tipo": "image",
-    "url": "/media/exercises/708/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 709,
-    "tipo": "image",
-    "url": "/media/exercises/709/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 709,
-    "tipo": "image",
-    "url": "/media/exercises/709/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 710,
-    "tipo": "image",
-    "url": "/media/exercises/710/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 710,
-    "tipo": "image",
-    "url": "/media/exercises/710/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 711,
-    "tipo": "image",
-    "url": "/media/exercises/711/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 711,
-    "tipo": "image",
-    "url": "/media/exercises/711/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 712,
-    "tipo": "image",
-    "url": "/media/exercises/712/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 712,
-    "tipo": "image",
-    "url": "/media/exercises/712/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 713,
-    "tipo": "image",
-    "url": "/media/exercises/713/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 713,
-    "tipo": "image",
-    "url": "/media/exercises/713/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 714,
-    "tipo": "image",
-    "url": "/media/exercises/714/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 714,
-    "tipo": "image",
-    "url": "/media/exercises/714/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 715,
     "tipo": "image",
     "url": "/media/exercises/715/exec_start.jpg",
@@ -7332,132 +4196,6 @@
     "exercise_id": 715,
     "tipo": "image",
     "url": "/media/exercises/715/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 716,
-    "tipo": "image",
-    "url": "/media/exercises/716/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 716,
-    "tipo": "image",
-    "url": "/media/exercises/716/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 717,
-    "tipo": "image",
-    "url": "/media/exercises/717/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 717,
-    "tipo": "image",
-    "url": "/media/exercises/717/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 718,
-    "tipo": "image",
-    "url": "/media/exercises/718/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 718,
-    "tipo": "image",
-    "url": "/media/exercises/718/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 719,
-    "tipo": "image",
-    "url": "/media/exercises/719/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 719,
-    "tipo": "image",
-    "url": "/media/exercises/719/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 720,
-    "tipo": "image",
-    "url": "/media/exercises/720/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 720,
-    "tipo": "image",
-    "url": "/media/exercises/720/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 721,
-    "tipo": "image",
-    "url": "/media/exercises/721/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 721,
-    "tipo": "image",
-    "url": "/media/exercises/721/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 722,
-    "tipo": "image",
-    "url": "/media/exercises/722/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 722,
-    "tipo": "image",
-    "url": "/media/exercises/722/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 723,
-    "tipo": "image",
-    "url": "/media/exercises/723/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 723,
-    "tipo": "image",
-    "url": "/media/exercises/723/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 724,
-    "tipo": "image",
-    "url": "/media/exercises/724/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 724,
-    "tipo": "image",
-    "url": "/media/exercises/724/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -7504,48 +4242,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 728,
-    "tipo": "image",
-    "url": "/media/exercises/728/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 728,
-    "tipo": "image",
-    "url": "/media/exercises/728/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 729,
-    "tipo": "image",
-    "url": "/media/exercises/729/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 729,
-    "tipo": "image",
-    "url": "/media/exercises/729/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 730,
-    "tipo": "image",
-    "url": "/media/exercises/730/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 730,
-    "tipo": "image",
-    "url": "/media/exercises/730/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 731,
     "tipo": "image",
     "url": "/media/exercises/731/exec_start.jpg",
@@ -7556,118 +4252,6 @@
     "exercise_id": 731,
     "tipo": "image",
     "url": "/media/exercises/731/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 732,
-    "tipo": "image",
-    "url": "/media/exercises/732/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 732,
-    "tipo": "image",
-    "url": "/media/exercises/732/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 733,
-    "tipo": "image",
-    "url": "/media/exercises/733/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 733,
-    "tipo": "image",
-    "url": "/media/exercises/733/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 734,
-    "tipo": "image",
-    "url": "/media/exercises/734/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 734,
-    "tipo": "image",
-    "url": "/media/exercises/734/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 735,
-    "tipo": "image",
-    "url": "/media/exercises/735/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 735,
-    "tipo": "image",
-    "url": "/media/exercises/735/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 736,
-    "tipo": "image",
-    "url": "/media/exercises/736/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 736,
-    "tipo": "image",
-    "url": "/media/exercises/736/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 737,
-    "tipo": "image",
-    "url": "/media/exercises/737/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 737,
-    "tipo": "image",
-    "url": "/media/exercises/737/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 738,
-    "tipo": "image",
-    "url": "/media/exercises/738/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 738,
-    "tipo": "image",
-    "url": "/media/exercises/738/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 739,
-    "tipo": "image",
-    "url": "/media/exercises/739/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 739,
-    "tipo": "image",
-    "url": "/media/exercises/739/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -7700,62 +4284,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 742,
-    "tipo": "image",
-    "url": "/media/exercises/742/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 742,
-    "tipo": "image",
-    "url": "/media/exercises/742/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 743,
-    "tipo": "image",
-    "url": "/media/exercises/743/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 743,
-    "tipo": "image",
-    "url": "/media/exercises/743/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 744,
-    "tipo": "image",
-    "url": "/media/exercises/744/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 744,
-    "tipo": "image",
-    "url": "/media/exercises/744/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 745,
-    "tipo": "image",
-    "url": "/media/exercises/745/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 745,
-    "tipo": "image",
-    "url": "/media/exercises/745/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 746,
     "tipo": "image",
     "url": "/media/exercises/746/exec_start.jpg",
@@ -7766,188 +4294,6 @@
     "exercise_id": 746,
     "tipo": "image",
     "url": "/media/exercises/746/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 747,
-    "tipo": "image",
-    "url": "/media/exercises/747/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 747,
-    "tipo": "image",
-    "url": "/media/exercises/747/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 748,
-    "tipo": "image",
-    "url": "/media/exercises/748/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 748,
-    "tipo": "image",
-    "url": "/media/exercises/748/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 749,
-    "tipo": "image",
-    "url": "/media/exercises/749/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 749,
-    "tipo": "image",
-    "url": "/media/exercises/749/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 750,
-    "tipo": "image",
-    "url": "/media/exercises/750/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 750,
-    "tipo": "image",
-    "url": "/media/exercises/750/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 751,
-    "tipo": "image",
-    "url": "/media/exercises/751/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 751,
-    "tipo": "image",
-    "url": "/media/exercises/751/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 752,
-    "tipo": "image",
-    "url": "/media/exercises/752/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 752,
-    "tipo": "image",
-    "url": "/media/exercises/752/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 753,
-    "tipo": "image",
-    "url": "/media/exercises/753/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 753,
-    "tipo": "image",
-    "url": "/media/exercises/753/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 754,
-    "tipo": "image",
-    "url": "/media/exercises/754/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 754,
-    "tipo": "image",
-    "url": "/media/exercises/754/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 755,
-    "tipo": "image",
-    "url": "/media/exercises/755/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 755,
-    "tipo": "image",
-    "url": "/media/exercises/755/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 756,
-    "tipo": "image",
-    "url": "/media/exercises/756/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 756,
-    "tipo": "image",
-    "url": "/media/exercises/756/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 757,
-    "tipo": "image",
-    "url": "/media/exercises/757/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 757,
-    "tipo": "image",
-    "url": "/media/exercises/757/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 758,
-    "tipo": "image",
-    "url": "/media/exercises/758/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 758,
-    "tipo": "image",
-    "url": "/media/exercises/758/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 759,
-    "tipo": "image",
-    "url": "/media/exercises/759/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 759,
-    "tipo": "image",
-    "url": "/media/exercises/759/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -7966,62 +4312,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 761,
-    "tipo": "image",
-    "url": "/media/exercises/761/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 761,
-    "tipo": "image",
-    "url": "/media/exercises/761/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 762,
-    "tipo": "image",
-    "url": "/media/exercises/762/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 762,
-    "tipo": "image",
-    "url": "/media/exercises/762/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 763,
-    "tipo": "image",
-    "url": "/media/exercises/763/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 763,
-    "tipo": "image",
-    "url": "/media/exercises/763/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 764,
-    "tipo": "image",
-    "url": "/media/exercises/764/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 764,
-    "tipo": "image",
-    "url": "/media/exercises/764/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 765,
     "tipo": "image",
     "url": "/media/exercises/765/exec_start.jpg",
@@ -8032,272 +4322,6 @@
     "exercise_id": 765,
     "tipo": "image",
     "url": "/media/exercises/765/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 766,
-    "tipo": "image",
-    "url": "/media/exercises/766/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 766,
-    "tipo": "image",
-    "url": "/media/exercises/766/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 767,
-    "tipo": "image",
-    "url": "/media/exercises/767/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 767,
-    "tipo": "image",
-    "url": "/media/exercises/767/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 768,
-    "tipo": "image",
-    "url": "/media/exercises/768/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 768,
-    "tipo": "image",
-    "url": "/media/exercises/768/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 769,
-    "tipo": "image",
-    "url": "/media/exercises/769/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 769,
-    "tipo": "image",
-    "url": "/media/exercises/769/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 770,
-    "tipo": "image",
-    "url": "/media/exercises/770/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 770,
-    "tipo": "image",
-    "url": "/media/exercises/770/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 771,
-    "tipo": "image",
-    "url": "/media/exercises/771/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 771,
-    "tipo": "image",
-    "url": "/media/exercises/771/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 772,
-    "tipo": "image",
-    "url": "/media/exercises/772/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 772,
-    "tipo": "image",
-    "url": "/media/exercises/772/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 773,
-    "tipo": "image",
-    "url": "/media/exercises/773/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 773,
-    "tipo": "image",
-    "url": "/media/exercises/773/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 774,
-    "tipo": "image",
-    "url": "/media/exercises/774/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 774,
-    "tipo": "image",
-    "url": "/media/exercises/774/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 775,
-    "tipo": "image",
-    "url": "/media/exercises/775/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 775,
-    "tipo": "image",
-    "url": "/media/exercises/775/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 776,
-    "tipo": "image",
-    "url": "/media/exercises/776/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 776,
-    "tipo": "image",
-    "url": "/media/exercises/776/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 777,
-    "tipo": "image",
-    "url": "/media/exercises/777/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 777,
-    "tipo": "image",
-    "url": "/media/exercises/777/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 778,
-    "tipo": "image",
-    "url": "/media/exercises/778/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 778,
-    "tipo": "image",
-    "url": "/media/exercises/778/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 779,
-    "tipo": "image",
-    "url": "/media/exercises/779/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 779,
-    "tipo": "image",
-    "url": "/media/exercises/779/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 780,
-    "tipo": "image",
-    "url": "/media/exercises/780/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 780,
-    "tipo": "image",
-    "url": "/media/exercises/780/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 781,
-    "tipo": "image",
-    "url": "/media/exercises/781/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 781,
-    "tipo": "image",
-    "url": "/media/exercises/781/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 782,
-    "tipo": "image",
-    "url": "/media/exercises/782/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 782,
-    "tipo": "image",
-    "url": "/media/exercises/782/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 783,
-    "tipo": "image",
-    "url": "/media/exercises/783/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 783,
-    "tipo": "image",
-    "url": "/media/exercises/783/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 784,
-    "tipo": "image",
-    "url": "/media/exercises/784/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 784,
-    "tipo": "image",
-    "url": "/media/exercises/784/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -8330,76 +4354,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 787,
-    "tipo": "image",
-    "url": "/media/exercises/787/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 787,
-    "tipo": "image",
-    "url": "/media/exercises/787/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 788,
-    "tipo": "image",
-    "url": "/media/exercises/788/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 788,
-    "tipo": "image",
-    "url": "/media/exercises/788/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 789,
-    "tipo": "image",
-    "url": "/media/exercises/789/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 789,
-    "tipo": "image",
-    "url": "/media/exercises/789/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 790,
-    "tipo": "image",
-    "url": "/media/exercises/790/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 790,
-    "tipo": "image",
-    "url": "/media/exercises/790/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 791,
-    "tipo": "image",
-    "url": "/media/exercises/791/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 791,
-    "tipo": "image",
-    "url": "/media/exercises/791/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 792,
     "tipo": "image",
     "url": "/media/exercises/792/exec_start.jpg",
@@ -8410,20 +4364,6 @@
     "exercise_id": 792,
     "tipo": "image",
     "url": "/media/exercises/792/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 793,
-    "tipo": "image",
-    "url": "/media/exercises/793/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 793,
-    "tipo": "image",
-    "url": "/media/exercises/793/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -8442,48 +4382,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 795,
-    "tipo": "image",
-    "url": "/media/exercises/795/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 795,
-    "tipo": "image",
-    "url": "/media/exercises/795/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 796,
-    "tipo": "image",
-    "url": "/media/exercises/796/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 796,
-    "tipo": "image",
-    "url": "/media/exercises/796/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 797,
-    "tipo": "image",
-    "url": "/media/exercises/797/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 797,
-    "tipo": "image",
-    "url": "/media/exercises/797/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 798,
     "tipo": "image",
     "url": "/media/exercises/798/exec_start.jpg",
@@ -8494,34 +4392,6 @@
     "exercise_id": 798,
     "tipo": "image",
     "url": "/media/exercises/798/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 799,
-    "tipo": "image",
-    "url": "/media/exercises/799/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 799,
-    "tipo": "image",
-    "url": "/media/exercises/799/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 800,
-    "tipo": "image",
-    "url": "/media/exercises/800/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 800,
-    "tipo": "image",
-    "url": "/media/exercises/800/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -8540,132 +4410,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 802,
-    "tipo": "image",
-    "url": "/media/exercises/802/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 802,
-    "tipo": "image",
-    "url": "/media/exercises/802/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 803,
-    "tipo": "image",
-    "url": "/media/exercises/803/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 803,
-    "tipo": "image",
-    "url": "/media/exercises/803/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 804,
-    "tipo": "image",
-    "url": "/media/exercises/804/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 804,
-    "tipo": "image",
-    "url": "/media/exercises/804/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 805,
-    "tipo": "image",
-    "url": "/media/exercises/805/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 805,
-    "tipo": "image",
-    "url": "/media/exercises/805/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 806,
-    "tipo": "image",
-    "url": "/media/exercises/806/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 806,
-    "tipo": "image",
-    "url": "/media/exercises/806/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 807,
-    "tipo": "image",
-    "url": "/media/exercises/807/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 807,
-    "tipo": "image",
-    "url": "/media/exercises/807/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 808,
-    "tipo": "image",
-    "url": "/media/exercises/808/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 808,
-    "tipo": "image",
-    "url": "/media/exercises/808/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 809,
-    "tipo": "image",
-    "url": "/media/exercises/809/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 809,
-    "tipo": "image",
-    "url": "/media/exercises/809/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 810,
-    "tipo": "image",
-    "url": "/media/exercises/810/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 810,
-    "tipo": "image",
-    "url": "/media/exercises/810/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 811,
     "tipo": "image",
     "url": "/media/exercises/811/exec_start.jpg",
@@ -8676,202 +4420,6 @@
     "exercise_id": 811,
     "tipo": "image",
     "url": "/media/exercises/811/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 812,
-    "tipo": "image",
-    "url": "/media/exercises/812/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 812,
-    "tipo": "image",
-    "url": "/media/exercises/812/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 813,
-    "tipo": "image",
-    "url": "/media/exercises/813/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 813,
-    "tipo": "image",
-    "url": "/media/exercises/813/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 814,
-    "tipo": "image",
-    "url": "/media/exercises/814/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 814,
-    "tipo": "image",
-    "url": "/media/exercises/814/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 815,
-    "tipo": "image",
-    "url": "/media/exercises/815/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 815,
-    "tipo": "image",
-    "url": "/media/exercises/815/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 816,
-    "tipo": "image",
-    "url": "/media/exercises/816/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 816,
-    "tipo": "image",
-    "url": "/media/exercises/816/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 817,
-    "tipo": "image",
-    "url": "/media/exercises/817/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 817,
-    "tipo": "image",
-    "url": "/media/exercises/817/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 818,
-    "tipo": "image",
-    "url": "/media/exercises/818/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 818,
-    "tipo": "image",
-    "url": "/media/exercises/818/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 819,
-    "tipo": "image",
-    "url": "/media/exercises/819/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 819,
-    "tipo": "image",
-    "url": "/media/exercises/819/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 820,
-    "tipo": "image",
-    "url": "/media/exercises/820/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 820,
-    "tipo": "image",
-    "url": "/media/exercises/820/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 821,
-    "tipo": "image",
-    "url": "/media/exercises/821/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 821,
-    "tipo": "image",
-    "url": "/media/exercises/821/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 822,
-    "tipo": "image",
-    "url": "/media/exercises/822/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 822,
-    "tipo": "image",
-    "url": "/media/exercises/822/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 823,
-    "tipo": "image",
-    "url": "/media/exercises/823/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 823,
-    "tipo": "image",
-    "url": "/media/exercises/823/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 824,
-    "tipo": "image",
-    "url": "/media/exercises/824/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 824,
-    "tipo": "image",
-    "url": "/media/exercises/824/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 825,
-    "tipo": "image",
-    "url": "/media/exercises/825/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 825,
-    "tipo": "image",
-    "url": "/media/exercises/825/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -8900,76 +4448,6 @@
     "exercise_id": 827,
     "tipo": "image",
     "url": "/media/exercises/827/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 828,
-    "tipo": "image",
-    "url": "/media/exercises/828/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 828,
-    "tipo": "image",
-    "url": "/media/exercises/828/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 829,
-    "tipo": "image",
-    "url": "/media/exercises/829/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 829,
-    "tipo": "image",
-    "url": "/media/exercises/829/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 830,
-    "tipo": "image",
-    "url": "/media/exercises/830/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 830,
-    "tipo": "image",
-    "url": "/media/exercises/830/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 831,
-    "tipo": "image",
-    "url": "/media/exercises/831/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 831,
-    "tipo": "image",
-    "url": "/media/exercises/831/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 832,
-    "tipo": "image",
-    "url": "/media/exercises/832/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 832,
-    "tipo": "image",
-    "url": "/media/exercises/832/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -9030,174 +4508,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 837,
-    "tipo": "image",
-    "url": "/media/exercises/837/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 837,
-    "tipo": "image",
-    "url": "/media/exercises/837/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 838,
-    "tipo": "image",
-    "url": "/media/exercises/838/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 838,
-    "tipo": "image",
-    "url": "/media/exercises/838/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 839,
-    "tipo": "image",
-    "url": "/media/exercises/839/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 839,
-    "tipo": "image",
-    "url": "/media/exercises/839/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 840,
-    "tipo": "image",
-    "url": "/media/exercises/840/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 840,
-    "tipo": "image",
-    "url": "/media/exercises/840/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 841,
-    "tipo": "image",
-    "url": "/media/exercises/841/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 841,
-    "tipo": "image",
-    "url": "/media/exercises/841/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 842,
-    "tipo": "image",
-    "url": "/media/exercises/842/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 842,
-    "tipo": "image",
-    "url": "/media/exercises/842/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 843,
-    "tipo": "image",
-    "url": "/media/exercises/843/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 843,
-    "tipo": "image",
-    "url": "/media/exercises/843/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 844,
-    "tipo": "image",
-    "url": "/media/exercises/844/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 844,
-    "tipo": "image",
-    "url": "/media/exercises/844/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 845,
-    "tipo": "image",
-    "url": "/media/exercises/845/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 845,
-    "tipo": "image",
-    "url": "/media/exercises/845/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 846,
-    "tipo": "image",
-    "url": "/media/exercises/846/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 846,
-    "tipo": "image",
-    "url": "/media/exercises/846/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 847,
-    "tipo": "image",
-    "url": "/media/exercises/847/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 847,
-    "tipo": "image",
-    "url": "/media/exercises/847/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 848,
-    "tipo": "image",
-    "url": "/media/exercises/848/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 848,
-    "tipo": "image",
-    "url": "/media/exercises/848/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 849,
     "tipo": "image",
     "url": "/media/exercises/849/exec_start.jpg",
@@ -9240,34 +4550,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 852,
-    "tipo": "image",
-    "url": "/media/exercises/852/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 852,
-    "tipo": "image",
-    "url": "/media/exercises/852/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 853,
-    "tipo": "image",
-    "url": "/media/exercises/853/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 853,
-    "tipo": "image",
-    "url": "/media/exercises/853/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 854,
     "tipo": "image",
     "url": "/media/exercises/854/exec_start.jpg",
@@ -9278,62 +4560,6 @@
     "exercise_id": 854,
     "tipo": "image",
     "url": "/media/exercises/854/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 855,
-    "tipo": "image",
-    "url": "/media/exercises/855/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 855,
-    "tipo": "image",
-    "url": "/media/exercises/855/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 856,
-    "tipo": "image",
-    "url": "/media/exercises/856/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 856,
-    "tipo": "image",
-    "url": "/media/exercises/856/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 857,
-    "tipo": "image",
-    "url": "/media/exercises/857/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 857,
-    "tipo": "image",
-    "url": "/media/exercises/857/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 858,
-    "tipo": "image",
-    "url": "/media/exercises/858/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 858,
-    "tipo": "image",
-    "url": "/media/exercises/858/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -9352,62 +4578,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 860,
-    "tipo": "image",
-    "url": "/media/exercises/860/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 860,
-    "tipo": "image",
-    "url": "/media/exercises/860/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 861,
-    "tipo": "image",
-    "url": "/media/exercises/861/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 861,
-    "tipo": "image",
-    "url": "/media/exercises/861/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 862,
-    "tipo": "image",
-    "url": "/media/exercises/862/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 862,
-    "tipo": "image",
-    "url": "/media/exercises/862/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 863,
-    "tipo": "image",
-    "url": "/media/exercises/863/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 863,
-    "tipo": "image",
-    "url": "/media/exercises/863/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 864,
     "tipo": "image",
     "url": "/media/exercises/864/exec_start.jpg",
@@ -9418,34 +4588,6 @@
     "exercise_id": 864,
     "tipo": "image",
     "url": "/media/exercises/864/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 865,
-    "tipo": "image",
-    "url": "/media/exercises/865/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 865,
-    "tipo": "image",
-    "url": "/media/exercises/865/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 866,
-    "tipo": "image",
-    "url": "/media/exercises/866/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 866,
-    "tipo": "image",
-    "url": "/media/exercises/866/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -9464,62 +4606,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 868,
-    "tipo": "image",
-    "url": "/media/exercises/868/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 868,
-    "tipo": "image",
-    "url": "/media/exercises/868/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 869,
-    "tipo": "image",
-    "url": "/media/exercises/869/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 869,
-    "tipo": "image",
-    "url": "/media/exercises/869/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 870,
-    "tipo": "image",
-    "url": "/media/exercises/870/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 870,
-    "tipo": "image",
-    "url": "/media/exercises/870/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 871,
-    "tipo": "image",
-    "url": "/media/exercises/871/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 871,
-    "tipo": "image",
-    "url": "/media/exercises/871/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 872,
     "tipo": "image",
     "url": "/media/exercises/872/exec_start.jpg",
@@ -9530,20 +4616,6 @@
     "exercise_id": 872,
     "tipo": "image",
     "url": "/media/exercises/872/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 873,
-    "tipo": "image",
-    "url": "/media/exercises/873/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 873,
-    "tipo": "image",
-    "url": "/media/exercises/873/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -9562,342 +4634,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 875,
-    "tipo": "image",
-    "url": "/media/exercises/875/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 875,
-    "tipo": "image",
-    "url": "/media/exercises/875/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 876,
-    "tipo": "image",
-    "url": "/media/exercises/876/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 876,
-    "tipo": "image",
-    "url": "/media/exercises/876/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 877,
-    "tipo": "image",
-    "url": "/media/exercises/877/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 877,
-    "tipo": "image",
-    "url": "/media/exercises/877/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 878,
-    "tipo": "image",
-    "url": "/media/exercises/878/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 878,
-    "tipo": "image",
-    "url": "/media/exercises/878/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 879,
-    "tipo": "image",
-    "url": "/media/exercises/879/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 879,
-    "tipo": "image",
-    "url": "/media/exercises/879/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 880,
-    "tipo": "image",
-    "url": "/media/exercises/880/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 880,
-    "tipo": "image",
-    "url": "/media/exercises/880/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 881,
-    "tipo": "image",
-    "url": "/media/exercises/881/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 881,
-    "tipo": "image",
-    "url": "/media/exercises/881/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 882,
-    "tipo": "image",
-    "url": "/media/exercises/882/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 882,
-    "tipo": "image",
-    "url": "/media/exercises/882/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 883,
-    "tipo": "image",
-    "url": "/media/exercises/883/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 883,
-    "tipo": "image",
-    "url": "/media/exercises/883/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 884,
-    "tipo": "image",
-    "url": "/media/exercises/884/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 884,
-    "tipo": "image",
-    "url": "/media/exercises/884/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 885,
-    "tipo": "image",
-    "url": "/media/exercises/885/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 885,
-    "tipo": "image",
-    "url": "/media/exercises/885/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 886,
-    "tipo": "image",
-    "url": "/media/exercises/886/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 886,
-    "tipo": "image",
-    "url": "/media/exercises/886/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 887,
-    "tipo": "image",
-    "url": "/media/exercises/887/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 887,
-    "tipo": "image",
-    "url": "/media/exercises/887/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 888,
-    "tipo": "image",
-    "url": "/media/exercises/888/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 888,
-    "tipo": "image",
-    "url": "/media/exercises/888/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 889,
-    "tipo": "image",
-    "url": "/media/exercises/889/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 889,
-    "tipo": "image",
-    "url": "/media/exercises/889/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 890,
-    "tipo": "image",
-    "url": "/media/exercises/890/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 890,
-    "tipo": "image",
-    "url": "/media/exercises/890/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 891,
-    "tipo": "image",
-    "url": "/media/exercises/891/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 891,
-    "tipo": "image",
-    "url": "/media/exercises/891/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 892,
-    "tipo": "image",
-    "url": "/media/exercises/892/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 892,
-    "tipo": "image",
-    "url": "/media/exercises/892/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 893,
-    "tipo": "image",
-    "url": "/media/exercises/893/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 893,
-    "tipo": "image",
-    "url": "/media/exercises/893/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 894,
-    "tipo": "image",
-    "url": "/media/exercises/894/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 894,
-    "tipo": "image",
-    "url": "/media/exercises/894/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 895,
-    "tipo": "image",
-    "url": "/media/exercises/895/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 895,
-    "tipo": "image",
-    "url": "/media/exercises/895/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 896,
-    "tipo": "image",
-    "url": "/media/exercises/896/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 896,
-    "tipo": "image",
-    "url": "/media/exercises/896/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 897,
-    "tipo": "image",
-    "url": "/media/exercises/897/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 897,
-    "tipo": "image",
-    "url": "/media/exercises/897/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 898,
-    "tipo": "image",
-    "url": "/media/exercises/898/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 898,
-    "tipo": "image",
-    "url": "/media/exercises/898/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 899,
     "tipo": "image",
     "url": "/media/exercises/899/exec_start.jpg",
@@ -9912,118 +4648,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 900,
-    "tipo": "image",
-    "url": "/media/exercises/900/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 900,
-    "tipo": "image",
-    "url": "/media/exercises/900/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 901,
-    "tipo": "image",
-    "url": "/media/exercises/901/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 901,
-    "tipo": "image",
-    "url": "/media/exercises/901/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 902,
-    "tipo": "image",
-    "url": "/media/exercises/902/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 902,
-    "tipo": "image",
-    "url": "/media/exercises/902/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 903,
-    "tipo": "image",
-    "url": "/media/exercises/903/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 903,
-    "tipo": "image",
-    "url": "/media/exercises/903/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 904,
-    "tipo": "image",
-    "url": "/media/exercises/904/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 904,
-    "tipo": "image",
-    "url": "/media/exercises/904/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 905,
-    "tipo": "image",
-    "url": "/media/exercises/905/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 905,
-    "tipo": "image",
-    "url": "/media/exercises/905/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 906,
-    "tipo": "image",
-    "url": "/media/exercises/906/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 906,
-    "tipo": "image",
-    "url": "/media/exercises/906/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 907,
-    "tipo": "image",
-    "url": "/media/exercises/907/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 907,
-    "tipo": "image",
-    "url": "/media/exercises/907/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 908,
     "tipo": "image",
     "url": "/media/exercises/908/exec_start.jpg",
@@ -10034,48 +4658,6 @@
     "exercise_id": 908,
     "tipo": "image",
     "url": "/media/exercises/908/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 909,
-    "tipo": "image",
-    "url": "/media/exercises/909/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 909,
-    "tipo": "image",
-    "url": "/media/exercises/909/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 910,
-    "tipo": "image",
-    "url": "/media/exercises/910/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 910,
-    "tipo": "image",
-    "url": "/media/exercises/910/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 911,
-    "tipo": "image",
-    "url": "/media/exercises/911/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 911,
-    "tipo": "image",
-    "url": "/media/exercises/911/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -10108,20 +4690,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 914,
-    "tipo": "image",
-    "url": "/media/exercises/914/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 914,
-    "tipo": "image",
-    "url": "/media/exercises/914/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 915,
     "tipo": "image",
     "url": "/media/exercises/915/exec_start.jpg",
@@ -10132,34 +4700,6 @@
     "exercise_id": 915,
     "tipo": "image",
     "url": "/media/exercises/915/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 916,
-    "tipo": "image",
-    "url": "/media/exercises/916/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 916,
-    "tipo": "image",
-    "url": "/media/exercises/916/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 917,
-    "tipo": "image",
-    "url": "/media/exercises/917/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 917,
-    "tipo": "image",
-    "url": "/media/exercises/917/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -10192,20 +4732,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 920,
-    "tipo": "image",
-    "url": "/media/exercises/920/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 920,
-    "tipo": "image",
-    "url": "/media/exercises/920/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 921,
     "tipo": "image",
     "url": "/media/exercises/921/exec_start.jpg",
@@ -10216,20 +4742,6 @@
     "exercise_id": 921,
     "tipo": "image",
     "url": "/media/exercises/921/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 922,
-    "tipo": "image",
-    "url": "/media/exercises/922/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 922,
-    "tipo": "image",
-    "url": "/media/exercises/922/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -10262,174 +4774,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 925,
-    "tipo": "image",
-    "url": "/media/exercises/925/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 925,
-    "tipo": "image",
-    "url": "/media/exercises/925/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 926,
-    "tipo": "image",
-    "url": "/media/exercises/926/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 926,
-    "tipo": "image",
-    "url": "/media/exercises/926/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 927,
-    "tipo": "image",
-    "url": "/media/exercises/927/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 927,
-    "tipo": "image",
-    "url": "/media/exercises/927/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 928,
-    "tipo": "image",
-    "url": "/media/exercises/928/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 928,
-    "tipo": "image",
-    "url": "/media/exercises/928/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 929,
-    "tipo": "image",
-    "url": "/media/exercises/929/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 929,
-    "tipo": "image",
-    "url": "/media/exercises/929/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 930,
-    "tipo": "image",
-    "url": "/media/exercises/930/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 930,
-    "tipo": "image",
-    "url": "/media/exercises/930/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 931,
-    "tipo": "image",
-    "url": "/media/exercises/931/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 931,
-    "tipo": "image",
-    "url": "/media/exercises/931/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 932,
-    "tipo": "image",
-    "url": "/media/exercises/932/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 932,
-    "tipo": "image",
-    "url": "/media/exercises/932/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 933,
-    "tipo": "image",
-    "url": "/media/exercises/933/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 933,
-    "tipo": "image",
-    "url": "/media/exercises/933/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 934,
-    "tipo": "image",
-    "url": "/media/exercises/934/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 934,
-    "tipo": "image",
-    "url": "/media/exercises/934/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 935,
-    "tipo": "image",
-    "url": "/media/exercises/935/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 935,
-    "tipo": "image",
-    "url": "/media/exercises/935/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 936,
-    "tipo": "image",
-    "url": "/media/exercises/936/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 936,
-    "tipo": "image",
-    "url": "/media/exercises/936/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 937,
     "tipo": "image",
     "url": "/media/exercises/937/exec_start.jpg",
@@ -10440,76 +4784,6 @@
     "exercise_id": 937,
     "tipo": "image",
     "url": "/media/exercises/937/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 938,
-    "tipo": "image",
-    "url": "/media/exercises/938/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 938,
-    "tipo": "image",
-    "url": "/media/exercises/938/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 939,
-    "tipo": "image",
-    "url": "/media/exercises/939/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 939,
-    "tipo": "image",
-    "url": "/media/exercises/939/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 940,
-    "tipo": "image",
-    "url": "/media/exercises/940/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 940,
-    "tipo": "image",
-    "url": "/media/exercises/940/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 941,
-    "tipo": "image",
-    "url": "/media/exercises/941/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 941,
-    "tipo": "image",
-    "url": "/media/exercises/941/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 942,
-    "tipo": "image",
-    "url": "/media/exercises/942/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 942,
-    "tipo": "image",
-    "url": "/media/exercises/942/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -10556,90 +4830,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 946,
-    "tipo": "image",
-    "url": "/media/exercises/946/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 946,
-    "tipo": "image",
-    "url": "/media/exercises/946/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 947,
-    "tipo": "image",
-    "url": "/media/exercises/947/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 947,
-    "tipo": "image",
-    "url": "/media/exercises/947/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 948,
-    "tipo": "image",
-    "url": "/media/exercises/948/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 948,
-    "tipo": "image",
-    "url": "/media/exercises/948/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 949,
-    "tipo": "image",
-    "url": "/media/exercises/949/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 949,
-    "tipo": "image",
-    "url": "/media/exercises/949/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 950,
-    "tipo": "image",
-    "url": "/media/exercises/950/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 950,
-    "tipo": "image",
-    "url": "/media/exercises/950/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 951,
-    "tipo": "image",
-    "url": "/media/exercises/951/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 951,
-    "tipo": "image",
-    "url": "/media/exercises/951/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 952,
     "tipo": "image",
     "url": "/media/exercises/952/exec_start.jpg",
@@ -10654,34 +4844,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 953,
-    "tipo": "image",
-    "url": "/media/exercises/953/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 953,
-    "tipo": "image",
-    "url": "/media/exercises/953/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 954,
-    "tipo": "image",
-    "url": "/media/exercises/954/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 954,
-    "tipo": "image",
-    "url": "/media/exercises/954/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 955,
     "tipo": "image",
     "url": "/media/exercises/955/exec_start.jpg",
@@ -10692,160 +4854,6 @@
     "exercise_id": 955,
     "tipo": "image",
     "url": "/media/exercises/955/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 956,
-    "tipo": "image",
-    "url": "/media/exercises/956/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 956,
-    "tipo": "image",
-    "url": "/media/exercises/956/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 957,
-    "tipo": "image",
-    "url": "/media/exercises/957/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 957,
-    "tipo": "image",
-    "url": "/media/exercises/957/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 958,
-    "tipo": "image",
-    "url": "/media/exercises/958/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 958,
-    "tipo": "image",
-    "url": "/media/exercises/958/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 959,
-    "tipo": "image",
-    "url": "/media/exercises/959/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 959,
-    "tipo": "image",
-    "url": "/media/exercises/959/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 960,
-    "tipo": "image",
-    "url": "/media/exercises/960/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 960,
-    "tipo": "image",
-    "url": "/media/exercises/960/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 961,
-    "tipo": "image",
-    "url": "/media/exercises/961/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 961,
-    "tipo": "image",
-    "url": "/media/exercises/961/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 962,
-    "tipo": "image",
-    "url": "/media/exercises/962/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 962,
-    "tipo": "image",
-    "url": "/media/exercises/962/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 963,
-    "tipo": "image",
-    "url": "/media/exercises/963/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 963,
-    "tipo": "image",
-    "url": "/media/exercises/963/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 964,
-    "tipo": "image",
-    "url": "/media/exercises/964/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 964,
-    "tipo": "image",
-    "url": "/media/exercises/964/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 965,
-    "tipo": "image",
-    "url": "/media/exercises/965/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 965,
-    "tipo": "image",
-    "url": "/media/exercises/965/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 966,
-    "tipo": "image",
-    "url": "/media/exercises/966/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 966,
-    "tipo": "image",
-    "url": "/media/exercises/966/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -10878,62 +4886,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 969,
-    "tipo": "image",
-    "url": "/media/exercises/969/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 969,
-    "tipo": "image",
-    "url": "/media/exercises/969/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 970,
-    "tipo": "image",
-    "url": "/media/exercises/970/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 970,
-    "tipo": "image",
-    "url": "/media/exercises/970/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 971,
-    "tipo": "image",
-    "url": "/media/exercises/971/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 971,
-    "tipo": "image",
-    "url": "/media/exercises/971/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 972,
-    "tipo": "image",
-    "url": "/media/exercises/972/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 972,
-    "tipo": "image",
-    "url": "/media/exercises/972/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 973,
     "tipo": "image",
     "url": "/media/exercises/973/exec_start.jpg",
@@ -10944,48 +4896,6 @@
     "exercise_id": 973,
     "tipo": "image",
     "url": "/media/exercises/973/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 974,
-    "tipo": "image",
-    "url": "/media/exercises/974/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 974,
-    "tipo": "image",
-    "url": "/media/exercises/974/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 975,
-    "tipo": "image",
-    "url": "/media/exercises/975/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 975,
-    "tipo": "image",
-    "url": "/media/exercises/975/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 976,
-    "tipo": "image",
-    "url": "/media/exercises/976/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 976,
-    "tipo": "image",
-    "url": "/media/exercises/976/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -11018,90 +4928,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 979,
-    "tipo": "image",
-    "url": "/media/exercises/979/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 979,
-    "tipo": "image",
-    "url": "/media/exercises/979/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 980,
-    "tipo": "image",
-    "url": "/media/exercises/980/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 980,
-    "tipo": "image",
-    "url": "/media/exercises/980/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 981,
-    "tipo": "image",
-    "url": "/media/exercises/981/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 981,
-    "tipo": "image",
-    "url": "/media/exercises/981/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 982,
-    "tipo": "image",
-    "url": "/media/exercises/982/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 982,
-    "tipo": "image",
-    "url": "/media/exercises/982/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 983,
-    "tipo": "image",
-    "url": "/media/exercises/983/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 983,
-    "tipo": "image",
-    "url": "/media/exercises/983/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 984,
-    "tipo": "image",
-    "url": "/media/exercises/984/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 984,
-    "tipo": "image",
-    "url": "/media/exercises/984/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 985,
     "tipo": "image",
     "url": "/media/exercises/985/exec_start.jpg",
@@ -11112,62 +4938,6 @@
     "exercise_id": 985,
     "tipo": "image",
     "url": "/media/exercises/985/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 986,
-    "tipo": "image",
-    "url": "/media/exercises/986/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 986,
-    "tipo": "image",
-    "url": "/media/exercises/986/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 987,
-    "tipo": "image",
-    "url": "/media/exercises/987/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 987,
-    "tipo": "image",
-    "url": "/media/exercises/987/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 988,
-    "tipo": "image",
-    "url": "/media/exercises/988/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 988,
-    "tipo": "image",
-    "url": "/media/exercises/988/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 989,
-    "tipo": "image",
-    "url": "/media/exercises/989/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 989,
-    "tipo": "image",
-    "url": "/media/exercises/989/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -11186,20 +4956,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 991,
-    "tipo": "image",
-    "url": "/media/exercises/991/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 991,
-    "tipo": "image",
-    "url": "/media/exercises/991/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 992,
     "tipo": "image",
     "url": "/media/exercises/992/exec_start.jpg",
@@ -11210,20 +4966,6 @@
     "exercise_id": 992,
     "tipo": "image",
     "url": "/media/exercises/992/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 993,
-    "tipo": "image",
-    "url": "/media/exercises/993/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 993,
-    "tipo": "image",
-    "url": "/media/exercises/993/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -11256,118 +4998,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 996,
-    "tipo": "image",
-    "url": "/media/exercises/996/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 996,
-    "tipo": "image",
-    "url": "/media/exercises/996/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 997,
-    "tipo": "image",
-    "url": "/media/exercises/997/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 997,
-    "tipo": "image",
-    "url": "/media/exercises/997/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 998,
-    "tipo": "image",
-    "url": "/media/exercises/998/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 998,
-    "tipo": "image",
-    "url": "/media/exercises/998/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 999,
-    "tipo": "image",
-    "url": "/media/exercises/999/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 999,
-    "tipo": "image",
-    "url": "/media/exercises/999/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1000,
-    "tipo": "image",
-    "url": "/media/exercises/1000/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1000,
-    "tipo": "image",
-    "url": "/media/exercises/1000/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1001,
-    "tipo": "image",
-    "url": "/media/exercises/1001/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1001,
-    "tipo": "image",
-    "url": "/media/exercises/1001/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1002,
-    "tipo": "image",
-    "url": "/media/exercises/1002/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1002,
-    "tipo": "image",
-    "url": "/media/exercises/1002/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1003,
-    "tipo": "image",
-    "url": "/media/exercises/1003/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1003,
-    "tipo": "image",
-    "url": "/media/exercises/1003/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 1004,
     "tipo": "image",
     "url": "/media/exercises/1004/exec_start.jpg",
@@ -11382,90 +5012,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 1005,
-    "tipo": "image",
-    "url": "/media/exercises/1005/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1005,
-    "tipo": "image",
-    "url": "/media/exercises/1005/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1006,
-    "tipo": "image",
-    "url": "/media/exercises/1006/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1006,
-    "tipo": "image",
-    "url": "/media/exercises/1006/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1007,
-    "tipo": "image",
-    "url": "/media/exercises/1007/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1007,
-    "tipo": "image",
-    "url": "/media/exercises/1007/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1008,
-    "tipo": "image",
-    "url": "/media/exercises/1008/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1008,
-    "tipo": "image",
-    "url": "/media/exercises/1008/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1009,
-    "tipo": "image",
-    "url": "/media/exercises/1009/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1009,
-    "tipo": "image",
-    "url": "/media/exercises/1009/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1010,
-    "tipo": "image",
-    "url": "/media/exercises/1010/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1010,
-    "tipo": "image",
-    "url": "/media/exercises/1010/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 1011,
     "tipo": "image",
     "url": "/media/exercises/1011/exec_start.jpg",
@@ -11476,34 +5022,6 @@
     "exercise_id": 1011,
     "tipo": "image",
     "url": "/media/exercises/1011/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1012,
-    "tipo": "image",
-    "url": "/media/exercises/1012/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1012,
-    "tipo": "image",
-    "url": "/media/exercises/1012/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1013,
-    "tipo": "image",
-    "url": "/media/exercises/1013/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1013,
-    "tipo": "image",
-    "url": "/media/exercises/1013/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -11536,118 +5054,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 1016,
-    "tipo": "image",
-    "url": "/media/exercises/1016/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1016,
-    "tipo": "image",
-    "url": "/media/exercises/1016/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1017,
-    "tipo": "image",
-    "url": "/media/exercises/1017/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1017,
-    "tipo": "image",
-    "url": "/media/exercises/1017/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1018,
-    "tipo": "image",
-    "url": "/media/exercises/1018/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1018,
-    "tipo": "image",
-    "url": "/media/exercises/1018/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1019,
-    "tipo": "image",
-    "url": "/media/exercises/1019/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1019,
-    "tipo": "image",
-    "url": "/media/exercises/1019/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1020,
-    "tipo": "image",
-    "url": "/media/exercises/1020/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1020,
-    "tipo": "image",
-    "url": "/media/exercises/1020/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1021,
-    "tipo": "image",
-    "url": "/media/exercises/1021/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1021,
-    "tipo": "image",
-    "url": "/media/exercises/1021/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1022,
-    "tipo": "image",
-    "url": "/media/exercises/1022/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1022,
-    "tipo": "image",
-    "url": "/media/exercises/1022/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1023,
-    "tipo": "image",
-    "url": "/media/exercises/1023/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1023,
-    "tipo": "image",
-    "url": "/media/exercises/1023/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 1024,
     "tipo": "image",
     "url": "/media/exercises/1024/exec_start.jpg",
@@ -11662,76 +5068,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 1025,
-    "tipo": "image",
-    "url": "/media/exercises/1025/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1025,
-    "tipo": "image",
-    "url": "/media/exercises/1025/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1026,
-    "tipo": "image",
-    "url": "/media/exercises/1026/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1026,
-    "tipo": "image",
-    "url": "/media/exercises/1026/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1027,
-    "tipo": "image",
-    "url": "/media/exercises/1027/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1027,
-    "tipo": "image",
-    "url": "/media/exercises/1027/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1028,
-    "tipo": "image",
-    "url": "/media/exercises/1028/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1028,
-    "tipo": "image",
-    "url": "/media/exercises/1028/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1029,
-    "tipo": "image",
-    "url": "/media/exercises/1029/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1029,
-    "tipo": "image",
-    "url": "/media/exercises/1029/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 1030,
     "tipo": "image",
     "url": "/media/exercises/1030/exec_start.jpg",
@@ -11742,62 +5078,6 @@
     "exercise_id": 1030,
     "tipo": "image",
     "url": "/media/exercises/1030/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1031,
-    "tipo": "image",
-    "url": "/media/exercises/1031/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1031,
-    "tipo": "image",
-    "url": "/media/exercises/1031/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1032,
-    "tipo": "image",
-    "url": "/media/exercises/1032/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1032,
-    "tipo": "image",
-    "url": "/media/exercises/1032/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1033,
-    "tipo": "image",
-    "url": "/media/exercises/1033/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1033,
-    "tipo": "image",
-    "url": "/media/exercises/1033/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1034,
-    "tipo": "image",
-    "url": "/media/exercises/1034/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1034,
-    "tipo": "image",
-    "url": "/media/exercises/1034/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -11830,48 +5110,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 1037,
-    "tipo": "image",
-    "url": "/media/exercises/1037/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1037,
-    "tipo": "image",
-    "url": "/media/exercises/1037/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1038,
-    "tipo": "image",
-    "url": "/media/exercises/1038/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1038,
-    "tipo": "image",
-    "url": "/media/exercises/1038/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1039,
-    "tipo": "image",
-    "url": "/media/exercises/1039/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1039,
-    "tipo": "image",
-    "url": "/media/exercises/1039/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 1040,
     "tipo": "image",
     "url": "/media/exercises/1040/exec_start.jpg",
@@ -11882,146 +5120,6 @@
     "exercise_id": 1040,
     "tipo": "image",
     "url": "/media/exercises/1040/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1041,
-    "tipo": "image",
-    "url": "/media/exercises/1041/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1041,
-    "tipo": "image",
-    "url": "/media/exercises/1041/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1042,
-    "tipo": "image",
-    "url": "/media/exercises/1042/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1042,
-    "tipo": "image",
-    "url": "/media/exercises/1042/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1043,
-    "tipo": "image",
-    "url": "/media/exercises/1043/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1043,
-    "tipo": "image",
-    "url": "/media/exercises/1043/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1044,
-    "tipo": "image",
-    "url": "/media/exercises/1044/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1044,
-    "tipo": "image",
-    "url": "/media/exercises/1044/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1045,
-    "tipo": "image",
-    "url": "/media/exercises/1045/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1045,
-    "tipo": "image",
-    "url": "/media/exercises/1045/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1046,
-    "tipo": "image",
-    "url": "/media/exercises/1046/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1046,
-    "tipo": "image",
-    "url": "/media/exercises/1046/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1047,
-    "tipo": "image",
-    "url": "/media/exercises/1047/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1047,
-    "tipo": "image",
-    "url": "/media/exercises/1047/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1048,
-    "tipo": "image",
-    "url": "/media/exercises/1048/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1048,
-    "tipo": "image",
-    "url": "/media/exercises/1048/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1049,
-    "tipo": "image",
-    "url": "/media/exercises/1049/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1049,
-    "tipo": "image",
-    "url": "/media/exercises/1049/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1050,
-    "tipo": "image",
-    "url": "/media/exercises/1050/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1050,
-    "tipo": "image",
-    "url": "/media/exercises/1050/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -12040,34 +5138,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 1052,
-    "tipo": "image",
-    "url": "/media/exercises/1052/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1052,
-    "tipo": "image",
-    "url": "/media/exercises/1052/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1053,
-    "tipo": "image",
-    "url": "/media/exercises/1053/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1053,
-    "tipo": "image",
-    "url": "/media/exercises/1053/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 1054,
     "tipo": "image",
     "url": "/media/exercises/1054/exec_start.jpg",
@@ -12078,34 +5148,6 @@
     "exercise_id": 1054,
     "tipo": "image",
     "url": "/media/exercises/1054/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1055,
-    "tipo": "image",
-    "url": "/media/exercises/1055/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1055,
-    "tipo": "image",
-    "url": "/media/exercises/1055/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1056,
-    "tipo": "image",
-    "url": "/media/exercises/1056/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1056,
-    "tipo": "image",
-    "url": "/media/exercises/1056/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -12124,20 +5166,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 1058,
-    "tipo": "image",
-    "url": "/media/exercises/1058/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1058,
-    "tipo": "image",
-    "url": "/media/exercises/1058/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 1059,
     "tipo": "image",
     "url": "/media/exercises/1059/exec_start.jpg",
@@ -12148,48 +5176,6 @@
     "exercise_id": 1059,
     "tipo": "image",
     "url": "/media/exercises/1059/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1060,
-    "tipo": "image",
-    "url": "/media/exercises/1060/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1060,
-    "tipo": "image",
-    "url": "/media/exercises/1060/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1061,
-    "tipo": "image",
-    "url": "/media/exercises/1061/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1061,
-    "tipo": "image",
-    "url": "/media/exercises/1061/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1062,
-    "tipo": "image",
-    "url": "/media/exercises/1062/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1062,
-    "tipo": "image",
-    "url": "/media/exercises/1062/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -12208,34 +5194,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 1064,
-    "tipo": "image",
-    "url": "/media/exercises/1064/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1064,
-    "tipo": "image",
-    "url": "/media/exercises/1064/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1065,
-    "tipo": "image",
-    "url": "/media/exercises/1065/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1065,
-    "tipo": "image",
-    "url": "/media/exercises/1065/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 1066,
     "tipo": "image",
     "url": "/media/exercises/1066/exec_start.jpg",
@@ -12246,188 +5204,6 @@
     "exercise_id": 1066,
     "tipo": "image",
     "url": "/media/exercises/1066/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1067,
-    "tipo": "image",
-    "url": "/media/exercises/1067/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1067,
-    "tipo": "image",
-    "url": "/media/exercises/1067/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1068,
-    "tipo": "image",
-    "url": "/media/exercises/1068/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1068,
-    "tipo": "image",
-    "url": "/media/exercises/1068/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1069,
-    "tipo": "image",
-    "url": "/media/exercises/1069/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1069,
-    "tipo": "image",
-    "url": "/media/exercises/1069/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1070,
-    "tipo": "image",
-    "url": "/media/exercises/1070/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1070,
-    "tipo": "image",
-    "url": "/media/exercises/1070/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1071,
-    "tipo": "image",
-    "url": "/media/exercises/1071/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1071,
-    "tipo": "image",
-    "url": "/media/exercises/1071/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1072,
-    "tipo": "image",
-    "url": "/media/exercises/1072/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1072,
-    "tipo": "image",
-    "url": "/media/exercises/1072/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1073,
-    "tipo": "image",
-    "url": "/media/exercises/1073/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1073,
-    "tipo": "image",
-    "url": "/media/exercises/1073/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1074,
-    "tipo": "image",
-    "url": "/media/exercises/1074/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1074,
-    "tipo": "image",
-    "url": "/media/exercises/1074/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1075,
-    "tipo": "image",
-    "url": "/media/exercises/1075/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1075,
-    "tipo": "image",
-    "url": "/media/exercises/1075/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1076,
-    "tipo": "image",
-    "url": "/media/exercises/1076/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1076,
-    "tipo": "image",
-    "url": "/media/exercises/1076/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1077,
-    "tipo": "image",
-    "url": "/media/exercises/1077/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1077,
-    "tipo": "image",
-    "url": "/media/exercises/1077/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1078,
-    "tipo": "image",
-    "url": "/media/exercises/1078/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1078,
-    "tipo": "image",
-    "url": "/media/exercises/1078/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1079,
-    "tipo": "image",
-    "url": "/media/exercises/1079/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1079,
-    "tipo": "image",
-    "url": "/media/exercises/1079/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -12456,48 +5232,6 @@
     "exercise_id": 1081,
     "tipo": "image",
     "url": "/media/exercises/1081/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1082,
-    "tipo": "image",
-    "url": "/media/exercises/1082/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1082,
-    "tipo": "image",
-    "url": "/media/exercises/1082/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1083,
-    "tipo": "image",
-    "url": "/media/exercises/1083/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1083,
-    "tipo": "image",
-    "url": "/media/exercises/1083/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 1084,
-    "tipo": "image",
-    "url": "/media/exercises/1084/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 1084,
-    "tipo": "image",
-    "url": "/media/exercises/1084/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },

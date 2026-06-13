@@ -148,6 +148,7 @@ data/*.db-shm
 data/*.db-wal
 data/backups/
 data/media/
+data/_media_orphans_pre_rebuild/
 data/license.key
 data/license_public.pem
 data/license_private.pem

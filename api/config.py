@@ -13,9 +13,11 @@ from dotenv import load_dotenv
 
 # Paths (prima di load_dotenv per poter caricare data/.env)
 # PyInstaller frozen: exe e' in {app}/backend/fitmanager.exe → parent.parent = {app}/
-# Nuitka compiled: __compiled__ presente, stesso layout directory di PyInstaller
+# Nuitka compiled: __compiled__ iniettato nel namespace del modulo, stesso layout di PyInstaller
 # Source tree: config.py e' in {project}/api/config.py → parents[1] = {project}/
-_is_bundled = getattr(sys, "frozen", False) or "__compiled__" in dir()
+# NOTA: il check usa globals(), MAI dir() — dentro una funzione dir() ritorna lo scope
+# locale e non vede __compiled__ (bug storico, vedi EXERCISE_LIBRARY_STRATEGY.md §5.6).
+_is_bundled = getattr(sys, "frozen", False) or "__compiled__" in globals()
 if _is_bundled:
     PROJECT_ROOT = Path(sys.executable).resolve().parent.parent
 else:
@@ -59,8 +61,14 @@ NUTRITION_DB_ENC: Path = DATA_DIR / "nutrition.db.enc"
 
 
 def is_compiled() -> bool:
-    """Detect compiled binary (PyInstaller frozen OR Nuitka compiled)."""
-    return getattr(sys, "frozen", False) or "__compiled__" in dir()
+    """Detect compiled binary (PyInstaller frozen OR Nuitka compiled).
+
+    Unico helper autorevole: valuta il check una volta a livello di modulo
+    (dove globals() vede __compiled__ di Nuitka). Tutti i componenti di
+    enforcement e detection runtime DEVONO usare questa funzione, mai
+    ripetere il check inline.
+    """
+    return _is_bundled
 
 
 # Logging locale applicativo

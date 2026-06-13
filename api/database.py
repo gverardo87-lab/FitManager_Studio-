@@ -13,7 +13,6 @@ e caricati in memoria (AES-256-GCM). In dev mode, usano i file .db plain.
 
 import logging
 import sqlite3 as sqlite3_stdlib
-import sys
 from pathlib import Path
 from typing import Generator
 
@@ -21,7 +20,13 @@ from sqlalchemy import event
 from sqlalchemy.pool import StaticPool
 from sqlmodel import SQLModel, Session, create_engine
 
-from api.config import CATALOG_DATABASE_URL, DATA_DIR, DATABASE_URL, NUTRITION_DATABASE_URL
+from api.config import (
+    CATALOG_DATABASE_URL,
+    DATA_DIR,
+    DATABASE_URL,
+    NUTRITION_DATABASE_URL,
+    is_compiled,
+)
 import api.models.share_token  # noqa: F401 — registra ShareToken nel metadata SQLModel
 import api.models.nutrition  # noqa: F401 — registra modelli nutrition nel metadata SQLModel
 
@@ -104,7 +109,7 @@ if DATABASE_URL.startswith("sqlite"):
 
 # --- Catalog Engine (catalog.db or catalog.db.enc) ---
 
-_is_compiled = getattr(sys, "frozen", False) or "__compiled__" in dir()
+_is_compiled = is_compiled()
 _catalog_enc = DATA_DIR / "catalog.db.enc"
 logger.info("Catalog DB init: compiled=%s, enc_exists=%s", _is_compiled, _catalog_enc.exists())
 
@@ -130,7 +135,7 @@ else:
 # --- Nutrition Engine (nutrition.db or nutrition.db.enc) ---
 
 _nutrition_enc = DATA_DIR / "nutrition.db.enc"
-if (getattr(sys, "frozen", False) or "__compiled__" in dir()) and _nutrition_enc.exists():
+if _is_compiled and _nutrition_enc.exists():
     nutrition_engine = _load_encrypted_db(_nutrition_enc, "nutrition")
     _nutrition_encrypted = True
 else:
