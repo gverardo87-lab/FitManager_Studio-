@@ -320,7 +320,7 @@ Skills installate in `.agents/skills/` — knowledge base attive per audit e cod
 | `docs/product/` | Roadmap post-lancio, FitScan, Video production/strategy | Pianificazione feature, video, post-lancio |
 | `docs/technical/` | Security, License, Tailscale, Deploy, Nutrition Engine | Architettura, sicurezza, infra |
 | `docs/operations/` | Release checklist, Diagnostics, Support, Upgrade | Release, troubleshooting, supporto |
-| `docs/adr/` | Architecture Decision Records (9 ADR) | Decisioni architetturali |
+| `docs/adr/` | Architecture Decision Records (10 ADR + 1 riservato) | Decisioni architetturali |
 | `docs/incidents/` | Post-mortem incidenti | Pattern sospetti, regressioni |
 | `docs/learning/` | Apprendimento founder-developer (concetti, metodo, build log) | Mai — materiale didattico, non spec |
 

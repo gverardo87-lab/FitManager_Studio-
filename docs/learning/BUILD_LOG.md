@@ -1,9 +1,10 @@
 # BUILD_LOG.md
 
-**Progetto:** FitManager — migrazione tunnel + infrastruttura AVGV
-**Scopo:** diario cronologico di cosa ho fatto, giorno per giorno. Risponde a "cosa ho fatto e quando". Per il "perche' / cosa ho imparato" rimanda ai file `LEARNING_*.md`.
+**Progetto:** FitManager — diario cronologico di sviluppo
+**Scopo:** diario cronologico di cosa ho fatto, giorno per giorno. Risponde a "cosa ho fatto e quando". Per il "perche' / cosa ho imparato" rimanda ai file `LEARNING_*.md`; per il "perche' delle decisioni" agli ADR (`docs/adr/`) e ai changelog dei doc di strategia.
 **Metodo:** vedi `LEARNING_METHOD.md`
-**Documenti di riferimento:** `TUNNEL_MIGRATION_STRATEGY.md`, `CRM_ACCESS_ARCHITECTURE.md`
+**Nota di scope:** nato come diario della migrazione tunnel (Fase 0-1), ampliato il 2026-06-13 a diario generale di sviluppo per non frammentare la traccia cronologica su piu' file.
+**Documenti di riferimento:** `TUNNEL_MIGRATION_STRATEGY.md`, `CRM_ACCESS_ARCHITECTURE.md`, `EXERCISE_LIBRARY_STRATEGY.md`, `docs/adr/`
 
 ---
 
@@ -337,5 +338,43 @@ La licenza e' un artefatto separato dal software. Si attiva una volta e sopravvi
 Installa → attiva licenza → tunnel parte automaticamente → URL pubblico raggiungibile. Il trainer non deve configurare nulla (DNS, certificati, porte). Il wildcard DNS e il cert self-signed gestiscono tutto.
 
 **Fase 1 CHIUSA.** Tutti gli step completati, testati in produzione su 2 installazioni reali.
+
+---
+
+## Libreria esercizi & strategia media
+
+Filone di lavoro avviato dopo la chiusura della Fase 1 tunnel. L'energia di prodotto si sposta sull'interfaccia cliente e sulla libreria di animazioni esercizi. Decisioni in `EXERCISE_LIBRARY_STRATEGY.md` (changelog v2.0 → v2.1 → v2.2).
+
+### 2026-06-10 — Verifica strategia libreria esercizi dall'interno (v2.1)
+
+- `EXERCISE_LIBRARY_STRATEGY.md` portata a v2.1: verifica dall'interno del codebase (query dirette su catalog.db, seed JSON, router, installer) + decisioni founder.
+- **Numeri canonici fissati:** 500 esercizi totali, 466 attivi (`in_subset`), 894 relazioni, 750 media, 107 esercizi senza foto. Copertura del bundle calcolata sui 466 attivi.
+- **`in_subset` ≠ fondamentali:** `in_subset` e' il flag "database attivo", non marca i ~50-80 fondamentali. Serve un marcatore dedicato.
+- **Decisione founder:** Alessio fuori dall'equazione tecnica del contenuto (eventuale validatore, non produttore); decade la scadenza agosto. Contenuto ricco gia' popolato al 100% su 466/466 → il lavoro e' tuning interno.
+- **Distribuzione (§4bis):** clip MP4 nell'installer, payload POC 1,2-2,3 GB, `nocompression` sui video. (Poi superseded dalla v2.2.)
+- Commit: `a1ffc69`.
+
+### 2026-06-12 — Strategia media cloud (chat) → learning doc + delta v2.2
+
+- Discussione in chat sull'architettura "hosting centrale dei media, doppio flusso": il video esce dal tunnel e viaggia diretto a `media.fitmanagerstudio.com`; pagina e dati personali restano nel tunnel.
+- Principio guida: **il routing segue la classificazione del dato** (personale → tunnel/P2; generico → media host diretto).
+- Creati: `docs/learning/LEARNING_MEDIA_CLOUD_ARCHITECTURE.md` (fondamento didattico, 3 livelli di perche', failure mode, autotest §9) e `docs/technical/DELTA_v2.2_EXERCISE_LIBRARY_STRATEGY.md` (istruzioni di integrazione v2.1 → v2.2).
+- **Gate:** la v2.2 non si consolida (commit nella strategia + mail al fornitore) finche' l'autotest §9 non passa. ADR-012 riservato in attesa del gate.
+
+### 2026-06-13 — Azioni tecniche §5.6 + allineamento documentazione
+
+**Codice (azioni §5.6 della strategia v2.1, da sessione precedente → committate oggi, `5caddd9`):**
+- §5.6.1: campo `is_fondamentale` su `Exercise` (model + schema + `types/api.ts`).
+- §5.6.2: normalizzazione `is_compiled()` (`config.py`, `database.py`).
+- §5.6.3: rename `seed_exercise_relations.json` → `seed_taxonomy_junctions.json` (il file conteneva junction tassonomiche, non relazioni — nome fuorviante). Verificato: nessun codice runtime/build lo legge (le junction sono calcolate da `populate_taxonomy.py`); aggiornato l'unico riferimento (e2e rehearsal).
+- §5.6.4: pruning `seed_exercise_media.json` (rimossi 1038 media orfani pre-rebuild, −8818 righe); file fisici spostati in quarantena `data/_media_orphans_pre_rebuild/` (mai cancellati senza backup).
+- `.gitignore`: aggiunta la quarantena (era fuori da `data/media/`, gia' ignorato → 1639 file comparivano erroneamente come da committare).
+- Quality gate verde: ruff + next build (anche via pre-commit hook).
+
+**Documentazione (allineamento):**
+- **ADR-011** creato (accepted): Migrazione Tunnel FRP self-hosted — la decisione architetturale piu' grande dell'ultimo mese non aveva ADR (solo strategia + BUILD_LOG).
+- **ADR-002**: link rotto nell'indice corretto (era stato rimosso come obsoleto in `0748ddf`, indice mai aggiornato).
+- **ADR-012** riservato nell'indice (pending gate autotest).
+- **BUILD_LOG** ampliato da diario-tunnel a diario generale di sviluppo (questa sezione).
 
 ---

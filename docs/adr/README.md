@@ -26,7 +26,7 @@ Esempio:
 | ADR | Data | Stato | Decisione |
 |-----|------|-------|-----------|
 | [ADR-001](ADR-001-single-source-of-truth-scientifica.md) | 2026-03-07 | Accettata | Backend = SSoT per dati scientifici |
-| [ADR-002](ADR-2026-03-09-operational-workspace-case-engine.md) | 2026-03-09 | Accettata | Workspace "Oggi" ranking + dominance matrix |
+| ADR-002 | 2026-03-09 | Rimossa (obsoleta) | Workspace operativo — ADR rimosso come obsoleto (commit `0748ddf`); la decisione vive negli UPG spec archiviati (`docs/archive/specs/UPG-2026-03-09-*`) |
 | [ADR-003](ADR-003-separazione-architetturale-3-database.md) | 2026-03-19 | Accettata | Separazione 3 DB: crm.db sacro, catalog.db + nutrition.db read-only |
 | [ADR-004](ADR-004-release-pipeline-sicuro.md) | 2026-03-21 | Accettata | Release pipeline 5 fasi con safety gates |
 | [ADR-005](ADR-005-license-hardening-anti-tampering.md) | 2026-03-24 | Accettata | License hardening: embedded key, env bypass block, fingerprint fail-closed |
@@ -35,6 +35,8 @@ Esempio:
 | [ADR-008](ADR-008-builder-fullscreen-science-panel.md) | 2026-03-26 | Accettata | Builder fullscreen con Science Panel live |
 | [ADR-009](ADR-009-client-workout-portal.md) | 2026-03-29 | Accettata | Client Workout Portal: token multi-uso, ExerciseLog, 5 endpoint pubblici |
 | [ADR-010](ADR-010-fitscan-computer-vision-biomechanics.md) | 2026-03-25 | Accettata | FitScan: Computer Vision per analisi corporea e biomeccanica |
+| [ADR-011](ADR-011-tunnel-frp-self-hosted.md) | 2026-06-09 | Accettata | Migrazione a Tunnel FRP self-hosted (SNI passthrough, instance_id, route separation, P2 data-blind) |
+| ADR-012 | — | Riservato (pending gate) | Routing media per classificazione del dato — hosting centrale clip (v2.2). In attesa del gate autotest (`docs/learning/LEARNING_METHOD.md` §9 / `LEARNING_MEDIA_CLOUD_ARCHITECTURE.md` §9). Razionale provvisorio in `docs/technical/DELTA_v2.2_EXERCISE_LIBRARY_STRATEGY.md` |
 
 ## Flusso
 
