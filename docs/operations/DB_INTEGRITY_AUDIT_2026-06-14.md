@@ -9,8 +9,8 @@
 > **AGGIORNAMENTO REMEDIATION (2026-06-14, sera):**
 > - ✅ **P2** — numeri canonici corretti (passo 1).
 > - ✅ **P1 / Ondata 1 — 10 keeper re-inseriti** in catalog.db preservando l'ID (3 ricchi: 235/252/299 · 7 medi: 15/16/46/73/81/140/142). `in_subset=0` (inattivi: risolvono le referenze, non entrano nei 466 attivi; junction rigenerabili all'eventuale attivazione). Insert chirurgico + `seed_exercises.json` aggiornato (riproducibilità). Verifiche: 500→510 esercizi, 466 attivi invariati, integrity_check OK, **orfani 32→22**. Backup `*.bak-threadA-20260614`.
-> - ⬜ **Ondata 2** — restano i **22 gusci** (414/428/498/509/518/522/599/603/644/656/700/738/756/791/877/905/962/984/987/1056/1062/1064): curation founder (distinguere veri da rinominare/scartare).
-> - ⬜ **P1 — DROP tabelle catalog stale da crm.db** (solo dopo la decisione sui 22).
+> - ✅ **P1 / Ondata 2 — 22 gusci triagiati** (sera 2026-06-14). Scoperta: non erano falsi ma **movimenti reali con nomi auto-tradotti male** (catalogo pre-rebuild seedato da DB inglese tradotto a macchina; contenuto 1/9 = solo `esecuzione`). Esito: **19 re-inseriti** (in_subset=0; 18 con nome OK + 962 Affondi Frontali con fix `categoria stretching→compound`, `pattern stretch→squat`); **3 scartati** (decisione founder): 877 "Buccinate da Seduto" (testo = Box Squat, nome = muscolo facciale, detrito), 644 "Carico Kettlebell" (testo = caricamento barili/pietre, attrez incoerente), 905 "Trazioni Laterali" (testo = rematore, traduzione maccheronica). I 3 scartati restano referenziati da schede TEST (refs dangling innocue, cross-DB senza FK). **Orfani 22→3** (= i 3 scarti deliberati). Backup `catalog.db.bak-threadA-ondata2`.
+> - ⬜ **P1 — DROP tabelle catalog stale da crm.db** (ora sbloccato: orfani decisi). Valutare se azzerare i 3 ref dangling in `esercizi_sessione` test prima/dopo il DROP.
 > - ⬜ **P3** — `crm_dev.db` + 7 duplicati nomi.
 
 ---

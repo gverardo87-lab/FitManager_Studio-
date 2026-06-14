@@ -14,12 +14,12 @@
 - ✅ Audit read-only completo. catalog.db **pristino**; debito = detrito di migrazione in crm.db.
 - ✅ **P2** — numeri canonici corretti (condizioni 5154, articolazioni 1452; doc + CLAUDE.md + memory).
 - ✅ **Analisi 32 orfani** completata (5 schede = dati TEST → decisione = merito di catalogo; ID liberi).
-- ✅ **Ondata 1 ESEGUITA (sera 2026-06-14):** re-inseriti **10 keeper** in catalog.db preservando l'ID, `in_subset=0` (insert chirurgico + `seed_exercises.json` aggiornato + sha256). 3 ricchi (235/252/299) + 7 medi (15/16/46/73/81/140/142). Verifiche: 500→510, 466 attivi invariati, integrity OK, **orfani 32→22**. Backup `*.bak-threadA-20260614`. Scoperta: junction generate da `populate_taxonomy` (in_subset=1) → keeper inattivi = junction rigenerabili all'attivazione.
-**PROSSIMA AZIONE (Ondata 2): curation founder dei 22 gusci residui.**
-- 22 ID: 414 Board Press · 428 Bradford Press · 498 Panca Declinata French Press · 509 Dip al petto · 518 Drag Curl · 522 Girata con Manubrio · 599 Buongiorno alla Sbarra · 603 Curl al Cavo · 644 Carico Kettlebell · 656 Muscle Up · 700 Affondo Pass Through · 738 Allungamento Collo · 756 Split Jerk KB · 791 Allungamento Perone · 877 Buccinate da Seduto · 905 Trazioni Laterali · 962 Affondi Frontali · 984 Allungamento Quadricipiti · 987 Allungamento Gambe Post. · 1056 Allungamento In Alto · 1062 Dip alla Panca · 1064 Jump Squat con Peso.
-- Distinguere veri da rinominare/scartare. Sospetti (possibile detrito auto-generato): Buccinate da Seduto, Carico Kettlebell, Girata con Manubrio, Trazioni Laterali, Affondi Frontali (962, mis-categorizzato `stretching`). I gusci hanno contenuto 1/7 → authoring richiesto (AC-3, dominio founder).
-- **GUARDRAIL:** mutazione → backup prima (regola #11); per i gusci la meccanica è uguale (insert chirurgico + seed), ma il contenuto va scritto.
-**Poi:** P1 DROP tabelle catalog stale da crm.db (dopo i 22, chiude ADR-003 a livello fisico, backup); P3 archiviare `crm_dev.db` + review 7 duplicati nomi catalog.db.
+- ✅ **Ondata 1 ESEGUITA (sera 2026-06-14):** 10 keeper (3 ricchi 235/252/299 + 7 medi 15/16/46/73/81/140/142), in_subset=0. Orfani 32→22.
+- ✅ **Ondata 2 ESEGUITA (sera 2026-06-14):** triage dei 22 gusci. Scoperta: movimenti reali con **nomi auto-tradotti male** (contenuto 1/9 = solo `esecuzione`). **19 re-inseriti** (in_subset=0; 18 nome OK + 962 Affondi Frontali con fix `categoria stretching→compound`/`pattern→squat`); **3 scartati** (founder): 877 "Buccinate da Seduto" (=Box Squat), 644 "Carico Kettlebell" (=caricamento pietre), 905 "Trazioni Laterali" (=rematore). Verifiche: 510→529, 466 attivi invariati, integrity OK, **orfani 22→3** (= i 3 scarti). Backup `catalog.db.bak-threadA-ondata2`. **Orfani Thread A chiusi** (29 keeper re-inseriti, 3 scarti consapevoli).
+**PROSSIMA AZIONE (P1 — DROP tabelle catalog stale da crm.db).** Ora sbloccato: orfani decisi.
+- Chiude ADR-003 a livello fisico (le 10 tabelle catalog stale in crm.db). **Backup crm.db prima** (regola #11).
+- I 3 scarti (644/877/905) hanno ancora refs in `esercizi_sessione` (schede TEST) → dopo il DROP della tabella stale `esercizi` quei ref non risolvono più (cross-DB, nessuna FK). Decidere se azzerarli (NULL) o lasciarli (innocui, dati test).
+**Poi:** P3 archiviare `crm_dev.db` + review 7 duplicati nomi catalog.db.
 
 ### Thread B — Strategia media cloud v2.2 — IN ATTESA DEL GATE (founder)
 **Doc:** `docs/learning/LEARNING_MEDIA_CLOUD_ARCHITECTURE.md` (+ Appendice A impl.), `docs/technical/DELTA_v2.2_EXERCISE_LIBRARY_STRATEGY.md`.
