@@ -207,6 +207,8 @@ data/videos/
 
 # DB backup manuali (data/*.bak.* pattern)
 data/*.db.bak.*
+data/*.bak-*
+data/*.archived-*
 
 # Office lock files
 ~$*
