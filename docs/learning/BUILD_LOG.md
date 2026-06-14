@@ -463,6 +463,19 @@ Analisi richiesta dal founder **prima** del codice: spiegare la logica di `metri
 
 **Da fare a valle:** ship nella prossima versione (auto-heal Alessio/Chiara al primo boot). Pitfall #15 in CLAUDE.md.
 
+### 2026-06-14 — Thread A: P3 (housekeeping) + chiusura
+
+**P3a — `crm_dev.db` archiviato.** Verificato che il runtime non apre il file: `api/main.py`/`system_runtime.py` controllano solo la stringa `"crm_dev" in DATABASE_URL` per il label DEV/PROD. Rinominato `data/crm_dev.db → .archived-20260614` (dati preservati, gitignored).
+
+**P3b — 7 nomi duplicati in catalog.db.** Analisi: ogni nome = 1 attivo canonico (junction complete) + 1 inattivo degradato (`in_subset=0`, zero junction — stesso pattern degli orfani). 5 erano lo stesso esercizio, 2 varianti (Adduttori, Distensioni Pettorali). Decisione founder: **eliminare tutti e 7 gli inattivi + remap**. Eseguito: DELETE 351/468/990/552/1094/389/349 da catalog.db (con media/junction/relazioni), remap dei 3 ref schede dev al gemello attivo (351→350, 990→621, 552→169). catalog 529→522, **0 nomi duplicati**, attivi 466 invariati, integrity OK su catalog+crm, seed 522/738, sha256 ricalcolato. Backup `*.bak-threadA-p3`.
+
+**🏁 Thread A chiuso.** Sintesi del filone catalog.db (giornata 2026-06-14):
+- Audit read-only → catalog.db pristino, debito = detrito migrazione in crm.db.
+- Ondate 1+2: 29 keeper orfani re-inseriti, 3 scartati (orfani 32→3).
+- P1+P1-bis: 10 tabelle catalog stale rimosse da crm.db (ADR-003 chiuso 100%) + **bug latente cross-DB FK corretto** (metriche, fix shippabile auto-heal).
+- P3: crm_dev.db archiviato, 7 duplicati risolti.
+- Restano solo: azione di release (ship fix metriche) + eventuale correzione memory nutrition (210 vs 512 ricette, fuori scope).
+
 ---
 
 ## Governance documentazione

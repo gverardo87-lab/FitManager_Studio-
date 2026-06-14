@@ -1988,20 +1988,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 349,
-    "tipo": "image",
-    "url": "/media/exercises/349/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 349,
-    "tipo": "image",
-    "url": "/media/exercises/349/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 350,
     "tipo": "image",
     "url": "/media/exercises/350/exec_start.jpg",
@@ -2012,20 +1998,6 @@
     "exercise_id": 350,
     "tipo": "image",
     "url": "/media/exercises/350/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 351,
-    "tipo": "image",
-    "url": "/media/exercises/351/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 351,
-    "tipo": "image",
-    "url": "/media/exercises/351/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -2520,20 +2492,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 389,
-    "tipo": "image",
-    "url": "/media/exercises/389/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 389,
-    "tipo": "image",
-    "url": "/media/exercises/389/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 391,
     "tipo": "image",
     "url": "/media/exercises/391/exec_start.jpg",
@@ -2996,20 +2954,6 @@
     "descrizione": "fdb:exec_end"
   },
   {
-    "exercise_id": 468,
-    "tipo": "image",
-    "url": "/media/exercises/468/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 468,
-    "tipo": "image",
-    "url": "/media/exercises/468/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
     "exercise_id": 470,
     "tipo": "image",
     "url": "/media/exercises/470/exec_start.jpg",
@@ -3426,20 +3370,6 @@
     "exercise_id": 550,
     "tipo": "image",
     "url": "/media/exercises/550/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 552,
-    "tipo": "image",
-    "url": "/media/exercises/552/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 552,
-    "tipo": "image",
-    "url": "/media/exercises/552/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },
@@ -4938,20 +4868,6 @@
     "exercise_id": 985,
     "tipo": "image",
     "url": "/media/exercises/985/exec_end.jpg",
-    "ordine": 1,
-    "descrizione": "fdb:exec_end"
-  },
-  {
-    "exercise_id": 990,
-    "tipo": "image",
-    "url": "/media/exercises/990/exec_start.jpg",
-    "ordine": 0,
-    "descrizione": "fdb:exec_start"
-  },
-  {
-    "exercise_id": 990,
-    "tipo": "image",
-    "url": "/media/exercises/990/exec_end.jpg",
     "ordine": 1,
     "descrizione": "fdb:exec_end"
   },

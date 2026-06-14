@@ -18,9 +18,14 @@
 - ✅ **Ondata 2 ESEGUITA (sera 2026-06-14):** triage dei 22 gusci. Scoperta: movimenti reali con **nomi auto-tradotti male** (contenuto 1/9 = solo `esecuzione`). **19 re-inseriti** (in_subset=0; 18 nome OK + 962 Affondi Frontali con fix `categoria stretching→compound`/`pattern→squat`); **3 scartati** (founder): 877 "Buccinate da Seduto" (=Box Squat), 644 "Carico Kettlebell" (=caricamento pietre), 905 "Trazioni Laterali" (=rematore). Verifiche: 510→529, 466 attivi invariati, integrity OK, **orfani 22→3** (= i 3 scarti). Backup `catalog.db.bak-threadA-ondata2`. **Orfani Thread A chiusi** (29 keeper re-inseriti, 3 scarti consapevoli).
 - ✅ **P1 ESEGUITO 9/10 (sera 2026-06-14):** droppate le 9 tabelle catalog pure da crm.db. crm.db 38→29 tabelle, VACUUM −80%. Backup `crm.db.bak-threadA-p1`.
 - ✅ **P1-bis ESEGUITO + BUG LATENTE CORRETTO (sera 2026-06-14):** `metriche` aveva FK locale da `goal.py`/`measurement.py` → **bug latente** (crm.db fresh da installer crasha `no such table: metriche` al 1° salvataggio misurazione; riprodotto). Chiara/Alessio NON colpiti (monolite con metriche — confermato dal backup di Chiara 8 giu); **a rischio le nuove installazioni**. Fix shippato per la prossima versione: modelli → cross-DB senza FK; `schema_sync._fix_cross_db_fk` esteso (auto-ripara i DB deployati al boot, preserva righe); **bonus** `_drop_stale_catalog_tables` (pulisce le catalog stale popolate dai DB deployati + VACUUM). Validato su copia backup Chiara (145 valori preservati). Suite 362 + 7 test, ruff OK. Dev crm.db: **ADR-003 chiuso al 100%**. Pitfall #15. Backup `crm.db.bak-threadA-p1bis`.
-**PROSSIMA AZIONE: P3** — archiviare `crm_dev.db` (legacy dual-env) + review 7 duplicati nomi in catalog.db.
-- Eventuale azzeramento dei 3 ref dangling (644/877/905) in `esercizi_sessione` (schede test).
-- **Release:** la prossima versione include il fix metriche (auto-heal Alessio/Chiara al primo boot). Bump versione + build quando si rilascia.
+- ✅ **P3 ESEGUITO (sera 2026-06-14):** P3a `crm_dev.db` archiviato (runtime non lo apre). P3b 7 duplicati risolti: eliminati i 7 inattivi degradati da catalog.db (529→522) + remap 3 ref dev (351→350/990→621/552→169), 0 nomi duplicati, 466 attivi invariati, integrity OK. Backup `*.bak-threadA-p3`.
+
+**🏁 THREAD A CHIUSO.** Tutta la remediation dell'audit è completa (orfani, ADR-003, bug latente metriche, housekeeping).
+
+**Azioni residue (fuori Thread A):**
+- **Release:** la prossima versione include il fix metriche (auto-heal Alessio/Chiara al primo boot). Bump versione (`api/__init__.py`) + build (ADR-004) quando si rilascia.
+- Minore: correggere memory nutrition (210 vs 512 ricette reali) quando si tocca la nutrizione.
+- Opzionale: i 3 orfani scartati Ondata 2 (644/877/905) hanno ancora ref in schede dev (innocui).
 
 ### Thread B — Strategia media cloud v2.2 — IN ATTESA DEL GATE (founder)
 **Doc:** `docs/learning/LEARNING_MEDIA_CLOUD_ARCHITECTURE.md` (+ Appendice A impl.), `docs/technical/DELTA_v2.2_EXERCISE_LIBRARY_STRATEGY.md`.
