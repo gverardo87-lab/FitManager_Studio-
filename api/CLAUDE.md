@@ -16,7 +16,7 @@ api/
 ├── database.py          Tri-engine (business + catalog + nutrition) + session factories + CATALOG/NUTRITION_TABLE_NAMES
 ├── logging_config.py    Bootstrap logging locale (`data/logs/fitmanager.log`, rotazione idempotente)
 ├── dependencies.py      get_current_trainer() → JWT validation
-├── seed_exercises.py    Seed builtin in catalog.db: 500 esercizi + 940 relazioni + 1788 media nei JSON → in DB 466 attivi / 894 / 750 (idempotente, FK guard filtra orfani pre-rebuild)
+├── seed_exercises.py    Seed builtin in catalog.db: 500 esercizi + 940 relazioni + 750 media nei JSON → in DB 466 attivi / 894 / 750 (idempotente, seed media potato 2026-06-13)
 ├── auth/
 │   ├── router.py        POST /login, /register, /reset-password, /setup-status (rate-limited via auth_limiter)
 │   ├── service.py       bcrypt hash, JWT create/validate
