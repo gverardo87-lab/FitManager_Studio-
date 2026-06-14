@@ -58,9 +58,13 @@ if not src.exists():
     print(f"ERRORE: Cartella media non trovata: {src}", file=sys.stderr)
     sys.exit(1)
 
+# Subset ATTIVO della libreria (in_subset=1): e' cio' che il comment chiama
+# "active catalog subset". Storicamente coincideva con is_builtin AND non-deleted,
+# ma dal 2026-06-14 il catalogo include esercizi builtin INATTIVI (keeper orfani
+# re-inseriti, in_subset=0) che non vanno nel media staging. Filtrare su in_subset.
 query = """
 SELECT id FROM esercizi
-WHERE is_builtin = 1 AND deleted_at IS NULL
+WHERE in_subset = 1 AND deleted_at IS NULL
 ORDER BY id
 """
 

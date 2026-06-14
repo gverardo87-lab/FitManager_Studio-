@@ -294,7 +294,7 @@ NUTRITION_COUNTS=$("$VENV_PYTHON" -c "
 import sqlite3, json
 db = sqlite3.connect(r'$NUTRITION_DB_W')
 counts = {
-    'catalog_exercises': 500,
+    'catalog_exercises': 522,  # totale catalog.db (era 500; +29 keeper orfani −7 dup, Thread A 2026-06-14)
     'nutrition_templates': db.execute('SELECT COUNT(*) FROM plan_templates WHERE is_active = 1').fetchone()[0],
     'nutrition_alimenti': db.execute('SELECT COUNT(*) FROM alimenti WHERE is_active = 1').fetchone()[0],
     'nutrition_pasti': db.execute('SELECT COUNT(*) FROM template_plan_meals').fetchone()[0],
