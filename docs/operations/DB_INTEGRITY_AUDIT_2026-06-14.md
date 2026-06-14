@@ -126,6 +126,29 @@ Ordine per sicurezza crescente di rischio (mai distruttivo senza backup — vedi
 
 ---
 
+## 8. Approfondimento — analisi dei 32 orfani (2026-06-14, read-only)
+
+Analisi per decidere keep/remap/drop (vedi §6 passo 2). **Confermato dal founder: le 5 schede impattate sono dati di TEST (gvera-dev), non schede reali** → le 58 referenze non sono preziose; la decisione è puro **merito di catalogo**.
+
+**Fatti chiave:**
+- **Zero duplicati di nome** in catalog.db (fuzzy match cutoff 0.86 → 0 match per tutti e 32): sono genuinamente *assenti*, non doppioni rinominati. Remap "facile" non disponibile.
+- **Raggio minuscolo:** 58 righe in **5 schede** (test).
+- **Gli ID orfani sono liberi in catalog.db** → fix pulito = **re-inserire preservando l'ID** (le referenze si risolvono da sole, zero remap).
+
+**Tiering per qualità contenuto (copia stale crm.db):**
+
+| Tier | N | Esercizi | Stato stale | Sforzo |
+|------|---|----------|-------------|--------|
+| Ricchi | 3 | Bear Hug Carry, Floor Press Bilanciere, Front Squat con Due KB | 6/7 campi + junction | Basso |
+| Medi | 7 | Affondo Laterale, Belt Squat, Landmine Press, Rematore T-Bar, Seal Row, Rack Carry, Clean Kettlebell | 5/7, 0 junction | Medio |
+| Gusci | 22 | Board/Bradford Press, Drag Curl, Curl al Cavo, Dip al petto, Muscle Up, Split Jerk, Jump Squat, 5 allungamenti, … | 1/7, 0 junction | Alto (authoring) |
+
+**Nomi sospetti da rivedere (possibile detrito auto-generato):** Buccinate da Seduto, Carico Kettlebell, Girata con Manubrio, Trazioni Laterali, Affondi Frontali (categorizzato `stretching` ma è un affondo).
+
+**Decisione raccomandata:** re-inserire i keeper preservando l'ID, in due ondate — (1) i 3 ricchi + 7 medi (basso sforzo, esercizi veri), (2) i 22 gusci con curation founder (distinguere veri da scartare/rinominare). Il re-insert allo standard 100% è curation proprietaria (AC-3); il bundle Alessio + dominio founder informano l'authoring. Meccanica: re-insert nel seed + rebuild catalog.db (pitfall #13: `seed_taxonomy → populate_taxonomy → populate_conditions`), **backup prima**.
+
+---
+
 ## 7. Riferimenti
 
 - `docs/adr/ADR-003-separazione-architetturale-3-database.md` — la separazione violata a livello di tabelle fisiche
