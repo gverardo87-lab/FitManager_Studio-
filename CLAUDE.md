@@ -282,7 +282,7 @@ Il CRM (login, dashboard, clienti) e' **completamente invisibile** da Internet.
 - Fase 2: TLS e2e (cert Let's Encrypt DNS-01, pagina offline, token hash)
 - Fase 3: Onboarding zero-touch + dismissione Tailscale
 
-Strategia completa: `docs/technical/TUNNEL_MIGRATION_STRATEGY.md`. Security boundary: `docs/technical/TUNNEL_SECURITY_BOUNDARY.md`.
+Architettura completa (design + build + operations): `docs/technical/TUNNEL_ARCHITECTURE.md`. Security boundary + Strada B: `docs/technical/TUNNEL_SECURITY_BOUNDARY.md`.
 
 ## Agent Skills (quality automation)
 

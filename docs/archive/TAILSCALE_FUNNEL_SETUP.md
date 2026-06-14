@@ -1,5 +1,10 @@
 # Tailscale Funnel — Setup e Guida Operativa
 
+> ⚠️ **DOCUMENTO ARCHIVIATO (2026-06-14) — SUPERATO DA FRP.**
+> Tailscale Funnel è stato sostituito dal tunnel FRP self-hosted (`*.fitmanagerstudio.com`).
+> Conservato come riferimento storico del setup precedente. Per l'architettura attuale del tunnel vedi
+> `docs/technical/TUNNEL_ARCHITECTURE.md`; per il confine di sicurezza `docs/technical/TUNNEL_SECURITY_BOUNDARY.md`.
+
 > **Documento di riferimento per installazione, configurazione e troubleshooting
 > di Tailscale Funnel su FitManager AI Studio.**
 > Destinato sia allo sviluppatore che all'installatore sui PC di clienti chinesiologi, personal trainer e professionisti fitness a P.IVA.

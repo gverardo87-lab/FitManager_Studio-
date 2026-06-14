@@ -3,7 +3,7 @@
 **Data**: 2026-06-09
 **Stato**: Accettata
 **Autore**: Giacomo Verardo + Claude
-**Decisione approvata**: 2026-06-01 (`TUNNEL_MIGRATION_STRATEGY.md` v1.0) — Fase 1 core completata e shippata in v1.0.10, testata su 2 PC il 2026-06-09.
+**Decisione approvata**: 2026-06-01 (allora in `TUNNEL_MIGRATION_STRATEGY.md` v1.0, ora consolidato in `TUNNEL_ARCHITECTURE.md`) — Fase 1 core completata e shippata in v1.0.10, testata su 2 PC il 2026-06-09.
 
 ## Contesto
 
@@ -84,13 +84,12 @@ FRP è **additivo**: finché la Fase 3 non dismette Tailscale, entrambi i percor
 
 ## Supersedes / Superseded By
 
-- **Supersedes**: l'approccio Tailscale Funnel (`docs/technical/TAILSCALE_FUNNEL_SETUP.md`, da archiviare in Fase 3).
+- **Supersedes**: l'approccio Tailscale Funnel (`docs/archive/TAILSCALE_FUNNEL_SETUP.md`, archiviato il 2026-06-14).
 - **Superseded by**: —
 
 ## Riferimenti
 
-- `docs/technical/TUNNEL_MIGRATION_STRATEGY.md` — strategia completa (4 fasi, gap analysis G1-G13)
-- `docs/technical/TUNNEL_SECURITY_BOUNDARY.md` — confine di sicurezza, P2 data-blind (dimostrato e2e)
-- `docs/technical/CRM_ACCESS_ARCHITECTURE.md` — blueprint architetturale v2.0
+- `docs/technical/TUNNEL_ARCHITECTURE.md` — architettura completa: design (P1-P10), build (4 fasi, gap analysis G1-G13), operations (VPS edge)
+- `docs/technical/TUNNEL_SECURITY_BOUNDARY.md` — confine di sicurezza, Strada B, P2 data-blind (dimostrato e2e)
 - `docs/learning/BUILD_LOG.md` — diario cronologico (Fase 0 → Fase 1 Step 1-8)
 - `docs/adr/ADR-007-anti-reverse-engineering.md` — hardening bundle (frpc bundlato in Nuitka)

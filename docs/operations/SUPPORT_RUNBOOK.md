@@ -33,8 +33,9 @@ Usare questo documento se il problema riguarda almeno uno di questi casi:
 - un aggiornamento ha introdotto un problema e bisogna tornare operativi
 - c'e un dubbio su ambiente `dev/prod`, runtime `source/installer` o stato del portale pubblico
 
-Per problemi di rete/Tailscale/Funnel usare questo runbook come ingresso rapido e poi
-passare a [TAILSCALE_FUNNEL_SETUP.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/technical/TAILSCALE_FUNNEL_SETUP.md).
+Per problemi di rete/tunnel usare questo runbook come ingresso rapido e poi
+passare a [TUNNEL_ARCHITECTURE.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/technical/TUNNEL_ARCHITECTURE.md)
+(setup VPS edge + operations FRP; il legacy Tailscale è in `docs/archive/TAILSCALE_FUNNEL_SETUP.md`).
 
 Per diagnosi shell rapide su porte locali, `health` e `license.key`, usare anche
 [RUNTIME_DIAGNOSTICS_PLAYBOOK.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/operations/RUNTIME_DIAGNOSTICS_PLAYBOOK.md).
@@ -435,7 +436,7 @@ Per ogni ticket serio raccogliere:
 ## 11. Collegamenti Operativi
 
 - [RELEASE_CHECKLIST.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/operations/RELEASE_CHECKLIST.md)
-- [TAILSCALE_FUNNEL_SETUP.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/technical/TAILSCALE_FUNNEL_SETUP.md)
+- [TUNNEL_ARCHITECTURE.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/technical/TUNNEL_ARCHITECTURE.md)
 - [UPGRADE_PROCEDURE.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/operations/UPGRADE_PROCEDURE.md)
 - [DEPLOYMENT_PLAN.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/technical/DEPLOYMENT_PLAN.md)
 - [UPG-2026-03-10-09-launch-operations-plan-v1.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/upgrades/specs/UPG-2026-03-10-09-launch-operations-plan-v1.md)

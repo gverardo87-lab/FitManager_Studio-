@@ -4,7 +4,7 @@
 **Versione:** 1.3  
 **Stato:** Documento operativo di riferimento per pre-launch e POC  
 **Documenti correlati:**
-- `CRM_ACCESS_ARCHITECTURE.md` v2.0 (architettura di accesso e tunnel)
+- `TUNNEL_ARCHITECTURE.md` (architettura di accesso e tunnel; ex `CRM_ACCESS_ARCHITECTURE.md` v2.0, consolidato 2026-06-14)
 - `BUSINESS_PLAN.md` v1.0 (modello di business, proiezioni, partnership)
 
 ---
@@ -96,7 +96,7 @@ Il modello POC è B2B (trainer professionisti con P.IVA o liberi professionisti)
 
 ## 3. Modello di distribuzione del software e implicazioni di compliance
 
-**[Sezione introdotta in v1.2, derivata da `CRM_ACCESS_ARCHITECTURE.md` v2.0]**
+**[Sezione introdotta in v1.2, derivata da `TUNNEL_ARCHITECTURE.md` — ex `CRM_ACCESS_ARCHITECTURE.md` v2.0]**
 
 ### 3.1 Architettura di distribuzione
 
@@ -135,7 +135,7 @@ AVGV resta Titolare di un trattamento autonomo, limitato a:
 | Eventuali dati di supporto raccolti durante assistenza | Erogazione supporto | Esecuzione contratto |
 
 **Note critiche:**
-- I metadati tunnel **non includono contenuto applicativo**: il traffico passa cifrato e AVGV non lo decifra. Vedi `CRM_ACCESS_ARCHITECTURE.md` v2.0 §4 P2 e §7.6.
+- I metadati tunnel **non includono contenuto applicativo**: il traffico passa cifrato e AVGV non lo decifra. Vedi `TUNNEL_ARCHITECTURE.md` §5 (principio P2) e `TUNNEL_SECURITY_BOUNDARY.md` §5 (P2 data-blind, dimostrato e2e).
 - Eventuale telemetria deve essere progettata come **anonima per default** o con opt-in esplicito se contiene identificatori.
 - I log infrastrutturali devono avere retention limitata e documentata (raccomandato 30–90 giorni, poi cancellazione o anonimizzazione irreversibile).
 
@@ -143,7 +143,7 @@ AVGV resta Titolare di un trattamento autonomo, limitato a:
 
 - **EULA** deve esplicitare la separazione: AVGV fornisce software; il trainer è autonomo Titolare dei dati dei propri clienti
 - **Privacy Policy AVGV** deve coprire solo i trattamenti di cui AVGV è Titolare (sezione 3.3), non i trattamenti che il trainer fa coi propri clienti
-- **Documento tecnico di descrizione architetturale** (referenziabile in eventuali audit o DPIA del trainer) che attesti la proprietà data-blind del tunnel: `CRM_ACCESS_ARCHITECTURE.md` v2.0 può fungere da riferimento
+- **Documento tecnico di descrizione architetturale** (referenziabile in eventuali audit o DPIA del trainer) che attesti la proprietà data-blind del tunnel: `TUNNEL_ARCHITECTURE.md` (+ `TUNNEL_SECURITY_BOUNDARY.md` §5) può fungere da riferimento
 - **Trainer onboarding kit** dovrebbe includere un memo informativo che ricordi al trainer i propri obblighi come Titolare (informativa ai clienti, raccolta consensi Art. 9, ecc.)
 
 ### 3.5 Rischio residuo da gestire
@@ -260,7 +260,7 @@ Clausole minime da includere (validare con avvocato):
 5. **Proprietà intellettuale**: chiarire che il software, i marchi e tutto il codice restano di proprietà esclusiva di AVGV
 6. **Aggiornamenti**: AVGV può rilasciare aggiornamenti; licenziatario è responsabile dell'installazione
 7. **Separazione dati**: **clausola critica in modello distribuito** — il software gira sul hardware del trainer; i dati trattati con il software restano sul hardware del trainer; AVGV non ha accesso a tali dati; il trainer è autonomo Titolare del trattamento
-8. **Servizio tunnel pubblico**: AVGV fornisce un servizio accessorio di tunnel reverse per esporre pubblicamente le funzioni di accesso cliente finale; il servizio è data-blind (riferimento a `CRM_ACCESS_ARCHITECTURE.md`)
+8. **Servizio tunnel pubblico**: AVGV fornisce un servizio accessorio di tunnel reverse per esporre pubblicamente le funzioni di accesso cliente finale; il servizio è data-blind (riferimento a `TUNNEL_ARCHITECTURE.md`)
 9. **Garanzia e responsabilità**: software fornito "as is" salvo le tutele minime di legge per i consumatori (se applicabili); limitazione di responsabilità nei limiti consentiti dalla legge
 10. **Sospensione e cessazione**: cause di sospensione (mancato pagamento, violazione termini), preavviso, conseguenze sui dati locali (restano del trainer)
 11. **Legge applicabile e foro competente**: legge italiana, foro di competenza del trainer (se B2C) o di AVGV (se B2B, salvo diversa pattuizione)
@@ -702,7 +702,7 @@ Da affrontare in fase di pianificazione Phase 2 con consulente prodotto/CE.
 - [ ] Esecuzione audit licenze open source (`pip-licenses`)
 - [ ] Generazione SBOM (CycloneDX)
 - [ ] Audit vulnerabilità (`pip-audit`)
-- [ ] Implementazione architettura `CRM_ACCESS_ARCHITECTURE.md` v2.0 (tunnel data-blind, autenticazione, token cliente, audit log)
+- [ ] Implementazione architettura `TUNNEL_ARCHITECTURE.md` (tunnel data-blind, autenticazione, token cliente, audit log)
 - [ ] Predisposizione template informativa privacy per trainer
 - [ ] Documento tecnico data-blind tunnel per fascicolo compliance
 
@@ -746,7 +746,7 @@ Da affrontare in fase di pianificazione Phase 2 con consulente prodotto/CE.
 |---|---------|-------------|---------|-------------|
 | 1 | Conflitto marchio "FitManager" già esistente | Media | Medio | Ricerca anteriorità prima del deposito; piano B nome alternativo |
 | 2 | EULA non valida o squilibrata → contestazioni B2B | Bassa | Medio | Avvocato; doppia firma esplicita su clausole limitative |
-| 3 | Modello distribuito mal documentato → AVGV trattata come Data Processor | Media | Alto | Documentazione tecnica accurata (questo report + `CRM_ACCESS_ARCHITECTURE.md`); EULA esplicita |
+| 3 | Modello distribuito mal documentato → AVGV trattata come Data Processor | Media | Alto | Documentazione tecnica accurata (questo report + `TUNNEL_ARCHITECTURE.md`); EULA esplicita |
 | 4 | Trainer non rispetta GDPR coi propri clienti → reclamo Garante in cui AVGV viene coinvolta | Media | Medio | Onboarding kit con template informativa; clausola EULA che il trainer è Titolare |
 | 5 | Vulnerabilità nel software causa breach dati clinici | Bassa | Alto | Audit sicurezza ricorrenti; aggiornamenti tempestivi; bug bounty informale |
 | 6 | Licenza open source incompatibile (es. GPL) incorporata nel binario | Media | Alto | Audit licenze ad ogni release; SBOM; sostituzione librerie problematiche |
@@ -755,7 +755,7 @@ Da affrontare in fase di pianificazione Phase 2 con consulente prodotto/CE.
 | 9 | VPS edge compromesso da attaccante | Bassa | Medio (TLS e2e mitiga) | Hardening; SSH key-only; fail2ban; aggiornamenti OS |
 | 10 | Partnership Alessio si rompe in modo conflittuale | Media | Medio | Term Sheet chiaro; clausole di uscita; NDA permane; IP confermata di AVGV |
 | 11 | Sanzioni privacy per uso non conforme di marketing | Bassa | Medio | Opt-in esplicito; documentazione consensi; modello double opt-in |
-| 12 | Cliente finale tronca URL e raggiunge CRM trainer (problema originario) | Bassa | Alto | Architettura `CRM_ACCESS_ARCHITECTURE.md` v2.0 risolve strutturalmente |
+| 12 | Cliente finale tronca URL e raggiunge CRM trainer (problema originario) | Bassa | Alto | Architettura `TUNNEL_ARCHITECTURE.md` risolve strutturalmente |
 | 13 | Concorrente registra marchio simile in classe diversa | Media | Basso | Registrare in classi 9 e 42; monitorare nuovi depositi |
 | 14 | Errore in fatturazione elettronica → sanzioni Agenzia Entrate | Bassa | Basso | Software qualificato; revisione mensile |
 | 15 | Cambio di legge (es. nuova soglia forfettario, nuove regole digital services) | Media | Variabile | Iscrizione a newsletter Agenzia Entrate, Garante, commercialista aggiornato |
@@ -861,7 +861,7 @@ Da affrontare in fase di pianificazione Phase 2 con consulente prodotto/CE.
 - [ ] Partnership Agreement con Alessio firmato
 
 **Setup tecnico-compliance**
-- [ ] Architettura `CRM_ACCESS_ARCHITECTURE.md` v2.0 implementata e testata
+- [ ] Architettura `TUNNEL_ARCHITECTURE.md` implementata e testata
 - [ ] TLS e2e verificato (test che AVGV non vede contenuto)
 - [ ] WCAG 2.1 AA implementata sulla pagina pubblica
 - [ ] Audit licenze open source eseguito, OK

@@ -2,6 +2,9 @@
 
 Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del dominio.
 
+> **Prima volta sul progetto?** Parti da `ARCHITECTURE.md` (root) — overview di sistema e bussola macro.
+> Poi `CLAUDE.md` per le regole operative. Questo indice è il dispatcher per il dettaglio per dominio.
+
 ---
 
 ## business/ — Strategia, numeri, partner, legal
@@ -62,16 +65,11 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 | `SECURITY_AUDIT_BASELINE.md` | Red Team audit pre-hardening (7 test, TTC per Crown Jewel) |
 | `SECURITY_AUDIT_POST_HARDENING.md` | Re-test post-hardening (4 step anti-RE, confronto pre/post) |
 | `LICENSE_ACTIVATION.md` | Attivazione licenza, hardware binding, CLI admin |
-| `CRM_ACCESS_ARCHITECTURE.md` | Architettura accesso v2.0: doppio piano (LAN/tunnel), FRP data-blind, TLS e2e, criteri accettazione | Blueprint infra tunnel |
-| `TUNNEL_MIGRATION_STRATEGY.md` | Strategia migrazione Tailscale -> FRP: 4 fasi, gap analysis, piano esecuzione | Esecuzione migrazione |
-| `TUNNEL_SECURITY_BOUNDARY.md` | Acceptance criteria Strada B v2.0: confine JWT, rate limiter, apertura selettiva tunnel, P2 data-blind | Sicurezza tunnel |
-| `STRADA_B_IMPLEMENTATION_PLAN.md` | Piano implementazione Strada B: 4 step (lockout, role JWT, apertura guard, test e2e) | Esecuzione Strada B |
-| `TAILSCALE_FUNNEL_SETUP.md` | Setup Tailscale Funnel, proxy, troubleshooting (da archiviare post-migrazione) |
+| `TUNNEL_ARCHITECTURE.md` | **Sottosistema tunnel (riferimento unico):** design (problema, P1-P10, P2 data-blind), build (migrazione Tailscale→FRP, 4 fasi, gap analysis), operations (setup VPS edge, costi, DR). Consolida i 4 doc storici. |
+| `TUNNEL_SECURITY_BOUNDARY.md` | **Confine di sicurezza + piano "Strada B":** acceptance criteria (confine JWT, rate limiter, apertura selettiva), piano implementazione (lockout, role JWT, guard, test e2e). Stato: approvato, non ancora implementato. |
 | `DEPLOYMENT_PLAN.md` | Piano deploy: PyInstaller/Nuitka, standalone, Inno Setup |
 | `NUTRITION_ENGINE_V3.md` | Architettura Nutrition Engine v3 |
 | `PRE_DELIVERY_AUDIT_2026_04_17.md` | Audit tecnico 360° pre-consegna ad Alessio (2026-04-17) |
-| `ARCHITECTURE_OVERVIEW.md` | Mappa narrata dell'architettura tunnel: problema, centralino, VPS, 3 attori, 4 fasi. Punto d'ingresso prima di leggere CRM_ACCESS e TUNNEL_MIGRATION |
-| `VPS_EDGE_SETUP.md` | Setup completo infra edge: dominio Cloudflare, VPS Hetzner, hardening, FRP server, DNS wildcard. Fase 0 completata. |
 
 ---
 
@@ -89,7 +87,7 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 
 ## adr/ — Architecture Decision Records
 
-10 ADR attivi (ADR-001 → ADR-010, senza ADR-002). Indice in `adr/README.md`.
+11 ADR attivi (ADR-001 → ADR-011, senza ADR-002). Indice in `adr/README.md`.
 
 ## incidents/ — Post-mortem
 

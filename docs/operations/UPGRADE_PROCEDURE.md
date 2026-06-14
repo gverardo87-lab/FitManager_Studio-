@@ -328,7 +328,7 @@ Questo ti lascia una baseline pulita anche per il supporto successivo.
 
 - [SUPPORT_RUNBOOK.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/operations/SUPPORT_RUNBOOK.md)
 - [RELEASE_CHECKLIST.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/operations/RELEASE_CHECKLIST.md)
-- [TAILSCALE_FUNNEL_SETUP.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/technical/TAILSCALE_FUNNEL_SETUP.md)
+- [TUNNEL_ARCHITECTURE.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/technical/TUNNEL_ARCHITECTURE.md)
 
 ---
 

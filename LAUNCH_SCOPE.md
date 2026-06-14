@@ -64,7 +64,7 @@ Per la procedura concreta usare:
 
 - `docs/operations/SUPPORT_RUNBOOK.md`
 - `docs/operations/UPGRADE_PROCEDURE.md`
-- `docs/technical/TAILSCALE_FUNNEL_SETUP.md`
+- `docs/technical/TUNNEL_ARCHITECTURE.md` (operations VPS edge; ex `TAILSCALE_FUNNEL_SETUP.md`, ora archiviato)
 - `docs/operations/RELEASE_CHECKLIST.md`
 
 Per la storia dettagliata dei microstep:
