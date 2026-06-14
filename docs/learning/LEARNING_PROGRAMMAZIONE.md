@@ -522,6 +522,29 @@ Per ogni concetto: "saprei spiegarlo a fonte chiusa a qualcuno che non programma
 
 ---
 
+## Concetti dal campo
+
+Concetti trasferibili emersi durante il lavoro reale (non roadmap, ma lezioni di data-modeling/architettura colte sul codice vero).
+
+### Campo "cablato ma vuoto" e semantica dei flag — `is_fondamentale` (2026-06-13)
+
+**Contesto:** la strategia libreria esercizi chiede un marcatore dei ~50-80 esercizi fondamentali (`is_fondamentale`) per guidare il tuning del contenuto e la metrica di copertura del bundle animazioni.
+
+**Livello 1 — Cosa fa.** È un campo booleano su `Exercise`. Verificato dall'interno: è **presente in tutti gli strati** (modello SQLModel, schema Pydantic, `types/api.ts`, e `seed_exercises.py` lo legge con `ex.get("is_fondamentale", False)`) — ma il seed JSON ha **zero esercizi marcati** e nessuna UI lo usa. È uno **scheletro**: cablato ovunque, semanticamente vuoto, funzionalmente morto.
+
+**Livello 2 — Perché lo voglio (la distinzione che conta).** Esisteva già un flag che *sembra* dire "fondamentale": `in_subset`. Ma `in_subset` significa "esercizio **attivo/visibile**" (466 su 500), **non** "fondamentale". Sono due flag con due semantiche diverse: uno è un **flag di visibilità**, l'altro un **flag di curation**. Confonderli (come accaduto in una stesura precedente della strategia) fa puntare il tuning e la metrica di copertura su 466 esercizi invece che su ~50-80.
+
+**Livello 3 — Perché funziona così sotto (la lezione trasferibile).** Tre verità di data-modeling:
+1. **Il nome di un campo non è il suo significato.** `in_subset` suona come "sottoinsieme dei fondamentali"; significa "attivo". Si verifica la semantica sul codice/dati, non sul nome.
+2. **Schema ≠ dati ≠ uso.** Un campo può esistere a *tutti* i layer ed essere comunque vuoto (nessun dato) e inutilizzato (nessun consumer). "Il campo c'è" non implica "la feature funziona".
+3. **Cablare è economico, popolare è il lavoro vero.** Aggiungere un campo attraverso gli strati è meccanico e veloce. Riempirlo richiede una **decisione di dominio** (quali 50-80 esercizi?) che il codice non può inventare. Il collo di bottiglia non è tecnico.
+
+**Failure mode:** se assumo "il campo esiste → la feature è pronta", spedisco un badge/filtro che non mostra nulla (zero marcati); oppure, peggio, riuso `in_subset` come se fossero i fondamentali → la metrica di copertura del bundle e il focus del tuning puntano sull'insieme sbagliato. Me ne accorgo solo quando la UI è vuota o i numeri non tornano.
+
+**Domande aperte:** [ ] criterio di selezione dei ~50-80 fondamentali (pattern, frequenza di prescrizione, copertura muscolare) da decidere col founder, eventualmente validato da Alessio.
+
+---
+
 ## Stato avanzamento
 
 ### Layer 0 — Fondamenti

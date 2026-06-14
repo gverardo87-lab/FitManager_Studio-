@@ -165,3 +165,37 @@ Se una risposta zoppica: la sezione indicata, poi di nuovo la domanda. **Il gate
 - `TUNNEL_SECURITY_BOUNDARY.md` — proprietà P2 (da aggiornare con la riformulazione del §6)
 - `LEARNING_NETWORKING.md` — DNS, handshake TLS, SNI
 - `BUILD_LOG.md` — voce da aggiungere quando la decisione si consolida
+
+---
+
+## Appendice A — La superficie di implementazione nel codice esistente (verifica Claude Code, 2026-06-13)
+
+Questa appendice è il *ponte* tra l'architettura (il disegno) e il codice che già esiste (la realtà). L'ho verificata dall'interno del codebase: serve a non scoprire le frizioni al momento di implementare.
+
+### A.1 — `media.ts` oggi vieta esattamente ciò che la v2.2 richiede
+
+**Cosa fa.** `frontend/src/lib/media.ts` espone `getMediaUrl()`, che ritorna il **path relativo** così com'è e, nel commento, **vieta esplicitamente** gli URL assoluti: *"NON costruire URL assoluti: falliscono via Tailscale Funnel… e su qualsiasi configurazione dove il browser non raggiunge direttamente la porta del backend."*
+
+**Perché è così.** Oggi i media sono **same-origin**: Next fa da rewrite `/media/* → backend`, quindi un path relativo basta e funziona da LAN, da tunnel, da ovunque. L'URL assoluto romperebbe perché punterebbe a una porta/origine che il browser dell'atleta non raggiunge.
+
+**Perché è il vero blocco della v2.2.** La v2.2 vuole l'**opposto**, ma *solo per il contenuto generico*: la clip deve puntare ad `https://media.fitmanagerstudio.com/…` (cross-origin, assoluto), mentre il dato personale resta relativo/same-origin via tunnel. Quindi `media.ts` non va "sbloccato" a permettere assoluti — va reso **consapevole della classificazione**: generico → host assoluto; personale → relativo. È la traduzione in codice del principio del §0.
+
+**Failure mode.** Se si "sblocca" ingenuamente `getMediaUrl` a ritornare assoluti per tutto, si rischia di mandare cross-origin anche dato personale (regressione P2) o di rompere i media same-origin esistenti. La distinzione non è opzionale: è il cuore del routing-per-classificazione.
+
+### A.2 — Non c'è un solo chokepoint: due percorsi di risoluzione
+
+**Cosa ho trovato.** La risoluzione media è **eterogenea**, su due strade indipendenti:
+- **Dashboard/trainer** → usa `getMediaUrl()` (in `esercizi/[id]`, `ExercisesTable` thumbnail, `ExerciseDetailPanel`).
+- **Pagina pubblica atleta** (`public/scheda/[token]`, ~830 LOC) → **NON** usa `getMediaUrl`: consuma `ex.foto_start` / `ex.foto_end` come `<img src>` diretti, **emessi dall'endpoint pubblico del backend**, e oggi viaggiano **attraverso il tunnel**.
+
+In più gli URL nascono da fonti diverse: `ExerciseMedia.url` (stored, relativo), `thumbnail_url` (calcolato nel router a query-time), path-by-convention (`ExerciseDetailPanel` costruisce `/media/exercises/{id}/exec_start.jpg`), `foto_start/end` (emessi dall'endpoint pubblico).
+
+**Conseguenza per l'implementazione.** Evolvere la risoluzione media tocca **due punti, non uno**: il resolver frontend *e* l'endpoint pubblico del backend che emette gli URL all'atleta. Quest'ultimo è dove il cross-origin conta di più, perché è il flusso che oggi carica il tunnel.
+
+### A.3 — Il puntatore vive in un DB read-only (richiamo al §5)
+
+Riepilogo del vincolo dimostrato in §5: `ExerciseMedia.url` sta in `catalog.db`, a runtime **cifrato e in-memory** (`api/database.py`: `decrypt → conn.deserialize → StaticPool`) → read-only. Aggiornare un URL = **build-time + release** (R1, POC). L'update *live* indipendente dalla release richiede lo strato **manifest** (R2, v2). Vedi §5 per il dettaglio.
+
+### A.4 — Il marcatore `is_fondamentale` (stato e dipendenza)
+
+Il campo `is_fondamentale` (marcatore dei ~50-80 fondamentali, che guida la **metrica di copertura del bundle**) è oggi **cablato ma vuoto**: presente in modello/schema/type/seed-reader, ma **zero esercizi marcati** nel seed JSON e zero UI. È prerequisito della metrica di copertura, ma il suo collo di bottiglia è una **decisione di dominio** (quali fondamentali), non codice. Lezione di data-modeling trasferibile in `LEARNING_PROGRAMMAZIONE.md` ("Concetti dal campo").
