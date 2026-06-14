@@ -16,10 +16,13 @@
 - ✅ **Analisi 32 orfani** completata (5 schede = dati TEST → decisione = merito di catalogo; ID liberi).
 - ✅ **Ondata 1 ESEGUITA (sera 2026-06-14):** 10 keeper (3 ricchi 235/252/299 + 7 medi 15/16/46/73/81/140/142), in_subset=0. Orfani 32→22.
 - ✅ **Ondata 2 ESEGUITA (sera 2026-06-14):** triage dei 22 gusci. Scoperta: movimenti reali con **nomi auto-tradotti male** (contenuto 1/9 = solo `esecuzione`). **19 re-inseriti** (in_subset=0; 18 nome OK + 962 Affondi Frontali con fix `categoria stretching→compound`/`pattern→squat`); **3 scartati** (founder): 877 "Buccinate da Seduto" (=Box Squat), 644 "Carico Kettlebell" (=caricamento pietre), 905 "Trazioni Laterali" (=rematore). Verifiche: 510→529, 466 attivi invariati, integrity OK, **orfani 22→3** (= i 3 scarti). Backup `catalog.db.bak-threadA-ondata2`. **Orfani Thread A chiusi** (29 keeper re-inseriti, 3 scarti consapevoli).
-**PROSSIMA AZIONE (P1 — DROP tabelle catalog stale da crm.db).** Ora sbloccato: orfani decisi.
-- Chiude ADR-003 a livello fisico (le 10 tabelle catalog stale in crm.db). **Backup crm.db prima** (regola #11).
-- I 3 scarti (644/877/905) hanno ancora refs in `esercizi_sessione` (schede TEST) → dopo il DROP della tabella stale `esercizi` quei ref non risolvono più (cross-DB, nessuna FK). Decidere se azzerarli (NULL) o lasciarli (innocui, dati test).
-**Poi:** P3 archiviare `crm_dev.db` + review 7 duplicati nomi catalog.db.
+- ✅ **P1 ESEGUITO 9/10 (sera 2026-06-14):** droppate le 9 tabelle catalog pure da crm.db (zero FK business in entrata). crm.db 38→29 tabelle, foreign_key_check pulito, business invariato, integrity OK. **VACUUM: 4.56 MB → 0.91 MB (−80%).** Backup `crm.db.bak-threadA-p1`.
+**PROSSIMA AZIONE (P1-bis — `metriche`, la 10ª tabella).** NON droppabile come le altre: FK locale reale da `obiettivi_cliente`/`valori_misurazione` (modelli `goal.py`/`measurement.py`: `foreign_key="metriche.id"`, 146 righe). Task coordinato:
+1. Migrare i modelli al pattern cross-DB (`id_metrica` = int semplice, come `componenti_pasto.alimento_id`).
+2. Alembic migration: rimuovere la FK (ricrea le 2 tabelle) + DROP metriche.
+3. Test goal/measurement.
+4. Verificare se un crm.db *fresh* (che già esclude metriche) rompe oggi su insert misurazioni con FK a tabella assente — possibile bug latente da chiarire.
+**Poi:** P3 archiviare `crm_dev.db` + review 7 duplicati nomi catalog.db. Eventuale azzeramento dei 3 ref dangling (644/877/905) in `esercizi_sessione` test.
 
 ### Thread B — Strategia media cloud v2.2 — IN ATTESA DEL GATE (founder)
 **Doc:** `docs/learning/LEARNING_MEDIA_CLOUD_ARCHITECTURE.md` (+ Appendice A impl.), `docs/technical/DELTA_v2.2_EXERCISE_LIBRARY_STRATEGY.md`.
