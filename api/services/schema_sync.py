@@ -197,63 +197,174 @@ def _drop_phantom_tables(db_engine: Engine) -> list[str]:
     return messages
 
 
-def _fix_cross_db_fk(db_engine: Engine) -> list[str]:
-    """Rimuove FK residue cross-DB (esercizi_sessione → esercizi).
+# Tabelle business con FK locale residua verso una tabella che vive in un altro DB
+# (catalog.db / nutrition.db). Con PRAGMA foreign_keys=ON SQLite cerca la tabella
+# parent nello stesso file: assente nei crm.db fresh → crash al commit/insert.
+# Il modello Python ha gia' rimosso la FK; questo fix allinea il DDL del DB.
+_CROSS_DB_FK_FIXES: list[tuple[str, str]] = [
+    ("esercizi_sessione", "esercizi"),    # → catalog.db (INC workout.py:91)
+    ("valori_misurazione", "metriche"),   # → catalog.db (measurement.py)
+    ("obiettivi_cliente", "metriche"),    # → catalog.db (goal.py)
+]
 
-    Background: esercizi_sessione.id_esercizio aveva FK verso esercizi(id),
-    ma esercizi vive in catalog.db. Con PRAGMA foreign_keys=ON SQLite
-    crashava al commit. Il modello Python ha gia' rimosso la FK (workout.py:91),
-    ma il DDL nel DB la manteneva. Questo fix ricrea la tabella senza la FK.
-    Idempotente: skip se la FK non c'e' piu'.
+
+def _recreate_table_dropping_fk(conn: Any, table: str, parent_to_drop: str) -> None:
+    """Ricrea `table` preservando colonne/righe/indici ma SENZA la FK verso
+    `parent_to_drop`. Generico via introspezione (PRAGMA) — robusto vs DB con
+    colonne aggiunte da migrazioni successive. SQLite non supporta DROP CONSTRAINT,
+    quindi: crea _tmp → copia righe → drop originale → rename → ricrea indici.
+    """
+    info = conn.execute(text(f"PRAGMA table_info([{table}])")).fetchall()
+    # (cid, name, type, notnull, dflt_value, pk)
+    col_names = [r[1] for r in info]
+    col_defs: list[str] = []
+    pk: list[tuple[int, str]] = []
+    for _cid, name, ctype, notnull, dflt, pk_idx in info:
+        d = f'"{name}" {ctype}'.rstrip()
+        if notnull:
+            d += " NOT NULL"
+        if dflt is not None:
+            d += f" DEFAULT {dflt}"
+        col_defs.append(d)
+        if pk_idx:
+            pk.append((pk_idx, name))
+    pk_cols = [n for _, n in sorted(pk)]
+
+    # FK da mantenere (tutte tranne quelle verso parent_to_drop), raggruppate per id
+    fk_rows = conn.execute(text(f"PRAGMA foreign_key_list([{table}])")).fetchall()
+    by_id: dict[int, list] = {}
+    for row in fk_rows:
+        by_id.setdefault(row[0], []).append(row)
+    fk_clauses: list[str] = []
+    for _fid, rows in sorted(by_id.items()):
+        parent = rows[0][2]
+        if parent == parent_to_drop:
+            continue
+        ordered = sorted(rows, key=lambda x: x[1])
+        froms = ", ".join(f'"{r[3]}"' for r in ordered)
+        tos = ", ".join(f'"{r[4]}"' for r in ordered)
+        fk_clauses.append(f"FOREIGN KEY ({froms}) REFERENCES {parent} ({tos})")
+
+    # Indici creati con CREATE INDEX (origin='c') da ricreare dopo il rename
+    recreate_idx: list[tuple[str, bool, list[str]]] = []
+    for _seq, iname, unique, origin, *_rest in conn.execute(
+        text(f"PRAGMA index_list([{table}])")
+    ).fetchall():
+        if origin != "c":
+            continue
+        icols = [c[2] for c in conn.execute(text(f"PRAGMA index_info([{iname}])")).fetchall()]
+        recreate_idx.append((iname, bool(unique), icols))
+
+    tmp = f"_{table}_fixed"
+    parts = list(col_defs)
+    if pk_cols:
+        parts.append(f"PRIMARY KEY ({', '.join(pk_cols)})")
+    parts.extend(fk_clauses)
+    ddl = f"CREATE TABLE {tmp} (\n  " + ",\n  ".join(parts) + "\n)"
+    cols_csv = ", ".join(f'"{c}"' for c in col_names)
+
+    conn.execute(text(f"DROP TABLE IF EXISTS {tmp}"))
+    conn.execute(text(ddl))
+    conn.execute(text(f"INSERT INTO {tmp} ({cols_csv}) SELECT {cols_csv} FROM {table}"))
+    conn.execute(text(f"DROP TABLE {table}"))
+    conn.execute(text(f"ALTER TABLE {tmp} RENAME TO {table}"))
+    for iname, unique, icols in recreate_idx:
+        uq = "UNIQUE " if unique else ""
+        icols_csv = ", ".join(f'"{c}"' for c in icols)
+        conn.execute(text(f"CREATE {uq}INDEX IF NOT EXISTS {iname} ON {table} ({icols_csv})"))
+
+
+def _fix_cross_db_fk(db_engine: Engine) -> list[str]:
+    """Rimuove FK residue cross-DB dal DDL di crm.db (idempotente).
+
+    Background: alcune tabelle business avevano FK verso tabelle catalog
+    (esercizi, metriche) che ora vivono in catalog.db. Con foreign_keys=ON
+    SQLite cercava il parent nello stesso file → crash su crm.db fresh.
+    Vedi `_CROSS_DB_FK_FIXES`. Skip per ogni tabella la cui FK non c'e' piu'.
     """
     messages: list[str] = []
     with db_engine.connect() as conn:
-        fks = conn.execute(text("PRAGMA foreign_key_list(esercizi_sessione)")).fetchall()
-        has_cross_db_fk = any(row[2] == "esercizi" for row in fks)
-        if not has_cross_db_fk:
-            return messages
-
-        logger.info("  schema_sync: fixing cross-DB FK on esercizi_sessione")
         conn.execute(text("PRAGMA foreign_keys=OFF"))
-        conn.execute(text("""
-            CREATE TABLE IF NOT EXISTS _esercizi_sessione_fixed (
-                id INTEGER NOT NULL PRIMARY KEY,
-                id_sessione INTEGER NOT NULL,
-                id_esercizio INTEGER NOT NULL,
-                ordine INTEGER NOT NULL,
-                serie INTEGER NOT NULL,
-                ripetizioni VARCHAR NOT NULL,
-                tempo_riposo_sec INTEGER NOT NULL,
-                tempo_esecuzione VARCHAR,
-                note VARCHAR,
-                carico_kg FLOAT,
-                id_blocco INTEGER,
-                posizione_nel_blocco INTEGER,
-                FOREIGN KEY(id_sessione) REFERENCES sessioni_scheda (id)
-            )
-        """))
-        conn.execute(text(
-            "INSERT OR IGNORE INTO _esercizi_sessione_fixed SELECT * FROM esercizi_sessione"
-        ))
-        conn.execute(text("DROP TABLE esercizi_sessione"))
-        conn.execute(text("ALTER TABLE _esercizi_sessione_fixed RENAME TO esercizi_sessione"))
-        conn.execute(text(
-            "CREATE INDEX IF NOT EXISTS ix_esercizi_sessione_id_esercizio "
-            "ON esercizi_sessione (id_esercizio)"
-        ))
-        conn.execute(text(
-            "CREATE INDEX IF NOT EXISTS ix_esercizi_sessione_id_sessione "
-            "ON esercizi_sessione (id_sessione)"
-        ))
-        conn.execute(text(
-            "CREATE INDEX IF NOT EXISTS ix_esercizi_sessione_id_blocco "
-            "ON esercizi_sessione (id_blocco)"
-        ))
+        for table, parent in _CROSS_DB_FK_FIXES:
+            exists = conn.execute(text(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name=:n"
+            ), {"n": table}).fetchone()
+            if not exists:
+                continue
+            fks = conn.execute(text(f"PRAGMA foreign_key_list([{table}])")).fetchall()
+            if not any(row[2] == parent for row in fks):
+                continue  # FK gia' assente → idempotente
+            logger.info("  schema_sync: fixing cross-DB FK on %s (→ %s)", table, parent)
+            _recreate_table_dropping_fk(conn, table, parent)
+            msg = f"{table} — removed cross-DB FK to {parent} (catalog.db)"
+            messages.append(msg)
+            logger.info("  schema_sync: %s", msg)
         conn.execute(text("PRAGMA foreign_keys=ON"))
-        conn.commit()
-        msg = "esercizi_sessione — removed cross-DB FK to esercizi (catalog.db)"
-        messages.append(msg)
-        logger.info("  schema_sync: %s", msg)
+        if messages:
+            conn.commit()
+
+    return messages
+
+
+def _drop_stale_catalog_tables(db_engine: Engine) -> list[str]:
+    """Rimuove dal crm.db le tabelle catalog STALE (duplicato del catalogo che
+    vive in catalog.db) — detrito della migrazione monolite→3 DB.
+
+    A differenza di `_drop_phantom_tables` (solo stub vuoti ≤3 colonne), droppa
+    anche le tabelle POPOLATE: l'app non le legge mai da crm.db (usa
+    get_catalog_session). Prerequisito: `_fix_cross_db_fk` ha gia' rimosso ogni
+    FK business→catalog (altrimenti skip difensivo per tabella ancora referenziata).
+
+    SAFETY — skip su DB in-memory: i test usano un singolo engine dove le tabelle
+    catalog convivono legittimamente con quelle business; non vanno toccate.
+    """
+    db = db_engine.url.database
+    if db in (None, "", ":memory:"):
+        return []
+
+    messages: list[str] = []
+    dropped: list[str] = []
+    with db_engine.connect() as conn:
+        existing = {row[0] for row in conn.execute(text(
+            "SELECT name FROM sqlite_master WHERE type='table'"
+        )).fetchall()}
+        targets = sorted(CATALOG_TABLE_NAMES & existing)
+        if not targets:
+            return []
+
+        # Difesa: nessuna tabella business deve ancora referenziare un target via FK
+        business = existing - CATALOG_TABLE_NAMES - NUTRITION_TABLE_NAMES
+        referenced: set[str] = set()
+        for bt in business:
+            for fk in conn.execute(text(f"PRAGMA foreign_key_list([{bt}])")).fetchall():
+                if fk[2] in targets:
+                    referenced.add(fk[2])
+
+        for t in targets:
+            if t in referenced:
+                logger.warning(
+                    "  schema_sync: skip drop stale '%s' — ancora referenziata da FK business", t
+                )
+                continue
+            conn.execute(text(f"DROP TABLE IF EXISTS [{t}]"))
+            dropped.append(t)
+            msg = f"dropped stale catalog table '{t}' (vive in catalog.db)"
+            messages.append(msg)
+            logger.info("  schema_sync: %s", msg)
+        if dropped:
+            conn.commit()
+
+    # Compatta lo spazio liberato (best-effort, fuori transazione, mai fatale al boot)
+    if dropped:
+        try:
+            raw = db_engine.raw_connection()
+            try:
+                raw.execute("VACUUM")
+                raw.commit()
+            finally:
+                raw.close()
+        except Exception as exc:  # noqa: BLE001 — VACUUM non deve mai bloccare il boot
+            logger.warning("  schema_sync: VACUUM post-drop fallito (non fatale): %s", exc)
 
     return messages
 
@@ -268,11 +379,14 @@ def sync_schema(db_engine: Engine) -> list[str]:
     """
     messages: list[str] = []
 
-    # Fix legacy cross-DB FK constraints (idempotente)
+    # Fix legacy cross-DB FK constraints (idempotente) — DEVE precedere i drop sotto
     messages.extend(_fix_cross_db_fk(db_engine))
 
-    # Rimuovi tabelle phantom da backup pre-separazione (idempotente)
+    # Rimuovi tabelle phantom da backup pre-separazione (stub vuoti, idempotente)
     messages.extend(_drop_phantom_tables(db_engine))
+
+    # Rimuovi tabelle catalog stale POPOLATE (detrito migrazione monolite→3DB, idempotente)
+    messages.extend(_drop_stale_catalog_tables(db_engine))
 
     tables_checked = 0
     columns_added = 0

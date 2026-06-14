@@ -46,5 +46,8 @@ class MeasurementValue(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     id_misurazione: int = Field(foreign_key="misurazioni_cliente.id", index=True)
-    id_metrica: int = Field(foreign_key="metriche.id", index=True)
+    # Cross-DB ref → catalog.db.metriche: NESSUNA FK locale (metriche vive in catalog.db,
+    # letta via get_catalog_session). Pattern identico a componenti_pasto.alimento_id.
+    # Una FK locale qui rompeva i crm.db fresh (no metriche) con foreign_keys=ON. Vedi schema_sync._fix_cross_db_fk.
+    id_metrica: int = Field(index=True)
     valore: float

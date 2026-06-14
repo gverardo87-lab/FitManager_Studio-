@@ -1,10 +1,8 @@
 """Test schema_sync — verifica che colonne mancanti vengano aggiunte."""
 
-import sqlite3
 
 import pytest
 from sqlalchemy import text
-from sqlmodel import Session
 
 from api.services.schema_sync import sync_schema
 
@@ -83,6 +81,78 @@ def test_sync_schema_skips_catalog_tables(test_engine):
 
     messages = sync_schema(test_engine)
     assert not any("muscoli" in m for m in messages)
+
+
+def test_fix_cross_db_fk_removes_metriche_fk(test_engine):
+    """FK locale residua valori_misurazione→metriche viene rimossa, righe preservate.
+
+    Simula il DDL vecchio (FK locale) che i crm.db deployati hanno ancora.
+    Il modello l'ha rimossa (cross-DB), schema_sync allinea il DB esistente.
+    """
+    with test_engine.connect() as conn:
+        # Ricrea valori_misurazione con il vecchio DDL (FK locale a metriche)
+        conn.execute(text("DROP TABLE valori_misurazione"))
+        conn.execute(text("""
+            CREATE TABLE valori_misurazione (
+                id INTEGER NOT NULL PRIMARY KEY,
+                id_misurazione INTEGER NOT NULL,
+                id_metrica INTEGER NOT NULL,
+                valore FLOAT NOT NULL,
+                FOREIGN KEY(id_misurazione) REFERENCES misurazioni_cliente (id),
+                FOREIGN KEY(id_metrica) REFERENCES metriche (id)
+            )
+        """))
+        # Una metrica + una sessione + un valore che usa la FK
+        conn.execute(text(
+            "INSERT INTO metriche (id, nome, nome_en, unita_misura, categoria, ordinamento) "
+            "VALUES (1, 'Peso', 'Weight', 'kg', 'composizione', 0)"
+        ))
+        conn.execute(text("INSERT INTO valori_misurazione (id, id_misurazione, id_metrica, valore) "
+                          "VALUES (1, 1, 1, 75.0)"))
+        conn.commit()
+        fks = conn.execute(text("PRAGMA foreign_key_list(valori_misurazione)")).fetchall()
+        assert any(r[2] == "metriche" for r in fks), "setup: la FK a metriche deve esserci"
+
+    messages = sync_schema(test_engine)
+    assert any("valori_misurazione" in m and "metriche" in m for m in messages)
+
+    with test_engine.connect() as conn:
+        fks = conn.execute(text("PRAGMA foreign_key_list(valori_misurazione)")).fetchall()
+        assert not any(r[2] == "metriche" for r in fks), "FK a metriche deve essere rimossa"
+        # riga preservata
+        assert conn.execute(text("SELECT COUNT(*) FROM valori_misurazione")).scalar() == 1
+        # FK legittima (misurazioni_cliente) preservata
+        assert any(r[2] == "misurazioni_cliente" for r in fks)
+
+
+def test_drop_stale_catalog_tables_on_file_db(tmp_path):
+    """Su un crm.db FILE, le tabelle catalog stale (popolate) vengono droppate;
+    su DB in-memory NO (guard, coperto da test_sync_schema_skips_catalog_tables)."""
+    from sqlmodel import SQLModel, create_engine
+
+    db_path = tmp_path / "crm_test.db"
+    engine = create_engine(f"sqlite:///{db_path}")
+    SQLModel.metadata.create_all(engine)  # crea anche le catalog tables (test metadata unico)
+
+    # Popola una catalog table (metriche) per simulare il detrito monolite
+    with engine.connect() as conn:
+        conn.execute(text(
+            "INSERT INTO metriche (id, nome, nome_en, unita_misura, categoria, ordinamento) "
+            "VALUES (1, 'Peso', 'Weight', 'kg', 'composizione', 0)"
+        ))
+        conn.commit()
+        assert conn.execute(text("SELECT 1 FROM sqlite_master WHERE name='metriche'")).fetchone()
+
+    messages = sync_schema(engine)
+    assert any("stale catalog table 'metriche'" in m for m in messages)
+
+    with engine.connect() as conn:
+        # catalog tables rimosse
+        assert conn.execute(text("SELECT 1 FROM sqlite_master WHERE name='metriche'")).fetchone() is None
+        assert conn.execute(text("SELECT 1 FROM sqlite_master WHERE name='esercizi'")).fetchone() is None
+        # business intatta
+        assert conn.execute(text("SELECT 1 FROM sqlite_master WHERE name='clienti'")).fetchone() is not None
+    engine.dispose()
 
 
 def test_sync_schema_multiple_missing_columns(test_engine):
