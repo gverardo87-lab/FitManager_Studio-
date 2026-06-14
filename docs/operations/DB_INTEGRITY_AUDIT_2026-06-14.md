@@ -6,6 +6,13 @@
 **Eseguito da:** Claude Code (verifica dall'interno). Versione prodotto: 1.0.10.
 **Esito sintetico:** `catalog.db` impeccabile; il debito reale è **detrito di migrazione** in `crm.db` + drift di documentazione. Cleanup mirato, **non rebuild**.
 
+> **AGGIORNAMENTO REMEDIATION (2026-06-14, sera):**
+> - ✅ **P2** — numeri canonici corretti (passo 1).
+> - ✅ **P1 / Ondata 1 — 10 keeper re-inseriti** in catalog.db preservando l'ID (3 ricchi: 235/252/299 · 7 medi: 15/16/46/73/81/140/142). `in_subset=0` (inattivi: risolvono le referenze, non entrano nei 466 attivi; junction rigenerabili all'eventuale attivazione). Insert chirurgico + `seed_exercises.json` aggiornato (riproducibilità). Verifiche: 500→510 esercizi, 466 attivi invariati, integrity_check OK, **orfani 32→22**. Backup `*.bak-threadA-20260614`.
+> - ⬜ **Ondata 2** — restano i **22 gusci** (414/428/498/509/518/522/599/603/644/656/700/738/756/791/877/905/962/984/987/1056/1062/1064): curation founder (distinguere veri da rinominare/scartare).
+> - ⬜ **P1 — DROP tabelle catalog stale da crm.db** (solo dopo la decisione sui 22).
+> - ⬜ **P3** — `crm_dev.db` + 7 duplicati nomi.
+
 ---
 
 ## 1. Executive summary
@@ -146,6 +153,8 @@ Analisi per decidere keep/remap/drop (vedi §6 passo 2). **Confermato dal founde
 **Nomi sospetti da rivedere (possibile detrito auto-generato):** Buccinate da Seduto, Carico Kettlebell, Girata con Manubrio, Trazioni Laterali, Affondi Frontali (categorizzato `stretching` ma è un affondo).
 
 **Decisione raccomandata:** re-inserire i keeper preservando l'ID, in due ondate — (1) i 3 ricchi + 7 medi (basso sforzo, esercizi veri), (2) i 22 gusci con curation founder (distinguere veri da scartare/rinominare). Il re-insert allo standard 100% è curation proprietaria (AC-3); il bundle Alessio + dominio founder informano l'authoring. Meccanica: re-insert nel seed + rebuild catalog.db (pitfall #13: `seed_taxonomy → populate_taxonomy → populate_conditions`), **backup prima**.
+
+> **✅ ONDATA 1 ESEGUITA (2026-06-14).** Scelta meccanica più sicura del rebuild completo: **insert chirurgico** in catalog.db (10 righe esercizio, `in_subset=0`) + append a `seed_exercises.json`, senza toccare i 466 attivi né rieseguire l'intera pipeline. Scoperta chiave durante l'esecuzione: le junction NON sono hand-authored ma **generate da `populate_taxonomy.py`** da `muscoli_primari/secondari` + `pattern_movimento` (solo per `in_subset=1`). I 7 medi avevano junction=0 solo perché inattivi, non per mancanza di dato → tutti e 10 hanno i campi sorgente completi, quindi le junction si rigenereranno da sole all'eventuale attivazione (`in_subset=1` + populate). Per questo i keeper sono inattivi: il re-insert è puro fix d'integrità, l'attivazione è curation separata. Decisione `in_subset` confermata dal founder.
 
 ---
 
