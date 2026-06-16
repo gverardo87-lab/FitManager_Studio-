@@ -508,3 +508,26 @@ Filone parallelo ai thread del catalogo: riassetto della documentazione architet
 **Lavoro docs-only:** nessun codice toccato, nessun quality gate richiesto.
 
 ---
+
+## Distribuzione
+
+### 2026-06-16 — v1.0.12: fix upgrade installer bloccato da `frpc.exe` orfano (codice 5)
+
+Installando v1.0.11 sopra v1.0.10, l'installer si fermava con `ERROR_ACCESS_DENIED` (codice 5) sovrascrivendo `backend\frpc.exe`. Causa: un `frpc.exe` **orfano** di una sessione precedente teneva il lock sul proprio binario (un .exe in esecuzione locka il proprio file immagine su Windows).
+
+**Catena causale (due livelli).**
+- `frpc` e' un processo **nipote detached**: `launcher.bat` (cmd) → `fitmanager.exe` (`start /B`) → `frpc.exe` (`subprocess.Popen`, `CREATE_NO_WINDOW`). Il suo cleanup dipendeva solo da `atexit` + shutdown ASGI (`_tunnel_manager.stop()`), percorsi che **non scattano** su chiusura brusca. Chiudendo la finestra del launcher, `fitmanager.exe` muore ma `frpc.exe` (nipote, altro contesto) **sopravvive orfano**.
+- L'installer (`fitmanager.iss`) **non chiudeva i processi** prima di sovrascrivere → tentava la sostituzione a caldo → codice 5.
+
+**Perche' ora.** `frpc.exe` e' nel bundle solo dalla ~v1.0.10 (Fase 1.6, 2026-06-09). v1.0.10 → v1.0.11 e' stato il **primo upgrade** a doverlo rimpiazzare: condizione latente diventata attiva. Fresh install non lo mostra (niente da sovrascrivere).
+
+**Fix doppio (difesa in profondita').**
+- **Fix B — causa radice** (`api/services/tunnel_manager.py`): `frpc` agganciato a un **Windows Job Object** con `JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE` (`_create_kill_on_close_job` + `_assign_process_to_job` via `ctypes`). Il SO uccide `frpc` quando l'ultimo handle al job si chiude — cioe' quando il backend termina, comunque termini. Fallback su `atexit`/`stop()` se il job non e' disponibile (non-Windows / errore).
+- **Fix A — sintomo** (`installer/fitmanager.iss`): `CloseApplications=yes` + `RestartApplications=no` (Restart Manager, scoping per lock di file) + `[Code]` `PrepareToInstall` con `taskkill /F /T` su `frpc.exe` e `fitmanager.exe` (nomi app-specifici, nessun collaterale su `node.exe` estranei).
+- *Perche' entrambi:* le macchine gia' deployate ospitano ancora il binario orfanabile; solo il Fix A le sblocca al **prossimo** upgrade. Il Fix B impedisce che si ricreino orfani da li' in avanti.
+
+**Validazione.** Job Object creato OK su Windows reale; pipeline ADR-004 verde (pytest 364, ruff clean, next build, smoke 5/5); artifact `FitManager_Setup_1.0.12.exe` (SHA-256 `df2d602e…fb50`), tag `v1.0.12` pushato.
+
+**Concetto catturato:** `LEARNING_BUILD_DISTRIBUZIONE.md` (orfanaggio nipote detached + lock immagine .exe + Job Object). Incident: `INC-2026-06-15-installer-frpc-lock.md`. Pitfall #16 in `CLAUDE.md`.
+
+---

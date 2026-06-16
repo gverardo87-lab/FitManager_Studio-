@@ -90,3 +90,31 @@ Source: "..\dist\media\animations\*"; DestDir: "{app}\data\media\animations"; Fl
 **Failure mode:** se precarico tutte le clip al load della pagina → primo atleta che apre la scheda satura l'upload del trainer per 30+ secondi (e il CRM in LAN rallenta) → me ne accorgo dai tempi del portale, non da errori.
 
 **Domande aperte:** [ ] valutare se il rate limiter debba coprire anche `/media` (oggi StaticFiles non rate-limitato)
+
+---
+
+## Orfani di processo, lock dell'immagine .exe e Windows Job Object — perché l'update si è rotto su frpc.exe — 16/06/2026
+**Contesto:** INC-2026-06-15. L'installer v1.0.11 falliva con "codice 5 / Accesso negato" sovrascrivendo `backend\frpc.exe`, perché un `frpc.exe` di una sessione precedente era ancora vivo.
+
+**Livello 1 — Cosa fa:** quando il backend lancia `frpc` (`subprocess.Popen`), nasce un albero `cmd → fitmanager.exe → frpc.exe`. Se chiudo l'app brutalmente (chiudo la finestra del launcher), `fitmanager.exe` muore ma `frpc.exe` resta vivo (orfano). Un `.exe` mentre gira tiene **lockato il proprio file**: nessuno può cancellarlo o sovrascriverlo → l'installer successivo sbatte contro `ERROR_ACCESS_DENIED` (5). Il fix: aggancio `frpc` a un **Job Object** con `KILL_ON_JOB_CLOSE`, così il SO lo uccide quando il backend muore.
+
+**Livello 2 — Perché lo voglio:** avevo già un cleanup di `frpc` (`atexit` + `_tunnel_manager.stop()` nel lifespan). Ma quei percorsi presuppongono una chiusura *gentile* — l'interprete che termina ordinatamente. In un'app desktop la chiusura *normale* dell'utente è brusca (chiude la finestra → `TerminateProcess`), e nessun handler Python gira. Affidare la vita di un processo figlio a `atexit` è una garanzia che vale solo nei casi in cui non mi serve. Il Job Object sposta la garanzia dal mio codice al **kernel**: l'handle del job vive quanto il processo backend; quando il backend muore (in qualsiasi modo) l'handle si chiude, e `KILL_ON_JOB_CLOSE` fa terminare tutto ciò che è nel job.
+
+**Livello 3 — Perché funziona così sotto:** Windows mappa l'eseguibile in memoria come *image section* e tiene il file aperto con sharing che **non consente la delete** finché esiste un processo che lo usa — da qui il lock. I Job Object sono il meccanismo del kernel per trattare un gruppo di processi come unità: la flag `JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE` dice "quando l'ultimo handle a questo job sparisce, termina tutti i membri". Poiché l'handle è posseduto dal processo backend, la sua morte — clean o crash o kill — chiude l'handle e innesca la kill. È lo stesso principio dei process group POSIX (`setsid` + `killpg`), ma su Windows la primitiva robusta è il job, non il gruppo console (che il `CREATE_NO_WINDOW` del nipote scavalca). Lato installer, il complemento è il **Restart Manager** (`CloseApplications`): identifica *per lock di file* chi tiene aperti i binari da rimpiazzare e li chiude — scoping preciso, senza uccidere `node.exe` estranei.
+
+**Comando/config reale:**
+```python
+# tunnel_manager.py — job creato una volta, frpc agganciato dopo lo spawn
+self._job = _create_kill_on_close_job()        # CreateJobObject + SetInformationJobObject(KILL_ON_JOB_CLOSE)
+self._process = subprocess.Popen(cmd, creationflags=CREATE_NO_WINDOW)
+_assign_process_to_job(self._job, self._process.pid)   # OpenProcess + AssignProcessToJobObject
+```
+```pascal
+// fitmanager.iss — l'installer chiude i processi prima di scrivere
+CloseApplications=yes
+// + PrepareToInstall: taskkill /IM frpc.exe /F /T ; taskkill /IM fitmanager.exe /F /T
+```
+
+**Failure mode:** se mi fido del solo `atexit`, l'orfano si forma silenziosamente a ogni chiusura brusca e non me ne accorgo — finché un *upgrade* deve sovrascrivere quel binario. Bug latente che esplode al primo aggiornamento dopo l'introduzione del binario nel bundle (qui: ~v1.0.10, prima a includere `frpc.exe`).
+
+**Domande aperte:** [ ] regola da estendere a ogni futuro processo a vita lunga spawnato dal backend (non solo `frpc`); [ ] su Linux/Box (Raspberry) l'equivalente è `prctl(PR_SET_PDEATHSIG)` o un cgroup/process group — da decidere quando il porting ARM toccherà il tunnel.

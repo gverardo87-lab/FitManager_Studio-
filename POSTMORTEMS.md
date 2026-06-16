@@ -3,6 +3,22 @@
 Questa non e' una fonte di regole nuove.
 Raccoglie solo lezioni concrete da errori gia' emersi, per evitare che la memoria orale torni a guidare il progetto.
 
+## 2026-06-15 - Upgrade installer bloccato da frpc.exe orfano (P2)
+
+Problema:
+- installando v1.0.11 sopra v1.0.10, l'installer Inno Setup fallisce con `ERROR_ACCESS_DENIED` (codice 5) sovrascrivendo `backend\frpc.exe`
+- causa: un `frpc.exe` orfano di una sessione precedente teneva il lock sul proprio binario (un .exe in esecuzione locka il proprio file immagine)
+- `frpc` e' un processo NIPOTE detached (launcher.bat → fitmanager.exe → frpc.exe via Popen `CREATE_NO_WINDOW`); il suo cleanup dipendeva solo da `atexit` + shutdown ASGI, che NON scattano su chiusura brusca (finestra del launcher chiusa) → orfano persistente
+- l'installer non chiudeva i processi prima di sovrascrivere i binari
+- condizione latente dalla ~v1.0.10 (prima versione a bundlare frpc.exe, 2026-06-09); emersa al PRIMO upgrade che doveva rimpiazzare quel binario
+
+Lezioni:
+- ogni processo figlio/nipote a vita lunga lanciato dal backend DEVE morire col backend via meccanismo del SO (Windows Job Object `KILL_ON_JOB_CLOSE`), MAI col solo `atexit`/shutdown ASGI — per un'app desktop la chiusura brusca e' la norma
+- un installer che aggiorna binari bundlati DEVE chiudere i processi che li usano prima di scrivere (`CloseApplications` + `taskkill` per nomi app-specifici)
+- bundlare un nuovo binario a vita lunga e' un rischio di upgrade latente: chiedersi sempre "puo' essere in uso durante un aggiornamento?"
+- difesa in profondita': correggere causa (codice, niente orfani) E sintomo (installer chiude), perche' le macchine gia' deployate hanno il binario orfanabile — solo il fix installer le sblocca al prossimo upgrade
+- fix in v1.0.12; report completo: `docs/incidents/INC-2026-06-15-installer-frpc-lock.md`
+
 ## 2026-04-19 - catalog.db tassonomia vuota dopo consegna v1.0.7 (P0)
 
 Problema:
