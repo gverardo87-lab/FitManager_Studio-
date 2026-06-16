@@ -18,6 +18,7 @@ import atexit
 import logging
 import random
 import subprocess
+import sys
 import threading
 import time
 from enum import Enum
@@ -25,6 +26,139 @@ from enum import Enum
 from api.services.tunnel_config import TunnelConfig
 
 logger = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# Windows Job Object — kill frpc quando il backend muore (anche brusco)
+# ---------------------------------------------------------------------------
+#
+# frpc viene lanciato come processo NIPOTE detached (CREATE_NO_WINDOW): se il
+# backend viene terminato bruscamente (chiusura finestra launcher, TerminateProcess)
+# ne' atexit ne' lo shutdown ASGI scattano, e frpc resta orfano. Un frpc orfano
+# tiene il lock sul proprio binario -> il prossimo installer non riesce a
+# sovrascrivere backend\frpc.exe (ERROR_ACCESS_DENIED, codice 5).
+#
+# Soluzione: assegnare frpc a un Job Object con JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE.
+# Il SO uccide tutti i processi del job quando l'ultimo handle al job si chiude —
+# cioe' quando il processo backend (che tiene l'handle) termina, comunque termini.
+# Questo e' l'unico meccanismo affidabile su Windows contro l'orfanaggio.
+
+
+def _create_kill_on_close_job():
+    """Crea un Job Object Windows con KILL_ON_JOB_CLOSE.
+
+    Restituisce l'handle del job, o None su non-Windows / errore (in tal caso si
+    ricade sul cleanup best-effort via atexit + stop(), gia' presente).
+    L'handle va tenuto vivo per tutta la vita del manager: alla sua chiusura il
+    SO killa i processi assegnati.
+    """
+    if not sys.platform.startswith("win"):
+        return None
+    try:
+        import ctypes
+        from ctypes import wintypes
+
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+
+        CreateJobObject = kernel32.CreateJobObjectW
+        CreateJobObject.restype = wintypes.HANDLE
+        CreateJobObject.argtypes = [wintypes.LPVOID, wintypes.LPCWSTR]
+
+        job = CreateJobObject(None, None)
+        if not job:
+            return None
+
+        class _BasicLimit(ctypes.Structure):
+            _fields_ = [
+                ("PerProcessUserTimeLimit", ctypes.c_int64),
+                ("PerJobUserTimeLimit", ctypes.c_int64),
+                ("LimitFlags", wintypes.DWORD),
+                ("MinimumWorkingSetSize", ctypes.c_size_t),
+                ("MaximumWorkingSetSize", ctypes.c_size_t),
+                ("ActiveProcessLimit", wintypes.DWORD),
+                ("Affinity", ctypes.c_size_t),
+                ("PriorityClass", wintypes.DWORD),
+                ("SchedulingClass", wintypes.DWORD),
+            ]
+
+        class _IoCounters(ctypes.Structure):
+            _fields_ = [
+                ("ReadOperationCount", ctypes.c_uint64),
+                ("WriteOperationCount", ctypes.c_uint64),
+                ("OtherOperationCount", ctypes.c_uint64),
+                ("ReadTransferCount", ctypes.c_uint64),
+                ("WriteTransferCount", ctypes.c_uint64),
+                ("OtherTransferCount", ctypes.c_uint64),
+            ]
+
+        class _ExtendedLimit(ctypes.Structure):
+            _fields_ = [
+                ("BasicLimitInformation", _BasicLimit),
+                ("IoInfo", _IoCounters),
+                ("ProcessMemoryLimit", ctypes.c_size_t),
+                ("JobMemoryLimit", ctypes.c_size_t),
+                ("PeakProcessMemoryUsed", ctypes.c_size_t),
+                ("PeakJobMemoryUsed", ctypes.c_size_t),
+            ]
+
+        JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE = 0x2000
+        JobObjectExtendedLimitInformation = 9
+
+        info = _ExtendedLimit()
+        info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+
+        SetInformationJobObject = kernel32.SetInformationJobObject
+        SetInformationJobObject.restype = wintypes.BOOL
+        SetInformationJobObject.argtypes = [
+            wintypes.HANDLE, ctypes.c_int, wintypes.LPVOID, wintypes.DWORD,
+        ]
+
+        ok = SetInformationJobObject(
+            job,
+            JobObjectExtendedLimitInformation,
+            ctypes.byref(info),
+            ctypes.sizeof(info),
+        )
+        if not ok:
+            kernel32.CloseHandle(job)
+            return None
+
+        logger.info("Job Object tunnel creato (kill-on-close): frpc morira' col backend")
+        return job
+    except Exception as e:
+        logger.warning("Job Object non disponibile (%s) — fallback cleanup atexit/stop", e)
+        return None
+
+
+def _assign_process_to_job(job, pid: int) -> bool:
+    """Assegna il processo `pid` al Job Object. False su errore (non fatale)."""
+    if job is None:
+        return False
+    try:
+        import ctypes
+        from ctypes import wintypes
+
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+
+        PROCESS_SET_QUOTA = 0x0100
+        PROCESS_TERMINATE = 0x0001
+
+        OpenProcess = kernel32.OpenProcess
+        OpenProcess.restype = wintypes.HANDLE
+        OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+
+        hproc = OpenProcess(PROCESS_SET_QUOTA | PROCESS_TERMINATE, False, pid)
+        if not hproc:
+            return False
+        try:
+            AssignProcessToJobObject = kernel32.AssignProcessToJobObject
+            AssignProcessToJobObject.restype = wintypes.BOOL
+            AssignProcessToJobObject.argtypes = [wintypes.HANDLE, wintypes.HANDLE]
+            return bool(AssignProcessToJobObject(job, hproc))
+        finally:
+            kernel32.CloseHandle(hproc)
+    except Exception:
+        return False
 
 
 # ---------------------------------------------------------------------------
@@ -144,6 +278,10 @@ class TunnelManager:
         self._backoff = BackoffTimer()
         self._lock = threading.Lock()
 
+        # Job Object: garantisce che frpc venga ucciso dal SO quando il backend
+        # termina, anche su kill brusco (atexit/stop sotto sono il fallback).
+        self._job = _create_kill_on_close_job()
+
         # Registra cleanup alla chiusura dell'app (evita processi orfani)
         atexit.register(self._cleanup)
 
@@ -229,6 +367,17 @@ class TunnelManager:
                     self._process.pid,
                     " ".join(cmd),
                 )
+
+                # Aggancia frpc al Job Object: morira' col backend (no orfani)
+                if self._job is not None:
+                    if _assign_process_to_job(self._job, self._process.pid):
+                        logger.debug("frpc agganciato al Job Object (kill-on-close)")
+                    else:
+                        logger.warning(
+                            "Assegnazione frpc al Job Object fallita — "
+                            "cleanup affidato a atexit/stop"
+                        )
+
                 self.state = TunnelState.CONNECTED
                 self._backoff.record_success()
 

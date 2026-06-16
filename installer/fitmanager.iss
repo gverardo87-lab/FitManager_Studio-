@@ -20,7 +20,7 @@
 ; Versione iniettata da build-installer.sh via /DMyAppVersion=X.Y.Z (SSoT: api/__init__.py)
 ; Il #define sotto serve come fallback per compilazione manuale diretta.
 #ifndef MyAppVersion
-  #define MyAppVersion "1.0.5"
+  #define MyAppVersion "1.0.12"
 #endif
 
 [Setup]
@@ -41,6 +41,13 @@ PrivilegesRequired=lowest
 WizardStyle=modern
 DisableProgramGroupPage=yes
 UninstallDisplayName={#MyAppName}
+; Aggiornamento "a caldo": Restart Manager rileva i processi che bloccano i file
+; in fase di sovrascrittura (es. node.exe sul frontend) e li chiude — scoping per
+; lock di file, nessun danno a processi node.exe estranei. Il kill esplicito dei
+; binari app-specifici e' in [Code] PrepareToInstall (copre l'frpc.exe orfano che
+; RM puo' non rilevare perche' nipote detached senza finestra).
+CloseApplications=yes
+RestartApplications=no
 
 [Languages]
 Name: "italian"; MessagesFile: "compiler:Languages\Italian.isl"
@@ -100,3 +107,25 @@ Type: filesandordirs; Name: "{app}\backend"
 Type: filesandordirs; Name: "{app}\frontend"
 Type: filesandordirs; Name: "{app}\node"
 Type: files; Name: "{app}\launcher.bat"
+
+[Code]
+procedure KillProcess(const ExeName: String);
+var
+  ResultCode: Integer;
+begin
+  // /F = forza, /T = anche l'albero dei figli. Stesso utente -> nessun admin.
+  Exec(ExpandConstant('{sys}\taskkill.exe'), '/IM ' + ExeName + ' /F /T', '',
+       SW_HIDE, ewWaitUntilTerminated, ResultCode);
+end;
+
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+begin
+  // Termina i processi FitManager attivi PRIMA di sovrascrivere i binari.
+  // Causa storica (codice 5 / Accesso negato su backend\frpc.exe): un frpc.exe
+  // orfano da una versione precedente — nipote detached che sopravvive alla
+  // chiusura del launcher — tiene il lock sul proprio .exe. Entrambi i nomi sono
+  // specifici dell'app, quindi il kill per nome e' sicuro (nessun collaterale).
+  KillProcess('frpc.exe');
+  KillProcess('fitmanager.exe');
+  Result := '';
+end;
