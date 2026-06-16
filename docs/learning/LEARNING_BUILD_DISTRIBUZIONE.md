@@ -118,3 +118,31 @@ CloseApplications=yes
 **Failure mode:** se mi fido del solo `atexit`, l'orfano si forma silenziosamente a ogni chiusura brusca e non me ne accorgo — finché un *upgrade* deve sovrascrivere quel binario. Bug latente che esplode al primo aggiornamento dopo l'introduzione del binario nel bundle (qui: ~v1.0.10, prima a includere `frpc.exe`).
 
 **Domande aperte:** [ ] regola da estendere a ogni futuro processo a vita lunga spawnato dal backend (non solo `frpc`); [ ] su Linux/Box (Raspberry) l'equivalente è `prctl(PR_SET_PDEATHSIG)` o un cgroup/process group — da decidere quando il porting ARM toccherà il tunnel.
+
+---
+
+## Compilazione Nuitka e toolchain C — perché la build può rompersi senza che cambi il codice — 16/06/2026
+**Contesto:** spike SQLCipher per ADR-013/G1. Il build Nuitka dello spike falliva con `windows.h not found` sul path MinGW (quello che usa la build reale), mentre passava con MSVC. In più: la `venv/` di progetto non ha Nuitka installato, e *quale* compilatore ha prodotto v1.0.12 non è scritto da nessuna parte.
+
+**Livello 1 — Cosa fa:** Nuitka non "impacchetta" Python come faceva PyInstaller (che zippava interprete + sorgenti, decompilabili). Nuitka **traduce il Python in C**, poi un **compilatore C esterno** trasforma quel C in eseguibile nativo x86-64. Due passaggi, due strumenti: Nuitka è il traduttore, il compilatore C è l'operaio che monta il prodotto finale. Su Windows i compilatori C disponibili sono due: **MinGW** (gcc, che Nuitka si *auto-scarica*) e **MSVC** (`cl.exe`, che arriva con Visual Studio). La nostra build forza MinGW (`--mingw64` in `build-backend-nuitka.sh`).
+
+**Livello 2 — Perché lo voglio:** la cifratura compilata e l'anti-reverse engineering (ADR-007) *richiedono* Nuitka — è ciò che trasforma il codice in C nativo non decompilabile. Quindi il compilatore C non è un dettaglio: è nel **percorso critico** della consegna. Senza un compilatore funzionante, non esiste `fitmanager.exe`. E con G1 (SQLCipher) che aggiunge un pezzo nativo al bundle, "non riesco a buildare" diventa "non posso consegnare al PT Virgin". Secondo punto, più sottile: consegno a clienti paganti, quindi la build dev'essere **riproducibile** — stesse versioni in ingresso, stesso `.exe` in uscita, sempre.
+
+**Livello 3 — Perché funziona così sotto:** tre fondamentali trasferibili.
+1. **Cosa fa un compilatore C e cosa sono gli header di sistema.** Il C non sa nulla del sistema operativo: per chiamare un'API di Windows (aprire un file, creare un processo) il codice fa `#include <windows.h>`, un file di *intestazione* che *dichiara* quelle funzioni. `windows.h` (via inclusioni a catena) finisce dentro quasi ogni modulo → se manca, **non compila niente**, ed è il motivo per cui l'errore appariva su *tutti* i moduli, sqlcipher compreso (non era colpa di sqlcipher).
+2. **Come il compilatore trova gli header — l'include path.** Il compilatore cerca gli header in una lista di cartelle (l'*include path* / *sysroot*). Gli header di sistema vivono dentro la distribuzione del compilatore stesso (qui: `mingw64/x86_64-w64-mingw32/include/windows.h` — **c'era**). Il bug non era un file mancante ma un'**istruzione mancante**: Nuitka 4.1.2 non passava al gcc 15.2.0 (recentissimo) il percorso del proprio sysroot. Traduttore e operaio non si parlavano sulla lingua degli indirizzi.
+3. **Build riproducibile — gli input nascosti.** Il risultato di una build non dipende solo dal *tuo* codice, ma anche da componenti che non vedi nel repo: la versione di Nuitka, la versione del compilatore che si auto-scarica. Se questi non sono **fissati** (pinned) e **documentati**, sono input nascosti che cambiano sotto i piedi: un giorno Nuitka o il gcc si aggiornano, e la stessa identica sorgente non compila più. È il "works on my machine" elevato a livello sistemico — e la cura è congelare la toolchain come si congelano le dipendenze Python.
+
+**Comando/config reale:**
+```bash
+# build-backend-nuitka.sh forza MinGW:
+python -m nuitka --standalone --mingw64 ...        # path attuale: ROTTO con Nuitka 4.1.2 + gcc 15.2.0
+# Lo spike è passato con MSVC (VS 2022, cl 14.3 già sulla macchina):
+python -m nuitka --standalone --msvc=latest ...     # path alternativo: FUNZIONA
+# Input nascosto non fissato — Nuitka NON è in pyproject.toml né nella venv:
+#   il commento di build-backend-nuitka.sh dice "pip install nuitka" a mano
+```
+
+**Failure mode:** se la toolchain non è fissata, la build *passa oggi e si rompe domani senza che il codice sia cambiato* — perché un componente auto-scaricato (gcc) o installato a mano (Nuitka) è cambiato. Me ne accorgo **solo quando provo a buildare** (qui: durante lo spike), non da un test del codice. Per questo la prossima release con SQLCipher non può partire prima di aver scelto e congelato il compilatore: il rischio non è teorico, l'ho già toccato.
+
+**Domande aperte:** [ ] decidere il compilatore di build: **MSVC** (già provato, ma richiede VS Build Tools su ogni macchina che builda) vs **MinGW pinnato** (self-contained, ma combo Nuitka+gcc da trovare e fissare); [ ] congelare `nuitka==X.Y` in un `requirements-build.txt` + documentare il compilatore nel BUILD_LOG; [ ] verificare *come* fu buildata v1.0.12 (quale Nuitka/gcc) per capire se era già fragile o se il gcc 15.2.0 l'ha tirato lo spike. → tutto in (b), il doc toolchain dedicato.

@@ -37,6 +37,7 @@ Esempio:
 | [ADR-010](ADR-010-fitscan-computer-vision-biomechanics.md) | 2026-03-25 | Accettata | FitScan: Computer Vision per analisi corporea e biomeccanica |
 | [ADR-011](ADR-011-tunnel-frp-self-hosted.md) | 2026-06-09 | Accettata | Migrazione a Tunnel FRP self-hosted (SNI passthrough, instance_id, route separation, P2 data-blind) |
 | ADR-012 | — | Riservato (pending gate) | Routing media per classificazione del dato — hosting centrale clip (v2.2). In attesa del gate autotest (`docs/learning/LEARNING_METHOD.md` §9 / `LEARNING_MEDIA_CLOUD_ARCHITECTURE.md` §9). Razionale provvisorio in `docs/technical/DELTA_v2.2_EXERCISE_LIBRARY_STRATEGY.md` |
+| [ADR-013](ADR-013-crm-db-encryption-at-rest.md) | 2026-06-16 | **Proposed** (in design) | Cifratura a riposo di crm.db password-bound (SQLCipher + envelope DEK-KEK + boot a due fasi). Gate G1 di `docs/technical/PRE_DELIVERY_SECURITY_GATE.md`. Prerequisito bloccante: spike bundle SQLCipher in Nuitka |
 
 ## Flusso
 

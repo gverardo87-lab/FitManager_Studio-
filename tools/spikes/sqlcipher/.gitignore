@@ -1,0 +1,8 @@
+# Spike SQLCipher — artefatti pesanti/transitori (riproducibili dai due script)
+.venv/
+dist_spike/
+_probe/
+*.whl
+*.log
+nuitka-crash-report.xml
+*.build/
