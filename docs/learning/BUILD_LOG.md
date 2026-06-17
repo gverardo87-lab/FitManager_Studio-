@@ -531,3 +531,47 @@ Installando v1.0.11 sopra v1.0.10, l'installer si fermava con `ERROR_ACCESS_DENI
 **Concetto catturato:** `LEARNING_BUILD_DISTRIBUZIONE.md` (orfanaggio nipote detached + lock immagine .exe + Job Object). Incident: `INC-2026-06-15-installer-frpc-lock.md`. Pitfall #16 in `CLAUDE.md`.
 
 ---
+
+## Sicurezza pre-consegna — Gate G1 (cifratura crm.db)
+
+Filone aperto dopo la v1.0.12. **Trigger:** Alessio ha portato il **primo cliente reale assoluto** — un PT storico di Virgin Active. Primo deployment con **atleti e dati reali** (categoria art. 9 GDPR), in anticipo sul POC di settembre, e in quanto tale **fissa lo standard di consegna per tutti**. Il modello di rischio cambia: da "bug recuperabile con patch" a "data breach con notifica al Garante in 72h". L'energia di prodotto si sposta dal bundle esercizi (⏸️ congelato) al **gate di sicurezza pre-consegna**. Decisione founder: solidità prima del tempo → G1 **full, niente postura interim**.
+
+### 2026-06-16 — Gate nel repo + ADR-013 + spike SQLCipher
+
+**Gate.** `docs/technical/PRE_DELIVERY_SECURITY_GATE.md` (elaborato in chat dal founder) portato nel repo e annotato **contro il codice reale** (bridge rule v1.1): per ogni voce una riga "Stato nel codice". 12 voci in 3 tier — Tier 1 bloccanti (G1 cifratura crm.db, G2 rate limiter real-IP, G3 TLS valido, G4 lifecycle ShareToken), Tier 2 (G5 backup cifrato, G6 auth hardening, G7 audit superficie pubblica, G8 logging), Tier 3 legale (G9-G12). **Correzioni ground-truth:** G4 era già ~60% fatto (modello `ShareToken` ha già expires_at/used_at/revoca), G7 ha già lo strato edge (tunnel guard nel middleware Next) — il codice vince sul doc.
+
+**Verifiche nel codice (decisive per G1).** L'engine business nasce in chiaro (`database.py:101`): **crm.db è plaintext**. Il modello cifratura cataloghi (`db_crypto.py`) **non è riusabile** — chiave embedded nel binario (viola "possesso del file insufficiente") e read-only. Il **lifespan tocca crm.db prima di qualsiasi login** (auto-backup, `create_db_and_tables`, `schema_sync`, integrity) → una chiave password-bound impone un **boot a due fasi**. L'auto-backup produce oggi una **copia in chiaro** → tensione G1↔G5 da risolvere insieme.
+
+**ADR-013 (cifratura crm.db a riposo).** Decisione `A + E + F`: **SQLCipher** (cifratura trasparente full-DB, read-write) + **envelope DEK-KEK** (una DEK random wrappata dalla password → cambio password = ri-wrap istantaneo, e abilita una **recovery key**) + **boot a due fasi** (engine late-bound, crm.db sigillato fino al login, maintenance post-unlock). Scartate: cifratura per-campo (rompe le query) e OS/DPAPI (non password-bound, viola G1).
+
+**Spike SQLCipher — VALIDATO end-to-end** (`tools/spikes/sqlcipher/`, 3 cancelli):
+1. **Wheel Windows**: `sqlcipher3-0.6.2-cp312-win_amd64` esiste (amalgamation + crypto statica nel wheel; gli altri driver no).
+2. **Funzionale**: cifra realmente (ciphertext at-rest, cipher_version 4.12.0), chiave giusta/sbagliata, **integra con SQLAlchemy** via `module=` + `PRAGMA key` su connect (il pattern dell'app).
+3. **Nuitka standalone**: l'exe prodotto gira e decifra, Nuitka bundla `_sqlite3.pyd` + `libcrypto-3.dll` (5.2 MB) + `sqlite3.dll` (+~7 MB sull'installer, trascurabile).
+
+**Finding toolchain collaterale (indipendente da SQLCipher).** Lo spike è passato con **MSVC**; il path `--mingw64` della build reale è **rotto su questa macchina** (Nuitka 4.1.2 + gcc 15.2.0 → `windows.h not found` — Nuitka non passa il sysroot al gcc nuovo; `windows.h` *esiste* nel MinGW). Inoltre la **venv di progetto non ha Nuitka installato** → ambiente di build non catturato/riproducibile. Concetto catturato in `LEARNING_BUILD_DISTRIBUZIONE.md` (compilatore C, header di sistema, build riproducibili). → traccia **(b)** dedicata, prerequisito alla *release* con SQLCipher, non al design.
+
+### 2026-06-17 — ADR-013 accettato (decisioni founder)
+
+Chiusi i tre bivi di prodotto/rischio che il codice non poteva decidere:
+1. **Recovery key OBBLIGATORIA** al setup. Data-blind ⇒ **niente reset password lato server** (non esiste un nostro cloud): senza recovery, "password dimenticata" = perdita totale irreversibile di dati di atleti reali. Schermata inequivocabile al setup.
+2. **Portale atleti fail-closed** pre-unlock: gli endpoint pubblici servono i dati solo dopo che il trainer ha fatto login nella sessione (DEK in RAM per la vita del processo). "App aperta" non basta più: serve "trainer loggato".
+3. **Policy password minima** non fastidiosa (soglia lunghezza + blocco password comuni + indicatore di forza). La cifratura vale quanto la password: cifrare con una password debole è un falso senso di sicurezza.
+4. **Perimetro**: crm.db + backup cifrati; log fuori (→ G8 separato); cataloghi restano col modello ADR-007.
+5. **Migrazione** crm.db deployati (Chiara): cifra in-place al 1° login post-upgrade, **backup-first**.
+
+ADR-013 `proposed → accepted`. **Accettato = decisione presa, NON codice partito.**
+
+### ⏭️ RIPRESA — prossima sessione: DESIGN DI DETTAGLIO G1
+
+Punto di ripartenza lineare. L'implementazione di produzione parte **solo dopo** il design di dettaglio (follow-up 2-4 di ADR-013), che è il prossimo blocco:
+- **Formato chiave su disco**: blob `wrapped_DEK` + salt + recovery-KEK — struttura, dove vivono (file accanto al DB, non segreti), flusso setup (genera DEK + recovery key + schermata obbligatoria) vs login (deriva KEK → unwrap DEK).
+- **Refactor `database.py`**: engine business da singleton-all'import a **late-bound** (creato post-unlock); `get_session` post-unlock.
+- **Boot a due fasi**: spostare auto-backup / `create_db_and_tables` / `schema_sync` / integrity dal lifespan-startup alla **Fase B** (post-login). Pre-unlock il backend serve solo login/setup/health.
+- KDF (Argon2id/scrypt/PBKDF2), `PRAGMA rekey` per cambio password, `VACUUM INTO` cifrato per backup (G5), comportamento WAL su DB cifrato.
+
+Parallele, non in conflitto col design: **(b)** decisione toolchain build (MSVC vs MinGW pinnato + congelamento Nuitka); **(c)** G2 rate limiter real-IP (doc dedicato). La call con Alessio (lato tecnico gestita dal founder) definirà "il di più" del rapporto col PT Virgin.
+
+**Lavoro docs-only finora:** nessun codice di produzione toccato (solo script di spike standalone). Implementazione G1 al via dopo il design di dettaglio.
+
+---
