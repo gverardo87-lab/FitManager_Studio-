@@ -1,7 +1,7 @@
 # ADR-013 — Cifratura a riposo di crm.db (password-bound) + boot a due fasi
 
-- Date: 2026-06-16
-- Status: **proposed** (in design — da discutere e accettare prima di implementare)
+- Date: 2026-06-16 (creazione) · **accettato 2026-06-17**
+- Status: **accepted** — decisioni founder integrate (§Decision); spike prerequisito sciolto; design di dettaglio in apertura
 - Deciders: Giacomo Verardo (founder), Claude Code (architetto nel codebase)
 - Related: `docs/technical/PRE_DELIVERY_SECURITY_GATE.md` §G1 + §G5 · ADR-003 (separazione 3 DB) · ADR-007 (anti-RE, cifratura cataloghi)
 
@@ -104,11 +104,19 @@ Una **Data Encryption Key (DEK)** random genera la cifratura del DB; la DEK è *
 
 ## Decision
 
-**Proposta (da confermare con Giacomo): A + E + F.**
+**Decisione (accettata 2026-06-17): A + E + F.**
 
 > SQLCipher per la cifratura trasparente full-DB; envelope DEK-KEK con recovery key per la gestione chiave; boot a due fasi con engine late-bound. DPAPI/OS come difesa in profondità *opzionale*, mai come sostituto del password-binding.
 
 Razionale: è l'unica combinazione che soddisfa **tutti** i driver insieme — D1 (password-bound vero), D3 (read-write trasparente), D5 (una sola password), D6 (recovery senza buco), D8 (backup = ciphertext nativo). B e C falliscono D1 o D3; D fallisce D6.
+
+### Decisioni founder vincolanti (2026-06-17)
+
+1. **Recovery key OBBLIGATORIA.** Al setup il trainer riceve un codice di emergenza (KEK aggiuntiva che wrappa la stessa DEK) e DEVE confermare di averlo salvato prima di procedere. Motivazione: l'architettura data-blind **esclude per costruzione** qualsiasi reset password lato server (non esiste un nostro cloud). Senza recovery, "password dimenticata" = perdita totale e irreversibile dei dati di atleti reali → relazione chiusa + esposizione legale. La frizione di una schermata al setup è il prezzo più basso contro quel disastro. La schermata deve essere inequivocabile: "questa è la tua chiave di emergenza, salvala/stampala — senza, i dati sono irrecuperabili, nemmeno noi possiamo recuperarli".
+2. **Modello di disponibilità portale — confermato.** Gli endpoint pubblici servono i dati degli atleti **solo dopo** che il trainer ha fatto login (sblocco DB) nella sessione corrente; la DEK resta in RAM per la vita del processo. Pre-unlock il portale risponde **fail-closed** ("trainer non disponibile"). È coerente: il trainer deve essere "aperto per lavorare" perché i suoi atleti accedano ai loro dati. Da rendere esplicito in UX + runbook.
+3. **Policy password minima.** Soglia di robustezza *minima e non fastidiosa* al setup/cambio password: lunghezza minima (target ~10-12 caratteri) + blocco delle password ovvie/comuni + indicatore di forza che **guida** invece di sbarrare. NON le regole controproducenti "1 maiuscola 1 simbolo". Motivazione: la cifratura vale quanto la password — cifrare con `chiara123` è un falso senso di sicurezza. Complemento necessario di G1, calibrato per non violare il principio no-frizione oltre il minimo indispensabile.
+4. **Perimetro confermato.** Si cifrano **crm.db + i suoi backup** (G5 dentro questo design: ogni copia è ciphertext). I **log NON** contengono dati sensibili → fuori perimetro qui, trattati come problema separato in **G8** (disciplina di logging). I cataloghi `catalog.db`/`nutrition.db` restano col modello ADR-007 (chiave embedded, read-only) — non sono dati atleti.
+5. **Migrazione dei crm.db già deployati** (Chiara): al primo boot post-upgrade, login con password esistente → deriva chiave → **cifra in-place** il plaintext, con **backup preventivo obbligatorio** prima della trasformazione (regola non negoziabile: mai operazione distruttiva su DB senza `.bak`). Genera contestualmente la recovery key (con la schermata obbligatoria del punto 1).
 
 **Prerequisito bloccante prima di scrivere codice di produzione:** un **spike di validazione bundle** — verificare che SQLCipher (driver scelto) si compili e giri in **Nuitka standalone** (non solo in venv dev). Se SQLCipher non è bundle-abile in modo affidabile, si rivaluta (fallback possibile: SQLite "encryption extension" alternativa, o ripiego su Option B limitata ai campi ex art. 9 come second-best documentato). Questo spike va fatto **per primo**, perché può invalidare l'intero asse 1.
 
@@ -126,24 +134,25 @@ Razionale: è l'unica combinazione che soddisfa **tutti** i driver insieme — D
 - **Negative / costi:**
   - Refactor di `database.py` (engine late-bound) e del lifespan (maintenance post-login). Tocca `get_session`, backup, schema_sync.
   - Dipendenza nativa nel bundle (rischio build da validare per primo).
-  - **Accoppiamento portale atleti ↔ unlock (D7):** gli endpoint pubblici possono servire i dati solo dopo che il trainer ha sbloccato il DB almeno una volta dall'avvio. Va deciso il comportamento pre-unlock: il portale risponde "trainer non disponibile" (fail-closed, preferito) finché il trainer non apre l'app e fa login. In pratica oggi il backend gira finché la finestra del launcher è aperta a prescindere dal login → con G1, "app aperta" non basta più: serve "trainer loggato". Da rendere esplicito nell'UX e nel runbook.
-  - "Password dimenticata" **senza** recovery key = perdita dati irreversibile. La recovery key va presentata al setup con istruzioni chiare (frizione minima ma necessaria — eccezione consapevole al principio no-frizione, perché l'alternativa è peggiore).
+  - **Accoppiamento portale atleti ↔ unlock (D7) — DECISO (fail-closed):** gli endpoint pubblici servono i dati solo dopo che il trainer ha sbloccato il DB nella sessione corrente. Pre-unlock → "trainer non disponibile". "App aperta" non basta più: serve "trainer loggato". Da rendere esplicito in UX + runbook.
+  - **Recovery key OBBLIGATORIA (DECISO):** risolve il rischio "password dimenticata = perdita totale" senza riaprire il buco data-blind. Costo: una schermata di frizione al setup + il trainer deve custodire il codice offline. Se perde *sia* password *sia* recovery key → dati persi comunque (limite intrinseco e accettato del data-blind, da comunicare con chiarezza).
 - **Follow-up actions:**
-  1. **Spike bundle SQLCipher in Nuitka** (bloccante, per primo).
-  2. Design di dettaglio: formato blob `wrapped_DEK` + salt + dove vivono (file accanto al DB, non segreti); flusso setup (genera DEK + recovery key) vs login (unwrap).
+  1. ✅ **Spike bundle SQLCipher in Nuitka** (bloccante) — fatto 2026-06-16, asse A validato.
+  2. Design di dettaglio: formato blob `wrapped_DEK` + salt + recovery-KEK + dove vivono (file accanto al DB, non segreti); flusso setup (genera DEK + recovery key + **schermata obbligatoria**) vs login (unwrap).
   3. Refactor `database.py` → engine late-bound + `get_session` post-unlock.
   4. Spostare auto-backup/`create_db_and_tables`/`schema_sync`/integrity in Fase B.
   5. Cifrare il percorso di backup/restore/export (G5).
-  6. Definire comportamento portale pubblico pre-unlock (fail-closed).
-  7. Voce `BUILD_LOG.md`: meccanismo, dove vive la chiave, minacce coperte/non coperte.
-  8. Reset password (`current_password` già richiesto) → diventa ri-wrap della DEK.
-  9. Promuovere questo ADR a **accepted** quando lo spike è verde e il design di dettaglio è chiuso.
+  6. ✅ Comportamento portale pubblico pre-unlock — **deciso: fail-closed** (§Decision punto 2). Resta da implementare + UX/runbook.
+  7. Policy password al setup/cambio (§Decision punto 3): soglia minima + blocco password comuni + indicatore di forza.
+  8. Voce `BUILD_LOG.md`: meccanismo, dove vive la chiave, minacce coperte/non coperte.
+  9. Reset password (`current_password` già richiesto) → diventa ri-wrap della DEK.
+  10. Decisione toolchain di build (MSVC vs MinGW pinnato) + congelamento Nuitka — **(b)**, prerequisito alla release con SQLCipher (non al design).
 
 ---
 
 ## Rollback / Exit Strategy
 
-- Finché l'ADR è `proposed`, zero codice di produzione: rollback = nessuno.
+- ADR `accepted`: la *decisione* è presa, ma l'implementazione di produzione parte solo dopo il **design di dettaglio** (follow-up 2-4). Fino a lì, rollback = nessuno (nessun codice prodotto).
 - In implementazione, sviluppo su branch dedicato; il dev mode resta su crm.db plaintext (nessun impatto sul flusso di sviluppo). La migrazione dei DB già deployati (Chiara) avviene una-tantum allo sblocco: plaintext → cifrato, con backup preventivo (regola non negoziabile: mai operazione distruttiva su DB senza `.bak`).
 - Se lo spike bundle fallisce: si ripiega su Option B documentata come second-best, oppure si rivaluta il meccanismo, **senza** abbandonare il password-binding (D1 resta vincolante).
 
