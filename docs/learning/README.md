@@ -31,7 +31,8 @@ non contengono requisiti, non sono SSoT per nessun componente del sistema.
 | `LEARNING_FASE1_BASI_TEORICHE.md` | Preparazione Fase 1: JWT, instance_id, tunnel_manager, bundling |
 | `LEARNING_TUNNEL_MANAGER.md` | Casi edge processo figlio: sleep/wake, rete, backoff, health check e2e |
 | `LEARNING_PROGRAMMAZIONE.md` | Roadmap 5 layer: fondamenti → Python/JS → web → framework → codebase. + "Concetti dal campo" (lezioni di data-modeling dal lavoro reale) |
-| `LEARNING_BUILD_DISTRIBUZIONE.md` | Packaging e media pesanti: scope `dir()`/Nuitka, codec e compatibilità mobile, Inno Setup DiskSpanning/nocompression, banda asimmetrica e tunnel |
+| `LEARNING_BUILD_DISTRIBUZIONE.md` | Packaging e media pesanti: scope `dir()`/Nuitka, codec e compatibilità mobile, Inno Setup DiskSpanning/nocompression, banda asimmetrica e tunnel, orfani di processo + Job Object, toolchain Nuitka/C (compilatore, header di sistema, build riproducibili) |
+| `LEARNING_GIT_VERSIONAMENTO.md` | Git: modello dei rami (ref su DAG), fast-forward vs merge vs rebase, a cosa serve un ramo stabile, allineamento di `main`, modelli trunk-based vs linea di release |
 | `LEARNING_MEDIA_CLOUD_ARCHITECTURE.md` | Architettura "media su cloud, doppio flusso": routing per classificazione del dato, pagina a due origini, cache immutabile, P2 rienunciata, autotest §9. Appendice A: superficie di implementazione (`media.ts`, vincolo `catalog.db` read-only) |
 
 ## Convenzioni
