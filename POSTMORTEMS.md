@@ -3,6 +3,22 @@
 Questa non e' una fonte di regole nuove.
 Raccoglie solo lezioni concrete da errori gia' emersi, per evitare che la memoria orale torni a guidare il progetto.
 
+## 2026-06-18 - Fingerprint hardware parziale → blocco CRM ricorrente (P1)
+
+Problema:
+- Chiara (v1.0.10) si vede chiedere la `license.key` e bloccare il CRM "ogni tanto"; workaround scoperto da lei: riavviare l'app. Oltre 45 episodi in 3 mesi nei log (`Fingerprint parziale: 2/3 identificatori`)
+- `machine_id` della licenza = SHA-256 di 3 valori hardware letti via PowerShell/WMI. Su alcune macchine le query falliscono a intermittenza (sistema sotto carico, antivirus, risveglio da sleep) ritornando stringa vuota
+- `_compute_fingerprint` hashava anche un set PARZIALE (`sha256("cpu||bios")`) → hash diverso dal `machine_id` firmato → `wrong_machine` → 403 → redirect a `/licenza`. Ritornava `"unavailable"` SOLO se tutte e 3 fallivano
+- `get_machine_fingerprint` CACHAVA il valore (anche sbagliato) per tutta la vita del processo → sessione bloccata fino al riavvio (= "logout/login risolve")
+- correlazione "WiFi palestra" = coincidente, non causale (cambio rete ≈ risveglio da sleep, WMI fiacco)
+
+Lezioni:
+- un identificatore di sicurezza si calcola su un set COMPLETO e DETERMINISTICO, o si fallisce in modo esplicito e recuperabile (`unavailable`) — MAI degradare a "uso quello che ho": set variabile → hash variabili → mismatch. Degradazione parziale ok per un display, mai per un binding
+- NON cachare i fallimenti transitori di una risorsa esterna fiacca (WMI, rete, subprocess): congela il guasto per l'intera sessione. Retry + non memoizzare l'errore
+- un test che asserisce il comportamento bacato e' debito, non copertura: `test_partial_failure_still_produces_fingerprint` era VERDE e certificava il bug. Per la sicurezza l'invariante va derivata dal requisito, non dall'implementazione corrente
+- il dev environment e' il caso MIGLIORE (WMI sempre 3/3), non quello rappresentativo: per logica dipendente dall'OS, il test deve simulare il degrado
+- fix in v1.0.13 (3 parti: mai hash parziale, cache solo del completo, retry); hash 3/3 invariato → licenze esistenti restano valide; report: `docs/incidents/INC-2026-06-18-fingerprint-partial-license-lockout.md`
+
 ## 2026-06-15 - Upgrade installer bloccato da frpc.exe orfano (P2)
 
 Problema:

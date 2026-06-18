@@ -575,3 +575,19 @@ Parallele, non in conflitto col design: **(b)** decisione toolchain build (MSVC 
 **Lavoro docs-only finora:** nessun codice di produzione toccato (solo script di spike standalone). Implementazione G1 al via dopo il design di dettaglio.
 
 ---
+
+## Manutenzione — bugfix in produzione
+
+### 2026-06-18 — INC fingerprint parziale: blocco licenza ricorrente di Chiara
+
+Emerso durante la preparazione della consegna ad Alessio: Chiara (v1.0.10) lamentava che "ogni tanto" l'app le chiedeva la `license.key` bloccando il CRM, risolvendo con un riavvio, forse legato al WiFi della palestra.
+
+**Diagnosi sul codice, poi confermata sul log reale.** Il `machine_id` della licenza è `sha256` di 3 valori hardware via PowerShell/WMI. `_compute_fingerprint` hashava anche un set **parziale** (una query vuota → `sha256("cpu||bios")`) → hash diverso dal `machine_id` firmato → `wrong_machine` → 403 → `/licenza`. Aggravante: `get_machine_fingerprint` **cachava** il valore sbagliato per tutta la sessione → blocco fino al riavvio. La "correlazione WiFi" era coincidente (cambio rete ≈ risveglio da sleep → WMI fiacco). **Prova nel log di Chiara:** oltre 45 righe `WARNING ... Fingerprint parziale: 2/3 identificatori disponibili` in 3 mesi (2026-03-25 → 06-16). Il log del founder (macchina sana): zero — controllo negativo.
+
+**Il test certificava il bug.** `test_partial_failure_still_produces_fingerprint` asseriva `fp != "unavailable"` e `len==64` con 2/3 → falsa sicurezza. In dev WMI risponde sempre 3/3 → invisibile.
+
+**Fix (3 parti, `machine_fingerprint.py`):** (a) set parziale → `"unavailable"`, mai hash; (b) cache solo del completo 3/3, il fallimento non si congela → auto-heal alla richiesta dopo; (c) retry sui vuoti transitori (no-retry sul timeout). Hash 3/3 **invariato** → licenze esistenti (Chiara, Alessio) restano valide. Sicurezza ADR-005 (fail-closed) preservata.
+
+**Verifica:** `test_machine_fingerprint.py` 11/11 (test bacato capovolto + casi parziale/retry/auto-heal/timeout); suite completa **369 passed**; ruff clean. Presente in tutte le versioni → **gate per la consegna ad Alessio**: base per **v1.0.13** che sblocca Chiara e dà ad Alessio una versione pulita. Incidente: `docs/incidents/INC-2026-06-18-fingerprint-partial-license-lockout.md`. Pitfall #17 in `CLAUDE.md`. Post-mortem in `POSTMORTEMS.md`.
+
+---
