@@ -590,4 +590,14 @@ Emerso durante la preparazione della consegna ad Alessio: Chiara (v1.0.10) lamen
 
 **Verifica:** `test_machine_fingerprint.py` 11/11 (test bacato capovolto + casi parziale/retry/auto-heal/timeout); suite completa **369 passed**; ruff clean. Presente in tutte le versioni → **gate per la consegna ad Alessio**: base per **v1.0.13** che sblocca Chiara e dà ad Alessio una versione pulita. Incidente: `docs/incidents/INC-2026-06-18-fingerprint-partial-license-lockout.md`. Pitfall #17 in `CLAUDE.md`. Post-mortem in `POSTMORTEMS.md`.
 
+### 2026-06-18 — Release v1.0.13 (build MSVC) + 🎯 milestone: tunnel FRP in produzione con un cliente reale
+
+**Build.** v1.0.13 prodotta con la pipeline ADR-004, ma per la **prima volta con MSVC** (`--msvc=latest`) invece di MinGW64: il gcc winlibs 15.2.0 in cache è incompatibile con Nuitka 4.1.2 (`windows.h not found`), MSVC (VS 2022, cl 14.3) compila l'app intera al primo colpo. Risolve di fatto il finding toolchain (b). Pipeline 5/5: preflight (369 test), build, verify (smoke 5/5), seal (`FitManager_Setup_1.0.13.exe`, SHA `948b5e42…eb88`), tag `v1.0.13`.
+
+**Licenza.** Nuova `license.key` per Alessio: claim estratti dalla v1.0.7 (machine_id `4c06bb47…0f37` **invariato**, tier pro, client_id), aggiunto `instance_id=alessio-crociani` (attiva il tunnel → `alessio-crociani.fitmanagerstudio.com`), 12 mesi (scad. 2027-06-13). Firma valida (verify → `wrong_machine` qui = atteso, è la macchina di Alessio).
+
+**🎯 Milestone — la data-blindness esce dalla teoria.** Consegna v1.0.13 ad Alessio (primo partner) via WeTransfer, **testata dal vivo in call**: un cliente esterno ha aperto un **link scheda pubblico reale** instradato attraverso il tunnel FRP self-hosted (VPS edge Hetzner, SNI passthrough, P2 data-blind), terminato sul PC del trainer. È la **prima validazione sul campo** dell'architettura tunnel (Fase 1) con un trainer e un link condiviso reali — non più solo test e2e interni. Registrato in `docs/operations/DEPLOYMENTS.md` (con callout milestone). Residuo noto: cert self-signed (G3/Fase 2) → eventuali avvisi browser fino a Let's Encrypt.
+
+**Modello rami (B):** v1.0.13 = release **verificata sul campo** (test live su macchina reale di Alessio) → trigger di allineamento `main`. `main` portato a includere v1.0.13 + record di deployment.
+
 ---
