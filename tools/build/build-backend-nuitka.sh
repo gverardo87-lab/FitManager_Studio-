@@ -5,7 +5,11 @@
 #
 # Prerequisiti:
 #   pip install nuitka
-#   Nuitka scarica MinGW64 automaticamente al primo build.
+#   Compilatore C: MSVC (Visual Studio 2022 con C++ build tools) — `--msvc=latest`.
+#   NB: il path MinGW (`--mingw64`) e' stato sostituito da MSVC perche' il gcc
+#   winlibs corrente (15.2.0) e' incompatibile con Nuitka 4.1.2 (windows.h not
+#   found). Vedi INC toolchain / SPIKE_REPORT.md §4. Rollback a `--mingw64` solo
+#   con un gcc compatibile in cache.
 #   Build time: 10-30 min (vs 1-2 min PyInstaller).
 #
 # Rollback: usa build-backend.sh (PyInstaller) se bloccante.
@@ -53,7 +57,7 @@ cd "$ROOT"
 
 "$PYTHON_BIN" -m nuitka \
     --standalone \
-    --mingw64 \
+    --msvc=latest \
     --output-dir="$ROOT/dist" \
     --output-filename=fitmanager.exe \
     --include-package=api \
