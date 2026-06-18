@@ -22,6 +22,23 @@ e il progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 - **Licenza**: compatibile / richiede rinnovo
 -->
 
+## [1.0.13] — 2026-06-18
+
+### Corretto
+- Fingerprint hardware parziale bloccava l'accesso al CRM in modo intermittente (INC-2026-06-18): una query WMI vuota a intermittenza (sistema sotto carico, antivirus, risveglio da sleep) produceva un fingerprint diverso dal `machine_id` firmato → falso "wrong_machine" → richiesta ripetuta della `license.key`. Fix: mai hash su set parziale (`unavailable` fail-closed), cache solo del fingerprint completo 3/3 (auto-heal alla richiesta successiva), retry sui vuoti transitori. L'hash 3/3 resta invariato → licenze esistenti valide.
+
+### Modificato
+- Build backend Nuitka via MSVC (Visual Studio) invece di MinGW64 (gcc winlibs corrente incompatibile con Nuitka)
+
+### Upgrade (da v1.0.12)
+- **DB**: nessuna migrazione (schema_sync invariato)
+- **Backup**: automatico al primo avvio
+- **Azioni manuali**: nessuna
+- **Breaking**: nessuno
+- **Licenza**: compatibile — il fingerprint 3/3 è invariato, le licenze già firmate restano valide
+
+> Nota: le release 1.0.9–1.0.12 non hanno una sezione dedicata in questo file (debito changelog pregresso). Storico tecnico completo in `docs/learning/BUILD_LOG.md` e `docs/operations/DEPLOYMENTS.md`.
+
 ## [1.0.8] — 2026-04-19
 
 ### Aggiunto
