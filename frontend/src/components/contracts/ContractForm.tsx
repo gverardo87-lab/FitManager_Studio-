@@ -15,7 +15,7 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { format, parseISO, addDays, differenceInDays } from "date-fns";
+import { format, parseISO, addDays, differenceInDays, startOfDay } from "date-fns";
 import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -113,13 +113,18 @@ export function ContractForm({
   const isRenewal = !!renewalDefaults;
   const { data: clientsData } = useClients();
 
-  // Rinnovo: il figlio parte oggi e dura quanto il padre (§A.2 — derivata, modificabile).
+  // Rinnovo = continuazione sequenziale del padre (§A.2 — derivata, modificabile):
+  // - il figlio parte il giorno DOPO la scadenza del padre (continuita', non parallelo);
+  // - se il padre e' gia' scaduto (rinnovo tardivo) parte da oggi, mai nel passato → max(scadenza+1, oggi);
+  // - dura quanto il padre (stesso numero di giorni).
   let renewalStart: Date | undefined;
   let renewalEnd: Date | undefined;
   if (isRenewal) {
-    renewalStart = new Date();
+    const today = startOfDay(new Date());
     const parentStart = renewalDefaults?.data_inizio ? parseISO(renewalDefaults.data_inizio) : undefined;
     const parentEnd = renewalDefaults?.data_scadenza ? parseISO(renewalDefaults.data_scadenza) : undefined;
+    const dayAfterParent = parentEnd ? addDays(parentEnd, 1) : undefined;
+    renewalStart = dayAfterParent && dayAfterParent > today ? dayAfterParent : today;
     if (parentStart && parentEnd) {
       const durationDays = differenceInDays(parentEnd, parentStart);
       if (durationDays > 0) renewalEnd = addDays(renewalStart, durationDays);
