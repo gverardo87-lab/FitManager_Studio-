@@ -34,6 +34,7 @@ non contengono requisiti, non sono SSoT per nessun componente del sistema.
 | `LEARNING_BUILD_DISTRIBUZIONE.md` | Packaging e media pesanti: scope `dir()`/Nuitka, codec e compatibilità mobile, Inno Setup DiskSpanning/nocompression, banda asimmetrica e tunnel, orfani di processo + Job Object, toolchain Nuitka/C (compilatore, header di sistema, build riproducibili) |
 | `LEARNING_GIT_VERSIONAMENTO.md` | Git: modello dei rami (ref su DAG), fast-forward vs merge vs rebase, a cosa serve un ramo stabile, allineamento di `main`, modelli trunk-based vs linea di release |
 | `LEARNING_MEDIA_CLOUD_ARCHITECTURE.md` | Architettura "media su cloud, doppio flusso": routing per classificazione del dato, pagina a due origini, cache immutabile, P2 rienunciata, autotest §9. Appendice A: superficie di implementazione (`media.ts`, vincolo `catalog.db` read-only) |
+| `LEARNING_APP_ARCHITECTURE.md` | Modellazione del dominio nel codebase: rinnovo sequenziale vs parallelo, semantica delle date (scadenza+1 inclusivo vs period-end esclusivo), convenzioni CRM (Salesforce CPQ / Stripe / Mindbody) |
 
 ## Convenzioni
 

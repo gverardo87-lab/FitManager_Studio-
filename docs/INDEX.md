@@ -116,6 +116,7 @@ Formazione del founder-developer in parallelo allo sviluppo. Concetti tecnici st
 | `LEARNING_METHOD.md` | Metodo di studio: 4 principi, flusso cattura/elaborazione, ponte con Claude Code |
 | `BUILD_LOG.md` | Diario cronologico: cosa ho fatto e quando (Fase 0 tunnel in corso) |
 | `LEARNING_LINUX_SYSADMIN.md` | Concetti: crittografia asimmetrica, chiavi SSH, passphrase |
+| `LEARNING_APP_ARCHITECTURE.md` | Dominio nel codebase: rinnovo sequenziale, semantica date, convenzioni CRM |
 
 ---
 

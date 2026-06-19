@@ -1,12 +1,17 @@
 # SPEC — Rinnovo contratto + Cruscotto "Contratti da pianificare"
 
-**Versione:** 1.2
+**Versione:** 1.3
 **Stato:** Vincolante sui criteri di accettazione — **non vincolante sull'implementazione**
 **Owner:** Giacomo Verardo (AVGV Technologies)
 **Destinatario:** Claude Code (architetto finale nel codebase)
 **Collocazione:** `docs/technical/`
 **Data:** 2026-06-19
 **Tassonomia di riferimento:** `TASSONOMIA_FINANZIARIA.md` (vocabolario condiviso, vincolante)
+
+> **Nota di versione 1.3 (2026-06-19):** durante l'implementazione (Step 1, Criterio A) emersa la
+> regola **sequenziale** del rinnovo — il figlio inizia il giorno dopo la scadenza del padre
+> (`max(scadenza+1, oggi)`), non oggi in parallelo. Riflessa in §A.2 e §5 (decisione #6). Concetto
+> catturato in `docs/learning/LEARNING_APP_ARCHITECTURE.md`.
 
 > **Nota di versione 1.2 (2026-06-19):** secondo giro di rilievi Claude Code — chiarito che nella
 > formula "Da pianificare" (§B.4) "rate non saldate" = `stato ∈ {PENDENTE, PARZIALE}` (non solo
@@ -92,8 +97,19 @@ costringere il trainer a re-immettere informazioni che il sistema già conosce, 
 
 - Alla conferma del rinnovo, il contratto-figlio è creato con `rinnovo_di` = id del padre.
 - Il figlio **pre-popola dal padre** i campi tipicamente invariati: `tipo_pacchetto`,
-  `prezzo_totale`, e la `data_scadenza` derivata dalla durata del padre. Tutti i campi pre-popolati
-  restano **modificabili** dal trainer prima della conferma.
+  `prezzo_totale`, e le date derivate. Tutti i campi pre-popolati restano **modificabili** dal
+  trainer prima della conferma.
+- **Date derivate — il rinnovo è sequenziale, non parallelo** (chiarifica v1.3, decisione 2026-06-19).
+  Il rinnovo è la *continuazione* del rapporto: nel ~90% dei casi il nuovo pacchetto inizia quando
+  finisce il precedente. Default:
+  - `data_inizio figlio = max(data_scadenza padre + 1 giorno, oggi)` — il giorno dopo la scadenza del
+    padre (continuità); se il padre è **già scaduto** (rinnovo tardivo) parte da **oggi**, mai nel
+    passato.
+  - `data_scadenza figlio = data_inizio figlio + durata del padre` (stesso numero di giorni).
+  - Razionale di settore: convenzione **date-intere** = `scadenza + 1` (Salesforce CPQ); la guardia
+    `max(…, oggi)` sul contratto scaduto replica Mindbody/Glofox. I sistemi a *timestamp*
+    (Stripe/Chargebee) usano il period-end esclusivo senza +1 — modello non applicabile qui
+    (`data_scadenza` è un `date`, ultimo giorno inclusivo).
 - I crediti **non si trasferiscono**: il figlio nasce con i propri `crediti_totali` e
   `crediti_usati = 0`, indipendenti dal padre. (Decisione di prodotto, 2026-06-19.)
 - **Sicurezza — vincolo di non-regressione:** il flusso di rinnovo segue lo **stesso pattern di
@@ -202,6 +218,7 @@ aperti", "Da cadenzare": scelta riservata a Claude Code e all'orecchio nativo di
 | 1 | Crediti su rinnovo | **Separati**, nessun travaso. Figlio parte da `crediti_usati = 0`. |
 | 2 | Importo rata su rinnovo | Scelto **dopo** la creazione del contratto, nello step piano rate. |
 | 3 | Data scadenza rata | Pre-popolata dalla durata del padre, **modificabile**. |
+| 6 | Date contratto figlio (v1.3) | **Sequenziale**: `data_inizio = max(scadenza padre + 1, oggi)`, `data_scadenza = inizio + durata padre`. Modificabili. |
 | 4 | Soglia alert "da pianificare" | **Caso 1 soltanto**: contratto attivo con residuo e **zero** rate. |
 | 5 | Distinzione billed vs da-pianificare nel cruscotto | **Sì** (booked / billed / da pianificare). |
 
