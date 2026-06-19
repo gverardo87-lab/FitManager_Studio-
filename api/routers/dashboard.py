@@ -599,13 +599,15 @@ def get_dashboard_alerts(
             link="/agenda",
         ))
 
-    # ── 2. Contratti senza piano pagamento (orfani) ──
+    # ── 2. Contratti da pianificare (residuo positivo, zero rate) ──
+    # SPEC_RINNOVO §B.3: residuo POSITIVO (prezzo > versato), non prezzo > 0 —
+    # un contratto saldato in acconto senza rate non ha nulla da pianificare.
     orphan_count = session.execute(text("""
         SELECT COUNT(*) FROM contratti c
         WHERE c.trainer_id = :tid
           AND c.deleted_at IS NULL
           AND c.chiuso = 0
-          AND COALESCE(c.prezzo_totale, 0) > 0
+          AND COALESCE(c.prezzo_totale, 0) > COALESCE(c.totale_versato, 0)
           AND NOT EXISTS (
               SELECT 1 FROM rate_programmate r
               WHERE r.id_contratto = c.id
