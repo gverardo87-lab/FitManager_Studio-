@@ -194,7 +194,7 @@ movements = session.exec(
 ```
 
 ### Contract Integrity Engine
-Il contratto e' il nodo centrale del sistema. 7 livelli di protezione:
+Il contratto e' il nodo centrale del sistema. 12 livelli di protezione:
 
 1. **Residual validation** (`create_rate`, `update_rate`): via `_cap_rateizzabile()` — `acconto = totale_versato - sum(saldato)`, `cap = prezzo - acconto`, `spazio = cap - sum(previsto)`. `update_rate` usa `exclude_rate_id` per escludere la rata in modifica dal calcolo
 2. **Chiuso guard**: `create_rate`, `generate_payment_plan`, `create_event(id_contratto)`

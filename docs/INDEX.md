@@ -70,6 +70,10 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 | `DEPLOYMENT_PLAN.md` | Piano deploy: PyInstaller/Nuitka, standalone, Inno Setup |
 | `NUTRITION_ENGINE_V3.md` | Architettura Nutrition Engine v3 |
 | `PRE_DELIVERY_AUDIT_2026_04_17.md` | Audit tecnico 360° pre-consegna ad Alessio (2026-04-17) |
+| `PRE_DELIVERY_SECURITY_GATE.md` | Gate di sicurezza pre-consegna: 12 voci in 3 tier (G1-G12), stato annotato contro il codice reale |
+| `TASSONOMIA_FINANZIARIA.md` | **Vocabolario finanziario condiviso (vincolante su concetti e formule):** 3 assi (liquidità reale/cassa, posizione commerciale/competenza, stato di pianificazione), esclusioni dalla cassa, riconciliazione. Referenziato dalle 2 spec finanziarie |
+| `SPEC_RINNOVO_E_CONTRATTI_DA_PIANIFICARE.md` | Spec: flusso di rinnovo (eredità dati + percorso guidato al piano rate) + vista Contract-first "contratti da pianificare" (denaro dovuto oggi invisibile all'aging) |
+| `SPEC_GESTIONE_FINANZIARIA_TEMPORALE.md` | Spec: asse temporale della finanza — aggregazione per periodo (cassa), trend + competenza affiancata, composizione (nuovi/rinnovi, acconti/rate) |
 
 ---
 
@@ -87,7 +91,7 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 
 ## adr/ — Architecture Decision Records
 
-11 ADR attivi (ADR-001 → ADR-011, senza ADR-002). Indice in `adr/README.md`.
+12 ADR attivi (ADR-001 → ADR-014; ADR-002 rimossa come obsoleta, ADR-012 riservato). Ultimo: ADR-014 (gestione finanziaria — tassonomia cassa/competenza + vista Contract-first, accettata 2026-06-19). Indice in `adr/README.md`.
 
 ## incidents/ — Post-mortem
 
