@@ -601,3 +601,31 @@ Emerso durante la preparazione della consegna ad Alessio: Chiara (v1.0.10) lamen
 **Modello rami (B):** v1.0.13 = release **verificata sul campo** (test live su macchina reale di Alessio) → trigger di allineamento `main`. `main` portato a includere v1.0.13 + record di deployment.
 
 ---
+
+## Filone — Gestione finanziaria avanzata (parallelo a G1)
+
+Nuovo filone aperto dopo la v1.0.13. **Trigger:** dal primo cliente reale (efficienza-driven) emergono due lacune della gestione finanziaria — denaro dovuto che il software non sollecita mai (contratti senza piano rate, caso "Chiara") e assenza dell'asse temporale (fotografia, non film). Prima modifica alla logica finanziaria dal 2026-06-08 (INC-2026-06-08). Differenziatore competitivo: la gestione economico-finanziaria è lo spazio scoperto dai leader anglosassoni.
+
+### 2026-06-19 — Spec + tassonomia + ADR-014 + allineamento governance (docs-only)
+
+**Ponte ritorno (chat → Code → chat).** Tre spec elaborate in chat, analizzate da Claude Code contro il codice reale, rilievi rimandati in chat e reincorporati in **due giri**:
+- Giro 1: (1) incassato per periodo ≠ `sum(ENTRATA)` — gli storni (`STORNO_SPESA_FISSA`, ENTRATA non-ricavo) vanno esclusi; `kpi_incassato` è `sum(totale_versato)`, non somma del mastro. (2) "Da pianificare" sul **residuo**, non "Booked − Billed" letterale (doppia-contava acconti e rate saldate). (3) `data_vendita` legacy/nullable → serie competenza best-effort.
+- Giro 2: (1) "rate non saldate" nella formula = `stato ∈ {PENDENTE, PARZIALE}`, non solo PENDENTE (allineato all'aging; il residuo delle PARZIALI è già a scadenza). (2) bucket cassa come **partizione complementare** su `id_contratto` (esaustiva per costruzione).
+
+**Verifiche decisive nel codice:** la formula "da pianificare" sul residuo **coincide con `importo_disallineamento`** già calcolato in `_to_response_with_rates` (`contracts.py:49`); `STORNO_SPESA_FISSA` ha `id_contratto = NULL` → l'esclusione "altri incassi al netto storni" lo intercetta.
+
+**Governance allineata PRIMA del codice** (metodo: documentazione e governance alla realtà prima di nuovo sviluppo). Disallineamenti trovati e corretti: `docs/INDEX.md` non citava le 3 spec né `PRE_DELIVERY_SECURITY_GATE.md` e fermava gli ADR a 011; `api/CLAUDE.md` diceva "7 livelli" di Contract Integrity mentre la lista ne enumera 12. Creato **ADR-014** (gestione finanziaria: tassonomia cassa/competenza + vista Contract-first + confine di posizionamento "cash management neutro"), che referenzia le 3 spec senza duplicarle. **Commit `96b5ccc`** (docs-only, pre-commit ruff clean).
+
+**Confine di posizionamento (ADR-014 §Decision punto 5):** il software espone visibilità sulla liquidità reale ("Altri incassi" = ENTRATA fuori contratto), NON nomina né struttura alcuna nozione fiscale. Nessun campo/label codifica lo stato dichiarato/non dichiarato: solo "con/senza contratto". Da validare con tributarista.
+
+### 2026-06-19 — Piano d'implementazione SPEC_RINNOVO (prima del codice)
+
+**Metodo macro-prima-del-micro.** Prima di toccare codice, prodotto un piano ancorato al codice reale (esplorazione 2 agenti su backend + frontend): `docs/technical/IMPL_PLAN_SPEC_RINNOVO.md`.
+
+**Scoperta che riduce il perimetro:** la categoria alert `orphan_contracts` esiste già (`dashboard.py:596-618`, commit `bc28e3c`) e copre quasi il Criterio B. Decisione: **raffinarla** (filtro a residuo positivo + endpoint di risoluzione inline + Sheet azionabile + cruscotto), non creare una categoria duplicata. Criterio A: backend `renew_contract` già conforme alla sicurezza; manca solo il pre-fill `data_scadenza` derivata e la **navigazione guidata post-rinnovo** al piano rate (oggi il trainer resta su `/rinnovi-incassi`).
+
+**Decisioni di prodotto bloccate:** (1) raffina `orphan_contracts`; (2) cruscotto venduto/a-rate/da-pianificare nella **pagina lista `/contratti`**; (3) post-rinnovo → `/contratti/{nuovo_id}?tab=payments`.
+
+**Sequenza:** Step 1 Criterio A (frontend) → Step 2 backend B1+B5 → Step 3 endpoint B2 → Step 4 frontend B3+B4+B6 → Step 5 test (`test_contracts_to_plan.py`). Implementazione al via dallo Step 1.
+
+---

@@ -74,6 +74,7 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 | `TASSONOMIA_FINANZIARIA.md` | **Vocabolario finanziario condiviso (vincolante su concetti e formule):** 3 assi (liquidità reale/cassa, posizione commerciale/competenza, stato di pianificazione), esclusioni dalla cassa, riconciliazione. Referenziato dalle 2 spec finanziarie |
 | `SPEC_RINNOVO_E_CONTRATTI_DA_PIANIFICARE.md` | Spec: flusso di rinnovo (eredità dati + percorso guidato al piano rate) + vista Contract-first "contratti da pianificare" (denaro dovuto oggi invisibile all'aging) |
 | `SPEC_GESTIONE_FINANZIARIA_TEMPORALE.md` | Spec: asse temporale della finanza — aggregazione per periodo (cassa), trend + competenza affiancata, composizione (nuovi/rinnovi, acconti/rate) |
+| `IMPL_PLAN_SPEC_RINNOVO.md` | Piano d'implementazione di SPEC_RINNOVO (ancorato al codice, decisioni bloccate, sequenza step). Materiale di lavoro — superato dal codice a implementazione conclusa |
 
 ---
 
