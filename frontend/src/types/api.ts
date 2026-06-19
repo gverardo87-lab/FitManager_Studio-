@@ -998,6 +998,7 @@ export interface OverdueRateItem {
 export interface ExpiringContractItem {
   contract_id: number;
   tipo_pacchetto: string | null;
+  data_inizio: string | null; // ISO date — durata padre per derivare la scadenza del rinnovo
   data_scadenza: string; // ISO date
   giorni_rimasti: number;
   crediti_totali: number;

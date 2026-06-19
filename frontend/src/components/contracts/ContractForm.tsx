@@ -15,7 +15,7 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, addDays, differenceInDays } from "date-fns";
 import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -87,6 +87,9 @@ export interface RenewalDefaults {
   tipo_pacchetto: string;
   crediti_totali: number;
   prezzo_totale: number;
+  /** Date del contratto-padre: usate solo per derivare la durata del rinnovo (§A.2). */
+  data_inizio?: string | null;
+  data_scadenza?: string | null;
 }
 
 interface ContractFormProps {
@@ -110,6 +113,19 @@ export function ContractForm({
   const isRenewal = !!renewalDefaults;
   const { data: clientsData } = useClients();
 
+  // Rinnovo: il figlio parte oggi e dura quanto il padre (§A.2 — derivata, modificabile).
+  let renewalStart: Date | undefined;
+  let renewalEnd: Date | undefined;
+  if (isRenewal) {
+    renewalStart = new Date();
+    const parentStart = renewalDefaults?.data_inizio ? parseISO(renewalDefaults.data_inizio) : undefined;
+    const parentEnd = renewalDefaults?.data_scadenza ? parseISO(renewalDefaults.data_scadenza) : undefined;
+    if (parentStart && parentEnd) {
+      const durationDays = differenceInDays(parentEnd, parentStart);
+      if (durationDays > 0) renewalEnd = addDays(renewalStart, durationDays);
+    }
+  }
+
   const {
     register,
     handleSubmit,
@@ -126,10 +142,10 @@ export function ContractForm({
       prezzo_totale: contract?.prezzo_totale ?? renewalDefaults?.prezzo_totale ?? 0,
       data_inizio: contract?.data_inizio
         ? parseISO(contract.data_inizio)
-        : undefined,
+        : renewalStart,
       data_scadenza: contract?.data_scadenza
         ? parseISO(contract.data_scadenza)
-        : undefined,
+        : renewalEnd,
       acconto: 0,
       metodo_acconto: undefined,
       note: contract?.note ?? "",

@@ -9,6 +9,7 @@
  */
 
 import { useCallback, useRef } from "react";
+import { useRouter } from "next/navigation";
 
 import {
   Sheet,
@@ -38,6 +39,7 @@ export function ContractSheet({
   renewContractId,
   renewalDefaults,
 }: ContractSheetProps) {
+  const router = useRouter();
   const isEdit = !!contract;
   const isRenewal = !!renewContractId;
   const createMutation = useCreateContract();
@@ -63,7 +65,19 @@ export function ContractSheet({
       const { id_cliente: _id_cliente, acconto: _acconto, metodo_acconto: _metodo_acconto, ...updatePayload } = values;
       updateMutation.mutate({ id: contract.id, ...updatePayload }, { onSuccess });
     } else if (isRenewal && renewContractId) {
-      renewMutation.mutate({ contractId: renewContractId, ...values }, { onSuccess });
+      // Dopo il rinnovo, conduci il trainer direttamente al piano rate del nuovo
+      // contratto (§A — passaggio guidato). La tab "Piano Pagamenti" e' il default
+      // del dettaglio: con zero rate apre subito il form di generazione.
+      renewMutation.mutate(
+        { contractId: renewContractId, ...values },
+        {
+          onSuccess: (newContract) => {
+            dirtyRef.current = false;
+            onOpenChange(false);
+            if (newContract?.id) router.push(`/contratti/${newContract.id}?from=rinnovi-incassi`);
+          },
+        },
+      );
     } else {
       createMutation.mutate(values, { onSuccess });
     }

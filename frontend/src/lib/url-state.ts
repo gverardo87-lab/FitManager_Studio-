@@ -97,6 +97,7 @@ const SIMPLE_BACK_ROUTES: Record<string, BackNavigation> = {
   monitoraggio: { href: "/monitoraggio", label: "Torna a Monitoraggio" },
   allenamenti: { href: "/allenamenti", label: "Torna a Monitoraggio Allenamenti" },
   schede: { href: "/schede", label: "Torna alle schede" },
+  "rinnovi-incassi": { href: "/rinnovi-incassi", label: "Torna a Rinnovi & Incassi" },
 };
 
 export function resolveBackNavigation(

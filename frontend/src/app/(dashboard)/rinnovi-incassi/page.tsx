@@ -452,6 +452,8 @@ export default function RinnoviIncassiPage() {
           tipo_pacchetto: renewItem.tipo_pacchetto ?? "",
           crediti_totali: renewItem.crediti_totali,
           prezzo_totale: renewItem.prezzo_totale ?? 0,
+          data_inizio: renewItem.data_inizio,
+          data_scadenza: renewItem.data_scadenza,
         } : undefined}
       />
     </div>

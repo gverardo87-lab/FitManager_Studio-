@@ -380,9 +380,15 @@ def get_expiring_contracts(
             scadenza = date.fromisoformat(scadenza)
         giorni_rimasti = (scadenza - today).days if isinstance(scadenza, date) else 0
 
+        # data_inizio del padre: serve al rinnovo per derivare la durata (SPEC_RINNOVO §A.2)
+        inizio = contract.data_inizio
+        if isinstance(inizio, str):
+            inizio = date.fromisoformat(inizio)
+
         items.append({
             "contract_id": contract.id,
             "tipo_pacchetto": contract.tipo_pacchetto,
+            "data_inizio": inizio.isoformat() if isinstance(inizio, date) else None,
             "data_scadenza": scadenza.isoformat() if isinstance(scadenza, date) else str(scadenza),
             "giorni_rimasti": giorni_rimasti,
             "crediti_totali": totali,
