@@ -18,7 +18,7 @@ def test_health_returns_enriched_runtime_metadata(client, test_engine, monkeypat
         "api.services.system_runtime.APP_STARTED_AT",
         datetime(2026, 3, 10, 6, 0, 0, tzinfo=timezone.utc),
     )
-    monkeypatch.setattr("api.services.system_runtime.DATABASE_URL", "sqlite:///data/crm_dev.db")
+    # app_mode ora deriva da is_compiled() (non dal nome DB): in test = sorgente = "development".
     monkeypatch.setattr(
         "api.services.system_runtime.check_license",
         lambda: LicenseCheckResult(status="valid", message="Licenza valida"),

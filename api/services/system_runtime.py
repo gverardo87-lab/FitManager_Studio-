@@ -7,7 +7,7 @@ from pathlib import Path
 from sqlmodel import Session, text
 
 from api import __version__
-from api.config import DATA_DIR, DATABASE_URL
+from api.config import DATA_DIR
 from api.schemas.system import (
     HealthResponse,
     SupportSnapshotBackupItem,
@@ -45,7 +45,10 @@ def is_public_base_url_configured() -> bool:
 
 
 def get_app_mode() -> str:
-    return "development" if "crm_dev" in DATABASE_URL else "production"
+    # Dev/prod dal segnale canonico is_compiled() (sorgente=dev, binario=prod),
+    # non dal nome del DB: esiste un solo crm.db (dual-env rimosso).
+    from api.config import is_compiled
+    return "production" if is_compiled() else "development"
 
 
 def get_distribution_mode() -> str:

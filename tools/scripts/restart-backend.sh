@@ -5,8 +5,12 @@
 # Killa il vecchio (inclusi worker figli), poi rilancia.
 #
 # Uso:
-#   bash tools/scripts/restart-backend.sh dev     → porta 8001, crm_dev.db
-#   bash tools/scripts/restart-backend.sh prod    → porta 8000, crm.db
+#   bash tools/scripts/restart-backend.sh dev     → porta 8001 (reload),  crm.db
+#   bash tools/scripts/restart-backend.sh prod    → porta 8000 (no reload), crm.db
+#
+# UN SOLO DATABASE (crm.db). L'offset di porta dev(8001)/prod(8000) serve solo a
+# far coesistere lo sviluppo con un'eventuale app installata di produzione sulla
+# stessa macchina. Nessun crm_dev.db: il dual-DB e' stato rimosso (2026-06-09).
 
 set -euo pipefail
 
@@ -17,7 +21,7 @@ ENV="${1:?Uso: restart-backend.sh <dev|prod>}"
 case "$ENV" in
     dev)
         PORT=8001
-        DB_URL="sqlite:///data/crm_dev.db"
+        DB_URL="sqlite:///data/crm.db"
         ;;
     prod)
         PORT=8000

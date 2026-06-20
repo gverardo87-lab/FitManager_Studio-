@@ -211,9 +211,11 @@ async def lifespan(app: FastAPI):
     4. Seed esercizi builtin
     5. Integrity check
     """
-    db_label = "DEV (crm_dev.db)" if "crm_dev" in DATABASE_URL else "PROD (crm.db)"
-    is_dev = "crm_dev" in DATABASE_URL
-    logger.info(f"API startup: database {db_label}")
+    # Dev/prod NON si deduce piu' dal nome del DB (un solo crm.db): il segnale
+    # canonico e' is_compiled() — sorgente = dev, binario Nuitka/PyInstaller = prod.
+    is_dev = not is_compiled()
+    db_label = "DEV (source)" if is_dev else "PROD (compiled)"
+    logger.info(f"API startup: {db_label}")
     logger.info(f"  LOG_FILE = {APP_LOG_PATH}")
     logger.info(
         "  LOG_POLICY = level=%s max_bytes=%s backup_count=%s",

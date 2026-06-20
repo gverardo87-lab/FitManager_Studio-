@@ -34,7 +34,9 @@ def test_support_snapshot_returns_safe_runtime_diagnostic_payload(
         "api.services.system_runtime.APP_STARTED_AT",
         datetime(2026, 3, 10, 6, 0, 0, tzinfo=timezone.utc),
     )
-    monkeypatch.setattr("api.services.system_runtime.DATABASE_URL", "sqlite:///data/crm.db")
+    # app_mode/distribution_mode derivano da is_compiled(): in test = sorgente
+    # → "development" + "source" (la vecchia combo "production"+"source" del
+    # dual-env non esiste piu', un solo crm.db).
     monkeypatch.setattr(
         "api.services.system_runtime.check_license",
         lambda: LicenseCheckResult(status="valid", message="Licenza valida"),
@@ -53,7 +55,7 @@ def test_support_snapshot_returns_safe_runtime_diagnostic_payload(
     assert "T" in data["generated_at"]
     assert data["public_base_url"] == "https://fitmanager.example.ts.net"
     assert data["health"]["status"] == "ok"
-    assert data["health"]["app_mode"] == "production"
+    assert data["health"]["app_mode"] == "development"
     assert data["health"]["distribution_mode"] == "source"
     assert data["health"]["license_enforcement_enabled"] is True
     assert len(data["recent_backups"]) == 1

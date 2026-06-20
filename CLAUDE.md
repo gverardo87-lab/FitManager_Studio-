@@ -46,14 +46,17 @@ SSoT numeri e proiezioni: `docs/business/BUSINESS_PLAN.md` (v4.3). Strategia ope
 - **crm.db**: 26 tabelle business (clienti, contratti, workout, communication_log). Tenant-isolated via `trainer_id`. SACRO — dati del trainer, backup/restore.
 - **catalog.db**: 10 tabelle catalogo scientifico (500 esercizi builtin, 466 attivi `in_subset` + tassonomia muscoli/articolazioni/condizioni + relazioni + media). Read-only, shipped con installer. Zero `trainer_id`.
 - **nutrition.db**: 8 tabelle catalogo alimenti (CREA 2019 + USDA). Read-only, shipped con installer. 880 alimenti attivi, 210 ricette pietanze, 12 template dieta.
-- **Porte**: backend 8000, frontend 3000. Formula generica: `frontend_port - 3000 + 8000 = backend_port`.
+- **Porte**: formula generica `frontend_port - 3000 + 8000 = backend_port` (derivazione runtime in `api-client.ts`).
+  - **Dev** (`npm run dev`): frontend **3001** → backend **8001** (`uvicorn --port 8001`). L'offset serve a far coesistere lo sviluppo con un'eventuale app installata di produzione sulla stessa macchina.
+  - **Prod / funnel** (`npm run prod`, app installata): frontend **3000** → backend **8000**.
+  - **UN SOLO database** (`crm.db`) in ogni caso: il dual-DB `crm_dev.db` è stato rimosso (2026-06-09). "Ambiente unico" = un solo DB, non una sola coppia di porte.
 
 ## Comandi operativi
 
 ```bash
-# --- Avvio sviluppo ---
-./venv/Scripts/uvicorn api.main:app --port 8000 --host 0.0.0.0    # backend
-cd frontend && npm run dev                                         # frontend (porta 3000)
+# --- Avvio sviluppo (dev = 3001/8001, vedi nota porte) ---
+./venv/Scripts/uvicorn api.main:app --port 8001 --host 0.0.0.0    # backend dev (8001)
+cd frontend && npm run dev                                         # frontend dev (porta 3001)
 
 # --- Test ---
 ./venv/Scripts/python -m pytest tests/ -v                          # 361 test backend
