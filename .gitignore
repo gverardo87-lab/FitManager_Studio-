@@ -218,3 +218,7 @@ tools/bin/
 
 # Tunnel config e certificati locali
 data/tunnel/
+
+# Verification scratch (Playwright /verify — può contenere PII reale, mai committare)
+.playwright-mcp/
+verify-*.png
