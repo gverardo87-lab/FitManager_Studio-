@@ -71,6 +71,7 @@ import { RecurringExpensesTab } from "@/components/movements/RecurringExpensesTa
 import { SplitLedgerView } from "@/components/movements/SplitLedgerView";
 import { AgingReport } from "@/components/movements/AgingReport";
 import { ForecastTab } from "@/components/movements/ForecastTab";
+import { AndamentoTab } from "@/components/movements/AndamentoTab";
 import { CashAuditSheet } from "@/components/movements/CashAuditSheet";
 import { GradientKpiCard, resolveMarginColors } from "@/components/movements/GradientKpiCard";
 import { useMovements, useMovementStats, usePendingExpenses, useCashBalance } from "@/hooks/useMovements";
@@ -96,13 +97,14 @@ const MESI = [
 ] as const;
 
 type LedgerMovementFilter = "ALL" | "ENTRATA" | "USCITA";
-type CassaTabKey = "ledger" | "recurring" | "split" | "aging" | "forecast";
+type CassaTabKey = "ledger" | "recurring" | "split" | "aging" | "forecast" | "trend";
 const CASSA_TAB_SET: ReadonlySet<CassaTabKey> = new Set([
   "ledger",
   "recurring",
   "split",
   "aging",
   "forecast",
+  "trend",
 ]);
 
 function isValidIsoDate(v: string | null): v is string {
@@ -443,6 +445,10 @@ export default function CassaPage() {
             <LineChart className="h-3.5 w-3.5 shrink-0" />
             <span className="text-[11px] sm:text-sm"><span className="sm:hidden">Prev.</span><span className="hidden sm:inline">Previsioni</span></span>
           </TabsTrigger>
+          <TabsTrigger value="trend" className="flex-1 gap-1 px-2 sm:gap-1.5 sm:px-3">
+            <TrendingUp className="h-3.5 w-3.5 shrink-0" />
+            <span className="text-[11px] sm:text-sm"><span className="sm:hidden">Trend</span><span className="hidden sm:inline">Andamento</span></span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="ledger" className="mt-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -502,6 +508,10 @@ export default function CassaPage() {
 
         <TabsContent value="forecast" className="mt-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <ForecastTab />
+        </TabsContent>
+
+        <TabsContent value="trend" className="mt-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <AndamentoTab />
         </TabsContent>
       </Tabs>
 

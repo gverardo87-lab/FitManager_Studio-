@@ -23,6 +23,7 @@ import type {
   CashAuditTimelineResponse,
   PendingExpensesResponse,
   ForecastResponse,
+  FinancialTrendResponse,
   BalanceResponse,
   SaldoInizialeUpdate,
   SaldoInizialeResponse,
@@ -148,6 +149,7 @@ export function useUpdateSaldoIniziale() {
       queryClient.invalidateQueries({ queryKey: ["saldo-iniziale"] });
       queryClient.invalidateQueries({ queryKey: ["cash-balance"] });
       queryClient.invalidateQueries({ queryKey: ["movement-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["financial-trend"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       queryClient.invalidateQueries({ queryKey: ["forecast"] });
       toast.success("Saldo iniziale aggiornato");
@@ -174,6 +176,7 @@ export function useCreateMovement() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["movements"] });
       queryClient.invalidateQueries({ queryKey: ["movement-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["financial-trend"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       queryClient.invalidateQueries({ queryKey: ["aging-report"] });
       queryClient.invalidateQueries({ queryKey: ["cash-balance"] });
@@ -283,6 +286,7 @@ export function useDeleteMovement() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["movements"] });
       queryClient.invalidateQueries({ queryKey: ["movement-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["financial-trend"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       queryClient.invalidateQueries({ queryKey: ["aging-report"] });
       queryClient.invalidateQueries({ queryKey: ["cash-balance"] });
@@ -336,6 +340,7 @@ export function useConfirmExpenses() {
       queryClient.invalidateQueries({ queryKey: ["pending-expenses"] });
       queryClient.invalidateQueries({ queryKey: ["movements"] });
       queryClient.invalidateQueries({ queryKey: ["movement-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["financial-trend"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       queryClient.invalidateQueries({ queryKey: ["aging-report"] });
       queryClient.invalidateQueries({ queryKey: ["cash-balance"] });
@@ -370,6 +375,19 @@ export function useForecast(mesi: number = 3) {
     queryFn: async () => {
       const { data } = await apiClient.get<ForecastResponse>(
         `/movements/forecast?mesi=${mesi}`
+      );
+      return data;
+    },
+  });
+}
+
+// Andamento finanziario temporale (Layer 1): incassato per periodo (cassa)
+export function useFinancialTrend(mesi: number = 12) {
+  return useQuery<FinancialTrendResponse>({
+    queryKey: ["financial-trend", { mesi }],
+    queryFn: async () => {
+      const { data } = await apiClient.get<FinancialTrendResponse>(
+        `/movements/financial-trend?mesi=${mesi}`
       );
       return data;
     },

@@ -42,7 +42,10 @@ from api.models.rate import Rate
 from api.models.contract import Contract
 from api.models.recurring_expense import RecurringExpense
 from api.schemas.financial import (
-    MovementManualCreate, MovementResponse,
+    MovementManualCreate,
+    MovementResponse,
+    FinancialTrendPeriod,
+    FinancialTrendResponse,
 )
 from api.routers._audit import log_audit
 from api.services.recurring_expense_schedule import (
@@ -1568,4 +1571,87 @@ def get_forecast(
         monthly_projection=monthly_projection,
         timeline=timeline,
         saldo_iniziale=saldo_iniziale,
+    )
+
+
+# ════════════════════════════════════════════════════════════
+# ANDAMENTO FINANZIARIO TEMPORALE (Layer 1 — incassato per periodo)
+# ════════════════════════════════════════════════════════════
+
+_MESI_IT_SHORT = ["gen", "feb", "mar", "apr", "mag", "giu", "lug", "ago", "set", "ott", "nov", "dic"]
+
+
+@router.get("/financial-trend", response_model=FinancialTrendResponse)
+def get_financial_trend(
+    mesi: int = Query(default=12, ge=1, le=36),
+    trainer: Trainer = Depends(get_current_trainer),
+    session: Session = Depends(get_session),
+):
+    """
+    Andamento dell'incassato (cassa) negli ultimi N mesi — Layer 1 SPEC temporale.
+
+    Su CashMovement.data_effettiva (ENTRATA, non eliminati, del trainer), per mese:
+    - incassi_contratti: id_contratto valorizzato (acconti + rate) — riconciliabile
+    - altri_incassi: id_contratto IS NULL, ESCLUSI gli storni (STORNO_SPESA_FISSA)
+    - cash_flow_reale: somma delle due (tutto cio' che entra, al netto storni)
+
+    Read-only. Gli storni sono rettifiche di uscita, mai ricavo → mai contati.
+    Partizione su id_contratto (esaustiva): contratti vs fuori-contratto.
+    """
+    today = date.today()
+    # Finestra cronologica di `mesi` mesi che termina col mese corrente.
+    window = list(reversed(_prev_months(today.year, today.month, mesi - 1)))
+    window.append((today.year, today.month))
+    window_set = set(window)
+    first_anno, first_mese = window[0]
+    first_day = date(first_anno, first_mese, 1)
+
+    rows = session.exec(
+        select(CashMovement).where(
+            CashMovement.trainer_id == trainer.id,
+            CashMovement.tipo == "ENTRATA",
+            CashMovement.deleted_at == None,
+            CashMovement.data_effettiva >= first_day,
+        )
+    ).all()
+
+    buckets_contratti: dict[tuple[int, int], float] = defaultdict(float)
+    buckets_altri: dict[tuple[int, int], float] = defaultdict(float)
+    for m in rows:
+        d = m.data_effettiva
+        if isinstance(d, str):
+            d = date.fromisoformat(d)
+        key = (d.year, d.month)
+        if key not in window_set:
+            continue
+        if m.categoria == "STORNO_SPESA_FISSA":
+            continue  # rettifica di uscita, non un ricavo
+        if m.id_contratto is not None:
+            buckets_contratti[key] += m.importo or 0
+        else:
+            buckets_altri[key] += m.importo or 0
+
+    periodi: list[FinancialTrendPeriod] = []
+    tot_c = 0.0
+    tot_a = 0.0
+    for anno, mese in window:
+        c = round(buckets_contratti.get((anno, mese), 0.0), 2)
+        a = round(buckets_altri.get((anno, mese), 0.0), 2)
+        tot_c += c
+        tot_a += a
+        periodi.append(FinancialTrendPeriod(
+            anno=anno,
+            mese=mese,
+            label=f"{_MESI_IT_SHORT[mese - 1]} {anno}",
+            incassi_contratti=c,
+            altri_incassi=a,
+            cash_flow_reale=round(c + a, 2),
+        ))
+
+    return FinancialTrendResponse(
+        mesi=mesi,
+        periodi=periodi,
+        tot_incassi_contratti=round(tot_c, 2),
+        tot_altri_incassi=round(tot_a, 2),
+        tot_cash_flow_reale=round(tot_c + tot_a, 2),
     )

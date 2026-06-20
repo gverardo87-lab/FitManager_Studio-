@@ -1715,6 +1715,24 @@ export interface ForecastResponse {
   saldo_iniziale: number;
 }
 
+// Andamento finanziario temporale (Layer 1) — GET /api/movements/financial-trend
+export interface FinancialTrendPeriod {
+  anno: number;
+  mese: number;
+  label: string;             // es. "giu 2026"
+  incassi_contratti: number; // ENTRATA con contratto (acconti + rate)
+  altri_incassi: number;     // ENTRATA fuori contratto, netto storni
+  cash_flow_reale: number;   // incassi_contratti + altri_incassi
+}
+
+export interface FinancialTrendResponse {
+  mesi: number;
+  periodi: FinancialTrendPeriod[];   // cronologico
+  tot_incassi_contratti: number;
+  tot_altri_incassi: number;
+  tot_cash_flow_reale: number;
+}
+
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // BACKUP (api/routers/backup.py)
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•

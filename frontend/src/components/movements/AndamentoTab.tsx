@@ -1,0 +1,127 @@
+// src/components/movements/AndamentoTab.tsx
+"use client";
+
+/**
+ * Andamento Tab — vista temporale della finanza (Layer 1).
+ *
+ * Incassato per periodo (cassa), ultimi N mesi:
+ * - 3 KPI: Cash flow reale, Incassi da contratti, Altri incassi (TASSONOMIA §1 Asse 1)
+ * - Stacked bar: incassi_contratti + altri_incassi = cash flow reale, per mese
+ *
+ * Dati: GET /api/movements/financial-trend via useFinancialTrend().
+ * Storni (STORNO_SPESA_FISSA) esclusi a monte dal backend.
+ * (Layer 2 aggiungerà la serie "venduto"/competenza; Layer 3 la composizione.)
+ */
+
+import { Wallet, FileText, Coins, LineChart as LineChartIcon } from "lucide-react";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+
+import { Skeleton } from "@/components/ui/skeleton";
+import { GradientKpiCard } from "@/components/movements/GradientKpiCard";
+import {
+  ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
+} from "@/components/ui/chart";
+import { useFinancialTrend } from "@/hooks/useMovements";
+import { formatCurrency } from "@/lib/format";
+
+const TREND_MONTHS = 12;
+
+const trendConfig: ChartConfig = {
+  incassi_contratti: { label: "Incassi da contratti", color: "var(--color-teal-500)" },
+  altri_incassi: { label: "Altri incassi", color: "var(--color-amber-400)" },
+};
+
+function KpiValue({ amount, color }: { amount: number; color: string }) {
+  return <p className={`text-2xl font-bold tracking-tight tabular-nums ${color}`}>{formatCurrency(amount)}</p>;
+}
+
+export function AndamentoTab() {
+  const { data, isLoading } = useFinancialTrend(TREND_MONTHS);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}
+        </div>
+        <Skeleton className="h-[320px] rounded-xl" />
+      </div>
+    );
+  }
+
+  const periodi = data?.periodi ?? [];
+  const hasData = (data?.tot_cash_flow_reale ?? 0) > 0;
+
+  return (
+    <div className="space-y-6">
+      {/* KPI — finestra ultimi N mesi */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <GradientKpiCard
+          icon={<Wallet className="h-5 w-5 text-teal-600 dark:text-teal-400" />}
+          iconBg="bg-teal-100 dark:bg-teal-900/30"
+          label="Cash flow reale"
+          value={<KpiValue amount={data?.tot_cash_flow_reale ?? 0} color="text-teal-700 dark:text-teal-400" />}
+          sub={`ultimi ${TREND_MONTHS} mesi`}
+          borderColor="border-l-teal-500"
+          gradient="from-teal-50/80 to-white dark:from-teal-950/40 dark:to-zinc-900"
+        />
+        <GradientKpiCard
+          icon={<FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />}
+          iconBg="bg-blue-100 dark:bg-blue-900/30"
+          label="Incassi da contratti"
+          value={<KpiValue amount={data?.tot_incassi_contratti ?? 0} color="text-blue-700 dark:text-blue-400" />}
+          sub="acconti + rate"
+          borderColor="border-l-blue-500"
+          gradient="from-blue-50/80 to-white dark:from-blue-950/40 dark:to-zinc-900"
+        />
+        <GradientKpiCard
+          icon={<Coins className="h-5 w-5 text-amber-600 dark:text-amber-400" />}
+          iconBg="bg-amber-100 dark:bg-amber-900/30"
+          label="Altri incassi"
+          value={<KpiValue amount={data?.tot_altri_incassi ?? 0} color="text-amber-700 dark:text-amber-400" />}
+          sub="fuori contratto"
+          borderColor="border-l-amber-400"
+          gradient="from-amber-50/80 to-white dark:from-amber-950/40 dark:to-zinc-900"
+        />
+      </div>
+
+      {/* Grafico andamento */}
+      {hasData ? (
+        <div className="rounded-xl border bg-card p-4 shadow-sm">
+          <div className="mb-3 flex items-center gap-2">
+            <LineChartIcon className="h-4 w-4 text-muted-foreground" />
+            <h3 className="text-sm font-semibold">Andamento incassato · ultimi {TREND_MONTHS} mesi</h3>
+          </div>
+          <ChartContainer config={trendConfig} className="h-[280px] w-full">
+            <BarChart data={periodi} margin={{ left: 4, right: 4, top: 8 }}>
+              <CartesianGrid vertical={false} strokeDasharray="3 3" />
+              <XAxis dataKey="label" tickLine={false} axisLine={false} fontSize={11} interval="preserveStartEnd" />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                width={64}
+                fontSize={11}
+                tickFormatter={(v) => formatCurrency(Number(v))}
+              />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <ChartLegend content={<ChartLegendContent />} />
+              <Bar dataKey="incassi_contratti" stackId="cf" fill="var(--color-incassi_contratti)" radius={[0, 0, 4, 4]} />
+              <Bar dataKey="altri_incassi" stackId="cf" fill="var(--color-altri_incassi)" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ChartContainer>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed py-16 text-center">
+          <LineChartIcon className="h-8 w-8 text-muted-foreground/40" />
+          <p className="text-sm font-medium text-muted-foreground">Nessun incasso negli ultimi {TREND_MONTHS} mesi</p>
+          <p className="text-xs text-muted-foreground/70">Gli incassi compaiono qui appena registri pagamenti o acconti</p>
+        </div>
+      )}
+    </div>
+  );
+}

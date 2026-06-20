@@ -506,3 +506,38 @@ class AgingResponse(BaseModel):
     clienti_con_scaduto: int
     overdue_buckets: List[AgingBucket]    # 4 bucket: 0-30, 31-60, 61-90, 90+
     upcoming_buckets: List[AgingBucket]   # 4 bucket: 0-7, 8-30, 31-60, 61-90
+
+
+# ════════════════════════════════════════════════════════════
+# ANDAMENTO FINANZIARIO TEMPORALE (Layer 1 — cassa per periodo)
+# ════════════════════════════════════════════════════════════
+
+class FinancialTrendPeriod(BaseModel):
+    """
+    Incassato di un singolo periodo (mese), per cassa.
+
+    Tre nozioni mai fuse (TASSONOMIA_FINANZIARIA.md §1 Asse 1):
+    - incassi_contratti: ENTRATA con id_contratto (acconti + rate) — spina dorsale riconciliabile
+    - altri_incassi: ENTRATA fuori contratto (id_contratto IS NULL), AL NETTO degli storni
+    - cash_flow_reale: incassi_contratti + altri_incassi (tutto ciò che entra, netto storni)
+    """
+    anno: int
+    mese: int
+    label: str                  # es. "giu 2026"
+    incassi_contratti: float
+    altri_incassi: float
+    cash_flow_reale: float
+
+
+class FinancialTrendResponse(BaseModel):
+    """
+    Serie temporale dell'incassato (cassa) su N mesi consecutivi.
+
+    Base di Layer 1 (aggregazione per periodo). La serie del VENDUTO (competenza)
+    si aggiunge in Layer 2. Storni (STORNO_SPESA_FISSA) sempre esclusi.
+    """
+    mesi: int
+    periodi: List[FinancialTrendPeriod]      # cronologico, dal più vecchio al più recente
+    tot_incassi_contratti: float
+    tot_altri_incassi: float
+    tot_cash_flow_reale: float
