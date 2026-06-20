@@ -77,6 +77,7 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 | `IMPL_PLAN_SPEC_RINNOVO.md` | Piano d'implementazione di SPEC_RINNOVO (ancorato al codice, decisioni bloccate, sequenza step). Materiale di lavoro — superato dal codice a implementazione conclusa |
 | `IMPL_PLAN_SPEC_TEMPORALE.md` | Piano d'implementazione di SPEC_GESTIONE_FINANZIARIA_TEMPORALE (tab Andamento in /cassa, L1 periodo+altri incassi, L2 trend+competenza, L3 composizione, fix monthly_revenue). Materiale di lavoro |
 | `SPEC_RINNOVI_SCADUTI_E_RETENTION.md` | Spec: i contratti scaduti non spariscono più — vista "scaduti da rinnovare" (anti-perdita silenziosa) + esito "non rinnova"+motivo; due lenti contratto/cliente (cliente differita). ADR-015 |
+| `IMPL_PLAN_RINNOVI_SCADUTI.md` | Piano d'implementazione lente contratto: stato `esito_rinnovo_*`, endpoint expired-contracts + fix esclusione rinnovati, azione renewal-outcome, sezione UI in /rinnovi-incassi. Materiale di lavoro |
 
 ---
 
