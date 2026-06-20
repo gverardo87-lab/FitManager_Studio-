@@ -1,11 +1,17 @@
 # SPEC — Rinnovi dei contratti scaduti + Retention (funnel anti-perdita silenziosa)
 
-**Versione:** 1.1
+**Versione:** 1.2
 **Stato:** Vincolante sui criteri di accettazione — **non vincolante sull'implementazione**
 **Owner:** Giacomo Verardo (AVGV Technologies)
 **Destinatario:** Claude Code (architetto finale nel codebase)
 **Collocazione:** `docs/technical/`
 **Data:** 2026-06-20
+
+> **Nota di versione 1.2 (2026-06-20):** durante l'implementazione (Step 2) emerso che il filtro
+> "opportunità residua" — ereditato dalla lente contratto — **ri-introduceva la perdita silenziosa di
+> clienti**: un cliente che ha completato e pagato tutto (residuo 0, crediti esauriti) e non rinnova
+> veniva escluso, pur essendo il miglior win-back. **Rimosso il filtro**: la worklist surface TUTTI i
+> lapsed; residuo/crediti = info + priorità. Vedi §A.2.
 
 > **Nota di versione 1.1 (2026-06-20):** rilievo founder — la rilevazione contract-level ("nessun
 > figlio `rinnovo_di`") è **fallace**: un cliente può aprire un nuovo contratto NON collegato →
@@ -114,14 +120,18 @@ scadenza", finché non viene **recuperato** (nuovo contratto attivo) o **marcato
   - **NON ha alcun contratto attivo** (nessun `Contract` con `chiuso=False AND data_scadenza >= today`,
     non eliminato) — questo è il cuore client-aware: sussume sia il rinnovo-figlio sia il
     nuovo-contratto-non-collegato (§3-bis);
-  - il suo **contratto più recente** (rappresentante) **non è marcato "perso"** (§5);
-  - opportunità residua *a livello cliente* (almeno un contratto con crediti inutilizzati o residuo > 0).
-- Il cliente è rappresentato dal **contratto scaduto più recente** (data_scadenza/data_vendita max);
+  - il suo **contratto più recente** (rappresentante) **non è marcato "perso"** (§5).
+- **NESSUN filtro "opportunità residua"** (correzione v1.2). Ogni cliente lapsed è un win-back, anche
+  chi ha **completato e pagato tutto** (residuo 0, crediti esauriti) — anzi è il bersaglio migliore.
+  `residuo`/`crediti_residui` sono **informazione + priorità di ordinamento**, non un filtro. Filtrarli
+  re-introdurrebbe la perdita silenziosa di clienti. Il recupero del *denaro* puro resta coperto dalle
+  altre worklist (aging, contratti-da-pianificare).
+- Il cliente è rappresentato dal **contratto scaduto più recente** (data_scadenza max);
   `giorni_ritardo = today − data_scadenza` di quel contratto.
 - **Aging**: ordinati/raggruppati per ritardo (es. 0-30 / 31-90 / 90+ giorni), urgenza decrescente.
-- **Invariante "nessuna perdita silenziosa" (vincolante):** nessun cliente lapsed (scaduto + zero
-  attivi + opportunità) non marcato perso può uscire da questa vista senza una **decisione umana
-  esplicita** (recupero o "non rinnova").
+- **Invariante "nessuna perdita silenziosa" (vincolante):** nessun cliente lapsed (≥1 scaduto + zero
+  attivi) non marcato perso può uscire da questa vista senza una **decisione umana esplicita**
+  (recupero o "non rinnova").
 - **Correzione collaterale**: i contratti già rinnovati (figlio attivo) vanno esclusi anche dalla
   vista "in scadenza" (oggi un rinnovato può ancora comparire).
 - La vista entra in `/rinnovi-incassi` come sezione dedicata, con CTA "Rinnova" (riusa SPEC_RINNOVO)
@@ -187,7 +197,7 @@ Forma dello stato (campo vs tabella), set dei motivi, reversibilità, UI dell'az
 ## 8. Checklist di accettazione (sintesi verificabile)
 
 **Clienti da recuperare (A) — client-aware:**
-- [ ] Vista per **cliente** (conta clienti): ha scaduto + **zero contratti attivi** (`chiuso=False AND data_scadenza>=today`) + rappresentante non perso + opportunità residua.
+- [ ] Vista per **cliente** (conta clienti): ha scaduto + **zero contratti attivi** (`chiuso=False AND data_scadenza>=today`) + rappresentante non perso. **Nessun filtro opportunità** (tutti i lapsed; residuo/crediti = info+priorità).
 - [ ] Rappresentato dal contratto scaduto più recente; `giorni_ritardo` + aging.
 - [ ] Già-rinnovati/continuati esclusi (sussunto dal "zero attivi"); fix esclusione su "in scadenza".
 - [ ] Invariante: nessun cliente lapsed esce senza decisione esplicita (recupero/perso).

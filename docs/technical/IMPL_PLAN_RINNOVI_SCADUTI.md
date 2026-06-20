@@ -53,10 +53,10 @@ Set motivi (codici strutturati, **confermato founder 2026-06-20**): `prezzo`, `t
   (`chiuso=False AND data_scadenza >= today AND deleted_at=None`). Pattern SQL: `clienti con scaduti`
   **EXCEPT** `clienti con attivi`. Questo sussume rinnovo-figlio e nuovo-contratto-non-collegato.
 - Per ogni cliente, **rappresentante** = contratto scaduto più recente (max `data_scadenza`).
-- Filtri sul rappresentante: **non perso** (`esito_rinnovo_motivo IS NULL`) e **opportunità residua**
-  a livello cliente (almeno un contratto con `crediti_residui > 0` o `prezzo_totale > totale_versato`).
+- Filtro sul rappresentante: **non perso** (`esito_rinnovo_motivo IS NULL`). **NESSUN filtro
+  opportunità** (v1.2): tutti i lapsed compaiono; `residuo`/`crediti_residui` = info + priorità.
 - Response per riga: dati cliente + contratto rappresentante + `giorni_ritardo = today − data_scadenza`
-  + aging bucket. Ordinati per ritardo desc.
+  + `residuo` + `crediti_residui`. Ordinati per ritardo desc.
 - NB: il vecchio "NOT EXISTS child rinnovo_di" **non serve più** — è sussunto da "zero contratti attivi".
 
 ### 3.2 Fix "in scadenza" — escludere i già-rinnovati
@@ -98,7 +98,8 @@ sollevata dal founder (un cliente con 2 scaduti = 1, non 2). Link a `/rinnovi-in
 - Cliente con scaduto + figlio rinnovo attivo → non compare (sussunto).
 - Cliente con **2 scaduti** e zero attivi → **1 sola riga** (rappresentante = più recente), conta come 1.
 - Rappresentante marcato "non rinnova" → escluso; reversibile → ricompare.
-- `giorni_ritardo` corretto; multi-tenant; opportunità nulla → escluso.
+- Cliente che ha **completato e pagato tutto** (residuo 0) lapsed → **compare comunque** (no filtro opportunità, v1.2).
+- `giorni_ritardo` corretto; multi-tenant.
 - `renewal-outcome`: ownership 404, motivo invalido 422, audit.
 
 ---
@@ -121,7 +122,7 @@ Ogni step rilasciabile; `check-all.sh` + `pytest`; commit per step.
 - ✅ **Attivo** = aperto E non scaduto.
 - ✅ **Set motivi**: prezzo, trasferito, infortunio, insoddisfatto, altro (+ nota).
 - ✅ **Alert dashboard** sì, conteggio clienti.
-- Opportunità residua = crediti residui **OR** residuo economico (spec §A.2).
+- ✅ **Nessun filtro opportunità** (v1.2): surface di tutti i lapsed; residuo/crediti = info+priorità (anti-perdita silenziosa anche del cliente "completato").
 
 ## 8. Bridge rule
 

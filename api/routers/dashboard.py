@@ -334,6 +334,15 @@ def get_expiring_contracts(
     today = date.today()
     deadline_30 = today + timedelta(days=30)
 
+    # Contratti-padre già rinnovati (hanno un figlio non eliminato) → esclusi dai solleciti
+    # di scadenza: il rinnovo è già stato fatto (SPEC_RINNOVI_SCADUTI §A.2, correzione).
+    renewed_parent_ids = {
+        row[0] for row in session.execute(text(
+            "SELECT DISTINCT rinnovo_di FROM contratti "
+            "WHERE trainer_id = :tid AND rinnovo_di IS NOT NULL AND deleted_at IS NULL"
+        ), {"tid": trainer.id}).fetchall()
+    }
+
     # Step 1: contratti in finestra scadenza con crediti
     contracts = session.exec(
         select(Contract, Client)
@@ -372,6 +381,10 @@ def get_expiring_contracts(
 
     items = []
     for contract, client in contracts:
+        # Già rinnovato (esiste figlio) → non sollecitare il rinnovo
+        if contract.id in renewed_parent_ids:
+            continue
+
         usati = credits_map.get(contract.id, 0)
         totali = contract.crediti_totali or 0
         residui = max(totali - usati, 0)
@@ -468,6 +481,115 @@ def get_contracts_to_plan(
             "client_telefono": client.telefono,
         })
 
+    return {"items": items, "total": len(items)}
+
+
+@router.get("/clients-to-recover")
+def get_clients_to_recover(
+    trainer: Trainer = Depends(get_current_trainer),
+    session: Session = Depends(get_session),
+):
+    """
+    Clienti da recuperare (lapsed) — SPEC_RINNOVI_SCADUTI v1.1, CLIENT-AWARE.
+
+    Un cliente compare se ha ≥1 contratto scaduto E NESSUN contratto attivo
+    (`chiuso=False AND data_scadenza >= today`; scadenza NULL = copertura aperta = attivo).
+    "Nessun attivo" sussume sia il rinnovo-figlio sia il nuovo-contratto-non-collegato →
+    zero falsi positivi (es. cliente che ha aperto un nuovo contratto senza passare da "Rinnova").
+
+    Unità = CLIENTE (1 riga/cliente), rappresentato dal contratto scaduto più recente.
+    Escluso se quel rappresentante è marcato "non rinnova" (esito_rinnovo_motivo valorizzato).
+    Opportunità residua a livello cliente: ≥1 contratto con residuo > 0 o crediti inutilizzati.
+    Read-only. Ordinato per ritardo decrescente.
+    """
+    today = date.today()
+
+    rows = session.exec(
+        select(Contract, Client)
+        .join(Client, Contract.id_cliente == Client.id)
+        .where(
+            Contract.trainer_id == trainer.id,
+            Contract.deleted_at == None,
+            Contract.chiuso == False,
+        )
+    ).all()
+    if not rows:
+        return {"items": [], "total": 0}
+
+    def _as_date(d):
+        return date.fromisoformat(d) if isinstance(d, str) else d
+
+    # Raggruppa i contratti aperti per cliente
+    by_client: dict[int, dict] = {}
+    for contract, client in rows:
+        entry = by_client.setdefault(client.id, {"client": client, "contracts": []})
+        entry["contracts"].append(contract)
+
+    # Candidati: cliente con scaduti e ZERO attivi; rappresentante non marcato perso
+    candidates = []  # (client, representative, expired_contracts)
+    for entry in by_client.values():
+        has_active = False
+        expired = []
+        for c in entry["contracts"]:
+            sc = _as_date(c.data_scadenza)
+            if sc is None or sc >= today:
+                has_active = True          # NULL scadenza o futura = copertura attiva
+            else:
+                expired.append(c)
+        if has_active or not expired:
+            continue
+        representative = max(expired, key=lambda c: _as_date(c.data_scadenza))
+        if representative.esito_rinnovo_motivo is not None:
+            continue                       # cliente già marcato "non rinnova"
+        candidates.append((entry["client"], representative, expired))
+
+    if not candidates:
+        return {"items": [], "total": 0}
+
+    # Batch crediti usati per tutti i contratti scaduti dei candidati (anti-N+1)
+    expired_ids = [c.id for _, _, exp in candidates for c in exp]
+    credit_rows = session.execute(
+        text("""
+        SELECT e.id_contratto, COUNT(*) as usati
+        FROM agenda e
+        WHERE e.id_contratto IN :ids
+          AND e.categoria = 'PT'
+          AND e.stato != 'Cancellato'
+          AND e.deleted_at IS NULL
+        GROUP BY e.id_contratto
+    """).bindparams(bindparam("ids", expanding=True)),
+        {"ids": expired_ids},
+    ).fetchall()
+    credits_map = {row[0]: row[1] for row in credit_rows}
+
+    def _crediti_residui(c) -> int:
+        return max((c.crediti_totali or 0) - credits_map.get(c.id, 0), 0)
+
+    def _residuo(c) -> float:
+        return round((c.prezzo_totale or 0) - (c.totale_versato or 0), 2)
+
+    items = []
+    for client, rep, expired in candidates:
+        # Nessun filtro opportunità: ogni cliente lapsed è un win-back (anche chi ha
+        # completato e pagato tutto). residuo/crediti sono info + priorità, non filtro
+        # (invariante: nessun cliente perso in silenzio — SPEC v1.2 §A.2).
+        scad = _as_date(rep.data_scadenza)
+        giorni_ritardo = (today - scad).days if isinstance(scad, date) else 0
+        items.append({
+            "client_id": client.id,
+            "client_nome": client.nome,
+            "client_cognome": client.cognome,
+            "client_telefono": client.telefono,
+            "contract_id": rep.id,
+            "tipo_pacchetto": rep.tipo_pacchetto,
+            "data_scadenza": scad.isoformat() if isinstance(scad, date) else None,
+            "giorni_ritardo": giorni_ritardo,
+            "residuo": _residuo(rep),
+            "crediti_totali": rep.crediti_totali or 0,
+            "crediti_residui": _crediti_residui(rep),
+        })
+
+    items.sort(key=lambda x: x["giorni_ritardo"], reverse=True)
     return {"items": items, "total": len(items)}
 
 
@@ -717,6 +839,10 @@ def get_dashboard_alerts(
               AND c.data_scadenza <= :deadline
               AND c.data_scadenza >= :today
               AND c.crediti_totali IS NOT NULL
+              AND NOT EXISTS (
+                  SELECT 1 FROM contratti ch
+                  WHERE ch.rinnovo_di = c.id AND ch.deleted_at IS NULL
+              )
         ) sub
         WHERE sub.crediti_usati < sub.crediti_totali
     """), {"tid": trainer.id, "deadline": deadline_30.isoformat(), "today": today.isoformat()}).fetchall()
