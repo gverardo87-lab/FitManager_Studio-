@@ -69,7 +69,11 @@ def get_dashboard_summary(
         )
     ).one()
 
-    # 2. Revenue mese corrente (solo ENTRATE)
+    # 2. Revenue mese corrente — INCASSI DA CONTRATTI per cassa.
+    # Ristretto a id_contratto valorizzato (acconti + rate): esclude automaticamente
+    # gli storni (STORNO_SPESA_FISSA, id_contratto NULL) e gli incassi fuori contratto
+    # (id_contratto NULL). Coerente con TASSONOMIA §1/§2 e con L1 (financial-trend).
+    # Prima era sum(ENTRATA) generico → sovrastimava (includeva storni e altri incassi).
     first_of_month = today.replace(day=1)
     if today.month == 12:
         first_of_next = today.replace(year=today.year + 1, month=1, day=1)
@@ -80,6 +84,7 @@ def get_dashboard_summary(
         select(func.sum(CashMovement.importo)).where(
             CashMovement.trainer_id == trainer.id,
             CashMovement.tipo == "ENTRATA",
+            CashMovement.id_contratto != None,  # solo incassi da contratti (per cassa)
             CashMovement.data_effettiva >= first_of_month,
             CashMovement.data_effettiva < first_of_next,
             CashMovement.deleted_at == None,

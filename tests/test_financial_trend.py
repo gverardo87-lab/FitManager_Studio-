@@ -102,6 +102,19 @@ def test_trend_empty_all_zero(client, auth_headers):
     assert all(p["cash_flow_reale"] == 0.0 for p in data["periodi"])
 
 
+def test_monthly_revenue_only_contract_incassi(client, auth_headers, sample_contract):
+    """dashboard/summary monthly_revenue = solo incassi da contratti del mese (no storni, no altri)."""
+    today = date.today()
+    cid = sample_contract["id"]
+    _pay_rate_today(client, auth_headers, cid, 300.0)                 # incasso da contratto (mese corrente)
+    _manual_entrata(client, auth_headers, 50.0, today)               # altri incassi → ESCLUSO
+    _manual_entrata(client, auth_headers, 999.0, today, "STORNO_SPESA_FISSA")  # storno → ESCLUSO
+
+    r = client.get("/api/dashboard/summary", headers=auth_headers)
+    assert r.status_code == 200
+    assert r.json()["monthly_revenue"] == 300.0
+
+
 def test_trend_multi_tenant(client, auth_headers, sample_contract):
     """Trainer B non vede gli incassi di Trainer A."""
     today = date.today()
