@@ -1,7 +1,12 @@
 # FINANCIAL DOMAIN MODEL — la base unica del dominio economico-finanziario
 
-**Versione:** 1.1
+**Versione:** 1.2
 **Stato:** **SSoT del dominio finanziario — vincolante.** Ogni feature finanziaria si misura qui.
+
+> **Nota di versione 1.2 (2026-06-20, robustezza bridge round-2):** (1) dichiarata l'**assunzione-proxy**
+> del raffreddamento (§4.1: usa i contatti loggati come proxy del contatto reale). (2) **G6** (§7): manca
+> il pagamento diretto del residuo → residuo non-rateizzato su scaduto non incassabile (verificato su
+> dato reale); + verifica auto-close su scaduto confermata sul codice. Nessun blocco: il modello è fermo.
 
 > **Nota di versione 1.1 (2026-06-20, rilievi bridge chat):** incorporati 3 rilievi che completano
 > l'asse-tempo (lo stesso che `chiuso` ignorava): (1) **invariante transizioni indotte dal tempo** —
@@ -106,6 +111,12 @@ a memoria). Non confonderle:
 
 > Il **"freddo" è derivato**, non un nuovo campo: riusa `communication_log` (il richiamo WhatsApp è già
 > loggato). `freddo = lapsed AND giorni_lapse > SOGLIA_CHURN AND (nessun richiamo o ultimo richiamo > SOGLIA_CHURN)`.
+>
+> **Assunzione esplicita (proxy del richiamo):** il raffreddamento usa i **contatti loggati** in
+> `communication_log` come *proxy* del contatto reale. Un richiamo **non loggato** (telefono, di persona)
+> NON sposta lo stato → un cliente realmente ricontattato può restare "caldo" oltre soglia. È una
+> semplificazione accettata (loggare ogni contatto = frizione che il PT efficienza-driven non vuole);
+> dichiarata qui perché non diventi un mistero futuro ("perché è ancora caldo se l'ho chiamato?").
 
 **Decadimento asimmetrico (vincolante):**
 - **lapsed → si raffredda**: è un'*opportunità*; dopo la soglia churn + ultimo richiamo, esce dalla
@@ -184,6 +195,17 @@ derivano da qui, senza doppi conteggi:
   esito+motivo (dato strutturato): `non_rinnova` (cliente perso), `sedute_decadute` (sospeso, sessioni
   forfettate), `saldo_a_perdere` (residuo abbonato). Coerente con `esito_rinnovo_motivo` (§ SPEC).
   Niente terminazioni mute.
+- **G6 — manca il pagamento DIRETTO del residuo (v1.2, da Obs bridge).** Oggi si incassa **solo via
+  Rata** (nessun endpoint di pagamento diretto sul contratto) e su uno **scaduto** non si può creare
+  una rata (guardia G1). Quindi un residuo **non rateizzato** su contratto scaduto è **non incassabile**
+  (verificato sul dato reale: Dalila c25, 20€ residuo non su rata) → "da incassare (scaduto)" lo
+  mostrerebbe **senza azione** (fantasma in worklist). **Fix:** azione "incassa residuo" diretta
+  (CashMovement legato al contratto + `totale_versato` += importo + auto-close), che rende azionabile
+  "da incassare (scaduto)".
+- **Verifica auto-close su scaduto (Obs bridge): ✓ confermata.** `pay_rate` auto-close è
+  **date-independent** (`rates.py:559-570`): incassare l'ultimo residuo di un ESAURITO (saldato +
+  crediti esauriti) lo porta a CHIUSO anche se scaduto → nessun ESAURITO-fantasma a residuo zero.
+  (Test di confine da aggiungere, come "scade oggi".)
 
 ---
 
