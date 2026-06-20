@@ -34,6 +34,7 @@ import { WeeklyPulse } from "@/components/dashboard/WeeklyPulse";
 import { TodoCard } from "@/components/dashboard/TodoCard";
 import { GhostEventsSheet } from "@/components/dashboard/GhostEventsSheet";
 import { ExpiringContractsSheet } from "@/components/dashboard/ExpiringContractsSheet";
+import { ContractsToPlanSheet } from "@/components/dashboard/ContractsToPlanSheet";
 import { InactiveClientsSheet } from "@/components/dashboard/InactiveClientsSheet";
 import { BirthdayClientsSheet } from "@/components/dashboard/BirthdayClientsSheet";
 import { useDashboard, useDashboardAlerts, useBirthdayClients } from "@/hooks/useDashboard";
@@ -111,11 +112,13 @@ export default function DashboardPage() {
   // Sheet state for inline alert resolution
   const [ghostSheetOpen, setGhostSheetOpen] = useState(false);
   const [expiringSheetOpen, setExpiringSheetOpen] = useState(false);
+  const [contractsToPlanSheetOpen, setContractsToPlanSheetOpen] = useState(false);
   const [inactiveSheetOpen, setInactiveSheetOpen] = useState(false);
   const [birthdaySheetOpen, setBirthdaySheetOpen] = useState(false);
 
   const alertActions: Record<string, () => void> = {
     ghost_events: () => setGhostSheetOpen(true),
+    orphan_contracts: () => setContractsToPlanSheetOpen(true),
     expiring_contracts: () => setExpiringSheetOpen(true),
     inactive_clients: () => setInactiveSheetOpen(true),
     birthdays: () => setBirthdaySheetOpen(true),
@@ -229,6 +232,7 @@ export default function DashboardPage() {
       {/* ── Sheet risoluzione inline ── */}
       <GhostEventsSheet open={ghostSheetOpen} onOpenChange={setGhostSheetOpen} />
       <ExpiringContractsSheet open={expiringSheetOpen} onOpenChange={setExpiringSheetOpen} />
+      <ContractsToPlanSheet open={contractsToPlanSheetOpen} onOpenChange={setContractsToPlanSheetOpen} />
       <InactiveClientsSheet open={inactiveSheetOpen} onOpenChange={setInactiveSheetOpen} />
       <BirthdayClientsSheet open={birthdaySheetOpen} onOpenChange={setBirthdaySheetOpen} />
     </div>

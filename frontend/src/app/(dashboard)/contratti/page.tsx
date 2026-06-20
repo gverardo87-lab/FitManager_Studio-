@@ -21,6 +21,7 @@ import {
   Wallet,
   Receipt,
   AlertTriangle,
+  CalendarClock,
   Eye,
   EyeOff,
   CheckCircle2,
@@ -100,6 +101,27 @@ const CONTRATTI_KPI: ContrattiKpiDef[] = [
     valueColor: "",
   },
 ];
+
+// ── Cruscotto pianificazione (SPEC_RINNOVO §B.4 / TASSONOMIA §1 Asse 3) ──
+// Scomposizione del portafoglio APERTO. Le tre nozioni non vanno mai sommate
+// tra loro come un totale unico: a_rate + da_pianificare = residuo (non venduto).
+
+function PlanStat({ label, value, strong }: { label: string; value: number; strong?: boolean }) {
+  return (
+    <div className="px-2 first:pl-0 last:pr-0">
+      <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground/70">
+        {label}
+      </p>
+      <p
+        className={`text-base font-bold tabular-nums sm:text-lg ${
+          strong ? "text-amber-700 dark:text-amber-400" : "text-foreground"
+        }`}
+      >
+        {formatCurrency(value)}
+      </p>
+    </div>
+  );
+}
 
 function getKpiValue(key: string, data: ContractListResponse): number {
   switch (key) {
@@ -361,6 +383,26 @@ export default function ContrattiPage() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* ── Cruscotto pianificazione (contratti aperti) ── */}
+      {contractsData && contractsData.kpi_venduto > 0 && (
+        <div
+          className={revealClass(75, "rounded-xl border bg-gradient-to-br from-amber-50/40 to-white p-3 shadow-sm dark:from-amber-950/20 dark:to-zinc-900 sm:p-4")}
+          style={revealStyle(75)}
+        >
+          <div className="mb-2 flex items-center gap-1.5">
+            <CalendarClock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70 sm:text-[11px]">
+              Pianificazione · contratti aperti
+            </p>
+          </div>
+          <div className="grid grid-cols-3 divide-x divide-border">
+            <PlanStat label="Venduto" value={contractsData.kpi_venduto} />
+            <PlanStat label="A rate" value={contractsData.kpi_a_rate} />
+            <PlanStat label="Da pianificare" value={contractsData.kpi_da_pianificare} strong />
+          </div>
         </div>
       )}
 

@@ -1613,6 +1613,24 @@ export interface ContractListResponse extends PaginatedResponse<ContractListItem
   kpi_fatturato: number;
   kpi_incassato: number;
   kpi_rate_scadute: number;
+  // Cruscotto pianificazione (contratti aperti) — SPEC_RINNOVO §B.4 / TASSONOMIA §1
+  kpi_venduto: number;          // Σ prezzo_totale
+  kpi_a_rate: number;           // Σ residui rate non saldate (già a scadenza)
+  kpi_da_pianificare: number;   // Σ max(0, residuo − a_rate)
+}
+
+/** Contratto da pianificare (aperto, residuo>0, zero rate) — GET /api/dashboard/contracts-to-plan */
+export interface ContractToPlanItem {
+  contract_id: number;
+  tipo_pacchetto: string | null;
+  data_scadenza: string | null;
+  prezzo_totale: number | null;
+  totale_versato: number | null;
+  importo_residuo: number;
+  client_id: number;
+  client_nome: string;
+  client_cognome: string;
+  client_telefono: string | null;
 }
 
 /** Wrapper lista semplice â€” usato da GET /rates, /rates/generate-plan */
