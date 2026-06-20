@@ -702,3 +702,9 @@ La chat parallela ha esaminato il modello v1.0 e prodotto 3 rilievi reali, tutti
 Decisioni founder: pull-coverage; freddo derivato da communication_log; una costante unica. Modello dichiarabile fermo → prossimo: `contract_state()` SSoT + fix progressivo (G1 + Step 2-5 RINNOVI_SCADUTI).
 
 ---
+
+### 2026-06-20 — IMPL_PLAN_FINANCIAL_REALIGN (piano unico, post-modello)
+
+Modello v1.2 fermo (3 rilievi + 2 robustezze chat incorporati/verificati; G6 scoperto verificando l'auto-close sul codice reale). Scritto **un solo** piano di riallineamento (anti-frammentazione, supera IMPL_PLAN_RINNOVI_SCADUTI): `IMPL_PLAN_FINANCIAL_REALIGN.md`. Blocchi: 0) `contract_state()` SSoT (modulo puro, 4 stati+sotto-stato denaro+engagement, test di confine) → 1) G1 da-pianificare solo ATTIVO → 2) riallineo worklist/KPI a contract_state (clients-to-recover esclude SOSPESI, rappresentante più-recente-assoluto, kpi_attivi=ATTIVO) → 3) worklist Contratti sospesi + estendi/decadi → 4) G6 incassa-residuo diretto → 5) win-back/freddo (communication_log) → 6) differiti (G3 analytics). Invariante di copertura §9.4 verificato dopo ogni blocco. Tutti i doc del dominio finanziario pushati. Prossimo: Blocco 0 (contract_state).
+
+---

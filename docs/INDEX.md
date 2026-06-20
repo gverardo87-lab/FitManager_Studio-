@@ -78,7 +78,8 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 | `IMPL_PLAN_SPEC_RINNOVO.md` | Piano d'implementazione di SPEC_RINNOVO (ancorato al codice, decisioni bloccate, sequenza step). Materiale di lavoro — superato dal codice a implementazione conclusa |
 | `IMPL_PLAN_SPEC_TEMPORALE.md` | Piano d'implementazione di SPEC_GESTIONE_FINANZIARIA_TEMPORALE (tab Andamento in /cassa, L1 periodo+altri incassi, L2 trend+competenza, L3 composizione, fix monthly_revenue). Materiale di lavoro |
 | `SPEC_RINNOVI_SCADUTI_E_RETENTION.md` | Spec (v2.0): ciclo a 4 stati (attivo/sospeso/esaurito/chiuso); "clienti da recuperare" (non ingaggiato = né attivo né sospeso) + "contratti sospesi" (sedute prepagate da recuperare) + esito "non rinnova". Anti-perdita silenziosa. ADR-015 |
-| `IMPL_PLAN_RINNOVI_SCADUTI.md` | Piano: stato `esito_rinnovo_*`, endpoint `clients-to-recover` (scaduti EXCEPT attivi), azione renewal-outcome, alert + sezione UI in /rinnovi-incassi (conteggio clienti). Materiale di lavoro |
+| `IMPL_PLAN_RINNOVI_SCADUTI.md` | ⚠️ **superato** da `IMPL_PLAN_FINANCIAL_REALIGN.md` (mancava lo stato SOSPESO). Storico |
+| `IMPL_PLAN_FINANCIAL_REALIGN.md` | **Piano unico** riallineamento al FINANCIAL_DOMAIN_MODEL v1.2: `contract_state()` SSoT, G1 (da-pianificare→ATTIVO), riallineo worklist/KPI, worklist sospesi, G6 (incassa residuo), win-back/freddo. Materiale di lavoro |
 
 ---
 
