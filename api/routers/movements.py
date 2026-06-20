@@ -1631,14 +1631,36 @@ def get_financial_trend(
         else:
             buckets_altri[key] += m.importo or 0
 
+    # ── Venduto (competenza, Layer 2): Σ prezzo_totale per mese su data_vendita ──
+    # Include anche i contratti chiusi (sono comunque stati "venduti" nel periodo).
+    # Best-effort sui legacy (data_vendita nullable/default — spec §5.4).
+    buckets_venduto: dict[tuple[int, int], float] = defaultdict(float)
+    contratti = session.exec(
+        select(Contract.data_vendita, Contract.prezzo_totale).where(
+            Contract.trainer_id == trainer.id,
+            Contract.deleted_at == None,
+            Contract.data_vendita != None,
+            Contract.data_vendita >= first_day,
+        )
+    ).all()
+    for dv, prezzo in contratti:
+        if isinstance(dv, str):
+            dv = date.fromisoformat(dv)
+        key = (dv.year, dv.month)
+        if key in window_set:
+            buckets_venduto[key] += prezzo or 0
+
     periodi: list[FinancialTrendPeriod] = []
     tot_c = 0.0
     tot_a = 0.0
+    tot_v = 0.0
     for anno, mese in window:
         c = round(buckets_contratti.get((anno, mese), 0.0), 2)
         a = round(buckets_altri.get((anno, mese), 0.0), 2)
+        v = round(buckets_venduto.get((anno, mese), 0.0), 2)
         tot_c += c
         tot_a += a
+        tot_v += v
         periodi.append(FinancialTrendPeriod(
             anno=anno,
             mese=mese,
@@ -1646,6 +1668,7 @@ def get_financial_trend(
             incassi_contratti=c,
             altri_incassi=a,
             cash_flow_reale=round(c + a, 2),
+            venduto=v,
         ))
 
     return FinancialTrendResponse(
@@ -1654,4 +1677,5 @@ def get_financial_trend(
         tot_incassi_contratti=round(tot_c, 2),
         tot_altri_incassi=round(tot_a, 2),
         tot_cash_flow_reale=round(tot_c + tot_a, 2),
+        tot_venduto=round(tot_v, 2),
     )

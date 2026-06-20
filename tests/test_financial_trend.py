@@ -79,6 +79,20 @@ def test_trend_buckets_by_month(client, auth_headers):
     assert data["tot_cash_flow_reale"] == 170.0
 
 
+def test_trend_venduto_competenza(client, auth_headers, sample_contract):
+    """Venduto (competenza) su data_vendita, distinto dalla cassa: contratto venduto oggi → venduto del mese."""
+    today = date.today()
+    data = client.get("/api/movements/financial-trend?mesi=12", headers=auth_headers).json()
+
+    cur = _current_period(data, today)
+    assert cur["venduto"] == 1000.0          # sample_contract prezzo_totale, data_vendita = oggi
+    assert data["tot_venduto"] == 1000.0
+    # cassa e competenza sono assi distinti: l'acconto (gen 2026) non entra nel venduto del mese,
+    # e il venduto non entra nella cassa del mese corrente
+    assert cur["incassi_contratti"] == 0.0
+    assert cur["cash_flow_reale"] == 0.0
+
+
 def test_trend_window_length_and_chronology(client, auth_headers):
     """`mesi` periodi, cronologici, ultimo = mese corrente."""
     today = date.today()

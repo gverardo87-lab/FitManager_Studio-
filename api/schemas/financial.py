@@ -527,17 +527,22 @@ class FinancialTrendPeriod(BaseModel):
     incassi_contratti: float
     altri_incassi: float
     cash_flow_reale: float
+    # Layer 2 — competenza (Σ prezzo_totale dei contratti VENDUTI nel periodo, su data_vendita).
+    # Asse diverso dalla cassa: mai sommato. Lo scarto venduto−incassato = credito vivo.
+    venduto: float = 0.0
 
 
 class FinancialTrendResponse(BaseModel):
     """
-    Serie temporale dell'incassato (cassa) su N mesi consecutivi.
+    Serie temporale: incassato (cassa, su data_effettiva) + venduto (competenza,
+    su data_vendita) su N mesi consecutivi. Due assi distinti, MAI sommati.
 
-    Base di Layer 1 (aggregazione per periodo). La serie del VENDUTO (competenza)
-    si aggiunge in Layer 2. Storni (STORNO_SPESA_FISSA) sempre esclusi.
+    Storni (STORNO_SPESA_FISSA) sempre esclusi dalla cassa. Il venduto è best-effort
+    sui contratti legacy (data_vendita nullable/default — vedi spec §5.4).
     """
     mesi: int
     periodi: List[FinancialTrendPeriod]      # cronologico, dal più vecchio al più recente
     tot_incassi_contratti: float
     tot_altri_incassi: float
     tot_cash_flow_reale: float
+    tot_venduto: float = 0.0
