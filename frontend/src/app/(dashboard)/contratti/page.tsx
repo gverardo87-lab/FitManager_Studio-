@@ -47,6 +47,7 @@ interface ContrattiKpiDef {
   label: string;
   icon: LucideIcon;
   format: "number" | "currency";
+  note?: string;          // micro-segnale di scope (es. "incl. chiusi")
   borderColor: string;
   gradient: string;
   iconBg: string;
@@ -71,6 +72,7 @@ const CONTRATTI_KPI: ContrattiKpiDef[] = [
     label: "Fatturato",
     icon: Receipt,
     format: "currency",
+    note: "incl. chiusi",
     borderColor: "border-l-blue-500",
     gradient: "from-blue-50/80 to-white dark:from-blue-950/40 dark:to-zinc-900",
     iconBg: "bg-blue-100 dark:bg-blue-900/30",
@@ -82,6 +84,7 @@ const CONTRATTI_KPI: ContrattiKpiDef[] = [
     label: "Incassato",
     icon: Wallet,
     format: "currency",
+    note: "incl. chiusi",
     borderColor: "border-l-emerald-500",
     gradient: "from-emerald-50/80 to-white dark:from-emerald-950/40 dark:to-zinc-900",
     iconBg: "bg-emerald-100 dark:bg-emerald-900/30",
@@ -102,23 +105,19 @@ const CONTRATTI_KPI: ContrattiKpiDef[] = [
   },
 ];
 
-// ── Cruscotto pianificazione (SPEC_RINNOVO §B.4 / TASSONOMIA §1 Asse 3) ──
-// Scomposizione del portafoglio APERTO. Le tre nozioni non vanno mai sommate
-// tra loro come un totale unico: a_rate + da_pianificare = residuo (non venduto).
+// ── Cruscotto "Da incassare" (SPEC_RINNOVO §B.4 / TASSONOMIA §1 Asse 3) ──
+// Scomposizione del RESIDUO sui contratti aperti, con equazione esplicita che
+// torna a occhio: Residuo = A scadenza + Da pianificare. 'Venduto' NON sta qui
+// (appartiene allo storico/Fatturato): sommarlo confonderebbe — vedi BUILD_LOG 2026-06-20.
 
-function PlanStat({ label, value, strong }: { label: string; value: number; strong?: boolean }) {
+function PlanStat({ label, value, hint }: { label: string; value: number; hint?: string }) {
   return (
-    <div className="px-2 first:pl-0 last:pr-0">
+    <div>
       <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground/70">
         {label}
       </p>
-      <p
-        className={`text-base font-bold tabular-nums sm:text-lg ${
-          strong ? "text-amber-700 dark:text-amber-400" : "text-foreground"
-        }`}
-      >
-        {formatCurrency(value)}
-      </p>
+      <p className="text-base font-bold tabular-nums sm:text-lg">{formatCurrency(value)}</p>
+      {hint ? <p className="text-[9px] text-muted-foreground/60">{hint}</p> : null}
     </div>
   );
 }
@@ -379,6 +378,9 @@ export default function ContrattiPage() {
                   <p className={`text-xl font-extrabold tracking-tighter tabular-nums sm:text-3xl ${valueColor}`}>
                     {kpi.format === "currency" ? formatCurrency(value) : value}
                   </p>
+                  {kpi.note ? (
+                    <p className="text-[9px] text-muted-foreground/60">{kpi.note}</p>
+                  ) : null}
                 </div>
               </div>
             );
@@ -386,8 +388,8 @@ export default function ContrattiPage() {
         </div>
       )}
 
-      {/* ── Cruscotto pianificazione (contratti aperti) ── */}
-      {contractsData && contractsData.kpi_venduto > 0 && (
+      {/* ── Cruscotto "Da incassare" (contratti aperti) — Residuo = A scadenza + Da pianificare ── */}
+      {contractsData && contractsData.kpi_residuo > 0 && (
         <div
           className={revealClass(75, "rounded-xl border bg-gradient-to-br from-amber-50/40 to-white p-3 shadow-sm dark:from-amber-950/20 dark:to-zinc-900 sm:p-4")}
           style={revealStyle(75)}
@@ -395,13 +397,26 @@ export default function ContrattiPage() {
           <div className="mb-2 flex items-center gap-1.5">
             <CalendarClock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
             <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70 sm:text-[11px]">
-              Pianificazione · contratti aperti
+              Da incassare · contratti aperti
             </p>
           </div>
-          <div className="grid grid-cols-3 divide-x divide-border">
-            <PlanStat label="Venduto" value={contractsData.kpi_venduto} />
-            <PlanStat label="A rate" value={contractsData.kpi_a_rate} />
-            <PlanStat label="Da pianificare" value={contractsData.kpi_da_pianificare} strong />
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+            {/* Ancora: residuo da incassare */}
+            <div className="sm:border-r sm:border-border sm:pr-4">
+              <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground/70">
+                Residuo da incassare
+              </p>
+              <p className="text-xl font-extrabold tabular-nums text-amber-700 dark:text-amber-400 sm:text-2xl">
+                {formatCurrency(contractsData.kpi_residuo)}
+              </p>
+            </div>
+            {/* Equazione: = A scadenza + Da pianificare */}
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-bold text-muted-foreground/50">=</span>
+              <PlanStat label="A scadenza" value={contractsData.kpi_a_rate} hint="già a rate" />
+              <span className="text-sm font-bold text-muted-foreground/50">+</span>
+              <PlanStat label="Da pianificare" value={contractsData.kpi_da_pianificare} hint="incl. parziali" />
+            </div>
           </div>
         </div>
       )}

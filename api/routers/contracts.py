@@ -242,13 +242,17 @@ def list_contracts(
         ).one()
         kpi_rate_scadute = overdue_rate_count or 0
 
-    # ── Cruscotto pianificazione (SPEC_RINNOVO §B.4 / TASSONOMIA §1 Asse 3) ──
-    # Sui contratti APERTI, tre nozioni mai fuse:
-    #   venduto       = Σ prezzo_totale
+    # ── Cruscotto "Da incassare" (SPEC_RINNOVO §B.4 / TASSONOMIA §1 Asse 3) ──
+    # Scomposizione del RESIDUO sui contratti APERTI — equazione che torna a occhio:
+    #   residuo       = Σ max(0, prezzo − versato)   ← ancora ("da incassare")
     #   a_rate        = Σ residui delle rate NON SALDATE (PENDENTE+PARZIALE) = già a scadenza
-    #   da_pianificare= Σ max(0, residuo − a_rate) = ciò che resta da mettere a rata
-    # da_pianificare per contratto coincide con importo_disallineamento (_to_response_with_rates).
-    kpi_venduto = round(sum(c.prezzo_totale or 0 for c in all_contracts if not c.chiuso), 2)
+    #   da_pianificare= residuo − a_rate = ciò che resta da mettere a rata (incl. parziali)
+    # NB: 'venduto' (Σ prezzo) NON sta qui — appartiene allo storico (kpi_fatturato),
+    # e sommato ad a_rate/da_pianificare confonderebbe (non sono la stessa grandezza).
+    kpi_residuo = round(
+        sum(max(0.0, (c.prezzo_totale or 0) - (c.totale_versato or 0)) for c in all_contracts if not c.chiuso),
+        2,
+    )
     residui_a_rate_by_contract: dict[int, float] = {}
     if active_ids:
         nonsaldate_rows = session.exec(
@@ -281,9 +285,9 @@ def list_contracts(
         "kpi_fatturato": kpi_fatturato,
         "kpi_incassato": kpi_incassato,
         "kpi_rate_scadute": kpi_rate_scadute,
-        "kpi_venduto": kpi_venduto,           # aperti: quanto ho venduto
-        "kpi_a_rate": kpi_a_rate,             # aperti: già messo a scadenza, da incassare
-        "kpi_da_pianificare": kpi_da_pianificare,  # aperti: resta da mettere a rata
+        "kpi_residuo": kpi_residuo,           # aperti: residuo da incassare (ancora) = a_rate + da_pianificare
+        "kpi_a_rate": kpi_a_rate,             # aperti: già a scadenza (residui rate non saldate)
+        "kpi_da_pianificare": kpi_da_pianificare,  # aperti: resta da mettere a rata (incl. parziali)
     }
 
     if not contracts:

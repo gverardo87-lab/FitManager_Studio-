@@ -96,13 +96,15 @@ def test_empty_returns_zero(client, auth_headers):
 # ════════════════════════════════════════════════════════════
 
 def test_cruscotto_zero_rate_contract(client, auth_headers, sample_contract):
-    """Zero rate: venduto=1000, a_rate=0, da_pianificare=residuo pieno=800."""
+    """Zero rate: residuo=800 (1000-200), a_rate=0, da_pianificare=residuo pieno=800."""
     r = client.get("/api/contracts", headers=auth_headers)
     assert r.status_code == 200
     data = r.json()
-    assert data["kpi_venduto"] == 1000.0
+    assert data["kpi_residuo"] == 800.0
     assert data["kpi_a_rate"] == 0.0
     assert data["kpi_da_pianificare"] == 800.0
+    # ancora: residuo = a_rate + da_pianificare
+    assert round(data["kpi_a_rate"] + data["kpi_da_pianificare"], 2) == data["kpi_residuo"]
 
 
 def test_cruscotto_partial_plan_reconciles(client, auth_headers, sample_contract):
@@ -116,18 +118,18 @@ def test_cruscotto_partial_plan_reconciles(client, auth_headers, sample_contract
     assert r.status_code == 201, r.text
 
     data = client.get("/api/contracts", headers=auth_headers).json()
-    assert data["kpi_venduto"] == 1000.0
+    assert data["kpi_residuo"] == 800.0
     assert data["kpi_a_rate"] == 300.0
     assert data["kpi_da_pianificare"] == 500.0
-    # riconciliazione: a_rate + da_pianificare == residuo (800)
-    assert round(data["kpi_a_rate"] + data["kpi_da_pianificare"], 2) == 800.0
+    # ancora: a_rate + da_pianificare == residuo (800)
+    assert round(data["kpi_a_rate"] + data["kpi_da_pianificare"], 2) == data["kpi_residuo"]
 
 
 def test_cruscotto_excludes_closed(client, auth_headers, sample_contract):
     """Contratto chiuso non contribuisce al cruscotto (KPI sugli aperti)."""
     client.put(f"/api/contracts/{sample_contract['id']}", json={"chiuso": True}, headers=auth_headers)
     data = client.get("/api/contracts", headers=auth_headers).json()
-    assert data["kpi_venduto"] == 0.0
+    assert data["kpi_residuo"] == 0.0
     assert data["kpi_a_rate"] == 0.0
     assert data["kpi_da_pianificare"] == 0.0
 
