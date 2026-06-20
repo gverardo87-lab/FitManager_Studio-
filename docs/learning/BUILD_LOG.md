@@ -640,4 +640,16 @@ Nuovo filone aperto dopo la v1.0.13. **Trigger:** dal primo cliente reale (effic
 
 **Fix definitivo dual-env** (commit `408a682`) — emerso durante la verifica: la rimozione del dual-env (2026-06-09) era **incompleta**. `package.json` (dev=3001), `restart-backend.sh` (dev=`crm_dev.db`) e ~50 script erano residui. Risolto alla radice (decisione founder, Option B): **un solo `crm.db`**; offset porte **dev 3001/8001 vs prod 3000/8000** mantenuto e documentato (fa coesistere sviluppo e app installata); dev/prod ora da **`is_compiled()`** (non dal nome DB, sempre falso ora) — corregge auto-backup-in-dev e `app_mode` sempre "production". Credenziali dev `Fitness2026!` (legate a `crm_dev.db`) rimosse da CLAUDE.md: ora un solo set (`chiarabassani`). Concetto catturato: `LEARNING_APP_ARCHITECTURE.md` (rinnovo sequenziale, convenzioni CRM). Decisione architetturale: `ADR-014`.
 
+**Cruscotto "Da incassare" chiarito** (commit `739f69d`, SPEC v1.4) — il founder ha rilevato (re-verify) che i 3 KPI affiancati Venduto/A rate/Da pianificare confondevano: **non sommano** (Venduto=prezzo, A rate+Da pianificare=residuo) e Venduto collide con Fatturato. Ristrutturato in due blocchi per scope: Storico (Fatturato/Incassato "incl. chiusi") + "Da incassare · aperti" con ancora **Residuo = A scadenza + Da pianificare**. Backend `kpi_venduto`→`kpi_residuo`. Concetto: `LEARNING_APP_ARCHITECTURE.md` ("affianca solo ciò che somma; una vista = uno scope"). Verifica visiva founder OK.
+
+### 2026-06-20 — Strategia SPEC_GESTIONE_FINANZIARIA_TEMPORALE (piano prima del codice)
+
+Ripreso il filone (RINNOVO chiuso). Piano ancorato al codice (esplorazione 2 agenti BE+FE): `docs/technical/IMPL_PLAN_SPEC_TEMPORALE.md`.
+
+**Mappa riuso:** nessun endpoint fa già il grouping storico multi-periodo (`/stats` mono-mese per-giorno; `/forecast` proiezione futura) → L1 ex-novo, riusando pattern grouping `(anno,mese)` + helper `_next_months` e logica esclusione storni. Frontend riuso alto: tab in `/cassa` (~4 righe), `ui/chart.tsx` + `GradientKpiCard` + clone `useForecast`; L3 stacked bar già fatto (`WeeklyPulse`); L2 a 2 serie da assemblare (`MeasurementChart` + `ProjectionChart`). `data_vendita` nullable → competenza best-effort.
+
+**Decisioni founder bloccate:** (1) vista in **nuova tab "Andamento" /cassa**; (2) **"Altri incassi" + cash flow reale subito in L1** (confine di posizionamento §0 vincolante: nessun campo/label codifica stato fiscale, validare con tributarista); (3) **correggere `monthly_revenue`** (oggi `sum(ENTRATA)` generico → sovrastima; allineare a categorie contrattuali, verificare trainer maturity).
+
+**Sequenza:** L1 (periodo+altri incassi+tab) → fix monthly_revenue → L2 (trend 2 serie+competenza) → L3 (composizione stacked) → test (`test_financial_trend.py`). Implementazione al via dal prossimo step.
+
 ---
