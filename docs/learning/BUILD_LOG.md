@@ -667,3 +667,13 @@ Ripreso il filone (RINNOVO chiuso). Piano ancorato al codice (esplorazione 2 age
 **Prodotti:** `docs/technical/SPEC_RINNOVI_SCADUTI_E_RETENTION.md` (v1.0) + `ADR-015` (accepted). Architettura: funnel a stati derivati (`attivo·in scadenza·scaduto·rinnovato·perso`), due lenti separate/collegate, **invariante anti-perdita silenziosa** (nessun contratto aperto+scaduto+opportunità residua esce dalla worklist senza decisione esplicita), esclusione già-rinnovati anche da "in scadenza". Riuso: flusso rinnovo (SPEC_RINNOVO §A) + WhatsApp win-back. Prossimo step: IMPL_PLAN ancorato al codice.
 
 ---
+
+### 2026-06-20 — RINNOVI_SCADUTI: scoperto difetto grave (sospensione) all'esame del dato reale
+
+Implementati Step 1-5 (modello esito_rinnovo, endpoint client-aware clients-to-recover, azione non-rinnova, UI sezione + alert; commit 393a929/681d491/3296308/558b537). All'esame del founder sul DB reale (clienti Floris/Buscaglia/Merchiori/Scalmato) emerso un **errore logico silenzioso**: contratti **scaduti per data ma con sedute prepagate residue** (Paola 18/20, Merchiori 5/10, Scalmato 7/10) venivano contati "attivi" (kpi_attivi=chiuso==False) e/o offerti come "da recuperare" — quando il trainer **deve** ancora quelle sedute. Causa meccanica: l'auto-close richiede SALDATO+crediti-esauriti, quindi un pacchetto pagato con sedute residue non si chiude mai e resta `chiuso=0` per sempre.
+
+**Diagnosi sul dato reale** (non su assunzioni): simulato `_lapsed_client_candidates` sul crm.db → restituisce tutti e 4 come candidati ⇒ il difetto è di **modello**, non l'asimmetria di visibilità riportata (quella è runtime/refetch — la logica li ritorna tutti). Trovati anche: rappresentante scelto tra i soli contratti aperti (ignora i chiusi più recenti → punto di interruzione sbagliato, caso Dalila).
+
+**Decisione (founder):** introdurre lo stato **SOSPESO** di prima classe. Ciclo a 4 stati derivati (ATTIVO/SOSPESO/ESAURITO/CHIUSO); **ingaggio = ATTIVO o SOSPESO**; worklist dedicata "Contratti sospesi / sedute da recuperare" (estendi o decadi, decisione esplicita — invariante anti-perdita esteso alle SEDUTE prepagate). "Clienti da recuperare" esclude gli ingaggiati. SPEC → v2.0 (§3 ciclo, §3-bis ingaggio, §4-bis sospesi), ADR-015 emendamento 2. Prossimo: IMPL_PLAN della revisione, poi fix endpoint/UI (Step 2-5 vanno corretti per escludere i sospesi). Concetto: la finanza è il 90% del CRM, gli errori logici silenziosi vanno presi prima della consegna.
+
+---

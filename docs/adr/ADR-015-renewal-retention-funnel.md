@@ -69,6 +69,18 @@ cade fuori dalla finestra e non compare più → si perdono **opportunità di ri
 > entra necessariamente già ora (non si può fare la lente contratto "pura" senza falsi positivi); la
 > retention ricca (segmenti/scoring/win-back) resta differita. Vedi SPEC v1.1 §3-bis/§4.
 
+> **Emendamento 2 — 2026-06-20 (esame dato reale) — stato SOSPESO.** `chiuso` true/false è
+> insufficiente: un contratto **scaduto per data ma con sedute prepagate residue** veniva contato
+> "attivo" e/o offerto come "da recuperare", quando il trainer **deve** ancora quelle sedute (clienti
+> reali Paola/Merchiori/Scalmato). Decisione: **ciclo a 4 stati derivati** — ATTIVO / **SOSPESO**
+> (scaduto + crediti residui > 0) / **ESAURITO** (scaduto + crediti 0) / CHIUSO. **Ingaggio cliente =
+> ATTIVO o SOSPESO**: il sospeso è ingaggio (sedute da erogare) → esclude dalla win-back. Nuova worklist
+> **"Contratti sospesi / sedute da recuperare"** (estendi o decadi, decisione esplicita — invariante
+> anti-perdita esteso alle SEDUTE prepagate, non solo al denaro). Corretto anche il rappresentante
+> (più recente in assoluto). L'auto-close non scatta mai per pacchetti a crediti residui → causa
+> meccanica del falso "attivo". Impatto: rivedere endpoint `clients-to-recover` + UI (Step 2-5) per
+> escludere i sospesi. Vedi SPEC v2.0 §3/§3-bis/§4-bis.
+
 ## Consequences
 
 - **Positive**: stop alla perdita silenziosa di denaro e clienti; renewal pipeline allo stato dell'arte;

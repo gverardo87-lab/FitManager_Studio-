@@ -1,11 +1,20 @@
 # SPEC — Rinnovi dei contratti scaduti + Retention (funnel anti-perdita silenziosa)
 
-**Versione:** 1.2
+**Versione:** 2.0
 **Stato:** Vincolante sui criteri di accettazione — **non vincolante sull'implementazione**
 **Owner:** Giacomo Verardo (AVGV Technologies)
 **Destinatario:** Claude Code (architetto finale nel codebase)
 **Collocazione:** `docs/technical/`
 **Data:** 2026-06-20
+
+> **Nota di versione 2.0 (2026-06-20):** dall'esame del dato reale (Paola/Merchiori/Scalmato) emerso
+> il difetto grave: contratti **scaduti per data ma con sedute prepagate residue** venivano trattati
+> come "attivi" o "da recuperare", quando il trainer **deve** ancora quelle sedute. Introdotto lo
+> stato **SOSPESO** di prima classe (ciclo a 4 stati §3), l'**ingaggio** = ATTIVO o SOSPESO (§3-bis),
+> la worklist dedicata **"Contratti sospesi / sedute da recuperare"** (§4-bis). "Clienti da recuperare"
+> ora esclude gli ingaggiati (incl. sospesi). Corretto anche il rappresentante (più recente in
+> assoluto, non più recente-aperto). Impatto: l'endpoint `clients-to-recover` e la UI Step 2-5 vanno
+> rivisti (escludere sospesi). Vedi ADR-015 emendamento 2.
 
 > **Nota di versione 1.2 (2026-06-20):** durante l'implementazione (Step 2) emerso che il filtro
 > "opportunità residua" — ereditato dalla lente contratto — **ri-introduceva la perdita silenziosa di
@@ -76,31 +85,40 @@ Non coincidono: un cliente con un contratto scaduto **e** uno attivo è opportun
 
 ---
 
-## 3. Stati del funnel (derivati dai campi esistenti)
+## 3. Ciclo di vita del contratto — 4 stati derivati (v2.0)
 
-Contratto (derivato, deterministico):
-- **attivo** — `chiuso=False`, `data_scadenza > today + soglia in-scadenza`.
-- **in scadenza** — `chiuso=False`, `today <= data_scadenza <= today + N` (N attuale = 30). [esiste]
-- **scaduto** — `chiuso=False`, `data_scadenza < today`. Stato del contratto.
-- **rinnovato/continuato** — il **cliente** ha (di nuovo) un contratto **attivo** (`chiuso=False AND
-  data_scadenza >= today`), che sia un figlio `rinnovo_di` *o un nuovo contratto non collegato*.
-  Derivato a livello cliente. [vedi §3-bis]
-- **perso** — il trainer ha registrato l'esito "non rinnova" (con motivo). Terminale negativo. [NUOVO]
+`chiuso` (bool) da solo è insufficiente: un contratto **scaduto per data** con `chiuso=False` viene
+oggi contato come "attivo", e un pacchetto con **sedute prepagate non usate** non si chiude mai
+(l'auto-close richiede SALDATO **E** crediti esauriti). Servono 4 stati **derivati**, deterministici:
 
-### 3-bis. Rilevazione client-aware (correzione 2026-06-20)
+| Stato | Definizione | Significato |
+|---|---|---|
+| **ATTIVO** | `chiuso=False` AND (`data_scadenza` NULL OR `>= today`) | copertura in corso |
+| **SOSPESO** | `chiuso=False` AND `data_scadenza < today` AND `crediti_residui > 0` | scaduto per data ma **ha sedute prepagate da erogare** — gli DEVI sessioni |
+| **ESAURITO** | `chiuso=False` AND `data_scadenza < today` AND `crediti_residui == 0` | pacchetto davvero concluso (sedute finite) |
+| **CHIUSO** | `chiuso=True` | terminato (saldato + crediti usati, o chiuso a mano) |
 
-**La rilevazione "da recuperare" è a livello CLIENTE, non contratto.** "Nessun figlio `rinnovo_di`"
-NON significa "il cliente non ha continuato": il cliente può aver aperto un **nuovo contratto non
-collegato**. Quindi:
-- Un contratto scaduto è un'**opportunità di recupero** SOLO se il **cliente non ha alcun contratto
-  attivo** (`chiuso=False AND data_scadenza >= today`). Questo sussume sia il rinnovo-figlio sia il
-  nuovo-contratto-non-collegato → zero falsi positivi.
-- **Unità = cliente**, non contratto: un cliente con N contratti scaduti = **1** opportunità di
-  recupero (1 riga, conteggio per clienti). Rappresentato dal suo **contratto più recente** (il punto
-  di interruzione della copertura).
-- Il denaro/crediti residui di uno scaduto il cui cliente è **ancora attivo** NON spariscono: vivono
-  nelle altre worklist (crediti su "in scadenza", residuo su aging/contratti-da-pianificare). Qui si
-  parla di **recupero del cliente**, non del singolo euro.
+> `crediti_residui = crediti_totali − crediti_usati` (eventi PT non cancellati). Esempi reali
+> (2026-06-20): Paola 18/20 → SOSPESO (2 sedute); Merchiori 5/10 → SOSPESO (5); Scalmato 7/10 →
+> SOSPESO (3); Dalila 4/4 → ESAURITO (+ residuo 20€).
+
+**Esito terminale "perso"** (`esito_rinnovo_motivo` valorizzato): decisione esplicita "non rinnova",
+ortogonale agli stati sopra; esce dalla worklist win-back, resta in storico.
+
+### 3-bis. Ingaggio cliente e rilevazione client-aware (v2.0)
+
+**Un cliente è "ingaggiato" se ha ≥1 contratto ATTIVO _o_ SOSPESO.** Il SOSPESO conta come ingaggio:
+il cliente ha sedute prepagate da usare → **non è perso**, gli devi sessioni. Quindi:
+
+- **"Cliente da recuperare" (win-back)** = cliente **NON ingaggiato** (nessun ATTIVO, nessun SOSPESO)
+  con ≥1 contratto scaduto, rappresentante non marcato perso. Sussume rinnovo-figlio, nuovo-contratto-
+  non-collegato **e** sospeso → niente falsi positivi (esclude Paola/Merchiori/Scalmato).
+- **Rappresentante** del cliente = **contratto più recente in assoluto** (incl. CHIUSO), non il più
+  recente *aperto*. (Bug v1.x: per Dalila mostrava c25 apr-aperto invece di c29 mag-chiuso = vero
+  punto di interruzione.)
+- **Unità = cliente** (1 riga, conta clienti).
+- **SOSPESO ha la sua worklist** (§4-bis): non è win-back, è "sedute da recuperare".
+- Il denaro residuo di uno scaduto vive nelle worklist denaro (aging/da-incassare), separato.
 
 ---
 
@@ -117,31 +135,54 @@ scadenza", finché non viene **recuperato** (nuovo contratto attivo) o **marcato
 - Esiste una vista/aggregato **"clienti da recuperare"** — **unità = cliente** (1 riga/cliente,
   conteggio per **clienti**). Un cliente vi compare se **tutte** valgono:
   - ha **almeno un contratto scaduto** (`chiuso=False`, `deleted_at=None`, `data_scadenza < today`);
-  - **NON ha alcun contratto attivo** (nessun `Contract` con `chiuso=False AND data_scadenza >= today`,
-    non eliminato) — questo è il cuore client-aware: sussume sia il rinnovo-figlio sia il
-    nuovo-contratto-non-collegato (§3-bis);
-  - il suo **contratto più recente** (rappresentante) **non è marcato "perso"** (§5).
-- **NESSUN filtro "opportunità residua"** (correzione v1.2). Ogni cliente lapsed è un win-back, anche
-  chi ha **completato e pagato tutto** (residuo 0, crediti esauriti) — anzi è il bersaglio migliore.
-  `residuo`/`crediti_residui` sono **informazione + priorità di ordinamento**, non un filtro. Filtrarli
-  re-introdurrebbe la perdita silenziosa di clienti. Il recupero del *denaro* puro resta coperto dalle
-  altre worklist (aging, contratti-da-pianificare).
-- Il cliente è rappresentato dal **contratto scaduto più recente** (data_scadenza max);
-  `giorni_ritardo = today − data_scadenza` di quel contratto.
-- **Aging**: ordinati/raggruppati per ritardo (es. 0-30 / 31-90 / 90+ giorni), urgenza decrescente.
-- **Invariante "nessuna perdita silenziosa" (vincolante):** nessun cliente lapsed (≥1 scaduto + zero
-  attivi) non marcato perso può uscire da questa vista senza una **decisione umana esplicita**
-  (recupero o "non rinnova").
-- **Correzione collaterale**: i contratti già rinnovati (figlio attivo) vanno esclusi anche dalla
-  vista "in scadenza" (oggi un rinnovato può ancora comparire).
-- La vista entra in `/rinnovi-incassi` come sezione dedicata, con CTA "Rinnova" (riusa SPEC_RINNOVO)
-  e "Non rinnova".
-- **Nessuna migrazione dati**: i clienti lapsed esistenti compaiono appena la vista sa cercarli.
+  - **NON è ingaggiato**: nessun contratto **ATTIVO** *né* **SOSPESO** (§3). Cioè: nessun contratto
+    aperto con `data_scadenza >= today` (attivo) E nessun contratto aperto scaduto con `crediti_residui > 0`
+    (sospeso). Il sospeso conta come ingaggio (gli devi sedute) → il cliente non è perso (v2.0);
+  - il suo **contratto rappresentante** (più recente in assoluto, §3-bis) **non è marcato "perso"** (§5).
+- **NESSUN filtro "opportunità residua"** (v1.2). Ogni cliente non-ingaggiato è un win-back, anche chi
+  ha completato e pagato tutto. `residuo`/`crediti_residui` = info + priorità, non filtro.
+- Rappresentante = **contratto più recente in assoluto** (incl. CHIUSO); `giorni_ritardo` calcolato
+  sul suo `data_scadenza` (se scaduto).
+- **Aging**: ordinati per ritardo (0-30 / 31-90 / 90+), urgenza decrescente.
+- **Invariante "nessuna perdita silenziosa" (vincolante):** nessun cliente non-ingaggiato con ≥1
+  scaduto, non marcato perso, può uscire da questa vista senza una **decisione umana esplicita**.
+- **Correzione collaterale**: i contratti già rinnovati (figlio attivo) esclusi anche da "in scadenza".
+- La vista entra in `/rinnovi-incassi`, CTA "Rinnova" (riusa SPEC_RINNOVO) + "Non rinnova".
+- **Nessuna migrazione dati**.
 
 ### A.3 Lasciato a Claude Code
 
-Endpoint dedicato vs estensione; forma della query (es. clienti con scaduti `EXCEPT` clienti con
-attivi); bucket di aging; innesto UI; naming italiano ("Clienti da recuperare", "Da riattivare"…).
+Endpoint dedicato vs estensione; forma della query (clienti con scaduti `EXCEPT` clienti ingaggiati
+= con attivi-o-sospesi); bucket di aging; innesto UI; naming italiano.
+
+---
+
+## 4-bis. Criterio A2 — Vista "Contratti sospesi" (sedute da recuperare) [v2.0]
+
+### A2.1 Cosa deve essere vero
+
+Un contratto **SOSPESO** (scaduto per data, con sedute prepagate residue) rappresenta **sessioni che
+il trainer DEVE al cliente**. Non è win-back e non è denaro da incassare: sono **sedute pagate non
+ancora erogate**, a rischio di andare perse silenziosamente. Devono comparire in una vista azionabile.
+
+### A2.2 Criteri di accettazione
+
+- Esiste una vista/aggregato **"contratti sospesi"**: contratti `chiuso=False`, `deleted_at=None`,
+  `data_scadenza < today`, `crediti_residui > 0`. **Unità = contratto** (ogni contratto sospeso ha le
+  sue sedute e la sua data).
+- Mostra: cliente, pacchetto, `data_scadenza`, `giorni_ritardo`, **crediti residui** (sedute da erogare),
+  eventuale residuo economico.
+- **Azioni** (forma a Claude Code, concetto vincolante):
+  - **Estendi/riattiva** — nuova `data_scadenza` (il contratto torna ATTIVO); riusa `update_contract`.
+  - **Sedute decadute** — chiusura esplicita (le sedute si considerano perse per policy); decisione
+    umana, non silenziosa. Reversibile/auditata.
+- **Invariante**: un contratto SOSPESO non esce dalla vista senza decisione esplicita (estendi o decadi).
+- I contratti sospesi **non** compaiono in "clienti da recuperare" (il cliente è ingaggiato, §3-bis).
+
+### A2.3 Lasciato a Claude Code
+
+Endpoint/innesto UI (sezione in `/rinnovi-incassi` o tab); forma azioni estendi/decadi; naming
+("Contratti sospesi", "Sedute da recuperare", "Da riattivare").
 
 ---
 
@@ -196,11 +237,20 @@ Forma dello stato (campo vs tabella), set dei motivi, reversibilità, UI dell'az
 
 ## 8. Checklist di accettazione (sintesi verificabile)
 
-**Clienti da recuperare (A) — client-aware:**
-- [ ] Vista per **cliente** (conta clienti): ha scaduto + **zero contratti attivi** (`chiuso=False AND data_scadenza>=today`) + rappresentante non perso. **Nessun filtro opportunità** (tutti i lapsed; residuo/crediti = info+priorità).
-- [ ] Rappresentato dal contratto scaduto più recente; `giorni_ritardo` + aging.
-- [ ] Già-rinnovati/continuati esclusi (sussunto dal "zero attivi"); fix esclusione su "in scadenza".
-- [ ] Invariante: nessun cliente lapsed esce senza decisione esplicita (recupero/perso).
+**Ciclo di vita (v2.0):**
+- [ ] 4 stati derivati: ATTIVO / SOSPESO (scaduto+crediti>0) / ESAURITO (scaduto+crediti=0) / CHIUSO.
+- [ ] Ingaggio cliente = ha ATTIVO **o** SOSPESO.
+
+**Clienti da recuperare (A) — client-aware + v2.0:**
+- [ ] Vista per **cliente** (conta clienti): ha scaduto + **NON ingaggiato** (zero ATTIVI e zero SOSPESI) + rappresentante non perso. Nessun filtro opportunità.
+- [ ] Rappresentante = contratto **più recente in assoluto** (incl. chiuso); `giorni_ritardo` + aging.
+- [ ] Sospesi/già-rinnovati/continuati esclusi; fix esclusione su "in scadenza".
+- [ ] Invariante: nessun cliente non-ingaggiato esce senza decisione esplicita (recupero/perso).
+
+**Contratti sospesi (A2) — v2.0:**
+- [ ] Vista per **contratto**: aperto + scaduto + crediti residui > 0; mostra sedute residue + ritardo.
+- [ ] Azioni estendi/riattiva (nuova data) e sedute-decadute (chiusura esplicita); non distruttive.
+- [ ] Invariante: nessun sospeso esce senza decisione; non compare in "da recuperare".
 - [ ] Zero migrazione.
 
 **Esito "Non rinnova" (B):**
