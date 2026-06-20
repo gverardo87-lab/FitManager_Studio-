@@ -57,3 +57,31 @@ Spec vincolante: `SPEC_RINNOVO_E_CONTRATTI_DA_PIANIFICARE.md` §A.2 (v1.3) + §5
 
 **Domande aperte:**
 - [ ] Serve un'icona/tooltip che mostri l'equazione anche a chi non la coglie dal layout? Per ora l'operatore `=`/`+` inline dovrebbe bastare — da validare con l'utente reale.
+
+---
+
+## Recharts non vede le serie dentro un React Fragment — 20/06/2026
+**Contesto:** grafico composizione (stacked bar con toggle Nuovi/Rinnovi vs Acconti/Rate). Le `<Bar>` condizionali erano avvolte in un Fragment `{cond ? <><Bar/><Bar/></> : <><Bar/><Bar/></>}`. A schermo: assi, griglia e label dei mesi presenti, ma **zero barre e zero legenda**. Il grafico gemello sopra (stesse `Bar` come figli diretti) funzionava.
+
+**Livello 1 — Cosa fa:** Recharts scopre le serie (Bar, Line, Area…) **ispezionando i propri `children` con `React.Children`** al render, per costruire scale, legenda e tooltip. Un **React Fragment** (`<>…</>`) interposto **nasconde** quei figli all'introspezione → le serie non vengono registrate → niente barre, niente legenda. Assi e griglia restano perché sono componenti propri, indipendenti dalle serie.
+
+**Livello 2 — Perché lo voglio:** rendering condizionale di serie diverse (toggle, modalità) è comunissimo. Sapere che il *contenitore* del condizionale conta evita un bug silenzioso: build verde, TypeScript contento, nessun errore runtime — solo un grafico vuoto. Il sintomo (assi sì, serie no) è la firma diagnostica.
+
+**Livello 3 — Perché funziona così sotto:** Recharts non usa il DOM per capire cosa disegnare; legge l'albero React dei figli *dichiarativamente* (`React.Children.toArray` + type-check sul `displayName`/tipo del componente). `React.Children` **appiattisce gli array** ma **non entra nei Fragment** come se fossero trasparenti per quel matching (un Fragment è un nodo di tipo `Symbol(react.fragment)`, non un `Bar`). Quindi: passare le serie condizionali come **array da `.map()`** funziona (l'array viene appiattito e ogni `Bar` è visto), un **Fragment** no.
+
+**Comando/config reale:** `frontend/src/components/movements/AndamentoTab.tsx`
+```tsx
+// ❌ niente barre: il Fragment nasconde le Bar a recharts
+{cond ? <><Bar dataKey="a"/><Bar dataKey="b"/></> : <>…</>}
+
+// ✅ array .map(): recharts appiattisce e vede ogni Bar
+{(cond ? ["a","b"] : ["c","d"]).map((k,i) => (
+  <Bar key={k} dataKey={k} stackId="s" fill={`var(--color-${k})`}
+       radius={i===0 ? [0,0,4,4] : [4,4,0,0]} />
+))}
+```
+
+**Failure mode:** avvolgo serie condizionali in `<>…</>` → grafico con assi ma vuoto, build verde, nessun errore → sembra un bug di *dati* (e infatti il primo sospetto è stato "logica/endpoint"). Me ne accorgo dal sintomo specifico: **assi/griglia presenti ma serie e legenda assenti** → guardare il *contenitore* dei children del grafico prima dei dati. Vale per qualunque libreria che introspeziona i children React (anche alcune di form/layout).
+
+**Domande aperte:**
+- [ ] Verificare se le versioni recenti di recharts hanno reso i Fragment trasparenti (in tal caso resta comunque buona pratica l'array per chiarezza). Per ora: mai Fragment attorno a serie di grafici.

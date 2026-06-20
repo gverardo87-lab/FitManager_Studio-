@@ -193,17 +193,20 @@ export function AndamentoTab() {
               <YAxis tickLine={false} axisLine={false} width={64} fontSize={11} tickFormatter={(v) => formatCurrency(Number(v))} />
               <ChartTooltip content={<ChartTooltipContent />} />
               <ChartLegend content={<ChartLegendContent />} />
-              {compMode === "origine" ? (
-                <>
-                  <Bar dataKey="incassi_nuovi" stackId="comp" fill="var(--color-incassi_nuovi)" radius={[0, 0, 4, 4]} />
-                  <Bar dataKey="incassi_rinnovi" stackId="comp" fill="var(--color-incassi_rinnovi)" radius={[4, 4, 0, 0]} />
-                </>
-              ) : (
-                <>
-                  <Bar dataKey="incassi_acconti" stackId="comp" fill="var(--color-incassi_acconti)" radius={[0, 0, 4, 4]} />
-                  <Bar dataKey="incassi_rate" stackId="comp" fill="var(--color-incassi_rate)" radius={[4, 4, 0, 0]} />
-                </>
-              )}
+              {/* No React Fragment qui: recharts non rileva le Bar dentro un <>…</>.
+                  Le serie condizionali vanno passate come array (recharts appiattisce). */}
+              {(compMode === "origine"
+                ? ["incassi_nuovi", "incassi_rinnovi"]
+                : ["incassi_acconti", "incassi_rate"]
+              ).map((key, i) => (
+                <Bar
+                  key={key}
+                  dataKey={key}
+                  stackId="comp"
+                  fill={`var(--color-${key})`}
+                  radius={i === 0 ? [0, 0, 4, 4] : [4, 4, 0, 0]}
+                />
+              ))}
             </BarChart>
           </ChartContainer>
         </div>
