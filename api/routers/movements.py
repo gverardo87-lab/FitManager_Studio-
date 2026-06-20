@@ -1615,8 +1615,19 @@ def get_financial_trend(
         )
     ).all()
 
+    # Mappa contratto → rinnovo_di per la composizione nuovi/rinnovi (Layer 3).
+    # Niente filtro deleted_at: serve a classificare anche movimenti di contratti chiusi/eliminati.
+    rinnovo_map = dict(session.exec(
+        select(Contract.id, Contract.rinnovo_di).where(Contract.trainer_id == trainer.id)
+    ).all())
+
     buckets_contratti: dict[tuple[int, int], float] = defaultdict(float)
     buckets_altri: dict[tuple[int, int], float] = defaultdict(float)
+    # Layer 3 — composizione di incassi_contratti (due tagli indipendenti)
+    buckets_nuovi: dict[tuple[int, int], float] = defaultdict(float)
+    buckets_rinnovi: dict[tuple[int, int], float] = defaultdict(float)
+    buckets_acconti: dict[tuple[int, int], float] = defaultdict(float)
+    buckets_rate: dict[tuple[int, int], float] = defaultdict(float)
     for m in rows:
         d = m.data_effettiva
         if isinstance(d, str):
@@ -1626,10 +1637,21 @@ def get_financial_trend(
             continue
         if m.categoria == "STORNO_SPESA_FISSA":
             continue  # rettifica di uscita, non un ricavo
+        imp = m.importo or 0
         if m.id_contratto is not None:
-            buckets_contratti[key] += m.importo or 0
+            buckets_contratti[key] += imp
+            # Taglio 1 — nuovi vs rinnovi (rinnovo_di): ognuno somma a incassi_contratti
+            if rinnovo_map.get(m.id_contratto) is None:
+                buckets_nuovi[key] += imp
+            else:
+                buckets_rinnovi[key] += imp
+            # Taglio 2 — acconti vs rate (categoria): else=rate garantisce la riconciliazione
+            if m.categoria == "ACCONTO_CONTRATTO":
+                buckets_acconti[key] += imp
+            else:
+                buckets_rate[key] += imp
         else:
-            buckets_altri[key] += m.importo or 0
+            buckets_altri[key] += imp
 
     # ── Venduto (competenza, Layer 2): Σ prezzo_totale per mese su data_vendita ──
     # Include anche i contratti chiusi (sono comunque stati "venduti" nel periodo).
@@ -1654,13 +1676,25 @@ def get_financial_trend(
     tot_c = 0.0
     tot_a = 0.0
     tot_v = 0.0
+    tot_nuovi = 0.0
+    tot_rinnovi = 0.0
+    tot_acconti = 0.0
+    tot_rate = 0.0
     for anno, mese in window:
         c = round(buckets_contratti.get((anno, mese), 0.0), 2)
         a = round(buckets_altri.get((anno, mese), 0.0), 2)
         v = round(buckets_venduto.get((anno, mese), 0.0), 2)
+        n = round(buckets_nuovi.get((anno, mese), 0.0), 2)
+        ri = round(buckets_rinnovi.get((anno, mese), 0.0), 2)
+        ac = round(buckets_acconti.get((anno, mese), 0.0), 2)
+        ra = round(buckets_rate.get((anno, mese), 0.0), 2)
         tot_c += c
         tot_a += a
         tot_v += v
+        tot_nuovi += n
+        tot_rinnovi += ri
+        tot_acconti += ac
+        tot_rate += ra
         periodi.append(FinancialTrendPeriod(
             anno=anno,
             mese=mese,
@@ -1669,6 +1703,10 @@ def get_financial_trend(
             altri_incassi=a,
             cash_flow_reale=round(c + a, 2),
             venduto=v,
+            incassi_nuovi=n,
+            incassi_rinnovi=ri,
+            incassi_acconti=ac,
+            incassi_rate=ra,
         ))
 
     return FinancialTrendResponse(
@@ -1678,4 +1716,8 @@ def get_financial_trend(
         tot_altri_incassi=round(tot_a, 2),
         tot_cash_flow_reale=round(tot_c + tot_a, 2),
         tot_venduto=round(tot_v, 2),
+        tot_incassi_nuovi=round(tot_nuovi, 2),
+        tot_incassi_rinnovi=round(tot_rinnovi, 2),
+        tot_incassi_acconti=round(tot_acconti, 2),
+        tot_incassi_rate=round(tot_rate, 2),
     )

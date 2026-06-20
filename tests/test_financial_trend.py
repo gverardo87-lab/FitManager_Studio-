@@ -93,6 +93,47 @@ def test_trend_venduto_competenza(client, auth_headers, sample_contract):
     assert cur["cash_flow_reale"] == 0.0
 
 
+def test_trend_composition_nuovo_rate(client, auth_headers, sample_contract):
+    """Composizione: contratto nuovo, rata oggi → nuovi+rate; riconcilia con incassi_contratti."""
+    today = date.today()
+    _pay_rate_today(client, auth_headers, sample_contract["id"], 300.0)
+    data = client.get("/api/movements/financial-trend?mesi=12", headers=auth_headers).json()
+    cur = _current_period(data, today)
+
+    # riconciliazione: ogni taglio somma a incassi_contratti
+    assert round(cur["incassi_nuovi"] + cur["incassi_rinnovi"], 2) == cur["incassi_contratti"]
+    assert round(cur["incassi_acconti"] + cur["incassi_rate"], 2) == cur["incassi_contratti"]
+    # sample_contract è nuovo (rinnovo_di NULL); l'incasso di oggi è una rata
+    assert cur["incassi_nuovi"] == 300.0
+    assert cur["incassi_rinnovi"] == 0.0
+    assert cur["incassi_acconti"] == 0.0
+    assert cur["incassi_rate"] == 300.0
+
+
+def test_trend_composition_rinnovo_acconto(client, auth_headers, sample_contract):
+    """Composizione: rinnovo con acconto oggi → rinnovi+acconti."""
+    today = date.today()
+    r = client.post(f"/api/contracts/{sample_contract['id']}/renew", json={
+        "id_cliente": sample_contract["id_cliente"],
+        "tipo_pacchetto": "Rinnovo",
+        "crediti_totali": 10,
+        "prezzo_totale": 500.0,
+        "data_inizio": today.isoformat(),
+        "data_scadenza": "2026-12-31",
+        "acconto": 100.0,
+        "metodo_acconto": "CONTANTI",
+    }, headers=auth_headers)
+    assert r.status_code == 201, r.text
+
+    data = client.get("/api/movements/financial-trend?mesi=12", headers=auth_headers).json()
+    cur = _current_period(data, today)
+    assert cur["incassi_rinnovi"] == 100.0   # contratto-figlio (rinnovo_di valorizzato)
+    assert cur["incassi_nuovi"] == 0.0
+    assert cur["incassi_acconti"] == 100.0   # acconto del rinnovo
+    assert cur["incassi_rate"] == 0.0
+    assert cur["incassi_contratti"] == 100.0
+
+
 def test_trend_window_length_and_chronology(client, auth_headers):
     """`mesi` periodi, cronologici, ultimo = mese corrente."""
     today = date.today()

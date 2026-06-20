@@ -1724,6 +1724,11 @@ export interface FinancialTrendPeriod {
   altri_incassi: number;     // ENTRATA fuori contratto, netto storni
   cash_flow_reale: number;   // incassi_contratti + altri_incassi
   venduto: number;           // competenza: Σ prezzo_totale venduto nel periodo (mai sommato alla cassa)
+  // Composizione di incassi_contratti (due tagli, ognuno somma a incassi_contratti)
+  incassi_nuovi: number;
+  incassi_rinnovi: number;
+  incassi_acconti: number;
+  incassi_rate: number;
 }
 
 export interface FinancialTrendResponse {
@@ -1733,6 +1738,10 @@ export interface FinancialTrendResponse {
   tot_altri_incassi: number;
   tot_cash_flow_reale: number;
   tot_venduto: number;
+  tot_incassi_nuovi: number;
+  tot_incassi_rinnovi: number;
+  tot_incassi_acconti: number;
+  tot_incassi_rate: number;
 }
 
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•

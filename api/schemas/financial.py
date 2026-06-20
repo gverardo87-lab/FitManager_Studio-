@@ -530,6 +530,11 @@ class FinancialTrendPeriod(BaseModel):
     # Layer 2 — competenza (Σ prezzo_totale dei contratti VENDUTI nel periodo, su data_vendita).
     # Asse diverso dalla cassa: mai sommato. Lo scarto venduto−incassato = credito vivo.
     venduto: float = 0.0
+    # Layer 3 — composizione di incassi_contratti (due tagli indipendenti, ognuno somma a incassi_contratti).
+    incassi_nuovi: float = 0.0      # da contratti nuovi (rinnovo_di IS NULL)
+    incassi_rinnovi: float = 0.0    # da rinnovi (rinnovo_di valorizzato)
+    incassi_acconti: float = 0.0    # categoria ACCONTO_CONTRATTO
+    incassi_rate: float = 0.0       # categoria PAGAMENTO_RATA
 
 
 class FinancialTrendResponse(BaseModel):
@@ -546,3 +551,7 @@ class FinancialTrendResponse(BaseModel):
     tot_altri_incassi: float
     tot_cash_flow_reale: float
     tot_venduto: float = 0.0
+    tot_incassi_nuovi: float = 0.0
+    tot_incassi_rinnovi: float = 0.0
+    tot_incassi_acconti: float = 0.0
+    tot_incassi_rate: float = 0.0

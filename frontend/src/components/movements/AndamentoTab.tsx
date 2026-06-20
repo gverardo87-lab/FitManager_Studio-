@@ -13,9 +13,11 @@
  * (Layer 2 aggiungerà la serie "venduto"/competenza; Layer 3 la composizione.)
  */
 
-import { Wallet, FileText, Coins, Tag, LineChart as LineChartIcon } from "lucide-react";
-import { Bar, Line, ComposedChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { useState } from "react";
+import { Wallet, FileText, Coins, Tag, LineChart as LineChartIcon, PieChart } from "lucide-react";
+import { Bar, BarChart, Line, ComposedChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { GradientKpiCard } from "@/components/movements/GradientKpiCard";
 import {
@@ -35,7 +37,14 @@ const trendConfig: ChartConfig = {
   incassi_contratti: { label: "Incassi da contratti", color: "var(--color-teal-500)" },
   altri_incassi: { label: "Altri incassi", color: "var(--color-amber-400)" },
   venduto: { label: "Venduto (competenza)", color: "var(--color-violet-500)" },
+  // Composizione (Layer 3)
+  incassi_nuovi: { label: "Nuovi", color: "var(--color-emerald-500)" },
+  incassi_rinnovi: { label: "Rinnovi", color: "var(--color-blue-500)" },
+  incassi_acconti: { label: "Acconti", color: "var(--color-teal-500)" },
+  incassi_rate: { label: "Rate", color: "var(--color-amber-400)" },
 };
+
+type CompMode = "origine" | "tipo";  // origine = nuovi/rinnovi, tipo = acconti/rate
 
 function KpiValue({ amount, color }: { amount: number; color: string }) {
   return <p className={`text-2xl font-bold tracking-tight tabular-nums ${color}`}>{formatCurrency(amount)}</p>;
@@ -43,6 +52,7 @@ function KpiValue({ amount, color }: { amount: number; color: string }) {
 
 export function AndamentoTab() {
   const { data, isLoading } = useFinancialTrend(TREND_MONTHS);
+  const [compMode, setCompMode] = useState<CompMode>("origine");
 
   if (isLoading) {
     return (
@@ -141,6 +151,61 @@ export function AndamentoTab() {
           <LineChartIcon className="h-8 w-8 text-muted-foreground/40" />
           <p className="text-sm font-medium text-muted-foreground">Nessun dato negli ultimi {TREND_MONTHS} mesi</p>
           <p className="text-xs text-muted-foreground/70">Incassi e contratti venduti compaiono qui appena registrati</p>
+        </div>
+      )}
+
+      {/* Composizione incassi da contratti (Layer 3) — due tagli, toggle */}
+      {(data?.tot_incassi_contratti ?? 0) > 0 && (
+        <div className="rounded-xl border bg-card p-4 shadow-sm">
+          <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2">
+              <PieChart className="h-4 w-4 text-muted-foreground" />
+              <h3 className="text-sm font-semibold">Composizione incassi da contratti</h3>
+            </div>
+            <div className="flex gap-1 rounded-lg border bg-muted/40 p-0.5">
+              <Button
+                size="sm"
+                variant={compMode === "origine" ? "default" : "ghost"}
+                className="h-7 px-2.5 text-xs"
+                onClick={() => setCompMode("origine")}
+              >
+                Nuovi / Rinnovi
+              </Button>
+              <Button
+                size="sm"
+                variant={compMode === "tipo" ? "default" : "ghost"}
+                className="h-7 px-2.5 text-xs"
+                onClick={() => setCompMode("tipo")}
+              >
+                Acconti / Rate
+              </Button>
+            </div>
+          </div>
+          <p className="mb-3 text-[11px] text-muted-foreground">
+            {compMode === "origine"
+              ? "Cresco acquisendo (nuovi) o fidelizzando (rinnovi)?"
+              : "Denaro fresco (acconti) o code di contratti pregressi (rate)?"}
+          </p>
+          <ChartContainer config={trendConfig} className="h-[240px] w-full">
+            <BarChart data={periodi} margin={{ left: 4, right: 4, top: 8 }}>
+              <CartesianGrid vertical={false} strokeDasharray="3 3" />
+              <XAxis dataKey="label" tickLine={false} axisLine={false} fontSize={11} interval="preserveStartEnd" />
+              <YAxis tickLine={false} axisLine={false} width={64} fontSize={11} tickFormatter={(v) => formatCurrency(Number(v))} />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <ChartLegend content={<ChartLegendContent />} />
+              {compMode === "origine" ? (
+                <>
+                  <Bar dataKey="incassi_nuovi" stackId="comp" fill="var(--color-incassi_nuovi)" radius={[0, 0, 4, 4]} />
+                  <Bar dataKey="incassi_rinnovi" stackId="comp" fill="var(--color-incassi_rinnovi)" radius={[4, 4, 0, 0]} />
+                </>
+              ) : (
+                <>
+                  <Bar dataKey="incassi_acconti" stackId="comp" fill="var(--color-incassi_acconti)" radius={[0, 0, 4, 4]} />
+                  <Bar dataKey="incassi_rate" stackId="comp" fill="var(--color-incassi_rate)" radius={[4, 4, 0, 0]} />
+                </>
+              )}
+            </BarChart>
+          </ChartContainer>
         </div>
       )}
     </div>
