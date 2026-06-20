@@ -555,3 +555,28 @@ class FinancialTrendResponse(BaseModel):
     tot_incassi_rinnovi: float = 0.0
     tot_incassi_acconti: float = 0.0
     tot_incassi_rate: float = 0.0
+
+
+# ════════════════════════════════════════════════════════════
+# ESITO RINNOVO ("non rinnova" / cliente perso) — SPEC_RINNOVI_SCADUTI §5
+# ════════════════════════════════════════════════════════════
+
+VALID_RENEWAL_OUTCOME_REASONS = {"prezzo", "trasferito", "infortunio", "insoddisfatto", "altro"}
+
+
+class RenewalOutcomeCreate(BaseModel):
+    """
+    Esito "non rinnova" su un contratto scaduto (cliente perso) con motivo strutturato.
+    Stato terminale reversibile: la DELETE dell'esito riapre l'opportunità di recupero.
+    """
+    model_config = {"extra": "forbid"}
+
+    motivo: str
+    note: Optional[str] = Field(None, max_length=500)
+
+    @field_validator("motivo")
+    @classmethod
+    def validate_motivo(cls, v: str) -> str:
+        if v not in VALID_RENEWAL_OUTCOME_REASONS:
+            raise ValueError(f"Motivo invalido. Validi: {sorted(VALID_RENEWAL_OUTCOME_REASONS)}")
+        return v

@@ -129,6 +129,45 @@ def test_empty(client, auth_headers):
 
 
 # ════════════════════════════════════════════════════════════
+# Azione "Non rinnova" (endpoint renewal-outcome)
+# ════════════════════════════════════════════════════════════
+
+def test_renewal_outcome_endpoint_excludes_and_reverses(client, auth_headers, sample_client):
+    """POST renewal-outcome → escluso dalla worklist; DELETE → ricompare."""
+    c = _contract(client, auth_headers, sample_client["id"], _past(120), _past(60))
+    assert _recover(client, auth_headers)["total"] == 1
+
+    r = client.post(f"/api/contracts/{c['id']}/renewal-outcome",
+                    json={"motivo": "prezzo", "note": "troppo caro"}, headers=auth_headers)
+    assert r.status_code == 200, r.text
+    assert _recover(client, auth_headers)["total"] == 0
+
+    d = client.delete(f"/api/contracts/{c['id']}/renewal-outcome", headers=auth_headers)
+    assert d.status_code == 200, d.text
+    assert _recover(client, auth_headers)["total"] == 1
+
+
+def test_renewal_outcome_invalid_motivo(client, auth_headers, sample_client):
+    """Motivo fuori set → 422."""
+    c = _contract(client, auth_headers, sample_client["id"], _past(120), _past(60))
+    r = client.post(f"/api/contracts/{c['id']}/renewal-outcome",
+                    json={"motivo": "boh"}, headers=auth_headers)
+    assert r.status_code == 422
+
+
+def test_renewal_outcome_ownership_404(client, auth_headers, sample_client):
+    """Contratto di altro trainer → 404 (mai 403)."""
+    c = _contract(client, auth_headers, sample_client["id"], _past(120), _past(60))
+    other = client.post("/api/auth/register", json={
+        "email": "o2@test.com", "nome": "O", "cognome": "T", "password": "otherpass123",
+    })
+    assert other.status_code == 201, other.text
+    oh = {"Authorization": f"Bearer {other.json()['access_token']}"}
+    r = client.post(f"/api/contracts/{c['id']}/renewal-outcome", json={"motivo": "prezzo"}, headers=oh)
+    assert r.status_code == 404
+
+
+# ════════════════════════════════════════════════════════════
 # Fix: già-rinnovati esclusi da "in scadenza"
 # ════════════════════════════════════════════════════════════
 

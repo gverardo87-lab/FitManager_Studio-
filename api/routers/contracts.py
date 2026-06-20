@@ -25,9 +25,15 @@ from api.models.rate import Rate
 from api.models.movement import CashMovement
 from api.models.event import Event
 from api.schemas.financial import (
-    ContractCreate, ContractUpdate,
-    ContractResponse, ContractListResponse, ContractWithRatesResponse,
-    RateResponse, RatePaymentReceipt, RenewalChainItem,
+    ContractCreate,
+    ContractUpdate,
+    ContractResponse,
+    ContractListResponse,
+    ContractWithRatesResponse,
+    RateResponse,
+    RatePaymentReceipt,
+    RenewalChainItem,
+    RenewalOutcomeCreate,
 )
 from api.routers._audit import log_audit
 
@@ -852,3 +858,59 @@ def renew_contract(
     session.refresh(renewed)
 
     return _to_response(renewed)
+
+
+def _bouncer_contract_owned(session: Session, contract_id: int, trainer_id: int) -> Contract:
+    """Bouncer: il contratto deve appartenere al trainer (404 mai 403)."""
+    contract = session.exec(
+        select(Contract).where(
+            Contract.id == contract_id,
+            Contract.trainer_id == trainer_id,
+            Contract.deleted_at == None,
+        )
+    ).first()
+    if not contract:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Contratto non trovato")
+    return contract
+
+
+@router.post("/{contract_id}/renewal-outcome", response_model=ContractResponse)
+def set_renewal_outcome(
+    contract_id: int,
+    data: RenewalOutcomeCreate,
+    trainer: Trainer = Depends(get_current_trainer),
+    session: Session = Depends(get_session),
+):
+    """
+    Marca un contratto come "non rinnova" (cliente perso) con motivo strutturato.
+
+    Stato terminale che esce dalla worklist "clienti da recuperare" ma resta in storico
+    (SPEC_RINNOVI_SCADUTI §5). Reversibile via DELETE. Bouncer ownership (404 mai 403) + audit.
+    """
+    contract = _bouncer_contract_owned(session, contract_id, trainer.id)
+    contract.esito_rinnovo_motivo = data.motivo
+    contract.esito_rinnovo_note = data.note
+    contract.esito_rinnovo_il = date.today()
+    session.add(contract)
+    log_audit(session, "contract", contract.id, "UPDATE", trainer.id, {"esito_rinnovo": data.motivo})
+    session.commit()
+    session.refresh(contract)
+    return _to_response(contract)
+
+
+@router.delete("/{contract_id}/renewal-outcome", response_model=ContractResponse)
+def clear_renewal_outcome(
+    contract_id: int,
+    trainer: Trainer = Depends(get_current_trainer),
+    session: Session = Depends(get_session),
+):
+    """Riapre l'opportunità di recupero (annulla "non rinnova"). Bouncer + audit."""
+    contract = _bouncer_contract_owned(session, contract_id, trainer.id)
+    contract.esito_rinnovo_motivo = None
+    contract.esito_rinnovo_note = None
+    contract.esito_rinnovo_il = None
+    session.add(contract)
+    log_audit(session, "contract", contract.id, "UPDATE", trainer.id, {"esito_rinnovo": None})
+    session.commit()
+    session.refresh(contract)
+    return _to_response(contract)
