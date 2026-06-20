@@ -404,6 +404,68 @@ def get_expiring_contracts(
     return {"items": items, "total": len(items)}
 
 
+@router.get("/contracts-to-plan")
+def get_contracts_to_plan(
+    trainer: Trainer = Depends(get_current_trainer),
+    session: Session = Depends(get_session),
+):
+    """
+    Contratti da pianificare: aperti, con residuo positivo e ZERO rate (SPEC_RINNOVO §B).
+
+    Contract-first (non Rate-first): l'aging report itera sulle rate ed e'
+    strutturalmente cieco a questi contratti. Qui si parte dal contratto.
+
+    Dati completi per risoluzione inline dalla Dashboard (Sheet → "Definisci piano").
+    Ordinamento: scadenza piu' vicina prima (urgenza decrescente).
+    """
+    # Step 1: contratti aperti con residuo positivo (prezzo > versato)
+    rows = session.exec(
+        select(Contract, Client)
+        .join(Client, Contract.id_cliente == Client.id)
+        .where(
+            Contract.trainer_id == trainer.id,
+            Contract.deleted_at == None,
+            Contract.chiuso == False,
+            func.coalesce(Contract.prezzo_totale, 0) > func.coalesce(Contract.totale_versato, 0),
+        )
+        .order_by(Contract.data_scadenza.asc())
+    ).all()
+
+    if not rows:
+        return {"items": [], "total": 0}
+
+    # Step 2: quali hanno almeno una rata non eliminata → escludili (zero rate, §B.3)
+    candidate_ids = [c.id for c, _ in rows]
+    with_rates = set(
+        session.exec(
+            select(Rate.id_contratto)
+            .where(Rate.id_contratto.in_(candidate_ids), Rate.deleted_at == None)
+            .distinct()
+        ).all()
+    )
+
+    items = []
+    for contract, client in rows:
+        if contract.id in with_rates:
+            continue
+        residuo = round((contract.prezzo_totale or 0) - (contract.totale_versato or 0), 2)
+        scad = contract.data_scadenza
+        items.append({
+            "contract_id": contract.id,
+            "tipo_pacchetto": contract.tipo_pacchetto,
+            "data_scadenza": scad.isoformat() if isinstance(scad, date) else (str(scad) if scad else None),
+            "prezzo_totale": contract.prezzo_totale,
+            "totale_versato": contract.totale_versato,
+            "importo_residuo": residuo,
+            "client_id": client.id,
+            "client_nome": client.nome,
+            "client_cognome": client.cognome,
+            "client_telefono": client.telefono,
+        })
+
+    return {"items": items, "total": len(items)}
+
+
 @router.get("/birthday-clients")
 def get_birthday_clients(
     trainer: Trainer = Depends(get_current_trainer),
