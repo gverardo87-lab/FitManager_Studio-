@@ -1,11 +1,17 @@
 # SPEC — Rinnovi dei contratti scaduti + Retention (funnel anti-perdita silenziosa)
 
-**Versione:** 1.0
+**Versione:** 1.1
 **Stato:** Vincolante sui criteri di accettazione — **non vincolante sull'implementazione**
 **Owner:** Giacomo Verardo (AVGV Technologies)
 **Destinatario:** Claude Code (architetto finale nel codebase)
 **Collocazione:** `docs/technical/`
 **Data:** 2026-06-20
+
+> **Nota di versione 1.1 (2026-06-20):** rilievo founder — la rilevazione contract-level ("nessun
+> figlio `rinnovo_di`") è **fallace**: un cliente può aprire un nuovo contratto NON collegato →
+> falso positivo. Corretto a **client-aware**: si recupera un cliente solo se NON ha alcun contratto
+> attivo (`chiuso=False AND data_scadenza>=oggi`); unità = **cliente** (conta clienti); rappresentato
+> dal contratto scaduto più recente. Vedi §3-bis e §4 riscritti.
 **Decisione architetturale:** `docs/adr/ADR-015-renewal-retention-funnel.md`
 **Spec correlate:** `SPEC_RINNOVO_E_CONTRATTI_DA_PIANIFICARE.md` (flusso di rinnovo + contratti da pianificare)
 
@@ -69,43 +75,63 @@ Non coincidono: un cliente con un contratto scaduto **e** uno attivo è opportun
 Contratto (derivato, deterministico):
 - **attivo** — `chiuso=False`, `data_scadenza > today + soglia in-scadenza`.
 - **in scadenza** — `chiuso=False`, `today <= data_scadenza <= today + N` (N attuale = 30). [esiste]
-- **scaduto (da rinnovare)** — `chiuso=False`, `data_scadenza < today`, **nessun figlio rinnovo**,
-  **non marcato perso**, con valore residuo *o* crediti inutilizzati. [IL BUCO]
-- **rinnovato** — esiste un contratto-figlio con `rinnovo_di = id`. Terminale positivo (derivato).
+- **scaduto** — `chiuso=False`, `data_scadenza < today`. Stato del contratto.
+- **rinnovato/continuato** — il **cliente** ha (di nuovo) un contratto **attivo** (`chiuso=False AND
+  data_scadenza >= today`), che sia un figlio `rinnovo_di` *o un nuovo contratto non collegato*.
+  Derivato a livello cliente. [vedi §3-bis]
 - **perso** — il trainer ha registrato l'esito "non rinnova" (con motivo). Terminale negativo. [NUOVO]
+
+### 3-bis. Rilevazione client-aware (correzione 2026-06-20)
+
+**La rilevazione "da recuperare" è a livello CLIENTE, non contratto.** "Nessun figlio `rinnovo_di`"
+NON significa "il cliente non ha continuato": il cliente può aver aperto un **nuovo contratto non
+collegato**. Quindi:
+- Un contratto scaduto è un'**opportunità di recupero** SOLO se il **cliente non ha alcun contratto
+  attivo** (`chiuso=False AND data_scadenza >= today`). Questo sussume sia il rinnovo-figlio sia il
+  nuovo-contratto-non-collegato → zero falsi positivi.
+- **Unità = cliente**, non contratto: un cliente con N contratti scaduti = **1** opportunità di
+  recupero (1 riga, conteggio per clienti). Rappresentato dal suo **contratto più recente** (il punto
+  di interruzione della copertura).
+- Il denaro/crediti residui di uno scaduto il cui cliente è **ancora attivo** NON spariscono: vivono
+  nelle altre worklist (crediti su "in scadenza", residuo su aging/contratti-da-pianificare). Qui si
+  parla di **recupero del cliente**, non del singolo euro.
 
 ---
 
-## 4. Criterio A — Vista "Scaduti da rinnovare" (anti-perdita silenziosa)
+## 4. Criterio A — Vista "Clienti da recuperare" (anti-perdita silenziosa, client-aware)
 
 ### A.1 Cosa deve essere vero
 
-Un contratto scaduto e non rinnovato non deve mai essere uno stato invisibile. Deve comparire in una
-vista esplicita e azionabile, accanto a "in scadenza", finché non viene **rinnovato** o **marcato perso**.
+Un cliente la cui copertura è **lapsed** (contratto scaduto, nessun contratto attivo) non deve mai
+essere uno stato invisibile. Deve comparire in una vista esplicita e azionabile, accanto a "in
+scadenza", finché non viene **recuperato** (nuovo contratto attivo) o **marcato perso**.
 
 ### A.2 Criteri di accettazione
 
-- Esiste una vista/aggregato **"contratti scaduti da rinnovare"** che seleziona i contratti con:
-  - aperti (`chiuso == False`), non eliminati (`deleted_at == None`), del trainer;
-  - `data_scadenza < today`;
-  - **nessun contratto-figlio** (nessun `Contract` con `rinnovo_di = id`, non eliminato) → non già rinnovato;
-  - **non marcati "perso"** (vedi §5);
-  - con **opportunità residua**: crediti inutilizzati **oppure** residuo economico > 0 (denaro o sedute da non perdere).
-- I contratti **già rinnovati** sono esclusi **anche** dalla vista "in scadenza" (correzione del bug
-  secondario: oggi un rinnovato può ancora comparire).
-- **Aging**: gli scaduti sono ordinati/raggruppati per ritardo (es. 0-30 / 31-90 / 90+ giorni dalla
-  scadenza), urgenza decrescente.
-- **Invariante "nessuna perdita silenziosa" (vincolante):** nessun contratto aperto, scaduto, con
-  opportunità residua, non rinnovato e non marcato perso, può uscire da questa vista. Ne esce solo per
-  decisione esplicita (rinnovo o "non rinnova").
-- La vista entra nel flusso di `/rinnovi-incassi` come sezione dedicata (oltre a "In scadenza"), con
-  CTA "Rinnova" (riusa il flusso di SPEC_RINNOVO) e "Non rinnova".
-- **Nessuna migrazione dati**: i contratti scaduti esistenti compaiono appena la vista sa cercarli.
+- Esiste una vista/aggregato **"clienti da recuperare"** — **unità = cliente** (1 riga/cliente,
+  conteggio per **clienti**). Un cliente vi compare se **tutte** valgono:
+  - ha **almeno un contratto scaduto** (`chiuso=False`, `deleted_at=None`, `data_scadenza < today`);
+  - **NON ha alcun contratto attivo** (nessun `Contract` con `chiuso=False AND data_scadenza >= today`,
+    non eliminato) — questo è il cuore client-aware: sussume sia il rinnovo-figlio sia il
+    nuovo-contratto-non-collegato (§3-bis);
+  - il suo **contratto più recente** (rappresentante) **non è marcato "perso"** (§5);
+  - opportunità residua *a livello cliente* (almeno un contratto con crediti inutilizzati o residuo > 0).
+- Il cliente è rappresentato dal **contratto scaduto più recente** (data_scadenza/data_vendita max);
+  `giorni_ritardo = today − data_scadenza` di quel contratto.
+- **Aging**: ordinati/raggruppati per ritardo (es. 0-30 / 31-90 / 90+ giorni), urgenza decrescente.
+- **Invariante "nessuna perdita silenziosa" (vincolante):** nessun cliente lapsed (scaduto + zero
+  attivi + opportunità) non marcato perso può uscire da questa vista senza una **decisione umana
+  esplicita** (recupero o "non rinnova").
+- **Correzione collaterale**: i contratti già rinnovati (figlio attivo) vanno esclusi anche dalla
+  vista "in scadenza" (oggi un rinnovato può ancora comparire).
+- La vista entra in `/rinnovi-incassi` come sezione dedicata, con CTA "Rinnova" (riusa SPEC_RINNOVO)
+  e "Non rinnova".
+- **Nessuna migrazione dati**: i clienti lapsed esistenti compaiono appena la vista sa cercarli.
 
 ### A.3 Lasciato a Claude Code
 
-Endpoint dedicato vs estensione; forma della query; bucket di aging; innesto UI; naming italiano
-("Scaduti da rinnovare", "Da recuperare"…).
+Endpoint dedicato vs estensione; forma della query (es. clienti con scaduti `EXCEPT` clienti con
+attivi); bucket di aging; innesto UI; naming italiano ("Clienti da recuperare", "Da riattivare"…).
 
 ---
 
@@ -160,11 +186,11 @@ Forma dello stato (campo vs tabella), set dei motivi, reversibilità, UI dell'az
 
 ## 8. Checklist di accettazione (sintesi verificabile)
 
-**Scaduti da rinnovare (A):**
-- [ ] Vista contratti `chiuso=False` + `data_scadenza<today` + non rinnovati + non persi + opportunità residua.
-- [ ] Già-rinnovati esclusi anche da "in scadenza".
-- [ ] Aging per ritardo; integrazione in `/rinnovi-incassi` + solleciti.
-- [ ] Invariante: nessuna uscita senza decisione esplicita (rinnovo/perso).
+**Clienti da recuperare (A) — client-aware:**
+- [ ] Vista per **cliente** (conta clienti): ha scaduto + **zero contratti attivi** (`chiuso=False AND data_scadenza>=today`) + rappresentante non perso + opportunità residua.
+- [ ] Rappresentato dal contratto scaduto più recente; `giorni_ritardo` + aging.
+- [ ] Già-rinnovati/continuati esclusi (sussunto dal "zero attivi"); fix esclusione su "in scadenza".
+- [ ] Invariante: nessun cliente lapsed esce senza decisione esplicita (recupero/perso).
 - [ ] Zero migrazione.
 
 **Esito "Non rinnova" (B):**

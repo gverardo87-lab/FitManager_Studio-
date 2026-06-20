@@ -59,6 +59,16 @@ cade fuori dalla finestra e non compare più → si perdono **opportunità di ri
    rinnova"); **lente cliente** (retention/lapsed/win-back) progettata nella spec ma **differita**.
    Confine con l'alert `inactive_clients` (attività-based) chiarito: complementare, non fuso.
 
+> **Emendamento 2026-06-20 (rilievo founder) — rilevazione client-aware.** La rilevazione
+> contract-level ("nessun figlio `rinnovo_di`") è **fallace**: un cliente può aprire un nuovo
+> contratto NON collegato → falso positivo "da rinnovare" mentre il cliente è ancora attivo. Decisione
+> corretta: un'opportunità di recupero esiste **solo se il cliente non ha alcun contratto attivo**
+> (`chiuso=False AND data_scadenza>=oggi`). Questo sussume sia il rinnovo-figlio sia il
+> nuovo-contratto-non-collegato. **Unità = cliente** (conteggio per clienti, 1 riga/cliente,
+> rappresentato dal contratto scaduto più recente). Conseguenza: una fetta minima della lente cliente
+> entra necessariamente già ora (non si può fare la lente contratto "pura" senza falsi positivi); la
+> retention ricca (segmenti/scoring/win-back) resta differita. Vedi SPEC v1.1 §3-bis/§4.
+
 ## Consequences
 
 - **Positive**: stop alla perdita silenziosa di denaro e clienti; renewal pipeline allo stato dell'arte;

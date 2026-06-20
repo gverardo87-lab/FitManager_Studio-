@@ -36,8 +36,8 @@ Nuovi campi **nullable** su `Contract` (auto-propagati da schema_sync):
 - `esito_rinnovo_il: Optional[date]` — quando deciso (audit/aging).
 
 Presenza di `esito_rinnovo_motivo` = stato **perso**. Reversibile: settare i tre a null = riapre.
-Set motivi (codici strutturati) — **da confermare con founder**: `prezzo`, `trasferito`, `infortunio`,
-`insoddisfatto`, `inattivo`, `altro`.
+Set motivi (codici strutturati, **confermato founder 2026-06-20**): `prezzo`, `trasferito`,
+`infortunio`, `insoddisfatto`, `altro` (con nota libera come catch-all).
 
 > Niente hard delete, niente nuova tabella: un campo nullable basta (più semplice del pattern outcome-table,
 > sufficiente per analytics di churn di base). Alembic migration + schema_sync per i DB esistenti.
@@ -46,14 +46,18 @@ Set motivi (codici strutturati) — **da confermare con founder**: `prezzo`, `tr
 
 ## 3. Backend
 
-### 3.1 Vista "scaduti da rinnovare" (Criterio A) — endpoint nuovo
-`GET /dashboard/expired-contracts` (modellato su `get_expiring_contracts`, stesso shape item + `giorni_ritardo`):
-- `chiuso == False`, `deleted_at == None`, `trainer_id`;
-- `data_scadenza < today`;
-- **non rinnovato**: `NOT EXISTS (child con rinnovo_di = c.id AND deleted_at IS NULL)`;
-- **non perso**: `esito_rinnovo_motivo IS NULL`;
-- **opportunità residua**: `crediti_residui > 0` **OR** `prezzo_totale > totale_versato`;
-- `giorni_ritardo = today − data_scadenza`; ordinati per ritardo desc; aging client-side o nel response.
+### 3.1 Vista "clienti da recuperare" (Criterio A) — endpoint nuovo, CLIENT-AWARE
+`GET /dashboard/clients-to-recover` (unità = **cliente**, 1 riga/cliente):
+- Seleziona i **clienti** del trainer che hanno **≥1 contratto scaduto** (`chiuso=False`,
+  `deleted_at=None`, `data_scadenza < today`) **E NON hanno alcun contratto attivo**
+  (`chiuso=False AND data_scadenza >= today AND deleted_at=None`). Pattern SQL: `clienti con scaduti`
+  **EXCEPT** `clienti con attivi`. Questo sussume rinnovo-figlio e nuovo-contratto-non-collegato.
+- Per ogni cliente, **rappresentante** = contratto scaduto più recente (max `data_scadenza`).
+- Filtri sul rappresentante: **non perso** (`esito_rinnovo_motivo IS NULL`) e **opportunità residua**
+  a livello cliente (almeno un contratto con `crediti_residui > 0` o `prezzo_totale > totale_versato`).
+- Response per riga: dati cliente + contratto rappresentante + `giorni_ritardo = today − data_scadenza`
+  + aging bucket. Ordinati per ritardo desc.
+- NB: il vecchio "NOT EXISTS child rinnovo_di" **non serve più** — è sussunto da "zero contratti attivi".
 
 ### 3.2 Fix "in scadenza" — escludere i già-rinnovati
 Aggiungere `NOT EXISTS (child rinnovo_di)` a `get_expiring_contracts` (`:346`) e all'alert
@@ -65,34 +69,36 @@ Aggiungere `NOT EXISTS (child rinnovo_di)` a `get_expiring_contracts` (`:346`) e
 - reversibilità: `DELETE /contracts/{id}/renewal-outcome` (o `motivo=null`) → riapre.
 - Validazione `motivo` contro il set consentito.
 
-### 3.4 (Opzionale) Alert dashboard "scaduti da rinnovare"
-Nuova categoria alert `expired_contracts` in `get_dashboard_alerts` (come `orphan_contracts`) — **da
-decidere** se aggiungerla ora o solo la sezione in `/rinnovi-incassi`.
+### 3.4 Alert dashboard "clienti da recuperare"
+Nuova categoria alert `clients_to_recover` in `get_dashboard_alerts` (come `orphan_contracts`),
+**conteggio per CLIENTI** ("N clienti da recuperare"), non per contratti — risolve la fallacia
+sollevata dal founder (un cliente con 2 scaduti = 1, non 2). Link a `/rinnovi-incassi`.
 
 ---
 
 ## 4. Frontend
 
-- **Tipo** `ExpiredContractItem` (come `ExpiringContractItem` + `giorni_ritardo`, `residuo`) e
-  `esito_rinnovo_*` su `Contract`/`ContractListItem` se serve in lista.
-- **Hook** `useExpiredContracts` (clone di `useExpiringContracts`) + `useMarkRenewalOutcome` /
-  `useReopenRenewalOutcome` (mutation, invalidano `["expired-contracts"]`, `["contracts"]`, `["dashboard"]`).
-- **`/rinnovi-incassi`**: nuova sezione **"Scaduti da rinnovare"** (sopra/sotto "Contratti da rinnovare"),
-  con aging (badge "Scaduto da Ngg"), CTA **"Rinnova"** (riusa `ContractSheet` renewal — il pre-fill
-  sequenziale `max(scadenza+1, oggi)` funziona già anche per scaduti) + **"Non rinnova"**.
-- **Dialog "Non rinnova"**: select motivo + note opzionale → `useMarkRenewalOutcome`. Azione MEDIA
-  (AlertDialog standard), non distruttiva.
-- KPI strip: aggiungere "Da recuperare" (scaduti) accanto a "Da rinnovare".
+- **Tipo** `ClientToRecoverItem` (dati cliente + contratto rappresentante + `giorni_ritardo`, residuo/crediti).
+- **Hook** `useClientsToRecover` (clone di `useExpiringContracts`) + `useMarkRenewalOutcome` /
+  `useReopenRenewalOutcome` (invalidano `["clients-to-recover"]`, `["contracts"]`, `["dashboard"]`).
+- **`/rinnovi-incassi`**: nuova sezione **"Clienti da recuperare"** (1 card/cliente), con aging
+  (badge "Scaduto da Ngg"), CTA **"Rinnova"** (riusa `ContractSheet` renewal — pre-fill sequenziale
+  `max(scadenza+1, oggi)` funziona già per gli scaduti) + **"Non rinnova"** (sul contratto rappresentante).
+- **Dialog "Non rinnova"**: select motivo (5 codici) + note opzionale → `useMarkRenewalOutcome`. Azione
+  MEDIA (AlertDialog standard), non distruttiva/reversibile.
+- KPI strip: "Da recuperare" = **conteggio clienti** lapsed.
 
 ---
 
 ## 5. Test
 
-`tests/test_expired_contracts.py`:
-- Scaduto aperto con crediti residui / residuo > 0 → compare; saldato+crediti usati (chiuso) → no.
-- Già-rinnovato (esiste figlio) → escluso da scaduti **e** da expiring.
-- Marcato "non rinnova" → escluso; reversibile → ricompare.
-- `giorni_ritardo` corretto; multi-tenant; opportunità nulla (residuo=0 e crediti usati) → escluso.
+`tests/test_clients_to_recover.py` (client-aware):
+- Cliente con scaduto e **zero attivi** → compare (1 riga).
+- Cliente con scaduto **+ contratto attivo non collegato** (nuovo manuale) → **NON compare** (il caso del founder).
+- Cliente con scaduto + figlio rinnovo attivo → non compare (sussunto).
+- Cliente con **2 scaduti** e zero attivi → **1 sola riga** (rappresentante = più recente), conta come 1.
+- Rappresentante marcato "non rinnova" → escluso; reversibile → ricompare.
+- `giorni_ritardo` corretto; multi-tenant; opportunità nulla → escluso.
 - `renewal-outcome`: ownership 404, motivo invalido 422, audit.
 
 ---
@@ -100,19 +106,22 @@ decidere** se aggiungerla ora o solo la sezione in `/rinnovi-incassi`.
 ## 6. Sequenza
 
 1. **Modello + migrazione** (campi `esito_rinnovo_*` su Contract; Alembic + verifica schema_sync).
-2. **Backend A** endpoint `expired-contracts` + fix esclusione rinnovati su expiring.
+2. **Backend A** endpoint `clients-to-recover` (client-aware: scaduti EXCEPT attivi) + fix esclusione rinnovati su expiring.
 3. **Backend B** endpoint `renewal-outcome` (set/reopen) + audit.
-4. **Frontend** sezione scaduti in `/rinnovi-incassi` + dialog "Non rinnova" + hook.
-5. **Test** + verifica e2e (skill `/verify`, zero scritture sul DB reale dove possibile).
-6. (Opz.) Alert dashboard scaduti.
+4. **Frontend** sezione "Clienti da recuperare" in `/rinnovi-incassi` + dialog "Non rinnova" + hook.
+5. **Alert dashboard** `clients_to_recover` (conteggio clienti).
+6. **Test** (`test_clients_to_recover.py`) + verifica e2e (skill `/verify`, zero scritture dove possibile).
 
 Ogni step rilasciabile; `check-all.sh` + `pytest`; commit per step.
 
-## 7. Punti aperti (decisioni founder)
+## 7. Decisioni founder (chiuse 2026-06-20)
 
-- **Set motivi** "non rinnova" (§2).
-- **Alert dashboard** per scaduti: sì ora o solo sezione `/rinnovi-incassi`? (§3.4)
-- Conferma definizione "opportunità residua" = crediti residui **OR** residuo economico (spec §A.2).
+- ✅ **Rilevazione client-aware**: cliente senza contratti attivi (`chiuso=False AND data_scadenza>=oggi`).
+- ✅ **Unità = cliente** (1 riga/cliente, conta clienti); rappresentante = scaduto più recente.
+- ✅ **Attivo** = aperto E non scaduto.
+- ✅ **Set motivi**: prezzo, trasferito, infortunio, insoddisfatto, altro (+ nota).
+- ✅ **Alert dashboard** sì, conteggio clienti.
+- Opportunità residua = crediti residui **OR** residuo economico (spec §A.2).
 
 ## 8. Bridge rule
 
