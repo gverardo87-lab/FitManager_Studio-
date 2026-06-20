@@ -7,6 +7,7 @@
 **Collocazione:** `docs/technical/`
 **Data:** 2026-06-19
 **Referenziato da:** `SPEC_RINNOVO_E_CONTRATTI_DA_PIANIFICARE.md`, `SPEC_GESTIONE_FINANZIARIA_TEMPORALE.md`
+**Modello di dominio (SSoT):** `FINANCIAL_DOMAIN_MODEL.md` (§8 referenzia questo doc per l'asse cassa/competenza).
 
 > **Nota di versione 1.1 (2026-06-19):** secondo giro di rilievi Claude Code. (1) "Rate non saldate"
 > nella formula "Da pianificare" = `stato ∈ {PENDENTE, PARZIALE}`, non solo PENDENTE (§1 Asse 3).

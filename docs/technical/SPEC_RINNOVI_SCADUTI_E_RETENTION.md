@@ -28,6 +28,8 @@
 > attivo (`chiuso=False AND data_scadenza>=oggi`); unità = **cliente** (conta clienti); rappresentato
 > dal contratto scaduto più recente. Vedi §3-bis e §4 riscritti.
 **Decisione architetturale:** `docs/adr/ADR-015-renewal-retention-funnel.md`
+**Modello di dominio (SSoT):** `FINANCIAL_DOMAIN_MODEL.md` — stati di vita, vocabolario, worklist e
+invarianti sono definiti LÌ. Questa spec contiene solo i criteri di accettazione e vi referenzia.
 **Spec correlate:** `SPEC_RINNOVO_E_CONTRATTI_DA_PIANIFICARE.md` (flusso di rinnovo + contratti da pianificare)
 
 > **Natura del documento.** Prescrittivo su *cosa deve essere vero*, silenzioso su *come*. I criteri

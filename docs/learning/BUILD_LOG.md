@@ -677,3 +677,15 @@ Implementati Step 1-5 (modello esito_rinnovo, endpoint client-aware clients-to-r
 **Decisione (founder):** introdurre lo stato **SOSPESO** di prima classe. Ciclo a 4 stati derivati (ATTIVO/SOSPESO/ESAURITO/CHIUSO); **ingaggio = ATTIVO o SOSPESO**; worklist dedicata "Contratti sospesi / sedute da recuperare" (estendi o decadi, decisione esplicita — invariante anti-perdita esteso alle SEDUTE prepagate). "Clienti da recuperare" esclude gli ingaggiati. SPEC → v2.0 (§3 ciclo, §3-bis ingaggio, §4-bis sospesi), ADR-015 emendamento 2. Prossimo: IMPL_PLAN della revisione, poi fix endpoint/UI (Step 2-5 vanno corretti per escludere i sospesi). Concetto: la finanza è il 90% del CRM, gli errori logici silenziosi vanno presi prima della consegna.
 
 ---
+
+### 2026-06-20 — Consolidamento: FINANCIAL_DOMAIN_MODEL.md (SSoT del dominio finanziario)
+
+Rilievo founder: stavamo definendo gli stati del contratto **per-feature** (kpi_attivi qui, "scaduto" lì, "sospeso" ora) con significati divergenti → logiche accavallate + frammentazione documentale (modello sparso su TASSONOMIA + 3 spec + 2 ADR). Stop alla frammentazione: rianalisi olistica vs CRM finanziari migliori e definizione delle **basi univoche**.
+
+**Prodotto:** `docs/technical/FINANCIAL_DOMAIN_MODEL.md` (v1.0, SSoT vincolante): entità; 3 assi indipendenti (tempo/crediti/denaro); **stato di vita derivato in 4 stati** (ATTIVO/SOSPESO/ESAURITO/CHIUSO) via `contract_state()`; vocabolario univoco (**aperto ≠ attivo**, mai più "attivo=chiuso==False"); sotto-stato denaro; rollup cliente (ingaggiato/lapsed); **mappa worklist senza sovrapposizioni**; invarianti anti-perdita (denaro, sedute, clienti). Lacune G1-G5 risolte a livello di modello: G1 "da pianificare" solo su ATTIVO (residuo su scaduto = "da incassare", non pianificabile per guardia rate); G2 1 stato primario + flag denaro (niente worklist sovrapposte); G3 renewal-rate via continuità cliente non solo rinnovo_di; G4 kpi_attivi = stato ATTIVO; G5 terminazioni con motivo (non_rinnova/sedute_decadute/saldo_a_perdere).
+
+**Consolidamento:** TASSONOMIA + le 3 spec finanziarie ora **referenziano** il modello (puntatore SSoT in testa); IMPL_PLAN effimeri → archive a fine implementazione; ADR-014/015 = decisioni. Lato codice: un solo modulo `contract_state()` (SSoT derivazione) da cui derivano KPI/worklist/alert.
+
+**Prossimo:** riprendere l'implementazione contro il modello unico — `contract_state()`, poi correggere le parti già fatte (Step 2-5 RINNOVI_SCADUTI) che divergono (escludere sospesi, kpi_attivi, ecc.).
+
+---

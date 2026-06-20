@@ -7,6 +7,7 @@
 **Collocazione:** `docs/technical/`
 **Data:** 2026-06-19
 **Tassonomia di riferimento:** `TASSONOMIA_FINANZIARIA.md` (vocabolario condiviso, vincolante)
+**Modello di dominio (SSoT):** `FINANCIAL_DOMAIN_MODEL.md` — stati/vocabolario/worklist definiti lì.
 
 > **Nota di versione 1.4 (2026-06-20):** post-implementazione, il cruscotto a 3 KPI affiancati
 > (Venduto/A rate/Da pianificare) risultava confuso anche al founder — i numeri non sommano e

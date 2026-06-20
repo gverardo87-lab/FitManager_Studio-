@@ -8,6 +8,7 @@
 **Data:** 2026-06-19
 **Spec correlata:** `SPEC_RINNOVO_E_CONTRATTI_DA_PIANIFICARE.md` (stesso dominio finanziario)
 **Tassonomia di riferimento:** `TASSONOMIA_FINANZIARIA.md` (vocabolario condiviso, vincolante)
+**Modello di dominio (SSoT):** `FINANCIAL_DOMAIN_MODEL.md` — stati/vocabolario/worklist definiti lì.
 
 > **Nota di versione 1.1 (2026-06-19):** incorporati i rilievi di Claude Code. (1) La base
 > dell'incassato per periodo si restringe alle **categorie contrattuali** (escludendo storni e
