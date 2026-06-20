@@ -653,3 +653,17 @@ Ripreso il filone (RINNOVO chiuso). Piano ancorato al codice (esplorazione 2 age
 **Sequenza:** L1 (periodo+altri incassi+tab) → fix monthly_revenue → L2 (trend 2 serie+competenza) → L3 (composizione stacked) → test (`test_financial_trend.py`). Implementazione al via dal prossimo step.
 
 ---
+
+### 2026-06-20 — SPEC_TEMPORALE implementata (L1+L2+L3) + nuovo filone: rinnovi scaduti / retention
+
+**SPEC_GESTIONE_FINANZIARIA_TEMPORALE completa** (commit `9b36358` L1, `a053e85` fix monthly_revenue, `042b30c` L2, `60b1852` L3, `5da399e` fix grafico). Tab "Andamento" in /cassa: L1 incassato per periodo + altri incassi + cash flow reale (storni esclusi); fix `monthly_revenue` (incassi da contratti, no storni/altri); L2 venduto/competenza + grafico Incassato-vs-Venduto (ComposedChart); L3 composizione nuovi/rinnovi · acconti/rate (stacked + toggle). 389 test. Verificato a schermo dal founder.
+
+**Gotcha catturato:** recharts non vede le `<Bar>` dentro un React Fragment `<>…</>` (assi sì, serie/legenda no) → serie condizionali via `.map()` su array. `LEARNING_APP_ARCHITECTURE.md`.
+
+**Nuovo filone — rinnovi scaduti / retention (gap rilevato dal founder).** I contratti scaduti (`data_scadenza<oggi`) **sparivano silenziosamente**: `/rinnovi-incassi` e l'alert mostrano solo la finestra futura (`get_expiring_contracts` `>= today AND <= +30`), e non esiste stato terminale "perso". → perdita silenziosa di opportunità di rinnovo (denaro) e clienti (churn).
+
+**Decisioni founder:** (1) stato terminale esplicito **"non rinnova" + motivo** (no auto-archivio silenzioso); (2) perimetro = **lente contratto** prima (scaduti da rinnovare), lente cliente (retention/lapsed) progettata e differita; (3) **SPEC + ADR poi piano** (metodo confermato).
+
+**Prodotti:** `docs/technical/SPEC_RINNOVI_SCADUTI_E_RETENTION.md` (v1.0) + `ADR-015` (accepted). Architettura: funnel a stati derivati (`attivo·in scadenza·scaduto·rinnovato·perso`), due lenti separate/collegate, **invariante anti-perdita silenziosa** (nessun contratto aperto+scaduto+opportunità residua esce dalla worklist senza decisione esplicita), esclusione già-rinnovati anche da "in scadenza". Riuso: flusso rinnovo (SPEC_RINNOVO §A) + WhatsApp win-back. Prossimo step: IMPL_PLAN ancorato al codice.
+
+---

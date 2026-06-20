@@ -39,6 +39,7 @@ Esempio:
 | ADR-012 | — | Riservato (pending gate) | Routing media per classificazione del dato — hosting centrale clip (v2.2). In attesa del gate autotest (`docs/learning/LEARNING_METHOD.md` §9 / `LEARNING_MEDIA_CLOUD_ARCHITECTURE.md` §9). Razionale provvisorio in `docs/technical/DELTA_v2.2_EXERCISE_LIBRARY_STRATEGY.md` |
 | [ADR-013](ADR-013-crm-db-encryption-at-rest.md) | 2026-06-16 | **Accettata** (2026-06-17) | Cifratura a riposo di crm.db password-bound (SQLCipher + envelope DEK-KEK + boot a due fasi). Gate G1 di `docs/technical/PRE_DELIVERY_SECURITY_GATE.md`. Spike validato; decisioni founder: recovery key obbligatoria, portale fail-closed, policy password minima. Implementazione dopo design di dettaglio |
 | [ADR-014](ADR-014-gestione-finanziaria-cassa-competenza.md) | 2026-06-19 | Accettata | Gestione finanziaria: tassonomia cassa/competenza vincolante + vista Contract-first "contratti da pianificare" + confine di posizionamento (cash management neutro). Referenzia le 3 spec in `docs/technical/`. Implementazione: prima rinnovo, poi asse temporale |
+| [ADR-015](ADR-015-renewal-retention-funnel.md) | 2026-06-20 | Accettata | Funnel Rinnovi & Retention: nessuna perdita silenziosa di contratti scaduti/clienti. Due lenti (contratto/cliente), stato terminale esplicito "non rinnova"+motivo, invariante anti-sparizione, esclusione già-rinnovati. Spec: `SPEC_RINNOVI_SCADUTI_E_RETENTION.md`. Lente cliente differita |
 
 ## Flusso
 

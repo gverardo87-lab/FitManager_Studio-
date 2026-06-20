@@ -76,6 +76,7 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 | `SPEC_GESTIONE_FINANZIARIA_TEMPORALE.md` | Spec: asse temporale della finanza — aggregazione per periodo (cassa), trend + competenza affiancata, composizione (nuovi/rinnovi, acconti/rate) |
 | `IMPL_PLAN_SPEC_RINNOVO.md` | Piano d'implementazione di SPEC_RINNOVO (ancorato al codice, decisioni bloccate, sequenza step). Materiale di lavoro — superato dal codice a implementazione conclusa |
 | `IMPL_PLAN_SPEC_TEMPORALE.md` | Piano d'implementazione di SPEC_GESTIONE_FINANZIARIA_TEMPORALE (tab Andamento in /cassa, L1 periodo+altri incassi, L2 trend+competenza, L3 composizione, fix monthly_revenue). Materiale di lavoro |
+| `SPEC_RINNOVI_SCADUTI_E_RETENTION.md` | Spec: i contratti scaduti non spariscono più — vista "scaduti da rinnovare" (anti-perdita silenziosa) + esito "non rinnova"+motivo; due lenti contratto/cliente (cliente differita). ADR-015 |
 
 ---
 
@@ -93,7 +94,7 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 
 ## adr/ — Architecture Decision Records
 
-12 ADR attivi (ADR-001 → ADR-014; ADR-002 rimossa come obsoleta, ADR-012 riservato). Ultimo: ADR-014 (gestione finanziaria — tassonomia cassa/competenza + vista Contract-first, accettata 2026-06-19). Indice in `adr/README.md`.
+13 ADR attivi (ADR-001 → ADR-015; ADR-002 rimossa come obsoleta, ADR-012 riservato). Ultimo: ADR-015 (funnel Rinnovi & Retention — nessuna perdita silenziosa di contratti scaduti, accettata 2026-06-20). Indice in `adr/README.md`.
 
 ## incidents/ — Post-mortem
 
