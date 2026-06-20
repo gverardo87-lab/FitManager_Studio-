@@ -23,6 +23,7 @@ import type {
   OverdueRateItem,
   ExpiringContractItem,
   ContractToPlanItem,
+  ClientToRecoverItem,
   InactiveClientItem,
   BirthdayClientItem,
   TrainingMethodologyWorklistResponse,
@@ -159,6 +160,19 @@ export function useContractsToPlan(enabled = true) {
     queryFn: async () => {
       const { data } = await apiClient.get<ListResponse<ContractToPlanItem>>(
         "/dashboard/contracts-to-plan"
+      );
+      return data;
+    },
+    enabled,
+  });
+}
+
+export function useClientsToRecover(enabled = true) {
+  return useQuery<ListResponse<ClientToRecoverItem>>({
+    queryKey: ["dashboard", "clients-to-recover"],
+    queryFn: async () => {
+      const { data } = await apiClient.get<ListResponse<ClientToRecoverItem>>(
+        "/dashboard/clients-to-recover"
       );
       return data;
     },

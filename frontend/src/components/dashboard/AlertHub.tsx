@@ -15,6 +15,7 @@ import {
   Cake,
   CalendarClock,
   CheckCircle2,
+  HeartHandshake,
   ChevronDown,
   CreditCard,
   Dumbbell,
@@ -34,6 +35,7 @@ import { MAX_VISIBLE_ALERTS } from "@/lib/dashboard-helpers";
 const ALERT_ICON: Record<string, typeof Ghost> = {
   ghost_events: Ghost,
   orphan_contracts: CalendarClock,
+  clients_to_recover: HeartHandshake,
   expiring_contracts: CreditCard,
   inactive_clients: UserX,
   stale_schede: Dumbbell,

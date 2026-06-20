@@ -128,6 +128,17 @@ def test_empty(client, auth_headers):
     assert _recover(client, auth_headers) == {"items": [], "total": 0}
 
 
+def test_alert_clients_to_recover(client, auth_headers, sample_client):
+    """L'alert dashboard 'clients_to_recover' compare e conta i clienti lapsed."""
+    _contract(client, auth_headers, sample_client["id"], _past(120), _past(60))
+    r = client.get("/api/dashboard/alerts", headers=auth_headers)
+    assert r.status_code == 200
+    alert = next((i for i in r.json()["items"] if i["category"] == "clients_to_recover"), None)
+    assert alert is not None
+    assert alert["count"] == 1
+    assert alert["link"] == "/rinnovi-incassi"
+
+
 # ════════════════════════════════════════════════════════════
 # Azione "Non rinnova" (endpoint renewal-outcome)
 # ════════════════════════════════════════════════════════════

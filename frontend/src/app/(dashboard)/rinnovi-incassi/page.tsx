@@ -18,16 +18,28 @@ import {
   BadgeCheck,
   CreditCard,
   HandCoins,
+  HeartHandshake,
   Loader2,
   RefreshCw,
   TrendingDown,
+  UserMinus,
   Wallet,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -38,13 +50,33 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import { ContractSheet } from "@/components/contracts/ContractSheet";
-import { useOverdueRates, useExpiringContracts } from "@/hooks/useDashboard";
+import { useOverdueRates, useExpiringContracts, useClientsToRecover } from "@/hooks/useDashboard";
 import { usePayRate } from "@/hooks/useRates";
+import { useMarkRenewalOutcome } from "@/hooks/useContracts";
 import { useTrainerName } from "@/hooks/useTrainerName";
 import { usePageReveal } from "@/lib/page-reveal";
 import { formatCurrency, formatShortDate, toISOLocal } from "@/lib/format";
-import { waRenewalReminder, waRateReminder } from "@/lib/whatsapp-templates";
-import type { ExpiringContractItem, OverdueRateItem } from "@/types/api";
+import { waRenewalReminder, waRateReminder, waCheckIn } from "@/lib/whatsapp-templates";
+import type { ExpiringContractItem, OverdueRateItem, ClientToRecoverItem } from "@/types/api";
+
+// Target comune per il rinnovo (compatibile con ExpiringContractItem e ClientToRecoverItem)
+interface RenewTarget {
+  client_id: number;
+  contract_id: number;
+  tipo_pacchetto: string | null;
+  crediti_totali: number;
+  prezzo_totale: number | null;
+  data_inizio: string | null;
+  data_scadenza: string | null;
+}
+
+const MOTIVI_NON_RINNOVA: { value: string; label: string }[] = [
+  { value: "prezzo", label: "Prezzo / economico" },
+  { value: "trasferito", label: "Trasferito / logistica" },
+  { value: "infortunio", label: "Infortunio / salute" },
+  { value: "insoddisfatto", label: "Insoddisfatto" },
+  { value: "altro", label: "Altro" },
+];
 
 const PAYMENT_METHODS = ["CONTANTI", "POS", "BONIFICO"] as const;
 
@@ -255,6 +287,123 @@ function OverdueRateCard({ item, trainerName }: { item: OverdueRateItem; trainer
 }
 
 // ════════════════════════════════════════════════════════════
+// RecoverCard — cliente da recuperare (lapsed) + dialog "Non rinnova"
+// ════════════════════════════════════════════════════════════
+
+function RecoverCard({
+  item,
+  onRenew,
+  trainerName,
+}: {
+  item: ClientToRecoverItem;
+  onRenew: (t: RenewTarget) => void;
+  trainerName: string;
+}) {
+  const markOutcome = useMarkRenewalOutcome();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [motivo, setMotivo] = useState("");
+  const [note, setNote] = useState("");
+
+  const ritardoLabel = item.giorni_ritardo === 1
+    ? "Scaduto da 1 giorno"
+    : `Scaduto da ${item.giorni_ritardo} giorni`;
+
+  const handleNonRinnova = () => {
+    if (!motivo) return;
+    markOutcome.mutate(
+      { contractId: item.contract_id, motivo, note: note.trim() || undefined },
+      { onSuccess: () => { setDialogOpen(false); setMotivo(""); setNote(""); } },
+    );
+  };
+
+  return (
+    <div className="rounded-xl border border-l-4 border-l-red-400 bg-gradient-to-br from-red-50/50 to-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:from-red-950/20 dark:to-zinc-900">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0 flex-1 space-y-1.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <Link href={`/clienti/${item.client_id}`} className="text-sm font-semibold hover:underline">
+              {item.client_nome} {item.client_cognome}
+            </Link>
+            <Badge variant="destructive" className="text-xs">{ritardoLabel}</Badge>
+          </div>
+          <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+            <span>{item.tipo_pacchetto || "Contratto"}</span>
+            {item.data_scadenza ? (
+              <>
+                <span className="text-muted-foreground/40">·</span>
+                <span>Scaduto il {formatShortDate(item.data_scadenza)}</span>
+              </>
+            ) : null}
+            {item.residuo > 0 ? (
+              <>
+                <span className="text-muted-foreground/40">·</span>
+                <span className="font-medium">Residuo {formatCurrency(item.residuo)}</span>
+              </>
+            ) : null}
+            {item.crediti_residui > 0 ? (
+              <>
+                <span className="text-muted-foreground/40">·</span>
+                <span>{item.crediti_residui} {item.crediti_residui === 1 ? "seduta" : "sedute"} non usate</span>
+              </>
+            ) : null}
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <WhatsAppButton
+            phone={item.client_telefono}
+            message={waCheckIn(item.client_nome, trainerName, item.giorni_ritardo)}
+            variant="icon"
+          />
+          <Button size="sm" variant="ghost" className="text-xs" onClick={() => setDialogOpen(true)}>
+            <UserMinus className="mr-1 h-3.5 w-3.5" />
+            Non rinnova
+          </Button>
+          <Button size="sm" onClick={() => onRenew(item)}>
+            <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+            Rinnova
+          </Button>
+        </div>
+      </div>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Non rinnova — {item.client_nome} {item.client_cognome}</DialogTitle>
+            <DialogDescription>
+              Registra il motivo. Il cliente esce dalla lista ma resta nello storico (reversibile).
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label>Motivo</Label>
+              <Select value={motivo} onValueChange={setMotivo}>
+                <SelectTrigger><SelectValue placeholder="Seleziona motivo..." /></SelectTrigger>
+                <SelectContent>
+                  {MOTIVI_NON_RINNOVA.map((m) => (
+                    <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Note (opzionale)</Label>
+              <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Dettaglio..." />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>Annulla</Button>
+            <Button onClick={handleNonRinnova} disabled={!motivo || markOutcome.isPending}>
+              {markOutcome.isPending ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : null}
+              Conferma
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════
 // Page
 // ════════════════════════════════════════════════════════════
 
@@ -262,20 +411,22 @@ export default function RinnoviIncassiPage() {
   const { revealClass, revealStyle } = usePageReveal();
   const overdueQuery = useOverdueRates();
   const expiringQuery = useExpiringContracts();
+  const recoverQuery = useClientsToRecover();
 
   const [renewSheet, setRenewSheet] = useState(false);
-  const [renewItem, setRenewItem] = useState<ExpiringContractItem | null>(null);
+  const [renewItem, setRenewItem] = useState<RenewTarget | null>(null);
 
   const trainerName = useTrainerName();
 
   const overdueItems = overdueQuery.data?.items ?? [];
   const expiringItems = expiringQuery.data?.items ?? [];
-  const isLoading = overdueQuery.isLoading || expiringQuery.isLoading;
-  const totalActions = overdueItems.length + expiringItems.length;
+  const recoverItems = recoverQuery.data?.items ?? [];
+  const isLoading = overdueQuery.isLoading || expiringQuery.isLoading || recoverQuery.isLoading;
+  const totalActions = overdueItems.length + expiringItems.length + recoverItems.length;
 
   const totalOverdueAmount = overdueItems.reduce((sum, i) => sum + i.importo_residuo, 0);
 
-  const handleRenew = (item: ExpiringContractItem) => {
+  const handleRenew = (item: RenewTarget) => {
     setRenewItem(item);
     setRenewSheet(true);
   };
@@ -317,7 +468,7 @@ export default function RinnoviIncassiPage() {
 
       {/* ── KPI Strip ── */}
       {totalActions > 0 ? (
-        <div className={`grid grid-cols-2 gap-4 lg:grid-cols-3 ${revealClass(30)}`} style={revealStyle(30)}>
+        <div className={`grid grid-cols-2 gap-4 lg:grid-cols-4 ${revealClass(30)}`} style={revealStyle(30)}>
           <KpiCard
             icon={RefreshCw}
             label="Da rinnovare"
@@ -329,6 +480,16 @@ export default function RinnoviIncassiPage() {
             bg="from-amber-50/80 to-white dark:from-amber-950/30 dark:to-zinc-900"
             iconBg="bg-amber-100 dark:bg-amber-900/50"
             iconColor="text-amber-600 dark:text-amber-400"
+          />
+          <KpiCard
+            icon={HeartHandshake}
+            label="Da recuperare"
+            value={String(recoverItems.length)}
+            sublabel={recoverItems.length > 0 ? "clienti lapsed" : undefined}
+            border="border-l-rose-500"
+            bg="from-rose-50/80 to-white dark:from-rose-950/30 dark:to-zinc-900"
+            iconBg="bg-rose-100 dark:bg-rose-900/50"
+            iconColor="text-rose-600 dark:text-rose-400"
           />
           <KpiCard
             icon={TrendingDown}
@@ -398,6 +559,29 @@ export default function RinnoviIncassiPage() {
           <div className="space-y-2">
             {expiringItems.map((item) => (
               <RenewalCard key={item.contract_id} item={item} onRenew={handleRenew} trainerName={trainerName} />
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {/* ── Sezione: Clienti da recuperare (lapsed) ── */}
+      {recoverItems.length > 0 ? (
+        <section className={revealClass(90)} style={revealStyle(90)}>
+          <div className="mb-1 flex items-center gap-2">
+            <HeartHandshake className="h-4 w-4 text-rose-600" />
+            <h2 className="text-sm font-semibold">
+              Clienti da recuperare
+              <span className="ml-1.5 font-normal text-muted-foreground">
+                ({recoverItems.length})
+              </span>
+            </h2>
+          </div>
+          <p className="mb-3 text-xs text-muted-foreground">
+            Contratto scaduto e nessuna copertura attiva — opportunità di win-back.
+          </p>
+          <div className="space-y-2">
+            {recoverItems.map((item) => (
+              <RecoverCard key={item.client_id} item={item} onRenew={handleRenew} trainerName={trainerName} />
             ))}
           </div>
         </section>

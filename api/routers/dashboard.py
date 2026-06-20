@@ -484,6 +484,54 @@ def get_contracts_to_plan(
     return {"items": items, "total": len(items)}
 
 
+def _coerce_date(d):
+    return date.fromisoformat(d) if isinstance(d, str) else d
+
+
+def _lapsed_client_candidates(session: Session, trainer_id: int, today: date):
+    """
+    Candidati "cliente da recuperare" (client-aware, SPEC_RINNOVI_SCADUTI v1.2 §3-bis).
+
+    Cliente con ≥1 contratto scaduto e ZERO contratti attivi (chiuso=False AND
+    data_scadenza >= today; scadenza NULL = copertura aperta = attivo), rappresentato
+    dal contratto scaduto più recente, NON marcato "non rinnova".
+    Usato sia dall'endpoint sia dall'alert dashboard → conteggi coerenti.
+
+    Ritorna: list[(Client, rappresentante: Contract, scaduti: list[Contract])].
+    """
+    rows = session.exec(
+        select(Contract, Client)
+        .join(Client, Contract.id_cliente == Client.id)
+        .where(
+            Contract.trainer_id == trainer_id,
+            Contract.deleted_at == None,
+            Contract.chiuso == False,
+        )
+    ).all()
+
+    by_client: dict[int, dict] = {}
+    for contract, client in rows:
+        by_client.setdefault(client.id, {"client": client, "contracts": []})["contracts"].append(contract)
+
+    candidates = []
+    for entry in by_client.values():
+        has_active = False
+        expired = []
+        for c in entry["contracts"]:
+            sc = _coerce_date(c.data_scadenza)
+            if sc is None or sc >= today:
+                has_active = True
+            else:
+                expired.append(c)
+        if has_active or not expired:
+            continue
+        representative = max(expired, key=lambda c: _coerce_date(c.data_scadenza))
+        if representative.esito_rinnovo_motivo is not None:
+            continue
+        candidates.append((entry["client"], representative, expired))
+    return candidates
+
+
 @router.get("/clients-to-recover")
 def get_clients_to_recover(
     trainer: Trainer = Depends(get_current_trainer),
@@ -503,46 +551,7 @@ def get_clients_to_recover(
     Read-only. Ordinato per ritardo decrescente.
     """
     today = date.today()
-
-    rows = session.exec(
-        select(Contract, Client)
-        .join(Client, Contract.id_cliente == Client.id)
-        .where(
-            Contract.trainer_id == trainer.id,
-            Contract.deleted_at == None,
-            Contract.chiuso == False,
-        )
-    ).all()
-    if not rows:
-        return {"items": [], "total": 0}
-
-    def _as_date(d):
-        return date.fromisoformat(d) if isinstance(d, str) else d
-
-    # Raggruppa i contratti aperti per cliente
-    by_client: dict[int, dict] = {}
-    for contract, client in rows:
-        entry = by_client.setdefault(client.id, {"client": client, "contracts": []})
-        entry["contracts"].append(contract)
-
-    # Candidati: cliente con scaduti e ZERO attivi; rappresentante non marcato perso
-    candidates = []  # (client, representative, expired_contracts)
-    for entry in by_client.values():
-        has_active = False
-        expired = []
-        for c in entry["contracts"]:
-            sc = _as_date(c.data_scadenza)
-            if sc is None or sc >= today:
-                has_active = True          # NULL scadenza o futura = copertura attiva
-            else:
-                expired.append(c)
-        if has_active or not expired:
-            continue
-        representative = max(expired, key=lambda c: _as_date(c.data_scadenza))
-        if representative.esito_rinnovo_motivo is not None:
-            continue                       # cliente già marcato "non rinnova"
-        candidates.append((entry["client"], representative, expired))
-
+    candidates = _lapsed_client_candidates(session, trainer.id, today)
     if not candidates:
         return {"items": [], "total": 0}
 
@@ -573,7 +582,8 @@ def get_clients_to_recover(
         # Nessun filtro opportunità: ogni cliente lapsed è un win-back (anche chi ha
         # completato e pagato tutto). residuo/crediti sono info + priorità, non filtro
         # (invariante: nessun cliente perso in silenzio — SPEC v1.2 §A.2).
-        scad = _as_date(rep.data_scadenza)
+        scad = _coerce_date(rep.data_scadenza)
+        inizio = _coerce_date(rep.data_inizio)
         giorni_ritardo = (today - scad).days if isinstance(scad, date) else 0
         items.append({
             "client_id": client.id,
@@ -582,6 +592,8 @@ def get_clients_to_recover(
             "client_telefono": client.telefono,
             "contract_id": rep.id,
             "tipo_pacchetto": rep.tipo_pacchetto,
+            "prezzo_totale": rep.prezzo_totale,
+            "data_inizio": inizio.isoformat() if isinstance(inizio, date) else None,
             "data_scadenza": scad.isoformat() if isinstance(scad, date) else None,
             "giorni_ritardo": giorni_ritardo,
             "residuo": _residuo(rep),
@@ -812,6 +824,19 @@ def get_dashboard_alerts(
             detail="Genera il piano rate per iniziare a incassare",
             count=orphan_count,
             link="/contratti",
+        ))
+
+    # ── 2-bis. Clienti da recuperare (lapsed: scaduto + zero attivi) — conta CLIENTI ──
+    # Stesso helper della worklist /rinnovi-incassi → conteggio coerente (incl. esclusione "non rinnova").
+    recover_count = len(_lapsed_client_candidates(session, trainer.id, today))
+    if recover_count > 0:
+        items.append(AlertItem(
+            severity="warning",
+            category="clients_to_recover",
+            title=f"{recover_count} {'cliente da recuperare' if recover_count == 1 else 'clienti da recuperare'}",
+            detail="Contratto scaduto e nessuna copertura attiva — riattivali",
+            count=recover_count,
+            link="/rinnovi-incassi",
         ))
 
     # ── 3. Contratti in scadenza con crediti inutilizzati ──

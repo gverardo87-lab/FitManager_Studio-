@@ -1011,6 +1011,23 @@ export interface ExpiringContractItem {
   client_telefono: string | null;
 }
 
+/** Cliente da recuperare (lapsed: scaduto + zero attivi) — GET /api/dashboard/clients-to-recover */
+export interface ClientToRecoverItem {
+  client_id: number;
+  client_nome: string;
+  client_cognome: string;
+  client_telefono: string | null;
+  contract_id: number;            // contratto rappresentante (scaduto più recente)
+  tipo_pacchetto: string | null;
+  prezzo_totale: number | null;
+  data_inizio: string | null;     // per il pre-fill durata del rinnovo
+  data_scadenza: string | null;
+  giorni_ritardo: number;
+  residuo: number;
+  crediti_totali: number;
+  crediti_residui: number;
+}
+
 /** Cliente inattivo per Dashboard Sheet */
 export interface InactiveClientItem {
   client_id: number;

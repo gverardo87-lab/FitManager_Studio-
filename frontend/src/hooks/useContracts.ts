@@ -155,6 +155,48 @@ export function useRenewContract() {
   });
 }
 
+// ── Mutation: esito "non rinnova" (cliente perso) + riapertura ──
+
+export function useMarkRenewalOutcome() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ contractId, motivo, note }: { contractId: number; motivo: string; note?: string }) => {
+      const { data } = await apiClient.post<Contract>(
+        `/contracts/${contractId}/renewal-outcome`,
+        { motivo, note }
+      );
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contracts"] });
+      queryClient.invalidateQueries({ queryKey: ["contract"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success("Segnato come non rinnovato");
+    },
+    onError: (error) => {
+      toast.error(extractErrorMessage(error, "Errore nel salvataggio dell'esito"));
+    },
+  });
+}
+
+export function useReopenRenewalOutcome() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (contractId: number) => {
+      await apiClient.delete(`/contracts/${contractId}/renewal-outcome`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contracts"] });
+      queryClient.invalidateQueries({ queryKey: ["contract"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success("Opportunità riaperta");
+    },
+    onError: (error) => {
+      toast.error(extractErrorMessage(error, "Errore nella riapertura"));
+    },
+  });
+}
+
 // ── Mutation: elimina contratto ──
 
 export function useDeleteContract() {
