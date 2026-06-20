@@ -54,6 +54,12 @@ class Contract(SQLModel, table=True):
     rinnovo_di: Optional[int] = Field(default=None, foreign_key="contratti.id", index=True)
     deleted_at: Optional[datetime] = None
 
+    # Esito rinnovo (SPEC_RINNOVI_SCADUTI §5 / ADR-015): null = opportunità di recupero aperta;
+    # valorizzato = "non rinnova" (cliente perso) con motivo. Reversibile (set a null = riapre).
+    esito_rinnovo_motivo: Optional[str] = Field(default=None, index=True)
+    esito_rinnovo_note: Optional[str] = None
+    esito_rinnovo_il: Optional[date] = None
+
     # Relationships (lazy-loaded, non incluse in JSON di default)
     rates: List["Rate"] = Relationship(back_populates="contract")
     movements: List["CashMovement"] = Relationship(back_populates="contract")
