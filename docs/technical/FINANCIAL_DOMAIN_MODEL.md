@@ -1,7 +1,14 @@
 # FINANCIAL DOMAIN MODEL — la base unica del dominio economico-finanziario
 
-**Versione:** 1.0
+**Versione:** 1.1
 **Stato:** **SSoT del dominio finanziario — vincolante.** Ogni feature finanziaria si misura qui.
+
+> **Nota di versione 1.1 (2026-06-20, rilievi bridge chat):** incorporati 3 rilievi che completano
+> l'asse-tempo (lo stesso che `chiuso` ignorava): (1) **invariante transizioni indotte dal tempo** —
+> ogni stato non-terminale ha una worklist, l'appartenenza è il segnale (§9.4); (2) **rollup cliente
+> a natura mista** derivato/a-memoria + stato **lapsed-freddo** e **decadimento asimmetrico** (§4.1);
+> (3) **costanti temporali unificate** in un punto solo, con cooling=retention=churn = una costante
+> (§4.2). Debito emerso: `orphan_contracts`/`contracts-to-plan` già implementati violano G1 (§7).
 **Owner:** Giacomo Verardo (AVGV Technologies)
 **Destinatario:** Claude Code
 **Collocazione:** `docs/technical/`
@@ -75,7 +82,7 @@ contract_state(c):
 
 ---
 
-## 4. Vocabolario non negoziabile
+## 4. Vocabolario non negoziabile (contratto)
 
 Tre termini erano usati con significati diversi → d'ora in poi:
 
@@ -84,8 +91,38 @@ Tre termini erano usati con significati diversi → d'ora in poi:
 | **aperto** | `chiuso = False` (qualsiasi stato di vita tranne CHIUSO/ELIMINATO) |
 | **attivo** | stato di vita **ATTIVO** (= aperto **e** vigente). **MAI** "attivo = chiuso==False" |
 | **scaduto** | `data_scadenza < oggi` (asse tempo) — è una *condizione*, non uno stato di vita |
-| **ingaggiato** (cliente) | ha ≥1 contratto **ATTIVO o SOSPESO** |
-| **lapsed** (cliente) | non ingaggiato, ma ha contratti (solo ESAURITO/CHIUSO) |
+
+### 4.1 Rollup cliente — natura MISTA: derivato + a memoria
+
+Lo stato cliente ha **due nature diverse** (come il contratto: ATTIVO è derivato, esito-non-rinnova è
+a memoria). Non confonderle:
+
+| Stato cliente | Natura | Derivazione / fonte |
+|---|---|---|
+| **ingaggiato** | **derivato** | ha ≥1 contratto **ATTIVO o SOSPESO** |
+| **lapsed (caldo)** | **derivato** | non ingaggiato, ha contratti, entro la soglia churn (§4.2) → worklist win-back |
+| **lapsed-freddo** | **derivato** (da `communication_log` + tempo) | lapsed **oltre** la soglia churn, *e* ultimo richiamo loggato oltre soglia (o nessun richiamo) → **esce** dalla worklist calda |
+| **perso** | **a memoria** | il trainer ha registrato "non rinnova" (`esito_rinnovo_motivo`) |
+
+> Il **"freddo" è derivato**, non un nuovo campo: riusa `communication_log` (il richiamo WhatsApp è già
+> loggato). `freddo = lapsed AND giorni_lapse > SOGLIA_CHURN AND (nessun richiamo o ultimo richiamo > SOGLIA_CHURN)`.
+
+**Decadimento asimmetrico (vincolante):**
+- **lapsed → si raffredda**: è un'*opportunità*; dopo la soglia churn + ultimo richiamo, esce dalla
+  worklist calda (diventa freddo). La worklist win-back non cresce all'infinito.
+- **SOSPESO → si scalda, non decade mai**: è un'*obbligazione* (gli devi sedute). Nessuna uscita
+  automatica; l'aging **aumenta** l'urgenza (segno invertito). Esce solo per decisione (estendi/decadi).
+
+### 4.2 Costanti temporali (dichiarate UNA volta)
+
+Tutte le finestre-tempo vivono qui, isolate, per non sdoppiarsi (no numeri magici sparsi):
+
+| Costante | Valore | Uso |
+|---|---|---|
+| `SOGLIA_IN_SCADENZA_GG` | 30 | ATTIVO entra in "in scadenza" |
+| `SOGLIA_CHURN_GG` | 90 | **unica**: confine churn = raffreddamento lapsed = finestra retention (G3). Un cliente che torna ingaggiato entro 90gg dal lapse = *retained*; oltre = *churned/freddo* |
+
+> Cooling, retention-window (G3) e definizione-di-churn sono **lo stesso concetto** → una costante sola.
 
 ---
 
@@ -112,9 +149,9 @@ derivano da qui, senza doppi conteggi:
 
 | Worklist | Deriva da | Note |
 |---|---|---|
-| **In scadenza** | ATTIVO + `data_scadenza ≤ oggi+N` | rinnovo anticipato |
-| **Contratti sospesi (sedute)** | **SOSPESO** | unità = contratto; estendi/decadi |
-| **Clienti da recuperare (win-back)** | cliente **lapsed**, rappresentante non perso | unità = cliente; rappresentante = contratto più recente in assoluto |
+| **In scadenza** | ATTIVO + `data_scadenza ≤ oggi+SOGLIA_IN_SCADENZA_GG` | rinnovo anticipato |
+| **Contratti sospesi (sedute)** | **SOSPESO** | unità = contratto; estendi/decadi; **non decade, urgenza ↑** |
+| **Clienti da recuperare (win-back)** | cliente **lapsed CALDO** (non freddo, non perso) | unità = cliente; rappresentante = contratto più recente in assoluto; esce quando freddo (§4.1) |
 | **Da pianificare (rate)** | **ATTIVO** + `da pianificare` | **solo ATTIVO** (vedi §7 G1) |
 | **Da incassare (scaduto)** | (SOSPESO o ESAURITO) + `residuo > 0` | incasso diretto, non pianificabile a rate |
 | **Rate scadute / aging** | Rate non-saldate oltre scadenza | rate-first |
@@ -128,14 +165,18 @@ derivano da qui, senza doppi conteggi:
   `data_scadenza` (passata) → su SOSPESO/ESAURITO non si può creare una rata. Quindi **"da pianificare"
   è ristretto ad ATTIVO**; il residuo su contratti scaduti vive in **"da incassare (scaduto)"** (incasso
   diretto o previa estensione del contratto). Niente azioni impossibili.
+  - **⚠️ DEBITO già in codice**: `orphan_contracts`/`contracts-to-plan` (SPEC_RINNOVO, già implementati)
+    filtrano `chiuso=False + residuo>0 + zero rate` **senza** restrizione di vigenza → includono i
+    SOSPESO/ESAURITO e offrono l'azione impossibile. **Da correggere** (restringere ad ATTIVO) — primo
+    fix che il modello fa emergere nel codice esistente.
 - **G2 — niente worklist sovrapposte.** Classificazione = **1 stato di vita primario** + flag denaro.
   Un SOSPESO con residuo e zero rate è in "Contratti sospesi" (primario) e "Da incassare (scaduto)"
   (flag denaro) — **mai** in "Da pianificare" (riservato ad ATTIVO).
 - **G3 — analytics rinnovi (renewal rate).** `rinnovo_di` cattura solo i rinnovi col bottone; un nuovo
   contratto non collegato non è linkato → il renewal-rate sottoconterebbe. **Definizione di modello:**
-  un cliente è *retained* se passa da non-ingaggiato a ingaggiato (nuovo ATTIVO) entro una finestra,
-  indipendentemente da `rinnovo_di`. Le metriche di churn/retention usano la **continuità cliente**,
-  non solo il link. (Implementazione differita; concetto fissato qui.)
+  un cliente è *retained* se torna ingaggiato entro **`SOGLIA_CHURN_GG`** (§4.2, la **stessa** costante
+  del raffreddamento lapsed), indipendentemente da `rinnovo_di`. Churn/retention usano la **continuità
+  cliente**, non solo il link. (Implementazione differita; concetto + costante fissati qui.)
 - **G4 — KPI "attivi".** `kpi_attivi` deve contare lo stato **ATTIVO** (aperto+vigente), non
   `chiuso==False`. I contratti aperti-non-attivi (SOSPESO/ESAURITO) si mostrano separati. Tutti i KPI
   derivano da `contract_state()`.
@@ -165,6 +206,22 @@ Nessuno di questi può sparire da una worklist senza **decisione umana esplicita
 1. **Denaro dovuto** (residuo > 0): da pianificare (ATTIVO) o da incassare (scaduto) o aging.
 2. **Sedute prepagate** (SOSPESO): estendi o decadi.
 3. **Cliente lapsed**: recupera o "non rinnova".
+
+### 9.4 Invariante delle transizioni indotte dal tempo (v1.1 — la lezione del SOSPESO)
+
+`contract_state()` è corretto ma **inerte**: risponde solo se interrogato. Il difetto SOSPESO non fu
+un dato sparito ma una **transizione muta** — ATTIVO→SOSPESO / ATTIVO→ESAURITO avvengono per pura
+aritmetica della data, senza che nessun evento le segnali. (Le transizioni *event-induced*, es. usare
+l'ultima seduta → ESAURITO, fanno già rumore; il rischio è solo sulle **time-induced**.)
+
+**Invariante:** *ogni stato non-terminale deve avere una worklist/alert che lo accoglie — nessuno
+stato "homeless".* Così la transizione indotta dal tempo **fa rumore** alla prossima apertura: la
+**membership nella worklist È il segnale** (modello pull). Verifica di copertura: ATTIVO→in-scadenza,
+SOSPESO→contratti-sospesi, ESAURITO→da-incassare + (cliente) clienti-da-recuperare. Se aggiungi uno
+stato e non gli dai casa, hai ricreato la perdita silenziosa.
+
+> **Push (futuro):** rilevamento attivo delle transizioni anche ad app chiusa (notifica) richiede un
+> always-on (FitManager Box / tunnel). Ora il pull-coverage è sufficiente per un'app locale.
 
 E: `kpi_incassato = Σ totale_versato` (NON somma del mastro); il cash flow reale (con Altri incassi)
 non riconcilia con `kpi_incassato` — è atteso (TASSONOMIA §3).

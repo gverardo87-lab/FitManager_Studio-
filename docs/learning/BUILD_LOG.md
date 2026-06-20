@@ -689,3 +689,16 @@ Rilievo founder: stavamo definendo gli stati del contratto **per-feature** (kpi_
 **Prossimo:** riprendere l'implementazione contro il modello unico — `contract_state()`, poi correggere le parti già fatte (Step 2-5 RINNOVI_SCADUTI) che divergono (escludere sospesi, kpi_attivi, ecc.).
 
 ---
+
+### 2026-06-20 — FINANCIAL_DOMAIN_MODEL v1.1 (rilievi bridge chat incorporati)
+
+La chat parallela ha esaminato il modello v1.0 e prodotto 3 rilievi reali, tutti sull'**asse-tempo** (lo stesso che `chiuso` ignorava — coerenza: il tempo resta l'asse sottovalutato). Incorporati in v1.1 dopo ragionamento Code↔chat:
+
+- **R1 (invariante transizioni indotte dal tempo, §9.4):** `contract_state()` è corretto ma *inerte* — il difetto SOSPESO fu una transizione MUTA, non un dato sparito. Invariante: nessuno stato non-terminale è "homeless"; ATTIVO→SOSPESO/ESAURITO (time-induced, silenziose) devono far rumore = la membership in una worklist È il segnale (modello **pull**: ogni stato ha casa). Push (notifica ad app chiusa) differito ad always-on (Box/tunnel).
+- **R2 (rollup cliente natura mista, §4.1):** ingaggiato/lapsed **derivati**; perso **a memoria**; aggiunto **lapsed-freddo** (derivato da `communication_log` + tempo, nessun campo nuovo) e **decadimento asimmetrico**: lapsed si raffredda ed esce dalla worklist calda (opportunità); SOSPESO non decade mai, urgenza ↑ (obbligazione, gli devi sedute).
+- **R3 (costanti temporali unificate, §4.2):** `SOGLIA_CHURN_GG=90` **unica** = raffreddamento lapsed = finestra retention (G3) = confine churn. `SOGLIA_IN_SCADENZA_GG=30`. Niente numeri magici sdoppiati.
+- **Debito emerso (G1):** `orphan_contracts`/`contracts-to-plan` già implementati violano G1 (filtrano chiuso=False senza vigenza → azione impossibile su SOSPESO/ESAURITO). Da correggere (restringere ad ATTIVO) — primo fix che il modello fa emergere.
+
+Decisioni founder: pull-coverage; freddo derivato da communication_log; una costante unica. Modello dichiarabile fermo → prossimo: `contract_state()` SSoT + fix progressivo (G1 + Step 2-5 RINNOVI_SCADUTI).
+
+---
