@@ -1,12 +1,17 @@
 # SPEC — Rinnovo contratto + Cruscotto "Contratti da pianificare"
 
-**Versione:** 1.3
+**Versione:** 1.4
 **Stato:** Vincolante sui criteri di accettazione — **non vincolante sull'implementazione**
 **Owner:** Giacomo Verardo (AVGV Technologies)
 **Destinatario:** Claude Code (architetto finale nel codebase)
 **Collocazione:** `docs/technical/`
 **Data:** 2026-06-19
 **Tassonomia di riferimento:** `TASSONOMIA_FINANZIARIA.md` (vocabolario condiviso, vincolante)
+
+> **Nota di versione 1.4 (2026-06-20):** post-implementazione, il cruscotto a 3 KPI affiancati
+> (Venduto/A rate/Da pianificare) risultava confuso anche al founder — i numeri non sommano e
+> "Venduto" collide con "Fatturato". Ristrutturato in **due blocchi per scope** con ancora
+> **Residuo = A scadenza + Da pianificare** (§B.4). Concetto in `LEARNING_APP_ARCHITECTURE.md`.
 
 > **Nota di versione 1.3 (2026-06-19):** durante l'implementazione (Step 1, Criterio A) emersa la
 > regola **sequenziale** del rinnovo — il figlio inizia il giorno dopo la scadenza del padre
@@ -174,6 +179,16 @@ invisibile. Deve comparire in una vista esplicita e azionabile, accanto a "rate 
   vista sa cercarli, leggendo `prezzo_totale` / `totale_versato` già presenti.
 
 ### B.4 Cruscotto — scomposizione del fatturato (chiarezza)
+
+> **PRESENTAZIONE v1.4 (2026-06-20, rivista con founder).** I tre numeri NON vanno messi in
+> fila come pari grado: `Venduto` (il prezzo) e `A rate + Da pianificare` (= il **residuo**) sono
+> grandezze diverse e **non sommano** tra loro — affiancarle implica una relazione inesistente e
+> confonde. Decisione: **due blocchi separati per scope**.
+> - *Storico* (tutti i contratti, inclusi chiusi): `Fatturato` / `Incassato` con segnale "incl. chiusi".
+> - *Da incassare · contratti aperti*: ancora **Residuo** + equazione esplicita
+>   `Residuo = A scadenza + Da pianificare`. **"Venduto" non sta qui** (vive nello storico/Fatturato).
+> Backend: `kpi_residuo` (Σ max(0, prezzo−versato) aperti) = `kpi_a_rate` + `kpi_da_pianificare`.
+> La tabella sotto resta valida come *definizione delle nozioni*; cambia solo come si mostrano.
 
 > **CORREZIONE v1.1 (rilievo Claude Code).** La v1.0 definiva "Da pianificare" come
 > "Booked − Billed" letterale (`prezzo_totale − rate pendenti`). **Errato:** acconti e rate **già

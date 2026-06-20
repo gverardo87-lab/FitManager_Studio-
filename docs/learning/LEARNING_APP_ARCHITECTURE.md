@@ -41,3 +41,19 @@ Spec vincolante: `SPEC_RINNOVO_E_CONTRATTI_DA_PIANIFICARE.md` §A.2 (v1.3) + §5
 **Domande aperte:**
 - [ ] La "durata" è preservata come numero di giorni esatto. Per pacchetti definiti in mesi/sedute potrebbe essere più naturale preservare i *mesi di calendario* (es. sempre 2 mesi) invece dei giorni. Valutare se serve, oppure se l'editabilità del campo basta.
 - [ ] Se in futuro si introducono pacchetti a timestamp (orari, non solo date), rivedere la convenzione +1 → period-end esclusivo.
+
+---
+
+## KPI affiancati: la disposizione comunica una relazione matematica — 20/06/2026
+**Contesto:** cruscotto contratti con 3 KPI in fila (Venduto / A rate / Da pianificare). Confondeva anche chi (founder + io) l'aveva pensato. Capire *perché* ha dato una regola di presentazione dati.
+
+**Livello 1 — Cosa fa:** N numeri in celle uguali, affiancate, vengono letti dal cervello come **parti di un insieme che somma**. Se i numeri NON sommano (o sommano a qualcosa che non è mostrato), il layout *mente* sulla loro relazione. Nel caso reale: `Venduto` (prezzo, 15.177) non c'entra con `A rate + Da pianificare` (= residuo, 5.441) — affiancarli implicava una somma inesistente. Fix: separare per **scope/storia** e rendere **esplicita l'equazione** che torna (`Residuo = A scadenza + Da pianificare`), con l'ancora (Residuo) mostrata.
+
+**Livello 2 — Perché lo voglio:** un cruscotto finanziario vale solo se l'utente **si fida** dei numeri. Numeri che non riconciliano a vista generano dubbio — l'opposto del "sentirsi in controllo" che il prodotto promette. Per un utente efficienza-driven con poco tempo, il dubbio = abbandono della feature.
+
+**Livello 3 — Perché funziona così sotto:** è percezione (Gestalt: prossimità + similarità → raggruppamento) + il "modello mentale" che l'utente costruisce. Due principi trasferibili: (a) **affianca solo ciò che somma**; se non somma, separa o mostra l'operatore (`=`, `+`); (b) **una vista = uno scope**: non mischiare cumulativo-storico (include chiusi) e stato-corrente (solo aperti) nella stessa griglia senza segnalarlo — sono domande diverse ("quanto ho fatto in totale" vs "quanto devo ancora incassare"). Lo stesso vale per qualunque dashboard: KPI di flusso vs di stato, lifetime vs corrente, lordo vs netto.
+
+**Failure mode:** se metto in fila numeri di scope/grandezza diversi → l'utente tenta una somma mentale che non torna → non si fida → o ignora il cruscotto o (peggio) prende decisioni su una lettura sbagliata. Me ne accorgo quando *io stesso* non so spiegare in una frase come si legano due numeri adiacenti (Principio 1 del metodo: "se non lo spiego, non l'ho capito" — vale anche per la UI).
+
+**Domande aperte:**
+- [ ] Serve un'icona/tooltip che mostri l'equazione anche a chi non la coglie dal layout? Per ora l'operatore `=`/`+` inline dovrebbe bastare — da validare con l'utente reale.
