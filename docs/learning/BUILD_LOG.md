@@ -628,4 +628,16 @@ Nuovo filone aperto dopo la v1.0.13. **Trigger:** dal primo cliente reale (effic
 
 **Sequenza:** Step 1 Criterio A (frontend) → Step 2 backend B1+B5 → Step 3 endpoint B2 → Step 4 frontend B3+B4+B6 → Step 5 test (`test_contracts_to_plan.py`). Implementazione al via dallo Step 1.
 
+### 2026-06-20 — SPEC_RINNOVO implementata (Step 1-4), verificata e2e + fix definitivo dual-env
+
+**Implementazione completa** (commit `83c93b1`, `54f0c8a`, `a1a7dae`, `9b701ef`, `af47c23`):
+- **Criterio A** — rinnovo guidato: pre-fill date **sequenziali** (figlio inizia `max(scadenza padre+1, oggi)`, durata = padre), tipo/prezzo ereditati; dopo conferma naviga al tab Piano Pagamenti del nuovo contratto. Backend `renew_contract` invariato (già sicuro); unico tocco BE: `data_inizio` padre esposto da `expiring-contracts`.
+- **Criterio B** — vista Contract-first: raffinato l'alert esistente `orphan_contracts` (residuo>0, non prezzo>0), nuovo endpoint `GET /dashboard/contracts-to-plan` + `ContractsToPlanSheet` azionabile, agganciato ad AlertHub.
+- **Cruscotto B.4** — 3 KPI in `list_contracts` (venduto/a_rate/da_pianificare, formula su residuo, rate non-saldate = PENDENTE+PARZIALE); striscia "Pianificazione" in `/contratti`.
+- Test: `test_contracts_to_plan.py` (11 casi: selezione, riconciliazione, multi-tenant). Suite 380 passed.
+
+**Verifica end-to-end live** (skill `/verify`, Playwright su `crm.db` reale): alert "1 contratto senza piano" → sheet (Chiara Agate, residuo 450€) → CTA `/contratti/39` su tab piano con form generazione; rinnovo Nicole Scalmato → **Data Inizio "01 luglio 2026" = scadenza padre +1** (non oggi), durata preservata; cruscotto Venduto 15.177 / A rate 4971 / **Da pianificare 470** (= 450 zero-rate + 20 di parziali sotto-coperti, differenza attesa e corretta). Zero scritture sul DB reale (rinnovo aperto e abbandonato senza submit).
+
+**Fix definitivo dual-env** (commit `408a682`) — emerso durante la verifica: la rimozione del dual-env (2026-06-09) era **incompleta**. `package.json` (dev=3001), `restart-backend.sh` (dev=`crm_dev.db`) e ~50 script erano residui. Risolto alla radice (decisione founder, Option B): **un solo `crm.db`**; offset porte **dev 3001/8001 vs prod 3000/8000** mantenuto e documentato (fa coesistere sviluppo e app installata); dev/prod ora da **`is_compiled()`** (non dal nome DB, sempre falso ora) — corregge auto-backup-in-dev e `app_mode` sempre "production". Credenziali dev `Fitness2026!` (legate a `crm_dev.db`) rimosse da CLAUDE.md: ora un solo set (`chiarabassani`). Concetto catturato: `LEARNING_APP_ARCHITECTURE.md` (rinnovo sequenziale, convenzioni CRM). Decisione architetturale: `ADR-014`.
+
 ---

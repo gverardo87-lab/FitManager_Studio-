@@ -371,5 +371,7 @@ Ogni commit deve lasciare il branch rilasciabile per il proprio scope.
 
 ## Credenziali sviluppo
 
-- Dev: chiarabassani96@gmail.com / Fitness2026!
-- Prod: chiarabassani96@gmail.com / chiarabassani
+- Login: **chiarabassani96@gmail.com / chiarabassani**
+- UN SOLO database (`crm.db`) → un solo set di credenziali. La vecchia coppia
+  "Dev: …/Fitness2026!" era legata al rimosso `crm_dev.db` e **non funziona più**
+  (verificato 2026-06-20: ritorna 401). Vedi sezione Porte per dev=3001/8001 vs prod=3000/8000.
