@@ -594,6 +594,44 @@ def _lapsed_client_candidates(session: Session, trainer_id: int, today: date):
     return candidates
 
 
+def _suspended_contracts_candidates(session: Session, trainer_id: int, today: date):
+    """
+    Candidati "contratti sospesi" (stato SOSPESO) — unità = CONTRATTO (FINANCIAL_DOMAIN_MODEL §6).
+
+    SOSPESO = aperto + scaduto + crediti_residui > 0 (sedute prepagate ancora da erogare: gliele DEVI).
+    Pre-filtro SQL grossolano (aperti + scaduti); la classificazione fine è del SSoT
+    `contract_state` (esclude gli ESAURITO, crediti_residui == 0 — regola d'oro §10).
+    Usato da endpoint (items) e alert (count) → conteggio coerente.
+
+    Ordine: aging **INVERTITO** (più vecchio = più urgente). Il SOSPESO non decade: è
+    un'obbligazione, l'urgenza cresce nel tempo (§4.1, decadimento asimmetrico).
+
+    Ritorna: list[(Contract, Client, crediti_usati: int)].
+    """
+    rows = session.exec(
+        select(Contract, Client)
+        .join(Client, Contract.id_cliente == Client.id)
+        .where(
+            Contract.trainer_id == trainer_id,
+            Contract.deleted_at == None,
+            Contract.chiuso == False,
+            Contract.data_scadenza < today,  # scaduto (NULL escluso dal confronto)
+        )
+    ).all()
+    if not rows:
+        return []
+
+    credits_map = _crediti_usati_map(session, [c.id for c, _ in rows])
+
+    out = []
+    for contract, client in rows:
+        crediti_usati = credits_map.get(contract.id, 0)
+        if cstate.contract_lifecycle(contract, crediti_usati, today) == cstate.Lifecycle.SOSPESO:
+            out.append((contract, client, crediti_usati))
+    out.sort(key=lambda t: (today - _coerce_date(t[0].data_scadenza)).days, reverse=True)
+    return out
+
+
 @router.get("/clients-to-recover")
 def get_clients_to_recover(
     trainer: Trainer = Depends(get_current_trainer),
@@ -640,6 +678,49 @@ def get_clients_to_recover(
         })
 
     items.sort(key=lambda x: x["giorni_ritardo"], reverse=True)
+    return {"items": items, "total": len(items)}
+
+
+@router.get("/suspended-contracts")
+def get_suspended_contracts(
+    trainer: Trainer = Depends(get_current_trainer),
+    session: Session = Depends(get_session),
+):
+    """
+    Contratti sospesi (stato SOSPESO) — FINANCIAL_DOMAIN_MODEL §6.
+
+    Contratto aperto, scaduto, con **sedute prepagate residue** (crediti_residui > 0): il trainer
+    le DEVE al cliente. Unità = CONTRATTO. Derivato da `contract_state` (mai inline).
+    Doppio debito esplicito (assi ortogonali §2): `crediti_residui` (sedute da recuperare) e
+    `residuo` (denaro eventualmente ancora da incassare) sono debiti DISTINTI, non un doppione.
+
+    Azione disponibile ORA: **estendi** (PUT /contracts/{id} su data_scadenza → torna ATTIVO).
+    Chiudi-con-conguaglio / decadi arrivano col blocco terminazione (G7).
+    Read-only, multi-tenant. Ordine: ritardo decrescente (aging invertito).
+    """
+    today = date.today()
+    items = []
+    for contract, client, crediti_usati in _suspended_contracts_candidates(session, trainer.id, today):
+        scad = _coerce_date(contract.data_scadenza)
+        inizio = _coerce_date(contract.data_inizio)
+        giorni_ritardo = (today - scad).days if isinstance(scad, date) else 0
+        items.append({
+            "contract_id": contract.id,
+            "tipo_pacchetto": contract.tipo_pacchetto,
+            "data_inizio": inizio.isoformat() if isinstance(inizio, date) else None,
+            "data_scadenza": scad.isoformat() if isinstance(scad, date) else None,
+            "giorni_ritardo": giorni_ritardo,
+            "prezzo_totale": contract.prezzo_totale,
+            "crediti_totali": contract.crediti_totali or 0,
+            "crediti_usati": crediti_usati,
+            "crediti_residui": cstate.crediti_residui(contract, crediti_usati),  # sedute da recuperare
+            "residuo": cstate.residuo(contract),  # denaro eventualmente ancora dovuto (asse distinto)
+            "client_id": client.id,
+            "client_nome": client.nome,
+            "client_cognome": client.cognome,
+            "client_telefono": client.telefono,
+        })
+
     return {"items": items, "total": len(items)}
 
 
@@ -864,6 +945,19 @@ def get_dashboard_alerts(
             title=f"{recover_count} {'cliente da recuperare' if recover_count == 1 else 'clienti da recuperare'}",
             detail="Contratto scaduto e nessuna copertura attiva — riattivali",
             count=recover_count,
+            link="/rinnovi-incassi",
+        ))
+
+    # ── 2-ter. Contratti sospesi (scaduti con sedute prepagate residue) — conta CONTRATTI ──
+    # Stesso helper della worklist → conteggio coerente. Obbligazione, non opportunità: gli devi le sedute.
+    suspended_count = len(_suspended_contracts_candidates(session, trainer.id, today))
+    if suspended_count > 0:
+        items.append(AlertItem(
+            severity="warning",
+            category="suspended_contracts",
+            title=f"{suspended_count} {'contratto sospeso' if suspended_count == 1 else 'contratti sospesi'}",
+            detail="Scaduti con sedute prepagate da erogare — estendi o regola",
+            count=suspended_count,
             link="/rinnovi-incassi",
         ))
 

@@ -1028,6 +1028,24 @@ export interface ClientToRecoverItem {
   crediti_residui: number;
 }
 
+/** Contratto SOSPESO (scaduto con sedute prepagate residue) — GET /api/dashboard/suspended-contracts */
+export interface SuspendedContractItem {
+  contract_id: number;
+  tipo_pacchetto: string | null;
+  data_inizio: string | null;
+  data_scadenza: string | null;
+  giorni_ritardo: number;
+  prezzo_totale: number | null;
+  crediti_totali: number;
+  crediti_usati: number;
+  crediti_residui: number;        // sedute da recuperare (asse crediti)
+  residuo: number;                // denaro eventualmente ancora dovuto (asse denaro, distinto)
+  client_id: number;
+  client_nome: string;
+  client_cognome: string;
+  client_telefono: string | null;
+}
+
 /** Cliente inattivo per Dashboard Sheet */
 export interface InactiveClientItem {
   client_id: number;

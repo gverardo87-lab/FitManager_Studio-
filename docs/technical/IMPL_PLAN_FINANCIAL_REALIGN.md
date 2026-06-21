@@ -76,6 +76,15 @@
 
 ## 2. Blocco 3 — Contratti sospesi + ESTENDI
 
+> **✅ STATO (2026-06-21, implementato).** Backend: helper `_suspended_contracts_candidates`
+> (deriva SOSPESO da `contract_state`) + endpoint `GET /dashboard/suspended-contracts` + alert
+> `suspended_contracts` (count == len, stesso helper). ESTENDI = `PUT /contracts/{id}` (riuso puro,
+> nessun codice backend). Frontend: `SuspendedContractItem`, `useSuspendedContracts`, `SuspendedCard`
+> + `ExtendDialog` (DatePicker minDate=oggi, default +30g) + KPI "Sospesi" + sezione in
+> `/rinnovi-incassi`, icona alert in `AlertHub`. I 2 bottoni di chiusura disegnati **disabilitati**
+> ("disponibile col prossimo aggiornamento") → atterrano in G7. Dual-debt esplicito (sedute vs denaro).
+> Test: `test_suspended_contracts` (11). Suite 485 passed, next build verde.
+
 **Scope.** Rendere visibile e azionabile lo stato **SOSPESO** (`chiuso=False` + scaduto + `crediti_residui>0`), oggi l'unico stato non-terminale "homeless". Unità = **CONTRATTO**. Azione attiva unica = **ESTENDI** (riporta ad ATTIVO spostando `data_scadenza`). I due bottoni di chiusura (`chiudi-con-conguaglio`, `decadi`) si **disegnano disabilitati** per comunicare il modello dei 3 modi di morte, ma vivono in G7 (design-scope ≠ build-scope: tutte le chiusure stanno nel blocco terminazione per non frammentare la migrazione schema). **Zero schema change.**
 
 **Riuso (file:riga):**

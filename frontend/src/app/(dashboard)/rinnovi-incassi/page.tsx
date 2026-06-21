@@ -16,10 +16,13 @@ import {
   AlertTriangle,
   ArrowRight,
   BadgeCheck,
+  CalendarPlus,
   CreditCard,
   HandCoins,
   HeartHandshake,
   Loader2,
+  Lock,
+  PauseCircle,
   RefreshCw,
   TrendingDown,
   UserMinus,
@@ -48,16 +51,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DatePicker } from "@/components/ui/date-picker";
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import { ContractSheet } from "@/components/contracts/ContractSheet";
-import { useOverdueRates, useExpiringContracts, useClientsToRecover } from "@/hooks/useDashboard";
+import { useOverdueRates, useExpiringContracts, useClientsToRecover, useSuspendedContracts } from "@/hooks/useDashboard";
 import { usePayRate } from "@/hooks/useRates";
-import { useMarkRenewalOutcome } from "@/hooks/useContracts";
+import { useMarkRenewalOutcome, useUpdateContract } from "@/hooks/useContracts";
 import { useTrainerName } from "@/hooks/useTrainerName";
 import { usePageReveal } from "@/lib/page-reveal";
 import { formatCurrency, formatShortDate, toISOLocal } from "@/lib/format";
 import { waRenewalReminder, waRateReminder, waCheckIn } from "@/lib/whatsapp-templates";
-import type { ExpiringContractItem, OverdueRateItem, ClientToRecoverItem } from "@/types/api";
+import type { ExpiringContractItem, OverdueRateItem, ClientToRecoverItem, SuspendedContractItem } from "@/types/api";
 
 // Target comune per il rinnovo (compatibile con ExpiringContractItem e ClientToRecoverItem)
 interface RenewTarget {
@@ -404,6 +408,120 @@ function RecoverCard({
 }
 
 // ════════════════════════════════════════════════════════════
+// SuspendedCard — contratto SOSPESO (sedute prepagate da erogare) + Estendi
+// ════════════════════════════════════════════════════════════
+
+function SuspendedCard({ item }: { item: SuspendedContractItem }) {
+  const updateContract = useUpdateContract();
+  const [extendOpen, setExtendOpen] = useState(false);
+  const [newDate, setNewDate] = useState<Date | undefined>(undefined);
+  const isExtending = updateContract.isPending;
+
+  const ritardoLabel = item.giorni_ritardo === 1
+    ? "Sospeso da 1 giorno"
+    : `Sospeso da ${item.giorni_ritardo} giorni`;
+
+  const openExtend = () => {
+    const d = new Date();
+    d.setDate(d.getDate() + 30); // default: +30 giorni da oggi
+    setNewDate(d);
+    setExtendOpen(true);
+  };
+
+  const handleExtend = () => {
+    if (!newDate) return;
+    updateContract.mutate(
+      { id: item.contract_id, data_scadenza: toISOLocal(newDate).slice(0, 10) },
+      { onSuccess: () => setExtendOpen(false) },
+    );
+  };
+
+  return (
+    <div className="rounded-xl border border-l-4 border-l-violet-500 bg-gradient-to-br from-violet-50/50 to-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:from-violet-950/20 dark:to-zinc-900">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0 flex-1 space-y-1.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <Link href={`/clienti/${item.client_id}`} className="text-sm font-semibold hover:underline">
+              {item.client_nome} {item.client_cognome}
+            </Link>
+            <Badge className="border-violet-300 bg-violet-100 text-xs text-violet-700 dark:bg-violet-900/30 dark:text-violet-300" variant="outline">
+              {ritardoLabel}
+            </Badge>
+          </div>
+          {/* Doppio debito esplicito: sedute (asse crediti) ≠ denaro (asse denaro) — non un doppione */}
+          <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+            <span>{item.tipo_pacchetto || "Contratto"}</span>
+            <span className="text-muted-foreground/40">·</span>
+            <span className="font-medium text-violet-700 dark:text-violet-300">
+              {item.crediti_residui} {item.crediti_residui === 1 ? "seduta" : "sedute"} da recuperare
+            </span>
+            {item.residuo > 0 ? (
+              <>
+                <span className="text-muted-foreground/40">·</span>
+                <span className="font-medium">Denaro da incassare {formatCurrency(item.residuo)}</span>
+              </>
+            ) : null}
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {/* Le due gambe di chiusura arrivano col blocco terminazione (G7) — disegnate, disabilitate */}
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled
+            className="text-xs text-muted-foreground/60"
+            title="Disponibile col prossimo aggiornamento"
+          >
+            <Lock className="mr-1 h-3 w-3" />
+            Chiudi con conguaglio
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled
+            className="text-xs text-muted-foreground/60"
+            title="Disponibile col prossimo aggiornamento"
+          >
+            Decadi
+          </Button>
+          <Button size="sm" onClick={openExtend} disabled={isExtending}>
+            {isExtending ? (
+              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <CalendarPlus className="mr-1.5 h-3.5 w-3.5" />
+            )}
+            Estendi
+          </Button>
+        </div>
+      </div>
+
+      <Dialog open={extendOpen} onOpenChange={setExtendOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Estendi contratto — {item.client_nome} {item.client_cognome}</DialogTitle>
+            <DialogDescription>
+              Sposta la scadenza in avanti: il contratto torna attivo e le {item.crediti_residui} sedute
+              residue restano erogabili.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-1.5">
+            <Label>Nuova scadenza</Label>
+            <DatePicker value={newDate} onChange={setNewDate} minDate={new Date()} />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setExtendOpen(false)}>Annulla</Button>
+            <Button onClick={handleExtend} disabled={!newDate || isExtending}>
+              {isExtending ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : null}
+              Conferma
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════
 // Page
 // ════════════════════════════════════════════════════════════
 
@@ -412,6 +530,7 @@ export default function RinnoviIncassiPage() {
   const overdueQuery = useOverdueRates();
   const expiringQuery = useExpiringContracts();
   const recoverQuery = useClientsToRecover();
+  const suspendedQuery = useSuspendedContracts();
 
   const [renewSheet, setRenewSheet] = useState(false);
   const [renewItem, setRenewItem] = useState<RenewTarget | null>(null);
@@ -421,8 +540,9 @@ export default function RinnoviIncassiPage() {
   const overdueItems = overdueQuery.data?.items ?? [];
   const expiringItems = expiringQuery.data?.items ?? [];
   const recoverItems = recoverQuery.data?.items ?? [];
-  const isLoading = overdueQuery.isLoading || expiringQuery.isLoading || recoverQuery.isLoading;
-  const totalActions = overdueItems.length + expiringItems.length + recoverItems.length;
+  const suspendedItems = suspendedQuery.data?.items ?? [];
+  const isLoading = overdueQuery.isLoading || expiringQuery.isLoading || recoverQuery.isLoading || suspendedQuery.isLoading;
+  const totalActions = overdueItems.length + expiringItems.length + recoverItems.length + suspendedItems.length;
 
   const totalOverdueAmount = overdueItems.reduce((sum, i) => sum + i.importo_residuo, 0);
 
@@ -468,7 +588,7 @@ export default function RinnoviIncassiPage() {
 
       {/* ── KPI Strip ── */}
       {totalActions > 0 ? (
-        <div className={`grid grid-cols-2 gap-4 lg:grid-cols-4 ${revealClass(30)}`} style={revealStyle(30)}>
+        <div className={`grid grid-cols-2 gap-4 lg:grid-cols-5 ${revealClass(30)}`} style={revealStyle(30)}>
           <KpiCard
             icon={RefreshCw}
             label="Da rinnovare"
@@ -480,6 +600,16 @@ export default function RinnoviIncassiPage() {
             bg="from-amber-50/80 to-white dark:from-amber-950/30 dark:to-zinc-900"
             iconBg="bg-amber-100 dark:bg-amber-900/50"
             iconColor="text-amber-600 dark:text-amber-400"
+          />
+          <KpiCard
+            icon={PauseCircle}
+            label="Sospesi"
+            value={String(suspendedItems.length)}
+            sublabel={suspendedItems.length > 0 ? "sedute da erogare" : undefined}
+            border="border-l-violet-500"
+            bg="from-violet-50/80 to-white dark:from-violet-950/30 dark:to-zinc-900"
+            iconBg="bg-violet-100 dark:bg-violet-900/50"
+            iconColor="text-violet-600 dark:text-violet-400"
           />
           <KpiCard
             icon={HeartHandshake}
@@ -559,6 +689,29 @@ export default function RinnoviIncassiPage() {
           <div className="space-y-2">
             {expiringItems.map((item) => (
               <RenewalCard key={item.contract_id} item={item} onRenew={handleRenew} trainerName={trainerName} />
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {/* ── Sezione: Contratti sospesi (sedute prepagate da erogare) ── */}
+      {suspendedItems.length > 0 ? (
+        <section className={revealClass(75)} style={revealStyle(75)}>
+          <div className="mb-1 flex items-center gap-2">
+            <PauseCircle className="h-4 w-4 text-violet-600" />
+            <h2 className="text-sm font-semibold">
+              Contratti sospesi
+              <span className="ml-1.5 font-normal text-muted-foreground">
+                ({suspendedItems.length})
+              </span>
+            </h2>
+          </div>
+          <p className="mb-3 text-xs text-muted-foreground">
+            Scaduti con sedute prepagate ancora da erogare — gliele devi. Estendi per riattivarli.
+          </p>
+          <div className="space-y-2">
+            {suspendedItems.map((item) => (
+              <SuspendedCard key={item.contract_id} item={item} />
             ))}
           </div>
         </section>

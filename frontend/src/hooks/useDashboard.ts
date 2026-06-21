@@ -24,6 +24,7 @@ import type {
   ExpiringContractItem,
   ContractToPlanItem,
   ClientToRecoverItem,
+  SuspendedContractItem,
   InactiveClientItem,
   BirthdayClientItem,
   TrainingMethodologyWorklistResponse,
@@ -173,6 +174,19 @@ export function useClientsToRecover(enabled = true) {
     queryFn: async () => {
       const { data } = await apiClient.get<ListResponse<ClientToRecoverItem>>(
         "/dashboard/clients-to-recover"
+      );
+      return data;
+    },
+    enabled,
+  });
+}
+
+export function useSuspendedContracts(enabled = true) {
+  return useQuery<ListResponse<SuspendedContractItem>>({
+    queryKey: ["dashboard", "suspended-contracts"],
+    queryFn: async () => {
+      const { data } = await apiClient.get<ListResponse<SuspendedContractItem>>(
+        "/dashboard/suspended-contracts"
       );
       return data;
     },
