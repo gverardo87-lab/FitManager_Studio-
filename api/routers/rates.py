@@ -38,10 +38,8 @@ from api.schemas.financial import (
     RateResponse, PaymentPlanCreate,
     AgingItem, AgingBucket, AgingResponse,
 )
-from api.routers._audit import log_audit
-
-# Categorie movimento cassa (allineate a ContractRepository)
-CATEGORIA_PAGAMENTO_RATA = "PAGAMENTO_RATA"
+from api.routers._audit import log_audit, log_contract_lifecycle_transition
+from api.services.cash_categories import CATEGORIA_PAGAMENTO_RATA  # SSoT categorie cassa
 
 router = APIRouter(prefix="/rates", tags=["rates"])
 
@@ -548,6 +546,7 @@ def pay_rate(
     #    contract gia' fetchato in B-ter. Approccio incrementale: totale_versato += importo.
     old_totale_versato = contract.totale_versato
     old_stato_pagamento = contract.stato_pagamento
+    old_chiuso = contract.chiuso
     contract.totale_versato = contract.totale_versato + data.importo
 
     # E) Stato contratto: SALDATO se totale pagato copre il prezzo
@@ -599,6 +598,8 @@ def pay_rate(
         "totale_versato": {"old": old_totale_versato, "new": contract.totale_versato},
         "stato_pagamento": {"old": old_stato_pagamento, "new": contract.stato_pagamento},
     })
+    # Audita la transizione `chiuso` (auto-close per completamento) — no-op se invariata
+    log_contract_lifecycle_transition(session, contract, old_chiuso=old_chiuso, motivo="completamento")
     session.commit()
     session.refresh(rate)
 
@@ -649,6 +650,7 @@ def unpay_rate(
     contract = session.get(Contract, rate.id_contratto)
     old_totale_versato = contract.totale_versato
     old_stato_pagamento = contract.stato_pagamento
+    old_chiuso = contract.chiuso
     contract.totale_versato = max(0, contract.totale_versato - importo_da_stornare)
 
     # E) Ricalcola stato_pagamento
@@ -690,6 +692,8 @@ def unpay_rate(
         "totale_versato": {"old": old_totale_versato, "new": contract.totale_versato},
         "stato_pagamento": {"old": old_stato_pagamento, "new": contract.stato_pagamento},
     })
+    # Audita la transizione `chiuso` (auto-reopen da revoca pagamento) — no-op se invariata
+    log_contract_lifecycle_transition(session, contract, old_chiuso=old_chiuso, motivo="riapertura_pagamento")
     session.commit()
     session.refresh(rate)
 

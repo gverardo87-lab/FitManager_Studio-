@@ -48,6 +48,7 @@ from api.schemas.financial import (
     FinancialTrendResponse,
 )
 from api.routers._audit import log_audit
+from api.services.cash_categories import CATEGORIA_ACCONTO_CONTRATTO
 from api.services.recurring_expense_schedule import (
     VALID_RECURRING_EXPENSE_FREQUENCIES,
     get_recurring_expense_occurrences_in_month,
@@ -1437,6 +1438,7 @@ def get_forecast(
             Rate.data_scadenza > today,
             Rate.deleted_at == None,
             Contract.deleted_at == None,
+            Contract.chiuso == False,  # P1: niente entrate-fantasma da rate PENDENTI su contratti CHIUSI
         )
     ).all()
 
@@ -1646,7 +1648,7 @@ def get_financial_trend(
             else:
                 buckets_rinnovi[key] += imp
             # Taglio 2 — acconti vs rate (categoria): else=rate garantisce la riconciliazione
-            if m.categoria == "ACCONTO_CONTRATTO":
+            if m.categoria == CATEGORIA_ACCONTO_CONTRATTO:
                 buckets_acconti[key] += imp
             else:
                 buckets_rate[key] += imp

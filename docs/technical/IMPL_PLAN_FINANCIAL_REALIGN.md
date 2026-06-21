@@ -242,6 +242,17 @@ Tutte le mutazioni DB **PRIMA** del `session.commit()` unico; dopo, solo `refres
 
 ## 6. Prerequisiti trasversali (Blocco "Prereq P", PRIMA di G7)
 
+> **✅ STATO (2026-06-21, implementato).** Round Prereq P limitato ai pezzi con **effetto reale e
+> testabile subito**: **P0** (`api/services/cash_categories.py` — predicato cassa bidirezionale +
+> consolidamento costanti `ACCONTO_CONTRATTO`/`PAGAMENTO_RATA`, literal residuo in `movements.py`
+> consolidato), **P1** (fix Forecast `Contract.chiuso==False`), **P2** (`log_contract_lifecycle_transition`
+> in `_audit.py` + wiring `pay_rate`/`unpay_rate`/`agenda._sync_contract_chiuso`). Test: `test_cash_categories`
+> (6), `test_forecast_phantom` (2), `test_lifecycle_audit` (4). **Raffinamento di scope:** le esclusioni-query
+> #2/#3/#4/#8 (sez. 5) e **P3 netto-per-vista** restano **codice inerte finché G7 non scrive `RIMBORSO`** →
+> spostate **dentro il blocco G7**, dove sono esercitabili end-to-end con un rimborso reale (no dead code
+> non testabile). La regola di boot di P3 (no query ORM su `Contract` prima di `sync_schema`) resta valida
+> e va rispettata quando G7 aggiunge le colonne.
+
 **P1 — Fix Forecast rate-fantasma** (`movements.py:1432-1441`): aggiungere `Contract.chiuso == False` alle entrate certe. **Hard prerequisite, NON differibile** (verdetto 3): protegge i CHIUSO legacy con rate PENDENTI future e belt-and-suspenders per i neo-terminati. Aging già safe (`rates.py:182-188`). Test: CHIUSO non-eliminato con rata PENDENTE futura → NON in proiezione; controprova open → contata.
 
 **P2 — Audit della transizione → CHIUSO** (verdetti 1 e 3): oggi `pay_rate` auto-chiude ma logga solo `totale_versato`+`stato_pagamento` (`rates.py:598-601`); `_sync_contract_chiuso` flippa senza `log_audit`. Nuovo `log_contract_lifecycle_transition(...)` in `_audit.py` (NON committa; idempotente: solo se `old_chiuso != contract.chiuso`; firma pronta per G6/G7). Wiring: `pay_rate` (motivo `completamento`), `agenda._sync_contract_chiuso`. I campi `motivo_*` viaggiano nel JSON `changes` finché G7 non aggiunge le colonne (zero schema in P2). **Verdetto 1:** nessun test esistente asserisce su audit/chiuso → safe.

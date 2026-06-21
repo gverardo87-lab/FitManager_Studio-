@@ -29,7 +29,7 @@ from api.models.trainer import Trainer
 from api.models.event import Event
 from api.models.client import Client
 from api.models.contract import Contract
-from api.routers._audit import log_audit
+from api.routers._audit import log_audit, log_contract_lifecycle_transition
 
 router = APIRouter(prefix="/events", tags=["events"])
 
@@ -325,8 +325,16 @@ def _sync_contract_chiuso(session: Session, contract_id: int) -> None:
     )
 
     if contract.chiuso != should_be_chiuso:
+        old_chiuso = contract.chiuso
         contract.chiuso = should_be_chiuso
         session.add(contract)
+        # Audita la transizione: completamento (chiude) vs riapertura per crediti liberati
+        log_contract_lifecycle_transition(
+            session,
+            contract,
+            old_chiuso=old_chiuso,
+            motivo="completamento" if should_be_chiuso else "riapertura_crediti",
+        )
 
 
 # --- Endpoints ---

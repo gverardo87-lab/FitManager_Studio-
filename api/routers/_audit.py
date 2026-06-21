@@ -38,3 +38,41 @@ def log_audit(
         trainer_id=trainer_id,
     )
     session.add(entry)
+
+
+def log_contract_lifecycle_transition(
+    session: Session,
+    contract,
+    *,
+    old_chiuso: bool,
+    motivo: str | None = None,
+    importo_rimborsato: float | None = None,
+    residuo_annullato: float | None = None,
+    data_chiusura=None,
+) -> None:
+    """
+    Audita la transizione del flag `chiuso` di un contratto (chiusura o riapertura).
+
+    Colma il buco rilevato in ricognizione: oggi `pay_rate` e `agenda._sync_contract_chiuso`
+    accendono/spengono `chiuso` senza loggarlo. La terminazione (G7) è l'evento più importante
+    da tracciare legalmente: non può ereditare un audit bucato.
+
+    - **Idempotente**: NON emette nulla se `chiuso` non è cambiato.
+    - **Non committa** (come `log_audit`): il chiamante committa atomicamente.
+    - `trainer_id` derivato da `contract.trainer_id` → nessun cambio di firma nei caller.
+    - Firma estesa (motivo/rimborso/storno/data) **pronta per G6/G7**: finché le colonne dedicate
+      (`motivo_chiusura`, `data_chiusura`) non atterrano col blocco terminazione, questi campi
+      viaggiano nel JSON `changes`.
+    """
+    if old_chiuso == contract.chiuso:
+        return
+    changes: dict = {"chiuso": {"old": old_chiuso, "new": contract.chiuso}}
+    if motivo is not None:
+        changes["motivo"] = motivo
+    if importo_rimborsato is not None:
+        changes["importo_rimborsato"] = importo_rimborsato
+    if residuo_annullato is not None:
+        changes["residuo_annullato"] = residuo_annullato
+    if data_chiusura is not None:
+        changes["data_chiusura"] = data_chiusura
+    log_audit(session, "contract", contract.id, "UPDATE", contract.trainer_id, changes)

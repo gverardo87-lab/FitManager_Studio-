@@ -37,9 +37,10 @@ from api.schemas.financial import (
 )
 from api.routers._audit import log_audit
 from api.services import contract_state as cstate
+from api.services.cash_categories import CATEGORIA_ACCONTO_CONTRATTO
 
-# Categoria movimento cassa per acconto (allineata a ContractRepository)
-CATEGORIA_ACCONTO = "ACCONTO_CONTRATTO"
+# Categoria movimento cassa per acconto — SSoT in cash_categories.py
+CATEGORIA_ACCONTO = CATEGORIA_ACCONTO_CONTRATTO
 
 router = APIRouter(prefix="/contracts", tags=["contracts"])
 
