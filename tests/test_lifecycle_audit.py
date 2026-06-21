@@ -141,15 +141,19 @@ def test_no_transition_when_chiuso_unchanged(client, auth_headers, sample_contra
     assert _chiuso_transitions(session, cid) == []
 
 
-# ── [BRIDGE §1 LOAD-BEARING] difetto latente: _sync_contract_chiuso riapre una chiusura deliberata ──
+# ── [BRIDGE §1 + §6 LOAD-BEARING] difetto latente: _sync_contract_chiuso riapre una chiusura deliberata ──
 # Una chiusura NON-da-completamento (manuale oggi; terminazione domani con G7) ha crediti_usati <
 # crediti_totali → should_be_chiuso=False → qualsiasi mutazione d'agenda su un suo evento la RIAPRE
-# in silenzio (etichettata "riapertura_crediti"). Fix vero in G7 (guard su motivo_chiusura/quota_stornata):
-# l'auto-riapertura credit-driven vale SOLO per le chiusure di completamento. xfail strict → quando G7
-# aggiunge la guard questo xpassa e va tolto il marker.
+# in silenzio (etichettata "riapertura_crediti"). Questo test chiude A MANO → motivo_chiusura resta NULL.
+# Fix vero in G7 = guard ALLOWLIST (addendum §6): auto-riapertura SOLO se motivo_chiusura==COMPLETAMENTO;
+# NULL (manuale/legacy) e TERMINAZIONE_* non si riaprono. NB: una denylist (motivo∈TERMINAZIONE_* /
+# quota_stornata>0) NON farebbe xpassare questo test (qui motivo=NULL). xpass SOLO quando atterrano
+# ENTRAMBI: (1) il completamento scrive motivo_chiusura=COMPLETAMENTO; (2) la guard è allowlist. Poi
+# rimuovere il marker. Delta modello: FDM §9.5.6, IMPL_PLAN §4.7.
 
 @pytest.mark.xfail(
-    reason="Bug latente (bridge §1): _sync_contract_chiuso riapre una chiusura deliberata. Fix in G7.",
+    reason="Bug latente (bridge §1/§6): _sync_contract_chiuso riapre una chiusura deliberata (motivo=NULL). "
+    "Fix G7 = guard allowlist (riapri solo se motivo==COMPLETAMENTO) + il completamento marca il motivo.",
     strict=True,
 )
 def test_manual_close_not_reopened_by_agenda_edit(client, auth_headers, sample_client, session):

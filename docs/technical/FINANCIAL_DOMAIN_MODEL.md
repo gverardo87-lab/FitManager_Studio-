@@ -562,18 +562,35 @@ La scelta Strada B (§3.1) mantiene **due rappresentazioni** del denaro effettiv
    chiuso`). Va **asserito/documentato** — oppure quelle formule migrano a `contract_state.residuo()`.
    Un `quota_stornata > 0` su un contratto **aperto** è uno stato impossibile: se compare, è un bug.
 
-   > **Semantica di riapertura (delta v1.3, da review bridge sul codice vivo).** L'auto-riapertura
-   > credit-driven (`agenda._sync_contract_chiuso`: `chiuso` da `True` a `False` quando i crediti non
-   > sono più esauriti) vale **solo per le chiusure di completamento**. Una chiusura **deliberata**
-   > (terminazione: `motivo_chiusura ∈ TERMINAZIONE_*`, oppure `quota_stornata > 0`, oppure rimborso
-   > registrato) **non si riapre mai automaticamente** — solo `reopen`/`unterminate` espliciti la
-   > riaprono. Riaprire una terminazione produrrebbe lo **stato zombie** `chiuso=False ∧
-   > quota_stornata>0`, che questo invariante dichiara impossibile: è il **meccanismo** che, lasciato non
-   > guardato, lo violerebbe. ⚠️ **Già latente oggi** (non solo post-G7): una chiusura *manuale* di un
-   > contratto non-completato viene riaperta alla prima mutazione d'agenda su un suo evento PT. Fix
-   > **vincolante in G7** (guard su `motivo_chiusura`/`quota_stornata` nel ramo di riapertura di
-   > `_sync_contract_chiuso`); tracciato da `test_lifecycle_audit.test_manual_close_not_reopened_by_agenda_edit`
-   > (xfail strict fino al fix). Mitigante presente: la transizione è già auditata (`log_contract_lifecycle_transition`).
+   > **Semantica di riapertura — guard ALLOWLIST (delta v1.3, review bridge + addendum §6).** L'auto-riapertura
+   > credit-driven (`agenda._sync_contract_chiuso`: `chiuso` da `True` a `False` quando i crediti non sono più
+   > esauriti) scatta **SOLO se `motivo_chiusura == COMPLETAMENTO`**. Ogni altro valore — `TERMINAZIONE_*`,
+   > **e `NULL` (chiusura manuale o legacy)** — **non si riapre automaticamente**; solo `reopen`/`unterminate`
+   > espliciti la riaprono. ⚠️ **Allowlist, NON denylist**: una denylist (`non riaprire se motivo ∈ TERMINAZIONE_*
+   > o quota_stornata>0`) **manca il caso reale** della chiusura *manuale* (`motivo=NULL`, nessuno storno) —
+   > che è proprio quella già latente oggi e quella esercitata dal test. Riaprire una terminazione produrrebbe
+   > lo **stato zombie** `chiuso=False ∧ quota_stornata>0`, che questo invariante dichiara impossibile.
+   >
+   > **Due prerequisiti non negoziabili (load-bearing in entrambe le direzioni):**
+   > 1. **Il completamento DEVE marcarsi.** I percorsi di auto-close per completamento (`pay_rate`; ramo di
+   >    chiusura di `_sync_contract_chiuso`) devono **scrivere `motivo_chiusura = COMPLETAMENTO`** quando chiudono.
+   >    Senza, la allowlist congela **anche** le riaperture legittime (es. completato → si cancella per errore una
+   >    seduta → deve tornare a dover una seduta → deve riaprirsi): preservato **solo** se il completamento porta `COMPLETAMENTO`.
+   > 2. **Doppio significato del `NULL`, dichiarato.** La guard tratta `NULL` in modo **conservativo (non-riaprire)**;
+   >    il runbook (§3.1/§11) legge il `NULL` legacy come **`COMPLETAMENTO` implicito** (solo classificazione/analytics).
+   >    Conseguenza **accettata**: un completamento **legacy** (`motivo=NULL`, pre-G7) non si auto-riapre più su modifica
+   >    d'agenda — direzione **sicura** (non resuscita uno stato a debito nascosto); se serve, il trainer riapre a mano.
+   >
+   > **Già latente oggi** (non solo post-G7): una chiusura *manuale* di un contratto non-completato viene riaperta
+   > alla prima mutazione d'agenda su un suo evento PT. Fix **vincolante in G7** (allowlist + marcatura completamento;
+   > la colonna `motivo_chiusura` esiste solo lì). Tracciato da
+   > `test_lifecycle_audit.test_manual_close_not_reopened_by_agenda_edit` (**xfail strict** → xpass **solo** quando
+   > atterrano **entrambi** i prerequisiti). Mitigante presente: la transizione è già auditata.
+   >
+   > **Alternativa più pulita (decisione di Giacomo, scope G7):** **togliere `chiuso` da `update_contract`** →
+   > le chiusure passano solo da `terminate`/`close` (che scrivono il motivo), `reopen` resta. Così la
+   > «chiusura-manuale-senza-motivo» **non esiste più**, la collisione del `NULL` sparisce, e il test va riscritto
+   > su una terminazione vera. Elimina la categoria di stati ambigui alla radice (costo: schema-input + call-site).
 
 E: `kpi_incassato = Σ totale_versato` (NON somma del mastro); il cash flow reale (con Altri incassi)
 non riconcilia con `kpi_incassato` — è atteso (TASSONOMIA §3).
