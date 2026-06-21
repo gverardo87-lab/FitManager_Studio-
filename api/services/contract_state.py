@@ -44,6 +44,9 @@ class ClientEngagement(str, Enum):
 
 
 def _as_date(d) -> Optional[date]:
+    # Dalla ORM (SQLModel) le colonne `date` arrivano come datetime.date → ramo identità.
+    # Il ramo-stringa copre SOLO i caller raw-SQL (es. dashboard.py GROUP BY) dove SQLite
+    # ritorna le date come testo. Verificato sul crm.db reale (2026-06-21): ORM = date.
     return date.fromisoformat(d) if isinstance(d, str) else d
 
 
@@ -143,12 +146,42 @@ def client_engagement(
 
 @dataclass(frozen=True)
 class ContractState:
+    """
+    Stato finanziario completo di un contratto.
+
+    ⚠️ `money` NON va MAI letto isolato da `lifecycle`. Lo stesso DA_PIANIFICARE
+    significa cose opposte a seconda dello stato di vita:
+      • ATTIVO + DA_PIANIFICARE  → azionabile: crea rata (worklist "da pianificare").
+      • SOSPESO/ESAURITO + DA_PIANIFICARE → NON rateizzabile (contratto scaduto):
+        il denaro è dovuto ma la via è "incassa residuo" diretto (G6).
+    Per non sbagliare, i caller usano gli helper `is_rate_planificabile()` /
+    `is_residuo_incassabile_diretto()` invece di ispezionare `money` a mano.
+    Difesa SSoT contro G1/G2 (un contratto scaduto NON deve finire in "da pianificare").
+    """
     lifecycle: Lifecycle
     money: MoneySubstate
     residuo: float
     crediti_residui: int
     rate_scadute: bool
     in_scadenza: bool
+
+
+def is_rate_planificabile(state: ContractState) -> bool:
+    """
+    True solo se si PUÒ creare una rata: contratto ATTIVO ancora da pianificare.
+    Worklist "contratti da pianificare" (G1) DEVE filtrare con questo, mai con
+    `money == DA_PIANIFICARE` da solo (intercetterebbe gli scaduti = azione impossibile).
+    """
+    return state.lifecycle == Lifecycle.ATTIVO and state.money == MoneySubstate.DA_PIANIFICARE
+
+
+def is_residuo_incassabile_diretto(state: ContractState) -> bool:
+    """
+    True se c'è denaro dovuto su un contratto scaduto (SOSPESO/ESAURITO) → non
+    rateizzabile, si incassa il residuo direttamente (G6, Blocco 4). È l'altra
+    metà dell'ambiguità di DA_PIANIFICARE: complementare a `is_rate_planificabile`.
+    """
+    return state.lifecycle in (Lifecycle.SOSPESO, Lifecycle.ESAURITO) and state.residuo > 0.009
 
 
 def evaluate_contract(contract, crediti_usati: int, rates: Sequence, today: date) -> ContractState:

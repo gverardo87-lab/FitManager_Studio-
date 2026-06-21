@@ -6,6 +6,7 @@ il sotto-stato denaro (§5) e il rollup cliente (§4.1). Funzioni pure → stub
 leggeri via SimpleNamespace, nessun DB.
 """
 
+import itertools
 from datetime import date, timedelta
 from types import SimpleNamespace
 
@@ -236,6 +237,120 @@ def test_evaluate_contract_attivo_in_scadenza():
     assert st.lifecycle == cs.Lifecycle.ATTIVO
     assert st.in_scadenza is True
     assert st.money == cs.MoneySubstate.SALDATO
+
+
+# ── Mutua esclusività esaustiva (16 combinazioni → 1 solo stato, zero buchi) ──
+# È il test che avrebbe preso il difetto SOSPESO alla scrittura, non sul dato reale.
+
+def _expected_lifecycle(*, chiuso, scaduto, crediti_pos, deleted):
+    if deleted:
+        return cs.Lifecycle.ELIMINATO
+    if chiuso:
+        return cs.Lifecycle.CHIUSO
+    if scaduto:
+        return cs.Lifecycle.SOSPESO if crediti_pos else cs.Lifecycle.ESAURITO
+    return cs.Lifecycle.ATTIVO
+
+
+@pytest.mark.parametrize(
+    "chiuso,scaduto,crediti_pos,deleted",
+    list(itertools.product([False, True], repeat=4)),
+)
+def test_lifecycle_mutua_esclusivita_esaustiva(chiuso, scaduto, crediti_pos, deleted):
+    c = _contract(
+        chiuso=chiuso,
+        deleted_at=date(2026, 1, 1) if deleted else None,
+        data_scadenza=(TODAY - timedelta(days=1)) if scaduto else (TODAY + timedelta(days=30)),
+        crediti_totali=10,
+    )
+    crediti_usati = 0 if crediti_pos else 10  # residui >0 vs ==0
+    got = cs.contract_lifecycle(c, crediti_usati, TODAY)
+    expected = _expected_lifecycle(
+        chiuso=chiuso, scaduto=scaduto, crediti_pos=crediti_pos, deleted=deleted
+    )
+    assert got == expected, f"combo({chiuso=},{scaduto=},{crediti_pos=},{deleted=}) → {got}, atteso {expected}"
+
+
+def test_lifecycle_copre_tutte_le_16_combinazioni():
+    # invariante di copertura: ogni combo produce esattamente uno stato definito
+    stati = {
+        cs.contract_lifecycle(
+            _contract(
+                chiuso=chiuso,
+                deleted_at=date(2026, 1, 1) if deleted else None,
+                data_scadenza=(TODAY - timedelta(days=1)) if scaduto else (TODAY + timedelta(days=30)),
+                crediti_totali=10,
+            ),
+            0 if crediti_pos else 10,
+            TODAY,
+        )
+        for chiuso, scaduto, crediti_pos, deleted in itertools.product([False, True], repeat=4)
+    }
+    assert stati <= set(cs.Lifecycle)  # nessuno stato "fantasma"
+    assert stati == {
+        cs.Lifecycle.ATTIVO,
+        cs.Lifecycle.SOSPESO,
+        cs.Lifecycle.ESAURITO,
+        cs.Lifecycle.CHIUSO,
+        cs.Lifecycle.ELIMINATO,
+    }
+
+
+# ── Confine is_in_scadenza attraverso il 31 dicembre (aritmetica ordinale) ────
+
+def test_in_scadenza_attraverso_capodanno():
+    capodanno_today = date(2026, 12, 20)
+    # 21 giorni, scavalca il 31/12 → in scadenza
+    assert cs.is_in_scadenza(_contract(data_scadenza=date(2027, 1, 10)), capodanno_today) is True
+    # 47 giorni oltre l'anno → NON in scadenza
+    assert cs.is_in_scadenza(_contract(data_scadenza=date(2027, 2, 5)), capodanno_today) is False
+
+
+def test_in_scadenza_confine_esatto_30gg_cross_year():
+    today = date(2026, 12, 31)
+    # +30 giorni esatti (inclusivo) → True
+    assert cs.is_in_scadenza(_contract(data_scadenza=date(2027, 1, 30)), today) is True
+    # +31 giorni → fuori soglia → False
+    assert cs.is_in_scadenza(_contract(data_scadenza=date(2027, 1, 31)), today) is False
+
+
+# ── Helper di consumo: money mai letto isolato da lifecycle ───────────────────
+
+def test_is_rate_planificabile_solo_attivo():
+    attivo = cs.evaluate_contract(
+        _contract(data_scadenza=TODAY + timedelta(days=30), prezzo_totale=500.0, totale_versato=200.0),
+        0, [], TODAY,
+    )
+    assert attivo.money == cs.MoneySubstate.DA_PIANIFICARE
+    assert cs.is_rate_planificabile(attivo) is True
+
+
+def test_is_rate_planificabile_falso_su_scaduto_con_residuo():
+    # SOSPESO con residuo: money è DA_PIANIFICARE ma NON è rateizzabile (G1)
+    sospeso = cs.evaluate_contract(
+        _contract(data_scadenza=TODAY - timedelta(days=5), crediti_totali=20,
+                  prezzo_totale=500.0, totale_versato=200.0),
+        2, [], TODAY,
+    )
+    assert sospeso.lifecycle == cs.Lifecycle.SOSPESO
+    assert sospeso.money == cs.MoneySubstate.DA_PIANIFICARE  # ambiguo se letto da solo
+    assert cs.is_rate_planificabile(sospeso) is False  # difesa SSoT
+    assert cs.is_residuo_incassabile_diretto(sospeso) is True  # via G6
+
+
+def test_is_residuo_incassabile_falso_su_attivo_e_saldato():
+    attivo = cs.evaluate_contract(
+        _contract(data_scadenza=TODAY + timedelta(days=30), prezzo_totale=500.0, totale_versato=200.0),
+        0, [], TODAY,
+    )
+    assert cs.is_residuo_incassabile_diretto(attivo) is False  # ATTIVO → si rateizza, non si forza
+    esaurito_saldato = cs.evaluate_contract(
+        _contract(data_scadenza=TODAY - timedelta(days=5), crediti_totali=10,
+                  prezzo_totale=500.0, totale_versato=500.0),
+        10, [], TODAY,
+    )
+    assert esaurito_saldato.lifecycle == cs.Lifecycle.ESAURITO
+    assert cs.is_residuo_incassabile_diretto(esaurito_saldato) is False  # niente residuo
 
 
 if __name__ == "__main__":
