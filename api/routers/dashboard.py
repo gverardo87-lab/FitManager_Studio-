@@ -467,6 +467,10 @@ def _contracts_to_plan_candidates(session: Session, trainer_id: int, today: date
     for contract, client in rows:
         if contract.id in with_rates:
             continue
+        # rates=[] è LECITO solo perché lo Step 2 ha già escluso i contratti con rate:
+        # qui money_substate non può che essere DA_PIANIFICARE. Se un domani si togliesse
+        # il filtro with_rates, passare le rate vere a evaluate_contract — altrimenti
+        # money_substate mentirebbe. I due step sono accoppiati di proposito.
         st = cstate.evaluate_contract(contract, 0, [], today)
         if cstate.is_rate_planificabile(st):
             out.append((contract, client))
@@ -512,26 +516,64 @@ def _coerce_date(d):
     return date.fromisoformat(d) if isinstance(d, str) else d
 
 
+def _crediti_usati_map(session: Session, contract_ids: list[int]) -> dict[int, int]:
+    """Batch crediti usati (eventi PT non cancellati) per i contratti dati. Anti-N+1."""
+    if not contract_ids:
+        return {}
+    rows = session.exec(
+        select(Event.id_contratto, func.count(Event.id))
+        .where(
+            Event.id_contratto.in_(contract_ids),
+            Event.categoria == "PT",
+            Event.stato != "Cancellato",
+            Event.deleted_at == None,
+        )
+        .group_by(Event.id_contratto)
+    ).all()
+    return {row[0]: int(row[1]) for row in rows}
+
+
+def _contract_recency_key(c) -> date:
+    """Recency assoluta: scadenza → inizio → vendita → date.min (per max())."""
+    return (
+        _coerce_date(c.data_scadenza)
+        or _coerce_date(c.data_inizio)
+        or _coerce_date(c.data_vendita)
+        or date.min
+    )
+
+
 def _lapsed_client_candidates(session: Session, trainer_id: int, today: date):
     """
-    Candidati "cliente da recuperare" (client-aware, SPEC_RINNOVI_SCADUTI v1.2 §3-bis).
+    Candidati "cliente da recuperare" (lapsed) — CLIENT-AWARE, derivato dal SSoT.
 
-    Cliente con ≥1 contratto scaduto e ZERO contratti attivi (chiuso=False AND
-    data_scadenza >= today; scadenza NULL = copertura aperta = attivo), rappresentato
-    dal contratto scaduto più recente, NON marcato "non rinnova".
-    Usato sia dall'endpoint sia dall'alert dashboard → conteggi coerenti.
+    Un cliente è lapsed se NON è ingaggiato (`cstate.is_engaged` = zero contratti
+    ATTIVO **o SOSPESO**) e ha ≥1 contratto. Il SOSPESO conta come ingaggio: un cliente
+    con sedute prepagate residue su un contratto scaduto va in "contratti sospesi", NON
+    in win-back (fix difetto SOSPESO — FINANCIAL_DOMAIN_MODEL §4.1; regola d'oro §10:
+    lo stato di vita si deriva da `contract_state`, mai inline `data_scadenza >= today`).
 
-    Ritorna: list[(Client, rappresentante: Contract, scaduti: list[Contract])].
+    Rappresentante = contratto più recente IN ASSOLUTO, inclusi CHIUSO/ESAURITO (§6):
+    è l'ancora del win-back (caso Dalila c29 vs c25). Escluso se quel rappresentante è
+    marcato "non rinnova" (esito_rinnovo_motivo valorizzato).
+    Usato da endpoint (items) e alert (count) → conteggi coerenti.
+
+    Ritorna: list[(Client, rappresentante: Contract, rep_crediti_usati: int)].
     """
     rows = session.exec(
         select(Contract, Client)
         .join(Client, Contract.id_cliente == Client.id)
         .where(
             Contract.trainer_id == trainer_id,
-            Contract.deleted_at == None,
-            Contract.chiuso == False,
+            Contract.deleted_at == None,  # include i CHIUSO → rappresentante §6
         )
     ).all()
+    if not rows:
+        return []
+
+    # crediti_usati serve a distinguere SOSPESO (crediti residui) da ESAURITO →
+    # determina l'ingaggio: senza, un SOSPESO sembrerebbe terminale (= il bug).
+    credits_map = _crediti_usati_map(session, [c.id for c, _ in rows])
 
     by_client: dict[int, dict] = {}
     for contract, client in rows:
@@ -539,20 +581,16 @@ def _lapsed_client_candidates(session: Session, trainer_id: int, today: date):
 
     candidates = []
     for entry in by_client.values():
-        has_active = False
-        expired = []
-        for c in entry["contracts"]:
-            sc = _coerce_date(c.data_scadenza)
-            if sc is None or sc >= today:
-                has_active = True
-            else:
-                expired.append(c)
-        if has_active or not expired:
-            continue
-        representative = max(expired, key=lambda c: _coerce_date(c.data_scadenza))
+        contracts = entry["contracts"]
+        lifecycles = [
+            cstate.contract_lifecycle(c, credits_map.get(c.id, 0), today) for c in contracts
+        ]
+        if cstate.is_engaged(lifecycles):
+            continue  # ATTIVO o SOSPESO → ingaggiato (non è win-back)
+        representative = max(contracts, key=_contract_recency_key)
         if representative.esito_rinnovo_motivo is not None:
             continue
-        candidates.append((entry["client"], representative, expired))
+        candidates.append((entry["client"], representative, credits_map.get(representative.id, 0)))
     return candidates
 
 
@@ -562,50 +600,26 @@ def get_clients_to_recover(
     session: Session = Depends(get_session),
 ):
     """
-    Clienti da recuperare (lapsed) — SPEC_RINNOVI_SCADUTI v1.1, CLIENT-AWARE.
+    Clienti da recuperare (lapsed) — CLIENT-AWARE, derivato dal SSoT.
 
-    Un cliente compare se ha ≥1 contratto scaduto E NESSUN contratto attivo
-    (`chiuso=False AND data_scadenza >= today`; scadenza NULL = copertura aperta = attivo).
-    "Nessun attivo" sussume sia il rinnovo-figlio sia il nuovo-contratto-non-collegato →
-    zero falsi positivi (es. cliente che ha aperto un nuovo contratto senza passare da "Rinnova").
+    Un cliente compare se NON è ingaggiato (zero contratti ATTIVO **o SOSPESO** —
+    `cstate.is_engaged`) e ha ≥1 contratto. Il SOSPESO (scaduto con sedute prepagate
+    residue) conta come ingaggio → quel cliente sta in "contratti sospesi", non qui
+    (fix difetto SOSPESO). "Non ingaggiato" sussume rinnovo-figlio e nuovo-contratto-
+    non-collegato → zero falsi positivi.
 
-    Unità = CLIENTE (1 riga/cliente), rappresentato dal contratto scaduto più recente.
-    Escluso se quel rappresentante è marcato "non rinnova" (esito_rinnovo_motivo valorizzato).
-    Opportunità residua a livello cliente: ≥1 contratto con residuo > 0 o crediti inutilizzati.
-    Read-only. Ordinato per ritardo decrescente.
+    Unità = CLIENTE (1 riga), rappresentato dal contratto più recente IN ASSOLUTO
+    (incl. CHIUSO/ESAURITO, §6). Escluso se quel rappresentante è "non rinnova".
+    Opportunità residua = info + priorità, mai filtro (invariante: nessun cliente perso
+    in silenzio). Read-only. Ordinato per ritardo decrescente.
     """
     today = date.today()
     candidates = _lapsed_client_candidates(session, trainer.id, today)
     if not candidates:
         return {"items": [], "total": 0}
 
-    # Batch crediti usati per tutti i contratti scaduti dei candidati (anti-N+1)
-    expired_ids = [c.id for _, _, exp in candidates for c in exp]
-    credit_rows = session.execute(
-        text("""
-        SELECT e.id_contratto, COUNT(*) as usati
-        FROM agenda e
-        WHERE e.id_contratto IN :ids
-          AND e.categoria = 'PT'
-          AND e.stato != 'Cancellato'
-          AND e.deleted_at IS NULL
-        GROUP BY e.id_contratto
-    """).bindparams(bindparam("ids", expanding=True)),
-        {"ids": expired_ids},
-    ).fetchall()
-    credits_map = {row[0]: row[1] for row in credit_rows}
-
-    def _crediti_residui(c) -> int:
-        return max((c.crediti_totali or 0) - credits_map.get(c.id, 0), 0)
-
-    def _residuo(c) -> float:
-        return round((c.prezzo_totale or 0) - (c.totale_versato or 0), 2)
-
     items = []
-    for client, rep, expired in candidates:
-        # Nessun filtro opportunità: ogni cliente lapsed è un win-back (anche chi ha
-        # completato e pagato tutto). residuo/crediti sono info + priorità, non filtro
-        # (invariante: nessun cliente perso in silenzio — SPEC v1.2 §A.2).
+    for client, rep, rep_crediti_usati in candidates:
         scad = _coerce_date(rep.data_scadenza)
         inizio = _coerce_date(rep.data_inizio)
         giorni_ritardo = (today - scad).days if isinstance(scad, date) else 0
@@ -620,9 +634,9 @@ def get_clients_to_recover(
             "data_inizio": inizio.isoformat() if isinstance(inizio, date) else None,
             "data_scadenza": scad.isoformat() if isinstance(scad, date) else None,
             "giorni_ritardo": giorni_ritardo,
-            "residuo": _residuo(rep),
+            "residuo": cstate.residuo(rep),
             "crediti_totali": rep.crediti_totali or 0,
-            "crediti_residui": _crediti_residui(rep),
+            "crediti_residui": cstate.crediti_residui(rep, rep_crediti_usati),
         })
 
     items.sort(key=lambda x: x["giorni_ritardo"], reverse=True)

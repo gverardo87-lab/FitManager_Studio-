@@ -1625,7 +1625,9 @@ export interface PaginatedResponse<T> {
 
 /** Response paginata contratti con KPI aggregati â€” GET /api/contracts */
 export interface ContractListResponse extends PaginatedResponse<ContractListItem> {
-  kpi_attivi: number;
+  kpi_attivi: number;           // STATO: ATTIVO (aperto + vigente) — G4, NON "non chiuso"
+  kpi_sospesi: number;          // STATO: SOSPESO (scaduto, crediti residui)
+  kpi_esauriti: number;         // STATO: ESAURITO (scaduto, crediti finiti)
   kpi_chiusi: number;
   kpi_fatturato: number;
   kpi_incassato: number;

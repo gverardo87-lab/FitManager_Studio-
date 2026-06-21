@@ -35,6 +35,28 @@ def _contract(client, auth_headers, client_id, inizio, scadenza, prezzo=1000.0, 
     return r.json()
 
 
+def _consume_all_credits(client, auth_headers, contract, client_id):
+    """Esaurisce i crediti con eventi PT → contratto ESAURITO (o CHIUSO se saldato)."""
+    inizio = contract["data_inizio"]
+    for i in range(contract["crediti_totali"]):
+        r = client.post("/api/events", json={
+            "data_inizio": f"{inizio}T{9 + i:02d}:00:00",
+            "data_fine": f"{inizio}T{9 + i:02d}:30:00",
+            "categoria": "PT",
+            "titolo": f"Seduta {i + 1}",
+            "id_cliente": client_id,
+            "id_contratto": contract["id"],
+        }, headers=auth_headers)
+        assert r.status_code == 201, f"Event create failed: {r.text}"
+
+
+def _lapsed(client, auth_headers, client_id, inizio, scadenza, prezzo=1000.0, acconto=200.0, crediti=1):
+    """Contratto LAPSED reale: scaduto + crediti esauriti (ESAURITO) → cliente non ingaggiato."""
+    c = _contract(client, auth_headers, client_id, inizio, scadenza, prezzo, acconto, crediti)
+    _consume_all_credits(client, auth_headers, c, client_id)
+    return c
+
+
 def _recover(client, auth_headers):
     r = client.get("/api/dashboard/clients-to-recover", headers=auth_headers)
     assert r.status_code == 200
@@ -46,8 +68,8 @@ def _recover(client, auth_headers):
 # ════════════════════════════════════════════════════════════
 
 def test_lapsed_client_appears(client, auth_headers, sample_client):
-    """Cliente con scaduto e zero attivi → compare (1 riga, ritardo corretto)."""
-    c = _contract(client, auth_headers, sample_client["id"], _past(120), _past(60))
+    """Cliente ESAURITO (scaduto, crediti finiti) e zero ingaggi → compare (1 riga, ritardo corretto)."""
+    c = _lapsed(client, auth_headers, sample_client["id"], _past(120), _past(60))
     data = _recover(client, auth_headers)
     assert data["total"] == 1
     item = data["items"][0]
@@ -56,16 +78,35 @@ def test_lapsed_client_appears(client, auth_headers, sample_client):
     assert item["giorni_ritardo"] == 60
 
 
+def test_suspended_client_excluded(client, auth_headers, sample_client):
+    """
+    FIX SOSPESO: scaduto con sedute prepagate residue (crediti>0, zero eventi) = SOSPESO =
+    ingaggiato → NON in clienti-da-recuperare (va in 'contratti sospesi'). Caso Paola/Merchiori.
+    """
+    _contract(client, auth_headers, sample_client["id"], _past(120), _past(60), crediti=10)  # 10 residui = SOSPESO
+    assert _recover(client, auth_headers)["total"] == 0
+
+
+def test_representative_is_most_recent_including_closed(client, auth_headers, sample_client):
+    """Rappresentante = contratto più recente IN ASSOLUTO, anche se CHIUSO (§6, caso Dalila c29/c25)."""
+    _lapsed(client, auth_headers, sample_client["id"], _past(200), _past(150))  # vecchio ESAURITO
+    recent = _contract(client, auth_headers, sample_client["id"], _past(80), _past(40), crediti=10)
+    client.put(f"/api/contracts/{recent['id']}", json={"chiuso": True}, headers=auth_headers)  # più recente, CHIUSO
+    data = _recover(client, auth_headers)
+    assert data["total"] == 1
+    assert data["items"][0]["contract_id"] == recent["id"]  # il CHIUSO più recente, non il vecchio scaduto
+
+
 def test_active_unlinked_contract_suppresses(client, auth_headers, sample_client):
-    """Cliente con scaduto + nuovo contratto attivo NON collegato → NON compare (il caso del founder)."""
-    _contract(client, auth_headers, sample_client["id"], _past(120), _past(60))   # scaduto
-    _contract(client, auth_headers, sample_client["id"], _past(10), _future(60))  # attivo, non collegato
+    """Cliente con ESAURITO + nuovo contratto attivo NON collegato → NON compare (il caso del founder)."""
+    _lapsed(client, auth_headers, sample_client["id"], _past(120), _past(60))      # esaurito
+    _contract(client, auth_headers, sample_client["id"], _past(10), _future(60))   # ATTIVO, non collegato
     assert _recover(client, auth_headers)["total"] == 0
 
 
 def test_renewed_child_suppresses(client, auth_headers, sample_client):
-    """Cliente con scaduto + figlio rinnovo attivo → NON compare (sussunto da 'zero attivi')."""
-    parent = _contract(client, auth_headers, sample_client["id"], _past(120), _past(60))
+    """Cliente con ESAURITO + figlio rinnovo attivo → NON compare (ingaggiato dal figlio attivo)."""
+    parent = _lapsed(client, auth_headers, sample_client["id"], _past(120), _past(60))
     r = client.post(f"/api/contracts/{parent['id']}/renew", json={
         "id_cliente": sample_client["id"], "tipo_pacchetto": "Rinnovo", "crediti_totali": 10,
         "prezzo_totale": 500.0, "data_inizio": TODAY.isoformat(), "data_scadenza": _future(60).isoformat(),
@@ -76,9 +117,9 @@ def test_renewed_child_suppresses(client, auth_headers, sample_client):
 
 
 def test_two_expired_collapse_to_one(client, auth_headers, sample_client):
-    """2 scaduti, zero attivi → 1 sola riga; rappresentante = scaduto più recente."""
-    _contract(client, auth_headers, sample_client["id"], _past(200), _past(150))   # vecchio
-    recent = _contract(client, auth_headers, sample_client["id"], _past(120), _past(40))  # più recente
+    """2 ESAURITI, zero ingaggi → 1 sola riga; rappresentante = scaduto più recente."""
+    _lapsed(client, auth_headers, sample_client["id"], _past(200), _past(150))   # vecchio
+    recent = _lapsed(client, auth_headers, sample_client["id"], _past(120), _past(40))  # più recente
     data = _recover(client, auth_headers)
     assert data["total"] == 1
     item = data["items"][0]
@@ -87,8 +128,8 @@ def test_two_expired_collapse_to_one(client, auth_headers, sample_client):
 
 
 def test_completed_paid_lapsed_still_appears(client, auth_headers, sample_client):
-    """Cliente che ha pagato tutto (residuo 0) e non rinnova → compare comunque (no filtro opportunità)."""
-    _contract(client, auth_headers, sample_client["id"], _past(120), _past(60), prezzo=500.0, acconto=500.0)
+    """Cliente che ha pagato tutto e finito le sedute (residuo 0, auto-CHIUSO) → compare comunque (no filtro opportunità)."""
+    _lapsed(client, auth_headers, sample_client["id"], _past(120), _past(60), prezzo=500.0, acconto=500.0)
     data = _recover(client, auth_headers)
     assert data["total"] == 1
     assert data["items"][0]["residuo"] == 0.0
@@ -97,7 +138,7 @@ def test_completed_paid_lapsed_still_appears(client, auth_headers, sample_client
 def test_marked_not_renewed_excluded_and_reversible(client, auth_headers, sample_client, session):
     """Rappresentante marcato 'non rinnova' → escluso; riaperto (null) → ricompare."""
     from api.models.contract import Contract
-    c = _contract(client, auth_headers, sample_client["id"], _past(120), _past(60))
+    c = _lapsed(client, auth_headers, sample_client["id"], _past(120), _past(60))
 
     contract = session.get(Contract, c["id"])
     contract.esito_rinnovo_motivo = "prezzo"
@@ -130,7 +171,7 @@ def test_empty(client, auth_headers):
 
 def test_alert_clients_to_recover(client, auth_headers, sample_client):
     """L'alert dashboard 'clients_to_recover' compare e conta i clienti lapsed."""
-    _contract(client, auth_headers, sample_client["id"], _past(120), _past(60))
+    _lapsed(client, auth_headers, sample_client["id"], _past(120), _past(60))
     r = client.get("/api/dashboard/alerts", headers=auth_headers)
     assert r.status_code == 200
     alert = next((i for i in r.json()["items"] if i["category"] == "clients_to_recover"), None)
@@ -145,7 +186,7 @@ def test_alert_clients_to_recover(client, auth_headers, sample_client):
 
 def test_renewal_outcome_endpoint_excludes_and_reverses(client, auth_headers, sample_client):
     """POST renewal-outcome → escluso dalla worklist; DELETE → ricompare."""
-    c = _contract(client, auth_headers, sample_client["id"], _past(120), _past(60))
+    c = _lapsed(client, auth_headers, sample_client["id"], _past(120), _past(60))
     assert _recover(client, auth_headers)["total"] == 1
 
     r = client.post(f"/api/contracts/{c['id']}/renewal-outcome",

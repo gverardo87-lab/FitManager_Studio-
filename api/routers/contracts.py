@@ -227,14 +227,37 @@ def list_contracts(
     )
     all_contracts = session.exec(all_contracts_q).all()
 
-    kpi_attivi = sum(1 for c in all_contracts if not c.chiuso)  # STATO: solo aperti
     kpi_chiusi = sum(1 for c in all_contracts if c.chiuso)  # STATO: solo chiusi
     kpi_fatturato = round(sum(c.prezzo_totale or 0 for c in all_contracts), 2)  # CUMULATIVO: include chiusi
     kpi_incassato = round(sum(c.totale_versato for c in all_contracts), 2)  # CUMULATIVO: include chiusi
 
+    # ── KPI headline per stato di vita (G4) — NON "non chiuso" ──
+    # kpi_attivi = stato ATTIVO (aperto + vigente). SOSPESO/ESAURITO (scaduti aperti)
+    # contati a parte: contarli come "attivi" mentirebbe sulla base clienti operativa.
+    # Derivati da contract_state (regola d'oro §10). Serve crediti_usati solo per
+    # distinguere SOSPESO (crediti residui) da ESAURITO; ATTIVO non ne dipende.
+    open_contracts = [c for c in all_contracts if not c.chiuso]
+    active_ids = [c.id for c in open_contracts]  # "aperti" = non chiusi (per rate scadute + cruscotto)
+    open_credit_rows = session.exec(
+        select(Event.id_contratto, func.count(Event.id))
+        .where(
+            Event.id_contratto.in_(active_ids),
+            Event.categoria == "PT",
+            Event.stato != "Cancellato",
+            Event.deleted_at == None,
+        )
+        .group_by(Event.id_contratto)
+    ).all() if active_ids else []
+    open_credits = {row[0]: int(row[1]) for row in open_credit_rows}
+    open_lifecycles = [
+        cstate.contract_lifecycle(c, open_credits.get(c.id, 0), today) for c in open_contracts
+    ]
+    kpi_attivi = sum(1 for lf in open_lifecycles if lf == cstate.Lifecycle.ATTIVO)
+    kpi_sospesi = sum(1 for lf in open_lifecycles if lf == cstate.Lifecycle.SOSPESO)
+    kpi_esauriti = sum(1 for lf in open_lifecycles if lf == cstate.Lifecycle.ESAURITO)
+
     # Rate scadute: rata individualmente scaduta O su contratto scaduto (modello Stripe)
     # Se il contratto e' scaduto, OGNI rata non pagata e' in ritardo.
-    active_ids = [c.id for c in all_contracts if not c.chiuso]
     kpi_rate_scadute = 0
     if active_ids:
         overdue_rate_count = session.exec(
@@ -299,7 +322,9 @@ def list_contracts(
     kpi_da_incassare_scaduto = round(da_incassare_scaduto_sum, 2)
 
     kpi_data = {
-        "kpi_attivi": kpi_attivi,
+        "kpi_attivi": kpi_attivi,             # STATO: ATTIVO (aperto + vigente) — G4
+        "kpi_sospesi": kpi_sospesi,           # STATO: SOSPESO (scaduto, crediti residui)
+        "kpi_esauriti": kpi_esauriti,         # STATO: ESAURITO (scaduto, crediti finiti)
         "kpi_chiusi": kpi_chiusi,
         "kpi_fatturato": kpi_fatturato,
         "kpi_incassato": kpi_incassato,
