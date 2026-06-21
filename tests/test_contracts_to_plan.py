@@ -25,6 +25,22 @@ def _create_contract(client, auth_headers, client_id, prezzo, acconto):
     return r.json()
 
 
+def _create_expired_contract(client, auth_headers, client_id, prezzo, acconto):
+    """Helper: contratto SCADUTO (data_scadenza nel passato), zero rate."""
+    r = client.post("/api/contracts", json={
+        "id_cliente": client_id,
+        "tipo_pacchetto": "Scaduto Pkg",
+        "crediti_totali": 10,
+        "prezzo_totale": prezzo,
+        "data_inizio": "2026-01-01",
+        "data_scadenza": "2026-03-01",  # < oggi (2026-06+) → scaduto
+        "acconto": acconto,
+        "metodo_acconto": "CONTANTI" if acconto > 0 else None,
+    }, headers=auth_headers)
+    assert r.status_code == 201, f"Expired contract creation failed: {r.text}"
+    return r.json()
+
+
 def _register_other_trainer(client):
     """Registra un secondo trainer, ritorna i suoi headers JWT."""
     r = client.post("/api/auth/register", json={
@@ -153,3 +169,58 @@ def test_alert_absent_for_fully_paid(client, auth_headers, sample_client):
     """Contratto saldato in acconto (residuo 0) senza rate → nessun alert (B1)."""
     _create_contract(client, auth_headers, sample_client["id"], prezzo=500.0, acconto=500.0)
     assert _orphan_alert(client, auth_headers) is None
+
+
+# ════════════════════════════════════════════════════════════
+# G1 — Contratto SCADUTO con residuo+zero rate NON è "da pianificare"
+# (non rateizzabile → va in "da incassare scaduto", FINANCIAL_DOMAIN_MODEL §3/§7)
+# ════════════════════════════════════════════════════════════
+
+def test_expired_contract_not_in_contracts_to_plan(client, auth_headers, sample_client):
+    """Scaduto + residuo>0 + zero rate → NON compare in contracts-to-plan (G1)."""
+    _create_expired_contract(client, auth_headers, sample_client["id"], prezzo=600.0, acconto=100.0)
+    r = client.get("/api/dashboard/contracts-to-plan", headers=auth_headers)
+    assert r.status_code == 200
+    assert r.json()["total"] == 0  # scaduto = non pianificabile
+
+
+def test_expired_contract_excluded_from_orphan_alert(client, auth_headers, sample_client):
+    """Scaduto + residuo>0 + zero rate → nessun alert orphan_contracts (G1)."""
+    _create_expired_contract(client, auth_headers, sample_client["id"], prezzo=600.0, acconto=100.0)
+    assert _orphan_alert(client, auth_headers) is None
+
+
+def test_active_appears_expired_does_not_coexist(client, auth_headers, sample_client, sample_contract):
+    """Con un ATTIVO e uno SCADUTO: solo l'attivo compare in da-pianificare."""
+    _create_expired_contract(client, auth_headers, sample_client["id"], prezzo=600.0, acconto=100.0)
+    r = client.get("/api/dashboard/contracts-to-plan", headers=auth_headers)
+    assert r.status_code == 200
+    data = r.json()
+    assert data["total"] == 1  # solo sample_contract (ATTIVO)
+    assert data["items"][0]["contract_id"] == sample_contract["id"]
+
+
+def test_cruscotto_routes_expired_residuo_to_da_incassare_scaduto(client, auth_headers, sample_client, sample_contract):
+    """
+    G1 sul cruscotto: il residuo di un contratto SCADUTO va in da_incassare_scaduto,
+    NON in da_pianificare. Invariante: residuo = a_rate + da_pianificare + da_incassare_scaduto.
+    """
+    # sample_contract: ATTIVO, residuo 800, zero rate → tutto in da_pianificare
+    # expired: residuo 500 (600-100), zero rate → tutto in da_incassare_scaduto
+    _create_expired_contract(client, auth_headers, sample_client["id"], prezzo=600.0, acconto=100.0)
+    data = client.get("/api/contracts", headers=auth_headers).json()
+    assert data["kpi_residuo"] == 1300.0  # 800 + 500 (entrambi aperti)
+    assert data["kpi_da_pianificare"] == 800.0  # solo l'ATTIVO
+    assert data["kpi_da_incassare_scaduto"] == 500.0  # solo lo SCADUTO
+    assert data["kpi_a_rate"] == 0.0
+    # invariante: residuo = a_rate + da_pianificare + da_incassare_scaduto
+    assert round(
+        data["kpi_a_rate"] + data["kpi_da_pianificare"] + data["kpi_da_incassare_scaduto"], 2
+    ) == data["kpi_residuo"]
+
+
+def test_cruscotto_active_only_has_zero_scaduto(client, auth_headers, sample_contract):
+    """Solo contratti ATTIVI → da_incassare_scaduto = 0, invariante a 2 termini regge."""
+    data = client.get("/api/contracts", headers=auth_headers).json()
+    assert data["kpi_da_incassare_scaduto"] == 0.0
+    assert round(data["kpi_a_rate"] + data["kpi_da_pianificare"], 2) == data["kpi_residuo"]

@@ -1630,10 +1630,12 @@ export interface ContractListResponse extends PaginatedResponse<ContractListItem
   kpi_fatturato: number;
   kpi_incassato: number;
   kpi_rate_scadute: number;
-  // Cruscotto "Da incassare" (contratti aperti) — SPEC_RINNOVO §B.4 / TASSONOMIA §1
-  kpi_residuo: number;          // Σ max(0, prezzo − versato) = ancora "da incassare" = a_rate + da_pianificare
+  // Cruscotto "Da incassare" (contratti aperti) — SPEC_RINNOVO §B.4 / TASSONOMIA §1 / G1
+  // Invariante: kpi_residuo = kpi_a_rate + kpi_da_pianificare + kpi_da_incassare_scaduto
+  kpi_residuo: number;          // Σ max(0, prezzo − versato) = ancora "da incassare"
   kpi_a_rate: number;           // Σ residui rate non saldate (già a scadenza)
-  kpi_da_pianificare: number;   // residuo − a_rate (incl. parziali)
+  kpi_da_pianificare: number;   // resto su contratti ATTIVI (rateizzabile)
+  kpi_da_incassare_scaduto: number; // resto su contratti SCADUTI aperti (non rateizzabile, G1→G6)
 }
 
 /** Contratto da pianificare (aperto, residuo>0, zero rate) — GET /api/dashboard/contracts-to-plan */

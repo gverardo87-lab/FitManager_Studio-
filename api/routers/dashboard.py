@@ -32,6 +32,7 @@ from api.schemas.clinical import (
     ClinicalReadinessWorklistResponse,
 )
 from api.routers.movements import _compute_saldo
+from api.services import contract_state as cstate
 from api.services.clinical_readiness import (
     compute_clinical_readiness_data,
     filter_clinical_readiness_items,
@@ -422,37 +423,34 @@ def get_expiring_contracts(
     return {"items": items, "total": len(items)}
 
 
-@router.get("/contracts-to-plan")
-def get_contracts_to_plan(
-    trainer: Trainer = Depends(get_current_trainer),
-    session: Session = Depends(get_session),
-):
+def _contracts_to_plan_candidates(session: Session, trainer_id: int, today: date):
     """
-    Contratti da pianificare: aperti, con residuo positivo e ZERO rate (SPEC_RINNOVO §B).
+    Candidati "contratti da pianificare" (SPEC_RINNOVO §B + G1 del FINANCIAL_DOMAIN_MODEL).
 
-    Contract-first (non Rate-first): l'aging report itera sulle rate ed e'
-    strutturalmente cieco a questi contratti. Qui si parte dal contratto.
+    Un contratto è pianificabile (= si può creare una rata) SOLO se ATTIVO con residuo
+    positivo e ZERO rate. G1: un contratto **scaduto** (SOSPESO/ESAURITO) con residuo e zero
+    rate NON va qui — non lo puoi rateizzare, va incassato direttamente (G6, "da incassare
+    scaduto"). La decisione passa da `contract_state.is_rate_planificabile` → mai inline.
 
-    Dati completi per risoluzione inline dalla Dashboard (Sheet → "Definisci piano").
-    Ordinamento: scadenza piu' vicina prima (urgenza decrescente).
+    Usato da endpoint (items) e alert (count) → conteggio coerente.
+    Ritorna: list[(Contract, Client)] ordinati per scadenza più vicina.
     """
     # Step 1: contratti aperti con residuo positivo (prezzo > versato)
     rows = session.exec(
         select(Contract, Client)
         .join(Client, Contract.id_cliente == Client.id)
         .where(
-            Contract.trainer_id == trainer.id,
+            Contract.trainer_id == trainer_id,
             Contract.deleted_at == None,
             Contract.chiuso == False,
             func.coalesce(Contract.prezzo_totale, 0) > func.coalesce(Contract.totale_versato, 0),
         )
         .order_by(Contract.data_scadenza.asc())
     ).all()
-
     if not rows:
-        return {"items": [], "total": 0}
+        return []
 
-    # Step 2: quali hanno almeno una rata non eliminata → escludili (zero rate, §B.3)
+    # Step 2: escludi i contratti con almeno una rata non eliminata (zero rate, §B.3)
     candidate_ids = [c.id for c, _ in rows]
     with_rates = set(
         session.exec(
@@ -462,10 +460,36 @@ def get_contracts_to_plan(
         ).all()
     )
 
-    items = []
+    # Step 3 (G1): tieni solo gli ATTIVO. Zero-rate + residuo>0 ⟹ money=DA_PIANIFICARE,
+    # quindi is_rate_planificabile equivale a lifecycle==ATTIVO (crediti_usati irrilevante:
+    # uno scaduto non è mai ATTIVO). crediti_usati=0 è sufficiente per questa decisione.
+    out = []
     for contract, client in rows:
         if contract.id in with_rates:
             continue
+        st = cstate.evaluate_contract(contract, 0, [], today)
+        if cstate.is_rate_planificabile(st):
+            out.append((contract, client))
+    return out
+
+
+@router.get("/contracts-to-plan")
+def get_contracts_to_plan(
+    trainer: Trainer = Depends(get_current_trainer),
+    session: Session = Depends(get_session),
+):
+    """
+    Contratti da pianificare: ATTIVI, con residuo positivo e ZERO rate (SPEC_RINNOVO §B, G1).
+
+    Contract-first (non Rate-first): l'aging report itera sulle rate ed e'
+    strutturalmente cieco a questi contratti. Qui si parte dal contratto.
+
+    Dati completi per risoluzione inline dalla Dashboard (Sheet → "Definisci piano").
+    Ordinamento: scadenza piu' vicina prima (urgenza decrescente).
+    """
+    today = date.today()
+    items = []
+    for contract, client in _contracts_to_plan_candidates(session, trainer.id, today):
         residuo = round((contract.prezzo_totale or 0) - (contract.totale_versato or 0), 2)
         scad = contract.data_scadenza
         items.append({
@@ -800,21 +824,11 @@ def get_dashboard_alerts(
             link="/agenda",
         ))
 
-    # ── 2. Contratti da pianificare (residuo positivo, zero rate) ──
-    # SPEC_RINNOVO §B.3: residuo POSITIVO (prezzo > versato), non prezzo > 0 —
-    # un contratto saldato in acconto senza rate non ha nulla da pianificare.
-    orphan_count = session.execute(text("""
-        SELECT COUNT(*) FROM contratti c
-        WHERE c.trainer_id = :tid
-          AND c.deleted_at IS NULL
-          AND c.chiuso = 0
-          AND COALESCE(c.prezzo_totale, 0) > COALESCE(c.totale_versato, 0)
-          AND NOT EXISTS (
-              SELECT 1 FROM rate_programmate r
-              WHERE r.id_contratto = c.id
-                AND r.deleted_at IS NULL
-          )
-    """), {"tid": trainer.id}).scalar() or 0
+    # ── 2. Contratti da pianificare (ATTIVI, residuo positivo, zero rate) ──
+    # SPEC_RINNOVO §B.3 + G1: stesso helper della worklist → count == len(items).
+    # G1: gli scaduti con residuo+zero rate NON sono pianificabili (vanno incassati,
+    # non rateizzati) → esclusi qui dalla derivazione `contract_state`.
+    orphan_count = len(_contracts_to_plan_candidates(session, trainer.id, today))
 
     if orphan_count > 0:
         items.append(AlertItem(

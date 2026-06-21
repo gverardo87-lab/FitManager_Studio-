@@ -410,12 +410,22 @@ export default function ContrattiPage() {
                 {formatCurrency(contractsData.kpi_residuo)}
               </p>
             </div>
-            {/* Equazione: = A scadenza + Da pianificare */}
+            {/* Equazione: = A scadenza + Da pianificare (+ Da incassare scaduto se presente) */}
             <div className="flex items-center gap-3">
               <span className="text-sm font-bold text-muted-foreground/50">=</span>
               <PlanStat label="A scadenza" value={contractsData.kpi_a_rate} hint="già a rate" />
               <span className="text-sm font-bold text-muted-foreground/50">+</span>
-              <PlanStat label="Da pianificare" value={contractsData.kpi_da_pianificare} hint="incl. parziali" />
+              <PlanStat label="Da pianificare" value={contractsData.kpi_da_pianificare} hint="contratti attivi" />
+              {contractsData.kpi_da_incassare_scaduto > 0 ? (
+                <>
+                  <span className="text-sm font-bold text-muted-foreground/50">+</span>
+                  <PlanStat
+                    label="Scaduto da incassare"
+                    value={contractsData.kpi_da_incassare_scaduto}
+                    hint="non rateizzabile"
+                  />
+                </>
+              ) : null}
             </div>
           </div>
         </div>

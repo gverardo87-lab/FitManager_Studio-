@@ -36,6 +36,7 @@ from api.schemas.financial import (
     RenewalOutcomeCreate,
 )
 from api.routers._audit import log_audit
+from api.services import contract_state as cstate
 
 # Categoria movimento cassa per acconto (allineata a ContractRepository)
 CATEGORIA_ACCONTO = "ACCONTO_CONTRATTO"
@@ -248,13 +249,16 @@ def list_contracts(
         ).one()
         kpi_rate_scadute = overdue_rate_count or 0
 
-    # ── Cruscotto "Da incassare" (SPEC_RINNOVO §B.4 / TASSONOMIA §1 Asse 3) ──
+    # ── Cruscotto "Da incassare" (SPEC_RINNOVO §B.4 / TASSONOMIA §1 Asse 3, G1) ──
     # Scomposizione del RESIDUO sui contratti APERTI — equazione che torna a occhio:
-    #   residuo       = Σ max(0, prezzo − versato)   ← ancora ("da incassare")
-    #   a_rate        = Σ residui delle rate NON SALDATE (PENDENTE+PARZIALE) = già a scadenza
-    #   da_pianificare= residuo − a_rate = ciò che resta da mettere a rata (incl. parziali)
-    # NB: 'venduto' (Σ prezzo) NON sta qui — appartiene allo storico (kpi_fatturato),
-    # e sommato ad a_rate/da_pianificare confonderebbe (non sono la stessa grandezza).
+    #   residuo            = Σ max(0, prezzo − versato)   ← ancora ("da incassare")
+    #   a_rate             = Σ residui delle rate NON SALDATE (PENDENTE+PARZIALE) = già a scadenza
+    #   da_pianificare     = resto da mettere a rata SOLO sui contratti ATTIVI (rateizzabili)
+    #   da_incassare_scaduto = resto sui contratti SCADUTI aperti (SOSPESO/ESAURITO): NON
+    #                          rateizzabile (G1) → si incassa diretto (G6). Bucket separato
+    #                          per non gonfiare "da pianificare" con azioni impossibili.
+    #   Invariante: residuo = a_rate + da_pianificare + da_incassare_scaduto.
+    # NB: 'venduto' (Σ prezzo) NON sta qui — appartiene allo storico (kpi_fatturato).
     kpi_residuo = round(
         sum(max(0.0, (c.prezzo_totale or 0) - (c.totale_versato or 0)) for c in all_contracts if not c.chiuso),
         2,
@@ -276,14 +280,23 @@ def list_contracts(
         residui_a_rate_by_contract = {row[0]: float(row[1] or 0) for row in nonsaldate_rows}
 
     kpi_a_rate = round(sum(residui_a_rate_by_contract.values()), 2)
-    kpi_da_pianificare = round(
-        sum(
-            max(0.0, (c.prezzo_totale or 0) - (c.totale_versato or 0) - residui_a_rate_by_contract.get(c.id, 0.0))
-            for c in all_contracts
-            if not c.chiuso
-        ),
-        2,
-    )
+    # Il "resto" (residuo non coperto da rate) va in da_pianificare se il contratto è ATTIVO
+    # (vigente), altrimenti in da_incassare_scaduto. is_vigente deriva l'asse tempo dal SSoT:
+    # su un contratto aperto+non eliminato, vigente ⟺ ATTIVO.
+    da_pianificare_sum = 0.0
+    da_incassare_scaduto_sum = 0.0
+    for c in all_contracts:
+        if c.chiuso:
+            continue
+        resto = max(0.0, (c.prezzo_totale or 0) - (c.totale_versato or 0) - residui_a_rate_by_contract.get(c.id, 0.0))
+        if resto <= 0:
+            continue
+        if cstate.is_vigente(c, today):
+            da_pianificare_sum += resto
+        else:
+            da_incassare_scaduto_sum += resto
+    kpi_da_pianificare = round(da_pianificare_sum, 2)
+    kpi_da_incassare_scaduto = round(da_incassare_scaduto_sum, 2)
 
     kpi_data = {
         "kpi_attivi": kpi_attivi,
@@ -291,9 +304,10 @@ def list_contracts(
         "kpi_fatturato": kpi_fatturato,
         "kpi_incassato": kpi_incassato,
         "kpi_rate_scadute": kpi_rate_scadute,
-        "kpi_residuo": kpi_residuo,           # aperti: residuo da incassare (ancora) = a_rate + da_pianificare
+        "kpi_residuo": kpi_residuo,           # aperti: residuo da incassare = a_rate + da_pianificare + da_incassare_scaduto
         "kpi_a_rate": kpi_a_rate,             # aperti: già a scadenza (residui rate non saldate)
-        "kpi_da_pianificare": kpi_da_pianificare,  # aperti: resta da mettere a rata (incl. parziali)
+        "kpi_da_pianificare": kpi_da_pianificare,  # ATTIVI: resta da mettere a rata (rateizzabile)
+        "kpi_da_incassare_scaduto": kpi_da_incassare_scaduto,  # SCADUTI aperti: residuo non rateizzabile (G1→G6)
     }
 
     if not contracts:
