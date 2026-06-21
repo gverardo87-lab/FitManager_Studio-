@@ -45,6 +45,14 @@ def _rate(stato="PENDENTE", previsto=100.0, saldato=0.0, scadenza=None):
     )
 
 
+# ── Giunzione _as_date: ramo-stringa (diventa caldo al Blocco 2, dashboard raw-SQL) ──
+
+def test_as_date_parse_stringa_iso():
+    assert cs._as_date("2026-06-20") == date(2026, 6, 20)  # raw-SQL SQLite → testo
+    assert cs._as_date(date(2026, 6, 20)) == date(2026, 6, 20)  # ORM → identità
+    assert cs._as_date(None) is None
+
+
 # ── Costanti (§4.2) ────────────────────────────────────────────────
 
 def test_costanti_dichiarate():

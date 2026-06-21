@@ -69,6 +69,12 @@
   **sedute decadute** (chiusura con motivo `sedute_decadute`, §G5; reversibile/audit).
 - Alert dashboard `suspended_contracts` (conteggio). UI: sezione in `/rinnovi-incassi`.
 - Test: SOSPESO compare; estendi→ATTIVO (esce); decadi→CHIUSO+motivo (esce); non compare in da-recuperare.
+- **UX dual-debt (assi diversi, NON doppione):** un SOSPESO con *sia* sedute residue *sia*
+  residuo denaro comparirà in **"contratti sospesi"** (debito = sedute, asse crediti) **e** in
+  **"da incassare scaduto"** (debito = denaro, asse denaro). È corretto per modello (§2 assi
+  ortogonali). Renderlo esplicito all'utente: due debiti distinti verso la stessa persona, non
+  una duplicazione. Es. badge/nota "sedute da recuperare" vs "denaro da incassare", e — se nella
+  stessa vista — riga unica cliente con i due importi separati e label inequivocabili.
 
 ## 5. Blocco 4 — G6: pagamento diretto del residuo
 
