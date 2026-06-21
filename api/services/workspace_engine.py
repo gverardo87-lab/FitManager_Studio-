@@ -1,7 +1,7 @@
 """Read-only orchestration layer for the operational workspace."""
 
 from collections import defaultdict
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 import unicodedata
 
 from sqlalchemy import bindparam
@@ -854,6 +854,23 @@ def _build_readiness_cases(
     return cases
 
 
+def _completed_in_local_day(completed_at: datetime | None, reference_date: date) -> bool:
+    """
+    True se il todo è stato completato nel giorno LOCALE `reference_date`.
+
+    `completed_at` è salvato in UTC (`datetime.now(timezone.utc)` in `toggle_todo`) e riletto da SQLite
+    come datetime **naive** che contiene l'orario UTC. Va riportato al fuso LOCALE prima di confrontare la
+    data: altrimenti nella finestra notturna (UTC indietro rispetto al locale, es. 00:00–02:00 CEST) il
+    confronto `completed_at.date() == reference_date` sbaglia di un giorno → conteggio sottostimato.
+    App desktop locale → il "giorno del trainer" è il fuso macchina (`.astimezone()`).
+    """
+    if completed_at is None:
+        return False
+    if completed_at.tzinfo is None:
+        completed_at = completed_at.replace(tzinfo=timezone.utc)  # naive da SQLite = UTC (toggle_todo)
+    return completed_at.astimezone().date() == reference_date
+
+
 def _build_todo_cases(
     *,
     trainer_id: int,
@@ -879,7 +896,7 @@ def _build_todo_cases(
     completed_today_count = sum(
         1
         for todo in completed_today
-        if todo.completed_at and todo.completed_at.date() == reference_date
+        if _completed_in_local_day(todo.completed_at, reference_date)
     )
 
     cases: list[OperationalCase] = []

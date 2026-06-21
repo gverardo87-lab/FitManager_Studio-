@@ -129,3 +129,52 @@ select(Rate).join(Contract, Rate.id_contratto == Contract.id).where(
 
 **Domande aperte:**
 - [ ] In G7, ri-verificare che le 8 query siano allineate **insieme** all'introduzione del rimborso (un solo blocco coerente, ognuna con un test che la esercita con un `RIMBORSO` vero).
+
+---
+
+## Tempo salvato in UTC, confrontato in locale: il bug che appare solo di notte — 22/06/2026
+**Contesto:** la suite completa, girata a cavallo di mezzanotte (06-21→06-22), ha mostrato 3 fallimenti
+(`test_workspace_today` + 2) che in pieno giorno passavano. `completed_today_count` (workspace_engine)
+contava i todo con `completed_at.date() == reference_date` e dava 0 invece di 1.
+
+**Livello 1 — Cosa fa:** `toggle_todo` salva `completed_at = datetime.now(timezone.utc)` (UTC). SQLite lo
+rilegge come datetime **naive** che contiene l'orario UTC. `reference_date` è invece `date.today()`
+(**locale**). Nella finestra in cui il locale è avanti rispetto a UTC (Italia CEST = UTC+2, quindi
+00:00–02:00 locale = ancora "ieri" in UTC), `completed_at.date()` (UTC) = ieri ≠ `reference_date` (oggi
+locale) → il confronto sbaglia di un giorno e il conteggio sottostima. Fix: riportare `completed_at` al
+fuso **locale** prima di `.date()` (`completed_at.replace(tzinfo=utc).astimezone().date()`).
+
+**Livello 2 — Perché lo voglio:** è un bug **invisibile di giorno** e che rende la suite **non
+deterministica** (verde alle 15, rossa all'1 di notte). Una suite che fallisce a seconda dell'ora mina la
+fiducia in OGNI verifica futura ("è una mia regressione o è l'ora?"). E lato prodotto, il "completati oggi"
+del trainer che apre l'app a tarda sera/notte sottoconta — piccolo ma reale.
+
+**Livello 3 — Perché funziona così sotto:** è l'**asimmetria di fuso tra scrittura e lettura**. Il dato è
+persistito in un frame (UTC) e confrontato in un altro (locale), senza conversione. SQLite non ha tipo
+datetime nativo → rilegge naive, perdendo il fatto che il valore "è UTC": un `.date()` ingenuo legge il
+giorno UTC. La regola trasferibile: **se confronti istanti, fissa UN fuso e convertici tutto prima di
+estrarre la data/ora**. Per un'app **desktop locale single-user** il "giorno" è quello della macchina
+(`.astimezone()` senza argomenti = fuso di sistema). Convenzione del progetto (frontend `toISOLocal`,
+"backend salva datetime naive locale"): `completed_at`/`deleted_at` salvati in UTC sono l'eccezione che
+genera l'attrito — la conversione esplicita al confronto è il punto in cui si paga il debito.
+
+**Comando/config reale:** `api/services/workspace_engine.py`
+```python
+def _completed_in_local_day(completed_at, reference_date):
+    if completed_at is None: return False
+    if completed_at.tzinfo is None:
+        completed_at = completed_at.replace(tzinfo=timezone.utc)  # naive da SQLite = UTC
+    return completed_at.astimezone().date() == reference_date     # confronto sul giorno LOCALE
+```
+
+**Failure mode:** confronto `dt_utc.date() == oggi_locale` → passa per ~22 ore al giorno, fallisce nella
+finestra notturna in cui locale e UTC sono su date diverse. Me ne accorgo SOLO se una suite gira di notte
+(o se un utente apre l'app dopo mezzanotte). Diagnosi: confronta `datetime.now()` vs
+`datetime.now(timezone.utc)` — se le **date** differiscono, sei nella finestra, e ogni confronto
+data-su-data tra un valore UTC e uno locale è sospetto. Test: il helper testato con un istante naive
+interpretato come UTC (deterministico, machine-independent); + l'integration test che, girando di notte,
+fa da guardia reale.
+
+**Domande aperte:**
+- [ ] Audit: altri `*_at` salvati UTC (`deleted_at`, `created_at`) confrontati con date locali altrove?
+  Per ora solo `completed_at` aveva un confronto data-su-data; gli altri si usano come timestamp, non come "giorno".

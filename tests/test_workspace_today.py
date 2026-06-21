@@ -1,6 +1,6 @@
 """Workspace today endpoint tests."""
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 from sqlmodel import select
 
@@ -11,10 +11,28 @@ from api.models.trainer import Trainer
 from api.models.workout import WorkoutPlan
 from api.services.session_prep import build_session_prep
 from api.services.workspace_engine import (
+    _completed_in_local_day,
     build_workspace_case_detail,
     build_workspace_case_list,
     build_workspace_today,
 )
+
+
+def test_completed_in_local_day_treats_naive_as_utc():
+    """
+    `completed_at` salvato UTC e riletto naive va confrontato sulla data LOCALE (fix tz):
+    altrimenti nella finestra notturna (UTC indietro) il "completati oggi" sottoconta.
+    Deterministico e indipendente dal fuso macchina.
+    """
+    assert _completed_in_local_day(None, date.today()) is False
+    # completamento "ora" (UTC naive, come da SQLite) → conta per OGGI locale, a qualunque ora
+    now_utc_naive = datetime.now(timezone.utc).replace(tzinfo=None)
+    assert _completed_in_local_day(now_utc_naive, date.today()) is True
+    # contratto: naive interpretato come UTC → confronto sulla data LOCALE corrispondente
+    instant = datetime(2026, 6, 21, 23, 30)  # naive = 23:30 UTC
+    local_d = instant.replace(tzinfo=timezone.utc).astimezone().date()
+    assert _completed_in_local_day(instant, local_d) is True
+    assert _completed_in_local_day(instant, local_d - timedelta(days=1)) is False
 
 
 def _structured_anamnesi():

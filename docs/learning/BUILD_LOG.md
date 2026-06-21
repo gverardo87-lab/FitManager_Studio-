@@ -786,3 +786,26 @@ unità=contratto), dual-debt, design-vs-build dei 2 bottoni disabilitati, retent
 Suite verde (1 xfailed atteso), next build verde. Prossimo: Blocco 4 — G6 incassa residuo diretto.
 
 ---
+
+### 2026-06-22 — Addendum bridge §6 (guard allowlist) assorbito + fix tz minore
+
+**Addendum §6 del bridge** (artefatto su Desktop): leggendo `test_manual_close_not_reopened_by_agenda_edit`
+(xfail strict) contro la prosa della guard è emerso che la formulazione **denylist** ("non riaprire se
+motivo∈TERMINAZIONE_* o quota_stornata>0") **non copre** il caso del test (chiusura manuale → `motivo=NULL`,
+nessuno storno) → lo strict-xfail non sarebbe mai diventato xpass. Riformulata **al positivo (ALLOWLIST)**:
+l'auto-riapertura credit-driven di `_sync_contract_chiuso` scatta **solo se `motivo_chiusura==COMPLETAMENTO`**;
+NULL (manuale/legacy) e TERMINAZIONE_* non si riaprono. Due prerequisiti: (1) il completamento DEVE scrivere
+`motivo_chiusura=COMPLETAMENTO` (altrimenti la allowlist congela anche le riaperture legittime); (2) doppio
+significato del NULL dichiarato (guard=non-riaprire; runbook=completamento implicito). Alternativa di scope
+(Giacomo): togliere `chiuso` da `update_contract`. Assorbito in **FDM §9.5.6** + **IMPL_PLAN §4.7**; commento
+del test allineato. Tutto **G7** (la colonna `motivo_chiusura` esiste solo lì).
+
+**Fix tz minore** (bug PRE-ESISTENTE esposto dalla suite a cavallo di mezzanotte): `completed_today_count`
+(workspace_engine) confrontava `completed_at.date()` (UTC, da `toggle_todo` → SQLite naive) con
+`reference_date` (locale) → nella finestra 00:00–02:00 CEST sottocontava. Estratto `_completed_in_local_day`
+(riporta `completed_at` al fuso locale prima di `.date()`). **Verificato nella finestra esatta del bug**
+(local 00:33 / UTC 22:33): prima 1 failed, dopo 24 passed; **suite completa 487 passed / 0 failed / 1 xfailed,
+girata ancora di notte** (i 3 fallimenti precedenti erano tutti questa classe). +unit test del contratto
+helper (deterministico, machine-independent). Learning capturato (tempo UTC salvato vs locale confrontato).
+
+---
