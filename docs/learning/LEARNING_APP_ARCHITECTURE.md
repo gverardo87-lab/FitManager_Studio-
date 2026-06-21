@@ -85,3 +85,47 @@ Spec vincolante: `SPEC_RINNOVO_E_CONTRATTI_DA_PIANIFICARE.md` §A.2 (v1.3) + §5
 
 **Domande aperte:**
 - [ ] Verificare se le versioni recenti di recharts hanno reso i Fragment trasparenti (in tal caso resta comunque buona pratica l'array per chiarezza). Per ora: mai Fragment attorno a serie di grafici.
+
+---
+
+## Entrata-fantasma: una query che fa JOIN al padre deve filtrare lo stato terminale del padre — 21/06/2026
+**Contesto:** il Forecast (`get_forecast`, `movements.py`) proietta come "entrate certe" le rate PENDENTI/PARZIALI future. La query faceva `JOIN Contract` e filtrava `Rate.deleted_at == None` + `Contract.deleted_at == None`, ma **non** `Contract.chiuso == False`. Una rata PENDENTE su un contratto CHIUSO (chiuso a metà, terminato, o legacy) restava proiettata come incasso futuro che non arriverà mai.
+
+**Livello 1 — Cosa fa:** quando un record-figlio (Rate) è valido di per sé ma la sua "esigibilità" dipende dallo **stato del padre** (Contract chiuso/terminato), filtrare solo il figlio non basta. Una rata può essere PENDENTE (figlio "vivo") mentre il contratto è CHIUSO (padre "morto") → il debito non esiste più, ma la query lo vede ancora. Fix: aggiungere il predicato di stato del padre (`Contract.chiuso == False`).
+
+**Livello 2 — Perché lo voglio:** una proiezione finanziaria che gonfia le entrate con denaro che non arriverà induce a decisioni sbagliate (spendere contando su un incasso fantasma). È lo speculare del "debito nascosto": qui è un **credito inventato**. Per un cruscotto che promette controllo, è un errore di fiducia.
+
+**Livello 3 — Perché funziona così sotto:** è una **dipendenza di validità transitiva**. La validità di un fatto figlio (rata dovuta) è condizionata da un fatto padre (contratto attivo). SQL non la impone: un JOIN unisce righe, non propaga lo stato. Regola trasferibile: **ogni aggregazione su figli che attraversa un JOIN al padre deve includere i predicati di stato del padre** (soft-delete *e* flag terminali tipo `chiuso`). Controprova sistematica: per ogni `JOIN Parent` in una query di lettura, chiedersi "quali stati del padre rendono il figlio non più rilevante?" e filtrarli. L'aging report lo faceva già (`Contract.chiuso == False`, `rates.py`), il Forecast no → asimmetria = il bug.
+
+**Comando/config reale:** `api/routers/movements.py` `get_forecast`
+```python
+select(Rate).join(Contract, Rate.id_contratto == Contract.id).where(
+    Contract.trainer_id == trainer.id,
+    Rate.stato.in_(["PENDENTE", "PARZIALE"]),
+    Rate.data_scadenza > today,
+    Rate.deleted_at == None,
+    Contract.deleted_at == None,
+    Contract.chiuso == False,   # ← senza questo: entrata-fantasma da rate su contratti chiusi
+)
+```
+
+**Failure mode:** filtro solo il figlio (soft-delete della rata) e dimentico lo stato del padre → numeri verdi, build verde, nessun errore, ma la proiezione mente. Me ne accorgo solo confrontando due query gemelle (aging vs forecast) e notando che una filtra `chiuso` e l'altra no. Test di regressione dedicato: rata PENDENTE futura su contratto CHIUSO → NON in proiezione.
+
+**Domande aperte:**
+- [ ] Audit sistematico: esistono altre query con `JOIN Contract` che dimenticano `chiuso`? (Le worklist nuove derivano da `contract_state`, quindi sono coperte; il rischio è nelle query raw-SQL storiche.)
+
+---
+
+## Difese inerti vs codice testabile: non landare esclusioni per dati che non esistono ancora — 21/06/2026
+**Contesto:** il piano (Prereq P) prevedeva di "cablare in difesa" l'esclusione del futuro `RIMBORSO_CONTRATTO` da 4 query di cassa (burn/stats/forecast/get_balance) **prima** che la categoria fosse mai scritta (la scrittura arriva col blocco G7). Avrei aggiunto `NOT categoria == RIMBORSO_CONTRATTO` a query che oggi non vedono nessun rimborso.
+
+**Livello 1 — Cosa fa:** un'esclusione di una categoria che **non esiste ancora nei dati** è codice **inerte**: non cambia nessun risultato finché G7 non scrive il primo rimborso. È de-facto non testabile end-to-end *adesso* (nessun caso reale la esercita; un test potrebbe solo verificare che è no-op). Scelta: spostare quelle esclusioni **dentro G7**, dove un `RIMBORSO` reale le esercita e il test ha significato.
+
+**Livello 2 — Perché lo voglio:** "massima pulizia" significa anche **niente codice che non puoi dimostrare funzioni**. Codice difensivo per un futuro non ancora arrivato sembra prudente ma è debito: chi legge non sa se è attivo o morto, e un test no-op dà falsa sicurezza. Tenere il blocco corrente (Prereq P) fatto **solo** di pezzi con effetto reale e testabile (predicato SSoT, fix Forecast, audit transizione) lo rende verificabile al 100%.
+
+**Livello 3 — Perché funziona così sotto:** principio di **co-locazione tra codice e sua prova**. Una modifica vale quando esiste un caso che la esercita; landarla lontano da quel caso separa il "cosa" dal "perché", e il "perché" (il rimborso) non c'è ancora. Distinzione operativa: il **predicato SSoT** (`cash_categories.py`) si lascia ora — è la *fonte* condivisa, consumata già dalla consolidazione costanti — ma i suoi **consumatori inerti** (le esclusioni) si scrivono col consumatore reale. SSoT = fondazione (ok in anticipo); difese = comportamento (con il caso che le attiva). Eccezione legittima al "cablare in difesa": un **fix con effetto reale subito** (P1 Forecast `chiuso`) si fa ora anche se "prepara" G7, perché protegge un caso **già esistente** (contratti chiusi legacy con rate pendenti).
+
+**Failure mode:** riempio un blocco "fondativo" di esclusioni/guard per scenari futuri → diff grande, test no-op, e al momento di G7 nessuno ricorda se quelle difese erano complete o giuste (non sono mai state esercitate). Me ne accorgo quando un test può solo asserire "non cambia nulla": segnale che il codice è nel posto sbagliato nel tempo.
+
+**Domande aperte:**
+- [ ] In G7, ri-verificare che le 8 query siano allineate **insieme** all'introduzione del rimborso (un solo blocco coerente, ognuna con un test che la esercita con un `RIMBORSO` vero).

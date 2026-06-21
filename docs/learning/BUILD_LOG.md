@@ -723,3 +723,25 @@ Modello v1.2 fermo (3 rilievi + 2 robustezze chat incorporati/verificati; G6 sco
 **Preludio installato (zero codice):** FDM v1.3 + TASSONOMIA v1.2 in `docs/technical/` (sostituite v1.2/v1.1); strategia → `IMPL_PLAN_FINANCIAL_REALIGN.md` v1.3; INDEX allineato; puntatore `contract_state.py` SSoT in `api/CLAUDE.md`. **Unica decisione aperta pre-migrazione G7:** enum di `motivo_chiusura` (esito economico vs ragione) — non blocca Blocco 3/4. **Prossimo:** Prereq P + Blocco 3 (entrambi costruibili subito, zero schema, zero policy).
 
 ---
+
+### 2026-06-21 — Prereq P + Blocco 3 implementati (post-Preludio)
+
+Ripreso lo sviluppo contro l'IMPL_PLAN v1.3 installato. Due blocchi, entrambi pushati.
+
+**Prereq P** (commit 32437da) — fondazione per G6/G7, solo pezzi con effetto reale e testabile:
+- **P0** `api/services/cash_categories.py`: SSoT delle categorie cassa + predicato "movimento contrattuale" bidirezionale (IN `ACCONTO_CONTRATTO`/`PAGAMENTO_RATA`, OUT `RIMBORSO_CONTRATTO`). Consolidate 3 literal sparsi (contracts.py, rates.py, movements.py) in un'unica fonte.
+- **P1** fix Forecast "entrata-fantasma": `get_forecast` filtra ora `Contract.chiuso == False` sulle entrate certe (rate PENDENTI su contratti chiusi non più proiettate). Learning capturato (join-to-parent deve filtrare lo stato terminale del padre).
+- **P2** `log_contract_lifecycle_transition()` in `_audit.py` (idempotente, no-commit, trainer_id dal contract): audita la transizione `chiuso` finora muta. Cablato in pay_rate (completamento), unpay_rate (riapertura_pagamento), agenda._sync_contract_chiuso (completamento/riapertura_crediti).
+- **Raffinamento scope:** esclusioni-query inerti (#2/#3/#4/#8) + P3 netto-per-vista spostati in G7 (codice testabile col rimborso reale, non difese inerti). Learning capturato.
+- +12 test (cash_categories 6, forecast_phantom 2, lifecycle_audit 4).
+
+**Blocco 3** (commit 22d864e) — worklist "Contratti sospesi" + Estendi:
+- Backend: `_suspended_contracts_candidates` (deriva SOSPESO da contract_state, helper unico endpoint+alert, aging invertito) + `GET /dashboard/suspended-contracts` + alert `suspended_contracts`. Dual-debt esplicito (sedute ≠ denaro). ESTENDI = PUT /contracts/{id} (riuso puro).
+- Frontend: SuspendedContractItem, useSuspendedContracts, KPI "Sospesi" + sezione /rinnovi-incassi + SuspendedCard/ExtendDialog (DatePicker minDate=oggi, default +30g) + icona AlertHub. 2 bottoni chiusura disegnati DISABILITATI → G7 (design-scope ≠ build-scope).
+- +11 test. Completa l'invariante §9.4 (lo SOSPESO non è più "homeless"). Suite **485 passed**, next build verde.
+
+**Doc allineati (metodo):** api/CLAUDE.md (contract_state + cash_categories nei services, nota "già in codice" vs "in arrivo G7", tabella endpoint dashboard con le 3 worklist + pattern helper-unico), INDEX/IMPL_PLAN §6/§2 con stato implementato, 2 learning capture in LEARNING_APP_ARCHITECTURE.
+
+**Prossimo:** Blocco 4 — G6 incassa residuo diretto (zero schema, zero policy; riusa cash_categories + auto-close; gemello-in-entrata del rimborso G7).
+
+---

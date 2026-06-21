@@ -81,6 +81,8 @@ api/
 │   ├── workout.py       WorkoutPlan/Session/Exercise Create/Update/Response
 │   └── workout_log.py   WorkoutLogCreate/Response
 └── services/            Business logic — servizi dominio + runtime/support + parser assistant + training science
+    ├── contract_state.py  SSoT derivazione stato di vita contratto (Lifecycle 4 stati + sotto-stato denaro, funzioni pure)
+    ├── cash_categories.py  SSoT categorie cassa + predicato "movimento contrattuale" bidirezionale (IN/OUT)
     ├── condition_rules.py  Regole deterministiche anamnesi → condizioni (80 pattern rules)
     ├── goal_engine.py      Calcolo progresso obiettivi
     ├── license.py          Verifica licenza JWT RSA (4-tier key resolution)
@@ -201,11 +203,13 @@ ricalcola "attivo/scaduto/residuo" inline — tutti derivano da qui (`residuo()`
 `is_rate_planificabile()`, `is_engaged()`, costanti `SOGLIA_IN_SCADENZA_GG`/`SOGLIA_CHURN_GG`). Modello
 vincolante: `docs/technical/FINANCIAL_DOMAIN_MODEL.md` (v1.3) + `TASSONOMIA_FINANZIARIA.md` (v1.2).
 
-> **In arrivo (IMPL_PLAN_FINANCIAL_REALIGN v1.3, non ancora in codice):** predicato cassa **bidirezionale**
-> (`cash_categories.py`: movimento contrattuale IN `ACCONTO/PAGAMENTO_RATA` / OUT `RIMBORSO_CONTRATTO`),
-> **audit della transizione `chiuso`** (oggi `pay_rate`/`_sync_contract_chiuso` non lo loggano), e la
-> **terminazione anticipata** (G7: `totale_rimborsato`/`quota_stornata`, `netto_incassato`, conguaglio
-> puro su base sedute). Quando questi atterrano, aggiornare questa sezione.
+**Già in codice (Blocchi 0-3 + Prereq P):**
+- `cash_categories.py` — predicato cassa **bidirezionale** (IN `ACCONTO_CONTRATTO`/`PAGAMENTO_RATA`, OUT `RIMBORSO_CONTRATTO`); fonte unica delle costanti categoria.
+- **Audit della transizione `chiuso`**: `log_contract_lifecycle_transition()` in `_audit.py` (idempotente, no-commit), cablato in `pay_rate` (completamento), `unpay_rate` (riapertura_pagamento), `agenda._sync_contract_chiuso` (completamento/riapertura_crediti).
+- Worklist finanziarie derivate da `contract_state`: `contracts-to-plan` (G1), `clients-to-recover` (lapsed), `suspended-contracts` (SOSPESO).
+- Forecast: filtra `Contract.chiuso == False` sulle entrate certe (no entrata-fantasma da rate PENDENTI su contratti chiusi).
+
+> **In arrivo (IMPL_PLAN_FINANCIAL_REALIGN v1.3, blocco G7 terminazione):** schema (`totale_rimborsato`/`quota_stornata`/`data_chiusura`/`motivo_chiusura`), categoria `RIMBORSO_CONTRATTO` scritta, `netto_incassato`, conguaglio puro su base sedute (`contract_settlement.py`), endpoint atomico a 2 gambe, allineamento delle 8 query di cassa al predicato. Quando atterra, aggiornare questa sezione.
 
 ### Contract Integrity Engine
 Il contratto e' il nodo centrale del sistema. 12 livelli di protezione:
@@ -343,19 +347,26 @@ Tabella `audit_log` + helper `log_audit()` in `api/routers/_audit.py`.
 
 ## Dashboard System (~980 LOC)
 
-9 endpoint in `dashboard.py`:
+Endpoint in `dashboard.py` (worklist finanziarie derivate da `contract_state`):
 
 | Endpoint | Scopo | Tipo query |
 |----------|-------|------------|
 | `GET /summary` | KPI aggregati (4 metriche) | `func.count/func.sum` |
 | `GET /reconciliation` | Audit contratti vs ledger | Raw SQL con GROUP BY |
-| `GET /alerts` | Warning proattivi (6 categorie) | 6 query aggregate |
+| `GET /alerts` | Warning proattivi (≈10 categorie, incl. orphan/clients_to_recover/suspended) | query aggregate + helper worklist |
 | `GET /clinical-readiness` | Coda readiness clinica per onboarding | ORM + timeline computation |
 | `GET /ghost-events` | Eventi fantasma per risoluzione inline | ORM + batch fetch clienti |
 | `GET /overdue-rates` | Rate scadute per pagamento inline | ORM join 3 entita' |
-| `GET /expiring-contracts` | Contratti in scadenza con crediti | ORM + batch fetch crediti |
+| `GET /expiring-contracts` | Contratti in scadenza (ATTIVO + ≤30gg), esclude i rinnovati | ORM + batch fetch crediti |
+| `GET /contracts-to-plan` | "Da pianificare" (G1): ATTIVO + residuo>0 + zero rate (`_contracts_to_plan_candidates`) | ORM + `contract_state` |
+| `GET /clients-to-recover` | Clienti lapsed (non ingaggiato) per win-back (`_lapsed_client_candidates`) | ORM + `contract_state` |
+| `GET /suspended-contracts` | Contratti SOSPESO (scaduti, sedute prepagate residue) (`_suspended_contracts_candidates`) | ORM + `contract_state` |
 | `GET /inactive-clients` | Clienti inattivi con ultimo evento | Raw SQL + batch fetch ultimo evento |
 | `GET /birthday-clients` | Compleanni oggi + prossimi 7gg | Raw SQL + date comparison mese/giorno |
+
+> **Pattern worklist finanziarie:** un helper `_*_candidates()` condiviso da endpoint (items) e alert
+> (count) → `count == len(items)` garantito. La classificazione di stato passa SEMPRE da
+> `contract_state` (mai inline). Aging "invertito" sui SOSPESO (più vecchio = più urgente: obbligazione).
 
 ### Clinical Readiness (`/clinical-readiness`)
 Coda deterministica per onboarding/migrazione clienti. Per ogni cliente attivo calcola:
