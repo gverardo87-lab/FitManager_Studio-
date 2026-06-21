@@ -4,6 +4,35 @@
 **Modello (SSoT):** `FINANCIAL_DOMAIN_MODEL.md` v1.3 + `TASSONOMIA_FINANZIARIA.md` v1.2
 **Supera:** `IMPL_PLAN_RINNOVI_SCADUTI.md` (storico).
 
+> ## 🔖 RESUME POINT — stato al 2026-06-22 (ultimo commit `d77c3fe`, branch `FitManager_Studio`)
+>
+> **FATTO (mergiato + pushato):**
+> - **Blocco 0** — `api/services/contract_state.py` SSoT (4 stati + sotto-stato denaro + engagement). 
+> - **Blocco 1 (G1)** — "da pianificare" solo ATTIVO; `kpi_da_incassare_scaduto`.
+> - **Blocco 2 (G4 + fix SOSPESO)** — `kpi_attivi/sospesi/esauriti`; `_lapsed_client_candidates` su `is_engaged`.
+> - **Prereq P** — `cash_categories.py` (predicato cassa bidir.) · fix Forecast `Contract.chiuso==False` ·
+>   `log_contract_lifecycle_transition` (audit transizione chiuso) in pay/unpay/agenda.
+> - **Blocco 3** — worklist "Contratti sospesi" + **Estendi** (`GET /dashboard/suspended-contracts` + alert
+>   + UI `/rinnovi-incassi`); 2 bottoni chiusura disegnati **disabilitati** (→ G7).
+> - **Review bridge processata** (`ALLINEAMENTO_REVIEW_CODICE_v1.3` su Desktop): NOW-fix (AlertItem union,
+>   `giorni_ritardo` clamp), delta modello assorbiti (guard **allowlist** §9.5.6/§4.7, 9ª query monthly_revenue),
+>   **fix tz** `completed_today_count` (workspace). Suite **487 passed / 1 xfailed / 0 failed** (verde anche di notte).
+>
+> **⏭️ PROSSIMO: Blocco 4 — G6 incassa residuo diretto** (§3 di questo doc). `POST /contracts/{id}/incassa-residuo`:
+> CashMovement ENTRATA legato al contratto (categoria `PAGAMENTO_RATA` da `cash_categories`), `totale_versato +=`,
+> auto-close via `_sync_contract_chiuso`, cap overpayment, bouncer+audit. **Zero schema, zero policy.** Riusa
+> RatePayment/pay_rate. Gemello-in-entrata del rimborso G7. Test: confine auto-close ESAURITO→CHIUSO, overpayment 422.
+>
+> **DOPO G6 → Blocco terminazione G7** (§4): schema (`totale_rimborsato`/`quota_stornata`/`data_chiusura`/`motivo_chiusura`),
+> conguaglio puro policy-pluggable, endpoint atomico 2 gambe. **Rispettare i 4 BLOCKER §4.7** (residuo→SSoT;
+> guard riapertura ALLOWLIST + il completamento marca `motivo_chiusura=COMPLETAMENTO`; soft-delete solo non-saldate;
+> financial-trend doppia decomposizione). Allora `test_manual_close_not_reopened_by_agenda_edit` passa da xfail→xpass: **togliere il marker**.
+>
+> **DECISIONI APERTE da Giacomo (solo per G7, NON bloccano G6):** policy valorizzazione conguaglio (tributarista);
+> enum `motivo_chiusura` (esito vs ragione); se togliere `chiuso` da `update_contract`; R/T per i 3 contratti muti (id 4/9/13).
+>
+> **Metodo:** model→spec→codice; commit per blocco con `check-all.sh`+`pytest` verde; bridge per i delta modello.
+
 > Successore consolidato del piano di riallineamento, allineato a FDM v1.3 + TASSONOMIA v1.2.
 > Prodotto da workflow Claude Code (**6 progettisti d'area + 4 verifiche adversariali + sintesi**),
 > ancorato al codice reale del branch `FitManager_Studio`. I `required_changes` dei verdetti sono
