@@ -467,7 +467,8 @@ derivano da qui, senza doppi conteggi:
     NOT NULL`, non per categoria. Una USCITA contrattuale cadrebbe **automaticamente** in 3 aggregati di
     uscite-variabili (misclassificata come **costo operativo**). → Il predicato "movimento contrattuale"
     va reso **esplicito e bidirezionale** (entrata: ACCONTO/RATA; uscita: RIMBORSO) — dettaglio in
-    `TASSONOMIA_FINANZIARIA.md` §2/§7 (v1.2). **8 query** da allineare (mappate nella tassonomia).
+    `TASSONOMIA_FINANZIARIA.md` §2/§7 (v1.2). **9 query** da allineare (mappate nella tassonomia; la 9ª,
+    `get_dashboard_summary.monthly_revenue`, emersa dalla review bridge sul codice vivo).
   - **Prerequisito Forecast.** Le rate **PENDENTI** su un contratto CHIUSO-non-eliminato sono proiettate
     dal Forecast come **entrata certa fantasma** (filtra solo `deleted_at`, `movements.py:1432-1441`) →
     la terminazione **deve soft-deletare le rate future**.
@@ -560,6 +561,19 @@ La scelta Strada B (§3.1) mantiene **due rappresentazioni** del denaro effettiv
    sottrarre `quota_stornata` e sono corretti **solo** perché filtrano i contratti aperti (`if not
    chiuso`). Va **asserito/documentato** — oppure quelle formule migrano a `contract_state.residuo()`.
    Un `quota_stornata > 0` su un contratto **aperto** è uno stato impossibile: se compare, è un bug.
+
+   > **Semantica di riapertura (delta v1.3, da review bridge sul codice vivo).** L'auto-riapertura
+   > credit-driven (`agenda._sync_contract_chiuso`: `chiuso` da `True` a `False` quando i crediti non
+   > sono più esauriti) vale **solo per le chiusure di completamento**. Una chiusura **deliberata**
+   > (terminazione: `motivo_chiusura ∈ TERMINAZIONE_*`, oppure `quota_stornata > 0`, oppure rimborso
+   > registrato) **non si riapre mai automaticamente** — solo `reopen`/`unterminate` espliciti la
+   > riaprono. Riaprire una terminazione produrrebbe lo **stato zombie** `chiuso=False ∧
+   > quota_stornata>0`, che questo invariante dichiara impossibile: è il **meccanismo** che, lasciato non
+   > guardato, lo violerebbe. ⚠️ **Già latente oggi** (non solo post-G7): una chiusura *manuale* di un
+   > contratto non-completato viene riaperta alla prima mutazione d'agenda su un suo evento PT. Fix
+   > **vincolante in G7** (guard su `motivo_chiusura`/`quota_stornata` nel ramo di riapertura di
+   > `_sync_contract_chiuso`); tracciato da `test_lifecycle_audit.test_manual_close_not_reopened_by_agenda_edit`
+   > (xfail strict fino al fix). Mitigante presente: la transizione è già auditata (`log_contract_lifecycle_transition`).
 
 E: `kpi_incassato = Σ totale_versato` (NON somma del mastro); il cash flow reale (con Altri incassi)
 non riconcilia con `kpi_incassato` — è atteso (TASSONOMIA §3).

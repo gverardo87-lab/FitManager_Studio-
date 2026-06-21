@@ -660,7 +660,9 @@ def get_clients_to_recover(
     for client, rep, rep_crediti_usati in candidates:
         scad = _coerce_date(rep.data_scadenza)
         inizio = _coerce_date(rep.data_inizio)
-        giorni_ritardo = (today - scad).days if isinstance(scad, date) else 0
+        # max(0): il rappresentante è il contratto più recente IN ASSOLUTO e può essere CHIUSO con
+        # scadenza FUTURA (caso 3 contratti muti) → niente "Scaduto da -N giorni".
+        giorni_ritardo = max(0, (today - scad).days) if isinstance(scad, date) else 0
         items.append({
             "client_id": client.id,
             "client_nome": client.nome,

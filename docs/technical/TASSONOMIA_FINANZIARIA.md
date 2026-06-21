@@ -16,7 +16,7 @@
 > **bidirezionale**. (2) **§2** — il predicato "movimento contrattuale" va reso **esplicito e
 > bidirezionale** (entrata: `ACCONTO`/`RATA`; uscita: `RIMBORSO_CONTRATTO`); estende la previsione
 > della v1.1 (che già aveva intuito il buco, ma solo sul lato ENTRATA). (3) **§7 NEW** — categoria
-> `RIMBORSO_CONTRATTO`, sua natura di **contra-ricavo** (NON costo operativo), e le **8 query** da
+> `RIMBORSO_CONTRATTO`, sua natura di **contra-ricavo** (NON costo operativo), e le **9 query** da
 > allineare perché un rimborso non cada negli aggregati di uscite-variabili. La **policy** del rimborso
 > (pro-sedute, prezzo seduta, recesso IT) è **DECISIONE APERTA** (vedi FDM §3.1).
 
@@ -263,7 +263,7 @@ in uscita legato al contratto**, con una **categoria dedicata**.
 > di spesa (`STORNO_SPESA_FISSA` ha `id_contratto = NULL` e compensa un'uscita), non è "Altri incassi"
 > (è un'uscita, non un'entrata). È la **prima** USCITA del sistema legata a un contratto.
 
-### 7.2 Dove DEVE essere conteggiata / esclusa — le 8 query da allineare
+### 7.2 Dove DEVE essere conteggiata / esclusa — le 9 query da allineare
 
 La ricognizione sul codice reale ha mappato l'impatto di una USCITA contrattuale sulle query di cassa.
 Poiché il predicato "contrattuale" non esiste ancora (§2), un `RIMBORSO_CONTRATTO` cadrebbe per
@@ -279,14 +279,15 @@ Poiché il predicato "contrattuale" non esiste ancora (§2), un `RIMBORSO_CONTRA
 | 6 | `get_reconciliation` | `dashboard.py:127-208` | ⚠️ **rendere visibile** — oggi cieca alle uscite (§3); deve riconciliare `totale_rimborsato` vs `Σ USCITA RIMBORSO_CONTRATTO` |
 | 7 | `get_cash_audit_log` (`flow_hint`) | `movements.py:900-906` | ⚠️ **non forzare ENTRATA** — oggi forza il segno entrata per le entity "contract"; un rimborso è un flusso **in uscita** |
 | 8 | `get_balance` (`totale_uscite`) | `movements.py:396-415` | ⚠️ **dipende dall'uso** — se `totale_uscite` è la cassa-out **grezza** del saldo, il rimborso **ci sta** (è denaro uscito); se è/alimenta le **«uscite operative»**, **escluderlo** (contra-ricavo, non opex). Claude Code applica in base a cosa `get_balance` alimenta davvero |
+| 9 | `get_dashboard_summary` (`monthly_revenue`) | `dashboard.py:84-94` | ⚠️ **vista contrattuale (netto)** — KPI "revenue del mese" su `tipo==ENTRATA + id_contratto`: oggi NON sottrae i rimborsi → sovrastima il netto. Deve sottrarre i `RIMBORSO_CONTRATTO` del mese. *(`divergent_count` dello stesso summary resta corretto: confronta `totale_versato` lordo vs Σ ENTRATA, invariante che Strada B preserva.)* |
 
 > **Principio unificante.** Le query si dividono in famiglie rispetto al rimborso:
 > - **Cassa/saldo reale** (#1, e #8 quando è saldo grezzo): il rimborso **deve** sottrarre (è denaro
 >   uscito davvero). ✅
 > - **Aggregati operativi** (#2, #3, #4, e #8 quando è «uscite operative»): il rimborso **non deve**
 >   comparire come **costo** (falserebbe burn e margine). ⚠️ escludere.
-> - **Viste contrattuali** (#5, #6, #7): il rimborso **deve** comparire come **componente contrattuale
->   in uscita** (abbatte l'incassato dei contratti, non i costi). ⚠️ includere col segno giusto.
+> - **Viste contrattuali** (#5, #6, #7, #9): il rimborso **deve** comparire come **componente contrattuale
+>   in uscita** (abbatte l'incassato/revenue dei contratti, non i costi). ⚠️ includere col segno giusto.
 >
 > Tutte e tre le famiglie si servono dello **stesso predicato esplicito** del §2 (movimento contrattuale
 > IN/OUT): è quel predicato a smistare correttamente il rimborso in ciascuna query.
@@ -302,5 +303,5 @@ Poiché il predicato "contrattuale" non esiste ancora (§2), un `RIMBORSO_CONTRA
   **confermato** (ricognizione→spec): un campo immutabile `quota_stornata`, **gemello** di
   `totale_rimborsato`, che `contract_state.residuo()` sottrae (`residuo = max(prezzo − versato −
   quota_stornata, 0)`, FDM §2). Resta **fuori dalla cassa** e quindi fuori da questa tassonomia (che
-  classifica i movimenti): lo storno **non** è un `CashMovement` — non compare in nessuna delle 8 query.
+  classifica i movimenti): lo storno **non** è un `CashMovement` — non compare in nessuna delle 9 query.
   La sua coerenza è l'invariante FDM §9.5.6 (`quota_stornata > 0 ⟹ chiuso`).

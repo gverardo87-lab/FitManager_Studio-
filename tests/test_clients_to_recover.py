@@ -97,6 +97,15 @@ def test_representative_is_most_recent_including_closed(client, auth_headers, sa
     assert data["items"][0]["contract_id"] == recent["id"]  # il CHIUSO più recente, non il vecchio scaduto
 
 
+def test_representative_future_scadenza_giorni_ritardo_clamped(client, auth_headers, sample_client):
+    """Rappresentante CHIUSO con scadenza FUTURA (caso 3 contratti muti) → giorni_ritardo clampato a 0, mai negativo."""
+    c = _contract(client, auth_headers, sample_client["id"], _past(30), _future(60))  # scadenza futura
+    client.put(f"/api/contracts/{c['id']}", json={"chiuso": True}, headers=auth_headers)  # chiuso "muto"
+    data = _recover(client, auth_headers)
+    assert data["total"] == 1
+    assert data["items"][0]["giorni_ritardo"] == 0  # non "-N giorni"
+
+
 def test_active_unlinked_contract_suppresses(client, auth_headers, sample_client):
     """Cliente con ESAURITO + nuovo contratto attivo NON collegato → NON compare (il caso del founder)."""
     _lapsed(client, auth_headers, sample_client["id"], _past(120), _past(60))      # esaurito

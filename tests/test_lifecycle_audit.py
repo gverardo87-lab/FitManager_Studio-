@@ -10,9 +10,11 @@ idempotente (no-op se `chiuso` non cambia).
 import json
 from datetime import date, timedelta
 
+import pytest
 from sqlmodel import select
 
 from api.models.audit_log import AuditLog
+from api.models.contract import Contract
 
 TODAY = date.today()
 FUTURE = (TODAY + timedelta(days=120)).isoformat()
@@ -137,3 +139,31 @@ def test_no_transition_when_chiuso_unchanged(client, auth_headers, sample_contra
     r = client.post(f"/api/rates/{rate['id']}/pay", json={"importo": rate["importo_previsto"], "metodo": "CONTANTI"}, headers=auth_headers)
     assert r.status_code == 200, r.text
     assert _chiuso_transitions(session, cid) == []
+
+
+# ── [BRIDGE §1 LOAD-BEARING] difetto latente: _sync_contract_chiuso riapre una chiusura deliberata ──
+# Una chiusura NON-da-completamento (manuale oggi; terminazione domani con G7) ha crediti_usati <
+# crediti_totali → should_be_chiuso=False → qualsiasi mutazione d'agenda su un suo evento la RIAPRE
+# in silenzio (etichettata "riapertura_crediti"). Fix vero in G7 (guard su motivo_chiusura/quota_stornata):
+# l'auto-riapertura credit-driven vale SOLO per le chiusure di completamento. xfail strict → quando G7
+# aggiunge la guard questo xpassa e va tolto il marker.
+
+@pytest.mark.xfail(
+    reason="Bug latente (bridge §1): _sync_contract_chiuso riapre una chiusura deliberata. Fix in G7.",
+    strict=True,
+)
+def test_manual_close_not_reopened_by_agenda_edit(client, auth_headers, sample_client, session):
+    # SOSPESO-like: crediti non esauriti (1/3) + residuo>0 (non saldato → no auto-close)
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=300.0, acconto=100.0, crediti=3)
+    ev = _pt_event(client, auth_headers, sample_client["id"], c["id"])  # 1/3 crediti usati
+
+    # chiusura DELIBERATA (manuale)
+    r = client.put(f"/api/contracts/{c['id']}", json={"chiuso": True}, headers=auth_headers)
+    assert r.status_code == 200, r.text
+
+    # mutazione d'agenda su un evento del contratto → _sync_contract_chiuso
+    client.delete(f"/api/events/{ev['id']}", headers=auth_headers)
+
+    session.expire_all()
+    contract = session.get(Contract, c["id"])
+    assert contract.chiuso is True  # la chiusura deliberata NON deve essere riaperta (oggi fallisce)

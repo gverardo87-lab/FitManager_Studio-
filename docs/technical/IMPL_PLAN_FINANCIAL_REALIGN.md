@@ -201,6 +201,7 @@ Companion read-only `GET /contracts/{id}/settlement-preview` → `ContractSettle
 
 ### 4.7 ANTI-PATTERN espliciti (verdetti 2 e 3, BLOCKER-grade)
 - **G7 NON chiama mai `_sync_contract_chiuso`** (`agenda.py:299-329`). È credito-driven: terminare un SOSPESO (saldato, crediti residui) farebbe `should_be_chiuso=False` → **RESET `chiuso=False` dentro lo stesso commit, annullando la terminazione**. G7 setta `chiuso/motivo/data_chiusura` direttamente. È il punto in cui l'infra condivisa con G6 **deve divergere**.
+- **⚠️ Guard sul ramo di RIAPERTURA di `_sync_contract_chiuso` (LOAD-BEARING, review bridge §1).** Non basta che il `terminate` non chiami `_sync`: l'agenda lo chiama **comunque** (`create/update/delete_event`) sugli eventi PT del cliente. Oggi il ramo di auto-riapertura (`chiuso=True→False` quando i crediti non sono esauriti) riapre **qualsiasi** chiusura non-da-completamento → con G7 una correzione d'agenda su una seduta passata di un contratto **terminato** lo riaprirebbe → **stato zombie** `chiuso=False ∧ quota_stornata>0` (viola §9.5.6). Fix vincolante: il ramo di riapertura **salta** le chiusure deliberate (`motivo_chiusura ∈ TERMINAZIONE_*`, o `quota_stornata>0`, o rimborso registrato); solo `reopen`/`unterminate` espliciti riaprono una terminazione. **Già latente oggi** sulle chiusure *manuali* (tracciato da `test_lifecycle_audit.test_manual_close_not_reopened_by_agenda_edit`, **xfail strict** → diventa xpass quando la guard atterra, allora rimuovere il marker). Delta modello assorbito in FDM §9.5.6.
 - **`residuo` nel dettaglio è MANDATORY-fix.** `contracts.py:127` calcola `residuo` inline (**verificato**), `financial.py:274` lo documenta. Dopo lo storno mostrerebbe **debito-fantasma nel punto più guardato della UI**. Delegare a `contract_state.residuo()`. `importo_da_rateizzare` (`:130`) e `disallineamento` (`:131`) ereditano la correzione. Test: terminato → `residuo==0` AND `somma_rate_pendenti==0` AND `piano_allineato==True`.
 - **Soft-delete rate = TUTTE le non-saldate (PENDENTE+PARZIALE, qualsiasi data), ESCLUSE le SALDATA.** **NON riusare `delete_contract:761-788` verbatim** (cancella anche SALDATA + i loro `CashMovement` ENTRATA → distrugge denaro incassato, rompe l'àncora `totale_versato == Σ ENTRATA`). Le SALDATA e i loro movimenti **sopravvivono**.
 - **Snapshot `sedute_erogate` nell'audit** al momento della terminazione: `crediti_usati` è event-derived e può driftare; è l'unico record che soddisfa no-silent-loss per le sedute forfettate.
@@ -218,7 +219,7 @@ Tutte le mutazioni DB **PRIMA** del `session.commit()` unico; dopo, solo `refres
 
 ---
 
-## 5. Predicato cassa contrattuale bidirezionale + allineamento 8 query
+## 5. Predicato cassa contrattuale bidirezionale + allineamento 9 query
 
 **SSoT unico:** `api/services/cash_categories.py` (P0, zero DB, zero import di router) — **introdotto PER PRIMO** (verdetto 1, evita refactor del G6 import):
 - Costanti `CATEGORIA_ACCONTO_CONTRATTO`, `CATEGORIA_PAGAMENTO_RATA`, `CATEGORIA_RIMBORSO_CONTRATTO`, `CATEGORIA_STORNO_SPESA_FISSA`.
@@ -239,6 +240,7 @@ Tutte le mutazioni DB **PRIMA** del `session.commit()` unico; dopo, solo `refres
 | 6 | `get_financial_trend` | `movements.py:1609-1654` | **Vista contrattuale (netto)**: `incassi_contratti`/`cash_flow_reale` sottraggono rimborso + campo `rimborsi_contratti` | edit (dipende da G7) |
 | 7 | `get_reconciliation` | `dashboard.py:177-208,127-138` | **Àncora (LORDO) INVARIATA** + **NUOVA leg separata** `totale_rimborsato` vs `Σ USCITA RIMBORSO` | additivo (dipende da G7) |
 | 8 | `get_cash_audit_log` (flow_hint) | `movements.py:899-905` | **flow_hint segno-aware** per OUT contrattuali | edit |
+| 9 | `get_dashboard_summary` (`monthly_revenue`) | `dashboard.py:84-94` | **Vista contrattuale (netto), bridge §2.2**: KPI revenue del mese su `tipo==ENTRATA + id_contratto` → sottrarre i `RIMBORSO_CONTRATTO` del mese | edit (dipende da G7) |
 
 **Invarianti (verdetti):**
 - **Reconciliation resta LORDO** (verdetto 3): entrambe le leg sommano solo ENTRATA via `CASE WHEN tipo='ENTRATA'`; il rimborso USCITA contribuisce 0. **MAI** foldare il rimborso nella somma ENTRATA. La leg rimborso è **separata e parallela**.

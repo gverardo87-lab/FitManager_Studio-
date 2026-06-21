@@ -745,3 +745,44 @@ Ripreso lo sviluppo contro l'IMPL_PLAN v1.3 installato. Due blocchi, entrambi pu
 **Prossimo:** Blocco 4 — G6 incassa residuo diretto (zero schema, zero policy; riusa cash_categories + auto-close; gemello-in-entrata del rimborso G7).
 
 ---
+
+### 2026-06-21 — Review bridge sul codice mergiato (ALLINEAMENTO_REVIEW_CODICE_v1.3) — verificata e assorbita
+
+La chat-bridge ha rivisto il codice realmente mergiato (post Blocco 3 + Prereq P) e prodotto
+`ALLINEAMENTO_REVIEW_CODICE_v1.3.md` (artefatto-ponte su Desktop, non installato nel repo: i suoi
+esiti durevoli sono assorbiti nei doc canonici qui sotto). Ogni rilievo verificato sul codice vivo.
+
+**NOW (fix immediati, in questo batch):**
+- **2.1 type drift** — `AlertItem.category` (types/api.ts) non includeva `suspended_contracts` /
+  `clients_to_recover` che il backend emette → union completata (runtime già reggeva via fallback, ma la
+  union "mentiva"). next build verde.
+- **2.3 giorni_ritardo negativo** — `get_clients_to_recover`: il rappresentante è il contratto più recente
+  IN ASSOLUTO e può essere CHIUSO con scadenza FUTURA (caso 3 muti) → `max(0, …)`. Niente più "Scaduto da
+  −N giorni" sul dato reale di Chiara. +test.
+
+**LOAD-BEARING verificato + tracciato (fix vero in G7):**
+- **§1 reopen-semantics di `_sync_contract_chiuso`** — il ramo di auto-riapertura riapre QUALSIASI chiusura
+  non-da-completamento (crediti non esauriti). **Già latente oggi** sulle chiusure manuali; **sistematico
+  con G7** (ogni terminazione la innescherebbe → stato zombie `chiuso=False ∧ quota_stornata>0`, viola
+  §9.5.6). Tracciato da `test_lifecycle_audit.test_manual_close_not_reopened_by_agenda_edit` (**xfail
+  strict** → xpass quando G7 aggiunge la guard, allora si toglie il marker). Correzione all'analisi
+  bridge precedente che lo dava come solo-post-G7.
+
+**Delta modello assorbiti (verificati → canonici):**
+- **FDM §9.5.6** esteso con la *semantica di riapertura* (auto-riapertura solo per completamento; le
+  chiusure deliberate si riaprono solo via reopen/unterminate espliciti).
+- **TASSONOMIA §7.2 / FDM §7-G7 / IMPL_PLAN §5**: aggiunta la **9ª query** da allineare in G7 —
+  `get_dashboard_summary.monthly_revenue` (vista contrattuale netto: sottrarre i `RIMBORSO_CONTRATTO`).
+  `divergent_count` dello stesso summary resta corretto (lordo vs Σ ENTRATA, invariante Strada B).
+- **IMPL_PLAN §4.7**: aggiunto il guard sul ramo reopen come fix vincolante di G7.
+
+**Tail (quando si toccano i file):** 2.4 `expiring-contracts` logica data inline → derivare da
+`contract_state` (già notato in Blocco 2, nessuna regressione).
+
+**Confermato fedele dal bridge (non toccato):** worklist sospesi (helper unico, aging invertito,
+unità=contratto), dual-debt, design-vs-build dei 2 bottoni disabilitati, retention≠chiusura, Prereq P
+(P0/P1/P2), query contra-ricavo correttamente NON ancora editate (inerti fino a G7).
+
+Suite verde (1 xfailed atteso), next build verde. Prossimo: Blocco 4 — G6 incassa residuo diretto.
+
+---
