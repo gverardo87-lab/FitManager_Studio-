@@ -193,6 +193,20 @@ movements = session.exec(
 # Backward-compat: `data_pagamento` e `metodo_pagamento` = ultimo pagamento
 ```
 
+### Stato finanziario del contratto — SSoT `contract_state.py`
+`api/services/contract_state.py` è l'**unica fonte** della derivazione dello stato di vita del contratto
+(`Lifecycle` ∈ ATTIVO/SOSPESO/ESAURITO/CHIUSO/ELIMINATO) e del sotto-stato denaro. Funzioni **pure**
+(no DB): i caller passano `crediti_usati` (batch-fetch) e `today`. **Regola d'oro:** nessun endpoint/KPI
+ricalcola "attivo/scaduto/residuo" inline — tutti derivano da qui (`residuo()`, `crediti_residui()`,
+`is_rate_planificabile()`, `is_engaged()`, costanti `SOGLIA_IN_SCADENZA_GG`/`SOGLIA_CHURN_GG`). Modello
+vincolante: `docs/technical/FINANCIAL_DOMAIN_MODEL.md` (v1.3) + `TASSONOMIA_FINANZIARIA.md` (v1.2).
+
+> **In arrivo (IMPL_PLAN_FINANCIAL_REALIGN v1.3, non ancora in codice):** predicato cassa **bidirezionale**
+> (`cash_categories.py`: movimento contrattuale IN `ACCONTO/PAGAMENTO_RATA` / OUT `RIMBORSO_CONTRATTO`),
+> **audit della transizione `chiuso`** (oggi `pay_rate`/`_sync_contract_chiuso` non lo loggano), e la
+> **terminazione anticipata** (G7: `totale_rimborsato`/`quota_stornata`, `netto_incassato`, conguaglio
+> puro su base sedute). Quando questi atterrano, aggiornare questa sezione.
+
 ### Contract Integrity Engine
 Il contratto e' il nodo centrale del sistema. 12 livelli di protezione:
 

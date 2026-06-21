@@ -71,15 +71,15 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 | `NUTRITION_ENGINE_V3.md` | Architettura Nutrition Engine v3 |
 | `PRE_DELIVERY_AUDIT_2026_04_17.md` | Audit tecnico 360° pre-consegna ad Alessio (2026-04-17) |
 | `PRE_DELIVERY_SECURITY_GATE.md` | Gate di sicurezza pre-consegna: 12 voci in 3 tier (G1-G12), stato annotato contro il codice reale |
-| `FINANCIAL_DOMAIN_MODEL.md` | **SSoT del dominio finanziario (vincolante):** entità, 3 assi (tempo/crediti/denaro), 4 stati di vita del contratto (ATTIVO/SOSPESO/ESAURITO/CHIUSO), vocabolario univoco (aperto≠attivo), mappa worklist, invarianti anti-perdita. Le altre spec finanziarie referenziano questo |
-| `TASSONOMIA_FINANZIARIA.md` | **Vocabolario finanziario condiviso (vincolante su concetti e formule):** 3 assi (liquidità reale/cassa, posizione commerciale/competenza, stato di pianificazione), esclusioni dalla cassa, riconciliazione. Referenziato dalle 2 spec finanziarie |
+| `FINANCIAL_DOMAIN_MODEL.md` | **SSoT del dominio finanziario (vincolante) — v1.3:** entità, 3 assi (tempo/crediti/denaro + netto via `totale_rimborsato`/`quota_stornata`, Strada B), 4 stati di vita (ATTIVO/SOSPESO/ESAURITO/CHIUSO), **terminazione anticipata** (3° modo di morte, conguaglio bidirezionale, §3.1/§7-G7), vocabolario univoco (aperto≠attivo), mappa worklist, invarianti anti-perdita (§9). Le altre spec finanziarie referenziano questo |
+| `TASSONOMIA_FINANZIARIA.md` | **Vocabolario finanziario condiviso (vincolante su concetti e formule) — v1.2:** 3 assi (liquidità reale/cassa **bidirezionale**, posizione commerciale/competenza, stato di pianificazione), predicato movimento contrattuale IN/OUT, `RIMBORSO_CONTRATTO` (contra-ricavo) + 8 query da allineare (§7), esclusioni dalla cassa, riconciliazione. Referenziato dalle spec finanziarie |
 | `SPEC_RINNOVO_E_CONTRATTI_DA_PIANIFICARE.md` | Spec: flusso di rinnovo (eredità dati + percorso guidato al piano rate) + vista Contract-first "contratti da pianificare" (denaro dovuto oggi invisibile all'aging) |
 | `SPEC_GESTIONE_FINANZIARIA_TEMPORALE.md` | Spec: asse temporale della finanza — aggregazione per periodo (cassa), trend + competenza affiancata, composizione (nuovi/rinnovi, acconti/rate) |
 | `IMPL_PLAN_SPEC_RINNOVO.md` | Piano d'implementazione di SPEC_RINNOVO (ancorato al codice, decisioni bloccate, sequenza step). Materiale di lavoro — superato dal codice a implementazione conclusa |
 | `IMPL_PLAN_SPEC_TEMPORALE.md` | Piano d'implementazione di SPEC_GESTIONE_FINANZIARIA_TEMPORALE (tab Andamento in /cassa, L1 periodo+altri incassi, L2 trend+competenza, L3 composizione, fix monthly_revenue). Materiale di lavoro |
 | `SPEC_RINNOVI_SCADUTI_E_RETENTION.md` | Spec (v2.0): ciclo a 4 stati (attivo/sospeso/esaurito/chiuso); "clienti da recuperare" (non ingaggiato = né attivo né sospeso) + "contratti sospesi" (sedute prepagate da recuperare) + esito "non rinnova". Anti-perdita silenziosa. ADR-015 |
 | `IMPL_PLAN_RINNOVI_SCADUTI.md` | ⚠️ **superato** da `IMPL_PLAN_FINANCIAL_REALIGN.md` (mancava lo stato SOSPESO). Storico |
-| `IMPL_PLAN_FINANCIAL_REALIGN.md` | **Piano unico** riallineamento al FINANCIAL_DOMAIN_MODEL v1.2: `contract_state()` SSoT, G1 (da-pianificare→ATTIVO), riallineo worklist/KPI, worklist sospesi, G6 (incassa residuo), win-back/freddo. Materiale di lavoro |
+| `IMPL_PLAN_FINANCIAL_REALIGN.md` | **Piano unico v1.3** (strategia, workflow-verified): Blocchi 0-2 fatti (`contract_state()` SSoT, G1, G4+fix SOSPESO); sequenza Prereq P → Blocco 3 (sospesi+Estendi) → Blocco 4 (G6) → Blocco terminazione (G7) → remediation runbook. ~95% buildable, policy-gated solo la valorizzazione. Materiale di lavoro |
 
 ---
 

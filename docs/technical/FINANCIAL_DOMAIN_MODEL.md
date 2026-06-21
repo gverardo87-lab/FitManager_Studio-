@@ -1,7 +1,41 @@
 # FINANCIAL DOMAIN MODEL — la base unica del dominio economico-finanziario
 
-**Versione:** 1.2
+**Versione:** 1.3
 **Stato:** **SSoT del dominio finanziario — vincolante.** Ogni feature finanziaria si misura qui.
+
+> **Nota di versione 1.3 (2026-06-21, evento di terminazione anticipata):** incorporato il **terzo modo
+> di morte** del contratto — la **terminazione anticipata per decisione umana** (recesso del cliente /
+> risoluzione del trainer / chiusura consensuale) avvenuta a contratto **vivo** (ATTIVO o SOSPESO), con
+> **conguaglio economico bidirezionale**. Sintesi delle modifiche: (1) **§2** — introdotti
+> `netto_incassato` e `totale_rimborsato` (decisione **Strada B**: il lordo non si riscrive mai). (2)
+> **§3** — la frase «`chiuso` si accende SOLO su saldato+esaurito» è **superata**: vale per il
+> completamento, non per la terminazione; CHIUSO è ora raggiungibile **mid-life**. (3) **§3.1 NEW** —
+> l'evento di terminazione, le **due gambe del conguaglio** (rimborso in cassa / storno del dovuto),
+> base di calcolo sulle **sedute** (non sul calendario). (4) **§6** — la worklist «Contratti sospesi»
+> guadagna la **terza azione** (chiudi con conguaglio). (5) **§7-G7 NEW** — il conguaglio e i suoi
+> invarianti; G5 esteso. (6) **§9** — **4° invariante anti-perdita** (il rimborso dovuto non sparisce)
+> + **§9.5 NEW** invariante di coerenza del netto (Strada B). (7) **prerequisiti** emersi dalla
+> ricognizione sul codice reale: fix Forecast (rate fantasma su CHIUSO), audit della transizione
+> `chiuso`, **remediation dei 3 contratti già terminati muti** (id 4/9/13). La **policy di rimborso**
+> (pro-sedute sì/no, prezzo di valorizzazione delle sedute usate, recesso del consumatore IT) è
+> marcata **DECISIONE APERTA** (tributarista/legale) — il modello fissa *che* l'evento esiste e *che
+> forma* ha; i numeri della policy si riempiono prima dell'implementazione. **Implementazione in coda
+> a G6** (il rimborso è cassa diretta in uscita sul contratto: riusa l'infrastruttura di G6, stesso
+> pattern, segno opposto).
+>
+> **Raffinamenti post-bridge (review Claude Code su codice vivo, 6 punti):** (a) §6/§11 — **design-scope
+> ≠ build-scope** sulle 3 azioni del SOSPESO (Blocco 3 consegna worklist + *Estendi*; le gambe di
+> chiusura sono di G7); (b) §3.1/§7-G5 — **`non_rinnova` è retention, NON un motivo di chiusura** (asse
+> ortogonale `esito_rinnovo_motivo`); (c) §9.5 — **netto vs lordo enumerato per vista** (non più «dove
+> serve»); (d) tassonomia §7.2 — **8ª query** (`get_balance`); (e) §11 — **scope schema** del blocco a
+> piano; (f) §7-G7 — **remediation su dato vivo** come runbook a sé. Il meccanismo è specificabile col
+> **parametro-policy pluggable**: SPEC_TERMINAZIONE non è bloccata dalla policy, solo la valorizzazione.
+>
+> **Assorbimenti dalla review del piano di strategia (Claude Code Opus 4.8):** (g) **campo storno
+> confermato** `quota_stornata` (gemello di `totale_rimborsato`) — §2/§11 lo nominano, `residuo()` lo
+> sottrae; (h) **nuovo invariante §9.5.6** `quota_stornata > 0 ⟹ chiuso = True` (load-bearing per i KPI
+> residuo inline). **Resta una sola decisione di Giacomo prima della migrazione:** l'**enum di
+> `motivo_chiusura`** (esito economico vs ragione — §11).
 
 > **Nota di versione 1.2 (2026-06-20, robustezza bridge round-2):** (1) dichiarata l'**assunzione-proxy**
 > del raffreddamento (§4.1: usa i contatti loggati come proxy del contatto reale). (2) **G6** (§7): manca
@@ -14,10 +48,11 @@
 > a natura mista** derivato/a-memoria + stato **lapsed-freddo** e **decadimento asimmetrico** (§4.1);
 > (3) **costanti temporali unificate** in un punto solo, con cooling=retention=churn = una costante
 > (§4.2). Debito emerso: `orphan_contracts`/`contracts-to-plan` già implementati violano G1 (§7).
+
 **Owner:** Giacomo Verardo (AVGV Technologies)
 **Destinatario:** Claude Code
 **Collocazione:** `docs/technical/`
-**Data:** 2026-06-20
+**Data:** 2026-06-21
 **Decisioni:** `ADR-014` (cassa/competenza), `ADR-015` (funnel rinnovi/retention)
 **Assorbe / coordina:** `TASSONOMIA_FINANZIARIA.md` (asse cassa/competenza), `SPEC_RINNOVO_E_CONTRATTI_DA_PIANIFICARE.md`, `SPEC_GESTIONE_FINANZIARIA_TEMPORALE.md`, `SPEC_RINNOVI_SCADUTI_E_RETENTION.md`
 
@@ -57,12 +92,30 @@ Un contratto si "esaurisce" lungo **tre assi distinti**, che NON vanno confusi:
 - **`residuo = max(prezzo_totale − totale_versato, 0)`**. `totale_versato` riconciliabile col mastro
   (`ReconciliationResponse`).
 
+> **Asse denaro — il netto (v1.3, decisione Strada B).** `totale_versato` è e resta **LORDO cumulativo**
+> (somma di tutto ciò che è entrato, invariante `totale_versato == Σ ENTRATA` del mastro per il
+> contratto). Su questo **non si scrive mai a ritroso**: ridurre il lordo = riscrivere il passato e far
+> riapparire un dovuto inesistente via `residuo = prezzo − versato`. Quando del denaro **esce** verso il
+> cliente (rimborso, §3.1), il netto si introduce **ex-novo** con un campo dedicato:
+>
+> | Quantità | Definizione | Natura |
+> |---|---|---|
+> | `totale_versato` | Σ di ciò che è entrato (LORDO) | stored, immutabile a ritroso, `== Σ ENTRATA` |
+> | `totale_rimborsato` | Σ di ciò che è uscito verso il cliente come restituzione | stored, parte da 0, **cresce solo** (immutable-forward) |
+> | `quota_stornata` | Σ del dovuto **abbonato** (write-off, gamba storno §3.1) — azzera il `residuo` senza riscrivere `prezzo_totale` | stored, parte da 0, **cresce solo** (immutable-forward) — gemello di `totale_rimborsato` |
+> | **`netto_incassato`** | `totale_versato − totale_rimborsato` | **derivato** — cassa effettivamente trattenuta |
+>
+> `residuo = max(prezzo_totale − totale_versato − quota_stornata, 0)` è la forma **canonica** (confermata
+> in ricognizione: il campo `quota_stornata` è necessario perché `residuo()` è letto anche nel **dettaglio**,
+> non solo nelle worklist gated dal lifecycle). Per i contratti non terminati `quota_stornata = 0` e la
+> formula collassa su `prezzo − versato`; per i terminati vale l'invariante §9.5 (`residuo ≡ 0`, settled).
+
 ---
 
 ## 3. Stato di vita del contratto (canonico) — `contract_state()`
 
-`chiuso` (flag stored) si accende SOLO su **denaro saldato + crediti esauriti** (auto-close su pay/event,
-o manuale) — **ignora il tempo**. Quindi lo stato di vita reale è una **funzione derivata** di
+`chiuso` (flag stored) è il **flag terminale**: quando è acceso, lo stato di vita è CHIUSO,
+**indipendentemente da tempo e crediti**. Lo stato di vita reale è una **funzione derivata** di
 (tempo × crediti × chiuso), in **4 stati mutuamente esclusivi**:
 
 ```
@@ -78,12 +131,158 @@ contract_state(c):
 | Stato | Significato operativo | Azione tipica |
 |---|---|---|
 | **ATTIVO** | copertura in corso | usare/pianificare |
-| **SOSPESO** | tempo scaduto, **sedute prepagate residue** = gliele DEVI | estendi / pianifica sedute / decadi |
+| **SOSPESO** | tempo scaduto, **sedute prepagate residue** = gliele DEVI | estendi / pianifica sedute / **chiudi con conguaglio** / decadi |
 | **ESAURITO** | pacchetto consumato, **deve ancora denaro** | incassa il residuo / rinnova |
-| **CHIUSO** | terminato (entrambi gli assi, o chiuso a mano) | — |
+| **CHIUSO** | terminato — **qualificato dal motivo** (completamento o terminazione, §3.1) | — |
+
+> **⚠️ Come si accende `chiuso` (corretto in v1.3).** Fino alla v1.2 si affermava che `chiuso` si
+> accende **SOLO** su denaro saldato + crediti esauriti (auto-close). Quella frase descriveva **un solo
+> percorso** — il *completamento*. La v1.3 riconosce un **secondo percorso**: la **terminazione
+> anticipata esplicita** (§3.1), che accende `chiuso` su un contratto ancora **vivo** (ATTIVO o
+> SOSPESO), *non* saldato/esaurito, previo **conguaglio**. Quindi `chiuso` si accende per **due vie**:
+> (a) **auto-close** su saldato+esaurito = *completamento*; (b) **terminazione** per decisione umana =
+> *recesso / risoluzione / chiusura consensuale*. CHIUSO **non è più indistinto**: porta sempre il
+> **motivo** che dice da quale via è arrivato (§3.1). I 3 contratti `chiuso=1` con scadenza futura e
+> crediti tutti da erogare trovati sul dato reale (id 4/9/13) sono esattamente terminazioni avvenute
+> per la via (b) **senza** motivo né conguaglio — la patologia che la v1.3 chiude (§7-G7, remediation).
 
 > **Regola d'oro:** lo stato di vita lo calcola SOLO `contract_state()`. Nessun endpoint/KPI ricalcola
 > "attivo" per conto suo.
+
+### 3.1 Terminazione anticipata — il terzo modo di morte (v1.3)
+
+Nel modello, un contratto muore oggi in **due** modi:
+
+- **Completamento** — denaro saldato **e** sedute esaurite → `chiuso` auto → **CHIUSO**. Morte
+  *fisiologica*: il contratto ha dato tutto ciò che doveva.
+- **Consunzione** — scade il tempo lasciando un asse aperto → **SOSPESO** (sedute residue) o
+  **ESAURITO** (denaro residuo), poi una decisione umana lo regola (§7-G5). Morte *per esaurimento del
+  tempo*.
+
+La v1.3 aggiunge il **terzo** modo:
+
+- **Terminazione anticipata** — una delle parti chiude il contratto **mentre è ancora vivo** (ATTIVO,
+  oppure SOSPESO sul versante crediti), **prima del suo corso naturale**, con un **conguaglio
+  economico**. Morte *per decisione attiva a metà corsa*.
+
+È l'evento **più trasversale** del dominio: attraversa **tutti e tre gli assi insieme** — interrompe
+il **tempo** (prima della scadenza), congela i **crediti** (sedute non erogate), muove il **denaro**
+(conguaglio). Per questo non è un sottocaso di `delete` (che porta a ELIMINATO, fuori da ogni vista,
+senza storia) né del `chiuso` di completamento (che presuppone i due assi esauriti). È un percorso
+proprio, e va rappresentato come tale.
+
+**Cosa registra la terminazione (dato strutturato):**
+
+| Campo | Ruolo | Stato oggi |
+|---|---|---|
+| `data_chiusura` | **quando** la terminazione ha effetto | ⚠️ **non esiste** (PRAGMA: solo `esito_rinnovo_il`, ortogonale, mai letto da `contract_state`) |
+| `motivo_chiusura` / `motivo_terminazione` | **perché/come** è chiuso: distingue *completamento* dalle terminazioni | ⚠️ **non esiste** |
+
+**Tassonomia dei motivi** (CHIUSO è sempre qualificato):
+
+| Famiglia | Motivo | Quando | Cassa |
+|---|---|---|---|
+| *Completamento* | `completamento` (implicito/default dell'auto-close) | saldato + esaurito | — |
+| *Post-scadenza* (§7-G5) | `sedute_decadute` · `saldo_a_perdere` | contratto **già scaduto** (SOSPESO/ESAURITO), si regola il residuo | nessuna, o storno |
+| *Terminazione anticipata* (**v1.3**) | `recesso_cliente` · `risoluzione_trainer` · `chiusura_consensuale` | contratto **vivo** (ATTIVO/SOSPESO), tagliato a metà | **conguaglio** (rimborso e/o storno) |
+
+> **Distinguibilità obbligatoria.** *Completamento* e *terminazione* possono avere assi identici a
+> chiusura avvenuta (entrambi CHIUSO, entrambi a residuo zero dopo conguaglio). La differenza è **a
+> memoria** (il *perché*), esattamente come ATTIVO è derivato ma «perso» è a memoria (§4.1). Perciò
+> CHIUSO **non** ottiene un quinto stato di vita derivato: resta CHIUSO, **qualificato** dal motivo.
+> Appiattire terminazione e completamento nello stesso CHIUSO indistinto è la perdita-di-informazione
+> che il consolidamento esiste per evitare (ed è ciò che rende i 3 contratti muti irriconoscibili oggi).
+
+> **`esito_rinnovo` ≠ `motivo_chiusura` (ortogonali — chiarito post-bridge).** `non_rinnova` **NON** è
+> un motivo di chiusura: è un marker di **retention a livello cliente** (campo **esistente**
+> `esito_rinnovo_motivo`) che dice «niente nuovo contratto» e fa **uscire il cliente dal win-back** —
+> **non chiude** il contratto corrente, che resta nel suo stato di vita (tipicamente SOSPESO/ESAURITO)
+> finché le sue assi aperte non sono regolate. Verificato sul codice: l'esito di rinnovo scrive
+> `esito_rinnovo_motivo` e **lascia il contratto aperto** (`test_clients_to_recover`: il contratto
+> resta, è solo escluso dal win-back). `motivo_chiusura` è invece il motivo per cui **IL CONTRATTO**
+> diventa CHIUSO. I due **coesistono** a tempi e per ragioni diverse: un cliente può prima dichiarare
+> `non_rinnova` (retention) e **poi** il suo contratto SOSPESO chiudersi per `sedute_decadute`
+> (chiusura). **Sono due campi distinti, da non fondere.** Quando esiste già un esito di rinnovo,
+> chiudere il contratto è un atto separato che valorizza `motivo_chiusura`.
+
+#### Il conguaglio — funzione pura, su base SEDUTE
+
+Al momento della terminazione una **funzione pura** (famiglia `contract_state.py`, niente DB) calcola
+il **conguaglio**. La particolarità del dominio PT rispetto al SaaS è la **base di calcolo**: il SaaS
+prora sul **tempo** (giorni usati / giorni totali); un pacchetto PT prora sulle **sedute**. Il valore
+da regolare non è "i giorni che mancano alla scadenza" ma "le **sedute** pagate e non erogate". È
+l'asse crediti che torna protagonista.
+
+```
+valore_servizio_reso = f(sedute_erogate, policy_prezzo_seduta)   # policy = DECISIONE APERTA
+conguaglio           = valore_servizio_reso − totale_versato      # cassa sul servizio reso
+```
+
+| `conguaglio` | Significato | Gamba |
+|---|---|---|
+| **< 0** | il cliente ha **versato più** del servizio reso | **RIMBORSO** (il trainer restituisce `−conguaglio`) |
+| **> 0** | il cliente ha **ricevuto più** di quanto versato | **da incassare** (G6) **oppure STORNO** (`saldo_a_perdere`) |
+| **= 0** | pari e patta | solo chiusura |
+
+In parallelo, la **quota non erogata** del contratto (`prezzo − valore_servizio_reso`) è **annullata**
+(non sarà mai erogata): è lo **storno** che porta `residuo` a **zero** (§9.5). Le due gambe sono
+simmetriche e corrispondono alla distinzione contabile **rimborso ≠ nota di credito**:
+
+- **Gamba RIMBORSO (cassa esce).** `conguaglio < 0` → movimento **USCITA** datato di categoria
+  **`RIMBORSO_CONTRATTO`** (con `id_contratto`) + `totale_rimborsato += −conguaglio`. È un **rimborso**:
+  contante che torna al cliente. `totale_versato` **non si tocca**; il netto emerge da
+  `netto_incassato = versato − rimborsato`.
+- **Gamba STORNO (cassa non si muove).** la quota non erogata e/o il dovuto a cui il trainer rinuncia
+  (`saldo_a_perdere`) si **stornano**: si **riduce il dovuto** senza movimento di cassa e **senza
+  riscrivere `prezzo_totale`** (che resta la verità della *competenza/venduto*, §8). È una **nota di
+  credito**: riduce un debito, non restituisce contante. Porta `residuo` a 0. Inoltre: le **rate future
+  PENDENTI** del contratto si **soft-deletano** (non più dovute) — §7-G7, prerequisito Forecast.
+
+> **Esempio compatto.** Pacchetto da 20 sedute, prezzo 1000, prepagato `versato = 700`. Il cliente fa 4
+> sedute, poi recede. Con policy "pro-sedute a prezzo di pacchetto" → `valore_servizio_reso = 200`.
+> `conguaglio = 200 − 700 = −500` → **rimborso 500** (USCITA `RIMBORSO_CONTRATTO`, `totale_rimborsato =
+> 500`). La quota mai erogata e mai incassata (`prezzo − versato = 300`) si **storna**. Esito:
+> `netto_incassato = 700 − 500 = 200` (= valore reso ✓), `residuo = 0` ✓. `totale_versato` resta 700,
+> `prezzo_totale` resta 1000 (il *venduto* storico non cambia).
+
+> **`residuo` e il debito-fantasma — la trappola da evitare.** NON calcolare mai `residuo = prezzo −
+> (versato − rimborsato)`: nell'esempio darebbe `1000 − 200 = 800`, cioè il sistema affermerebbe che il
+> cliente **deve ancora 800** dopo che gli hai **restituito** denaro. È il debito *inventato*, speculare
+> al debito *nascosto* dei 3 contratti muti. La verità è che la terminazione **regola** tutto: dopo di
+> essa `residuo ≡ 0` (§9.5). Il `residuo` formula `prezzo − versato` vale per i contratti **non**
+> terminati; per i terminati è zero per costruzione (rimborso) o via storno (write-off).
+
+#### Decisione Strada B (vincolante)
+
+Tra le due architetture possibili per la verità del "netto incassato" dopo un rimborso, è scelta la
+**Strada B**:
+
+- **Movimento di denaro sacro** (disciplina della Strada A dove conta): il rimborso è una **USCITA
+  datata immutabile** nel mastro, **mai** una cancellazione né una modifica dell'ENTRATA originale —
+  stesso principio dello `STORNO_SPESA_FISSA` (compensa, non cancella).
+- **Proiezione KPI pragmatica** (niente refactoring totale): i KPI contrattuali continuano a leggere i
+  **campi del Contract** (`totale_versato`, `residuo`, e ora `totale_rimborsato`/`netto_incassato`),
+  **non** si riscrivono per derivare dal mastro. `totale_rimborsato` è il **ponte** che rende il
+  rimborso visibile ai KPI senza migrare ogni query al ledger.
+- **Contropartita non negoziabile (§9.5):** il rimborso scrive in **due posti in una sola transazione
+  atomica** — USCITA nel mastro **e** `totale_rimborsato` sul Contract — *o entrambi o nessuno*, così
+  mastro e Contract **non divergono mai**. Questo è l'invariante che tiene in piedi la scelta.
+
+#### Policy di rimborso — DECISIONE APERTA (non blocca il modello)
+
+Il modello fissa *che* l'evento esiste e *che forma* ha. I **numeri** della policy restano da chiudere
+con **tributarista/legale** prima dell'implementazione del blocco:
+
+1. **Rimborso pro-sedute come default sì/no.** I pacchetti PA prepagati assomigliano più
+   all'abbonamento annuale (importo significativo, prepagato → rimborso atteso) che al mensile (servizio
+   fino a fine periodo, nessun rimborso). Default plausibile: **pro-sedute**, ma è scelta contrattuale.
+2. **Prezzo di valorizzazione delle sedute usate.** Listino pieno o prezzo scontato del pacchetto? Un
+   cliente che recede dopo le prime sedute di un pacchetto scontato deve indietro **meno** se le sedute
+   usate si valorizzano a prezzo pieno. Cambia il numero del conguaglio.
+3. **Recesso del consumatore (legge IT).** Il recesso ha tutele specifiche; va verificato l'inquadramento.
+
+Finché la policy non è chiusa, la **funzione di conguaglio** ha **forma** definita (input: contratto,
+data di efficacia, policy; output: numero con segno; base: sedute) ma il **parametro policy** è aperto.
 
 ---
 
@@ -96,6 +295,8 @@ Tre termini erano usati con significati diversi → d'ora in poi:
 | **aperto** | `chiuso = False` (qualsiasi stato di vita tranne CHIUSO/ELIMINATO) |
 | **attivo** | stato di vita **ATTIVO** (= aperto **e** vigente). **MAI** "attivo = chiuso==False" |
 | **scaduto** | `data_scadenza < oggi` (asse tempo) — è una *condizione*, non uno stato di vita |
+| **terminazione** (v1.3) | chiusura **per decisione umana di un contratto vivo** (recesso/risoluzione/consensuale), con conguaglio — **distinta** dal *completamento* (auto-close) e dalla *consunzione* (scadenza). CHIUSO è sempre qualificato dal `motivo_chiusura` |
+| **conguaglio** (v1.3) | regolamento economico della terminazione, calcolato **sulle sedute**; segno: `<0` rimborso al cliente, `>0` dovuto dal cliente, `=0` pari |
 
 ### 4.1 Rollup cliente — natura MISTA: derivato + a memoria
 
@@ -122,7 +323,8 @@ a memoria). Non confonderle:
 - **lapsed → si raffredda**: è un'*opportunità*; dopo la soglia churn + ultimo richiamo, esce dalla
   worklist calda (diventa freddo). La worklist win-back non cresce all'infinito.
 - **SOSPESO → si scalda, non decade mai**: è un'*obbligazione* (gli devi sedute). Nessuna uscita
-  automatica; l'aging **aumenta** l'urgenza (segno invertito). Esce solo per decisione (estendi/decadi).
+  automatica; l'aging **aumenta** l'urgenza (segno invertito). Esce solo per decisione (estendi /
+  **chiudi con conguaglio** / decadi).
 
 ### 4.2 Costanti temporali (dichiarate UNA volta)
 
@@ -151,6 +353,10 @@ Su un contratto aperto, indipendente dallo stato di vita:
 
 "Rate non-saldate" = `stato ∈ {PENDENTE, PARZIALE}` (allineato all'aging).
 
+> **Contratti terminati (v1.3).** Un contratto CHIUSO per terminazione è **regolato** (settled): il
+> conguaglio ha portato `residuo` a 0 e le rate future sono soft-deleted. Non compare quindi in alcun
+> sotto-stato denaro "da pianificare / da incassare / rate scadute". Se compare, è un bug (§9.5).
+
 ---
 
 ## 6. Mappa worklist → derivazione (univoca, senza sovrapposizioni)
@@ -161,16 +367,37 @@ derivano da qui, senza doppi conteggi:
 | Worklist | Deriva da | Note |
 |---|---|---|
 | **In scadenza** | ATTIVO + `data_scadenza ≤ oggi+SOGLIA_IN_SCADENZA_GG` | rinnovo anticipato |
-| **Contratti sospesi (sedute)** | **SOSPESO** | unità = contratto; estendi/decadi; **non decade, urgenza ↑** |
+| **Contratti sospesi (sedute)** | **SOSPESO** | unità = contratto; **estendi / chiudi-con-conguaglio / decadi**; **non decade, urgenza ↑** |
 | **Clienti da recuperare (win-back)** | cliente **lapsed CALDO** (non freddo, non perso) | unità = cliente; rappresentante = contratto più recente in assoluto; esce quando freddo (§4.1) |
 | **Da pianificare (rate)** | **ATTIVO** + `da pianificare` | **solo ATTIVO** (vedi §7 G1) |
 | **Da incassare (scaduto)** | (SOSPESO o ESAURITO) + `residuo > 0` | incasso diretto, non pianificabile a rate |
 | **Rate scadute / aging** | Rate non-saldate oltre scadenza | rate-first |
 | **Andamento (cassa/competenza)** | libro mastro datato | ortogonale (vedi §8) |
 
+> **Le tre azioni su un SOSPESO (v1.3).** Chiudere un SOSPESO non è binario. Sono **tre** esiti distinti,
+> e la UX del Blocco 3 va disegnata per accoglierli tutti e tre fin dall'inizio:
+> 1. **Estendi** — sposta `data_scadenza` avanti: il SOSPESO torna ATTIVO, le sedute restano erogabili.
+> 2. **Chiudi con conguaglio** (`recesso_cliente` / `chiusura_consensuale`) — il cliente non userà le
+>    sedute residue e **vuole indietro** il prepagato → terminazione con **gamba rimborso** (§3.1).
+> 3. **Decadi** (`sedute_decadute`) — le sedute residue sono **forfettate**, nessun rimborso → chiusura
+>    con **gamba storno** a saldo zero di cassa.
+> «Estendi vs decadi» (v1.2) era una falsa dicotomia: mancava la terza via, il rimborso.
+>
+> **⚠️ Design-scope ≠ build-scope (precisato post-bridge).** La UX del Blocco 3 si **disegna** per
+> accogliere tutte e tre fin dall'inizio (i tre bottoni esistono), ma solo **Estendi** è
+> **costruibile** nel Blocco 3 (`update_contract` su `data_scadenza`: niente cassa, niente schema
+> nuovo). Le **due gambe di chiusura** — *Chiudi con conguaglio* (rimborso, infra G7) e *Decadi*
+> (storno del residuo, G7 / G5-mai-implementato) — atterrano **col blocco terminazione**, dove vivono
+> i campi schema (`data_chiusura`, `motivo_chiusura`) e la macchina del conguaglio. **Anche «Decadi a
+> `residuo` zero»** (pura chiusura+motivo, senza cassa) resta lì: spezzare la migrazione dello
+> schema-di-chiusura per anticipare un solo sotto-caso frammenta una superficie che va costruita **come
+> unità coerente**. Quindi: **Blocco 3 = worklist + Estendi**; ogni *chiusura* (qualsiasi gamba,
+> qualsiasi `residuo`) = **blocco terminazione**. Nel Blocco 3 i due bottoni di chiusura si mostrano
+> **disabilitati con affordance** «disponibile a breve».
+
 ---
 
-## 7. Lacune risolte a livello di modello (G1–G5)
+## 7. Lacune risolte a livello di modello (G1–G7)
 
 - **G1 — residuo su contratto scaduto NON è "da pianificare".** La guardia rate vieta rate oltre
   `data_scadenza` (passata) → su SOSPESO/ESAURITO non si può creare una rata. Quindi **"da pianificare"
@@ -179,7 +406,7 @@ derivano da qui, senza doppi conteggi:
   - **⚠️ DEBITO già in codice**: `orphan_contracts`/`contracts-to-plan` (SPEC_RINNOVO, già implementati)
     filtrano `chiuso=False + residuo>0 + zero rate` **senza** restrizione di vigenza → includono i
     SOSPESO/ESAURITO e offrono l'azione impossibile. **Da correggere** (restringere ad ATTIVO) — primo
-    fix che il modello fa emergere nel codice esistente.
+    fix che il modello fa emergere nel codice esistente. *(Stato: chiuso nel Blocco 1.)*
 - **G2 — niente worklist sovrapposte.** Classificazione = **1 stato di vita primario** + flag denaro.
   Un SOSPESO con residuo e zero rate è in "Contratti sospesi" (primario) e "Da incassare (scaduto)"
   (flag denaro) — **mai** in "Da pianificare" (riservato ad ATTIVO).
@@ -190,22 +417,72 @@ derivano da qui, senza doppi conteggi:
   cliente**, non solo il link. (Implementazione differita; concetto + costante fissati qui.)
 - **G4 — KPI "attivi".** `kpi_attivi` deve contare lo stato **ATTIVO** (aperto+vigente), non
   `chiuso==False`. I contratti aperti-non-attivi (SOSPESO/ESAURITO) si mostrano separati. Tutti i KPI
-  derivano da `contract_state()`.
-- **G5 — chiusura/terminazione con motivo.** Ogni terminazione per **decisione umana** registra un
-  esito+motivo (dato strutturato): `non_rinnova` (cliente perso), `sedute_decadute` (sospeso, sessioni
-  forfettate), `saldo_a_perdere` (residuo abbonato). Coerente con `esito_rinnovo_motivo` (§ SPEC).
-  Niente terminazioni mute.
-- **G6 — manca il pagamento DIRETTO del residuo (v1.2, da Obs bridge).** Oggi si incassa **solo via
-  Rata** (nessun endpoint di pagamento diretto sul contratto) e su uno **scaduto** non si può creare
-  una rata (guardia G1). Quindi un residuo **non rateizzato** su contratto scaduto è **non incassabile**
-  (verificato sul dato reale: Dalila c25, 20€ residuo non su rata) → "da incassare (scaduto)" lo
-  mostrerebbe **senza azione** (fantasma in worklist). **Fix:** azione "incassa residuo" diretta
-  (CashMovement legato al contratto + `totale_versato` += importo + auto-close), che rende azionabile
-  "da incassare (scaduto)".
-- **Verifica auto-close su scaduto (Obs bridge): ✓ confermata.** `pay_rate` auto-close è
-  **date-independent** (`rates.py:559-570`): incassare l'ultimo residuo di un ESAURITO (saldato +
-  crediti esauriti) lo porta a CHIUSO anche se scaduto → nessun ESAURITO-fantasma a residuo zero.
-  (Test di confine da aggiungere, come "scade oggi".)
+  derivano da `contract_state()`. *(Stato: chiuso nel Blocco 2.)*
+- **G5 — chiusura/terminazione con motivo.** Ogni chiusura per **decisione umana** registra un
+  `motivo_chiusura` (dato strutturato): `sedute_decadute` (sospeso, sessioni forfettate),
+  `saldo_a_perdere` (residuo abbonato), più i tre di **terminazione anticipata** (§3.1). Niente
+  terminazioni mute.
+  - **⚠️ `non_rinnova` NON è un motivo di chiusura (corretto post-bridge).** È un marker di **retention
+    a livello cliente** (`esito_rinnovo_motivo`, campo **esistente**), su un asse **ortogonale** al
+    `motivo_chiusura`: **non chiude** il contratto (verificato: `test_clients_to_recover` — il
+    contratto resta aperto, è solo escluso dal win-back). I due campi coesistono per ragioni diverse
+    (§3.1). La v1.2 li elencava insieme; qui sono separati.
+  - **⚠️ Esteso in v1.3 (G7).** I motivi G5 coprono le decisioni **post-scadenza** (contratto già
+    SOSPESO/ESAURITO). La v1.3 aggiunge i motivi di **terminazione anticipata** (contratto **vivo**) e,
+    soprattutto, la **macchina del conguaglio** (rimborso in cassa) che G5 non aveva — G5 prevedeva solo
+    storni/forfait, **mai un'uscita di cassa verso il cliente**. Inoltre: **G5 non è mai stato
+    implementato** (lo storno del residuo con motivo non esiste in codice) → il meccanismo di storno
+    della gamba write-off (§3.1) e G5 si **unificano** nel blocco di terminazione.
+- **G6 — manca il pagamento DIRETTO del residuo (v1.2).** Oggi si incassa **solo via Rata** e su uno
+  **scaduto** non si può creare una rata (guardia G1). Quindi un residuo **non rateizzato** su contratto
+  scaduto è **non incassabile** (verificato: Dalila c25, 20€). **Fix:** azione "incassa residuo" diretta
+  (CashMovement legato al contratto + `totale_versato` += importo + auto-close).
+  - **Verifica auto-close su scaduto: ✓ confermata.** `pay_rate` auto-close è **date-independent**
+    (`rates.py:559-570`): incassare l'ultimo residuo di un ESAURITO lo porta a CHIUSO anche se scaduto →
+    nessun ESAURITO-fantasma a residuo zero.
+  - **Dipendenza con G7.** Il rimborso (G7) è cassa **diretta in uscita** sul contratto; G6 costruisce
+    la prima cassa **diretta in entrata** sul contratto. **Stesso pattern, segno opposto** → G7 riusa
+    l'infrastruttura di G6. **Sequenza vincolata: G6 prima, terminazione dopo.**
+
+- **G7 — terminazione anticipata con conguaglio (v1.3, NEW).** Il contratto non ha un percorso per
+  essere **chiuso a metà corsa con regolamento economico bidirezionale**. Conseguenze sul codice reale,
+  verificate in ricognizione:
+  - **Sta già succedendo muto.** 3 contratti (id **4, 9, 13**) sono `chiuso=1` con scadenza **futura**,
+    saldati, **tutti i crediti da erogare**, zero `rinnovo_di`/`esito`. Terminazione anticipata avvenuta
+    via `update_contract chiuso=true` (setattr generico, `contracts.py:646-648`) **senza** conguaglio né
+    traccia: il residuo/le sedute spariscono da "da incassare" mentre prezzo/versato/crediti restano →
+    **debito non cancellato, nascosto**. → **Remediation dati** (sotto).
+  - **Il rimborso è infrastruttura nuova.** Lo schema mastro regge una **USCITA con `id_contratto`**
+    senza migrazione (`movement.py:42-47`), ma **0 casi** esistono nel DB e `MovementManualCreate`
+    **vieta** `id_contratto` (`financial.py:327`). Va costruita: categoria `RIMBORSO_CONTRATTO`,
+    endpoint transazionale, registrazione del rimborso, storno del residuo, calcolo conguaglio.
+  - **I due sottosistemi finanziari non convergono — la terminazione li costringe a incontrarsi.**
+    Contratti/rate **cancellano** (soft-delete dell'ENTRATA: `contracts.py:754`, `rates.py:680`); le
+    spese **compensano** (storno immutabile: `recurring_expenses.py:588`). La terminazione corretta è
+    **ibrida**: **rimborso = nuovo movimento USCITA** (compensa, preserva la traccia fiscale); **rate
+    future = soft-delete** (cancella, già esistente). `delete_contract` (force+keep_payments) porta a
+    **ELIMINATO, non a CHIUSO-con-storia**: semantica sbagliata per una terminazione **visibile**.
+  - **La categoria deve essere classificata da un predicato esplicito.** La "whitelist cassa
+    contrattuale" **non esiste** come predicato in codice: le query partizionano per `id_contratto IS
+    NOT NULL`, non per categoria. Una USCITA contrattuale cadrebbe **automaticamente** in 3 aggregati di
+    uscite-variabili (misclassificata come **costo operativo**). → Il predicato "movimento contrattuale"
+    va reso **esplicito e bidirezionale** (entrata: ACCONTO/RATA; uscita: RIMBORSO) — dettaglio in
+    `TASSONOMIA_FINANZIARIA.md` §2/§7 (v1.2). **8 query** da allineare (mappate nella tassonomia).
+  - **Prerequisito Forecast.** Le rate **PENDENTI** su un contratto CHIUSO-non-eliminato sono proiettate
+    dal Forecast come **entrata certa fantasma** (filtra solo `deleted_at`, `movements.py:1432-1441`) →
+    la terminazione **deve soft-deletare le rate future**.
+  - **Prerequisito auditabilità.** La transizione `chiuso` oggi è auditata in modo **inaffidabile**
+    (`pay_rate` non logga `chiuso`, `rates.py:598-601`; l'agenda audita l'evento non il contratto). La
+    terminazione — l'evento **più importante da tracciare** legalmente — non può ereditare un audit
+    bucato. → **Auditabilità della transizione `chiuso` è prerequisito del blocco.**
+  - **Fork risolto (Strada B).** Verità del netto: campo `totale_rimborsato` immutabile sul Contract, KPI
+    sui campi, sync atomico mastro+Contract (§3.1, §9.5).
+  - **Remediation dati (id 4/9/13) — su DATO VIVO.** Una volta che il modello esiste e l'evento è
+    rappresentabile, i 3 contratti muti vanno regolarizzati: riconosciuti come terminazioni col loro
+    conguaglio **ricostruito**, oppure riaperti se la chiusura fu un errore. **Non si toccano** finché
+    il blocco non esiste. **Sono contratti reali di Chiara (dato di produzione):** la regolarizzazione è
+    una **procedura a sé** — **per-contratto, auditata, reversibile, mai uno script bulk** — da scrivere
+    come **runbook separato**, non come parte dell'implementazione del meccanismo.
 
 ---
 
@@ -213,9 +490,13 @@ derivano da qui, senza doppi conteggi:
 
 Ortogonale agli stati: misura il **flusso nel tempo**, non lo stato del contratto.
 - **Cassa** (primaria, forfettario): incassato su `CashMovement.data_effettiva`, ristretto alle categorie
-  contrattuali (`ACCONTO_CONTRATTO`+`PAGAMENTO_RATA`), **storni esclusi**; "Altri incassi" (fuori
-  contratto) separati; "cash flow reale" = somma.
+  contrattuali, **storni esclusi**; "Altri incassi" (fuori contratto) separati; "cash flow reale" = somma.
+  - **v1.3:** la cassa contrattuale diventa **bidirezionale** — gli **incassi da contratti** sono ora al
+    **netto dei rimborsi** (`RIMBORSO_CONTRATTO`). Il "cash flow reale dei contratti" passa da `Σ incassi`
+    a **`Σ incassi − Σ rimborsi`**. Dettaglio e formule: `TASSONOMIA_FINANZIARIA.md` §1/§2/§7 (v1.2).
 - **Competenza** (secondaria, commerciale): venduto su `Contract.data_vendita`. **Mai sommata alla cassa.**
+  - **v1.3:** la terminazione **non riscrive `prezzo_totale`** → il *venduto* storico resta integro
+    (un'altra ragione per cui lo storno usa un campo dedicato e non la riscrittura del prezzo, §3.1).
 - Confine §0 TASSONOMIA: cash management **neutro**, nessun campo/label codifica lo stato fiscale.
 
 Dettaglio completo e formule: `TASSONOMIA_FINANZIARIA.md` (resta valido; questo §8 è il puntatore).
@@ -224,10 +505,16 @@ Dettaglio completo e formule: `TASSONOMIA_FINANZIARIA.md` (resta valido; questo 
 
 ## 9. Invarianti (anti-perdita silenziosa)
 
-Nessuno di questi può sparire da una worklist senza **decisione umana esplicita**:
+Nessuno di questi può sparire da una worklist o da un conto senza **decisione umana esplicita**:
 1. **Denaro dovuto** (residuo > 0): da pianificare (ATTIVO) o da incassare (scaduto) o aging.
-2. **Sedute prepagate** (SOSPESO): estendi o decadi.
+2. **Sedute prepagate** (SOSPESO): estendi / chiudi-con-conguaglio / decadi.
 3. **Cliente lapsed**: recupera o "non rinnova".
+4. **Rimborso dovuto al cliente (v1.3)**: quando la terminazione produce un conguaglio a favore del
+   cliente (sedute prepagate non erogate), quel rimborso **non sparisce senza essere registrato**. È lo
+   **speculare** del SOSPESO: lì è il **cliente che deve al trainer** (gli devi le sedute), qui è il
+   **trainer che deve al cliente** (gli devi indietro il denaro). Un rimborso dovuto e non tracciato è
+   una **passività occulta** ed espone legalmente — la protezione che distingue il prodotto vale **anche
+   e di più** sul lato uscita.
 
 ### 9.4 Invariante delle transizioni indotte dal tempo (v1.1 — la lezione del SOSPESO)
 
@@ -245,8 +532,52 @@ stato e non gli dai casa, hai ricreato la perdita silenziosa.
 > **Push (futuro):** rilevamento attivo delle transizioni anche ad app chiusa (notifica) richiede un
 > always-on (FitManager Box / tunnel). Ora il pull-coverage è sufficiente per un'app locale.
 
+### 9.5 Invariante di coerenza del netto — Strada B (v1.3)
+
+La scelta Strada B (§3.1) mantiene **due rappresentazioni** del denaro effettivamente trattenuto: il
+**mastro** (somma firmata dei movimenti) e i **campi del Contract** (`totale_versato`,
+`totale_rimborsato`). Se divergono, il sistema **mente in silenzio**. Invarianti che lo impediscono:
+
+1. **`totale_versato` è LORDO e immutabile a ritroso**: `totale_versato == Σ ENTRATA(contratto)`. Un
+   rimborso **non lo riduce**.
+2. **Scrittura atomica del rimborso**: ogni rimborso scrive **in una sola transazione** sia la **USCITA
+   `RIMBORSO_CONTRATTO`** nel mastro sia l'incremento di **`totale_rimborsato`** sul Contract — *o
+   entrambi o nessuno*. Mastro e Contract non divergono mai.
+3. **Netto derivato**: `netto_incassato = totale_versato − totale_rimborsato`. È l'unica nozione di
+   "cassa trattenuta" sul contratto.
+4. **`residuo ≡ 0` dopo terminazione**: un contratto CHIUSO per terminazione è **regolato**. Il
+   conguaglio porta il residuo a zero — per costruzione nella gamba rimborso (versato già ≥ valore
+   reso), via **storno** nella gamba write-off (riduzione del dovuto **senza** riscrivere
+   `prezzo_totale`). **Mai** un residuo aperto né un debito **inventato** su un contratto terminato
+   (`residuo = prezzo − versato − storni`, non `prezzo − (versato − rimborsato)`). Le **rate future**
+   sono soft-deleted (no fantasmi nel Forecast).
+5. **Atomicità delle due gambe**: rimborso (cassa) e storno (dovuto) sono **due facce dello stesso
+   evento contabile** → **transazione unica, tutto-o-niente**. Mai denaro restituito con residuo ancora
+   dovuto, né viceversa.
+6. **`quota_stornata > 0 ⟹ chiuso = True`** (coupling reso esplicito, dal piano di strategia). Lo storno
+   avviene **solo** terminando (gamba write-off / decadenza), che accende `chiuso`; `reopen`/`unterminate`
+   lo azzerano. L'invariante è **load-bearing**: alcuni KPI calcolano il residuo **inline senza**
+   sottrarre `quota_stornata` e sono corretti **solo** perché filtrano i contratti aperti (`if not
+   chiuso`). Va **asserito/documentato** — oppure quelle formule migrano a `contract_state.residuo()`.
+   Un `quota_stornata > 0` su un contratto **aperto** è uno stato impossibile: se compare, è un bug.
+
 E: `kpi_incassato = Σ totale_versato` (NON somma del mastro); il cash flow reale (con Altri incassi)
 non riconcilia con `kpi_incassato` — è atteso (TASSONOMIA §3).
+
+> **Netto vs lordo per vista — enumerato, non «dove serve» (precisato post-bridge).** Appena esistono
+> rimborsi, una card «Incassato» che mostra `Σ totale_versato` (lordo) **sovrastima**. Quale vista usa
+> cosa è **decisione fissata qui**, non lasciata all'implementazione:
+>
+> | Vista | Base | Perché |
+> |---|---|---|
+> | Card «Incassato» / KPI incassato visualizzato | **netto** (`Σ netto_incassato`) | il trainer vuole sapere cosa ha **trattenuto** |
+> | Andamento cassa — serie contratti | **netto** per periodo (incassi − rimborsi) | TASSONOMIA §7 q#5 |
+> | Saldo / cash reale | **già netto** (l'USCITA sottrae da sé) | TASSONOMIA §7 q#1 |
+> | Venduto (competenza) | **`prezzo_totale`** (invariato) | i rimborsi non toccano la competenza |
+> | Reconciliation (interna) | `totale_versato` **LORDO** `== Σ ENTRATA` **+** `totale_rimborsato == Σ USCITA RIMBORSO` | è l'**àncora di consistenza**, non una vista «incassato»: resta sul lordo per definizione |
+>
+> Regola: ogni numero che il trainer legge come «quanto è entrato» dai contratti è **netto**; il
+> **lordo** sopravvive solo come **sorgente del netto** e **àncora della reconciliation**.
 
 ---
 
@@ -255,6 +586,9 @@ non riconcilia con `kpi_incassato` — è atteso (TASSONOMIA §3).
 - **Un modulo `contract_state()`** (es. `api/services/contract_state.py` o helper condiviso): data un
   contratto (+ crediti_usati), ritorna lo stato di vita + sotto-stato denaro. **Unica fonte** della
   derivazione; KPI, worklist, alert lo consumano. Vietato ricalcolare "attivo/scaduto" altrove.
+  - **v1.3:** stessa famiglia (funzioni pure, niente DB) ospita il **calcolo del conguaglio** (input:
+    contratto, data di efficacia, policy; output: numero con segno; base: sedute). Il **parametro
+    policy** è aperto finché non chiuso col tributarista.
 - Le viste/endpoint diventano *query + presentazione* sopra `contract_state()`.
 
 ---
@@ -264,12 +598,36 @@ non riconcilia con `kpi_incassato` — è atteso (TASSONOMIA §3).
 | Doc | Ruolo dopo questo modello |
 |---|---|
 | `FINANCIAL_DOMAIN_MODEL.md` (questo) | **SSoT**: entità, assi, stati, vocabolario, worklist, invarianti |
-| `TASSONOMIA_FINANZIARIA.md` | dettaglio asse cassa/competenza (referenziato §8) |
+| `TASSONOMIA_FINANZIARIA.md` | dettaglio asse cassa/competenza (referenziato §8) — **v1.2** include `RIMBORSO_CONTRATTO` e il predicato contrattuale bidirezionale |
 | `SPEC_RINNOVO_*`, `SPEC_*_TEMPORALE`, `SPEC_RINNOVI_SCADUTI_*` | solo *criteri di accettazione* della feature; **referenziano** stati/vocabolario di qui |
+| `SPEC_TERMINAZIONE_*` (da scrivere) | criteri di accettazione della terminazione anticipata; referenzia §3.1/§7-G7/§9.5; **dopo** che la policy di rimborso è chiusa |
 | `IMPL_PLAN_*` | effimeri; in `docs/archive/` a implementazione conclusa |
 | `ADR-014`, `ADR-015` | decisioni (immutabili) |
 
+> **Sequenza di implementazione (v1.3, precisata post-bridge).** Blocco 3 = **worklist sospesi +
+> Estendi** (la UX *disegna* le 3 azioni, §6; ma le due gambe di chiusura sono di G7) → Blocco 4
+> (**G6**, incasso diretto) → **Blocco terminazione** (**G7**, rimborso diretto + storno + **tutte** le
+> chiusure-con-motivo, riusa G6) → **remediation** dei 3 contratti muti (runbook a sé, §7-G7) → infine
+> **G1 — cifratura `crm.db`**, il **vero prossimo grande blocco**: l'unico con una scadenza che non
+> dipende da noi (dato sanitario, art. 9). Il finanziario rende il prodotto convincente, la cifratura
+> lo rende lecito.
+>
+> **Scope schema del blocco terminazione (per il piano).** **4 colonne plain** su `contratti` (nessuna FK
+> cross-DB, gemelle di `esito_rinnovo_motivo`): `totale_rimborsato`, **`quota_stornata`** (campo storno
+> **confermato** in ricognizione — azzera il `residuo` nella gamba write-off senza riscrivere
+> `prezzo_totale`; serve perché `residuo()` è letto anche nel dettaglio, §2/§3.1), `data_chiusura`,
+> `motivo_chiusura` (**enum da decidere** — vedi nota sotto) + la categoria movimento `RIMBORSO_CONTRATTO`.
+> Serve quindi: migrazione Alembic **e** `schema_sync` ADD-column per i DB **già deployati** (Chiara/Alessio)
+> + `ContractResponse` + il tipo frontend. Da mettere a piano.
+>
+> **⚠️ Decisione aperta — enum di `motivo_chiusura` (prima della migrazione).** Il piano di strategia lo
+> organizza per **esito economico** (`COMPLETAMENTO`/`CONSUNZIONE`/`TERMINAZIONE_RIMBORSO`/`TERMINAZIONE_DECADENZA`),
+> guida-gamba; §3.1 lo organizzava per **ragione** (`recesso`/`risoluzione`/`consensuale`). Sono **due assi
+> ortogonali** in un campo solo: va scelto **quale** vive in `motivo_chiusura` (l'esito è load-bearing, guida
+> la gamba; la ragione, se serve per le analytics, va in un campo/nota separato), e il modello e l'enum del
+> codice **devono coincidere** prima che la colonna atterri. Decisione di Giacomo.
+
 ## 12. Bridge rule
 
-Modifiche al modello (nuovo stato, nuova worklist, nuovo invariante) → qui prima, poi le spec/codice.
-Output non banale → learning capture + `BUILD_LOG.md`.
+Modifiche al modello (nuovo stato, nuova worklist, nuovo invariante, nuovo evento di dominio) → qui
+prima, poi le spec/codice. Output non banale → learning capture + `BUILD_LOG.md`.
