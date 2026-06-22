@@ -968,3 +968,46 @@ fix tz (d77c3fe `completed_today_count`): *salvato in un fuso, confrontato in un
 valutato a un altro*.
 
 ---
+
+### 2026-06-23 — CHECKPOINT RESUME: 3 decisioni audit Contract risolte + stato sessione (tighten-first)
+
+**Stato branch:** `FitManager_Studio` interamente verde — **528 passed / 1 xfailed / 0 failed**. Tre commit
+in questa sessione: `d934948` (PREREQ-prezzo + audit), `631a3fd` (fix flaky workspace), + questo doc-align.
+
+**Le 3 decisioni aperte dell'audit — RISOLTE (analisi workflow 3 agenti code-grounded → scelte di Giacomo):**
+
+1. **`data_scadenza` nullable → SÌ, permetti NULL a creazione.** I pacchetti/carnet **senza scadenza**
+   (contratto perpetuo a crediti) sono un'offerta reale. Il SSoT li gestisce già (null-safe end-to-end);
+   l'unico punto che li vieta è il boundary `ContractCreate` + form. **Decisione: aprire il boundary**
+   (`data_scadenza` opzionale in `ContractCreate` + form con "Senza scadenza" + label "Senza scadenza" in
+   `ContractsTable`/dettaglio). Zero migrazione DB (colonna già nullable). **Impl pendente** (tighten-first,
+   bounded). Registrata in FDM §2.
+
+2. **`chiuso` via `ContractUpdate` → rimozione RIMANDATA a G7.** Nessuna UI live chiude via PUT (bottoni
+   manuali già `disabled`); ~15 test usano `PUT chiuso=True` come scorciatoia. Toglierlo ora = ponte
+   temporaneo che G7 butterebbe via. In **G7** nascono `terminate`/`close` con motivo+conguaglio → si toglie
+   `chiuso` da update e i 15 test migrano **una volta sola** al canale definitivo + si sistema l'auto-reopen
+   cieco (`test_lifecycle_audit` xfail bridge §6). Il leak grave (credito-fantasma) è già chiuso dal PREREQ.
+
+3. **type-honesty (NOT NULL / ORM non-Optional) → RIMANDATO, resta boundary-only.** L'integrità è già
+   incassata al boundary (entrambi i write-path passano da `ContractCreate`). `NOT NULL` su SQLite = rebuild
+   della tabella **più referenziata** del dominio al boot sui DB di clienti reali, gated su zero-NULL che è
+   **empiricamente falso** per `crediti_totali` (4 NULL nei backup di marzo). Rischio sproporzionato a una
+   pulizia cosmetica mentre la priorità è G1 (cifratura). Allineato a ciò che FDM §9.5.7 già prescrive
+   (ORM Optional + guardie annotate). Se mai in futuro: solo TIPO Response/TS, MAI NOT NULL DB, `crediti_totali`
+   per ultimo e solo dopo backfill + audit zero-NULL per-cliente.
+
+**⏭️ RIPRESA DA QUI (domani), in ordine:**
+- **(a)** Implementare **data_scadenza-null** (decisione 1) — bounded: schema `ContractCreate` opzionale +
+  validator condizionale + `ContractForm` (checkbox "Senza scadenza") + label "Senza scadenza" in lista/dettaglio
+  + test. Chiude la contraddizione cross-layer.
+- **(b)** **Riordino doc** (resto di option-2): archiviare gli `IMPL_PLAN_*` implementati in `docs/archive/`;
+  **riconciliare il drift del FDM su Desktop** (la copia `…/svil/learning_method/FINANCIAL_DOMAIN_MODEL.md` è
+  indietro rispetto al repo — il **canonico è il repo `docs/technical/`**; allineare o dismettere la copia Desktop).
+- **(c)** Poi **G6** (incassa residuo diretto), poi **G7** (terminazione + i rimandi sopra), poi **G1** (cifratura).
+
+**Audit invarianti Contract = "regole ferme" completato:** ~85% delle regole erano già enforced al boundary;
+buco prezzo chiuso (PREREQ), 1 contraddizione decisa (data_scadenza), 2 rimandi consapevoli (chiuso/type) con
+home in G7/§9.5.7. Niente rewrite: tighten-first ha consolidato senza buttare via il modello sano.
+
+---

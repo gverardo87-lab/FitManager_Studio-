@@ -92,6 +92,15 @@ Un contratto si "esaurisce" lungo **tre assi distinti**, che NON vanno confusi:
 - **`residuo = max(prezzo_totale − totale_versato, 0)`**. `totale_versato` riconciliabile col mastro
   (`ReconciliationResponse`).
 
+> **`data_scadenza = NULL` = "pacchetto senza termine" è un caso di prodotto REALE (decisione audit 2026-06-23).**
+> Il SSoT tratta già NULL come *contratto perpetuo* (`is_vigente` NULL→True, `contract_lifecycle` NULL→ATTIVO
+> permanente; tutti i guard rate/KPI/aging sono già null-safe). La contraddizione cross-layer — il boundary
+> `ContractCreate` **vieta** NULL mentre modello e SSoT lo **ammettono** — si risolve **aprendo il boundary**:
+> `ContractCreate` + form da rendere `data_scadenza` **opzionale** (impl pendente; zero migrazione DB, colonna
+> già nullable). NULL **non è "legacy"**: è first-class. *(Altre decisioni audit Contract 2026-06-23 — non
+> model-level: `chiuso`-via-update → rimozione rimandata a G7; type-honesty NOT NULL/ORM → rimandato, resta
+> boundary-only [§9.5.7]. Dettaglio e razionale in `BUILD_LOG.md`.)*
+
 > **Asse denaro — il netto (v1.3, decisione Strada B).** `totale_versato` è e resta **LORDO cumulativo**
 > (somma di tutto ciò che è entrato, invariante `totale_versato == Σ ENTRATA` del mastro per il
 > contratto). Su questo **non si scrive mai a ritroso**: ridurre il lordo = riscrivere il passato e far
