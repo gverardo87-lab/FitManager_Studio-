@@ -555,3 +555,46 @@ def test_renew_chain_items_carry_lifecycle(client, auth_headers, sample_contract
     children = rp.json()["rinnovi_successivi"]
     assert children and children[0]["id"] == renewed_id
     assert children[0]["lifecycle"] in valid_life
+
+
+# ── PREREQ-prezzo (FDM §9.5.7): invariante prezzo_totale > 0 ──
+
+
+def test_create_contract_zero_price_rejected(client, auth_headers, sample_client):
+    """AC-B1/B2: POST con prezzo_totale=0 → 422 con messaggio italiano didattico, contratto NON creato."""
+    r = client.post("/api/contracts", json={
+        "id_cliente": sample_client["id"],
+        "tipo_pacchetto": "Senza prezzo",
+        "crediti_totali": 10,
+        "prezzo_totale": 0.0,
+        "data_inizio": "2026-07-01",
+        "data_scadenza": "2026-12-31",
+        "acconto": 0.0,
+    }, headers=auth_headers)
+    assert r.status_code == 422
+    # AC-B2: messaggio IT didattico (non default Pydantic), comunica il perché (coperture/incassi)
+    body = str(r.json()).lower()
+    assert "prezzo" in body and "copertur" in body
+
+
+def test_update_contract_zero_price_rejected(client, auth_headers, sample_contract):
+    """Leak di update chiuso: PUT con prezzo_totale=0 → 422 (non si azzera il prezzo a posteriori)."""
+    r = client.put(f"/api/contracts/{sample_contract['id']}", json={
+        "prezzo_totale": 0.0,
+    }, headers=auth_headers)
+    assert r.status_code == 422
+    assert "prezzo" in str(r.json()).lower()
+
+
+def test_renew_zero_price_rejected(client, auth_headers, sample_contract, sample_client):
+    """AC-B3: renew_contract usa ContractCreate → eredita il vincolo prezzo>0."""
+    r = client.post(f"/api/contracts/{sample_contract['id']}/renew", json={
+        "id_cliente": sample_client["id"],
+        "tipo_pacchetto": "Rinnovo senza prezzo",
+        "crediti_totali": 10,
+        "prezzo_totale": 0.0,
+        "data_inizio": "2027-01-01",
+        "data_scadenza": "2027-12-31",
+        "acconto": 0.0,
+    }, headers=auth_headers)
+    assert r.status_code == 422

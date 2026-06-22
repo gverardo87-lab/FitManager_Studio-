@@ -351,7 +351,7 @@ Su un contratto aperto, indipendente dallo stato di vita:
 
 | Sotto-stato | Derivazione |
 |---|---|
-| **saldato** | `residuo = 0` |
+| **saldato** | `residuo = 0` — **sempre e solo** "pagato" grazie all'invariante `prezzo > 0` (§9.5.7): mai "prezzo mancante" |
 | **da pianificare** | `residuo > 0` e nessuna Rata (zero rate non eliminate) |
 | **parzialmente pianificato** | rate presenti ma `Σ residui rate non-saldate < residuo` |
 | **pianificato** | `Σ residui rate non-saldate ≈ residuo` |
@@ -602,6 +602,24 @@ La scelta Strada B (§3.1) mantiene **due rappresentazioni** del denaro effettiv
    > le chiusure passano solo da `terminate`/`close` (che scrivono il motivo), `reopen` resta. Così la
    > «chiusura-manuale-senza-motivo» **non esiste più**, la collisione del `NULL` sparisce, e il test va riscritto
    > su una terminazione vera. Elimina la categoria di stati ambigui alla radice (costo: schema-input + call-site).
+7. **`prezzo_totale > 0` per ogni contratto creato** (invariante di creazione — PREREQ-prezzo di G6).
+   Un contratto **esiste** solo con un prezzo strettamente positivo: è l'atto che attiva le coperture
+   (assicurative/fiscali) e abilita gli incassi. Conseguenza: l'equivalenza `residuo = 0 ⟺ saldato` (§5) è
+   vera **senza asterischi** — `residuo = 0` significa **sempre e solo** "saldato", **mai** "prezzo mai posto".
+   Un `prezzo_totale` nullo/zero su un contratto **non eliminato** è uno stato **impossibile**: se compare è
+   un bug (o un legacy pre-invariante da bonificare). Enforce **al boundary** (`ContractCreate` **e**
+   `ContractUpdate`, `api/schemas/financial.py`, messaggio IT didattico); il tipo ORM resta `Optional` (legacy
+   ammesso) ⇒ le due guardie di consumo del frontend (Giro 1, `prezzo != null`) restano come
+   **difesa-in-profondità a costo zero** — annotate, non da rimuovere.
+
+   > **Simmetria credito-/debito-fantasma — `residuo` ha UN solo significato.** Ai due estremi dell'asse denaro
+   > la stessa disciplina: il **debito-fantasma** (residuo che afferma un dovuto inesistente dopo un rimborso) si
+   > chiude con un **campo dedicato** (§9.5.6, `quota_stornata`) perché quello stato *deve* esistere; il
+   > **credito-fantasma** (residuo 0 che afferma "pagato" senza prezzo) si chiude con un **invariante a monte**
+   > (questo §9.5.7, `prezzo > 0`) perché quello stato **non deve** esistere. La decisione di design che separa le
+   > due strade: *stato di processo* (legittimamente incompleto → sotto-stato + worklist) vs *vincolo di integrità*
+   > (non deve mai esistere → validazione a monte). Qui il dominio («niente prezzo = niente contratto/coperture»)
+   > qualifica il caso come integrità ⇒ invariante, non un sesto sotto-stato.
 
 E: `kpi_incassato = Σ totale_versato` (NON somma del mastro); il cash flow reale (con Altri incassi)
 non riconcilia con `kpi_incassato` — è atteso (TASSONOMIA §3).

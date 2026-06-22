@@ -198,7 +198,9 @@ export function ContractsTable({
                     </div>
                   </TableCell>
 
-                  {/* ── Pagamenti (asse denaro, hidden mobile) — prezzo assente: niente "Saldato" (AC-12b) ── */}
+                  {/* ── Pagamenti (asse denaro) — prezzo assente → "—", mai "Saldato" (AC-12b).
+                       Difesa-in-profondità vs eventuale legacy prezzo-nullo: l'invariante PREREQ-prezzo
+                       (FDM §9.5.7) rende il caso irraggiungibile sui nuovi. NON rimuovere. ── */}
                   <TableCell className="hidden sm:table-cell">
                     {contract.prezzo_totale != null ? (
                       <ContractMoneyBadge money={contract.money_substate} />

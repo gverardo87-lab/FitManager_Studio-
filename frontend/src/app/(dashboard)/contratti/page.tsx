@@ -170,7 +170,8 @@ function matchesSituazione(c: ContractListItem, key: string): boolean {
     case "rate_scadute":
       return c.ha_rate_scadute && !c.chiuso; // SSoT-derived (AC-1b); i chiusi sono settled (FDM §5)
     case "saldati":
-      // prezzo assente → non è "saldato" (AC-12b)
+      // prezzo assente → non è "saldato" (AC-12b). Difesa-in-profondità vs legacy prezzo-nullo:
+      // l'invariante PREREQ-prezzo (FDM §9.5.7) lo rende irraggiungibile sui nuovi. NON rimuovere.
       return c.prezzo_totale != null && c.money_substate === "saldato";
     default:
       return false;

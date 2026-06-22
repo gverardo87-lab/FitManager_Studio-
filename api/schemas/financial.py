@@ -40,6 +40,16 @@ VALID_PAYMENT_STATUSES = {"PENDENTE", "PARZIALE", "SALDATO"}
 # CONTRACT SCHEMAS
 # ════════════════════════════════════════════════════════════
 
+# Invariante di dominio (FDM §9.5.7, PREREQ-prezzo di G6): «niente prezzo = niente contratto».
+# Un contratto è l'atto che attiva le coperture (assicurative/fiscali) e abilita gli incassi;
+# senza prezzo strettamente positivo non è ancora un contratto. Messaggio didattico in italiano
+# (regola #9), riusato da create e update — il software insegna il principio, non vomita un 422 crudo.
+PREZZO_OBBLIGATORIO_MSG = (
+    "Definisci un prezzo per il contratto: senza un prezzo concordato non si attivano "
+    "le coperture (assicurative e fiscali) e non è possibile registrare incassi."
+)
+
+
 class ContractCreate(BaseModel):
     """
     Schema per creazione contratto.
@@ -52,7 +62,7 @@ class ContractCreate(BaseModel):
     id_cliente: int = Field(gt=0)
     tipo_pacchetto: str = Field(min_length=1, max_length=100)
     crediti_totali: int = Field(ge=1, le=1000)
-    prezzo_totale: float = Field(ge=0, le=1_000_000)
+    prezzo_totale: float = Field(le=1_000_000)  # > 0 imposto nel validator (messaggio didattico, FDM §9.5.7)
     data_inizio: date
     data_scadenza: date
     acconto: float = Field(default=0, ge=0, le=1_000_000)
@@ -61,7 +71,9 @@ class ContractCreate(BaseModel):
 
     @model_validator(mode="after")
     def validate_dates_and_acconto(self):
-        """Validazione cross-field: date coerenti + acconto <= prezzo."""
+        """Validazione cross-field: prezzo > 0 (invariante) + date coerenti + acconto <= prezzo."""
+        if self.prezzo_totale <= 0:
+            raise ValueError(PREZZO_OBBLIGATORIO_MSG)
         if self.data_scadenza <= self.data_inizio:
             raise ValueError("data_scadenza deve essere dopo data_inizio")
         if self.acconto > self.prezzo_totale:
@@ -86,11 +98,20 @@ class ContractUpdate(BaseModel):
 
     tipo_pacchetto: Optional[str] = Field(None, min_length=1, max_length=100)
     crediti_totali: Optional[int] = Field(None, ge=1, le=1000)
-    prezzo_totale: Optional[float] = Field(None, ge=0, le=1_000_000)
+    prezzo_totale: Optional[float] = Field(None, le=1_000_000)  # > 0 se presente (chiude il leak di update, FDM §9.5.7)
     data_inizio: Optional[date] = None
     data_scadenza: Optional[date] = None
     note: Optional[str] = Field(None, max_length=500)
     chiuso: Optional[bool] = None
+
+    @field_validator("prezzo_totale")
+    @classmethod
+    def _prezzo_positivo(cls, v: Optional[float]) -> Optional[float]:
+        # L'invariante prezzo>0 (FDM §9.5.7) vale anche in update: non si può azzerare il prezzo
+        # di un contratto esistente (riaprirebbe il credito-fantasma chiuso a creazione).
+        if v is not None and v <= 0:
+            raise ValueError(PREZZO_OBBLIGATORIO_MSG)
+        return v
 
 
 class ContractResponse(BaseModel):

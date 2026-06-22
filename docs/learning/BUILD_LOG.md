@@ -894,4 +894,47 @@ allo stesso `contract-status.tsx` + grep-guard in `check-all.sh`. Chiunque riapr
 **Non ancora committato** (checkpoint di review founder); **verifica visiva su dato reale** (AC-8/9c/13:
 dark mode + riga rossa + badge catena) ancora da fare.
 
+> *Aggiornamento:* Giro 1 poi **committato `91cbc39`** e **verificato a schermo** (light+dark su crm.db reale);
+> bug intercettato dalla verifica e corretto (CHIUSO non mostra più il segnale "denaro arretrato").
+
+---
+
+### 2026-06-22 — PREREQ-prezzo (di G6): invariante `prezzo_totale > 0` + audit invarianti Contract (tighten-first)
+
+**Contesto (decisione founder).** Avvertita la sensazione di "allargare il cerchio" sul finanziario, scelta la
+strada **tighten-first** (NON un rewrite): stringere *enforce-ando* gli invarianti del FDM, non patchando edge
+a valle. Primo mattone: l'invariante `prezzo > 0` (PREREQ-prezzo, artefatto-ponte Desktop analizzato col bridge).
+
+**Audit invarianti dell'entità Contract (code-grounded).** Scoperta chiave: il **boundary di creazione è già
+più stretto del modello ORM** — `ContractCreate` richiede `tipo_pacchetto` non-vuoto, `crediti_totali ≥ 1`,
+`data_inizio`, `data_scadenza`, mentre il modello li ha tutti `Optional`. Le "regole ferme" del contratto
+esistono già quasi tutte: vivono come constraint al *boundary*, non nel *tipo*. L'unico buco a creazione era
+`prezzo` (`ge=0` → accetta 0); e `ContractUpdate` lo lasciava passare (leak). **Decisioni aperte emerse (per
+Giacomo):** (1) `data_scadenza` nullable — create la richiede ma FDM/SSoT trattano NULL come "pacchetto senza
+termine" → contraddizione cross-layer; (2) `chiuso` settabile via update raw — origine dei 3 muti id 4/9/13,
+scope G7; (3) type-honesty `Optional → non-Optional` via migrazione — rimandato.
+
+**PREREQ-prezzo implementato.** (A) Bonifica **backup-first** (regola #11): backup `crm.db.bak-prereq-prezzo-*`,
+soft-delete del contratto-test id 43 (prezzo 0, **zero** rate/movimenti/eventi, repro di oggi su cliente reale
+Jessica Abarca → eliminato solo il contratto bogus, il suo contratto reale id 19 resta), verifica **zero**
+contratti non-eliminati a prezzo NULL/0. (B) `prezzo > 0` su **create E update** (`api/schemas/financial.py`),
+**messaggio italiano didattico** condiviso (`PREZZO_OBBLIGATORIO_MSG`), non il 422 Pydantic crudo. (C) SSoT non
+toccato; le due guardie di consumo del Giro 1 (`prezzo != null`) **annotate** come difesa-in-profondità (no
+terzo sito per una config resa irraggiungibile). **+3 test** (create/update/renew con prezzo 0 → 422). Suite
+integrità **22 passed**.
+
+**Assorbito nei canonici.** FDM **§9.5.7** (prezzo>0; `residuo=0 ⟺ saldato` senza asterischi; **simmetria
+credito-/debito-fantasma**: campo dedicato quando lo stato *deve* esistere [§9.5.6 `quota_stornata`] vs
+invariante a monte quando *non deve* [§9.5.7 `prezzo>0`]) + pointer §5; `api/CLAUDE.md` Contract Integrity;
+**senza bump FDM** (consolidamento). ⚠️ **Il working copy FDM su Desktop è drifted dal repo** (manca l'addendum
+§6 della review bridge) → il **canonico è il repo `docs/technical/`**; niente mirror su copie divergenti
+(housekeeping: archiviare gli `IMPL_PLAN_*` implementati, tenere **un solo** FDM).
+
+**Learning (livello 3, `LEARNING_APP_ARCHITECTURE`):** un valore "magico" (`NULL`/`0`) che il modello legge come
+valore legittimo dell'asse è una **collisione semantica** (stesso numero, due significati). Si disambigua alla
+radice: *vincolo di integrità* (non deve esistere → validazione a monte) vs *stato di processo* (legittimamente
+incompleto → sotto-stato + worklist); il dominio decide quale.
+
+**Prossimo:** decisioni audit aperte (data_scadenza / chiuso-via-update / type-honesty) + riordino doc → poi G6.
+
 ---

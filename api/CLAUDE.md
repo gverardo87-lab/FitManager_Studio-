@@ -216,6 +216,13 @@ vincolante: `docs/technical/FINANCIAL_DOMAIN_MODEL.md` (v1.3) + `TASSONOMIA_FINA
 ### Contract Integrity Engine
 Il contratto e' il nodo centrale del sistema. 12 livelli di protezione:
 
+> **Invariante di creazione (FDM §9.5.7, PREREQ-prezzo di G6):** `ContractCreate` **e** `ContractUpdate`
+> impongono `prezzo_totale > 0` (`api/schemas/financial.py`, messaggio italiano didattico, non 422 crudo) —
+> «niente prezzo = niente contratto»: senza prezzo non si attivano le coperture (assicurative/fiscali) né si
+> incassa. Rende `residuo = 0 ⟺ saldato` vero **senza asterischi** e chiude il **credito-fantasma** (speculare
+> al **debito-fantasma** che `quota_stornata` chiude in G7). Il tipo ORM resta `Optional` (legacy) → le due
+> guardie di consumo del frontend (Giro 1) restano come difesa-in-profondità annotata.
+
 1. **Residual validation** (`create_rate`, `update_rate`): via `_cap_rateizzabile()` — `acconto = totale_versato - sum(saldato)`, `cap = prezzo - acconto`, `spazio = cap - sum(previsto)`. `update_rate` usa `exclude_rate_id` per escludere la rata in modifica dal calcolo
 2. **Chiuso guard**: `create_rate`, `generate_payment_plan`, `create_event(id_contratto)`
    rifiutano operazioni su contratti chiusi (400)
