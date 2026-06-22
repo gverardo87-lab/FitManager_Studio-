@@ -1,7 +1,8 @@
 """Workspace today endpoint tests."""
 
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, time, timedelta, timezone
 
+import pytest
 from sqlmodel import select
 
 from api.models.client import Client
@@ -9,6 +10,7 @@ from api.models.contract import Contract
 from api.models.measurement import ClientMeasurement
 from api.models.trainer import Trainer
 from api.models.workout import WorkoutPlan
+from api.services import workspace_engine
 from api.services.session_prep import build_session_prep
 from api.services.workspace_engine import (
     _completed_in_local_day,
@@ -16,6 +18,22 @@ from api.services.workspace_engine import (
     build_workspace_case_list,
     build_workspace_today,
 )
+
+
+@pytest.fixture(autouse=True)
+def _freeze_workspace_clock(monkeypatch):
+    """
+    Congela l'orologio del workspace a oggi-09:00 LOCALE per i test che passano dall'endpoint HTTP
+    (che internamente usa `_now_local() = datetime.now()`). Senza questo, un evento creato a
+    `now()+30min` negli ULTIMI 30 min del giorno cade DOMANI → fuori dai bounds del giorno locale
+    (`_build_session_cases`) → la sessione imminente non assorbe l'onboarding → l'ordinamento dei casi
+    onboarding (tiebreak alfabetico sul titolo) flippa → 3 test flaky al confine di mezzanotte.
+    Congelando a un'ora fissa diurna i test diventano deterministici e indipendenti dall'ora di
+    esecuzione. I test che chiamano direttamente l'engine con un `reference_dt` esplicito non usano
+    `_now_local()` → non sono toccati.
+    """
+    frozen = datetime.combine(date.today(), time(9, 0, 0))
+    monkeypatch.setattr(workspace_engine, "_now_local", lambda: frozen)
 
 
 def test_completed_in_local_day_treats_naive_as_utc():
@@ -127,7 +145,9 @@ def _create_event(
     start_at=None,
     category="PT",
 ):
-    start_at = start_at or (datetime.now() + timedelta(minutes=30))
+    # Default deterministico: oggi-09:30 LOCALE — futuro rispetto all'orologio congelato (09:00) e
+    # SEMPRE dentro i bounds del giorno locale (no flaky di mezzanotte). Vedi _freeze_workspace_clock.
+    start_at = start_at or datetime.combine(date.today(), time(9, 30, 0))
     end_at = start_at + timedelta(hours=1)
     payload = {
         "data_inizio": start_at.isoformat(),

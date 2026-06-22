@@ -938,3 +938,33 @@ incompleto → sotto-stato + worklist); il dominio decide quale.
 **Prossimo:** decisioni audit aperte (data_scadenza / chiuso-via-update / type-honesty) + riordino doc → poi G6.
 
 ---
+
+### 2026-06-23 — Fix flaky test_workspace_today (3 test): orologio congelato (fragilità al confine di mezzanotte)
+
+**Scoperto** eseguendo la suite completa dopo il PREREQ: 3 test in `test_workspace_today.py` rossi
+(`assert 2 == 1` su `items[0].root_entity.id`). **Provato ortogonale al PREREQ** (stash di `financial.py`
+a HEAD → gli stessi 3 falliscono), e **pre-esistente** (verdi nel run del Giro 1, di giorno; rossi ora, a
+mezzanotte passata).
+
+**Causa-radice (test-bug, non code-bug).** I 3 test HTTP creano un evento a `datetime.now() + 30min`. Negli
+ultimi 30 min del giorno quell'evento cade **domani** → fuori da `_as_local_day_bounds(oggi)` in
+`_build_session_cases` → la sessione imminente **non** viene caricata → l'onboarding del cliente con sessione
+non viene **assorbito** → restano due casi onboarding a pari severità/bucket/due → il `_sort_case` cade sul
+**tiebreak alfabetico del titolo** (`case.title.lower()`) → "Cash" < "Onboarding" → il cliente sbagliato
+finisce in posizione 0. Il **codice è corretto** (un evento di domani non è "oggi"); è il test che assumeva
+fragilmente "now+30min = oggi". (Gli autori lo sapevano — commento esistente: «the HTTP endpoint uses
+datetime.now() which differs from test time».)
+
+**Fix (deterministico, non assert più lasco).** Fixture **autouse** module-scoped che congela
+`workspace_engine._now_local()` a **oggi-09:00 locale** + default di `_create_event` ancorato a **oggi-09:30**
+(futuro rispetto a 09:00, sempre dentro i bounds del giorno). I test diretti-engine (che passano un
+`reference_dt` esplicito) non usano `_now_local` → non toccati. **25/25 nel file verdi**, deterministici e
+indipendenti dall'ora di esecuzione.
+
+**Learning (livello 3, già nel docstring del test):** un test che costruisce dati "relativi a oggi" con
+`now() + offset` è **flaky al confine del giorno locale**. La cura non è un assert più permissivo (maschera
+l'intento) ma **congelare l'orologio** a un riferimento fisso e ancorare i dati a quello — stessa famiglia dei
+fix tz (d77c3fe `completed_today_count`): *salvato in un fuso, confrontato in un altro / costruito a un istante,
+valutato a un altro*.
+
+---
