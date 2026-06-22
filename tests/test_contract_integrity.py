@@ -477,3 +477,81 @@ def test_kpi_fatturato_includes_closed_contracts(client, auth_headers, sample_cl
         f"kpi_fatturato calato da {fatturato_before} a {fatturato_after} "
         f"dopo chiusura contratto — regressione INC-2026-06-08"
     )
+
+
+# ── SPEC_VOCABOLARIO: campi derivati dal SSoT su lista + dettaglio ──
+
+
+def test_list_contracts_exposes_ssot_derived_fields(client, auth_headers, sample_contract):
+    """AC-2/AC-2b/AC-3: lista e dettaglio espongono lifecycle/money_substate/is_insolvente/in_scadenza
+    derivati dal SSoT, coerenti coi KPI e mutuamente esclusivi (is_insolvente vs in_scadenza)."""
+    valid_life = {"attivo", "sospeso", "esaurito", "chiuso"}
+    valid_money = {"saldato", "da_pianificare", "parziale", "pianificato"}
+
+    r = client.get("/api/contracts", headers=auth_headers)
+    assert r.status_code == 200
+    body = r.json()
+    items = body["items"]
+    assert items, "atteso almeno un contratto (sample_contract)"
+
+    for it in items:
+        assert it["lifecycle"] in valid_life
+        assert it["money_substate"] in valid_money
+        assert isinstance(it["is_insolvente"], bool)
+        assert isinstance(it["in_scadenza"], bool)
+        # AC-2b: mai entrambi accesi (uno scaduto, l'altro ATTIVO-non-scaduto)
+        assert not (it["is_insolvente"] and it["in_scadenza"])
+
+    # AC-2: i KPI headline coincidono col conteggio dei lifecycle delle righe (stessa fonte)
+    if body["total"] <= body["page_size"]:
+        assert body["kpi_attivi"] == sum(1 for it in items if it["lifecycle"] == "attivo")
+        assert body["kpi_sospesi"] == sum(1 for it in items if it["lifecycle"] == "sospeso")
+        assert body["kpi_esauriti"] == sum(1 for it in items if it["lifecycle"] == "esaurito")
+
+    # sample_contract: residuo 800 > 0, ZERO rate → asserzioni date-robuste
+    row = next(it for it in items if it["id"] == sample_contract["id"])
+    assert row["money_substate"] == "da_pianificare"  # residuo>0 + zero rate
+    assert row["is_insolvente"] is False               # zero rate ⇒ niente rate scadute
+
+    # AC-3: il dettaglio espone gli stessi 4 campi
+    rd = client.get(f"/api/contracts/{sample_contract['id']}", headers=auth_headers)
+    assert rd.status_code == 200
+    d = rd.json()
+    assert d["lifecycle"] in valid_life
+    assert d["money_substate"] == "da_pianificare"
+    assert d["is_insolvente"] is False
+    assert "in_scadenza" in d
+
+
+def test_renew_chain_items_carry_lifecycle(client, auth_headers, sample_contract, sample_client):
+    """AC-13b (G3): i nodi della catena rinnovi (RenewalChainItem) portano il PROPRIO lifecycle reale,
+    su genitore (contratto_originale) e figli (rinnovi_successivi)."""
+    valid_life = {"attivo", "sospeso", "esaurito", "chiuso"}
+
+    # Rinnova sample_contract → nuovo contratto figlio collegato (rinnovo_di = parent)
+    r = client.post(f"/api/contracts/{sample_contract['id']}/renew", json={
+        "id_cliente": sample_client["id"],
+        "tipo_pacchetto": "Gold 10 (rinnovo)",
+        "crediti_totali": 10,
+        "prezzo_totale": 1000.0,
+        "data_inizio": "2027-01-01",
+        "data_scadenza": "2027-12-31",
+        "acconto": 0.0,
+        "metodo_acconto": "CONTANTI",
+    }, headers=auth_headers)
+    assert r.status_code == 201, r.text
+    renewed_id = r.json()["id"]
+
+    # Dettaglio del FIGLIO → il genitore porta lifecycle (non solo `chiuso`)
+    rd = client.get(f"/api/contracts/{renewed_id}", headers=auth_headers)
+    assert rd.status_code == 200
+    parent = rd.json()["contratto_originale"]
+    assert parent is not None and parent["id"] == sample_contract["id"]
+    assert parent["lifecycle"] in valid_life
+
+    # Dettaglio del GENITORE → il figlio porta lifecycle
+    rp = client.get(f"/api/contracts/{sample_contract['id']}", headers=auth_headers)
+    assert rp.status_code == 200
+    children = rp.json()["rinnovi_successivi"]
+    assert children and children[0]["id"] == renewed_id
+    assert children[0]["lifecycle"] in valid_life

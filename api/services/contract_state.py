@@ -184,6 +184,20 @@ def is_residuo_incassabile_diretto(state: ContractState) -> bool:
     return state.lifecycle in (Lifecycle.SOSPESO, Lifecycle.ESAURITO) and state.residuo > 0.009
 
 
+def is_insolvente(state: ContractState) -> bool:
+    """
+    True se il contratto è scaduto (SOSPESO/ESAURITO) **E** ha rate scadute.
+    Flag DERIVATO cross-asse, **NON** uno stato di vita (FDM §4): il modello
+    resta a 4 stati + ELIMINATO. È il sotto-caso *scaduto* del segnale "denaro
+    arretrato" (`rate_scadute`); su un ATTIVO con rate scadute si parla di
+    "in ritardo", non di insolvenza. **Mutuamente esclusivo con `in_scadenza`**
+    per costruzione (uno è scaduto, l'altro è ATTIVO-non-scaduto).
+    Gemello di `is_rate_planificabile`/`is_residuo_incassabile_diretto`.
+    Resa UI vincolante: SPEC_VOCABOLARIO_E_CLASSIFICAZIONE_CONTRATTI.md.
+    """
+    return state.lifecycle in (Lifecycle.SOSPESO, Lifecycle.ESAURITO) and state.rate_scadute
+
+
 def evaluate_contract(contract, crediti_usati: int, rates: Sequence, today: date) -> ContractState:
     """Stato finanziario completo di un contratto. Entry point per i caller."""
     lf = contract_lifecycle(contract, crediti_usati, today)

@@ -2,27 +2,23 @@
 "use client";
 
 /**
- * Tabella contratti enriched — colonne: Cliente, Pacchetto, Finanze, Crediti, Scadenza, Rate, Azioni.
+ * Tabella contratti enriched — colonne: Cliente, Pacchetto, Finanze, Crediti, Scadenza,
+ * Stato, Pagamenti, Azioni.
  *
- * Il nome cliente arriva direttamente dal backend (ContractListResponse)
- * grazie al batch fetch. Niente piu' clientMap lato frontend.
- *
- * Colonna Finanze: progress bar versato/totale con 3 livelli colore
- *   (emerald >=80%, amber >=40%, red <40%) — pattern identico a ClientsTable.
- *
- * Colonna Rate: badge con stato pagamento derivato dalle rate (7 livelli):
- * - chiuso → grigio "Chiuso"
- * - scaduto + rate non pagate → rosso intenso "Insolvente"
- * - ha_rate_scadute → rosso "Rate in Ritardo"
- * - data_scadenza < oggi → amber "Scaduto" (contratto oltre termine)
- * - totale_versato >= prezzo_totale → verde "Saldato"
- * - rate_totali > 0 → blu "In corso (X/Y)"
- * - default → grigio "Nessuna rata"
+ * Classificazione interamente dal SSoT backend (contract_state.py via ContractListItem):
+ * questo file LEGGE i campi derivati, non li ricalcola (SPEC_VOCABOLARIO §2.5).
+ * - Due assi distinti, mai fusi: Stato di vita (lifecycle) + Pagamenti (money_substate),
+ *   resi dai badge canonici di `lib/contract-status`.
+ * - "Denaro arretrato" (ha_rate_scadute = SSoT rate_scadute): segnale di RIGA — sfondo
+ *   rosso percepibile + icona AlertTriangle + aria-label — copre sia gli insolventi
+ *   (scaduti) sia gli ATTIVO in ritardo (G1). Mai col solo colore (regola accessibilità,
+ *   frontend/CLAUDE.md). NON è un terzo badge che compete con i due assi.
+ * - Colonna Scadenza: neutra; l'urgenza la comunicano lo Stato e il segnale di riga.
  */
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { format, parseISO, differenceInDays, startOfToday } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { it } from "date-fns/locale";
 import {
   MoreHorizontal,
@@ -31,9 +27,9 @@ import {
   Search,
   FileText,
   Plus,
+  AlertTriangle,
 } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -53,93 +49,13 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import type { ContractListItem } from "@/types/api";
 import { formatCurrency, getFinanceBarColor } from "@/lib/format";
+import { ContractLifecycleBadge, ContractMoneyBadge } from "@/lib/contract-status";
 
 interface ContractsTableProps {
   contracts: ContractListItem[];
   onEdit: (contract: ContractListItem) => void;
   onDelete: (contract: ContractListItem) => void;
   onNewContract?: () => void;
-}
-
-function getPaymentBadge(contract: ContractListItem) {
-  // Priorita' 1: contratto chiuso
-  if (contract.chiuso) {
-    return <Badge variant="secondary">Chiuso</Badge>;
-  }
-
-  // Priorita' 2: scaduto + rate non pagate — caso peggiore (insolvente)
-  const isExpired = contract.data_scadenza &&
-    differenceInDays(parseISO(contract.data_scadenza), startOfToday()) < 0;
-  if (contract.ha_rate_scadute && isExpired) {
-    return (
-      <Badge className="bg-red-600 text-white hover:bg-red-600 dark:bg-red-700 dark:text-red-100">
-        Insolvente
-      </Badge>
-    );
-  }
-
-  // Priorita' 3: rate scadute, ma contratto ancora in corso
-  if (contract.ha_rate_scadute) {
-    return (
-      <Badge className="bg-red-100 text-red-700 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400">
-        Rate in Ritardo
-      </Badge>
-    );
-  }
-
-  // Priorita' 4: contratto oltre data_scadenza (termine scaduto, rate ok)
-  if (isExpired) {
-    return (
-      <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400">
-        Scaduto
-      </Badge>
-    );
-  }
-
-  // Priorita' 5: tutto pagato
-  if (
-    contract.prezzo_totale &&
-    contract.totale_versato >= contract.prezzo_totale - 0.01
-  ) {
-    return (
-      <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400">
-        Saldato
-      </Badge>
-    );
-  }
-
-  // Priorita' 6: in corso con progress rate
-  if (contract.rate_totali > 0) {
-    return (
-      <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400">
-        In corso ({contract.rate_pagate}/{contract.rate_totali})
-      </Badge>
-    );
-  }
-
-  // Nessuna rata creata — warning, non stato neutro
-  if ((contract.prezzo_totale ?? 0) > 0) {
-    return (
-      <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 dark:bg-amber-900/40 dark:text-amber-400">
-        Piano mancante
-      </Badge>
-    );
-  }
-  return (
-    <Badge className="bg-zinc-100 text-zinc-600 hover:bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-400">
-      Nessuna rata
-    </Badge>
-  );
-}
-
-/** Classe CSS per urgenza colonna scadenza. */
-function getScadenzaStyle(contract: ContractListItem): string {
-  if (!contract.data_scadenza || contract.chiuso) return "";
-  const days = differenceInDays(parseISO(contract.data_scadenza), startOfToday());
-  if (days < 0) return "text-red-600 font-medium";
-  if (days <= 7) return "text-amber-600 font-medium";
-  if (days <= 30) return "text-amber-500";
-  return "";
 }
 
 export function ContractsTable({
@@ -199,13 +115,22 @@ export function ContractsTable({
                 <TableHead className="hidden sm:table-cell">Finanze</TableHead>
                 <TableHead className="hidden lg:table-cell text-center">Crediti</TableHead>
                 <TableHead className="hidden md:table-cell">Scadenza</TableHead>
-                <TableHead>Rate</TableHead>
+                <TableHead>Stato</TableHead>
+                <TableHead className="hidden sm:table-cell">Pagamenti</TableHead>
                 <TableHead className="w-[80px]">Azioni</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.map((contract, i) => (
-                <TableRow key={contract.id} {...(i === 0 ? { "data-guide": "contratti-table-first-row" } : {})} className="transition-colors hover:bg-muted/50">
+                <TableRow
+                  key={contract.id}
+                  {...(i === 0 ? { "data-guide": "contratti-table-first-row" } : {})}
+                  className={`transition-colors ${
+                    contract.ha_rate_scadute && !contract.chiuso
+                      ? "bg-red-100/70 hover:bg-red-100 dark:bg-red-900/30 dark:hover:bg-red-900/40"
+                      : "hover:bg-muted/50"
+                  }`}
+                >
                   {/* ── Cliente (link a scheda contratto) ── */}
                   <TableCell className="font-medium">
                     <Link href={`/contratti/${contract.id}`} className="hover:underline">
@@ -252,15 +177,35 @@ export function ContractsTable({
                     </span>
                   </TableCell>
 
-                  {/* ── Scadenza (hidden mobile) — color-coded per urgenza ── */}
-                  <TableCell className={`hidden md:table-cell ${getScadenzaStyle(contract)}`}>
+                  {/* ── Scadenza (hidden mobile) — neutra: l'urgenza la dà lo Stato + segnale riga ── */}
+                  <TableCell className="hidden md:table-cell text-muted-foreground">
                     {contract.data_scadenza
                       ? format(parseISO(contract.data_scadenza), "dd MMM yyyy", { locale: it })
                       : "—"}
                   </TableCell>
 
-                  {/* ── Rate (payment badge) ── */}
-                  <TableCell>{getPaymentBadge(contract)}</TableCell>
+                  {/* ── Stato (asse vita) + segnale "denaro arretrato" (icona, sempre visibile) ── */}
+                  <TableCell>
+                    <div className="flex items-center gap-1.5">
+                      <ContractLifecycleBadge lifecycle={contract.lifecycle} />
+                      {contract.ha_rate_scadute && !contract.chiuso ? (
+                        <AlertTriangle
+                          role="img"
+                          aria-label="Rate scadute"
+                          className="h-3.5 w-3.5 shrink-0 text-red-600 dark:text-red-400"
+                        />
+                      ) : null}
+                    </div>
+                  </TableCell>
+
+                  {/* ── Pagamenti (asse denaro, hidden mobile) — prezzo assente: niente "Saldato" (AC-12b) ── */}
+                  <TableCell className="hidden sm:table-cell">
+                    {contract.prezzo_totale != null ? (
+                      <ContractMoneyBadge money={contract.money_substate} />
+                    ) : (
+                      <span className="text-sm italic text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
 
                   {/* ── Azioni ── */}
                   <TableCell>

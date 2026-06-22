@@ -12,7 +12,7 @@
  * Pattern identico a /clienti/[id] — dynamic route con use(params).
  */
 
-import { use, useState } from "react";
+import { use, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -48,6 +48,7 @@ import { DeleteContractDialog } from "@/components/contracts/DeleteContractDialo
 import { useContract } from "@/hooks/useContracts";
 import { useContractEvents, type EventHydrated } from "@/hooks/useAgenda";
 import { resolveBackNavigation } from "@/lib/url-state";
+import { ContractLifecycleBadge } from "@/lib/contract-status";
 
 // ════════════════════════════════════════════════════════════
 // PAGE COMPONENT
@@ -107,13 +108,7 @@ export default function ContractDetailPage({
               <h1 className="text-2xl font-bold tracking-tight">
                 {contract.tipo_pacchetto ?? "Contratto"}
               </h1>
-              {contract.chiuso ? (
-                <Badge variant="secondary">Chiuso</Badge>
-              ) : (
-                <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400">
-                  Attivo
-                </Badge>
-              )}
+              <ContractLifecycleBadge lifecycle={contract.lifecycle} />
             </div>
             <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
               {clientName && (
@@ -274,9 +269,7 @@ function RenewalChainLink({ item, label }: { item: RenewalChainItem; label: stri
       className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1 transition-colors hover:bg-muted"
     >
       <span>{item.tipo_pacchetto ?? label}</span>
-      {item.chiuso && (
-        <Badge variant="secondary" className="h-4 px-1 text-[10px]">Chiuso</Badge>
-      )}
+      <ContractLifecycleBadge lifecycle={item.lifecycle} />
     </Link>
   );
 }
@@ -391,7 +384,7 @@ function DettagliTab({ contract }: { contract: ContractWithRates }) {
               ? format(new Date(contract.data_scadenza + "T00:00:00"), "dd MMMM yyyy", { locale: it })
               : "\u2014"}
           />
-          <DetailRow label="Stato" value={contract.chiuso ? "Chiuso" : "Attivo"} />
+          <DetailRow label="Stato" value={<ContractLifecycleBadge lifecycle={contract.lifecycle} />} />
           {contract.note && (
             <div className="pt-2">
               <p className="text-muted-foreground">Note</p>
@@ -404,7 +397,7 @@ function DettagliTab({ contract }: { contract: ContractWithRates }) {
   );
 }
 
-function DetailRow({ label, value }: { label: string; value: string }) {
+function DetailRow({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="flex justify-between">
       <span className="text-muted-foreground">{label}</span>

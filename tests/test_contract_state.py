@@ -361,5 +361,67 @@ def test_is_residuo_incassabile_falso_su_attivo_e_saldato():
     assert cs.is_residuo_incassabile_diretto(esaurito_saldato) is False  # niente residuo
 
 
+# ── is_insolvente (AC-1) + esclusività mutua con in_scadenza (AC-2b) ──────────
+# SPEC_VOCABOLARIO §2.1: insolvente = lifecycle∈{SOSPESO,ESAURITO} AND rate_scadute.
+
+def _eval(*, scaduto, crediti_pos, chiuso=False, rata_scaduta=False, in_scadenza_window=False,
+          prezzo=500.0, versato=300.0):
+    if in_scadenza_window:
+        ds = TODAY + timedelta(days=10)       # ATTIVO entro soglia
+    elif scaduto:
+        ds = TODAY - timedelta(days=5)         # scaduto
+    else:
+        ds = TODAY + timedelta(days=200)       # ATTIVO oltre soglia
+    c = _contract(
+        chiuso=chiuso,
+        data_scadenza=ds,
+        crediti_totali=20 if crediti_pos else 10,
+        prezzo_totale=prezzo,
+        totale_versato=versato,
+    )
+    crediti_usati = 2 if crediti_pos else 10   # residui >0 vs ==0
+    rates = [_rate(scadenza=TODAY - timedelta(days=2))] if rata_scaduta else []
+    return cs.evaluate_contract(c, crediti_usati, rates, TODAY)
+
+
+def test_is_insolvente_esaurito_con_rata_scaduta():
+    st = _eval(scaduto=True, crediti_pos=False, rata_scaduta=True)
+    assert st.lifecycle == cs.Lifecycle.ESAURITO
+    assert cs.is_insolvente(st) is True
+
+
+def test_is_insolvente_falso_su_attivo_con_rata_scaduta():
+    # ATTIVO con rata arretrata = "in ritardo", NON insolvente (non è scaduto, §2.1)
+    st = _eval(scaduto=False, crediti_pos=True, rata_scaduta=True)
+    assert st.lifecycle == cs.Lifecycle.ATTIVO
+    assert st.rate_scadute is True
+    assert cs.is_insolvente(st) is False
+
+
+def test_is_insolvente_falso_su_sospeso_senza_rate_scadute():
+    st = _eval(scaduto=True, crediti_pos=True, rata_scaduta=False)
+    assert st.lifecycle == cs.Lifecycle.SOSPESO
+    assert cs.is_insolvente(st) is False
+
+
+def test_is_insolvente_falso_su_chiuso():
+    st = _eval(scaduto=True, crediti_pos=False, chiuso=True, rata_scaduta=True)
+    assert st.lifecycle == cs.Lifecycle.CHIUSO
+    assert cs.is_insolvente(st) is False
+
+
+@pytest.mark.parametrize(
+    "scaduto,crediti_pos,chiuso,rata_scaduta,in_scadenza_window",
+    list(itertools.product([False, True], repeat=5)),
+)
+def test_is_insolvente_in_scadenza_mutuamente_esclusivi(
+    scaduto, crediti_pos, chiuso, rata_scaduta, in_scadenza_window
+):
+    # AC-2b: per OGNI combinazione, mai entrambi True (uno scaduto, l'altro ATTIVO-non-scaduto)
+    st = _eval(scaduto=scaduto, crediti_pos=crediti_pos, chiuso=chiuso,
+               rata_scaduta=rata_scaduta, in_scadenza_window=in_scadenza_window)
+    assert not (cs.is_insolvente(st) and st.in_scadenza)
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

@@ -234,13 +234,22 @@ class ContractListResponse(ContractResponse):
     Campi extra (calcolati nel router via batch fetch):
     - client_nome/cognome: nome del cliente (evita JOIN lato frontend)
     - rate_totali/rate_pagate: conteggi per progress badge
-    - ha_rate_scadute: true se almeno una rata PENDENTE/PARZIALE e' oltre scadenza
+    - ha_rate_scadute: derivato dal SSoT `contract_state.rate_scadute` (AC-1b, fonte unica)
+
+    Stato derivato dal SSoT (SPEC_VOCABOLARIO §2.2 — il frontend LEGGE, non ricalcola):
+    - lifecycle/money_substate: i due assi (vita × denaro), valori-enum del SSoT.
+    - is_insolvente/in_scadenza: flag derivati, mutuamente esclusivi per costruzione.
     """
     client_nome: str = ""
     client_cognome: str = ""
     rate_totali: int = 0
     rate_pagate: int = 0
     ha_rate_scadute: bool = False
+    # ── Stato derivato dal SSoT contract_state (SPEC_VOCABOLARIO §2.2) ──
+    lifecycle: str = "attivo"          # attivo|sospeso|esaurito|chiuso
+    money_substate: str = "saldato"    # saldato|da_pianificare|parziale|pianificato
+    is_insolvente: bool = False        # scaduto (SOSPESO/ESAURITO) + rate scadute
+    in_scadenza: bool = False          # ATTIVO entro SOGLIA_IN_SCADENZA_GG
 
 
 class RenewalChainItem(BaseModel):
@@ -250,6 +259,7 @@ class RenewalChainItem(BaseModel):
     data_inizio: Optional[str] = None
     data_scadenza: Optional[str] = None
     chiuso: bool = False
+    lifecycle: str = "attivo"  # stato di vita reale del nodo catena (SPEC_VOCABOLARIO §2.7/G3)
 
 
 class ContractWithRatesResponse(ContractResponse):
@@ -288,6 +298,12 @@ class ContractWithRatesResponse(ContractResponse):
     sedute_completate: int = 0    # stato=Completato
     sedute_rinviate: int = 0      # stato=Rinviato
     crediti_residui: int = 0      # crediti_totali - programmate - completate
+
+    # ── Stato derivato dal SSoT contract_state (SPEC_VOCABOLARIO §2.2, scheda dettaglio) ──
+    lifecycle: str = "attivo"          # attivo|sospeso|esaurito|chiuso
+    money_substate: str = "saldato"    # saldato|da_pianificare|parziale|pianificato
+    is_insolvente: bool = False        # scaduto (SOSPESO/ESAURITO) + rate scadute
+    in_scadenza: bool = False          # ATTIVO entro SOGLIA_IN_SCADENZA_GG
 
 
 # ════════════════════════════════════════════════════════════

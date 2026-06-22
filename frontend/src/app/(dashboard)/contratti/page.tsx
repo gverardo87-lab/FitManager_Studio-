@@ -14,7 +14,6 @@
 
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { usePageReveal } from "@/lib/page-reveal";
-import { differenceInDays, parseISO, startOfToday } from "date-fns";
 import {
   Plus,
   FileText,
@@ -22,6 +21,7 @@ import {
   Receipt,
   AlertTriangle,
   CalendarClock,
+  PauseCircle,
   Eye,
   EyeOff,
   CheckCircle2,
@@ -141,10 +141,16 @@ interface FilterChipDef {
   icon: LucideIcon;
 }
 
+// Chiavi = valori dell'enum `lifecycle` del SSoT (SPEC_VOCABOLARIO §2.6).
 const STATO_CHIPS: FilterChipDef[] = [
-  { key: "attivi", label: "Attivi", color: "#8b5cf6", icon: FileText },
-  { key: "chiusi", label: "Chiusi", color: "#a1a1aa", icon: FileText },
+  { key: "attivo", label: "Attivi", color: "#8b5cf6", icon: FileText },
+  { key: "sospeso", label: "Sospesi", color: "#f59e0b", icon: PauseCircle },
+  { key: "esaurito", label: "Esauriti", color: "#f97316", icon: Wallet },
+  { key: "chiuso", label: "Chiusi", color: "#a1a1aa", icon: FileText },
 ];
+
+// Sanitizzazione filtri salvati: le vecchie chiavi ("attivi"/"chiusi") non sono più valide.
+const STATO_KEYS = new Set(STATO_CHIPS.map((c) => c.key));
 
 const SITUAZIONE_CHIPS: FilterChipDef[] = [
   { key: "insolventi", label: "Insolventi", color: "#dc2626", icon: ShieldAlert },
@@ -152,20 +158,20 @@ const SITUAZIONE_CHIPS: FilterChipDef[] = [
   { key: "saldati", label: "Saldati", color: "#10b981", icon: CheckCircle2 },
 ];
 
-/** Classifica un contratto nella situazione finanziaria. */
+/**
+ * Classifica un contratto nella situazione finanziaria — LEGGE i campi derivati dal SSoT,
+ * non li ricalcola (SPEC_VOCABOLARIO §2.6). "Insolventi" è il sotto-insieme scaduto di
+ * "Con Rate Scadute"; entrambi con OR logic, nessuna formula di stato inline.
+ */
 function matchesSituazione(c: ContractListItem, key: string): boolean {
-  const today = startOfToday();
-  const isExpired = c.data_scadenza && differenceInDays(parseISO(c.data_scadenza), today) < 0;
-  const isSaldato = c.prezzo_totale != null && c.totale_versato >= c.prezzo_totale - 0.01;
-
   switch (key) {
     case "insolventi":
-      return c.ha_rate_scadute && !!isExpired && !c.chiuso;
+      return c.is_insolvente;
     case "rate_scadute":
-      // Rate in ritardo ma NON insolvente (contratto non ancora scaduto)
-      return c.ha_rate_scadute && !isExpired && !c.chiuso;
+      return c.ha_rate_scadute && !c.chiuso; // SSoT-derived (AC-1b); i chiusi sono settled (FDM §5)
     case "saldati":
-      return isSaldato;
+      // prezzo assente → non è "saldato" (AC-12b)
+      return c.prezzo_totale != null && c.money_substate === "saldato";
     default:
       return false;
   }
@@ -204,9 +210,15 @@ export default function ContrattiPage() {
   // Filter state (sessionStorage → URL → default)
   const [activeStati, setActiveStati] = useState<Set<string>>(() => {
     const saved = loadFilters("contratti");
-    if (saved?.stato) return new Set(saved.stato as string[]);
+    if (saved?.stato) {
+      const valid = (saved.stato as string[]).filter((k) => STATO_KEYS.has(k));
+      if (valid.length) return new Set(valid);
+    }
     const param = getUrlParams().get("stato");
-    if (param) return new Set(param.split(","));
+    if (param) {
+      const valid = param.split(",").filter((k) => STATO_KEYS.has(k));
+      if (valid.length) return new Set(valid);
+    }
     return new Set(STATO_CHIPS.map((c) => c.key));
   });
   const [activeSituazioni, setActiveSituazioni] = useState<Set<string>>(() => {
@@ -262,9 +274,8 @@ export default function ContrattiPage() {
     if (!contractsData) return [];
 
     return contractsData.items.filter((c) => {
-      // Asse 1: stato (attivi = !chiuso, chiusi = chiuso)
-      const statoKey = c.chiuso ? "chiusi" : "attivi";
-      if (!activeStati.has(statoKey)) return false;
+      // Asse 1: stato di vita dal SSoT (4 stati) — il filtro legge c.lifecycle
+      if (!activeStati.has(c.lifecycle)) return false;
 
       // Asse 2: situazione (OR logic — passa se almeno un chip attivo matcha)
       const hasSituazioneFilters = activeSituazioni.size < SITUAZIONE_CHIPS.length;

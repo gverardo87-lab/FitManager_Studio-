@@ -607,6 +607,15 @@ export interface ContractUpdate {
   note?: string | null;
 }
 
+/**
+ * Stato di vita e sotto-stato denaro derivati dal SSoT backend (contract_state.py).
+ * Specchiano 1:1 i valori esposti sul wire degli enum Lifecycle/MoneySubstate
+ * (ELIMINATO escluso by-design: i soft-deleted non raggiungono mai le liste).
+ * SPEC_VOCABOLARIO_E_CLASSIFICAZIONE_CONTRATTI §2.3.
+ */
+export type ContractLifecycle = "attivo" | "sospeso" | "esaurito" | "chiuso";
+export type ContractMoneySubstate = "saldato" | "da_pianificare" | "parziale" | "pianificato";
+
 /** ContractResponse â€” restituito da GET/POST/PUT */
 export interface Contract {
   id: number;
@@ -624,6 +633,12 @@ export interface Contract {
   note: string | null;
   chiuso: boolean;
   rinnovo_di: number | null;
+  // ── Stato derivato dal SSoT (SPEC_VOCABOLARIO §2.2): il frontend LEGGE, non ricalcola.
+  // Popolati su lista (ContractListItem) e dettaglio (ContractWithRates).
+  lifecycle: ContractLifecycle;
+  money_substate: ContractMoneySubstate;
+  is_insolvente: boolean;
+  in_scadenza: boolean;
 }
 
 /** ContractListResponse â€” GET /api/contracts (enriched with rate KPI) */
@@ -642,6 +657,7 @@ export interface RenewalChainItem {
   data_inizio: string | null;
   data_scadenza: string | null;
   chiuso: boolean;
+  lifecycle: ContractLifecycle; // stato di vita reale del nodo catena (SPEC_VOCABOLARIO §2.7/G3)
 }
 
 /** ContractWithRatesResponse â€” GET /api/contracts/{id} */

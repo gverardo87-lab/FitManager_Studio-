@@ -854,3 +854,44 @@ ha mancato siti **due volte**: §4.7 e la v1.0 della spec) — ma o **centralizz
 SSoT) o con **enforcement automatico** (grep-guard); meglio entrambi.
 
 ---
+
+### 2026-06-22 — SPEC_VOCABOLARIO Giro 1 IMPLEMENTATO (backend-first, suite + build verdi)
+
+**Cosa.** Implementato il **Giro 1** della spec: il vocabolario contratti è ora unificato via SSoT su
+`/contratti` (lista), scheda dettaglio e backend. Le superfici **leggono** la classificazione da
+`contract_state.py`, non la ricalcolano. Sequenza backend-first, ogni passo verde prima del successivo.
+
+**Backend.** (1) `is_insolvente(state)` nel SSoT — flag derivato (`lifecycle ∈ {SOSPESO,ESAURITO} AND
+rate_scadute`), gemello di `is_rate_planificabile` (+36 test: 4 casi AC-1 + esclusività mutua esaustiva
+32 combo AC-2b). (2) `list_contracts`/`get_contract` attaccano alla riga/oggetto i 4 campi derivati
+(`lifecycle`/`money_substate`/`is_insolvente`/`in_scadenza`) da `evaluate_contract` — **zero query nuove**
+(rate+crediti già batch-fetchati). (3) **Delega-residuo** di `_to_response_with_rates` a
+`contract_state.residuo()` — **anticipa il BLOCKER #1 di G7** (residuo→SSoT), byte-identico oggi. (4)
+`ha_rate_scadute` di riga **riconciliato** al SSoT `rate_scadute` (AC-1b, una sola formula; equivalente al
+vecchio inline grazie ai guard rate-date #9/#10). (5) `RenewalChainItem` esteso con `lifecycle` reale di
+genitore/figli (G3, batch-fetch crediti catena). Schema: 4 campi su `ContractListResponse` +
+`ContractWithRatesResponse` (con default → create/update/renew restano plain, il FE rifetcha).
+
+**Frontend.** Tipi (`ContractLifecycle`/`ContractMoneySubstate` union + 4 campi su `Contract` base +
+`lifecycle` su `RenewalChainItem`). Nuovo modulo **`lib/contract-status.tsx`** = fonte unica del vocabolario
+di display (LIFECYCLE_BADGE/MONEY_BADGE + componenti, zero logica/date). `ContractsTable`: eliminata la
+cascata `getPaymentBadge` (8 rami) e `getScadenzaStyle`; due colonne **Stato**+**Pagamenti**; **segnale di
+riga "denaro arretrato"** (`ha_rate_scadute`) con sfondo rosso dark-safe + icona `AlertTriangle`
+(`role="img"`+`aria-label`) resistente all'hover — copre insolventi E ATTIVO in ritardo (G1+G2), mai col solo
+colore; Scadenza neutra. `contratti/page.tsx`: `STATO_CHIPS` 2→4 su `c.lifecycle` (+ sanitizzazione filtri
+salvati con chiavi vecchie), `matchesSituazione` riancorato (`is_insolvente`/`ha_rate_scadute`/`money_substate`),
+edge `prezzo_totale=null` ≠ "Saldato" (AC-12b). `[id]/page.tsx`: i 3 punti di collasso →
+`<ContractLifecycleBadge>`, `RenewalChainLink` usa `item.lifecycle` (G3).
+
+**Verifica.** Suite backend **523 passed / 1 xfailed** (+ test integrazione AC-2/2b/3: i campi derivati sono
+esposti e coerenti coi KPI su lista+dettaglio). `check-all.sh` (ruff + next build) **verde**, zero errori TS,
+26 route compilate. Governance: `api/CLAUDE.md` + `frontend/CLAUDE.md` (sezione "Badge Contratti" riscritta +
+pitfall superato) allineati.
+
+**Debito tracciato (Giro 2, dopo G7):** `rinnovi-incassi` (stringhe stato hardcoded) + `workspace_engine`
+(secondo motore off-SSoT, 3 siti inline-residuo + censimento esteso `dashboard.py:497`/`rates.py`) da allineare
+allo stesso `contract-status.tsx` + grep-guard in `check-all.sh`. Chiunque riapra quei file: usare il modulo.
+**Non ancora committato** (checkpoint di review founder); **verifica visiva su dato reale** (AC-8/9c/13:
+dark mode + riga rossa + badge catena) ancora da fare.
+
+---

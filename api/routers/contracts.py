@@ -125,7 +125,7 @@ def _to_response_with_rates(
     prezzo = contract.prezzo_totale or 0
     versato = contract.totale_versato or 0
 
-    residuo = round(max(0, prezzo - versato), 2)
+    residuo = cstate.residuo(contract)  # delega al SSoT (§2.2): byte-identica oggi, load-bearing con G7
     percentuale = round((versato / prezzo) * 100) if prezzo > 0 else 0
     # totale_versato e' la fonte di verita' (include acconto + rate + pagamenti legacy)
     importo_da_rateizzare = residuo
@@ -142,6 +142,9 @@ def _to_response_with_rates(
     # Override crediti_usati nel dict base (sovrascrive il valore ORM = 0)
     contract_data = ContractResponse.model_validate(contract).model_dump()
     contract_data["crediti_usati"] = crediti_usati_computed
+
+    # Stato derivato dal SSoT (SPEC_VOCABOLARIO §2.2): il dettaglio LEGGE, non ricalcola.
+    state = cstate.evaluate_contract(contract, crediti_usati_computed, rates, today)
 
     return ContractWithRatesResponse(
         **contract_data,
@@ -161,6 +164,10 @@ def _to_response_with_rates(
         sedute_completate=completate,
         sedute_rinviate=rinviate,
         crediti_residui=max(0, crediti_totali - crediti_usati_computed),
+        lifecycle=state.lifecycle.value,
+        money_substate=state.money.value,
+        is_insolvente=cstate.is_insolvente(state),
+        in_scadenza=state.in_scadenza,
     )
 
 
@@ -375,13 +382,16 @@ def list_contracts(
     for contract in contracts:
         client = client_map.get(contract.id_cliente)
         rates = rates_by_contract.get(contract.id, [])
+        crediti_usati = credits_used_map.get(contract.id, 0)
 
         # Override crediti_usati: computed on read (non dal valore ORM)
         contract_data = ContractResponse.model_validate(contract).model_dump()
-        contract_data["crediti_usati"] = credits_used_map.get(contract.id, 0)
+        contract_data["crediti_usati"] = crediti_usati
 
-        # Contratto scaduto? Se si', ogni rata non pagata e' in ritardo
-        contract_expired = contract.data_scadenza and contract.data_scadenza < today
+        # Stato derivato dal SSoT (SPEC_VOCABOLARIO §2.2): un asse vita + un asse denaro +
+        # flag derivati, calcolati UNA volta. ha_rate_scadute deriva da qui (AC-1b: una sola
+        # formula — equivalente al vecchio inline grazie ai guard rate-date #9/#10).
+        state = cstate.evaluate_contract(contract, crediti_usati, rates, today)
 
         results.append(ContractListResponse(
             **contract_data,
@@ -389,10 +399,11 @@ def list_contracts(
             client_cognome=client.cognome if client else "",
             rate_totali=len(rates),
             rate_pagate=sum(1 for r in rates if r.stato == "SALDATA"),
-            ha_rate_scadute=any(
-                (r.data_scadenza < today or contract_expired) and r.stato != "SALDATA"
-                for r in rates
-            ),
+            ha_rate_scadute=state.rate_scadute,
+            lifecycle=state.lifecycle.value,
+            money_substate=state.money.value,
+            is_insolvente=cstate.is_insolvente(state),
+            in_scadenza=state.in_scadenza,
         ))
 
     return {
@@ -474,7 +485,10 @@ def get_contract(
         resp.client_nome = client.nome
         resp.client_cognome = client.cognome
 
-    # Renewal chain: parent + children (2 query leggere)
+    # Renewal chain: parent + children — ogni nodo porta il PROPRIO lifecycle reale
+    # (SPEC_VOCABOLARIO §2.7/G3): un genitore SOSPESO non deve apparire "Chiuso"/"Attivo".
+    today = date.today()
+    parent = None
     if contract.rinnovo_di:
         parent = session.exec(
             select(Contract).where(
@@ -483,31 +497,43 @@ def get_contract(
                 Contract.deleted_at == None,
             )
         ).first()
-        if parent:
-            resp.contratto_originale = RenewalChainItem(
-                id=parent.id,
-                tipo_pacchetto=parent.tipo_pacchetto,
-                data_inizio=str(parent.data_inizio) if parent.data_inizio else None,
-                data_scadenza=str(parent.data_scadenza) if parent.data_scadenza else None,
-                chiuso=parent.chiuso,
-            )
-    children = session.exec(
+    children = list(session.exec(
         select(Contract).where(
             Contract.rinnovo_di == contract_id,
             Contract.trainer_id == trainer.id,
             Contract.deleted_at == None,
         ).order_by(Contract.data_inizio)
-    ).all()
-    resp.rinnovi_successivi = [
-        RenewalChainItem(
+    ).all())
+
+    # crediti_usati per i nodi catena (1 query batch) → distingue SOSPESO da ESAURITO
+    chain = ([parent] if parent else []) + children
+    chain_credits: dict[int, int] = {}
+    if chain:
+        chain_credit_rows = session.exec(
+            select(Event.id_contratto, func.count(Event.id))
+            .where(
+                Event.id_contratto.in_([c.id for c in chain]),
+                Event.categoria == "PT",
+                Event.stato != "Cancellato",
+                Event.deleted_at == None,
+            )
+            .group_by(Event.id_contratto)
+        ).all()
+        chain_credits = {row[0]: int(row[1]) for row in chain_credit_rows}
+
+    def _chain_item(c: Contract) -> RenewalChainItem:
+        return RenewalChainItem(
             id=c.id,
             tipo_pacchetto=c.tipo_pacchetto,
             data_inizio=str(c.data_inizio) if c.data_inizio else None,
             data_scadenza=str(c.data_scadenza) if c.data_scadenza else None,
             chiuso=c.chiuso,
+            lifecycle=cstate.contract_lifecycle(c, chain_credits.get(c.id, 0), today).value,
         )
-        for c in children
-    ]
+
+    if parent:
+        resp.contratto_originale = _chain_item(parent)
+    resp.rinnovi_successivi = [_chain_item(c) for c in children]
 
     return resp
 

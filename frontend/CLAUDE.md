@@ -236,17 +236,23 @@ Componente con 4 sotto-componenti inline:
 - Props: riceve `anno` e `mese` da `cassa/page.tsx`
 - Badge tab: `cassa/page.tsx` mostra badge numerico pending sul tab "Spese Fisse"
 
-### Badge Contratti (7 livelli priorita')
-`getPaymentBadge()` in `ContractsTable.tsx` — scala priorita' fissa:
-1. **Chiuso** (zinc secondary) — contratto chiuso
-2. **Insolvente** (red-600 solid white) — `ha_rate_scadute && isExpired` — caso peggiore
-3. **Rate in Ritardo** (red-100) — `ha_rate_scadute` senza contratto scaduto
-4. **Scaduto** (amber-100) — `data_scadenza < oggi` senza rate scadute
-5. **Saldato** (emerald-100) — `totale_versato >= prezzo_totale`
-6. **In corso (X/Y)** (blue-100) — rate in progress
-7. **Nessuna rata** (zinc-100) — default
+### Badge Contratti — due assi dal SSoT (SPEC_VOCABOLARIO §2.5)
+La cascata `getPaymentBadge()` a 8 rami (che fondeva vita+denaro e perdeva informazione) è
+**eliminata**. La classificazione arriva dal SSoT backend (`contract_state.py` → `ContractListItem`):
+`ContractsTable.tsx` **legge** i campi derivati, non ricalcola nulla. Due assi distinti, mai fusi:
+- **Colonna Stato** (asse vita): `<ContractLifecycleBadge lifecycle={c.lifecycle}/>` da `lib/contract-status` —
+  Attivo (emerald) · Sospeso (amber) · Esaurito (orange) · Chiuso (zinc).
+- **Colonna Pagamenti** (asse denaro): `<ContractMoneyBadge money={c.money_substate}/>` — Saldato · Pianificato ·
+  Parziale · Da pianificare (amber warning). Prezzo assente → `—` (niente "Saldato" fuorviante, AC-12b).
+- **"Denaro arretrato"** (`c.ha_rate_scadute`, derivato dal SSoT `rate_scadute`): **segnale di RIGA** — sfondo
+  rosso dark-safe + icona `AlertTriangle` (`role="img"` + `aria-label`), resistente all'hover. Copre sia gli
+  insolventi (scaduti) sia gli ATTIVO in ritardo (G1). Mai col solo colore. NON è un terzo badge.
 
-Colonna Scadenza: color-coded con `getScadenzaStyle()` (red < 0gg, amber < 7gg, amber-light < 30gg).
+`lib/contract-status.tsx` = fonte UNICA del vocabolario di display (mappa valore-enum → label+className,
+zero logica/date). Riusato anche da scheda dettaglio e — Giro 2 — da `rinnovi-incassi`/`workspace_engine`.
+
+Colonna Scadenza: **neutra** (niente gradiente `getScadenzaStyle` ricalcolato); l'urgenza la danno lo Stato
+(Sospeso/Esaurito = scaduto) e il flag `in_scadenza` (ATTIVO entro soglia).
 
 ### FilterBar Clienti (pattern Agenda)
 Stessa architettura `Set<string>` + chip toggle dell'Agenda, applicata a Clienti:
@@ -362,7 +368,7 @@ Token in cookie `fitmanager_token` (8h expiry). Trainer data in `fitmanager_trai
 | Calendar unmount on navigate | `onRangeChange` → new query key → `isLoading=true` → calendar unmounts → state reset a oggi | `keepPreviousData` + smart range check (return `prev` se range dentro buffer) |
 | D&D sposta evento -1h | `toISOString()` converte ora locale in UTC → offset perso | `toISOLocal()` da `lib/format.ts` — formatta locale senza `Z` |
 | 401 interceptor loop login | Interceptor cattura 401 credenziali errate → redirect a /login → loop | Skip redirect se `pathname.startsWith("/login")` |
-| Badge "Scaduto" per rate in ritardo | Confondeva contratto scaduto con rate scadute — significato diverso | 7 livelli badge: Insolvente (red solid), Rate in Ritardo (red light), Scaduto (amber) |
+| Badge "Scaduto" per rate in ritardo | Confondeva contratto scaduto con rate scadute — significato diverso. La cascata a 8 rami fondeva vita+denaro e perdeva informazione (un SOSPESO saldato mostrava "Scaduto") | **Superato (SPEC_VOCABOLARIO):** due assi separati dal SSoT (Stato `lifecycle` + Pagamenti `money_substate`) + segnale di riga per "denaro arretrato". Vedi sezione "Badge Contratti" |
 | KPI "Rate Scadute" contava contratti | `func.count(distinct(id_contratto))` → numeri bassi e fuorvianti | `func.count(Rate.id)` per contratti, label "Con Rate Scadute" per clienti |
 | Proxy intercetta fetch `/api/public/*` senza cookie | Next.js proxy gira PRIMA dei rewrites. `fetch('/api/public/...')` da pagina kiosk (no JWT cookie) → proxy → `307 /login` → client riceve HTML | Separare `PUBLIC_ROUTES` (accessibili senza auth, include `/api/public`) da `AUTH_ONLY_PAGES` (sole pagine auth che redirectano utenti loggati). MAI trattare queste due liste come sinonimi. |
 | Link kiosk da localhost non raggiungibile da altri device | `window.location.origin = "http://localhost:3000"` → URL nel link non raggiungibile su rete esterna | Mostrare warning amber nel dialog quando `hostname === "localhost"`. Il trainer deve accedere via IP LAN o Tailscale per generare link fruibili da smartphone. |
