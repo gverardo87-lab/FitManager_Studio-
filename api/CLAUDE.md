@@ -211,6 +211,8 @@ vincolante: `docs/technical/FINANCIAL_DOMAIN_MODEL.md` (v1.3) + `TASSONOMIA_FINA
 
 > **In arrivo (IMPL_PLAN_FINANCIAL_REALIGN v1.3, blocco G7 terminazione):** schema (`totale_rimborsato`/`quota_stornata`/`data_chiusura`/`motivo_chiusura`), categoria `RIMBORSO_CONTRATTO` scritta, `netto_incassato`, conguaglio puro su base sedute (`contract_settlement.py`), endpoint atomico a 2 gambe, allineamento delle 8 query di cassa al predicato. Quando atterra, aggiornare questa sezione.
 
+> **Consumo UI del SSoT (`docs/technical/SPEC_VOCABOLARIO_E_CLASSIFICAZIONE_CONTRATTI.md` v1.1, da implementare):** il frontend NON deve reimplementare la classificazione (oggi `getPaymentBadge` a cascata, `is_scaduto` ricalcolato 3×, 3 definizioni di "insolvente"). `list_contracts`/`get_contract` attaccano alla riga i campi derivati da `evaluate_contract` (`lifecycle`, `money_substate`, `is_insolvente`, `in_scadenza`) e il frontend li **legge** via modulo `contract-status.ts`. **`is_insolvente`** (flag derivato: `lifecycle ∈ {SOSPESO,ESAURITO} AND rate_scadute`) è il prossimo predicato da aggiungere a `contract_state.py`, gemello di `is_rate_planificabile`. La delega del residuo inline di `_to_response_with_rates` a `residuo()` **anticipa il BLOCKER #1 di G7**.
+
 ### Contract Integrity Engine
 Il contratto e' il nodo centrale del sistema. 12 livelli di protezione:
 

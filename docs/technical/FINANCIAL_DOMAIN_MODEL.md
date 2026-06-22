@@ -297,6 +297,12 @@ Tre termini erano usati con significati diversi → d'ora in poi:
 | **scaduto** | `data_scadenza < oggi` (asse tempo) — è una *condizione*, non uno stato di vita |
 | **terminazione** (v1.3) | chiusura **per decisione umana di un contratto vivo** (recesso/risoluzione/consensuale), con conguaglio — **distinta** dal *completamento* (auto-close) e dalla *consunzione* (scadenza). CHIUSO è sempre qualificato dal `motivo_chiusura` |
 | **conguaglio** (v1.3) | regolamento economico della terminazione, calcolato **sulle sedute**; segno: `<0` rimborso al cliente, `>0` dovuto dal cliente, `=0` pari |
+| **insolvente** (consumo UI) | **flag derivato cross-asse**, NON uno stato: `lifecycle ∈ {SOSPESO, ESAURITO}` **AND** `rate scadute`. Il modello resta a **4 stati + ELIMINATO** (§3); nessun badge-asse proprio; **mutuamente esclusivo con `in_scadenza`** per costruzione (uno scaduto, l'altro ATTIVO). È il sotto-caso *scaduto* del segnale "denaro arretrato" (`rate_scadute`), che su un ATTIVO si chiama "in ritardo". Definizione e resa UI vincolanti: `SPEC_VOCABOLARIO_E_CLASSIFICAZIONE_CONTRATTI.md` |
+
+> **"insolvente" è solo *consumo* del modello, non un'estensione.** Vive come predicato puro
+> (`is_insolvente(state)`) nel SSoT `contract_state.py`, gemello di `is_rate_planificabile`/
+> `is_residuo_incassabile_diretto`, e non aggiunge stati di vita né colonne. Registrato qui perché aveva
+> **tre definizioni divergenti** nel frontend: il consolidamento del vocabolario lo riporta a una sola.
 
 ### 4.1 Rollup cliente — natura MISTA: derivato + a memoria
 
@@ -352,6 +358,11 @@ Su un contratto aperto, indipendente dallo stato di vita:
 | **rate scadute** | ≥1 rata non-saldata con `data_scadenza < oggi` |
 
 "Rate non-saldate" = `stato ∈ {PENDENTE, PARZIALE}` (allineato all'aging).
+
+> **"rate scadute" ha UNA sola fonte.** Il SSoT `rate_scadute` (`evaluate_contract`) alimenta sia questo
+> sotto-stato, sia il flag-riga "denaro arretrato", sia il filtro Situazione, sia `is_insolvente` (§4). La
+> formula-riga "larga" preesistente (`ha_rate_scadute`, `contracts.py`) va derivata da qui o documentata come
+> suo alias — niente seconda formula viva (`SPEC_VOCABOLARIO_E_CLASSIFICAZIONE_CONTRATTI.md` §2.1/AC-1b).
 
 > **Contratti terminati (v1.3).** Un contratto CHIUSO per terminazione è **regolato** (settled): il
 > conguaglio ha portato `residuo` a 0 e le rate future sono soft-deleted. Non compare quindi in alcun

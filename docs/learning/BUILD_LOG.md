@@ -809,3 +809,48 @@ girata ancora di notte** (i 3 fallimenti precedenti erano tutti questa classe). 
 helper (deterministico, machine-independent). Learning capturato (tempo UTC salvato vs locale confrontato).
 
 ---
+
+### 2026-06-22 — SPEC_VOCABOLARIO unificazione stati contratto: v1.0 (chat) → review code-grounded → v1.1 → integrata in docs/
+
+**Cosa.** Prodotta in chat la `SPEC_VOCABOLARIO_E_CLASSIFICAZIONE_CONTRATTI.md` (spec di *consumo del SSoT*
++ *vocabolario UI*): il `contract_state` modella già correttamente lo stato su due assi ortogonali, ma
+nessuna superficie frontend lo consuma — `/contratti`, scheda dettaglio, `rinnovi-incassi`, `workspace_engine`
+reimplementano la classificazione ognuna a modo suo (cascata `getPaymentBadge`, `is_scaduto` ricalcolato 3×,
+3 definizioni divergenti di "insolvente"). Stesso contratto, nomi diversi a un click di distanza.
+
+**Bridge — review code-grounded (Claude Code, workflow 9 agenti su codice vivo).** 6 cluster di verifica
+adversariale + 3 dimensioni strategiche. **La diagnosi della v1.0 regge interamente** (claim verificati
+carattere per carattere): la cascata a 8 rami (non 7), il collasso `chiuso?"Chiuso":"Attivo"`, i 3 ricalcoli
+frontend, il SSoT che espone già `money_substate`/`MoneySubstate`/`evaluate_contract` (6 campi)/`ha_rate_scadute`
+sulla riga/batch-fetch pronti, e §4.7 che **omette** i 3 siti inline-residuo del `workspace_engine`. Scoperta
+strategica: la delega-residuo del §2.2 **NON collide con G7 — lo anticipa** (è il BLOCKER #1 "residuo→SSoT",
+byte-identico oggi, forward-compatible con `getattr(quota_stornata,0)`).
+
+**v1.1 — 3 gap HIGH chiusi con decisioni Giacomo** (i gap che la stesura a fonte-codice-chiusa non poteva
+vedere): **G1** il segnale di riga "denaro arretrato" scatta **anche su ATTIVO con rate scadute** (il caso
+"Rate in Ritardo" non sparisce dalla lista); **G2** insolvenza segnalata con **icona `AlertTriangle` +
+`aria-label` + opacità alzata**, mai col solo colore (regola `frontend/CLAUDE.md`), niente badge testuale;
+**G3** i nodi della catena rinnovi ricevono il **proprio `lifecycle`** (estensione `RenewalChainItem`).
+Più: imprecisioni corrette (8 rami; 3 def su 2 file; `financial.py:274` è doc non calcolo; AC-4/AC-5; drift
+righe), AC aggiunti (esclusività `is_insolvente`/`in_scadenza`; non-regressione + KPI cumulativi pitfall #14;
+edge `prezzo_totale=null`; percepibilità senza colore; riconciliazione "rate scadute" a una sola formula
+SSoT), grep-guard riposizionato da "CI" (inesistente) a `check-all.sh` con allowlist, censimento esteso dei
+siti inline-residuo (`dashboard.py:497` **senza clamp = bug latente di residuo negativo**, `rates.py:525/734`).
+
+**Integrazione in docs/ (questo step, ZERO codice).** Spec installata in `docs/technical/`; **puntatore
+"insolvente"** (flag derivato cross-asse, non uno stato) in `FINANCIAL_DOMAIN_MODEL.md` §4 (vocabolario) +
+§5 (sotto-stato denaro, fonte unica di "rate scadute") — mirrorato anche sul working copy Desktop per non
+perderlo al prossimo install; riga in `INDEX.md`; pointer in `api/CLAUDE.md` (sezione `contract_state.py`).
+**Nessun bump di versione del FDM** (la spec non modifica il modello: `is_insolvente`/`in_scadenza` sono
+derivazioni, il modello resta a 4 stati + ELIMINATO).
+
+**Sequenza decisa (verificata):** Giro 1 (`/contratti` + dettaglio + backend) → **G6** (incassa residuo) →
+**G7** (terminazione) → Giro 2 (`rinnovi-incassi` + `workspace_engine` + grep-guard). Mai Giro 1 in parallelo
+a G6 sugli stessi file. **Prossimo step: implementazione Giro 1.**
+
+**Learning da catturare (livello 3, `LEARNING_APP_ARCHITECTURE`):** un invariante che alcuni siti calcolano
+inline non si garantisce **enumerandone** i siti — l'enumerazione manuale è strutturalmente incompleta (qui
+ha mancato siti **due volte**: §4.7 e la v1.0 della spec) — ma o **centralizzando** la derivazione (delega al
+SSoT) o con **enforcement automatico** (grep-guard); meglio entrambi.
+
+---
