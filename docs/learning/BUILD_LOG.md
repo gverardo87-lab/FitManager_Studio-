@@ -1224,3 +1224,42 @@ inline fa diventare rossa la suite.
 exclusion-set, commit a sé) → **G7**. A e B mai nello stesso commit (§1.1).
 
 ---
+
+### 2026-06-23 — SPEC_REVISIONE_PRE_G7 Sezione B: copertura SOSPESO nel workspace (cambiamento funzionale)
+
+**Cosa.** Il cockpit operativo (`/api/workspace/cases?workspace=renewals_cash`) non vedeva i contratti
+**SOSPESO** (aperti, scaduti, con sedute prepagate ancora da erogare): cadevano nel buco fra la maglia
+*renewal* (`data_scadenza >= today`) e la maglia *overdue* (rate scadute) — mentre lista
+(`kpi_da_incassare_scaduto`) e `/dashboard/suspended-contracts` li mostravano già. Cambiamento **funzionale**
+(non output-invariante → verificato con test che descrivono i case attesi, non con l'output di prima).
+
+**Backend** (`workspace_engine.py`). Nuovo `case_kind` `suspended_contract` (schema `workspace.py`). Loader
+`_load_suspended_contract_rows`: pre-filtro SQL grossolano (aperti + scaduti + con crediti) → classificazione
+fine **dal SSoT** `contract_state.contract_lifecycle == SOSPESO` (esclude gli ESAURITO, regola d'oro §10),
+aging **invertito** (più vecchio = più urgente: l'obbligazione non decade). Builder
+`_build_suspended_contract_cases` → `OperationalCase` in `renewals_cash`. Helper `_suspended_bucket`/`_severity`.
+Cablato nell'assembly **dopo** overdue, con l'**exclusion-set `overdue_contract_ids`** (un SOSPESO che ha
+ANCHE rate scadute è già `payment_overdue` → niente doppione; la dedup fra builder passa dagli exclusion-set,
+**non** da `merge_key` — nessun consumer lo legge).
+
+**Decisioni di dominio (AC-B3, documentate).** Aggancio su **`lifecycle==SOSPESO`, NON su `residuo>0`**: un
+SOSPESO *saldato* con sedute residue (residuo 0) è il caso-tipo del doppio-debito e deve comparire. Bucket
+**`now`** (obbligazione già scaduta, azionabile subito; non una deadline futura). Severity per aging, **mai
+`critical`** (riservato all'arretrato di cassa). **Doppio-debito esplicito**: sedute (asse crediti, nel
+testo/segnale) ≠ denaro (asse denaro, `total_residual_amount = cstate.residuo` — già SSoT da Sez. A).
+
+**Frontend.** `case_kind` `suspended_contract` aggiunto all'union `CaseKind` e ai due `Record<CaseKind,…>`
+esaustivi (`DEFAULT_CASE_KIND_TONES` + `WORKSPACE_CASE_KIND_META`, label "Sospeso") + `getFinanceAmountLabel`
+("Residuo") + `getCaseImpactLine`. (Senza questi il `next build` rompe sui Record esaustivi.)
+
+**Test.** `tests/test_workspace_suspended.py` (7): il SOSPESO compare; ESAURITO/ATTIVO no; bucket `now` +
+`total_residual_amount == residuo del dettaglio`; severity alta su molto-scaduto; **dedup** (SOSPESO con rata
+scaduta → `payment_overdue`, NON `suspended_contract`); **allineamento AC-B2** con `/dashboard/suspended-contracts`.
+
+**Verifica.** Suite **559 passed / 1 xfailed** (552 + 7); `check-all` verde. Zero regressioni (anche
+`test_workspace_today`, già flaky, verde). Commit **separato da Sezione A** (§1.1).
+
+**⏭️ Prossimo:** **G7** terminazione (4 colonne plain + conguaglio policy-gated + endpoint atomico 2 gambe,
+4 BLOCKER §4.7; il BLOCKER residuo→SSoT è già soddisfatto da Sez. A). Poi G1 cifratura; Giro 2 vocabolario.
+
+---

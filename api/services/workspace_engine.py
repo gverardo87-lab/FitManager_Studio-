@@ -343,6 +343,22 @@ def _payment_due_soon_severity(days_left: int) -> str:
     return "low"
 
 
+def _suspended_bucket(days_overdue: int) -> str:
+    # SOSPESO = obbligazione GIÀ scaduta (sedute prepagate da erogare), non una deadline futura:
+    # va resa visibile e azionabile subito → "now". L'aging modula la severity, non il bucket.
+    return "now"
+
+
+def _suspended_severity(days_overdue: int) -> str:
+    # Aging-invertito: l'obbligazione non decade, l'urgenza cresce nel tempo (FDM §4.1). Non
+    # "critical" (riservato all'arretrato di cassa, payment_overdue): qui è un debito di sedute.
+    if days_overdue > 60:
+        return "high"
+    if days_overdue > 14:
+        return "medium"
+    return "low"
+
+
 def _recurring_expense_bucket(days_left: int) -> str:
     if days_left <= 0:
         return "today"
@@ -1320,6 +1336,155 @@ def _build_contract_renewal_cases(
                     currency="EUR",
                     total_due_amount=contract.prezzo_totale or 0,
                     total_residual_amount=cstate.residuo(contract),  # SSoT (SPEC_REVISIONE_PRE_G7 §A)
+                    contract_id=contract_id,
+                ),
+                suggested_actions=[
+                    _link_action("open-contract", "Apri contratto", f"/contratti/{contract_id}", primary=True),
+                ],
+                source_refs=[f"contract:{contract_id}"],
+            )
+        )
+
+    return cases
+
+
+def _load_suspended_contract_rows(
+    *,
+    trainer_id: int,
+    session: Session,
+    reference_date: date,
+):
+    """Contratti SOSPESO: aperti, scaduti, con crediti residui > 0 (sedute prepagate da erogare).
+
+    Stato di vita derivato dal SSoT contract_state (regola d'oro §10), non da SQL inline: il
+    pre-filtro SQL è grossolano (aperti + scaduti + con crediti), la classificazione fine
+    (esclude ESAURITO = crediti_residui 0) la fa `contract_lifecycle`. Aging INVERTITO (più
+    vecchio = più urgente: l'obbligazione non decade). Specchia
+    `dashboard._suspended_contracts_candidates` per l'allineamento cross-surface (AC-B2).
+    """
+    contracts = session.exec(
+        select(Contract, Client)
+        .join(Client, Contract.id_cliente == Client.id)
+        .where(
+            Contract.trainer_id == trainer_id,
+            Contract.deleted_at == None,
+            Contract.chiuso == False,
+            Contract.data_scadenza != None,
+            Contract.data_scadenza < reference_date,
+            Contract.crediti_totali != None,
+        )
+    ).all()
+
+    if not contracts:
+        return []
+
+    contract_ids = [contract.id for contract, _ in contracts if contract.id is not None]
+    credit_rows = session.execute(
+        text(
+            """
+            SELECT e.id_contratto, COUNT(*) as usati
+            FROM agenda e
+            WHERE e.id_contratto IN :contract_ids
+              AND e.categoria = 'PT'
+              AND e.stato != 'Cancellato'
+              AND e.deleted_at IS NULL
+            GROUP BY e.id_contratto
+            """
+        ).bindparams(bindparam("contract_ids", expanding=True)),
+        {"contract_ids": contract_ids},
+    ).fetchall()
+    credits_map = {row[0]: row[1] for row in credit_rows}
+
+    items = []
+    for contract, client in contracts:
+        used = credits_map.get(contract.id or 0, 0)
+        # SSoT: tieni SOLO i SOSPESO (esclude gli ESAURITO con crediti_residui == 0)
+        if cstate.contract_lifecycle(contract, used, reference_date) != cstate.Lifecycle.SOSPESO:
+            continue
+        residual_credits = cstate.crediti_residui(contract, used)
+        due_date = contract.data_scadenza
+        days_overdue = (reference_date - due_date).days
+        items.append((contract, client, residual_credits, days_overdue, due_date))
+
+    items.sort(key=lambda t: t[3], reverse=True)  # aging invertito: più scaduto prima
+    return items
+
+
+def _build_suspended_contract_cases(
+    *,
+    trainer_id: int,
+    session: Session,
+    reference_date: date,
+    overdue_contract_ids: set[int] | None = None,
+) -> list[OperationalCase]:
+    """SOSPESO → OperationalCase in `renewals_cash` (SPEC_REVISIONE_PRE_G7 §B).
+
+    Colma il buco strutturale: le maglie renewal (`data_scadenza >= today`) e overdue (rate
+    scadute) NON intercettano un contratto scaduto-con-crediti-senza-rate-scadute. Dedup: se ha
+    anche rate scadute è già un `payment_overdue` → escluso via `overdue_contract_ids` (la dedup
+    fra builder passa dagli exclusion-set, NON da `merge_key`). Doppio-debito esplicito: sedute
+    (asse crediti, nel testo) ≠ denaro (asse denaro, `total_residual_amount`).
+    """
+    cases: list[OperationalCase] = []
+    for contract, client, residual_credits, days_overdue, due_date in _load_suspended_contract_rows(
+        trainer_id=trainer_id,
+        session=session,
+        reference_date=reference_date,
+    ):
+        contract_id = contract.id or 0
+        if contract_id in (overdue_contract_ids or set()):
+            continue
+        residuo_denaro = cstate.residuo(contract)
+        severity = _suspended_severity(days_overdue)
+        client_id = client.id or 0
+        client_label = _full_name(client.nome, client.cognome)
+        sedute_label = f"{residual_credits} {'seduta' if residual_credits == 1 else 'sedute'} da recuperare"
+        reason = f"Scaduto da {days_overdue} giorni · {sedute_label}"
+        if residuo_denaro > 0.009:
+            reason += f" · {residuo_denaro:.2f} EUR ancora da incassare"
+        case_id = f"case:suspended_contract:contract:{contract_id}"
+        cases.append(
+            OperationalCase(
+                case_id=case_id,
+                merge_key=case_id,
+                workspace="renewals_cash",
+                case_kind="suspended_contract",
+                title=f"Sedute da recuperare: {client_label}",
+                reason=reason,
+                severity=severity,
+                bucket=_suspended_bucket(days_overdue),
+                due_date=due_date,
+                days_to_due=-days_overdue,  # negativo = già scaduto
+                root_entity=WorkspaceRootEntity(
+                    type="contract",
+                    id=contract_id,
+                    label=contract.tipo_pacchetto or f"Contratto {contract_id}",
+                    href=f"/contratti/{contract_id}",
+                ),
+                secondary_entity=WorkspaceRootEntity(
+                    type="client",
+                    id=client_id,
+                    label=client_label,
+                    href=f"/clienti/{client_id}",
+                ),
+                signal_count=1,
+                preview_signals=[
+                    WorkspaceSignal(
+                        signal_code="contract_suspended",
+                        source="suspended_contracts",
+                        label="Contratto sospeso (sedute prepagate residue)",
+                        severity=severity,
+                        due_date=due_date,
+                        reason=sedute_label,
+                    )
+                ],
+                finance_context=WorkspaceFinanceContext(
+                    visibility="full",
+                    due_date=due_date,
+                    overdue_count=None,
+                    currency="EUR",
+                    total_due_amount=contract.prezzo_totale or 0,
+                    total_residual_amount=residuo_denaro,  # SSoT residuo (asse denaro del doppio-debito)
                     contract_id=contract_id,
                 ),
                 suggested_actions=[
@@ -2316,6 +2481,14 @@ def collect_workspace_snapshot(
         overdue_contract_ids=overdue_contract_ids,
         due_soon_contract_ids=due_soon_contract_ids,
     )
+    # SOSPESO (scaduti aperti con sedute residue): maglia mancante fra renewal (futuri) e overdue
+    # (rate scadute). Dedup via overdue_contract_ids — un SOSPESO con rate scadute è già overdue.
+    suspended_cases = _build_suspended_contract_cases(
+        trainer_id=trainer_id,
+        session=session,
+        reference_date=today,
+        overdue_contract_ids=overdue_contract_ids,
+    )
     recurring_expense_cases = _build_recurring_expense_due_cases(
         trainer_id=trainer_id,
         session=session,
@@ -2334,6 +2507,7 @@ def collect_workspace_snapshot(
         *overdue_cases,
         *due_soon_cases,
         *renewal_cases,
+        *suspended_cases,
         *recurring_expense_cases,
         *reactivation_cases,
     ]

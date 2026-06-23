@@ -1239,6 +1239,7 @@ export type CaseKind =
   | "payment_overdue"
   | "payment_due_soon"
   | "contract_renewal_due"
+  | "suspended_contract"
   | "recurring_expense_due"
   | "client_reactivation"
   | "ops_anomaly"

@@ -88,6 +88,9 @@ export const WORKSPACE_CASE_KIND_META: Record<
   contract_renewal_due: {
     label: "Rinnovo",
   },
+  suspended_contract: {
+    label: "Sospeso",
+  },
   recurring_expense_due: {
     label: "Spesa",
   },
@@ -161,6 +164,7 @@ export function getFinanceAmountLabel(caseKind: CaseKind): string {
   if (caseKind === "recurring_expense_due") return "Uscita";
   if (caseKind === "payment_due_soon") return "In arrivo";
   if (caseKind === "contract_renewal_due") return "Residuo";
+  if (caseKind === "suspended_contract") return "Residuo";
   return "Da incassare";
 }
 
@@ -213,6 +217,8 @@ export function getCaseImpactLine(item: OperationalCase): string {
       return "Se lo prepari adesso, eviti che una scadenza vicina diventi arretrato.";
     case "contract_renewal_due":
       return "Se non lo muovi oggi, il rinnovo perde slancio commerciale.";
+    case "suspended_contract":
+      return "Il cliente ha sedute prepagate non erogate: estendi o salda, prima che diventi un problema.";
     case "recurring_expense_due":
       return "Se la confermi nel contesto corretto, la previsione di cassa resta pulita e auditabile.";
     case "client_reactivation":

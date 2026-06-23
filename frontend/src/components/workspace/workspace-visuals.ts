@@ -35,6 +35,7 @@ const DEFAULT_CASE_KIND_TONES: Record<CaseKind, SurfaceTone> = {
   payment_overdue: "red",
   payment_due_soon: "amber",
   contract_renewal_due: "amber",
+  suspended_contract: "amber",
   recurring_expense_due: "amber",
   client_reactivation: "teal",
   ops_anomaly: "red",
@@ -45,6 +46,7 @@ const FINANCE_CASE_KIND_TONE_OVERRIDES: Partial<Record<CaseKind, SurfaceTone>> =
   payment_overdue: "red",
   payment_due_soon: "amber",
   contract_renewal_due: "teal",
+  suspended_contract: "amber",
   recurring_expense_due: "amber",
 };
 
