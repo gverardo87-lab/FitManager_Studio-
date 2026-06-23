@@ -30,6 +30,7 @@ from api.schemas.workspace import (
     WorkspaceTodayResponse,
     WorkspaceTodaySection,
 )
+from api.services import contract_state as cstate  # SSoT residuo() (SPEC_REVISIONE_PRE_G7 §A)
 from api.services.clinical_readiness import compute_clinical_readiness_data
 from api.services.recurring_expense_schedule import (
     list_pending_recurring_expense_occurrences,
@@ -1131,10 +1132,7 @@ def _build_payment_due_soon_cases(
             sum(rate.importo_previsto - rate.importo_saldato for rate in rates),
             2,
         )
-        contract_residual_amount = round(
-            max((contract.prezzo_totale or 0) - contract.totale_versato, 0),
-            2,
-        )
+        contract_residual_amount = cstate.residuo(contract)  # SSoT (SPEC_REVISIONE_PRE_G7 §A)
         reason = (
             f"1 rata in scadenza il {earliest_due.isoformat()}"
             if due_count == 1
@@ -1320,8 +1318,8 @@ def _build_contract_renewal_cases(
                     due_date=due_date,
                     overdue_count=None,
                     currency="EUR",
-                    total_due_amount=contract.prezzo_totale,
-                    total_residual_amount=round(max((contract.prezzo_totale or 0) - contract.totale_versato, 0), 2),
+                    total_due_amount=contract.prezzo_totale or 0,
+                    total_residual_amount=cstate.residuo(contract),  # SSoT (SPEC_REVISIONE_PRE_G7 §A)
                     contract_id=contract_id,
                 ),
                 suggested_actions=[

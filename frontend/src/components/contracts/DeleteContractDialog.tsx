@@ -31,7 +31,10 @@ import type { Contract } from "@/types/api";
 interface DeleteContractDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  contract: Contract | null;
+  // Richiede il `residuo` dal SSoT backend (SPEC_REVISIONE_PRE_G7 §A: il frontend LEGGE, non
+  // ricalcola). I caller passano ContractListItem (lista) o ContractWithRates (dettaglio), che
+  // lo espongono entrambi; non lo dichiariamo su `Contract` base (POST/PUT non lo ritornano).
+  contract: (Contract & { residuo: number }) | null;
   clientName?: string;
   onDeleted?: () => void;
 }
@@ -55,7 +58,7 @@ export function DeleteContractDialog({
       ? (contract as Contract & { rate_totali: number; rate_pagate: number }).rate_totali -
         (contract as Contract & { rate_totali: number; rate_pagate: number }).rate_pagate
       : 0;
-  const importoNonRiscosso = (contract.prezzo_totale ?? 0) - (contract.totale_versato ?? 0);
+  const importoNonRiscosso = contract.residuo; // SSoT backend (clamp ≥0 incluso), no ricalcolo
   const creditiResidui = (contract.crediti_totali ?? 0) - (contract.crediti_usati ?? 0);
   const hasPagamenti = (contract.totale_versato ?? 0) > 0;
   const needsForce = ratePendenti > 0 || creditiResidui > 0;

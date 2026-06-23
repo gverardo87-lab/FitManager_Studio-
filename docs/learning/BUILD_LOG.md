@@ -1177,3 +1177,50 @@ finanziario vivo"). Desktop working copy lasciata al founder; **canonica = repo*
 **Sezione B** (builder SOSPESO workspace, commit a sé) → **G7**. A e B mai nello stesso commit (§1.1).
 
 ---
+
+### 2026-06-23 — SPEC_REVISIONE_PRE_G7 Sezione A: convergenza del residuo al SSoT (refactoring output-invariante)
+
+**Cosa.** Tutti i siti che ricalcolavano il residuo del contratto inline (`prezzo − versato`) ora **delegano**
+a `contract_state.residuo()` — unica definizione. Prerequisito di G7 (che ridefinirà `residuo = prezzo − versato
+− quota_stornata`): senza questa convergenza, ogni copia inline diventerebbe una bugia silenziosa. Refactoring
+**output-invariante** (oracolo: la suite di prima, byte-identica).
+
+**Backend delegato (9 siti, incl. i 5 trovati dal bridge oltre la lista A.4):**
+- `contracts.py:296` (`kpi_residuo`) → `Σ cstate.residuo(c)`; `:324` (`resto`) → `cstate.residuo(c) − rate`.
+- `workspace_engine.py:1135/1324` (finance_context renewals_cash) → `cstate.residuo(contract)` (+`prezzo_totale or 0`
+  su `total_due_amount`); aggiunto import `contract_state`.
+- `dashboard.py:497` (`contracts-to-plan.importo_residuo`) → `cstate.residuo(contract)` (guadagna il clamp).
+- `rates.py:525` (**cap anti-overpayment di `pay_rate`** — guard di integrità: il più importante) → `cstate.residuo`;
+  `:734` (`generate_payment_plan`) → `cstate.residuo` + **rimossa la formula hard-coded dal messaggio 422**;
+  aggiunto import `contract_state`.
+- `dashboard.py:446` (where-clause ORM `prezzo > versato`) **lasciato** come pre-filtro grezzo (SQL, non delegabile;
+  il SSoT ri-corregge a valle via `is_rate_planificabile`; regex-safe perché senza `-`).
+- `financial.py:310` — corretto il **commento** `# prezzo_totale − totale_versato` (era un falso positivo del guard-rail).
+
+**Frontend.** `DeleteContractDialog.tsx:58` (`importoNonRiscosso`, unico ricalcolo residuo del FE) → legge
+`contract.residuo` dal SSoT backend; prop ristretto a `Contract & { residuo: number }` (i caller passano
+`ContractListItem`/`ContractWithRates`, entrambi lo espongono) → guadagna il clamp `max(0,…)`.
+
+**Reti (AC).** `tests/test_residuo_convergence.py`: **AC-A1** guard-rail in suite (source-scan `api/**/*.py`,
+allowlist `contract_state.py`, regex sulla coppia `prezzo_totale…−…totale_versato`) **+ meta-test** che prova che
+non è un no-op; **AC-A2** coerenza cross-surface (lista = dettaglio = workspace `finance_context`, fixture pilotata
+su contratto in scadenza → `total_residual_amount` È il residuo-contratto). **AC-A3** (invariante `kpi_residuo =
+a_rate + da_pianificare + da_incassare_scaduto`) già presidiato da `test_contracts_to_plan.py:218`.
+
+**Limiti noti del guard-rail (documentati).** AC-A1 è sintattico: cieco a predicati ORM (`dashboard.py:446`),
+raw-SQL, forme multilinea e **frontend TS**. AC-A2 è il backstop semantico. L'hook di CI dedicato e una guardia
+TS sono direzione futura (§A.5), fuori da questo giro.
+
+**Verifica.** Suite **552 passed / 1 xfailed** (549 + 3 nuovi): ogni test pre-esistente **invariato** → byte-identità
+confermata. I 3 siti senza clamp (`dashboard.py:497`, `rates.py:525`, `DeleteContractDialog.tsx:58`) cambiano output
+SOLO su contratto sovra-pagato (negativo→0): correzione di bug latente attesa, non regressione. `check-all` verde.
+
+**Lezione.** Per un valore *derivato* (residuo) l'enforcement non è la disciplina ma una **proprietà presidiata**:
+il guard-rail (sintattico, prima linea) + il test cross-surface (semantico, cattura anche l'ignoto). Il bridge aveva
+già provato che l'enumerazione manuale manca i siti (A.4 ne aveva mancati 5/9). Ora un nuovo `prezzo − versato`
+inline fa diventare rossa la suite.
+
+**⏭️ Prossimo:** **Sezione B** (builder SOSPESO nel workspace `renewals_cash`, `lifecycle==SOSPESO`, dedup via
+exclusion-set, commit a sé) → **G7**. A e B mai nello stesso commit (§1.1).
+
+---

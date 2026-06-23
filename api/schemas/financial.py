@@ -307,7 +307,7 @@ class ContractWithRatesResponse(ContractResponse):
     rinnovi_successivi: List[RenewalChainItem] = []          # children
 
     # ── KPI Computed (calcolati nel router) ──
-    residuo: float = 0                  # prezzo_totale - totale_versato
+    residuo: float = 0                  # SSoT: contract_state.residuo() (no formula inline)
     percentuale_versata: int = 0        # round((totale_versato / prezzo_totale) * 100)
     importo_da_rateizzare: float = 0    # prezzo - acconto - somma(SALDATA)
     somma_rate_previste: float = 0      # sum(ALL importo_previsto)

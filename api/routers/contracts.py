@@ -293,7 +293,7 @@ def list_contracts(
     #   Invariante: residuo = a_rate + da_pianificare + da_incassare_scaduto.
     # NB: 'venduto' (Σ prezzo) NON sta qui — appartiene allo storico (kpi_fatturato).
     kpi_residuo = round(
-        sum(max(0.0, (c.prezzo_totale or 0) - (c.totale_versato or 0)) for c in all_contracts if not c.chiuso),
+        sum(cstate.residuo(c) for c in all_contracts if not c.chiuso),  # SSoT: Σ residuo() per contratto aperto
         2,
     )
     residui_a_rate_by_contract: dict[int, float] = {}
@@ -321,7 +321,7 @@ def list_contracts(
     for c in all_contracts:
         if c.chiuso:
             continue
-        resto = max(0.0, (c.prezzo_totale or 0) - (c.totale_versato or 0) - residui_a_rate_by_contract.get(c.id, 0.0))
+        resto = max(0.0, cstate.residuo(c) - residui_a_rate_by_contract.get(c.id, 0.0))  # residuo SSoT − rate
         if resto <= 0:
             continue
         if cstate.is_vigente(c, today):

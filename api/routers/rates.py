@@ -39,6 +39,7 @@ from api.schemas.financial import (
     AgingItem, AgingBucket, AgingResponse,
 )
 from api.routers._audit import log_audit, log_contract_lifecycle_transition
+from api.services import contract_state as cstate  # SSoT residuo() (SPEC_REVISIONE_PRE_G7 §A)
 from api.services.cash_categories import CATEGORIA_PAGAMENTO_RATA  # SSoT categorie cassa
 
 router = APIRouter(prefix="/rates", tags=["rates"])
@@ -522,7 +523,7 @@ def pay_rate(
     # B-ter) Validazione livello contratto: pagamento non eccede prezzo totale
     contract = session.get(Contract, rate.id_contratto)
     if contract.prezzo_totale:
-        residuo_contratto = round(contract.prezzo_totale - contract.totale_versato, 2)
+        residuo_contratto = cstate.residuo(contract)  # SSoT (SPEC_REVISIONE_PRE_G7 §A): cap = residuo()
         if data.importo > residuo_contratto + 0.01:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -729,18 +730,16 @@ def generate_payment_plan(
             detail="Impossibile generare piano rate per un contratto chiuso",
         )
 
-    # Validazione: importo_da_rateizzare deve corrispondere al residuo reale
-    # totale_versato e' la fonte di verita' (include acconto + rate + pagamenti legacy)
-    residuo_atteso = round(max(0, (contract.prezzo_totale or 0) - (contract.totale_versato or 0)), 2)
+    # Validazione: importo_da_rateizzare deve corrispondere al residuo reale.
+    # Residuo dal SSoT (SPEC_REVISIONE_PRE_G7 §A): unica definizione, no formula inline/nel messaggio.
+    residuo_atteso = cstate.residuo(contract)
 
     if abs(data.importo_da_rateizzare - residuo_atteso) > 0.01:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
                 f"importo_da_rateizzare ({data.importo_da_rateizzare:.2f}) "
-                f"non corrisponde al residuo ({residuo_atteso:.2f}). "
-                f"Formula: prezzo_totale ({contract.prezzo_totale}) "
-                f"- totale_versato ({contract.totale_versato})"
+                f"non corrisponde al residuo del contratto ({residuo_atteso:.2f})."
             ),
         )
 

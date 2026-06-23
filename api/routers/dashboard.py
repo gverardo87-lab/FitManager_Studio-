@@ -494,7 +494,7 @@ def get_contracts_to_plan(
     today = date.today()
     items = []
     for contract, client in _contracts_to_plan_candidates(session, trainer.id, today):
-        residuo = round((contract.prezzo_totale or 0) - (contract.totale_versato or 0), 2)
+        residuo = cstate.residuo(contract)  # SSoT (SPEC_REVISIONE_PRE_G7 §A): no ricalcolo inline
         scad = contract.data_scadenza
         items.append({
             "contract_id": contract.id,
