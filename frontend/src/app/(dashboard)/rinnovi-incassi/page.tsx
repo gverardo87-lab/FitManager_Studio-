@@ -54,6 +54,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { DatePicker } from "@/components/ui/date-picker";
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import { ContractSheet } from "@/components/contracts/ContractSheet";
+import { IncassaResiduoDialog } from "@/components/contracts/IncassaResiduoDialog";
 import { useOverdueRates, useExpiringContracts, useClientsToRecover, useSuspendedContracts } from "@/hooks/useDashboard";
 import { usePayRate } from "@/hooks/useRates";
 import { useMarkRenewalOutcome, useUpdateContract } from "@/hooks/useContracts";
@@ -414,8 +415,10 @@ function RecoverCard({
 function SuspendedCard({ item }: { item: SuspendedContractItem }) {
   const updateContract = useUpdateContract();
   const [extendOpen, setExtendOpen] = useState(false);
+  const [incassaOpen, setIncassaOpen] = useState(false);
   const [newDate, setNewDate] = useState<Date | undefined>(undefined);
   const isExtending = updateContract.isPending;
+  const hasResiduo = item.residuo > 0.009;
 
   const ritardoLabel = item.giorni_ritardo === 1
     ? "Sospeso da 1 giorno"
@@ -484,6 +487,18 @@ function SuspendedCard({ item }: { item: SuspendedContractItem }) {
           >
             Decadi
           </Button>
+          {/* Incassa residuo diretto (G6): denaro dovuto su contratto scaduto non rateizzabile */}
+          {hasResiduo ? (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setIncassaOpen(true)}
+              className="text-xs"
+            >
+              <HandCoins className="mr-1.5 h-3.5 w-3.5" />
+              Incassa {formatCurrency(item.residuo)}
+            </Button>
+          ) : null}
           <Button size="sm" onClick={openExtend} disabled={isExtending}>
             {isExtending ? (
               <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
@@ -494,6 +509,16 @@ function SuspendedCard({ item }: { item: SuspendedContractItem }) {
           </Button>
         </div>
       </div>
+
+      {hasResiduo ? (
+        <IncassaResiduoDialog
+          contractId={incassaOpen ? item.contract_id : null}
+          residuo={item.residuo}
+          clientLabel={`${item.client_nome} ${item.client_cognome}`}
+          open={incassaOpen}
+          onOpenChange={setIncassaOpen}
+        />
+      ) : null}
 
       <Dialog open={extendOpen} onOpenChange={setExtendOpen}>
         <DialogContent>

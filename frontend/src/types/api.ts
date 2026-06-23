@@ -648,6 +648,7 @@ export interface ContractListItem extends Contract {
   rate_totali: number;
   rate_pagate: number;
   ha_rate_scadute: boolean;
+  residuo: number; // SSoT contract_state.residuo() — il frontend LEGGE, non ricalcola (G6)
 }
 
 /** Minimal contract info for renewal chain display */

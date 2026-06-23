@@ -15,6 +15,7 @@ import type {
   ContractUpdate,
   ContractWithRates,
   ContractListResponse,
+  RatePayment,
 } from "@/types/api";
 
 // ── Query: lista contratti (tutti, filtraggio client-side) ──
@@ -193,6 +194,42 @@ export function useReopenRenewalOutcome() {
     },
     onError: (error) => {
       toast.error(extractErrorMessage(error, "Errore nella riapertura"));
+    },
+  });
+}
+
+// ── Mutation: incassa residuo diretto (G6) ──
+// Incasso ENTRATA legato al contratto SENZA passare da una rata (contratti scaduti il cui
+// residuo non è più rateizzabile). Invalidazione IDENTICA a usePayRate (regola ferrea:
+// operazioni di cassa contrattuale invalidano lo stesso set) → KPI/ledger/dashboard freschi.
+
+export function useIncassaResiduo() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      contractId,
+      ...payload
+    }: RatePayment & { contractId: number }) => {
+      const { data } = await apiClient.post<Contract>(
+        `/contracts/${contractId}/incassa-residuo`,
+        payload
+      );
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contract"] });
+      queryClient.invalidateQueries({ queryKey: ["contracts"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["movements"] });
+      queryClient.invalidateQueries({ queryKey: ["movement-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["financial-trend"] });
+      queryClient.invalidateQueries({ queryKey: ["aging-report"] });
+      queryClient.invalidateQueries({ queryKey: ["cash-balance"] });
+      toast.success("Residuo incassato");
+    },
+    onError: (error) => {
+      toast.error(extractErrorMessage(error, "Errore nell'incasso del residuo"));
     },
   });
 }

@@ -203,11 +203,12 @@ ricalcola "attivo/scaduto/residuo" inline — tutti derivano da qui (`residuo()`
 `is_rate_planificabile()`, `is_engaged()`, costanti `SOGLIA_IN_SCADENZA_GG`/`SOGLIA_CHURN_GG`). Modello
 vincolante: `docs/technical/FINANCIAL_DOMAIN_MODEL.md` (v1.3) + `TASSONOMIA_FINANZIARIA.md` (v1.2).
 
-**Già in codice (Blocchi 0-3 + Prereq P):**
+**Già in codice (Blocchi 0-4 + Prereq P):**
 - `cash_categories.py` — predicato cassa **bidirezionale** (IN `ACCONTO_CONTRATTO`/`PAGAMENTO_RATA`, OUT `RIMBORSO_CONTRATTO`); fonte unica delle costanti categoria.
 - **Audit della transizione `chiuso`**: `log_contract_lifecycle_transition()` in `_audit.py` (idempotente, no-commit), cablato in `pay_rate` (completamento), `unpay_rate` (riapertura_pagamento), `agenda._sync_contract_chiuso` (completamento/riapertura_crediti).
 - Worklist finanziarie derivate da `contract_state`: `contracts-to-plan` (G1), `clients-to-recover` (lapsed), `suspended-contracts` (SOSPESO).
 - Forecast: filtra `Contract.chiuso == False` sulle entrate certe (no entrata-fantasma da rate PENDENTI su contratti chiusi).
+- **G6 incasso residuo diretto**: `POST /contracts/{id}/incassa-residuo` (`contracts.py`) — ENTRATA legata al contratto senza rata (categoria `PAGAMENTO_RATA`, `id_rata=None`), `totale_versato +=`, auto-close canonico via `_sync_contract_chiuso` (la transizione `chiuso` la logga lui, no doppio audit — G6 rispecchia `pay_rate`), residuo dal SSoT `contract_state.residuo()`, bouncer 404 + cap overpayment 422, UN solo commit. Riusa lo schema `RatePayment`. Il `residuo` SSoT è ora esposto anche su `ContractListResponse` (`residuo`) → il frontend lo **legge** (mai ricalcolo inline).
 
 > **In arrivo (IMPL_PLAN_FINANCIAL_REALIGN v1.3, blocco G7 terminazione):** schema (`totale_rimborsato`/`quota_stornata`/`data_chiusura`/`motivo_chiusura`), categoria `RIMBORSO_CONTRATTO` scritta, `netto_incassato`, conguaglio puro su base sedute (`contract_settlement.py`), endpoint atomico a 2 gambe, allineamento delle 8 query di cassa al predicato. Quando atterra, aggiornare questa sezione.
 

@@ -24,15 +24,17 @@
 >   dettaglio derivano lo stato dal SSoT (niente ricalcolo inline); nuovo modulo frontend `lib/contract-status.tsx`.
 > - **data_scadenza-null** (`3be936f`) — carnet **senza scadenza** first-class (FDM §2): `ContractCreate.data_scadenza`
 >   reso `Optional` + checkbox UI "Senza scadenza". Decisione 1 dell'audit invarianti Contract.
+> - **Blocco 4 (G6)** — `POST /contracts/{id}/incassa-residuo` (incasso ENTRATA diretto, senza rata): bouncer
+>   → guard chiuso → residuo via SSoT → cap → `totale_versato +=` + auto-close canonico (`_sync_contract_chiuso`)
+>   → audit, UN solo commit. Riusa `RatePayment`. Frontend: `useIncassaResiduo` + `IncassaResiduoDialog` su
+>   SuspendedCard (`/rinnovi-incassi`) + dropdown `ContractsTable`. **+16 test** (`test_incassa_residuo.py`).
+>   Review adversariale (13 agenti) → 4 fix: **`residuo` SSoT esposto su `ContractListResponse`** (il frontend
+>   legge, non ricalcola — §8.1/§8.9), dialog `open` disaccoppiato dal target, test ledger-reale, assert categoria.
+>   **Implementato, suite verde — commit pendente.**
 >
-> Suite **533 passed / 1 xfailed / 0 failed** (stato corrente, verde anche di notte).
+> Suite **549 passed / 1 xfailed / 0 failed** (533 baseline + 16 G6).
 >
-> **⏭️ PROSSIMO: Blocco 4 — G6 incassa residuo diretto** (§3 di questo doc). `POST /contracts/{id}/incassa-residuo`:
-> CashMovement ENTRATA legato al contratto (categoria `PAGAMENTO_RATA` da `cash_categories`), `totale_versato +=`,
-> auto-close via `_sync_contract_chiuso`, cap overpayment, bouncer+audit. **Zero schema, zero policy.** Riusa
-> RatePayment/pay_rate. Gemello-in-entrata del rimborso G7. Test: confine auto-close ESAURITO→CHIUSO, overpayment 422.
->
-> **DOPO G6 → Blocco terminazione G7** (§4): schema (`totale_rimborsato`/`quota_stornata`/`data_chiusura`/`motivo_chiusura`),
+> **⏭️ PROSSIMO: Blocco terminazione G7** (§4): schema (`totale_rimborsato`/`quota_stornata`/`data_chiusura`/`motivo_chiusura`),
 > conguaglio puro policy-pluggable, endpoint atomico 2 gambe. **Rispettare i 4 BLOCKER §4.7** (residuo→SSoT;
 > guard riapertura ALLOWLIST + il completamento marca `motivo_chiusura=COMPLETAMENTO`; soft-delete solo non-saldate;
 > financial-trend doppia decomposizione). Allora `test_manual_close_not_reopened_by_agenda_edit` passa da xfail→xpass: **togliere il marker**.
@@ -155,6 +157,17 @@
 ---
 
 ## 3. Blocco 4 — G6 incassa residuo diretto
+
+> **✅ STATO (2026-06-23, implementato — commit pendente).** Endpoint `POST /contracts/{id}/incassa-residuo`
+> in `api/routers/contracts.py` (riusa `RatePayment`, `_sync_contract_chiuso` da `agenda.py`,
+> `CATEGORIA_PAGAMENTO_RATA` da `cash_categories`). Audit: la transizione `chiuso` è loggata **solo** da
+> `_sync_contract_chiuso` (P2) → G6 rispecchia `pay_rate` (no doppio log). Frontend: `useIncassaResiduo`
+> (invalidazione = `usePayRate`) + `IncassaResiduoDialog` riusabile, su `SuspendedCard` (`/rinnovi-incassi`)
+> e dropdown `ContractsTable` (gated `lifecycle ∈ {sospeso,esaurito}` + residuo>0). **+16 test**
+> (`tests/test_incassa_residuo.py`). **Fix da review adversariale:** il `residuo` ora è esposto dal SSoT su
+> `ContractListResponse` (`residuo=state.residuo`) e il frontend lo **legge** (niente ricalcolo inline,
+> §8.1/§8.9, forward-safe per G7); `open` del dialog condiviso disaccoppiato dal target (no glitch in
+> fade-out); test riconciliazione interroga il libro mastro reale; assert `categoria==PAGAMENTO_RATA`.
 
 **Scope.** Prima **cassa ENTRATA diretta sul contratto senza rata**: `POST /contracts/{id}/incassa-residuo` registra una ENTRATA legata al contratto, incrementa `totale_versato` (Strada B, LORDO crescente), ricalcola `stato_pagamento`, fa scattare l'auto-close date-independent, con bouncer 404 + cap anti-overpayment + audit atomico. Rende azionabile `kpi_da_incassare_scaduto` (Blocco 1). **Gemello in ENTRATA del rimborso G7.** Zero schema/migrazioni.
 

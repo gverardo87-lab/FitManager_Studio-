@@ -28,6 +28,7 @@ import {
   FileText,
   Plus,
   AlertTriangle,
+  HandCoins,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -50,6 +51,17 @@ import { EmptyState } from "@/components/ui/empty-state";
 import type { ContractListItem } from "@/types/api";
 import { formatCurrency, getFinanceBarColor } from "@/lib/format";
 import { ContractLifecycleBadge, ContractMoneyBadge } from "@/lib/contract-status";
+import { IncassaResiduoDialog } from "./IncassaResiduoDialog";
+
+/** Residuo incassabile direttamente: solo su contratto SCADUTO aperto (SOSPESO/ESAURITO),
+ *  dove la via non è più la rateizzazione ma l'incasso diretto (G6). Per gli ATTIVO il
+ *  percorso resta il piano rate. Il residuo arriva dal SSoT backend (contract_state.residuo()
+ *  via ContractListResponse): il frontend LEGGE, non ricalcola (§8.1/§8.9, forward-safe per G7). */
+function residuoIncassabile(c: ContractListItem): number {
+  if (c.chiuso) return 0;
+  if (c.lifecycle !== "sospeso" && c.lifecycle !== "esaurito") return 0;
+  return c.residuo;
+}
 
 interface ContractsTableProps {
   contracts: ContractListItem[];
@@ -65,6 +77,10 @@ export function ContractsTable({
   onNewContract,
 }: ContractsTableProps) {
   const [search, setSearch] = useState("");
+  // Dialog incasso: open separato dal target (incassaContract resta valorizzato durante la
+  // ~200ms di fade-out di Radix → niente glitch "Supera il residuo di € 0,00" alla chiusura).
+  const [incassaContract, setIncassaContract] = useState<ContractListItem | null>(null);
+  const [incassaOpen, setIncassaOpen] = useState(false);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return contracts;
@@ -225,6 +241,17 @@ export function ContractsTable({
                             Dettagli
                           </Link>
                         </DropdownMenuItem>
+                        {residuoIncassabile(contract) > 0 ? (
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setIncassaContract(contract);
+                              setIncassaOpen(true);
+                            }}
+                          >
+                            <HandCoins className="mr-2 h-4 w-4" />
+                            Incassa residuo
+                          </DropdownMenuItem>
+                        ) : null}
                         <DropdownMenuItem onClick={() => onEdit(contract)}>
                           <Pencil className="mr-2 h-4 w-4" />
                           Modifica
@@ -245,6 +272,21 @@ export function ContractsTable({
           </Table>
         </div>
       )}
+
+      {/* Incasso residuo diretto (G6) — un solo dialog condiviso, target = riga selezionata.
+          open è uno stato separato: incassaContract NON viene azzerato alla chiusura, così i
+          props restano coerenti durante l'animazione di fade-out (no glitch residuo €0). */}
+      <IncassaResiduoDialog
+        contractId={incassaContract?.id ?? null}
+        residuo={incassaContract ? residuoIncassabile(incassaContract) : 0}
+        clientLabel={
+          incassaContract
+            ? `${incassaContract.client_cognome} ${incassaContract.client_nome}`
+            : ""
+        }
+        open={incassaOpen}
+        onOpenChange={setIncassaOpen}
+      />
     </div>
   );
 }

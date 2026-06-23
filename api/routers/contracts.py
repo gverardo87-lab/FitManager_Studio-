@@ -31,13 +31,15 @@ from api.schemas.financial import (
     ContractListResponse,
     ContractWithRatesResponse,
     RateResponse,
+    RatePayment,
     RatePaymentReceipt,
     RenewalChainItem,
     RenewalOutcomeCreate,
 )
 from api.routers._audit import log_audit
+from api.routers.agenda import _sync_contract_chiuso
 from api.services import contract_state as cstate
-from api.services.cash_categories import CATEGORIA_ACCONTO_CONTRATTO
+from api.services.cash_categories import CATEGORIA_ACCONTO_CONTRATTO, CATEGORIA_PAGAMENTO_RATA
 
 # Categoria movimento cassa per acconto — SSoT in cash_categories.py
 CATEGORIA_ACCONTO = CATEGORIA_ACCONTO_CONTRATTO
@@ -404,6 +406,7 @@ def list_contracts(
             money_substate=state.money.value,
             is_insolvente=cstate.is_insolvente(state),
             in_scadenza=state.in_scadenza,
+            residuo=state.residuo,  # SSoT (G6): il frontend legge questo, non ricalcola
         ))
 
     return {
@@ -979,4 +982,104 @@ def clear_renewal_outcome(
     log_audit(session, "contract", contract.id, "UPDATE", trainer.id, {"esito_rinnovo": None})
     session.commit()
     session.refresh(contract)
+    return _to_response(contract)
+
+
+# ════════════════════════════════════════════════════════════
+# POST: Incassa residuo diretto (G6, Blocco 4)
+# ════════════════════════════════════════════════════════════
+
+@router.post("/{contract_id}/incassa-residuo", response_model=ContractResponse)
+def incassa_residuo(
+    contract_id: int,
+    data: RatePayment,
+    trainer: Trainer = Depends(get_current_trainer),
+    session: Session = Depends(get_session),
+):
+    """
+    Incassa il residuo di un contratto DIRETTAMENTE, senza passare da una rata (G6).
+
+    È l'azione per i contratti SCADUTI aperti (SOSPESO/ESAURITO) il cui residuo NON è
+    più rateizzabile (FDM §1 Asse 3, bucket "da incassare scaduto" di list_contracts) —
+    ma funziona su qualsiasi contratto aperto con residuo > 0. Gemello in ENTRATA del
+    rimborso da terminazione (G7).
+
+    Strada B (LORDO crescente): `totale_versato` aumenta, mai si riscrive a ritroso.
+
+    Operazione atomica (UN solo commit):
+    A) Bouncer ownership → 404
+    B) Guard contratto chiuso → 400
+    C) Residuo via SSoT `contract_state.residuo()` (regola d'oro §10); residuo ~0 → 400
+    D) Cap anti-overpayment: importo > residuo → 422
+    E) `totale_versato += importo` + ricalcolo `stato_pagamento`
+    F) CashMovement ENTRATA (categoria PAGAMENTO_RATA, id_rata=None) nel libro mastro
+    G) Auto-close canonico via `_sync_contract_chiuso` (logga la transizione `chiuso`)
+    H) Audit contract UPDATE (`totale_versato`+`stato_pagamento`; `chiuso` lo logga G)
+    """
+    # A) Bouncer ownership (404 mai 403)
+    contract = _bouncer_contract_owned(session, contract_id, trainer.id)
+
+    # B) Guard: contratto chiuso non incassabile
+    if contract.chiuso:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Impossibile incassare: il contratto è chiuso",
+        )
+
+    # C) Residuo dal SSoT (delega obbligatoria — niente ricalcolo inline)
+    residuo = cstate.residuo(contract)
+    if residuo <= 0.009:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Nessun residuo da incassare: il contratto è già saldato",
+        )
+
+    # D) Cap anti-overpayment a livello contratto
+    if data.importo > residuo + 0.01:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Importo ({data.importo:.2f}) supera il residuo del contratto ({residuo:.2f})",
+        )
+
+    # E) Aggiorna totale_versato (incrementale, Strada B) + stato_pagamento
+    old_totale_versato = contract.totale_versato
+    old_stato_pagamento = contract.stato_pagamento
+    contract.totale_versato = contract.totale_versato + data.importo
+    if contract.prezzo_totale and contract.totale_versato >= contract.prezzo_totale - 0.01:
+        contract.stato_pagamento = "SALDATO"
+    elif contract.totale_versato > 0:
+        contract.stato_pagamento = "PARZIALE"
+    session.add(contract)
+
+    # F) Registra nel libro mastro (CashMovement ENTRATA, id_rata=None → incasso diretto)
+    client = session.get(Client, contract.id_cliente)
+    client_label = f"{client.nome} {client.cognome}" if client else f"Cliente #{contract.id_cliente}"
+    movement = CashMovement(
+        trainer_id=trainer.id,
+        data_effettiva=data.data_pagamento,
+        tipo="ENTRATA",
+        categoria=CATEGORIA_PAGAMENTO_RATA,
+        importo=data.importo,
+        metodo=data.metodo,
+        id_cliente=contract.id_cliente,
+        id_contratto=contract.id,
+        id_rata=None,
+        note=data.note or f"Incasso residuo diretto - {client_label}",
+    )
+    session.add(movement)
+
+    # G) Auto-close canonico (date-independent): se saldato + crediti esauriti → chiuso.
+    #    Riusa l'helper SSoT condiviso con agenda/pay_rate (no 3ª copia inline) — logga
+    #    da sé la transizione `chiuso` con motivo "completamento".
+    _sync_contract_chiuso(session, contract.id)
+
+    # H) Audit + commit atomico. La transizione `chiuso` è già loggata da G (P2):
+    #    qui si registra solo l'UPDATE denaro, identico a pay_rate (no doppio log).
+    log_audit(session, "contract", contract.id, "UPDATE", trainer.id, {
+        "totale_versato": {"old": old_totale_versato, "new": contract.totale_versato},
+        "stato_pagamento": {"old": old_stato_pagamento, "new": contract.stato_pagamento},
+    })
+    session.commit()
+    session.refresh(contract)
+
     return _to_response(contract)

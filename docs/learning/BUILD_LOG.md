@@ -1085,3 +1085,48 @@ scaffale". Lezione: l'audit della doc va fatto **contro il codice**, non a memor
 implementato ciò che era già in `contract_state.py`/`cash_categories.py` e viceversa.
 
 ---
+
+### 2026-06-23 — G6 (Blocco 4): incassa residuo diretto — `POST /contracts/{id}/incassa-residuo`
+
+**Cosa.** Prima cassa ENTRATA legata al contratto **senza passare da una rata**: l'azione per i contratti
+SCADUTI aperti (SOSPESO/ESAURITO) il cui residuo non è più rateizzabile (bucket "da incassare scaduto" di
+G1). Gemello in entrata del rimborso da terminazione (G7). **Zero schema, zero policy** — solo riuso.
+
+**Backend** (`api/routers/contracts.py`). Flusso atomico (UN solo `commit`): bouncer 404 → guard chiuso 400
+→ residuo via SSoT `contract_state.residuo()` (≤0.009 → 400) → cap overpayment 422 → `totale_versato +=` +
+ricalcolo `stato_pagamento` → `CashMovement` ENTRATA (`PAGAMENTO_RATA` da `cash_categories`, `id_contratto`
+set, `id_rata=None`, nota "Incasso residuo diretto") → **auto-close canonico** via `_sync_contract_chiuso`
+(importato da `agenda.py`, nessun ciclo: agenda non importa contracts) → `log_audit` UPDATE. Riusa lo schema
+`RatePayment` as-is (mass-assignment: niente `id_contratto/id_cliente/trainer_id` nel body).
+
+**Decisione chiave (audit doppio-log).** `_sync_contract_chiuso` logga **da sé** la transizione `chiuso`
+(P2, idempotente, motivo "completamento"). Quindi G6 **non** ri-logga `chiuso` nel diff UPDATE: rispecchia
+esattamente `pay_rate` (solo `totale_versato`+`stato_pagamento`) → `_chiuso_transitions` conta **una** entry,
+non due. La nota del piano "(H) ...E chiuso" era pre-P2.
+
+**Frontend.** `useIncassaResiduo` (invalidazione **identica** a `usePayRate`); `IncassaResiduoDialog`
+riusabile (UX clonata da PayRateForm: quick "Tutto (€residuo)" cap-limitato, `toISOLocal`); due superfici —
+**SuspendedCard** (`/rinnovi-incassi`, SOSPESO) e **dropdown riga** di `ContractsTable` (copre anche ESAURITO,
+gated su `lifecycle ∈ {sospeso,esaurito}` + residuo>0; ATTIVO resta sul piano rate).
+
+**Test.** `tests/test_incassa_residuo.py` (16): incasso parziale/pieno, shape ENTRATA (+categoria
+`PAGAMENTO_RATA` load-bearing), riconciliazione **ledger reale** (Σ ENTRATA == `totale_versato`), boundary
+auto-close ESAURITO + no-close con crediti residui + **SOSPESO reale** (scaduto, `lifecycle=="sospeso"`),
+overpayment 422, già-saldato/chiuso 400, IDOR/unknown 404, atomicità, audit transizione singola. Suite verde.
+
+**Review adversariale** (workflow 13 agenti, 4 lenti → verifica scettica per finding): 9 rilievi → **4 reali**
+(5 falsi positivi correttamente scartati). Tutti corretti: (1) **SSoT residuo** sorvegliato — `residuoIncassabile`
+del frontend ricalcolava il residuo inline (viola §8.1/§8.9) → ora il backend lo espone su `ContractListResponse`
+(`residuo`, da `state.residuo` già calcolato, costo zero) e il frontend lo **legge**, allineato a SuspendedCard
+e forward-safe per G7; (2) dialog condiviso azzerava `residuo/clientLabel` durante il fade-out (~200ms → glitch
+"Supera il residuo €0") → `open` disaccoppiato dal target; (3) test "riconciliazione" non interrogava il mastro
+→ ora chiude il loop contratto↔ledger; (4) shape-test senza assert `categoria` → aggiunto.
+
+**Lezione.** Ogni nuovo punto di lettura del residuo deve **delegare** al SSoT, anche lato frontend: la review
+ha intercettato un ricalcolo inline che "funzionava" (byte-identico) ma avrebbe driftato con G7 (`quota_stornata`).
+L'enforcement vero è il SSoT esposto sul wire, non la disciplina manuale (cfr. SPEC_VOCABOLARIO Giro 2).
+
+**⏭️ Prossimo:** **G7** (terminazione: 4 colonne plain + conguaglio policy-gated + endpoint atomico 2 gambe,
+rispettando i 4 BLOCKER §4.7) → **G1** (cifratura crm.db). Giro 2 vocabolario dopo G7.
+
+---

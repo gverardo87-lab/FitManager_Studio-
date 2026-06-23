@@ -275,6 +275,7 @@ class ContractListResponse(ContractResponse):
     money_substate: str = "saldato"    # saldato|da_pianificare|parziale|pianificato
     is_insolvente: bool = False        # scaduto (SOSPESO/ESAURITO) + rate scadute
     in_scadenza: bool = False          # ATTIVO entro SOGLIA_IN_SCADENZA_GG
+    residuo: float = 0                 # SSoT contract_state.residuo() — il frontend LEGGE, non ricalcola (G6)
 
 
 class RenewalChainItem(BaseModel):
