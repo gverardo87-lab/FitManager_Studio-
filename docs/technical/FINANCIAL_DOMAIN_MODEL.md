@@ -54,7 +54,8 @@
 **Collocazione:** `docs/technical/`
 **Data:** 2026-06-21
 **Decisioni:** `ADR-014` (cassa/competenza), `ADR-015` (funnel rinnovi/retention)
-**Assorbe / coordina:** `TASSONOMIA_FINANZIARIA.md` (asse cassa/competenza), `SPEC_RINNOVO_E_CONTRATTI_DA_PIANIFICARE.md`, `SPEC_GESTIONE_FINANZIARIA_TEMPORALE.md`, `SPEC_RINNOVI_SCADUTI_E_RETENTION.md`
+**Coordina (vivo):** `TASSONOMIA_FINANZIARIA.md` (asse cassa/competenza) · `SPEC_VOCABOLARIO_E_CLASSIFICAZIONE_CONTRATTI.md` (consumo-SSoT UI) · `IMPL_PLAN_FINANCIAL_REALIGN.md` (piano attivo).
+**Ha assorbito (spec implementate, archiviate 2026-06-23 in `docs/archive/specs/`):** SPEC_RINNOVO_E_CONTRATTI_DA_PIANIFICARE, SPEC_GESTIONE_FINANZIARIA_TEMPORALE, SPEC_RINNOVI_SCADUTI_E_RETENTION — il loro modello vive ora qui.
 
 > **Perché esiste.** Gli stati del contratto e la nozione di "attivo" erano definiti **per-feature**,
 > con significati divergenti in endpoint diversi → logiche accavallate, difetti silenziosi (un contratto

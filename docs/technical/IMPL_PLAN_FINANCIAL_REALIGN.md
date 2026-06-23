@@ -2,9 +2,9 @@
 
 **Versione:** 1.3 (2026-06-21) · **Stato:** materiale di lavoro (effimero, → `docs/archive/` a implementazione conclusa)
 **Modello (SSoT):** `FINANCIAL_DOMAIN_MODEL.md` v1.3 + `TASSONOMIA_FINANZIARIA.md` v1.2
-**Supera:** `IMPL_PLAN_RINNOVI_SCADUTI.md` (storico).
+**Supera:** `docs/archive/specs/IMPL_PLAN_RINNOVI_SCADUTI.md` (storico).
 
-> ## 🔖 RESUME POINT — stato al 2026-06-22 (ultimo commit `d77c3fe`, branch `FitManager_Studio`)
+> ## 🔖 RESUME POINT — stato al 2026-06-23 (ultimo commit `3be936f`, branch `FitManager_Studio`)
 >
 > **FATTO (mergiato + pushato):**
 > - **Blocco 0** — `api/services/contract_state.py` SSoT (4 stati + sotto-stato denaro + engagement). 
@@ -16,7 +16,16 @@
 >   + UI `/rinnovi-incassi`); 2 bottoni chiusura disegnati **disabilitati** (→ G7).
 > - **Review bridge processata** (`ALLINEAMENTO_REVIEW_CODICE_v1.3` su Desktop): NOW-fix (AlertItem union,
 >   `giorni_ritardo` clamp), delta modello assorbiti (guard **allowlist** §9.5.6/§4.7, 9ª query monthly_revenue),
->   **fix tz** `completed_today_count` (workspace). Suite **487 passed / 1 xfailed / 0 failed** (verde anche di notte).
+>   **fix tz** `completed_today_count` (workspace).
+> - **PREREQ-prezzo** (`d934948`) — invariante `prezzo_totale > 0` su `ContractCreate` **e** `ContractUpdate`
+>   (FDM §9.5.7). Chiude il caso `prezzo None`/`prezzo ≤ 0` a monte: il residuo `prezzo − versato` è ora sempre
+>   ben definito (vedi §3, G6 può assumere `prezzo > 0`).
+> - **SPEC_VOCABOLARIO Giro 1** (`91cbc39`) — `is_insolvente` SSoT in `contract_state.py`; lista `/contratti` +
+>   dettaglio derivano lo stato dal SSoT (niente ricalcolo inline); nuovo modulo frontend `lib/contract-status.tsx`.
+> - **data_scadenza-null** (`3be936f`) — carnet **senza scadenza** first-class (FDM §2): `ContractCreate.data_scadenza`
+>   reso `Optional` + checkbox UI "Senza scadenza". Decisione 1 dell'audit invarianti Contract.
+>
+> Suite **533 passed / 1 xfailed / 0 failed** (stato corrente, verde anche di notte).
 >
 > **⏭️ PROSSIMO: Blocco 4 — G6 incassa residuo diretto** (§3 di questo doc). `POST /contracts/{id}/incassa-residuo`:
 > CashMovement ENTRATA legato al contratto (categoria `PAGAMENTO_RATA` da `cash_categories`), `totale_versato +=`,
@@ -161,7 +170,7 @@
 - Single-commit: `rates.py:602`.
 - Hook+invalidazione simmetrica da clonare: `useRates.ts:196-205` (`usePayRate`).
 
-**Nuovo codice / flusso endpoint:** (A) bouncer 404 → (B) guard chiuso 400 → (C) `residuo = round(max(0, (prezzo or 0) - versato), 2)`; se `≤0.009 → 400` (copre `prezzo None`) → (D) cap `importo > residuo+0.01 → 422` → (E) `totale_versato += importo` + ricalcolo stato → (F) `CashMovement` ENTRATA (`categoria=CATEGORIA_PAGAMENTO_RATA`, `id_contratto` set, `id_rata=None`, note `"Incasso residuo diretto - {cliente}"`) → (G) auto-close via `_sync_contract_chiuso(session, contract.id)` → (H) `log_audit` contract UPDATE con diff `totale_versato`+`stato_pagamento` **E `chiuso`** (colma il gap di `pay_rate`) → **UN solo `session.commit()`**. Nessuno storno, nessuna modifica a ritroso di `totale_versato`.
+**Nuovo codice / flusso endpoint:** (A) bouncer 404 → (B) guard chiuso 400 → (C) `residuo = round(max(0, prezzo - versato), 2)`; se `≤0.009 → 400`. Con **PREREQ-prezzo** (`d934948`, invariante `prezzo_totale > 0` garantita su `ContractCreate` **e** `ContractUpdate`, FDM §9.5.7) il caso `prezzo None` **non esiste più**: G6 può assumere `prezzo > 0` e il guard a 400 segnala solo il residuo già saldato → (D) cap `importo > residuo+0.01 → 422` → (E) `totale_versato += importo` + ricalcolo stato → (F) `CashMovement` ENTRATA (`categoria=CATEGORIA_PAGAMENTO_RATA`, `id_contratto` set, `id_rata=None`, note `"Incasso residuo diretto - {cliente}"`) → (G) auto-close via `_sync_contract_chiuso(session, contract.id)` → (H) `log_audit` contract UPDATE con diff `totale_versato`+`stato_pagamento` **E `chiuso`** (colma il gap di `pay_rate`) → **UN solo `session.commit()`**. Nessuno storno, nessuna modifica a ritroso di `totale_versato`.
 - **Categoria movimento**: riusare `CATEGORIA_PAGAMENTO_RATA` (coerente col predicato del modello, distinguibile via `id_rata IS NULL` + note). Verdetti confermano: saldo/reconciliation/trend chiavano su `id_contratto`, NON su categoria → zero silent-loss. Una categoria distinta è rinviata/abbinata all'allineamento del predicato in G7.
 - Frontend: `useIncassaResiduo` (invalidazione **identica** a `usePayRate`: `contract, contracts, dashboard, movements, movement-stats, financial-trend, aging-report, cash-balance` + toast; date via `toISOLocal`); `IncassaResiduoDialog` (UX clonata da `PayRateForm`, quick "Tutto (€residuo)" cap-limitato); surface nel bucket "da incassare scaduto" in `contratti/page.tsx` + `rinnovi-incassi/page.tsx`. Label "denaro da incassare" distinta da "sedute da recuperare".
 

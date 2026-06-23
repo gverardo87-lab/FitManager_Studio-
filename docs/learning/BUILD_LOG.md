@@ -1046,3 +1046,42 @@ d'integrazione sul router reale.
 canonico = repo) → poi **G6** (incassa residuo) → **G7** (terminazione) → **G1** (cifratura).
 
 ---
+
+### 2026-06-23 — Riordino docs/: audit code-grounded + consolidamento (eleganza, 1 sottosistema = 1 riferimento)
+
+**Perché.** Il filone finanziario aveva generato 9 doc che descrivevano lo stesso dominio (2 SSoT + 3 spec
++ 3 impl-plan + 2 ADR) con sovrapposizioni e drift; il cluster sicurezza aveva 4 reference per la stessa
+storia. Confusione in arrivo. Principio del founder: eleganza e semplicità.
+
+**Metodo.** Workflow multi-agente **code-grounded read-only** (14 agenti: 13 audit + 1 sintesi, ~1,5M token):
+ogni doc classificato live-binding / live-active-plan / superseded / historical-snapshot contro il **codice
+reale** (api/services/contract_state.py, cash_categories.py, schemas, routers), sovrapposizioni mappate,
+piano di consolidamento sintetizzato. 3 scelte di gusto rimesse al founder (archiviare spec implementate;
+foldare la tassonomia L0-L4; toccare il doc esercizi congelato) → tutte verso preservazione+eleganza.
+
+**Fatto (zero codice toccato, solo docs).**
+- **Archiviati 11 doc.** Finanziari implementati → `docs/archive/specs/`: SPEC_RINNOVO, SPEC_TEMPORALE,
+  SPEC_RINNOVI_SCADUTI + i 3 IMPL_PLAN. Sicurezza storici → `docs/archive/`: SECURITY_AUDIT_BASELINE,
+  SECURITY_AUDIT_POST_HARDENING, ANTI_REVERSE_ENGINEERING_STRATEGY (svuota `docs/security/`),
+  PRE_DELIVERY_AUDIT_2026_04_17. Operations → `docs/archive/`: SESSION_HANDOFF_2026-06-14.
+- **DELTA_v2.2 integrato + eliminato.** Le OP-1..OP-7 (incl. nuova §4ter hosting centrale media) foldate in
+  `EXERCISE_LIBRARY_STRATEGY.md`, poi `git rm` del delta (si autodefiniva "da eliminare dopo l'integrazione").
+- **Contenuto di valore preservato prima dell'archivio:** la tassonomia attaccanti L0-L4 (la più ricca) è
+  stata foldata nel threat model di `SECURITY_MODEL.md` (unico reference sicurezza vivo).
+- **7 drift doc-vs-codice corretti** nei doc che restano: banner REALIGN (HEAD `d77c3fe`→`3be936f`, +PREREQ-
+  prezzo/Giro1/data_scadenza-null, suite 487→533); SECURITY_MODEL (Tailscale→FRP, crm.db da Fase-3-eventuale
+  a gate Tier-1 G1); EXERCISE_LIBRARY (500→522 esercizi, is_fondamentale wired-but-empty, muscle_map_url 29,
+  bug config.py risolto); PRE_DELIVERY_SECURITY_GATE + ADR-README (ADR-013 proposed→accepted); ADR-014/015
+  (versioni stale + line-cite fragili resi robusti); CLAUDE.md (10→13 ADR).
+- **INDEX.md** riscritto (sezioni security rimossa, technical sfoltita, +EXERCISE_LIBRARY, +INC-2026-06-18,
+  learning 4→11, nota archivio). **Puntatori incrociati** aggiornati (ADR-007/014/015, REALIGN, RELEASE_CHECKLIST).
+- **Verifica anti-orfani** repo-wide (ripgrep): zero riferimenti morti nei doc vivi. I log append-only
+  (questo BUILD_LOG, UPGRADE_LOG) conservano le voci datate originali — registrano la storia, non si riscrivono;
+  i file citati esistono comunque in `docs/archive/`.
+
+**Esito.** Cluster finanziario 9→6 doc, sicurezza 4→1+gate. `docs/technical/` ~12 file in meno. Ogni
+sottosistema torna ad avere un riferimento solo: restano doc o vincolanti o attivi, nessuno "finito ma a
+scaffale". Lezione: l'audit della doc va fatto **contro il codice**, non a memoria — diversi doc dichiaravano
+implementato ciò che era già in `contract_state.py`/`cash_categories.py` e viceversa.
+
+---

@@ -13,7 +13,7 @@ Il Red Team audit baseline (2026-04-01) ha rivelato che un attaccante L2 (svilup
 - **4 seed JSON** (4 MB): 500 esercizi completi in chiaro nel bundle
 - **Bytecode Python**: estraibile in 30 sec (pyinstxtractor) e decompilabile in 15 min (decompyle3)
 
-Audit completo: `docs/technical/SECURITY_AUDIT_BASELINE.md`
+Audit completo: `docs/archive/SECURITY_AUDIT_BASELINE.md` (storico)
 
 Il software sara' installato sulla macchina del partner commerciale per il POC con 10 Fondatori. La protezione deve essere proporzionata: bloccare L2 (sviluppatore esperto), non L3+ (RE professionale).
 
@@ -109,8 +109,8 @@ Nuovo helper `is_compiled()` in `api/config.py`: rileva sia `sys.frozen` (PyInst
 
 ## Riferimenti
 
-- `docs/security/ANTI_REVERSE_ENGINEERING_STRATEGY.md` — strategia completa
-- `docs/technical/SECURITY_MODEL.md` — modello 6 livelli
-- `docs/technical/SECURITY_AUDIT_BASELINE.md` — audit pre-hardening
-- `docs/technical/SECURITY_AUDIT_POST_HARDENING.md` — audit post-hardening
+- `docs/archive/ANTI_REVERSE_ENGINEERING_STRATEGY.md` — strategia completa (storico, implementata)
+- `docs/technical/SECURITY_MODEL.md` — modello 6 livelli + threat model (reference vivo)
+- `docs/archive/SECURITY_AUDIT_BASELINE.md` — audit pre-hardening (storico)
+- `docs/archive/SECURITY_AUDIT_POST_HARDENING.md` — audit post-hardening (storico)
 - `docs/adr/ADR-005-license-hardening-anti-tampering.md` — hardening licenza (complementare)

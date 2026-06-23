@@ -12,7 +12,7 @@
 > (lifecycle token presente nel modello), **G7 ha già lo strato edge** (tunnel guard nel middleware
 > Next), e il report legale Tier 3 vive in `docs/business/LEGAL_REGULATORY_REPORT.md`
 > (non in `docs/technical/`). Il design del gate più pesante (G1) è in
-> `docs/adr/ADR-013-crm-db-encryption-at-rest.md` (proposed).
+> `docs/adr/ADR-013-crm-db-encryption-at-rest.md` (accepted 2026-06-17).
 
 ---
 
@@ -61,7 +61,7 @@ Tutto ciò che è in Tier 1 e Tier 2 è un criterio di accettazione su una di qu
 - Il flusso di derivazione/sblocco della chiave è legato all'autenticazione del trainer, così che il solo possesso del file sia insufficiente.
 - L'approccio è documentato in una voce di `BUILD_LOG.md`, incluso dove vive la chiave e da quale minaccia difende e da quale no.
 
-**Stato nel codice (verificato 2026-06-16):** ❌ **Gap reale, confermato.** L'engine business nasce da `create_engine(DATABASE_URL)` in chiaro (`api/database.py:101`); **crm.db è plaintext sul disco**. Solo `catalog.db`/`nutrition.db` passano per `decrypt_db_to_bytes` → `sqlite3.deserialize` (`api/services/db_crypto.py`), ma quel modello **non è riutilizzabile** per crm.db per due motivi: (a) la chiave è derivata da un **seed embedded nel binario** (`_EMBEDDED_KEY_SEED`) — adeguato per cataloghi read-only (minaccia = reverse engineering, ADR-007), ma **viola il criterio G1** "il solo possesso del file è insufficiente" perché file + binario viaggiano insieme; (b) è **read-only** (decrypt-to-memory), mentre crm.db è read-write. Inoltre il **lifespan tocca crm.db prima di qualsiasi login** (auto-backup, `create_db_and_tables`, `schema_sync`, integrity check), quindi una chiave password-bound impone un **boot a due fasi**. Tensione concreta con G5: `_auto_backup_on_startup` produce oggi una **copia in chiaro** via `sqlite3.backup()`. → Design completo in **`docs/adr/ADR-013-crm-db-encryption-at-rest.md` (proposed)**.
+**Stato nel codice (verificato 2026-06-16):** ❌ **Gap reale, confermato.** L'engine business nasce da `create_engine(DATABASE_URL)` in chiaro (`api/database.py:101`); **crm.db è plaintext sul disco**. Solo `catalog.db`/`nutrition.db` passano per `decrypt_db_to_bytes` → `sqlite3.deserialize` (`api/services/db_crypto.py`), ma quel modello **non è riutilizzabile** per crm.db per due motivi: (a) la chiave è derivata da un **seed embedded nel binario** (`_EMBEDDED_KEY_SEED`) — adeguato per cataloghi read-only (minaccia = reverse engineering, ADR-007), ma **viola il criterio G1** "il solo possesso del file è insufficiente" perché file + binario viaggiano insieme; (b) è **read-only** (decrypt-to-memory), mentre crm.db è read-write. Inoltre il **lifespan tocca crm.db prima di qualsiasi login** (auto-backup, `create_db_and_tables`, `schema_sync`, integrity check), quindi una chiave password-bound impone un **boot a due fasi**. Tensione concreta con G5: `_auto_backup_on_startup` produce oggi una **copia in chiaro** via `sqlite3.backup()`. → Design completo in **`docs/adr/ADR-013-crm-db-encryption-at-rest.md` (accepted 2026-06-17)**.
 
 **Esplicitamente fuori dalla decisione implementativa (sceglie Claude Code):** il meccanismo specifico (es. SQLCipher vs. cifratura a livello di campo applicativo vs. meccanismi a livello di OS), la KDF, e come il segreto di sblocco viene fornito a runtime. Il criterio è la proprietà, non la libreria.
 

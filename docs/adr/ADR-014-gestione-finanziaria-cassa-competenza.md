@@ -5,9 +5,9 @@
 - Deciders: Giacomo Verardo (AVGV Technologies); analisi e rilievi tecnici di Claude Code
 - Related upgrade ID: —
 - Spec di dettaglio (vincolanti sui criteri di accettazione):
-  - `docs/technical/TASSONOMIA_FINANZIARIA.md` (v1.1) — vocabolario condiviso, vincolante su concetti e formule
-  - `docs/technical/SPEC_RINNOVO_E_CONTRATTI_DA_PIANIFICARE.md` (v1.2)
-  - `docs/technical/SPEC_GESTIONE_FINANZIARIA_TEMPORALE.md` (v1.1)
+  - `docs/technical/TASSONOMIA_FINANZIARIA.md` — vocabolario condiviso, vincolante su concetti e formule (vivo)
+  - `docs/archive/specs/SPEC_RINNOVO_E_CONTRATTI_DA_PIANIFICARE.md` — implementata, archiviata 2026-06-23
+  - `docs/archive/specs/SPEC_GESTIONE_FINANZIARIA_TEMPORALE.md` — implementata, archiviata 2026-06-23
 
 > Questo ADR **cristallizza la decisione architetturale**; le tre spec restano la fonte di dettaglio
 > sui criteri di accettazione. L'ADR non le duplica: registra il *perché* e i confini vincolanti.

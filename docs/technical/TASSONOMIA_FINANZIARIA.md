@@ -6,7 +6,7 @@
 **Destinatario:** Claude Code (architetto finale nel codebase)
 **Collocazione:** `docs/technical/`
 **Data:** 2026-06-21
-**Referenziato da:** `SPEC_RINNOVO_E_CONTRATTI_DA_PIANIFICARE.md`, `SPEC_GESTIONE_FINANZIARIA_TEMPORALE.md`
+**Consumato da (vivo):** `FINANCIAL_DOMAIN_MODEL.md` (§8, asse cassa/competenza) + il codice (`api/services/cash_categories.py`). Le spec-feature che lo referenziavano (SPEC_RINNOVO, SPEC_TEMPORALE) sono implementate e archiviate in `docs/archive/specs/` (2026-06-23).
 **Modello di dominio (SSoT):** `FINANCIAL_DOMAIN_MODEL.md` (§8 referenzia questo doc per l'asse cassa/competenza; §3.1/§7-G7 introducono il rimborso da terminazione che questo doc classifica).
 
 > **Nota di versione 1.2 (2026-06-21, rimborso da terminazione anticipata):** il modello (FDM v1.3 §3.1)

@@ -3,7 +3,7 @@
 Modello di sicurezza del prodotto. Copre: threat model, protezioni implementate,
 limitazioni note, roadmap futuri interventi.
 
-Ultimo aggiornamento: 2026-04-19 (pre-Funnel network hardening).
+Ultimo aggiornamento: 2026-06-23 (drift Tailscale→FRP, tassonomia attaccanti L0–L4, gate G1 crm.db attivo).
 
 ## Principi
 
@@ -73,7 +73,7 @@ Accesso non autorizzato ai dati del trainer (clienti, contratti, dati clinici, f
 | Backend bind loopback | `host = "127.0.0.1"` in produzione (zero accesso diretto da LAN) | `tools/build/entry_point.py` |
 | Swagger/Redoc disabilitati | `docs_url=None` quando `is_compiled()` | `api/main.py` |
 | Version masking | `/health` ritorna `"ok"` invece di versione in compiled mode | `api/services/system_runtime.py` |
-| CORS HTTPS | Regex `^https?://` (supporta Funnel HTTPS) | `api/main.py` |
+| CORS HTTPS | Regex `^https?://` (supporta il tunnel FRP HTTPS) | `api/main.py` |
 | Security headers (backend) | `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy` | `api/main.py` |
 | Security headers (frontend) | HSTS, Referrer-Policy, Permissions-Policy, X-Content-Type-Options, X-Frame-Options | `frontend/next.config.ts` |
 
@@ -244,11 +244,35 @@ Proprieta' intellettuale: codice sorgente (Training Science ~9K LOC, Nutrition S
 | Training Science (9K LOC) | 15 min | > 1 settimana |
 | License bypass | 1-2 ore | > 3 giorni |
 
-Audit completo: `docs/technical/SECURITY_AUDIT_POST_HARDENING.md`
+Audit completo (storico, archiviato): `docs/archive/SECURITY_AUDIT_POST_HARDENING.md`. Decisione viva: **ADR-007**.
 
 ---
 
 ## Threat model — rischi residui e prossimi interventi
+
+### Tassonomia attaccanti (L0–L4)
+
+Le protezioni sono calibrate sul profilo di attaccante realistico, non sul caso peggiore assoluto.
+La scala seguente classifica chi potrebbe voler estrarre il valore del prodotto (codice scientifico,
+cataloghi DB, bypass licenza), con tool, tempo e motivazione tipici:
+
+| Livello | Profilo | Tool | Tempo budget | Motivazione |
+|---------|---------|------|-------------|-------------|
+| **L0** | Utente curioso | Google, YouTube | 10 min | "Vediamo cosa c'e' dentro" |
+| **L1** | Tecnico base | pyinstxtractor, DB Browser | 1-2 ore | Copiare il DB esercizi |
+| **L2** | Sviluppatore esperto | decompyle3, Ghidra, Frida | 1-3 giorni | Clonare il prodotto |
+| **L3** | RE professionale | angr, symbolic execution, IDA Pro | 1-2 settimane | Craccare DRM commerciale |
+| **L4** | Nation-state | Custom tool, 0-day | Illimitato | Fuori scope |
+
+**Livello target**: l'attaccante realistico e' **L1–L2** — un partner o uno sviluppatore da lui
+ingaggiato, con competenze Python e accesso al software installato. Una protezione efficace fino a
+**L2** e' business-sufficiente per una licenza da 249 EUR in una nicchia italiana di settore: oltre
+L2 (RE professionale, nation-state) il costo dell'attacco supera abbondantemente il valore estraibile.
+Le difese L3 / L3b / L6 alzano il TTC oltre la settimana proprio per spingere L1–L2 sotto la soglia di
+convenienza.
+
+> Fonte storica completa: la strategia anti-RE v2.0 (tassonomia originale + analisi TTC) e' ora in
+> `docs/archive/ANTI_REVERSE_ENGINEERING_STRATEGY.md`. La decisione viva e' **ADR-007**.
 
 ### Rischio residuo attuale
 
@@ -264,6 +288,18 @@ Audit completo: `docs/technical/SECURITY_AUDIT_POST_HARDENING.md`
 
 Ordinati per rapporto impatto/costo. Non tutti necessari — valutare in base all'evoluzione
 del prodotto e del modello di distribuzione.
+
+#### Gate Tier-1 ATTIVO — Cifratura crm.db a riposo (Gate G1)
+
+Non e' piu' un intervento "eventuale": la cifratura a riposo di `crm.db` (che contiene dati ex
+art. 9 GDPR degli atleti) e' un **bloccante Tier-1 attivo** del Pre-Delivery Security Gate
+(**Gate G1**), prerequisito per la prima consegna a un cliente reale. Decisione founder:
+**full, password-bound** (SQLCipher, chiave legata all'autenticazione del trainer — il solo
+possesso del file e' insufficiente), nessuna postura interim. Tocca boot, auth, backup e ciclo di
+vita dell'engine (boot a due fasi).
+
+- Decisione architetturale: **ADR-013** (`docs/adr/ADR-013-crm-db-encryption-at-rest.md`) — **accepted (2026-06-17)**, spike SQLCipher validato
+- Specifica del gate: `docs/technical/PRE_DELIVERY_SECURITY_GATE.md` §G1 (+ §G5 — ogni backup di `crm.db` cifrato allo stesso standard, progettato nello stesso ADR-013)
 
 #### Fase 1 — Pre-lancio (IMPLEMENTATO)
 
@@ -283,7 +319,7 @@ del prodotto e del modello di distribuzione.
 - [x] Reset password con verifica current_password (L1)
 - [x] Email enumeration eliminata su register (L1)
 - [x] Security headers HSTS + Referrer-Policy + Permissions-Policy (L1)
-- [x] CORS esteso a HTTPS per Tailscale Funnel (L1)
+- [x] CORS esteso a HTTPS per il tunnel FRP (L1)
 - [x] Version masking in /health compiled mode (L1)
 
 #### Fase 2 — Post-lancio (trigger-based)
@@ -301,8 +337,9 @@ del prodotto e del modello di distribuzione.
 |-----------|-------|---------|--------|
 | **License server** | Alto | Molto alto — verifica online, revoca remota, analytics | Se modello SaaS/subscription |
 | **Anti-debug runtime** (Frida detection) | Medio | Alto — Anello 6 ambientale | Se emerge piracy attiva |
-| **SQLCipher su crm.db** | Medio | Alto — DB illeggibile senza chiave | Se dati clinici diventano regolamentati |
 | **DRM nativo** (Widevine/custom) | Alto | Molto alto — protezione a livello OS | Probabilmente mai necessario |
+
+> La cifratura di `crm.db` **non** e' piu' in questa fase: e' stata promossa a **gate Tier-1 attivo (Gate G1)** — vedi il riquadro "Gate Tier-1 ATTIVO" a inizio roadmap e ADR-013 (accepted).
 
 ---
 
@@ -335,11 +372,13 @@ Le protezioni tecniche sono una barriera, non una garanzia. Per tutela completa:
 | `tools/build/fitmanager.spec` | Build spec PyInstaller (backup/rollback) |
 | `tools/admin_scripts/generate_license.py` | CLI generazione licenze |
 | `docs/technical/LICENSE_ACTIVATION.md` | Guida operativa attivazione |
-| `docs/security/ANTI_REVERSE_ENGINEERING_STRATEGY.md` | Strategia anti-RE completa |
-| `docs/technical/SECURITY_AUDIT_BASELINE.md` | Audit pre-hardening |
-| `docs/technical/SECURITY_AUDIT_POST_HARDENING.md` | Audit post-hardening |
+| `docs/technical/PRE_DELIVERY_SECURITY_GATE.md` | Pre-Delivery Security Gate — §G1 cifratura crm.db (gate Tier-1 attivo) |
+| `docs/archive/ANTI_REVERSE_ENGINEERING_STRATEGY.md` | Strategia anti-RE completa (storico archiviato — decisione viva = ADR-007) |
+| `docs/archive/SECURITY_AUDIT_BASELINE.md` | Audit pre-hardening (storico archiviato) |
+| `docs/archive/SECURITY_AUDIT_POST_HARDENING.md` | Audit post-hardening (storico archiviato) |
 | `docs/adr/ADR-005-license-hardening-anti-tampering.md` | Decisione architetturale hardening licenza |
 | `docs/adr/ADR-007-anti-reverse-engineering.md` | Decisione architetturale anti-RE |
+| `docs/adr/ADR-013-crm-db-encryption-at-rest.md` | Decisione architetturale cifratura crm.db (Gate G1, accepted) |
 | `tests/test_license_hardening.py` | 9 test copertura hardening |
 | `tests/test_license_service.py` | 9 test servizio licenza |
 | `tests/test_license_middleware.py` | 8 test middleware enforcement |

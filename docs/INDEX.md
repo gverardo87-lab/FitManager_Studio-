@@ -36,14 +36,6 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 
 ---
 
-## security/ — Strategia anti-reverse engineering
-
-| File | Scopo |
-|------|-------|
-| `ANTI_REVERSE_ENGINEERING_STRATEGY.md` | Strategia anti-RE v2.0: 4 step, 6 anelli, threat model, TTC, checklist (implementato) |
-
----
-
 ## scientific/ — Certificazione motori deterministici
 
 | File | Scopo | SSoT per |
@@ -61,26 +53,20 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 
 | File | Scopo |
 |------|-------|
-| `SECURITY_MODEL.md` | Threat model, 6 livelli protezione (L1-L6 + L3b), network hardening pre-Funnel, roadmap sicurezza |
-| `SECURITY_AUDIT_BASELINE.md` | Red Team audit pre-hardening (7 test, TTC per Crown Jewel) |
-| `SECURITY_AUDIT_POST_HARDENING.md` | Re-test post-hardening (4 step anti-RE, confronto pre/post) |
+| `SECURITY_MODEL.md` | **Reference unico sicurezza (vivo):** threat model + tassonomia attaccanti L0-L4, 6 livelli protezione (L1-L6 + L3b), network hardening, roadmap (cifratura crm.db = gate Tier-1 attivo G1). Gli audit storici e la strategia anti-RE sono in `docs/archive/` |
 | `LICENSE_ACTIVATION.md` | Attivazione licenza, hardware binding, CLI admin |
 | `TUNNEL_ARCHITECTURE.md` | **Sottosistema tunnel (riferimento unico):** design (problema, P1-P10, P2 data-blind), build (migrazione Tailscale→FRP, 4 fasi, gap analysis), operations (setup VPS edge, costi, DR). Consolida i 4 doc storici. |
 | `TUNNEL_SECURITY_BOUNDARY.md` | **Confine di sicurezza + piano "Strada B":** acceptance criteria (confine JWT, rate limiter, apertura selettiva), piano implementazione (lockout, role JWT, guard, test e2e). Stato: approvato, non ancora implementato. |
 | `DEPLOYMENT_PLAN.md` | Piano deploy: PyInstaller/Nuitka, standalone, Inno Setup |
 | `NUTRITION_ENGINE_V3.md` | Architettura Nutrition Engine v3 |
-| `PRE_DELIVERY_AUDIT_2026_04_17.md` | Audit tecnico 360° pre-consegna ad Alessio (2026-04-17) |
-| `PRE_DELIVERY_SECURITY_GATE.md` | Gate di sicurezza pre-consegna: 12 voci in 3 tier (G1-G12), stato annotato contro il codice reale |
-| `FINANCIAL_DOMAIN_MODEL.md` | **SSoT del dominio finanziario (vincolante) — v1.3:** entità, 3 assi (tempo/crediti/denaro + netto via `totale_rimborsato`/`quota_stornata`, Strada B), 4 stati di vita (ATTIVO/SOSPESO/ESAURITO/CHIUSO), **terminazione anticipata** (3° modo di morte, conguaglio bidirezionale, §3.1/§7-G7), vocabolario univoco (aperto≠attivo), mappa worklist, invarianti anti-perdita (§9). Le altre spec finanziarie referenziano questo |
-| `TASSONOMIA_FINANZIARIA.md` | **Vocabolario finanziario condiviso (vincolante su concetti e formule) — v1.2:** 3 assi (liquidità reale/cassa **bidirezionale**, posizione commerciale/competenza, stato di pianificazione), predicato movimento contrattuale IN/OUT, `RIMBORSO_CONTRATTO` (contra-ricavo) + 9 query da allineare (§7), esclusioni dalla cassa, riconciliazione. Referenziato dalle spec finanziarie |
-| `SPEC_VOCABOLARIO_E_CLASSIFICAZIONE_CONTRATTI.md` | **Spec consumo-SSoT + vocabolario UI (vincolante sugli AC) — v1.1:** unifica la classificazione degli stati contratto su tutte le superfici (lista, dettaglio, rinnovi, workspace) derivandola da `contract_state` invece di reimplementarla. Due assi mai fusi (vita × denaro), `is_insolvente` come flag derivato, modulo `contract-status.ts`. Giro 1 (`/contratti` + dettaglio + backend) → Giro 2 (`rinnovi-incassi` + `workspace_engine` + grep-guard). Anticipa il BLOCKER #1 di G7 (residuo→SSoT). Verificata code-grounded (workflow 9 agenti) |
-| `SPEC_RINNOVO_E_CONTRATTI_DA_PIANIFICARE.md` | Spec: flusso di rinnovo (eredità dati + percorso guidato al piano rate) + vista Contract-first "contratti da pianificare" (denaro dovuto oggi invisibile all'aging) |
-| `SPEC_GESTIONE_FINANZIARIA_TEMPORALE.md` | Spec: asse temporale della finanza — aggregazione per periodo (cassa), trend + competenza affiancata, composizione (nuovi/rinnovi, acconti/rate) |
-| `IMPL_PLAN_SPEC_RINNOVO.md` | Piano d'implementazione di SPEC_RINNOVO (ancorato al codice, decisioni bloccate, sequenza step). Materiale di lavoro — superato dal codice a implementazione conclusa |
-| `IMPL_PLAN_SPEC_TEMPORALE.md` | Piano d'implementazione di SPEC_GESTIONE_FINANZIARIA_TEMPORALE (tab Andamento in /cassa, L1 periodo+altri incassi, L2 trend+competenza, L3 composizione, fix monthly_revenue). Materiale di lavoro |
-| `SPEC_RINNOVI_SCADUTI_E_RETENTION.md` | Spec (v2.0): ciclo a 4 stati (attivo/sospeso/esaurito/chiuso); "clienti da recuperare" (non ingaggiato = né attivo né sospeso) + "contratti sospesi" (sedute prepagate da recuperare) + esito "non rinnova". Anti-perdita silenziosa. ADR-015 |
-| `IMPL_PLAN_RINNOVI_SCADUTI.md` | ⚠️ **superato** da `IMPL_PLAN_FINANCIAL_REALIGN.md` (mancava lo stato SOSPESO). Storico |
-| `IMPL_PLAN_FINANCIAL_REALIGN.md` | **Piano unico v1.3 + RESUME POINT** (strategia, workflow-verified). FATTI: Blocchi 0/1/2/3 + Prereq P + review bridge + addendum allowlist + fix tz. **PROSSIMO: Blocco 4 (G6 incassa residuo)**, poi G7 terminazione → remediation → G1 cifratura. Stato dettagliato nel banner in testa al doc. Materiale di lavoro |
+| `PRE_DELIVERY_SECURITY_GATE.md` | Gate di sicurezza pre-consegna: 12 voci in 3 tier (G1-G12), stato annotato contro il codice reale. G1 (cifratura crm.db) attivo → ADR-013 |
+| `EXERCISE_LIBRARY_STRATEGY.md` | Strategia libreria esercizi/media v2.2 (hosting centrale media §4ter). **Congelato 2026-06-16** (pivot security gate). Riferimento unico libreria esercizi |
+| `FINANCIAL_DOMAIN_MODEL.md` | **SSoT del dominio finanziario (vincolante) — v1.3:** entità, 3 assi (tempo/crediti/denaro + netto via `totale_rimborsato`/`quota_stornata`, Strada B), 4 stati di vita (ATTIVO/SOSPESO/ESAURITO/CHIUSO), terminazione anticipata (§3.1/§7-G7), data_scadenza nullable (§2), vocabolario univoco (aperto≠attivo), invarianti anti-perdita (§9). `contract_state.py` lo deriva |
+| `TASSONOMIA_FINANZIARIA.md` | **Vocabolario finanziario condiviso (vincolante su concetti e formule) — v1.2:** 3 assi (liquidità reale/cassa **bidirezionale**, competenza, pianificazione), predicato movimento contrattuale IN/OUT, `RIMBORSO_CONTRATTO` + 9 query da allineare (§7). `cash_categories.py` lo deriva |
+| `SPEC_VOCABOLARIO_E_CLASSIFICAZIONE_CONTRATTI.md` | **Spec consumo-SSoT + vocabolario UI (vincolante sugli AC) — v1.1:** la classificazione degli stati contratto su tutte le superfici deriva da `contract_state`, non si reimplementa. Due assi mai fusi (vita × denaro), `is_insolvente` derivato, modulo `contract-status.tsx`. **Giro 1 fatto** (`/contratti` + dettaglio + backend) → **Giro 2 pendente** (`rinnovi-incassi` + `workspace_engine` + grep-guard) |
+| `IMPL_PLAN_FINANCIAL_REALIGN.md` | **Unico piano attivo + RESUME POINT del filone finanziario** (workflow-verified). FATTI: Blocchi 0-3 + Prereq P + PREREQ-prezzo + Giro 1 vocabolario + data_scadenza-null. **PROSSIMO: G6 (incassa residuo) → G7 (terminazione) → G1 (cifratura).** Stato nel banner in testa al doc |
+
+> **Spec finanziarie implementate → `docs/archive/specs/`.** Le spec-feature SPEC_RINNOVO, SPEC_GESTIONE_FINANZIARIA_TEMPORALE e SPEC_RINNOVI_SCADUTI_E_RETENTION sono state implementate e il loro modello vive ora nel SSoT (FDM + TASSONOMIA + `contract_state.py`). Sono archiviate come design-record insieme ai rispettivi IMPL_PLAN. Il dominio finanziario vivo è: FDM + TASSONOMIA (SSoT) · SPEC_VOCABOLARIO (Giro 2 aperto) · IMPL_PLAN_FINANCIAL_REALIGN (piano attivo) · ADR-014/015 (decisioni).
 
 ---
 
@@ -110,6 +96,7 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 | `INC-2026-04-19-catalog-taxonomy-empty.md` | P0: catalog.db tassonomia vuota dopo consegna v1.0.7 — Safety Engine cieco, 6 tabelle vuote, gap pipeline seed/build |
 | `INC-2026-06-08-kpi-fatturato-contratti-chiusi.md` | P1: KPI fatturato/incassato escludevano i contratti chiusi — metriche storiche errate (v1.0.9) |
 | `INC-2026-06-15-installer-frpc-lock.md` | P2: upgrade installer bloccato (codice 5) da `frpc.exe` orfano — Job Object kill-on-close + installer chiude i processi (v1.0.12) |
+| `INC-2026-06-18-fingerprint-partial-license-lockout.md` | P1: hash fingerprint parziale → falso `wrong_machine` → blocco CRM intermittente. Fail-closed + no cache dei fallimenti (v1.0.13) |
 
 ## learning/ — Diario di apprendimento personale
 
@@ -120,9 +107,16 @@ Formazione del founder-developer in parallelo allo sviluppo. Concetti tecnici st
 | File | Ambito |
 |------|--------|
 | `LEARNING_METHOD.md` | Metodo di studio: 4 principi, flusso cattura/elaborazione, ponte con Claude Code |
-| `BUILD_LOG.md` | Diario cronologico: cosa ho fatto e quando (Fase 0 tunnel in corso) |
-| `LEARNING_LINUX_SYSADMIN.md` | Concetti: crittografia asimmetrica, chiavi SSH, passphrase |
+| `BUILD_LOG.md` | Diario cronologico: cosa ho fatto e quando |
+| `LEARNING_FASE1_BASI_TEORICHE.md` | Basi teoriche di programmazione e architettura |
+| `LEARNING_PROGRAMMAZIONE.md` | Concetti di programmazione incontrati nel codebase |
 | `LEARNING_APP_ARCHITECTURE.md` | Dominio nel codebase: rinnovo sequenziale, semantica date, convenzioni CRM |
+| `LEARNING_LINUX_SYSADMIN.md` | Crittografia asimmetrica, chiavi SSH, passphrase |
+| `LEARNING_NETWORKING.md` | Reti, DNS, TLS, SNI |
+| `LEARNING_TUNNEL_MANAGER.md` | Babysitter frpc: subprocess, backoff, Job Object |
+| `LEARNING_MEDIA_CLOUD_ARCHITECTURE.md` | Routing per classificazione del dato, hosting media centrale |
+| `LEARNING_BUILD_DISTRIBUZIONE.md` | Build Nuitka, packaging, installer |
+| `LEARNING_GIT_VERSIONAMENTO.md` | Git, branching, versionamento |
 
 ---
 
@@ -130,7 +124,8 @@ Formazione del founder-developer in parallelo allo sviluppo. Concetti tecnici st
 
 | Directory | Contenuto |
 |-----------|-----------|
-| `archive/specs/` | 100+ spec storiche (frozen, non modificare) |
+| `archive/specs/` | Spec storiche frozen (non modificare): UPG storici + spec finanziarie implementate (SPEC_RINNOVO, SPEC_TEMPORALE, SPEC_RINNOVI_SCADUTI + i loro IMPL_PLAN, archiviati 2026-06-23) |
+| `archive/` (root) | Snapshot storici: audit sicurezza pre/post-hardening, strategia anti-RE (implementata), pre-delivery audit 04-17, session handoff datati, DUAL_ENV, Tailscale |
 | `archive/nutrition-v2-strategy.md` | Strategia nutrition v2 (obsoleta, 226 alimenti → ora 880) |
 | `upgrades/` | Spec upgrade attive |
 | `videos/` | Script video-pillole |

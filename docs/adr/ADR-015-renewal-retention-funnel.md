@@ -4,13 +4,13 @@
 - Status: accepted
 - Deciders: Giacomo Verardo (AVGV Technologies); analisi e proposta di Claude Code
 - Related upgrade ID: —
-- Spec di dettaglio (vincolante sui criteri): `docs/technical/SPEC_RINNOVI_SCADUTI_E_RETENTION.md`
-- Correlati: `ADR-014` (gestione finanziaria), `SPEC_RINNOVO_E_CONTRATTI_DA_PIANIFICARE.md`
+- Spec di dettaglio (implementata, archiviata 2026-06-23): `docs/archive/specs/SPEC_RINNOVI_SCADUTI_E_RETENTION.md`
+- Correlati: `ADR-014` (gestione finanziaria); modello vivo: `docs/technical/FINANCIAL_DOMAIN_MODEL.md`
 
 ## Context
 
 I contratti **scaduti** (`data_scadenza < oggi`) spariscono silenziosamente: `/rinnovi-incassi` e
-l'alert mostrano solo i contratti **in scadenza futura** (`dashboard.py:346-347`). Non esiste alcuno
+l'alert mostrano solo i contratti **in scadenza futura** (filtro finestra futura in `dashboard.py`). Non esiste alcuno
 **stato terminale** ("perso"/"non rinnova"). Un contratto che oltrepassa la scadenza senza rinnovo
 cade fuori dalla finestra e non compare più → si perdono **opportunità di rinnovo** (denaro) e
 **clienti** (churn) per *assenza*, non per decisione. È l'opposto del controllo che il prodotto promette.
@@ -89,7 +89,7 @@ cade fuori dalla finestra e non compare più → si perdono **opportunità di ri
   due sezioni in più da mantenere; rischio di worklist lunga se il trainer non decide (mitigato da
   aging + azione "non rinnova").
 - **Follow-up actions**:
-  - SPEC → `IMPL_PLAN_RINNOVI_SCADUTI.md` ancorato al codice, poi implementazione.
+  - SPEC → `docs/archive/specs/IMPL_PLAN_RINNOVI_SCADUTI.md` (superato da `IMPL_PLAN_FINANCIAL_REALIGN.md`).
   - Definire forma dello stato "perso" (campo nullable su `Contract` vs tabella outcome) e set motivi.
   - Iterazione successiva: lente cliente (retention) come da SPEC §6.
   - A implementazione: aggiornare `api/CLAUDE.md` + `BUILD_LOG.md`.

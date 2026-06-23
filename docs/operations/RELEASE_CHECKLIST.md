@@ -8,7 +8,7 @@
 
 - [x] `bash tools/scripts/check-all.sh` - ruff (0 errori) + next build (0 errori TS)
 - [x] `bash tools/build/build-release.sh` - preflight + build + verify + seal + tag (ADR-004)
-- [x] Audit pre-consegna completato (`docs/technical/PRE_DELIVERY_AUDIT_2026_04_17.md`)
+- [x] Audit pre-consegna completato (`docs/archive/PRE_DELIVERY_AUDIT_2026_04_17.md`)
 - [x] ESLint: 0 errori, 5 warning residui (non-actionable `react-hooks/incompatible-library`)
 - [x] `pytest tests/ -v` - 361 test verdi, 0 falliti
 - [x] Frontend vitest: 69 test data protection verdi
