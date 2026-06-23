@@ -1130,3 +1130,50 @@ L'enforcement vero è il SSoT esposto sul wire, non la disciplina manuale (cfr. 
 rispettando i 4 BLOCKER §4.7) → **G1** (cifratura crm.db). Giro 2 vocabolario dopo G7.
 
 ---
+
+### 2026-06-23 — Bridge Chat→Code: verifica e installazione SPEC_REVISIONE_PRE_G7 (zero codice)
+
+**Cosa.** Il founder ha prodotto in Claude Chat `SPEC_REVISIONE_PRE_G7` (Desktop working copy) — una spec di revisione
+pre-G7 in due sezioni: **A** convergenza del residuo a `contract_state.residuo()` (refactoring output-invariante,
+prerequisito di G7), **B** copertura SOSPESO nel workspace `renewals_cash` (cambiamento funzionale, indipendente).
+Metodo bridge: io la verifico **contro il codice vivo** (ground-truth vince), piego i delta, installo la canonica
+in `docs/technical/`.
+
+**Verifica (workflow 15 agenti: 5 angoli di sweep + verifica adversariale per ogni sito candidato, ~1,3M token).**
+Esito: **spec solida e tesi confermata** — e A.4 confermata incompleta, come la spec stessa dichiarava, per un
+margine più ampio. La lista A.4 (4 siti) ha **mancato 5 siti reali** di ricalcolo residuo inline:
+- `rates.py:525` — cap anti-overpayment di `pay_rate` (B-ter), **senza clamp**. **PRIORITÀ ALTA**: è un guard del
+  Contract Integrity Engine → sotto G7 (`residuo = prezzo − versato − quota_stornata`) over-permetterebbe pagamenti.
+- `rates.py:734` — validazione `generate_payment_plan` (clamp ok, ma formula hard-coded anche nel messaggio 422).
+- `dashboard.py:497` — `contracts-to-plan.importo_residuo`, senza clamp (era il grounding mio).
+- `dashboard.py:446` — where-clause ORM `coalesce(prezzo,0) > coalesce(versato,0)` = predicato `residuo>0`: la
+  **parafrasi SQL** che un guard-rail sintattico (AC-A1) NON vede → allowlist, non bug (Step 3 SSoT ri-corregge).
+- `DeleteContractDialog.tsx:58` — `importoNonRiscosso`, **unico** ricalcolo residuo del frontend (caveat: prop è
+  `Contract` base che non ha `residuo` → allargare a `ContractListItem`).
+
+**Insight (rafforza la spec).** `rates.py:525/734` non sono convergenza cosmetica: sono **guard di integrità**.
+Section A non protegge solo i numeri, protegge le difese sui pagamenti dal cambio semantico di G7. Questo eleva A
+da "terreno pulito" a prerequisito di sicurezza del Contract Integrity Engine.
+
+**AC verificati.** AC-A1: pytest source-scan su `api/**/*.py` + allowlist `contract_state.py`/`dashboard.py:446`,
+regex sulla coppia `prezzo_totale…−…totale_versato` (esclude il residuo di rata); limiti reali documentati
+(cieco a SQL/ORM/TS). AC-A2: i 3 seam wire esistono (list `.residuo`, detail `.residuo`, workspace
+`finance_context.total_residual_amount`) **ma** `total_residual_amount` è **sovraccarico per `case_kind`** (residuo-
+contratto per due kind, somma-rate-scadute per `payment_overdue`) → la fixture va pilotata. AC-A3: l'invariante
+`kpi_residuo = a_rate + da_pianificare + da_incassare_scaduto` è **già** asserito (`test_contracts_to_plan.py:218`).
+
+**Section B confermata per trace.** `renewals_cash` ha 3 maglie (overdue rata-scaduta · due_soon [oggi,+7] ·
+renewal [oggi,+30]); un SOSPESO (aperto, scaduto, crediti residui, senza rate scadute) cade nel vuoto e non genera
+`OperationalCase`. L'integrity-guard #9 (date-rata ≤ `data_scadenza`) garantisce che non possa nemmeno colpire
+due_soon. Due correzioni: AC-B1 deve agganciarsi a **`lifecycle==SOSPESO`** (non `residuo>0`: un SOSPESO saldato
+con sedute residue va mostrato); AC-B3 dedup via **exclusion-set** (`overdue_contract_ids`), non `merge_key` (nessun
+consumer lo legge).
+
+**Fold-back installato.** Spec corretta in `docs/technical/SPEC_REVISIONE_PRE_G7.md` (delta marcati `[Bridge Code
+2026-06-23]`: §0bis inventario, A.3 limiti AC, A.4 +5 siti, B.1/B.3 correzioni). INDEX aggiornato (riga + "dominio
+finanziario vivo"). Desktop working copy lasciata al founder; **canonica = repo**. ZERO codice.
+
+**⏭️ Prossimo:** implementare **Sezione A** (convergenza + guard-rail, commit a sé, verifica byte-identica) →
+**Sezione B** (builder SOSPESO workspace, commit a sé) → **G7**. A e B mai nello stesso commit (§1.1).
+
+---
