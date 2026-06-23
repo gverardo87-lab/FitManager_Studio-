@@ -96,8 +96,10 @@ Un contratto si "esaurisce" lungo **tre assi distinti**, che NON vanno confusi:
 > Il SSoT tratta già NULL come *contratto perpetuo* (`is_vigente` NULL→True, `contract_lifecycle` NULL→ATTIVO
 > permanente; tutti i guard rate/KPI/aging sono già null-safe). La contraddizione cross-layer — il boundary
 > `ContractCreate` **vieta** NULL mentre modello e SSoT lo **ammettono** — si risolve **aprendo il boundary**:
-> `ContractCreate` + form da rendere `data_scadenza` **opzionale** (impl pendente; zero migrazione DB, colonna
-> già nullable). NULL **non è "legacy"**: è first-class. *(Altre decisioni audit Contract 2026-06-23 — non
+> `ContractCreate` + form `data_scadenza` **opzionale** (**implementato 2026-06-23**; zero migrazione DB,
+> colonna già nullable: `ContractCreate.data_scadenza: Optional[date]`, validator condizionale, checkbox
+> "Senza scadenza" nel `ContractForm`, label "Senza scadenza" in lista/dettaglio; test
+> `test_contract_no_expiry.py`). NULL **non è "legacy"**: è first-class. *(Altre decisioni audit Contract 2026-06-23 — non
 > model-level: `chiuso`-via-update → rimozione rimandata a G7; type-honesty NOT NULL/ORM → rimandato, resta
 > boundary-only [§9.5.7]. Dettaglio e razionale in `BUILD_LOG.md`.)*
 

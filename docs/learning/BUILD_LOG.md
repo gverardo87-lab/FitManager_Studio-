@@ -1011,3 +1011,38 @@ buco prezzo chiuso (PREREQ), 1 contraddizione decisa (data_scadenza), 2 rimandi 
 home in G7/§9.5.7. Niente rewrite: tighten-first ha consolidato senza buttare via il modello sano.
 
 ---
+
+### 2026-06-23 — data_scadenza nullable: carnet senza scadenza (decisione 1 audit Contract, bounded)
+
+**Cosa.** Implementata la **decisione 1** dell'audit Contract: `data_scadenza` opzionale a creazione →
+i pacchetti/carnet a crediti senza termine sono ora un'offerta di prima classe (FDM §2). Modifica
+**bounded** al boundary + frontend; **zero migrazione DB** (colonna già nullable), **zero tocco al SSoT**
+(`contract_state.py` era già null-safe end-to-end: `is_scaduto=False`/`is_vigente=True` su scadenza assente
+→ lifecycle ATTIVO finché i crediti non si esauriscono, poi auto-close).
+
+**Backend** (`api/schemas/financial.py`): `ContractCreate.data_scadenza: Optional[date] = None`; il
+`model_validator` salta il check `data_scadenza <= data_inizio` quando è None (gli altri invarianti —
+prezzo>0, acconto≤prezzo — restano). I guard rate (#9 boundary, #10 shortening, update `contracts.py:648`)
+erano **già** null-safe (`contract.data_scadenza and …` / `new_inizio and new_scadenza and …`).
+
+**Frontend.** `ContractForm.tsx`: `data_scadenza` zod opzionale + nuovo campo `senza_scadenza` (checkbox
+"Senza scadenza (pacchetto a crediti)") che governa due refine condizionali (richiedi scadenza **o**
+checkbox; ordine date solo se presente); il submit manda `null` quando la checkbox è attiva; pre-selezione
+in edit (contratto già senza scadenza) e in rinnovo (padre carnet). `ContractsTable` + dettaglio `[id]`:
+fallback `—` → label esplicita **"Senza scadenza"**. `types/api.ts`: `ContractCreate.data_scadenza` →
+`string | null`.
+
+**Test.** Nuovo `tests/test_contract_no_expiry.py` (5): create senza/`null` scadenza → 201; lifecycle
+**ATTIVO** in lista anche con `data_inizio` nel passato; rate boundary senza cap; SSoT puro null-safe
+(`is_scaduto/is_vigente/is_in_scadenza/contract_lifecycle`). **Suite 533 passed / 1 xfailed**, ruff clean,
+next build clean.
+
+**Verifica a schermo.** Form "Nuovo Contratto" su crm.db reale: la checkbox "Senza scadenza" renderizza
+nella posizione corretta sotto Data Scadenza. Submit live NON eseguita di proposito — creerebbe un
+contratto-test sul crm.db reale di Chiara; il path POST→persistenza→lifecycle è coperto dai 5 test
+d'integrazione sul router reale.
+
+**⏭️ Prossimo:** (b) riordino doc (archiviare `IMPL_PLAN_*` implementati; riconciliare drift FDM Desktop,
+canonico = repo) → poi **G6** (incassa residuo) → **G7** (terminazione) → **G1** (cifratura).
+
+---

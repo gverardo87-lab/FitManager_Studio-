@@ -181,7 +181,7 @@ export function ContractsTable({
                   <TableCell className="hidden md:table-cell text-muted-foreground">
                     {contract.data_scadenza
                       ? format(parseISO(contract.data_scadenza), "dd MMM yyyy", { locale: it })
-                      : "—"}
+                      : "Senza scadenza"}
                   </TableCell>
 
                   {/* ── Stato (asse vita) + segnale "denaro arretrato" (icona, sempre visibile) ── */}

@@ -128,8 +128,10 @@ export default function ContractDetailPage({
                   <span className="text-muted-foreground/50">|</span>
                   <span>
                     {format(new Date(contract.data_inizio + "T00:00:00"), "dd MMM yyyy", { locale: it })}
-                    {contract.data_scadenza && (
+                    {contract.data_scadenza ? (
                       <> — {format(new Date(contract.data_scadenza + "T00:00:00"), "dd MMM yyyy", { locale: it })}</>
+                    ) : (
+                      <> — Senza scadenza</>
                     )}
                   </span>
                 </>
@@ -382,7 +384,7 @@ function DettagliTab({ contract }: { contract: ContractWithRates }) {
             label="Data scadenza"
             value={contract.data_scadenza
               ? format(new Date(contract.data_scadenza + "T00:00:00"), "dd MMMM yyyy", { locale: it })
-              : "\u2014"}
+              : "Senza scadenza"}
           />
           <DetailRow label="Stato" value={<ContractLifecycleBadge lifecycle={contract.lifecycle} />} />
           {contract.note && (

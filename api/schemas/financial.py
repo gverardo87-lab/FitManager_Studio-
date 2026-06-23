@@ -64,7 +64,10 @@ class ContractCreate(BaseModel):
     crediti_totali: int = Field(ge=1, le=1000)
     prezzo_totale: float = Field(le=1_000_000)  # > 0 imposto nel validator (messaggio didattico, FDM §9.5.7)
     data_inizio: date
-    data_scadenza: date
+    # data_scadenza nullable (FDM §2, audit Contract 2026-06-23): i pacchetti/carnet a crediti
+    # senza termine sono un'offerta reale. None = "senza scadenza" → il contratto resta ATTIVO
+    # finché non si esauriscono i crediti (auto-close via _sync_contract_chiuso). SSoT null-safe.
+    data_scadenza: Optional[date] = None
     acconto: float = Field(default=0, ge=0, le=1_000_000)
     metodo_acconto: Optional[str] = None
     note: Optional[str] = Field(None, max_length=500)
@@ -74,7 +77,8 @@ class ContractCreate(BaseModel):
         """Validazione cross-field: prezzo > 0 (invariante) + date coerenti + acconto <= prezzo."""
         if self.prezzo_totale <= 0:
             raise ValueError(PREZZO_OBBLIGATORIO_MSG)
-        if self.data_scadenza <= self.data_inizio:
+        # Coerenza date solo se una scadenza è stata fornita (None = carnet senza termine).
+        if self.data_scadenza is not None and self.data_scadenza <= self.data_inizio:
             raise ValueError("data_scadenza deve essere dopo data_inizio")
         if self.acconto > self.prezzo_totale:
             raise ValueError("acconto non puo' essere maggiore del prezzo_totale")

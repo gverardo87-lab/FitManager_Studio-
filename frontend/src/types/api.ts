@@ -591,7 +591,7 @@ export interface ContractCreate {
   crediti_totali: number;
   prezzo_totale: number;
   data_inizio: string; // ISO date "YYYY-MM-DD"
-  data_scadenza: string;
+  data_scadenza: string | null; // null = carnet senza scadenza (FDM §2)
   acconto?: number;
   metodo_acconto?: string | null;
   note?: string | null;

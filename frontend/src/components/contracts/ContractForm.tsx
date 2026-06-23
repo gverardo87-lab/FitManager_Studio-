@@ -21,6 +21,7 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -42,15 +43,25 @@ const contractSchema = z
     crediti_totali: z.number().int().min(1, "Minimo 1 credito").max(1000),
     prezzo_totale: z.number().min(0).max(1_000_000),
     data_inizio: z.date({ error: "Data inizio obbligatoria" }),
-    data_scadenza: z.date({ error: "Data scadenza obbligatoria" }),
+    // Scadenza opzionale: i carnet a crediti senza termine sono un'offerta reale (FDM §2).
+    // La checkbox "Senza scadenza" governa la presenza del campo.
+    data_scadenza: z.date().optional(),
+    senza_scadenza: z.boolean().optional(),
     acconto: z.number().min(0).max(1_000_000).optional(),
     metodo_acconto: z.string().optional(),
     note: z.string().max(500).optional(),
   })
-  .refine((data) => data.data_scadenza > data.data_inizio, {
-    message: "La scadenza deve essere dopo la data inizio",
+  .refine((data) => data.senza_scadenza === true || !!data.data_scadenza, {
+    message: "Indica una scadenza o seleziona 'Senza scadenza'",
     path: ["data_scadenza"],
   })
+  .refine(
+    (data) => !data.data_scadenza || data.data_scadenza > data.data_inizio,
+    {
+      message: "La scadenza deve essere dopo la data inizio",
+      path: ["data_scadenza"],
+    },
+  )
   .refine(
     (data) => !data.acconto || data.acconto <= data.prezzo_totale,
     {
@@ -75,7 +86,7 @@ export interface ContractSubmitPayload {
   crediti_totali: number;
   prezzo_totale: number;
   data_inizio: string;
-  data_scadenza: string;
+  data_scadenza: string | null; // null = carnet senza scadenza (FDM §2)
   acconto?: number;
   metodo_acconto?: string;
   note?: string;
@@ -151,6 +162,13 @@ export function ContractForm({
       data_scadenza: contract?.data_scadenza
         ? parseISO(contract.data_scadenza)
         : renewalEnd,
+      // Un contratto già senza scadenza (edit) o il rinnovo di un carnet (padre senza
+      // scadenza) pre-selezionano la checkbox.
+      senza_scadenza: isEdit
+        ? !contract?.data_scadenza
+        : isRenewal
+          ? !renewalDefaults?.data_scadenza
+          : false,
       acconto: 0,
       metodo_acconto: undefined,
       note: contract?.note ?? "",
@@ -160,16 +178,20 @@ export function ContractForm({
   useEffect(() => { onDirtyChange?.(isDirty); }, [isDirty, onDirtyChange]);
 
   const accontoValue = watch("acconto") ?? 0;
+  const senzaScadenza = watch("senza_scadenza") ?? false;
 
   const handleFormSubmit = (values: ContractFormValues) => {
-    // Converti Date in string ISO per il backend
+    // Converti Date in string ISO per il backend. "Senza scadenza" → null (carnet, FDM §2).
     const payload: ContractSubmitPayload = {
       id_cliente: values.id_cliente,
       tipo_pacchetto: values.tipo_pacchetto,
       crediti_totali: values.crediti_totali,
       prezzo_totale: values.prezzo_totale,
       data_inizio: format(values.data_inizio, "yyyy-MM-dd"),
-      data_scadenza: format(values.data_scadenza, "yyyy-MM-dd"),
+      data_scadenza:
+        values.senza_scadenza || !values.data_scadenza
+          ? null
+          : format(values.data_scadenza, "yyyy-MM-dd"),
       note: values.note || undefined,
       acconto: values.acconto || 0,
       metodo_acconto: values.metodo_acconto || undefined,
@@ -275,7 +297,7 @@ export function ContractForm({
           )}
         </div>
         <div className="space-y-2">
-          <Label>Data Scadenza *</Label>
+          <Label>Data Scadenza {senzaScadenza ? "" : "*"}</Label>
           <Controller
             control={control}
             name="data_scadenza"
@@ -284,9 +306,31 @@ export function ContractForm({
                 value={field.value}
                 onChange={field.onChange}
                 placeholder="Scadenza..."
+                disabled={senzaScadenza}
               />
             )}
           />
+          <div className="flex items-center gap-2 pt-1">
+            <Controller
+              control={control}
+              name="senza_scadenza"
+              render={({ field }) => (
+                <Checkbox
+                  id="senza_scadenza"
+                  checked={field.value ?? false}
+                  onCheckedChange={(checked) => {
+                    const on = checked === true;
+                    field.onChange(on);
+                    // Azzera la data quando si passa a "senza scadenza" (carnet a crediti).
+                    if (on) setValue("data_scadenza", undefined, { shouldValidate: true });
+                  }}
+                />
+              )}
+            />
+            <Label htmlFor="senza_scadenza" className="text-sm font-normal text-muted-foreground">
+              Senza scadenza (pacchetto a crediti)
+            </Label>
+          </div>
           {errors.data_scadenza && (
             <p className="text-sm text-destructive">
               {errors.data_scadenza.message}
