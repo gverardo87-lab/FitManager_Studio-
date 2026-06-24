@@ -30,16 +30,23 @@ from api.schemas.financial import (
     ContractResponse,
     ContractListResponse,
     ContractWithRatesResponse,
+    ContractTerminate,
+    ContractSettlementPreview,
     RateResponse,
     RatePayment,
     RatePaymentReceipt,
     RenewalChainItem,
     RenewalOutcomeCreate,
 )
-from api.routers._audit import log_audit
+from api.routers._audit import log_audit, log_contract_lifecycle_transition
 from api.routers.agenda import _sync_contract_chiuso
 from api.services import contract_state as cstate
-from api.services.cash_categories import CATEGORIA_ACCONTO_CONTRATTO, CATEGORIA_PAGAMENTO_RATA
+from api.services.cash_categories import (
+    CATEGORIA_ACCONTO_CONTRATTO,
+    CATEGORIA_PAGAMENTO_RATA,
+    CATEGORIA_RIMBORSO_CONTRATTO,
+)
+from api.services.contract_settlement import compute_settlement, SettlementEsito, MotivoChiusura
 
 # Categoria movimento cassa per acconto — SSoT in cash_categories.py
 CATEGORIA_ACCONTO = CATEGORIA_ACCONTO_CONTRATTO
@@ -239,7 +246,9 @@ def list_contracts(
 
     kpi_chiusi = sum(1 for c in all_contracts if c.chiuso)  # STATO: solo chiusi
     kpi_fatturato = round(sum(c.prezzo_totale or 0 for c in all_contracts), 2)  # CUMULATIVO: include chiusi
-    kpi_incassato = round(sum(c.totale_versato for c in all_contracts), 2)  # CUMULATIVO: include chiusi
+    # NETTO dei rimborsi (G7.3 §6, FDM §9.5): card "Incassato" = denaro reale incassato. Delega al SSoT
+    # netto_incassato() (= versato − rimborsato). Oggi == Σ versato (rimborsato=0); sotto G7.3 NON sovrastima.
+    kpi_incassato = round(sum(cstate.netto_incassato(c) for c in all_contracts), 2)  # CUMULATIVO: include chiusi
 
     # ── KPI headline per stato di vita (G4) — NON "non chiuso" ──
     # kpi_attivi = stato ATTIVO (aperto + vigente). SOSPESO/ESAURITO (scaduti aperti)
@@ -1079,6 +1088,211 @@ def incassa_residuo(
         "totale_versato": {"old": old_totale_versato, "new": contract.totale_versato},
         "stato_pagamento": {"old": old_stato_pagamento, "new": contract.stato_pagamento},
     })
+    session.commit()
+    session.refresh(contract)
+
+    return _to_response(contract)
+
+
+# ════════════════════════════════════════════════════════════
+# Terminazione anticipata (G7.3) — conguaglio + atto atomico a 2 gambe
+# ════════════════════════════════════════════════════════════
+
+def _count_sedute_erogate(session: Session, contract_id: int) -> int:
+    """Sedute PT **erogate** (servizio reso) = Event PT Completati, non eliminati. Base del conguaglio
+    pro-sedute (IMPL_PLAN §4.2). NB: ≠ `crediti_usati` dell'auto-close (che conta i NON-Cancellati,
+    incl. i Programmati): il conguaglio valuta ciò che è stato reso, non ciò che è solo prenotato."""
+    return session.exec(
+        select(func.count(Event.id)).where(
+            Event.id_contratto == contract_id,
+            Event.categoria == "PT",
+            Event.stato == "Completato",
+            Event.deleted_at == None,
+        )
+    ).one()
+
+
+def _motivo_from_esito(esito: SettlementEsito) -> str:
+    """Mappa esito→motivo_chiusura (AC-7.3-9). terminate NON assegna MAI COMPLETAMENTO
+    (riservato all'auto-close; lo riaprirebbe la reopen-allowlist G7.2)."""
+    if esito == SettlementEsito.RIMBORSO:
+        return MotivoChiusura.TERMINAZIONE_RIMBORSO.value
+    if esito == SettlementEsito.NULLO:
+        return MotivoChiusura.CONSUNZIONE.value
+    return MotivoChiusura.TERMINAZIONE_DECADENZA.value  # SALDO_A_PERDERE
+
+
+def _settlement_for(session: Session, contract: Contract):
+    """Conguaglio di terminazione (puro, zero scritture). Fonte-unica-importo (§2): il
+    `residuo_corrente = contract_state.residuo()` PRE-storno passa in UNA variabile a compute_settlement."""
+    residuo_corrente = cstate.residuo(contract)
+    sedute_erogate = _count_sedute_erogate(session, contract.id)
+    return compute_settlement(
+        sedute_erogate=sedute_erogate,
+        prezzo_totale=contract.prezzo_totale,
+        crediti_totali=contract.crediti_totali,
+        totale_versato=contract.totale_versato,
+        residuo_corrente=residuo_corrente,
+    )
+
+
+def _build_settlement_preview(contract: Contract, settlement) -> ContractSettlementPreview:
+    """Compone la preview leggibile dal conguaglio. Framing di PROPOSTA (§0/§4): mai "obbligo legale",
+    sempre "calcolato col metodo standard, verifica con le condizioni del contratto"."""
+    rimborso = settlement.esito == SettlementEsito.RIMBORSO
+    storno = settlement.quota_da_stornare > 0.009
+    if rimborso:
+        msg = f"Conguaglio calcolato (pro-rata sedute): risulta un rimborso di €{settlement.importo_rimborso:.2f} a favore del cliente."
+        if storno:
+            msg += f" Il residuo di €{settlement.quota_da_stornare:.2f} per le sedute non erogate viene azzerato."
+    elif storno:
+        msg = f"Conguaglio calcolato (pro-rata sedute): nessun rimborso. Il cliente ha già consumato il servizio reso; il residuo di €{settlement.quota_da_stornare:.2f} viene azzerato."
+    else:
+        msg = "Conguaglio calcolato (pro-rata sedute): nessun rimborso e nessun residuo da azzerare."
+    msg += " Importo proposto col metodo standard pro-rata sedute — verifica con le condizioni del tuo contratto."
+    return ContractSettlementPreview(
+        esito=settlement.esito.value,
+        motivo_chiusura=_motivo_from_esito(settlement.esito),
+        valore_servizio_reso=settlement.valore_servizio_reso,
+        conguaglio=settlement.conguaglio,
+        importo_rimborso=settlement.importo_rimborso,
+        quota_da_stornare=settlement.quota_da_stornare,
+        sedute_erogate=settlement.sedute_erogate,
+        sedute_totali=contract.crediti_totali,
+        metodo_rimborso_richiesto=rimborso,
+        messaggio=msg,
+    )
+
+
+@router.get("/{contract_id}/settlement-preview", response_model=ContractSettlementPreview)
+def settlement_preview(
+    contract_id: int,
+    trainer: Trainer = Depends(get_current_trainer),
+    session: Session = Depends(get_session),
+):
+    """
+    Anteprima del conguaglio di terminazione (dry-run, AC-7.3-4): **ZERO scritture**.
+
+    Il default pro_sedute NON esegue mai silenziosamente: propone l'esito (rimborso/storno/nullo)
+    e l'utente ratifica via `terminate`. Bouncer 404; contratto già chiuso → 400.
+    """
+    contract = _bouncer_contract_owned(session, contract_id, trainer.id)
+    if contract.chiuso:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Il contratto è già chiuso")
+    return _build_settlement_preview(contract, _settlement_for(session, contract))
+
+
+@router.post("/{contract_id}/terminate", response_model=ContractResponse)
+def terminate_contract(
+    contract_id: int,
+    data: ContractTerminate,
+    trainer: Trainer = Depends(get_current_trainer),
+    session: Session = Depends(get_session),
+):
+    """
+    Terminazione anticipata di un contratto vivo (G7.3, Strada B). Atto UMANO esplicito, terza via a
+    CHIUSO. Transazione UNICA atomica.
+
+    Flusso (un solo commit):
+    A) Bouncer 404 → B) guard chiuso 400
+    C) Conguaglio puro (fonte-unica-importo §2: `residuo()` PRE-storno in UNA variabile)
+    D) Gamba RIMBORSO (solo se esito RIMBORSO; richiede `metodo_rimborso` → 422):
+       CashMovement USCITA RIMBORSO_CONTRATTO + `totale_rimborsato +=` (STESSO importo)
+    E) Gamba STORNO (SEMPRE): `quota_stornata += residuo_corrente` → `residuo()` → 0
+    F) Soft-delete SOLO rate NON-saldate (B-3): mai SALDATA né i loro CashMovement
+    G) Stato terminale DIRETTO (B-2-attiva): chiuso/motivo/data — **MAI** via `_sync_contract_chiuso`
+       (su un SOSPESO terminato `_sync` vedrebbe should_be_chiuso=False e riaprirebbe nello stesso commit)
+    H) Audit (snapshot `sedute_erogate`, no-silent-loss) + transizione `chiuso`
+    """
+    # A) Bouncer ownership (404 mai 403)
+    contract = _bouncer_contract_owned(session, contract_id, trainer.id)
+
+    # B) Guard: già chiuso → non terminabile
+    if contract.chiuso:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Il contratto è già chiuso")
+
+    # C) Conguaglio puro (fonte-unica-importo: residuo PRE-storno)
+    settlement = _settlement_for(session, contract)
+    motivo = _motivo_from_esito(settlement.esito)
+    data_chiusura = data.data_chiusura or date.today()
+    old_quota = contract.quota_stornata or 0
+    old_rimborsato = contract.totale_rimborsato or 0
+    old_chiuso = contract.chiuso
+
+    # D) Gamba RIMBORSO (solo se il cliente ha pagato più del servizio reso)
+    movement = None
+    if settlement.esito == SettlementEsito.RIMBORSO:
+        if not data.metodo_rimborso:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Metodo di rimborso obbligatorio per una terminazione con rimborso",
+            )
+        client = session.get(Client, contract.id_cliente)
+        client_label = f"{client.nome} {client.cognome}" if client else f"Cliente #{contract.id_cliente}"
+        movement = CashMovement(
+            trainer_id=trainer.id,
+            data_effettiva=data_chiusura,
+            tipo="USCITA",
+            categoria=CATEGORIA_RIMBORSO_CONTRATTO,
+            importo=settlement.importo_rimborso,   # fonte-unica-importo (§2)
+            metodo=data.metodo_rimborso,
+            id_cliente=contract.id_cliente,
+            id_contratto=contract.id,
+            id_rata=None,
+            note=data.note or f"Rimborso terminazione - {client_label}",
+        )
+        session.add(movement)
+        contract.totale_rimborsato = old_rimborsato + settlement.importo_rimborso  # STESSO importo del movimento
+
+    # E) Gamba STORNO (sempre): azzera il residuo senza riscrivere prezzo_totale (Strada B)
+    contract.quota_stornata = old_quota + settlement.quota_da_stornare  # == residuo_corrente PRE-storno
+
+    # F) Soft-delete SOLO le rate NON-saldate (B-3). Le SALDATE e i loro CashMovement ENTRATA
+    #    SOPRAVVIVONO: cancellarle romperebbe l'àncora `totale_versato == Σ ENTRATA` (Σ ENTRATA
+    #    scenderebbe, il lordo no). NON riusare il cascade di delete_contract (tocca anche le SALDATE).
+    now = datetime.now(timezone.utc)
+    rate_non_saldate = session.exec(
+        select(Rate).where(
+            Rate.id_contratto == contract.id,
+            Rate.stato.in_(["PENDENTE", "PARZIALE"]),
+            Rate.deleted_at == None,
+        )
+    ).all()
+    for r in rate_non_saldate:
+        r.deleted_at = now
+        session.add(r)
+        log_audit(session, "rate", r.id, "DELETE", trainer.id)
+
+    # G) Stato terminale DIRETTO (B-2-attiva). MAI `_sync_contract_chiuso`: su un SOSPESO terminato
+    #    (saldato, crediti residui) ricalcolerebbe should_be_chiuso=False → reset `chiuso=False`.
+    contract.chiuso = True
+    contract.motivo_chiusura = motivo
+    contract.data_chiusura = data_chiusura
+    session.add(contract)
+
+    # H) Audit atomico. flush per popolare l'id del movimento. Snapshot `sedute_erogate` (no-silent-loss:
+    #    crediti_usati è event-derived e può driftare; è l'unico record del servizio forfettato).
+    if movement is not None:
+        session.flush()
+        log_audit(session, "movement", movement.id, "CREATE", trainer.id)
+    log_audit(session, "contract", contract.id, "UPDATE", trainer.id, {
+        "motivo_chiusura": {"old": None, "new": motivo},
+        "data_chiusura": {"old": None, "new": data_chiusura},
+        "quota_stornata": {"old": old_quota, "new": contract.quota_stornata},
+        "totale_rimborsato": {"old": old_rimborsato, "new": contract.totale_rimborsato},
+        "sedute_erogate_snapshot": settlement.sedute_erogate,
+        "valore_servizio_reso": settlement.valore_servizio_reso,
+    })
+    # Transizione `chiuso` (P2): terminate la logga DA SÉ (non chiama _sync, che altrimenti la loggherebbe)
+    log_contract_lifecycle_transition(
+        session,
+        contract,
+        old_chiuso=old_chiuso,
+        motivo="terminazione",
+        importo_rimborsato=settlement.importo_rimborso if movement is not None else None,
+        residuo_annullato=settlement.quota_da_stornare,
+        data_chiusura=data_chiusura,
+    )
     session.commit()
     session.refresh(contract)
 

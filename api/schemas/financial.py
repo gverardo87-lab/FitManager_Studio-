@@ -153,6 +153,54 @@ class ContractResponse(BaseModel):
         return cstate.netto_incassato(self)
 
 
+class ContractTerminate(BaseModel):
+    """
+    Input per la terminazione anticipata (G7.3). Atto UMANO esplicito su un contratto vivo.
+
+    BLINDATO (mass-assignment): NESSUN campo calcolato in input — né `totale_versato`, né
+    `totale_rimborsato`/`quota_stornata`, né l'importo. Il conguaglio è calcolato server-side
+    (`compute_settlement`, base sedute) e il `motivo_chiusura` è DERIVATO dall'esito (AC-7.3-9),
+    NON scelto dal trainer.
+
+    - `metodo_rimborso`: obbligatorio SOLO se l'esito è RIMBORSO (verificato nel router → 422).
+    - `data_chiusura`: quando la chiusura ha effetto (default oggi nel router).
+    """
+    model_config = {"extra": "forbid"}
+
+    metodo_rimborso: Optional[str] = None
+    note: Optional[str] = Field(None, max_length=500)
+    data_chiusura: Optional[date] = None
+
+    @field_validator("metodo_rimborso")
+    @classmethod
+    def _validate_metodo_rimborso(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and v not in VALID_PAYMENT_METHODS:
+            raise ValueError(f"Metodo invalido. Validi: {sorted(VALID_PAYMENT_METHODS)}")
+        return v
+
+
+class ContractSettlementPreview(BaseModel):
+    """
+    Esito del conguaglio di terminazione, calcolato PRIMA della conferma (G7.3 dry-run, AC-7.3-4).
+
+    Posizionamento (ADR-014, §0 della spec): il software **propone** un conguaglio calcolato col
+    metodo standard pro-rata sedute; **non afferma** che sia l'obbligo legale del trainer. Il campo
+    `messaggio` porta il framing di proposta (load-bearing quanto i numeri): mai "da rimborsare",
+    sempre "calcolato/proposto, verifica con le condizioni del contratto".
+    """
+    esito: str                            # RIMBORSO | SALDO_A_PERDERE | NULLO
+    motivo_chiusura: str                  # derivato: TERMINAZIONE_RIMBORSO | TERMINAZIONE_DECADENZA | CONSUNZIONE
+    valore_servizio_reso: float
+    conguaglio: float                     # valore_reso − versato (firmato)
+    importo_rimborso: float               # > 0 solo se esito RIMBORSO
+    quota_da_stornare: float              # residuo corrente che verrà azzerato (write-off)
+    sedute_erogate: int                   # sedute Completate (servizio reso) — base del pro-rata
+    sedute_totali: Optional[int] = None   # crediti_totali (None = senza monte-sedute)
+    metodo_rimborso_richiesto: bool       # True se esito RIMBORSO → il form deve chiedere il metodo
+    policy_mode: str = "pro_sedute"       # metodo di valorizzazione (default dichiarato, §0)
+    messaggio: str                        # framing di proposta (§0/§4)
+
+
 # ════════════════════════════════════════════════════════════
 # RATE SCHEMAS
 # ════════════════════════════════════════════════════════════

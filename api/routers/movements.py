@@ -48,7 +48,7 @@ from api.schemas.financial import (
     FinancialTrendResponse,
 )
 from api.routers._audit import log_audit
-from api.services.cash_categories import CATEGORIA_ACCONTO_CONTRATTO
+from api.services.cash_categories import CATEGORIA_ACCONTO_CONTRATTO, CATEGORIA_RIMBORSO_CONTRATTO
 from api.services.recurring_expense_schedule import (
     VALID_RECURRING_EXPENSE_FREQUENCIES,
     get_recurring_expense_occurrences_in_month,
@@ -301,6 +301,11 @@ def _compute_variable_burn_rate(session: Session, trainer: Trainer, today: date)
                 CashMovement.trainer_id == trainer.id,
                 CashMovement.tipo == "USCITA",
                 CashMovement.id_spesa_ricorrente == None,
+                # G7.3 §7: un RIMBORSO_CONTRATTO è una USCITA contra-ricavo, NON un costo operativo
+                # variabile. Senza questa esclusione gonfierebbe il burn → _build_cash_protection a valle
+                # potrebbe degradare a CRITICO falso (unica query-cassa con profilo-allarme). coalesce =
+                # null-safe (le USCITA manuali senza categoria restano nel burn).
+                func.coalesce(CashMovement.categoria, "") != CATEGORIA_RIMBORSO_CONTRATTO,
                 extract("year", CashMovement.data_effettiva) == anno,
                 extract("month", CashMovement.data_effettiva) == mese,
                 CashMovement.deleted_at == None,
