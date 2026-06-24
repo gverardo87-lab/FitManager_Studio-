@@ -1342,3 +1342,36 @@ xfail→xpass (poi rimuovere il marker) → **G7.3** endpoint terminate (servono
 *valorizzazione*) → G7.4/5/6 → **G1**.
 
 ---
+
+### 2026-06-24 — Bridge SPEC_G7.1_COPERTURA_SETTLEMENT: presidio confini esito (test-only, modulo invariato)
+
+**Bridge (Chat→Code).** Spec di *copertura* su `contract_settlement.py`: aggiungere test che esercitano i
+confini di esito (dead-zone ±0.009) e la gamba rimborso, senza toccare il modulo (output-invariante; il
+modulo vince — i test descrivono ciò che già fa). La spec chiedeva esplicitamente di verificare gli input
+sul modulo reale prima di scriverli (cautela su `round()`).
+
+**Verifica empirica → 2 delta importanti (segnalati, modulo NON modificato):**
+- **Δ1 — la dead-zone ±0.009 è IRRAGGIUNGIBILE.** `compute_settlement` fa `conguaglio = round(reso − versato, 2)`,
+  quindi il conguaglio è **sempre un multiplo di €0.01**: nessun multiplo di 0.01 vive negli intervalli aperti
+  (−0.009, 0) o (0, 0.009). L'input suggerito (`versato=400.005`) dà `conguaglio = −0.0 → NULLO` via il ramo
+  `==0`, non via la tolleranza; scan ±0.001 → zero hit di dead-zone. Quindi gli **AC-1/2 non sono costruibili
+  come scritti**: il ramo NULLO è raggiungibile solo da `conguaglio == 0.00` (già coperto). La tolleranza ±0.009
+  è *inerte* — il pre-rounding rimuove già il rumore di virgola che proteggerebbe.
+- **Δ2 — il `round()` sull'abs è INERTE.** `abs(conguaglio)` è già a 2 decimali → `round(abs, 2)` è un no-op;
+  toglierlo non cambia output → **AC-4 non "cade solo se round() è in funzione"**.
+
+**Scritto (contro il comportamento REALE, ottenendo comunque l'intento — uccidere il mutante soglia 0.009→0.9).**
++4 test in `tests/test_contract_settlement.py` (10→14): confine reale **−0.01 → RIMBORSO €0.01** e **+0.01 →
+SALDO_A_PERDERE** (i casi −200/+100 esistenti NON uccidono il mutante soglia; ∓0.01 sì), **quota_da_stornare
+clampa residuo negativo → 0.0** (AC-3, esercita il `max(…,0.0)` mai battuto), **rimborso frazionario 266.67**
+(copertura del percorso non-intero; docstring onesto: non muore se si toglie l'abs-round, vedi Δ2). Commento in
+testa che lega gli input alla semantica di `round(,2)` (cautela tecnica della spec) per chi tocca `arrotondamento`.
+I 10 test esistenti **invariati**; `contract_settlement.py`/`contract_state.py` **non toccati** (zero diff).
+
+**Lezione.** Un gate con tolleranza (`±0.009`) a valle di un arrotondamento alla stessa scala (`round(,2)`) è
+**logicamente morto**: la quantizzazione collassa la dead-zone prima del confronto. I test di confine vanno
+pinnati sul *valore quantizzato* reale (∓0.01), non sull'epsilon nominale; e una mutazione su un `round()`
+ridondante è non-rilevabile per costruzione. Verificare sempre gli input-di-confine sul modulo, mai derivarli
+dal codice "a occhio" (il bridge ha intercettato 2 AC non costruibili su 5).
+
+---
