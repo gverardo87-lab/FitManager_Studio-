@@ -597,7 +597,8 @@ export interface ContractCreate {
   note?: string | null;
 }
 
-/** PUT /api/contracts/{id} (partial update) */
+/** PUT /api/contracts/{id} (partial update). NB G7.3 §8: `chiuso` NON è più aggiornabile da qui —
+ * la chiusura passa solo da auto-close o POST /terminate. */
 export interface ContractUpdate {
   tipo_pacchetto?: string | null;
   crediti_totali?: number | null;
@@ -605,6 +606,30 @@ export interface ContractUpdate {
   data_inizio?: string | null;
   data_scadenza?: string | null;
   note?: string | null;
+}
+
+/** POST /api/contracts/{id}/terminate (G7.3) — terminazione anticipata. Il `motivo_chiusura` è
+ * DERIVATO server-side dall'esito del conguaglio: il body non lo contiene (anti mass-assignment). */
+export interface ContractTerminate {
+  metodo_rimborso?: string | null; // obbligatorio se l'esito è RIMBORSO
+  note?: string | null;
+  data_chiusura?: string | null; // ISO date; default oggi
+}
+
+/** GET /api/contracts/{id}/settlement-preview (G7.3) — conguaglio calcolato PRIMA della conferma
+ * (dry-run, zero scritture). `messaggio` = framing di proposta (mai "obbligo legale"). */
+export interface ContractSettlementPreview {
+  esito: "RIMBORSO" | "SALDO_A_PERDERE" | "NULLO";
+  motivo_chiusura: string; // derivato dall'esito
+  valore_servizio_reso: number;
+  conguaglio: number;
+  importo_rimborso: number; // > 0 solo se esito RIMBORSO
+  quota_da_stornare: number; // residuo che verrà azzerato (write-off)
+  sedute_erogate: number;
+  sedute_totali: number | null;
+  metodo_rimborso_richiesto: boolean;
+  policy_mode: string;
+  messaggio: string;
 }
 
 /**

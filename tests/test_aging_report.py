@@ -2,6 +2,8 @@
 
 from datetime import date, timedelta
 
+from api.models.contract import Contract
+
 
 def _create_rate(client, auth_headers, contract_id, days_offset, importo):
     """Helper: crea rata con scadenza a today + days_offset."""
@@ -82,13 +84,18 @@ def test_aging_excludes_saldate(client, auth_headers, sample_contract):
     assert r.json()["rate_in_arrivo"] == 0
 
 
-def test_aging_excludes_closed_contracts(client, auth_headers, sample_contract):
+def test_aging_excludes_closed_contracts(client, auth_headers, sample_contract, session):
     """Rate di contratti chiusi non appaiono."""
     cid = sample_contract["id"]
     _create_rate(client, auth_headers, cid, days_offset=-10, importo=100.0)
 
-    # Chiudi il contratto manualmente
-    client.put(f"/api/contracts/{cid}", json={"chiuso": True}, headers=auth_headers)
+    # Chiudi via ORM MANTENENDO la rata scaduta viva. Post-G7.3 il canale PUT chiuso è ritirato;
+    # `terminate` soft-eliminerebbe la rata → il test verificherebbe la cancellazione, NON il
+    # FILTRO-chiuso dell'aging (ciò che presidia). Lo stato chiuso=True ∧ rata viva è costruito a mano.
+    contract = session.get(Contract, cid)
+    contract.chiuso = True
+    session.add(contract)
+    session.commit()
 
     r = client.get("/api/rates/aging", headers=auth_headers)
     assert r.status_code == 200

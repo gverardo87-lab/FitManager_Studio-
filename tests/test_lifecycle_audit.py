@@ -160,9 +160,16 @@ def test_manual_close_not_reopened_by_agenda_edit(client, auth_headers, sample_c
     c = _contract(client, auth_headers, sample_client["id"], prezzo=300.0, acconto=100.0, crediti=3)
     ev = _pt_event(client, auth_headers, sample_client["id"], c["id"])  # 1/3 crediti usati
 
-    # chiusura DELIBERATA (manuale, motivo_chiusura resta NULL)
-    r = client.put(f"/api/contracts/{c['id']}", json={"chiuso": True}, headers=auth_headers)
-    assert r.status_code == 200, r.text
+    # chiusura DELIBERATA con motivo NULL, costruita via ORM. Post-G7.3 il canale PUT chiuso è ritirato
+    # (§8) e `terminate` scrive SEMPRE un motivo → lo stato chiuso=True ∧ motivo=NULL non è più
+    # producibile via API. Ma resta come LEGACY (contratti chiusi pre-G7, ereditati a motivo=NULL) e il
+    # ramo NULL della reopen-allowlist DEVE continuare a proteggerlo: lo si fabbrica a mano (come i
+    # forward-guard :200/:224) così il presidio resta verde E VIVO, non verde-e-morto.
+    contract = session.get(Contract, c["id"])
+    contract.chiuso = True
+    contract.motivo_chiusura = None
+    session.add(contract)
+    session.commit()
 
     # mutazione d'agenda su un evento del contratto → _sync_contract_chiuso
     client.delete(f"/api/events/{ev['id']}", headers=auth_headers)

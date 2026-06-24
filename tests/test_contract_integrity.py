@@ -50,8 +50,8 @@ def test_second_rate_exceeds_residual(client, auth_headers, sample_contract):
 
 def test_rate_on_closed_contract_rejected(client, auth_headers, sample_contract):
     """Rata su contratto chiuso → 400."""
-    client.put(f"/api/contracts/{sample_contract['id']}", json={
-        "chiuso": True,
+    client.post(f"/api/contracts/{sample_contract['id']}/terminate", json={
+        "metodo_rimborso": "CONTANTI",
     }, headers=auth_headers)
 
     r = client.post("/api/rates", json={
@@ -65,8 +65,8 @@ def test_rate_on_closed_contract_rejected(client, auth_headers, sample_contract)
 
 def test_plan_on_closed_contract_rejected(client, auth_headers, sample_contract):
     """Piano rate su contratto chiuso → 400."""
-    client.put(f"/api/contracts/{sample_contract['id']}", json={
-        "chiuso": True,
+    client.post(f"/api/contracts/{sample_contract['id']}/terminate", json={
+        "metodo_rimborso": "CONTANTI",
     }, headers=auth_headers)
 
     r = client.post(f"/api/rates/generate-plan/{sample_contract['id']}", json={
@@ -81,8 +81,8 @@ def test_plan_on_closed_contract_rejected(client, auth_headers, sample_contract)
 
 def test_event_on_closed_contract_rejected(client, auth_headers, sample_client, sample_contract):
     """Evento PT con id_contratto su contratto chiuso → 400."""
-    client.put(f"/api/contracts/{sample_contract['id']}", json={
-        "chiuso": True,
+    client.post(f"/api/contracts/{sample_contract['id']}/terminate", json={
+        "metodo_rimborso": "CONTANTI",
     }, headers=auth_headers)
 
     r = client.post("/api/events", json={
@@ -100,21 +100,23 @@ def test_event_on_closed_contract_rejected(client, auth_headers, sample_client, 
 # ── F2: Close/Reopen via update ──
 
 
-def test_close_contract_via_update(client, auth_headers, sample_contract):
-    """Chiudere un contratto via PUT → chiuso = True."""
-    r = client.put(f"/api/contracts/{sample_contract['id']}", json={
-        "chiuso": True,
+def test_close_contract_via_terminate(client, auth_headers, sample_contract):
+    """Chiudere un contratto via terminate (canale G7.3) → chiuso=True + motivo_chiusura valorizzato.
+    Ex test_close_contract_via_update: il canale PUT chiuso è stato ritirato (§8)."""
+    r = client.post(f"/api/contracts/{sample_contract['id']}/terminate", json={
+        "metodo_rimborso": "CONTANTI",
     }, headers=auth_headers)
     assert r.status_code == 200
 
     cr = client.get(f"/api/contracts/{sample_contract['id']}", headers=auth_headers)
     assert cr.json()["chiuso"] is True
+    assert cr.json()["motivo_chiusura"] in ("TERMINAZIONE_RIMBORSO", "TERMINAZIONE_DECADENZA", "CONSUNZIONE")
 
 
 def test_delete_client_with_closed_contract(client, auth_headers, sample_client, sample_contract):
     """Cancellazione cliente con contratto chiuso → OK (non blocca)."""
-    client.put(f"/api/contracts/{sample_contract['id']}", json={
-        "chiuso": True,
+    client.post(f"/api/contracts/{sample_contract['id']}/terminate", json={
+        "metodo_rimborso": "CONTANTI",
     }, headers=auth_headers)
 
     r = client.delete(f"/api/clients/{sample_client['id']}", headers=auth_headers)
@@ -418,9 +420,9 @@ def test_credits_include_closed_contracts(client, auth_headers, sample_client):
     assert cr.status_code == 201
     contract = cr.json()
 
-    # Chiudi il contratto
-    client.put(f"/api/contracts/{contract['id']}", json={
-        "chiuso": True,
+    # Chiudi il contratto (via terminate, canale G7.3)
+    client.post(f"/api/contracts/{contract['id']}/terminate", json={
+        "metodo_rimborso": "CONTANTI",
     }, headers=auth_headers)
 
     # Crediti del cliente devono includere i 5 del contratto chiuso
@@ -463,9 +465,9 @@ def test_kpi_fatturato_includes_closed_contracts(client, auth_headers, sample_cl
     assert r1.status_code == 200
     fatturato_before = r1.json()["kpi_fatturato"]
 
-    # Chiudi il secondo contratto
-    client.put(f"/api/contracts/{c2.json()['id']}", json={
-        "chiuso": True,
+    # Chiudi il secondo contratto (via terminate, canale G7.3)
+    client.post(f"/api/contracts/{c2.json()['id']}/terminate", json={
+        "metodo_rimborso": "CONTANTI",
     }, headers=auth_headers)
 
     # KPI dopo la chiusura — DEVE restare uguale

@@ -203,7 +203,7 @@ def test_incassa_residuo_double_incasso_settles_then_400(client, auth_headers, s
 
 def test_incassa_residuo_closed_contract_400(client, auth_headers, sample_contract):
     """Contratto chiuso → 400 (non incassabile)."""
-    client.put(f"/api/contracts/{sample_contract['id']}", json={"chiuso": True}, headers=auth_headers)
+    client.post(f"/api/contracts/{sample_contract['id']}/terminate", json={"metodo_rimborso": "CONTANTI"}, headers=auth_headers)
     r = _incassa(client, auth_headers, sample_contract["id"], 100.0)
     assert r.status_code == 400
     assert "chiuso" in r.json()["detail"].lower()

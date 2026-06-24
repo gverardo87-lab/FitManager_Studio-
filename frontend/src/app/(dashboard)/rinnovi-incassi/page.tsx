@@ -55,6 +55,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import { ContractSheet } from "@/components/contracts/ContractSheet";
 import { IncassaResiduoDialog } from "@/components/contracts/IncassaResiduoDialog";
+import { TerminateContractDialog } from "@/components/contracts/TerminateContractDialog";
 import { useOverdueRates, useExpiringContracts, useClientsToRecover, useSuspendedContracts } from "@/hooks/useDashboard";
 import { usePayRate } from "@/hooks/useRates";
 import { useMarkRenewalOutcome, useUpdateContract } from "@/hooks/useContracts";
@@ -416,6 +417,7 @@ function SuspendedCard({ item }: { item: SuspendedContractItem }) {
   const updateContract = useUpdateContract();
   const [extendOpen, setExtendOpen] = useState(false);
   const [incassaOpen, setIncassaOpen] = useState(false);
+  const [terminateOpen, setTerminateOpen] = useState(false);
   const [newDate, setNewDate] = useState<Date | undefined>(undefined);
   const isExtending = updateContract.isPending;
   const hasResiduo = item.residuo > 0.009;
@@ -467,25 +469,18 @@ function SuspendedCard({ item }: { item: SuspendedContractItem }) {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {/* Le due gambe di chiusura arrivano col blocco terminazione (G7) — disegnate, disabilitate */}
+          {/* Termina contratto (G7.3): conguaglio derivato (rimborso o storno) + chiusura, in un atto.
+              L'unico endpoint terminate copre sia "chiudi con conguaglio" sia "decadi": l'esito lo
+              determina il calcolo pro-rata sedute (mostrato in anteprima). */}
           <Button
             size="sm"
             variant="ghost"
-            disabled
-            className="text-xs text-muted-foreground/60"
-            title="Disponibile col prossimo aggiornamento"
+            onClick={() => setTerminateOpen(true)}
+            className="text-xs text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:text-rose-400 dark:hover:bg-rose-950/30"
+            title="Termina il contratto con conguaglio"
           >
             <Lock className="mr-1 h-3 w-3" />
-            Chiudi con conguaglio
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            disabled
-            className="text-xs text-muted-foreground/60"
-            title="Disponibile col prossimo aggiornamento"
-          >
-            Decadi
+            Termina
           </Button>
           {/* Incassa residuo diretto (G6): denaro dovuto su contratto scaduto non rateizzabile */}
           {hasResiduo ? (
@@ -519,6 +514,13 @@ function SuspendedCard({ item }: { item: SuspendedContractItem }) {
           onOpenChange={setIncassaOpen}
         />
       ) : null}
+
+      <TerminateContractDialog
+        contractId={terminateOpen ? item.contract_id : null}
+        clientLabel={`${item.client_nome} ${item.client_cognome}`}
+        open={terminateOpen}
+        onOpenChange={setTerminateOpen}
+      />
 
       <Dialog open={extendOpen} onOpenChange={setExtendOpen}>
         <DialogContent>

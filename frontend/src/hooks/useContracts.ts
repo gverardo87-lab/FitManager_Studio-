@@ -15,6 +15,8 @@ import type {
   ContractUpdate,
   ContractWithRates,
   ContractListResponse,
+  ContractTerminate,
+  ContractSettlementPreview,
   RatePayment,
 } from "@/types/api";
 
@@ -230,6 +232,65 @@ export function useIncassaResiduo() {
     },
     onError: (error) => {
       toast.error(extractErrorMessage(error, "Errore nell'incasso del residuo"));
+    },
+  });
+}
+
+// ── Query: anteprima conguaglio terminazione (G7.3, dry-run) ──
+// Calcolo del conguaglio PRIMA della conferma (zero scritture). Sempre fresco (staleTime 0):
+// l'esito dipende dallo stato corrente del contratto. Abilitata solo a dialog aperto.
+
+export function useSettlementPreview(contractId: number | null) {
+  return useQuery<ContractSettlementPreview>({
+    queryKey: ["settlement-preview", contractId],
+    queryFn: async () => {
+      const { data } = await apiClient.get<ContractSettlementPreview>(
+        `/contracts/${contractId}/settlement-preview`
+      );
+      return data;
+    },
+    enabled: contractId !== null,
+    staleTime: 0,
+    gcTime: 0,
+  });
+}
+
+// ── Mutation: termina contratto (G7.3) ──
+// Terminazione anticipata: conguaglio (rimborso/storno) + chiusura, atto atomico. Invalidazione
+// = usePayRate (cassa) + lifecycle (chiude il contratto) + workspace/clients. Gemello in USCITA
+// di useIncassaResiduo.
+
+export function useTerminateContract() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      contractId,
+      ...payload
+    }: ContractTerminate & { contractId: number }) => {
+      const { data } = await apiClient.post<Contract>(
+        `/contracts/${contractId}/terminate`,
+        payload
+      );
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contract"] });
+      queryClient.invalidateQueries({ queryKey: ["contracts"] });
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
+      queryClient.invalidateQueries({ queryKey: ["client"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["movements"] });
+      queryClient.invalidateQueries({ queryKey: ["movement-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["financial-trend"] });
+      queryClient.invalidateQueries({ queryKey: ["aging-report"] });
+      queryClient.invalidateQueries({ queryKey: ["cash-balance"] });
+      queryClient.invalidateQueries({ queryKey: ["forecast"] });
+      queryClient.invalidateQueries({ queryKey: ["workspace"] });
+      toast.success("Contratto terminato");
+    },
+    onError: (error) => {
+      toast.error(extractErrorMessage(error, "Errore nella terminazione del contratto"));
     },
   });
 }

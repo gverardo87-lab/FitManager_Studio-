@@ -86,7 +86,7 @@ def test_contract_with_rates_excluded(client, auth_headers, sample_contract_with
 
 def test_closed_contract_excluded(client, auth_headers, sample_contract):
     """Contratto chiuso → NON compare anche se senza rate."""
-    client.put(f"/api/contracts/{sample_contract['id']}", json={"chiuso": True}, headers=auth_headers)
+    client.post(f"/api/contracts/{sample_contract['id']}/terminate", json={"metodo_rimborso": "CONTANTI"}, headers=auth_headers)
     r = client.get("/api/dashboard/contracts-to-plan", headers=auth_headers)
     assert r.status_code == 200
     assert r.json()["total"] == 0
@@ -143,7 +143,7 @@ def test_cruscotto_partial_plan_reconciles(client, auth_headers, sample_contract
 
 def test_cruscotto_excludes_closed(client, auth_headers, sample_contract):
     """Contratto chiuso non contribuisce al cruscotto (KPI sugli aperti)."""
-    client.put(f"/api/contracts/{sample_contract['id']}", json={"chiuso": True}, headers=auth_headers)
+    client.post(f"/api/contracts/{sample_contract['id']}/terminate", json={"metodo_rimborso": "CONTANTI"}, headers=auth_headers)
     data = client.get("/api/contracts", headers=auth_headers).json()
     assert data["kpi_residuo"] == 0.0
     assert data["kpi_a_rate"] == 0.0

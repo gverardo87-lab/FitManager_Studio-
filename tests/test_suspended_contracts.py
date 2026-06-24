@@ -87,7 +87,7 @@ def test_attivo_excluded(client, auth_headers, sample_client):
 def test_chiuso_excluded(client, auth_headers, sample_client):
     """Contratto chiuso non compare anche se scaduto con crediti."""
     c = _contract(client, auth_headers, sample_client["id"], inizio=_past(120), scadenza=_past(30), crediti=10)
-    client.put(f"/api/contracts/{c['id']}", json={"chiuso": True}, headers=auth_headers)
+    client.post(f"/api/contracts/{c['id']}/terminate", json={"metodo_rimborso": "CONTANTI"}, headers=auth_headers)
     assert _suspended(client, auth_headers)["total"] == 0
 
 

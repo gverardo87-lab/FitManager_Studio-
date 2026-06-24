@@ -91,7 +91,7 @@ def test_representative_is_most_recent_including_closed(client, auth_headers, sa
     """Rappresentante = contratto più recente IN ASSOLUTO, anche se CHIUSO (§6, caso Dalila c29/c25)."""
     _lapsed(client, auth_headers, sample_client["id"], _past(200), _past(150))  # vecchio ESAURITO
     recent = _contract(client, auth_headers, sample_client["id"], _past(80), _past(40), crediti=10)
-    client.put(f"/api/contracts/{recent['id']}", json={"chiuso": True}, headers=auth_headers)  # più recente, CHIUSO
+    client.post(f"/api/contracts/{recent['id']}/terminate", json={"metodo_rimborso": "CONTANTI"}, headers=auth_headers)  # più recente, CHIUSO (via terminate)
     data = _recover(client, auth_headers)
     assert data["total"] == 1
     assert data["items"][0]["contract_id"] == recent["id"]  # il CHIUSO più recente, non il vecchio scaduto
@@ -100,7 +100,7 @@ def test_representative_is_most_recent_including_closed(client, auth_headers, sa
 def test_representative_future_scadenza_giorni_ritardo_clamped(client, auth_headers, sample_client):
     """Rappresentante CHIUSO con scadenza FUTURA (caso 3 contratti muti) → giorni_ritardo clampato a 0, mai negativo."""
     c = _contract(client, auth_headers, sample_client["id"], _past(30), _future(60))  # scadenza futura
-    client.put(f"/api/contracts/{c['id']}", json={"chiuso": True}, headers=auth_headers)  # chiuso "muto"
+    client.post(f"/api/contracts/{c['id']}/terminate", json={"metodo_rimborso": "CONTANTI"}, headers=auth_headers)  # chiuso "muto" (via terminate, scadenza futura accettata)
     data = _recover(client, auth_headers)
     assert data["total"] == 1
     assert data["items"][0]["giorni_ritardo"] == 0  # non "-N giorni"

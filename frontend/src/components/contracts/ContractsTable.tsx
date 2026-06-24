@@ -29,6 +29,7 @@ import {
   Plus,
   AlertTriangle,
   HandCoins,
+  Lock,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -52,6 +53,7 @@ import type { ContractListItem } from "@/types/api";
 import { formatCurrency, getFinanceBarColor } from "@/lib/format";
 import { ContractLifecycleBadge, ContractMoneyBadge } from "@/lib/contract-status";
 import { IncassaResiduoDialog } from "./IncassaResiduoDialog";
+import { TerminateContractDialog } from "./TerminateContractDialog";
 
 /** Residuo incassabile direttamente: solo su contratto SCADUTO aperto (SOSPESO/ESAURITO),
  *  dove la via non è più la rateizzazione ma l'incasso diretto (G6). Per gli ATTIVO il
@@ -81,6 +83,9 @@ export function ContractsTable({
   // ~200ms di fade-out di Radix → niente glitch "Supera il residuo di € 0,00" alla chiusura).
   const [incassaContract, setIncassaContract] = useState<ContractListItem | null>(null);
   const [incassaOpen, setIncassaOpen] = useState(false);
+  // Terminazione (G7.3): stesso pattern open-separato-dal-target dell'incasso.
+  const [terminateContract, setTerminateContract] = useState<ContractListItem | null>(null);
+  const [terminateOpen, setTerminateOpen] = useState(false);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return contracts;
@@ -252,6 +257,17 @@ export function ContractsTable({
                             Incassa residuo
                           </DropdownMenuItem>
                         ) : null}
+                        {contract.lifecycle !== "chiuso" ? (
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setTerminateContract(contract);
+                              setTerminateOpen(true);
+                            }}
+                          >
+                            <Lock className="mr-2 h-4 w-4" />
+                            Termina
+                          </DropdownMenuItem>
+                        ) : null}
                         <DropdownMenuItem onClick={() => onEdit(contract)}>
                           <Pencil className="mr-2 h-4 w-4" />
                           Modifica
@@ -286,6 +302,18 @@ export function ContractsTable({
         }
         open={incassaOpen}
         onOpenChange={setIncassaOpen}
+      />
+
+      {/* Terminazione (G7.3) — un solo dialog condiviso, target = riga selezionata (open separato). */}
+      <TerminateContractDialog
+        contractId={terminateContract?.id ?? null}
+        clientLabel={
+          terminateContract
+            ? `${terminateContract.client_cognome} ${terminateContract.client_nome}`
+            : ""
+        }
+        open={terminateOpen}
+        onOpenChange={setTerminateOpen}
       />
     </div>
   );

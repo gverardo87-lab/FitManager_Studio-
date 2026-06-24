@@ -97,6 +97,10 @@ class ContractUpdate(BaseModel):
     - NO trainer_id (non trasferibile)
     - NO id_cliente (non trasferibile)
     - NO crediti_usati, totale_versato (calcolati automaticamente)
+    - NO chiuso (G7.3 §8): la chiusura NON passa più da update. Le uniche vie a CHIUSO sono
+      l'auto-close (completamento, via pay/eventi) e `POST /contracts/{id}/terminate` (terminazione
+      anticipata, che qualifica sempre la chiusura con un `motivo_chiusura`). Toglierlo qui elimina
+      la chiusura-manuale-senza-motivo (`chiuso=True ∧ motivo=NULL`) come stato producibile via API.
     """
     model_config = {"extra": "forbid"}
 
@@ -106,7 +110,6 @@ class ContractUpdate(BaseModel):
     data_inizio: Optional[date] = None
     data_scadenza: Optional[date] = None
     note: Optional[str] = Field(None, max_length=500)
-    chiuso: Optional[bool] = None
 
     @field_validator("prezzo_totale")
     @classmethod
