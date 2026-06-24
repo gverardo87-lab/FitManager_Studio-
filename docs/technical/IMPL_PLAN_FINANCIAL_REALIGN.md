@@ -315,10 +315,17 @@ Agganciato a G7.5 (non a un blocco proprio): condivide il terreno-cassa che G7.5
 Rifinitura frontend di G7.3 senza dipendenze, accodata a D4 per non aprire un commit isolato.
 
 - **Tesi:** D1=A (base conguaglio = sedute **Completate**) rende il calcolo corretto ma non auto-evidente. `TerminateContractDialog` mostra "N / M erogate" ma non esplicita che le sedute solo *prenotate* sono escluse dal calcolo.
-- **Dove:** `TerminateContractDialog.tsx` — riga condizionale: *"Le sedute prenotate ma non ancora svolte non riducono il rimborso."*
-- **Condizionale, non sempre:** mostrare SOLO quando esistono prenotate-non-erogate (Programmati effettivi). Su un contratto senza prenotazioni residue la riga è rumore. Principio: *avvisa solo quando c'è qualcosa da avvertire*.
-- **Costo:** solo testo frontend. **NB code-grounded:** la preview attuale (`ContractSettlementPreview`) espone `sedute_erogate` (Completate) e `sedute_totali` (crediti_totali), **non** il conteggio dei Programmati → per un avviso *preciso* ("prenotate ma non svolte") servirebbe un campo nuovo `sedute_prenotate` nella preview (micro-tocco backend). Fallback senza backend: condizionare su `sedute_totali − sedute_erogate > 0` (meno preciso: include anche i crediti mai prenotati). Decisione dal vivo in G7.5.
-- **AC:** preview con prenotate-non-erogate mostra l'avviso; preview senza prenotazioni residue non lo mostra; `next build` verde.
+- **Decisione (founder, `[Bridge ratify 2026-06-24]`):** strada code-grounded precisa → **aggiungere `sedute_prenotate` a `ContractSettlementPreview`**. Scartata l'approssimazione `sedute_totali − sedute_erogate > 0` (includeva i crediti mai prenotati → avviso mostrato dove non si applica = il rumore che D2 nasce per evitare).
+- **Natura del campo — NON una nuova SSoT.** `sedute_prenotate` è una **proiezione derivata** della fonte unica dei conteggi-sedute (la tabella `Event`), gemello esatto di `_count_sedute_erogate`: `count(Event)` con `stato == "Programmato"`, categoria PT, `deleted_at == None`, per quel contratto. NON una colonna sul contratto, NON un valore memorizzato — calcolato on-read come tutti gli altri conteggi (cfr. `crediti_usati` ORM sovrascritto a runtime dal `credit_breakdown` proprio perché driftava). La regola "i conteggi-sedute si derivano da `Event` ogni volta, mai si duplicano" regge.
+- **Dove (code-grounded, verificare sul vivo):**
+  - Helper backend: gemello di `_count_sedute_erogate` (`contracts.py`), filtro `Event.stato == "Programmato"`. Dal vivo: valutare un solo helper parametrico `_count_sedute_by_stato(session, contract_id, stato)` (DRY, copre erogate+prenotate) o due espliciti (leggibilità) — entrambi rispettano la SSoT-`Event`.
+  - Schema: `sedute_prenotate: int` su `ContractSettlementPreview` (`financial.py`), accanto a `sedute_erogate`/`sedute_totali`.
+  - Popolamento: in `_build_settlement_preview`/`_settlement_for`, stesso punto dove si conta `sedute_erogate`.
+  - Type sync: `sedute_prenotate: number` su `ContractSettlementPreview` (`types/api.ts`).
+- **Avviso frontend (ora preciso):** in `TerminateContractDialog.tsx`, mostrare la riga *"Le sedute prenotate ma non ancora svolte non riducono il rimborso"* **solo se `sedute_prenotate > 0`**. Vero per costruzione: appare quando esiste qualcosa di prenotato da escludere, mai sui crediti liberi.
+- **Confine — il campo è SOLO display.** `sedute_prenotate` entra nella preview per trasparenza UI; **NON** entra nel calcolo del conguaglio (D1=A: la base resta `sedute_erogate`/Completate). Nessuna riga di `compute_settlement` lo legge.
+- **Costo:** non più "zero backend" — un helper-query (pattern esistente) + un campo schema + un campo TS. Trascurabile, e l'avviso è ora veritiero. Resta dentro la finestra G7.5, stesso commit di D4.
+- **AC:** preview di contratto con Programmati → `sedute_prenotate > 0` → avviso mostrato; preview senza Programmati (solo crediti liberi o tutto erogato) → `sedute_prenotate == 0` → avviso assente; `next build` verde; **nessun test di `compute_settlement` cambia** (campo display-only).
 
 **Collocazione commit (D2+D4):** un **Commit dedicato dentro la finestra G7.5** (guardia D4 + riga D2), tesi falsificabile propria. NON un commit isolato fuori-sequenza prima di G7.4: la catena resta `G7.4 → G7.5 (+D2/D4) → G7.6 → G1`. G7.3a/b sono già committati e verdi → non rimetterci mano.
 
