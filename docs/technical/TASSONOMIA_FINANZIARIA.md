@@ -266,13 +266,18 @@ in uscita legato al contratto**, con una **categoria dedicata**.
 ### 7.2 Dove DEVE essere conteggiata / esclusa — le 9 query da allineare
 
 La ricognizione sul codice reale ha mappato l'impatto di una USCITA contrattuale sulle query di cassa.
-Poiché il predicato "contrattuale" non esiste ancora (§2), un `RIMBORSO_CONTRATTO` cadrebbe per
-**default** negli aggregati di uscite-variabili. Allineamenti richiesti:
+Il predicato "contrattuale" **ora esiste** (`cash_categories.py`, P0); un `RIMBORSO_CONTRATTO` non allineato
+cadrebbe per **default** negli aggregati di uscite-variabili. Allineamenti richiesti:
+
+> *Questa tabella classifica il TRATTAMENTO-modello di ogni query (il ✅/⚠️ è classificazione, non un tracker).
+> Lo **stato di avanzamento** vive in `AUDIT_PRE_G7.3` (Domanda 1 Classe C) + `IMPL_PLAN §5`. Stato 2026-06-24:
+> #1 già corretto · **#2 FATTA (G7.3 §7, esclusione-burn)** · le restanti = **G7.5**. Il conteggio "9" e l'inventario
+> sono da **ratificare in G7.5** (drift noto col "8" di `api/CLAUDE.md`).*
 
 | # | Query | file:riga | Trattamento corretto del rimborso |
 |---|---|---|---|
 | 1 | `_compute_saldo` / `_signed_importo` | `movements.py:66-118` | ✅ **già corretto** — l'USCITA sottrae dal saldo reale (così deve essere) |
-| 2 | `_compute_variable_burn_rate` | `movements.py:290-310` | ⚠️ **escludere** — un rimborso **non** è burn variabile (contra-ricavo, non costo) |
+| 2 | `_compute_variable_burn_rate` | `movements.py:290-310` | ✅ **FATTO (G7.3 §7)** — escluso il `RIMBORSO_CONTRATTO` (contra-ricavo, non burn variabile) |
 | 3 | `get_movement_stats` (uscite variabili) | `movements.py:1148-1151` | ⚠️ **escludere** dalle uscite operative — non deve ridurre il `margine_netto` come fosse un costo |
 | 4 | `get_forecast` (burn/uscite) | `movements.py:1486-1535` | ⚠️ **escludere** dal burn proiettato — non gonfiare la proiezione spese a 90gg |
 | 5 | `get_financial_trend` L1/L2/L3 | `movements.py:1609-1654` | ⚠️ **includere come componente contrattuale** — oggi il trend vede **solo ENTRATA** (`:1612`): il rimborso sarebbe **invisibile**. Deve abbattere gli incassi netti da contratti del periodo |

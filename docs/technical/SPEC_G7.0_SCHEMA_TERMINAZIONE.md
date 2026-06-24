@@ -128,7 +128,7 @@ Senza questa marcatura, la reopen-allowlist di G7.2 (che pretende `== COMPLETAME
 - **`residuo()` NON cambia** in G7.0. Resta `prezzo − versato`. L'estensione con `quota_stornata` è **G7.1**.
 - **Nessun endpoint** terminate/close/reopen/unterminate. Tutto G7.3+.
 - **Le 9 query NON cambiano.** Inerti finché non esiste un `RIMBORSO` reale (G7.3). G7.5.
-- **`chiuso` resta settabile via `update_contract`.** La sua rimozione è decisione separata in G7.3 (o rimandata).
+- **`chiuso` resta settabile via `update_contract`.** La sua rimozione è decisione separata in G7.3 (o rimandata). → **[Superato 2026-06-24, G7.3b]: `chiuso` è stato RIMOSSO da `ContractUpdate`; la chiusura passa solo da auto-close o `POST /terminate`, la riapertura da `POST /reopen`.**
 
 ---
 

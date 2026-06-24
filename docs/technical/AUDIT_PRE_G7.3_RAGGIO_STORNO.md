@@ -6,7 +6,9 @@
 **Esito:** **ratificato da Bridge-Claude** (vedi §Ratificazione in fondo). Consolidato in `BUILD_LOG.md` 2026-06-24 "Audit consolidamento PRE-G7.3".
 **SSoT di dominio:** `FINANCIAL_DOMAIN_MODEL.md` (Strada B §2/§9.5) · `TASSONOMIA_FINANZIARIA.md` §7.2 · `IMPL_PLAN_FINANCIAL_REALIGN.md` §4-§5 · `SPEC_G7.0_SCHEMA_TERMINAZIONE.md`.
 
-> ⚠️ **Caveat coordinate.** Questo è uno snapshot al commit `d7bbcdc`. I `file:riga` qui dentro sono accurati a quella data ma **driftano di pochi-decine di righe per commit successivo** (lo dimostra l'audit stesso: i riferimenti in IMPL_PLAN/FDM/BUILD_LOG erano pervasivamente driftati). Le **decisioni e gli esiti** sono durevoli; le **coordinate** vanno riverificate sul codice al momento di G7.3. La memory cattura solo gli esiti, non le righe — di proposito.
+> ⚠️ **Caveat coordinate.** Questo è uno snapshot al commit `d7bbcdc`. I `file:riga` qui dentro sono accurati a quella data ma **driftano di pochi-decine di righe per commit successivo** (lo dimostra l'audit stesso: i riferimenti in IMPL_PLAN/FDM/BUILD_LOG erano pervasivamente driftati). Le **decisioni e gli esiti** sono durevoli; le **coordinate** vanno riverificate sul codice. La memory cattura solo gli esiti, non le righe — di proposito.
+
+> 📌 **Aggiornamento stato (2026-06-24).** Dopo questo snapshot **G7.3 e G7.4 sono stati IMPLEMENTATI** (`9acd2c5`/`3f1404b`/`121144c`). Di conseguenza: le "**6 decisioni esterne che bloccavano G7.3**", il framing "**G7.3 = prossimo**" e gli AC marcati "per G7.3" qui sotto sono **storia** (le decisioni sono risolte). Il **perimetro G7.3 canonico** è ora `SPEC_G7.3_TERMINAZIONE_ENDPOINT.md` (questo doc lo deferisce). **Lo snapshot resta VIVO** come **mappa-query per G7.5/G7.6**: le ~7 query-cassa residue da allineare (Domanda 1 Classe C) e l'inventario "8 vs 9" da ratificare. Archiviare a chiusura di G7.
 
 ---
 

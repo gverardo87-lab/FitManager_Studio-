@@ -1,7 +1,7 @@
 # SPEC — Vocabolario e classificazione degli stati contratto (SSoT su tutte le superfici)
 
 **Versione:** 1.1
-**Stato:** Vincolante sui criteri di accettazione — **silente sull'implementazione** (Claude Code è l'architetto nel codebase)
+**Stato:** Vincolante sui criteri di accettazione — **silente sull'implementazione** (Claude Code è l'architetto nel codebase). ✅ **Giro 1 IMPLEMENTATO** (`91cbc39`): `is_insolvente` SSoT, lista/dettaglio `/contratti` derivano lo stato dal SSoT, modulo `lib/contract-status.tsx`, delega residuo. **⏳ Giro 2 PENDENTE:** `rinnovi-incassi` + `workspace_engine` off-SSoT + grep-guard.
 **Owner:** Giacomo Verardo (AVGV Technologies)
 **Destinatario:** Claude Code
 **Collocazione:** `docs/technical/`

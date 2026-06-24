@@ -183,12 +183,12 @@ il **tempo** (prima della scadenza), congela i **crediti** (sedute non erogate),
 senza storia) né del `chiuso` di completamento (che presuppone i due assi esauriti). È un percorso
 proprio, e va rappresentato come tale.
 
-**Cosa registra la terminazione (dato strutturato):**
+**Cosa registra la terminazione (dato strutturato):** *(colonna "Stato" aggiornata 2026-06-24: G7.0 ha aggiunto le 4 colonne)*
 
-| Campo | Ruolo | Stato oggi |
+| Campo | Ruolo | Stato |
 |---|---|---|
-| `data_chiusura` | **quando** la terminazione ha effetto | ⚠️ **non esiste** (PRAGMA: solo `esito_rinnovo_il`, ortogonale, mai letto da `contract_state`) |
-| `motivo_chiusura` / `motivo_terminazione` | **perché/come** è chiuso: distingue *completamento* dalle terminazioni | ⚠️ **non esiste** |
+| `data_chiusura` | **quando** la terminazione ha effetto | ✅ **esiste** (`contract.py`, G7.0; scritto da `terminate`/`reopen`) |
+| `motivo_chiusura` / `motivo_terminazione` | **perché/come** è chiuso: distingue *completamento* dalle terminazioni | ✅ **esiste** (`contract.py`, enum 4 valori, G7.0; **DERIVATO dall'esito** in `terminate`, mai COMPLETAMENTO) |
 
 **Tassonomia dei motivi** (CHIUSO è sempre qualificato):
 
@@ -415,8 +415,9 @@ derivano da qui, senza doppi conteggi:
 > `residuo` zero»** (pura chiusura+motivo, senza cassa) resta lì: spezzare la migrazione dello
 > schema-di-chiusura per anticipare un solo sotto-caso frammenta una superficie che va costruita **come
 > unità coerente**. Quindi: **Blocco 3 = worklist + Estendi**; ogni *chiusura* (qualsiasi gamba,
-> qualsiasi `residuo`) = **blocco terminazione**. Nel Blocco 3 i due bottoni di chiusura si mostrano
-> **disabilitati con affordance** «disponibile a breve».
+> qualsiasi `residuo`) = **blocco terminazione**. Nel Blocco 3 i due bottoni di chiusura erano disabilitati
+> «disponibile a breve» → **[✅ G7.3/G7.4: cablati]** ora attivi: un **"Termina"** (copre conguaglio e
+> decadenza, esito DERIVATO) + **"Riapri"** sui contratti chiusi.
 
 ---
 
@@ -453,9 +454,9 @@ derivano da qui, senza doppi conteggi:
   - **⚠️ Esteso in v1.3 (G7).** I motivi G5 coprono le decisioni **post-scadenza** (contratto già
     SOSPESO/ESAURITO). La v1.3 aggiunge i motivi di **terminazione anticipata** (contratto **vivo**) e,
     soprattutto, la **macchina del conguaglio** (rimborso in cassa) che G5 non aveva — G5 prevedeva solo
-    storni/forfait, **mai un'uscita di cassa verso il cliente**. Inoltre: **G5 non è mai stato
-    implementato** (lo storno del residuo con motivo non esiste in codice) → il meccanismo di storno
-    della gamba write-off (§3.1) e G5 si **unificano** nel blocco di terminazione.
+    storni/forfait, **mai un'uscita di cassa verso il cliente**. G5 non era mai stato implementato → il
+    meccanismo di storno della gamba write-off (§3.1) e G5 si sono **unificati nel blocco terminazione**
+    (**✅ G7.1/G7.3:** `quota_stornata` azzera il residuo, scritto da `terminate`; rimborso = `RIMBORSO_CONTRATTO`).
 - **G6 — manca il pagamento DIRETTO del residuo (v1.2).** Oggi si incassa **solo via Rata** e su uno
   **scaduto** non si può creare una rata (guardia G1). Quindi un residuo **non rateizzato** su contratto
   scaduto è **non incassabile** (verificato: Dalila c25, 20€). **Fix:** azione "incassa residuo" diretta
@@ -486,9 +487,10 @@ derivano da qui, senza doppi conteggi:
     future = soft-delete** (cancella, già esistente). `delete_contract` (force+keep_payments) porta a
     **ELIMINATO, non a CHIUSO-con-storia**: semantica sbagliata per una terminazione **visibile**.
   - **La categoria deve essere classificata da un predicato esplicito.** La "whitelist cassa
-    contrattuale" **non esiste** come predicato in codice: le query partizionano per `id_contratto IS
-    NOT NULL`, non per categoria. Una USCITA contrattuale cadrebbe **automaticamente** in 3 aggregati di
-    uscite-variabili (misclassificata come **costo operativo**). → Il predicato "movimento contrattuale"
+    contrattuale" **✅ ora esiste** (`cash_categories.py`, `CONTRACT_CASH_IN/OUT`, Prereq P0); ante-P0 non
+    c'era e le query partizionavano per `id_contratto IS NOT NULL`, non per categoria — una USCITA
+    contrattuale cadeva **automaticamente** in 3 aggregati di uscite-variabili (misclassificata come **costo
+    operativo**). **L'allineamento delle ~7 query residue al predicato resta G7.5.** → Il predicato "movimento contrattuale"
     va reso **esplicito e bidirezionale** (entrata: ACCONTO/RATA; uscita: RIMBORSO) — dettaglio in
     `TASSONOMIA_FINANZIARIA.md` §2/§7 (v1.2). **9 query** da allineare (mappate nella tassonomia; la 9ª,
     `get_dashboard_summary.monthly_revenue`, emersa dalla review bridge sul codice vivo).
@@ -672,7 +674,7 @@ non riconcilia con `kpi_incassato` — è atteso (TASSONOMIA §3).
 | `FINANCIAL_DOMAIN_MODEL.md` (questo) | **SSoT**: entità, assi, stati, vocabolario, worklist, invarianti |
 | `TASSONOMIA_FINANZIARIA.md` | dettaglio asse cassa/competenza (referenziato §8) — **v1.2** include `RIMBORSO_CONTRATTO` e il predicato contrattuale bidirezionale |
 | `SPEC_RINNOVO_*`, `SPEC_*_TEMPORALE`, `SPEC_RINNOVI_SCADUTI_*` | solo *criteri di accettazione* della feature; **referenziano** stati/vocabolario di qui |
-| `SPEC_TERMINAZIONE_*` (da scrivere) | criteri di accettazione della terminazione anticipata; referenzia §3.1/§7-G7/§9.5; **dopo** che la policy di rimborso è chiusa |
+| `SPEC_G7.0` + `SPEC_G7.3` (✅ scritte, IMPLEMENTATE) | criteri di accettazione della terminazione anticipata (schema G7.0 + endpoint/conguaglio G7.3); referenziano §3.1/§7-G7/§9.5. La policy `pro_sedute` è default **PROVISIONAL** (valorizzazione numerica gated dal tributarista, ma NON ha bloccato la struttura) |
 | `IMPL_PLAN_*` | effimeri; in `docs/archive/` a implementazione conclusa |
 | `ADR-014`, `ADR-015` | decisioni (immutabili) |
 
@@ -684,20 +686,20 @@ non riconcilia con `kpi_incassato` — è atteso (TASSONOMIA §3).
 > dipende da noi (dato sanitario, art. 9). Il finanziario rende il prodotto convincente, la cifratura
 > lo rende lecito.
 >
-> **Scope schema del blocco terminazione (per il piano).** **4 colonne plain** su `contratti` (nessuna FK
-> cross-DB, gemelle di `esito_rinnovo_motivo`): `totale_rimborsato`, **`quota_stornata`** (campo storno
-> **confermato** in ricognizione — azzera il `residuo` nella gamba write-off senza riscrivere
-> `prezzo_totale`; serve perché `residuo()` è letto anche nel dettaglio, §2/§3.1), `data_chiusura`,
-> `motivo_chiusura` (**enum da decidere** — vedi nota sotto) + la categoria movimento `RIMBORSO_CONTRATTO`.
-> Serve quindi: migrazione Alembic **e** `schema_sync` ADD-column per i DB **già deployati** (Chiara/Alessio)
-> + `ContractResponse` + il tipo frontend. Da mettere a piano.
+> **Scope schema del blocco terminazione — ✅ IMPLEMENTATO (G7.0).** **4 colonne plain** su `contratti` (nessuna FK
+> cross-DB, gemelle di `esito_rinnovo_motivo`): `totale_rimborsato`, **`quota_stornata`** (azzera il `residuo` nella
+> gamba write-off senza riscrivere `prezzo_totale`; `residuo()` lo sottrae — letto anche nel dettaglio, §2/§3.1),
+> `data_chiusura`, `motivo_chiusura` (**enum a 4 valori, DECISO** — vedi nota sotto) + la categoria movimento
+> `RIMBORSO_CONTRATTO`. Fatti: migrazione Alembic `d83abb993ea8` **e** `schema_sync` ADD-column per i DB **già
+> deployati** (Chiara/Alessio) + `ContractResponse` + il tipo frontend. (Dettaglio: `SPEC_G7.0`.)
 >
 > **⚠️ Decisione aperta — enum di `motivo_chiusura` (prima della migrazione).** Il piano di strategia lo
 > organizza per **esito economico** (`COMPLETAMENTO`/`CONSUNZIONE`/`TERMINAZIONE_RIMBORSO`/`TERMINAZIONE_DECADENZA`),
 > guida-gamba; §3.1 lo organizzava per **ragione** (`recesso`/`risoluzione`/`consensuale`). Sono **due assi
-> ortogonali** in un campo solo: va scelto **quale** vive in `motivo_chiusura` (l'esito è load-bearing, guida
-> la gamba; la ragione, se serve per le analytics, va in un campo/nota separato), e il modello e l'enum del
-> codice **devono coincidere** prima che la colonna atterri. Decisione di Giacomo.
+> ortogonali** in un campo solo: andava scelto **quale** vive in `motivo_chiusura`. **✅ DECISO (G7.0/G7.3):**
+> vince l'**esito economico** (4 valori, guida-gamba), **DERIVATO server-side** dal conguaglio (mai scelto dal
+> trainer, mai `COMPLETAMENTO` da `terminate`); la *ragione* umana (recesso/risoluzione) NON vive qui (campo
+> separato futuro, se servirà). Modello ed enum del codice coincidono (`contract_settlement.MotivoChiusura`).
 
 ## 12. Bridge rule
 

@@ -1,7 +1,7 @@
 # SPEC_REVISIONE_PRE_G7 — Convergenza del residuo + Copertura SOSPESO
 
 **Tipo:** specifica prescrittiva di revisione (bridge Chat→Code).
-**Stato:** verificata sul codice (bridge Code, 2026-06-23) — **da implementare prima di G7**.
+**Stato:** ✅ **IMPLEMENTATA** (2026-06-23) — Sez. A convergenza residuo a `contract_state.residuo()` (`6d5ba31`) + Sez. B copertura SOSPESO nel workspace `renewals_cash` (`38509e6`). Resta come **design-record + AC** (era prerequisito di G7, ora completato). Candidata ad archiviazione a chiusura di G7.
 **Vincolante per:** implementazione (`docs/technical/`). Claude Code è l'architetto finale della *forma* dall'interno del codebase; questo documento vincola il *cosa-deve-essere-vero*, mai il *come*.
 **Origine:** redatta in Claude Chat; **i delta verificati sul codice vivo sono marcati `[Bridge Code 2026-06-23]`** (ground-truth vince sul doc).
 **SSoT di dominio:** `FINANCIAL_DOMAIN_MODEL.md` (residuo §2, stati di vita §3, simmetria credito/debito-fantasma §9.5.7) · `contract_state.py` (`residuo()`).

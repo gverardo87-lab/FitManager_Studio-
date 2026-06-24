@@ -49,8 +49,8 @@ api/
 │   ├── assistant.py     Parse + commit NLP (feature flag ASSISTANT_V1_ENABLED)
 │   ├── backup.py        Backup/Restore/Export/Verify (7 endpoint, WAL-safe)
 │   ├── clients.py       CRUD clienti
-│   ├── contracts.py     CRUD contratti + batch fetch enriched + renew (rinnovo_di FK chain)
-│   ├── dashboard.py     KPI + alerts + clinical readiness + inline resolution (8 GET, ~980 LOC)
+│   ├── contracts.py     CRUD contratti + batch fetch enriched + renew + incassa-residuo (G6) + terminate/settlement-preview/reopen (G7.3-G7.4)
+│   ├── dashboard.py     KPI + alerts + clinical readiness + inline resolution (13 GET, ~980 LOC)
 │   ├── exercises.py     Catalogo esercizi read-only da catalog.db + safety-map (catalog_session)
 │   ├── goals.py         CRUD obiettivi + progress tracking (dual session)
 │   ├── measurements.py  CRUD misurazioni + valori (dual session)
@@ -203,16 +203,16 @@ ricalcola "attivo/scaduto/residuo" inline — tutti derivano da qui (`residuo()`
 `is_rate_planificabile()`, `is_engaged()`, costanti `SOGLIA_IN_SCADENZA_GG`/`SOGLIA_CHURN_GG`). Modello
 vincolante: `docs/technical/FINANCIAL_DOMAIN_MODEL.md` (v1.3) + `TASSONOMIA_FINANZIARIA.md` (v1.2).
 
-**Già in codice (Blocchi 0-4 + Prereq P):**
+**Già in codice (Blocchi 0-4 + Prereq P + terminazione G7.0→G7.4):**
 - `cash_categories.py` — predicato cassa **bidirezionale** (IN `ACCONTO_CONTRATTO`/`PAGAMENTO_RATA`, OUT `RIMBORSO_CONTRATTO`); fonte unica delle costanti categoria.
 - **Audit della transizione `chiuso`**: `log_contract_lifecycle_transition()` in `_audit.py` (idempotente, no-commit), cablato in `pay_rate` (completamento), `unpay_rate` (riapertura_pagamento), `agenda._sync_contract_chiuso` (completamento/riapertura_crediti).
 - Worklist finanziarie derivate da `contract_state`: `contracts-to-plan` (G1), `clients-to-recover` (lapsed), `suspended-contracts` (SOSPESO).
 - Forecast: filtra `Contract.chiuso == False` sulle entrate certe (no entrata-fantasma da rate PENDENTI su contratti chiusi).
 - **G6 incasso residuo diretto**: `POST /contracts/{id}/incassa-residuo` (`contracts.py`) — ENTRATA legata al contratto senza rata (categoria `PAGAMENTO_RATA`, `id_rata=None`), `totale_versato +=`, auto-close canonico via `_sync_contract_chiuso` (la transizione `chiuso` la logga lui, no doppio audit — G6 rispecchia `pay_rate`), residuo dal SSoT `contract_state.residuo()`, bouncer 404 + cap overpayment 422, UN solo commit. Riusa lo schema `RatePayment`. Il `residuo` SSoT è ora esposto anche su `ContractListResponse` (`residuo`) → il frontend lo **legge** (mai ricalcolo inline).
 
-> **In arrivo (IMPL_PLAN_FINANCIAL_REALIGN v1.3, blocco G7 terminazione):** schema (`totale_rimborsato`/`quota_stornata`/`data_chiusura`/`motivo_chiusura`), categoria `RIMBORSO_CONTRATTO` scritta, `netto_incassato`, conguaglio puro su base sedute (`contract_settlement.py`), endpoint atomico a 2 gambe, allineamento delle 8 query di cassa al predicato. Quando atterra, aggiornare questa sezione.
+> **✅ Terminazione anticipata — IMPLEMENTATA (G7.0→G7.4, IMPL_PLAN_FINANCIAL_REALIGN §4 + SPEC_G7.0/G7.3):** schema 4 colonne (`totale_rimborsato`/`quota_stornata`/`data_chiusura`/`motivo_chiusura`, `contract.py`, PLAIN), categoria `RIMBORSO_CONTRATTO` (`cash_categories.py`), `netto_incassato`, conguaglio puro su base sedute Completate (`contract_settlement.py`, policy `pro_sedute` **PROVISIONAL** — valorizzazione gated dal tributarista), **`POST /terminate` + `GET /settlement-preview` (G7.3) + `POST /reopen` (G7.4)** (2 gambe: storno sempre + rimborso se overpaid; reopen è l'inverso esplicito state-driven), `kpi_incassato`→`netto_incassato()`, esclusione del rimborso dal burn variabile. **`chiuso` rimosso da `ContractUpdate`**: la chiusura passa SOLO da auto-close (completamento) o `POST /terminate`. **Aperto (G7.5):** allineamento delle ~7 query di cassa residue al predicato bidirezionale + ratifica del conteggio (vedi pitfall conteggio query).
 
-> **Consumo UI del SSoT (`docs/technical/SPEC_VOCABOLARIO_E_CLASSIFICAZIONE_CONTRATTI.md` v1.1, da implementare):** il frontend NON deve reimplementare la classificazione (oggi `getPaymentBadge` a cascata, `is_scaduto` ricalcolato 3×, 3 definizioni di "insolvente"). `list_contracts`/`get_contract` attaccano alla riga i campi derivati da `evaluate_contract` (`lifecycle`, `money_substate`, `is_insolvente`, `in_scadenza`) e il frontend li **legge** via modulo `contract-status.ts`. **`is_insolvente`** (flag derivato: `lifecycle ∈ {SOSPESO,ESAURITO} AND rate_scadute`) è il prossimo predicato da aggiungere a `contract_state.py`, gemello di `is_rate_planificabile`. La delega del residuo inline di `_to_response_with_rates` a `residuo()` **anticipa il BLOCKER #1 di G7**.
+> **Consumo UI del SSoT (`docs/technical/SPEC_VOCABOLARIO_E_CLASSIFICAZIONE_CONTRATTI.md` v1.1):** **Giro 1 IMPLEMENTATO** — `list_contracts`/`get_contract` attaccano alla riga i campi derivati da `evaluate_contract` (`lifecycle`, `money_substate`, `is_insolvente`, `in_scadenza`); `is_insolvente` è in `contract_state.py` (flag derivato `lifecycle ∈ {SOSPESO,ESAURITO} AND rate_scadute`, gemello di `is_rate_planificabile`); il frontend li **legge** via `frontend/src/lib/contract-status.tsx` (badge a 2 assi vita×denaro); la delega del residuo inline di `_to_response_with_rates` a `residuo()` è fatta. **Giro 2 pendente:** `rinnovi-incassi` + `workspace_engine` ancora reimplementano la classificazione off-SSoT + grep-guard in `check-all.sh`.
 
 ### Contract Integrity Engine
 Il contratto e' il nodo centrale del sistema. 12 livelli di protezione:
@@ -238,6 +238,7 @@ Il contratto e' il nodo centrale del sistema. 12 livelli di protezione:
      - `delete_event` (crediti_usati scende)
      - `update_event` quando `stato` cambia (es. Completato ↔ Cancellato)
    - **MAI** aggiungere operazioni che modificano `crediti_usati` senza chiamare `_sync_contract_chiuso()`
+   - **Reopen-allowlist (G7.2):** l'auto-riapertura (credit-driven via `_sync_contract_chiuso` + payment-driven via `unpay_rate`) scatta SOLO se `motivo_chiusura == "COMPLETAMENTO"`. Le chiusure da terminazione (`TERMINAZIONE_*`) o manuali/legacy (`NULL`) NON si auto-riaprono — solo `POST /contracts/{id}/reopen` (G7.4, inverso esplicito state-driven) le riapre. Evita lo stato-zombie `chiuso=False ∧ quota_stornata>0`.
 5. **Flexible rate editing** (`update_rate`): rate pagate (SALDATA/PARZIALE) modificabili con vincoli:
    - `data_scadenza`, `descrizione`: sempre modificabili
    - `importo_previsto`: modificabile se >= importo_saldato (422 altrimenti)

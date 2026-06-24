@@ -4,7 +4,7 @@
 **Modello (SSoT):** `FINANCIAL_DOMAIN_MODEL.md` v1.3 + `TASSONOMIA_FINANZIARIA.md` v1.2
 **Supera:** `docs/archive/specs/IMPL_PLAN_RINNOVI_SCADUTI.md` (storico).
 
-> ## 🔖 RESUME POINT — stato al 2026-06-23 (ultimo commit `3be936f`, branch `FitManager_Studio`)
+> ## 🔖 RESUME POINT — stato al 2026-06-24 (ultimo commit `1df3414`, branch `FitManager_Studio`) — ✅ G7.0→G7.4 IMPLEMENTATI
 >
 > **FATTO (mergiato + pushato):**
 > - **Blocco 0** — `api/services/contract_state.py` SSoT (4 stati + sotto-stato denaro + engagement). 
@@ -30,17 +30,21 @@
 >   SuspendedCard (`/rinnovi-incassi`) + dropdown `ContractsTable`. **+16 test** (`test_incassa_residuo.py`).
 >   Review adversariale (13 agenti) → 4 fix: **`residuo` SSoT esposto su `ContractListResponse`** (il frontend
 >   legge, non ricalcola — §8.1/§8.9), dialog `open` disaccoppiato dal target, test ledger-reale, assert categoria.
->   **Implementato, suite verde — commit pendente.**
+>   **Committato+pushato (`3ebef34`).**
+> - **G7.0→G7.4 — Terminazione anticipata (FATTI 2026-06-24):** G7.0 schema 4 colonne + migrazione (`32499b5`) · G7.1 conguaglio puro `contract_settlement.py` + `residuo()`/`netto_incassato()` (`1997b12`) · G7.2 reopen-allowlist (`d7bbcdc`) · G7.3 `POST /terminate` + `GET /settlement-preview` + ritiro PUT chiuso + migrazione 16 test + frontend (`9acd2c5`+`3f1404b`) · G7.4 `POST /reopen` inverso esplicito state-driven (`121144c`).
 >
-> Suite **549 passed / 1 xfailed / 0 failed** (533 baseline + 16 G6).
+> Suite **604 passed / 0 xfailed**.
 >
-> **⏭️ PROSSIMO: Blocco terminazione G7** (§4): schema (`totale_rimborsato`/`quota_stornata`/`data_chiusura`/`motivo_chiusura`),
-> conguaglio puro policy-pluggable, endpoint atomico 2 gambe. **Rispettare i 4 BLOCKER §4.7** (residuo→SSoT;
-> guard riapertura ALLOWLIST + il completamento marca `motivo_chiusura=COMPLETAMENTO`; soft-delete solo non-saldate;
-> financial-trend doppia decomposizione). Allora `test_manual_close_not_reopened_by_agenda_edit` passa da xfail→xpass: **togliere il marker**.
+> **⏭️ PROSSIMO: G7.5** (§5 + §5-bis/§5-ter): allineamento delle ~7 query-cassa residue al predicato bidirezionale +
+> ratifica conteggio (8-vs-9, vedi sotto) + **D4** guardia `data_chiusura` non-futura + **D2** campo `sedute_prenotate`.
+> Poi **G7.6** (runbook 3 muti) → **G1** (cifratura). I **4 BLOCKER §4.7 sono chiusi**: residuo→SSoT (Sez. A); allowlist
+> (G7.2); soft-delete selettivo (G7.3 B-3); financial-trend doppia decomposizione (resta in G7.5). `test_manual_close_*`
+> è già xpass (marker rimosso, presidio permanente).
 >
-> **DECISIONI APERTE da Giacomo (solo per G7, NON bloccano G6):** policy valorizzazione conguaglio (tributarista);
-> enum `motivo_chiusura` (esito vs ragione); se togliere `chiuso` da `update_contract`; R/T per i 3 contratti muti (id 4/9/13).
+> **DECISIONI di Giacomo — RISOLTE per G7.0-G7.4:** policy conguaglio = `pro_sedute` default DICHIARATO **PROVISIONAL**
+> (la valorizzazione numerica resta gated dal tributarista, ma non blocca la struttura); enum `motivo_chiusura` = 4 valori
+> **DERIVATO dall'esito** (mai COMPLETAMENTO da terminate); `chiuso` **RIMOSSO** da `update_contract`. **Resta aperto:**
+> R/T per i 3 contratti muti (id 4/9/13) = **G7.6** runbook.
 >
 > **Metodo:** model→spec→codice; commit per blocco con `check-all.sh`+`pytest` verde; bridge per i delta modello.
 
@@ -49,9 +53,10 @@
 > ancorato al codice reale del branch `FitManager_Studio`. I `required_changes` dei verdetti sono
 > recepiti nei blocchi (sez. 9 per tracciabilità). Tutte le citazioni `file:riga` verificate sul codice vivo.
 >
-> Citazioni portanti confermate sul codice: `ContractUpdate` accetta `data_scadenza`+`chiuso` con
-> `extra:forbid`; `RatePayment` riusabile per G6; `residuo` calcolato **inline** a `contracts.py:127` e
-> `financial.py:274` (NON via SSoT); `contract_state.residuo()` (`:59-60`) da estendere con `quota_stornata`.
+> Citazioni portanti — **[aggiornate 2026-06-24, superate dall'implementazione G7.0-G7.4]:** `ContractUpdate` NON
+> accetta più `chiuso` (rimosso in G7.3b); `residuo` è delegato al SSoT `contract_state.residuo()` ovunque (NON più
+> inline @ `contracts.py:127`); `residuo()` è già esteso con `quota_stornata` (G7.1). Le coordinate `file:riga` in
+> questo doc sono pre-G7 e driftate — riverificare sul codice vivo prima di citarle.
 
 ---
 
@@ -96,15 +101,14 @@
    POST /contracts/{id}/incassa-residuo  (prima cassa ENTRATA diretta sul contratto)
         │
         ▼
-[Blocco Terminazione — G7]  (SCHEMA: 4 colonne plain + categoria RIMBORSO_CONTRATTO)
+[Blocco Terminazione — G7.0->G7.4 ✅ FATTO]  (schema 4 colonne + categoria RIMBORSO_CONTRATTO)
    contract_settlement.py (conguaglio puro, policy pluggable)
-   POST /terminate /close /reopen /unterminate (atomici)
-   accende numericamente i consumatori netto di P3 + le viste contrattuali dipendenti
-   abilita i 2 bottoni di chiusura del Blocco 3
+   POST /terminate + GET /settlement-preview + POST /reopen (2 endpoint, atomici)  <- consolidati (no /close, no /unterminate)
+   kpi_incassato->netto + esclusione-burn; bottoni Blocco 3 cablati ("Termina"/"Riapri")
         │
         ▼
-[Remediation runbook — 3 contratti muti id 4/9/13]  (dato vivo, procedura a sé)
-   gamba REOPEN: disponibile ORA  |  gamba TERMINATE: solo dopo merge G7
+[G7.5 (aperto): ~7 query-cassa + D4/D2]  ->  [G7.6: runbook 3 contratti muti id 4/9/13]  (dato vivo)
+   gamba REOPEN: POST /reopen (disponibile)  |  gamba TERMINATE: POST /terminate (disponibile)
 ```
 
 **Buildable ORA vs bloccato dalla policy:**
@@ -197,6 +201,15 @@
 
 ## 4. Blocco Terminazione (G7) — schema + conguaglio puro + endpoint atomico a 2 gambe
 
+> ✅ **IMPLEMENTATO (G7.0→G7.4, 2026-06-24).** Le sotto-sezioni 4.1-4.9 erano marcate "BUILDABLE NOW": ora sono
+> COSTRUITE — schema (G7.0), conguaglio puro (G7.1), `residuo()`/`netto_incassato()` estesi (G7.1), reopen-allowlist
+> (G7.2), endpoint `POST /terminate` + `GET /settlement-preview` (G7.3) + `POST /reopen` (G7.4). **Resta aperto solo
+> G7.5** (§5 + §5-bis/§5-ter). **Delta dell'implementazione rispetto a questo testo:** (a) endpoint **consolidati in 2**
+> (`/terminate` + `/reopen` state-driven), NON 4 — niente `/close` né `/unterminate` separati (reopen inverte ciò che
+> lo stato mostra); (b) `motivo_chiusura` **DERIVATO dall'esito** server-side (non scelto dal trainer); (c) reopen è un
+> **endpoint** (`POST /reopen`), NON `PUT chiuso=False` (chiuso rimosso da `ContractUpdate`). Riferimento canonico
+> dell'implementazione: `SPEC_G7.3` §0bis + `SPEC_G7.0`. Le coordinate `file:riga` qui sotto sono pre-G7, driftate.
+
 > **Consolidamento (verdetto 1):** casa unica del conguaglio puro = **`api/services/contract_settlement.py`** (mantiene `contract_state.py` minimale); le estensioni SSoT degli assi (`residuo()` esteso, `netto_incassato()`) restano in `contract_state.py`. Casa unica costanti/predicato cassa = **`api/services/cash_categories.py`** (P0).
 
 **Scope.** Terza modalità di morte: terminazione anticipata umana su contratto vivo, conguaglio su **base sedute**, Strada B + invariante no-debito-fantasma. CHIUSO sempre qualificato da `motivo_chiusura`. Tutto derivato da `contract_state`, transazione **unica atomica**.
@@ -238,9 +251,9 @@ Companion read-only `GET /contracts/{id}/settlement-preview` → `ContractSettle
 
 `POST /contracts/{id}/close` = bottone "decadi" (`TERMINAZIONE_DECADENZA`): **storno-only**, zero USCITA (forfeit auditato, non silente).
 
-`POST /contracts/{id}/reopen` (o `PUT chiuso=False`, **già supportato** da `ContractUpdate.chiuso`, verificato `financial.py:93`): `chiuso=False` + azzera `motivo_chiusura`/`data_chiusura`. Zero cassa. Path REOPEN del runbook, **disponibile ORA**.
+`POST /contracts/{id}/reopen` — **[✅ IMPLEMENTATO G7.4, `121144c`]:** inverso ESPLICITO state-driven (annulla rimborso + storno, ripristina rate, `chiuso=False` + azzera `motivo_chiusura`/`data_chiusura`). **NON via `PUT chiuso=False`** — `chiuso` è stato rimosso da `ContractUpdate` (G7.3b), quel path darebbe 422. Copre il path REOPEN del runbook (3 muti: motivo NULL, nessuno storno → sola `chiuso=False`).
 
-`POST /contracts/{id}/unterminate`: inverso per chiusure con denaro — soft-delete del `CashMovement` RIMBORSO **via ORM (`deleted_at=now`), NON via endpoint** (`delete_movement` blocca `id_contratto!=None`, `movements.py:1278-1283`; pattern `unpay_rate` `rates.py:679-682`), `totale_rimborsato -=`, `quota_stornata=0`, ripristina rate, `chiuso=False`. Atomico+audit.
+`POST /contracts/{id}/unterminate` — **[CONSOLIDATO in `/reopen`, G7.4]:** non esiste un endpoint separato. La logica (soft-delete del `CashMovement` RIMBORSO **via ORM** — `delete_movement` blocca `id_contratto!=None`, pattern `unpay_rate`; `totale_rimborsato -=`; `quota_stornata=0`; ripristina rate; `chiuso=False`) vive dentro `reopen_contract`, che inverte ciò che lo STATO mostra (rimborso+storno+rate) qualunque sia il motivo. Atomico+audit.
 
 **Riuso scheletri (file:riga):** `pay_rate` build-then-single-commit `rates.py:547-602`; `unpay_rate` reversal+soft-delete `rates.py:612-696`; STORNO compensativo `recurring_expenses.py:588-609`; bouncer `contracts.py:902-913`; conteggio sedute erogate `contracts.py:713-720`; template renew movimento `contracts.py:859-896`; `_to_response_with_rates` `contracts.py:124-131`; `ImpactPreviewResponse` `movements.py:149-159`; dialog distruttivo `DeleteContractDialog.tsx`.
 
@@ -253,7 +266,7 @@ Companion read-only `GET /contracts/{id}/settlement-preview` → `ContractSettle
 ### 4.7 ANTI-PATTERN espliciti (verdetti 2 e 3, BLOCKER-grade)
 - **G7 NON chiama mai `_sync_contract_chiuso`** (`agenda.py:299-329`). È credito-driven: terminare un SOSPESO (saldato, crediti residui) farebbe `should_be_chiuso=False` → **RESET `chiuso=False` dentro lo stesso commit, annullando la terminazione**. G7 setta `chiuso/motivo/data_chiusura` direttamente. È il punto in cui l'infra condivisa con G6 **deve divergere**.
 - **⚠️ Guard ALLOWLIST sul ramo di RIAPERTURA di `_sync_contract_chiuso` (LOAD-BEARING, review bridge §1 + addendum §6).** Non basta che il `terminate` non chiami `_sync`: l'agenda lo chiama **comunque** (`create/update/delete_event`) sugli eventi PT del cliente. Oggi il ramo di auto-riapertura (`chiuso=True→False` quando i crediti non sono esauriti) riapre **qualsiasi** chiusura non-da-completamento → stato zombie `chiuso=False ∧ quota_stornata>0` (viola §9.5.6). **Fix vincolante — ALLOWLIST, non denylist:** il ramo di riapertura scatta **SOLO se `motivo_chiusura == COMPLETAMENTO`**; ogni altro valore — `TERMINAZIONE_*` **e `NULL` (chiusura manuale/legacy)** — non si riapre (solo `reopen`/`unterminate` espliciti). ⚠️ Una **denylist** (`motivo ∈ TERMINAZIONE_* o quota_stornata>0`) **manca il caso reale** della chiusura manuale (`motivo=NULL`, nessuno storno) = quello che il test esercita → lo strict-xfail non diventerebbe **mai** xpass. **Due prerequisiti:** (1) i percorsi di auto-close per completamento (`pay_rate`; ramo di chiusura di `_sync_contract_chiuso`) **devono scrivere `motivo_chiusura = COMPLETAMENTO`** — senza, la allowlist congela anche le riaperture legittime di completamento; (2) doppio significato del `NULL` dichiarato (guard = non-riaprire; runbook = completamento implicito → un completamento legacy non si auto-riapre più, direzione sicura). **Alternativa (decisione Giacomo):** togliere `chiuso` da `update_contract` → solo `terminate`/`close` chiudono (scrivono il motivo) → la chiusura-manuale-senza-motivo non esiste più. Tracciato da `test_lifecycle_audit.test_manual_close_not_reopened_by_agenda_edit` (**xfail strict** → xpass **solo** quando atterrano **entrambi** i prerequisiti). Delta modello in FDM §9.5.6.
-- **`residuo` nel dettaglio è MANDATORY-fix.** `contracts.py:127` calcola `residuo` inline (**verificato**), `financial.py:274` lo documenta. Dopo lo storno mostrerebbe **debito-fantasma nel punto più guardato della UI**. Delegare a `contract_state.residuo()`. `importo_da_rateizzare` (`:130`) e `disallineamento` (`:131`) ereditano la correzione. Test: terminato → `residuo==0` AND `somma_rate_pendenti==0` AND `piano_allineato==True`.
+- **`residuo` nel dettaglio — ✅ FATTO (Sez. A `6d5ba31`, BLOCKER §4.7 #1 chiuso).** Era MANDATORY-fix (residuo inline @ `contracts.py:127` = debito-fantasma post-storno nel punto più guardato della UI): ora `_to_response_with_rates` delega a `contract_state.residuo()`; `importo_da_rateizzare`/`disallineamento` ereditano. Verificato dall'AUDIT_PRE_G7.3 (convergenza residuo COMPLETA).
 - **Soft-delete rate = TUTTE le non-saldate (PENDENTE+PARZIALE, qualsiasi data), ESCLUSE le SALDATA.** **NON riusare `delete_contract:761-788` verbatim** (cancella anche SALDATA + i loro `CashMovement` ENTRATA → distrugge denaro incassato, rompe l'àncora `totale_versato == Σ ENTRATA`). Le SALDATA e i loro movimenti **sopravvivono**.
 - **Snapshot `sedute_erogate` nell'audit** al momento della terminazione: `crediti_usati` è event-derived e può driftare; è l'unico record che soddisfa no-silent-loss per le sedute forfettate.
 - **Invariante `quota_stornata>0 ⟹ chiuso=True`**: i KPI inline residuo (`contracts.py:285-286,314`) NON sottraggono `quota_stornata`, safe SOLO perché filtrano `if not c.chiuso`. Documentare/asserire l'invariante (o migrare quelle formule a `residuo()`).
@@ -361,7 +374,7 @@ Rifinitura frontend di G7.3 senza dipendenze, accodata a D4 per non aprire un co
 **Stato reale (crm.db Chiara):** `chiuso=1`, `data_scadenza` FUTURA, `totale_versato==prezzo_totale` (saldati, residuo 0), `crediti_usati=0` (tutte le sedute da erogare), `motivo/data/conguaglio` assenti. **Anomalia:** l'auto-close richiede `SALDATO AND crediti_usati>=crediti_totali`; con `crediti_usati=0` NON poteva scattare → chiusura **manuale o da import**.
 
 **Decisione per-contratto (mai bulk):**
-- **OPZIONE R (REOPEN, default)** se relazione viva / chiusura erronea: `PUT update_contract chiuso=False` (**nessuna dipendenza da schema G7, disponibile ORA**), zero cassa, log_audit, reversibile.
+- **OPZIONE R (REOPEN, default)** se relazione viva / chiusura erronea: `POST /contracts/{id}/reopen` (G7.4, `121144c` — **NON** `PUT chiuso=False`, rimosso in G7.3b), inverso esplicito state-driven, log_audit, reversibile. Sui 3 muti (motivo NULL, nessuno storno) riapre con sola `chiuso=False`.
 - **OPZIONE T (TERMINAZIONE retroattiva)** se rapporto finito: endpoint `terminate` (**solo DOPO G7**). Conguaglio: `sedute_erogate=0` → `conguaglio=−totale_versato` → **RIMBORSO PIENO dovuto**. **Attenzione:** se non c'è stato rimborso reale, correggere `sedute_erogate` o trattare come chiusura erronea → R.
 
 **Step per contratto:** (1) **backup** `cp crm.db crm.db.bak`; (2) snapshot pre (`_compute_saldo`, `/reconciliation`, dump contratto, audit_log); (3) decisione R/T col trainer; (4) esecuzione **SOLO via endpoint**; (5) snapshot post (R: `totale_versato==Σ ENTRATA` invariato, lifecycle→ATTIVO; T: `Σ USCITA RIMBORSO==totale_rimborsato`, lifecycle→CHIUSO+motivo; zero rate PENDENTI; audit presenti); (6) reversibilità documentata. **Un contratto alla volta.** I legacy NULL si leggono come `COMPLETAMENTO implicito`.
