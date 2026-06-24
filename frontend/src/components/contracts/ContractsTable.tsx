@@ -30,6 +30,7 @@ import {
   AlertTriangle,
   HandCoins,
   Lock,
+  RotateCcw,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -54,6 +55,7 @@ import { formatCurrency, getFinanceBarColor } from "@/lib/format";
 import { ContractLifecycleBadge, ContractMoneyBadge } from "@/lib/contract-status";
 import { IncassaResiduoDialog } from "./IncassaResiduoDialog";
 import { TerminateContractDialog } from "./TerminateContractDialog";
+import { ReopenContractDialog } from "./ReopenContractDialog";
 
 /** Residuo incassabile direttamente: solo su contratto SCADUTO aperto (SOSPESO/ESAURITO),
  *  dove la via non è più la rateizzazione ma l'incasso diretto (G6). Per gli ATTIVO il
@@ -86,6 +88,9 @@ export function ContractsTable({
   // Terminazione (G7.3): stesso pattern open-separato-dal-target dell'incasso.
   const [terminateContract, setTerminateContract] = useState<ContractListItem | null>(null);
   const [terminateOpen, setTerminateOpen] = useState(false);
+  // Riapertura (G7.4): inverso di terminate, per i contratti chiusi.
+  const [reopenContract, setReopenContract] = useState<ContractListItem | null>(null);
+  const [reopenOpen, setReopenOpen] = useState(false);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return contracts;
@@ -267,7 +272,17 @@ export function ContractsTable({
                             <Lock className="mr-2 h-4 w-4" />
                             Termina
                           </DropdownMenuItem>
-                        ) : null}
+                        ) : (
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setReopenContract(contract);
+                              setReopenOpen(true);
+                            }}
+                          >
+                            <RotateCcw className="mr-2 h-4 w-4" />
+                            Riapri
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem onClick={() => onEdit(contract)}>
                           <Pencil className="mr-2 h-4 w-4" />
                           Modifica
@@ -314,6 +329,18 @@ export function ContractsTable({
         }
         open={terminateOpen}
         onOpenChange={setTerminateOpen}
+      />
+
+      {/* Riapertura (G7.4) — inverso di terminate, per i contratti chiusi. */}
+      <ReopenContractDialog
+        contract={reopenContract}
+        clientLabel={
+          reopenContract
+            ? `${reopenContract.client_cognome} ${reopenContract.client_nome}`
+            : ""
+        }
+        open={reopenOpen}
+        onOpenChange={setReopenOpen}
       />
     </div>
   );

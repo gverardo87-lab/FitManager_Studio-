@@ -295,6 +295,42 @@ export function useTerminateContract() {
   });
 }
 
+// ── Mutation: riapri contratto chiuso (G7.4) ──
+// Inverso esplicito di terminate/auto-close: annulla rimborso+storno, ripristina rate, chiuso=False.
+// Stessa invalidazione di useTerminateContract (tocca cassa + lifecycle).
+
+export function useReopenContract() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (contractId: number) => {
+      const { data } = await apiClient.post<Contract>(
+        `/contracts/${contractId}/reopen`,
+        {}
+      );
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contract"] });
+      queryClient.invalidateQueries({ queryKey: ["contracts"] });
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
+      queryClient.invalidateQueries({ queryKey: ["client"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["movements"] });
+      queryClient.invalidateQueries({ queryKey: ["movement-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["financial-trend"] });
+      queryClient.invalidateQueries({ queryKey: ["aging-report"] });
+      queryClient.invalidateQueries({ queryKey: ["cash-balance"] });
+      queryClient.invalidateQueries({ queryKey: ["forecast"] });
+      queryClient.invalidateQueries({ queryKey: ["workspace"] });
+      toast.success("Contratto riaperto");
+    },
+    onError: (error) => {
+      toast.error(extractErrorMessage(error, "Errore nella riapertura del contratto"));
+    },
+  });
+}
+
 // ── Mutation: elimina contratto ──
 
 export function useDeleteContract() {

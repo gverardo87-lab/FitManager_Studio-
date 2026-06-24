@@ -1297,3 +1297,108 @@ def terminate_contract(
     session.refresh(contract)
 
     return _to_response(contract)
+
+
+@router.post("/{contract_id}/reopen", response_model=ContractResponse)
+def reopen_contract(
+    contract_id: int,
+    trainer: Trainer = Depends(get_current_trainer),
+    session: Session = Depends(get_session),
+):
+    """
+    Riapre un contratto chiuso (G7.4) — inverso ESPLICITO di terminate e dell'auto-close.
+
+    State-driven, non motivo-driven: inverte CIÒ CHE LO STATO mostra (rimborso, storno, rate),
+    qualunque sia il `motivo_chiusura`. È il path esplicito che la reopen-allowlist G7.2 demanda a
+    reopen (vs l'auto-riapertura credit/payment-driven, bloccata per le chiusure non-COMPLETAMENTO):
+    qui il trainer dichiara di voler annullare la chiusura, quindi NON c'è allowlist da rispettare.
+    Copre i 3 contratti muti del runbook G7.6 (motivo NULL, nessun storno → solo `chiuso=False`).
+
+    Operazione atomica (UN solo commit):
+    A) Bouncer 404 → B) guard `chiuso==True` else 400
+    C) Gamba RIMBORSO inversa (se `totale_rimborsato>0`): soft-delete via ORM dei `CashMovement` USCITA
+       `RIMBORSO_CONTRATTO` attivi del contratto (`delete_movement` blocca `id_contratto` → ORM, come
+       `unpay_rate`) + `totale_rimborsato -=` la loro somma.
+    D) Gamba STORNO inversa: `quota_stornata = 0` → `residuo()` ripristinato (prezzo − versato).
+    E) Ripristino rate: `deleted_at=None` sulle rate non-saldate soft-eliminate (undo del soft-delete
+       di terminate). Le SALDATE non erano state toccate (B-3), restano com'erano.
+    F) `chiuso=False` + `motivo_chiusura=None` + `data_chiusura=None`.
+    G) Audit (importi invertiti + n. rate ripristinate) + transizione `chiuso` (motivo riapertura_esplicita).
+
+    NB Strada B: come `unpay_rate` decrementa `totale_versato` (il "cresce-solo" vale sul forward;
+    l'inverso esplicito è l'eccezione sanzionata), qui si decrementano `totale_rimborsato`/`quota_stornata`.
+    `stato_pagamento` NON si tocca: terminate non l'aveva cambiato → resta coerente col pre-terminazione.
+    """
+    # A) Bouncer ownership (404 mai 403)
+    contract = _bouncer_contract_owned(session, contract_id, trainer.id)
+
+    # B) Guard: solo un contratto chiuso si riapre
+    if not contract.chiuso:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Il contratto non è chiuso")
+
+    now = datetime.now(timezone.utc)
+    old_chiuso = contract.chiuso
+    old_motivo = contract.motivo_chiusura
+    old_rimborsato = contract.totale_rimborsato or 0
+    old_quota = contract.quota_stornata or 0
+
+    # C) Gamba RIMBORSO inversa: annulla i movimenti di rimborso (via ORM — delete_movement blocca id_contratto)
+    rimborso_invertito = 0.0
+    if old_rimborsato > 0.009:
+        refund_movements = session.exec(
+            select(CashMovement).where(
+                CashMovement.id_contratto == contract.id,
+                CashMovement.categoria == CATEGORIA_RIMBORSO_CONTRATTO,
+                CashMovement.tipo == "USCITA",
+                CashMovement.deleted_at == None,
+            )
+        ).all()
+        for m in refund_movements:
+            m.deleted_at = now
+            session.add(m)
+            log_audit(session, "movement", m.id, "DELETE", trainer.id)
+            rimborso_invertito += m.importo
+        contract.totale_rimborsato = round(max(old_rimborsato - rimborso_invertito, 0.0), 2)
+
+    # D) Gamba STORNO inversa: ripristina il residuo
+    contract.quota_stornata = 0
+
+    # E) Ripristino rate non-saldate soft-eliminate da terminate (le SALDATE non erano state toccate)
+    rate_ripristinate = 0
+    deleted_rates = session.exec(
+        select(Rate).where(
+            Rate.id_contratto == contract.id,
+            Rate.stato.in_(["PENDENTE", "PARZIALE"]),
+            Rate.deleted_at != None,
+        )
+    ).all()
+    for r in deleted_rates:
+        r.deleted_at = None
+        session.add(r)
+        log_audit(session, "rate", r.id, "RESTORE", trainer.id)
+        rate_ripristinate += 1
+
+    # F) Riapertura: stato terminale azzerato
+    contract.chiuso = False
+    contract.motivo_chiusura = None
+    contract.data_chiusura = None
+    session.add(contract)
+
+    # G) Audit atomico + transizione `chiuso` (la logga log_contract_lifecycle_transition, no doppio)
+    log_audit(session, "contract", contract.id, "UPDATE", trainer.id, {
+        "motivo_chiusura": {"old": old_motivo, "new": None},
+        "totale_rimborsato": {"old": old_rimborsato, "new": contract.totale_rimborsato},
+        "quota_stornata": {"old": old_quota, "new": 0},
+        "rate_ripristinate": rate_ripristinate,
+    })
+    log_contract_lifecycle_transition(
+        session,
+        contract,
+        old_chiuso=old_chiuso,
+        motivo="riapertura_esplicita",
+        importo_rimborsato=rimborso_invertito if rimborso_invertito > 0 else None,
+    )
+    session.commit()
+    session.refresh(contract)
+
+    return _to_response(contract)

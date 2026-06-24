@@ -1539,3 +1539,48 @@ predicato bidirezionale: movement-stats, 2 forecast, financial-trend, monthly_re
 Lo snapshot `AUDIT_PRE_G7.3_RAGGIO_STORNO.md` resta vivo per G7.4/5/6 (archiviazione alla chiusura di G7, vedi checklist sopra).
 
 ---
+
+### 2026-06-24 — G7.4: riapertura esplicita (inverso di terminate / auto-close)
+
+Nessuna SPEC_G7.4 di Bridge (G7.4 = "Medio" risk, zero blocker esterni) → guidato da IMPL_PLAN §4.4 + i
+pattern di G7.3, con ricognizione sul vivo e checkpoint sulle 2 decisioni reali (rhythm di G7.3). Decisioni
+(founder via AskUserQuestion): **(1) un solo `/reopen` smart** (non lo split reopen/unterminate di §4.4) +
+**(2) ripristino delle rate soft-eliminate**. Suite **604 passed / 0 xfailed**, check-all verde.
+
+**`POST /contracts/{id}/reopen`** — un endpoint **state-driven**: inverte CIÒ CHE LO STATO mostra, qualunque
+sia il `motivo_chiusura`. (a) se `totale_rimborsato>0` soft-elimina via ORM i `CashMovement` USCITA
+`RIMBORSO_CONTRATTO` attivi (`delete_movement` blocca `id_contratto` → ORM, come `unpay_rate`) + `totale_rimborsato -=`;
+(b) `quota_stornata=0` → `residuo()` ripristinato; (c) ripristina (`deleted_at=None`) le rate non-saldate
+soft-eliminate (le SALDATE non erano state toccate, B-3); (d) `chiuso=False`+motivo/data cleared. UN commit,
+audit + transizione `chiuso` (motivo `riapertura_esplicita`).
+
+**Perché un endpoint solo, state-driven (vs lo split §4.4):** la chiusura CONSUNZIONE/DECADENZA ha storno ma
+NON rimborso → uno split "light reopen / full unterminate" cadrebbe in mezzo; lo **stato** del contratto (non il
+label `motivo`) dice cosa invertire. È anche il path che il runbook G7.6 usa sui 3 muti (motivo NULL, nessuno
+storno → solo `chiuso=False`).
+
+**È il path ESPLICITO della reopen-allowlist G7.2:** la G7.2 blocca solo l'**auto**-riapertura (credit/payment-driven)
+delle chiusure non-COMPLETAMENTO; `reopen` è il path che la allowlist demanda esplicitamente — il trainer dichiara
+di voler annullare la chiusura, quindi nessuna allowlist da rispettare.
+
+**Modello (Strada B):** come `unpay_rate` decrementa `totale_versato` (il "cresce-solo" vale sul forward; l'inverso
+esplicito è l'eccezione sanzionata), `reopen` decrementa `totale_rimborsato`/`quota_stornata`. `stato_pagamento` NON
+si tocca (terminate non l'aveva cambiato → resta coerente col pre-terminazione). Invarianti dopo reopen: `totale_versato
+== Σ ENTRATA` (intatta, non si toccano le ENTRATA) · `totale_rimborsato == Σ USCITA RIMBORSO attivi` (→0, il movimento
+è soft-eliminato).
+
+**Rate (decisione 2):** ripristino delle non-saldate soft-eliminate del contratto. Edge accettato: una rata eliminata
+singolarmente PRIMA del terminate verrebbe ri-ripristinata (over-restore di 1, basso impatto; il contratto chiuso non
+ammette altre delete-rata, quindi in pratica le soft-eliminate sono quelle del terminate).
+
+**Test (`test_contract_reopen.py`, +6):** reopen di un auto-close COMPLETAMENTO (zero cassa) · **round-trip
+RIMBORSO** (refund annullato + storno + rate ripristinate, stato attivo == pre-terminate, riconciliazione ledger) ·
+DECADENZA storno-only · guardia non-chiuso 400 · bouncer 404 · **reopen→re-terminate** (un solo rimborso attivo, non
+accumulato → nessuno stato-zombie). **Frontend:** `useReopenContract` + `ReopenContractDialog` (conferma con riepilogo
+di cosa viene invertito: rimborso annullato/residuo ripristinato/rate ripristinate) + "Riapri" nel dropdown
+`ContractsTable` per i chiusi (mutuamente esclusivo con "Termina").
+
+**⏭️ Prossimo:** **G7.5** (allineamento ~7 query-cassa + coppia flow_hint/filter + ratifica "8+8" + D4/D2 da
+IMPL_PLAN §5-bis/5-ter) · **G7.6** (runbook 3 muti) → **G1 cifratura**.
+
+---
