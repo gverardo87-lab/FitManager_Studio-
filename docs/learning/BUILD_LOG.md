@@ -1488,3 +1488,54 @@ unico** → risanata in G7.3 a monte con la burn-exclusion, in G7.5 solo verific
 sul codice vivo.
 
 ---
+
+### 2026-06-24 — G7.3: endpoint terminazione anticipata + conguaglio cablato (SPEC_G7.3, due commit)
+
+Bridge ha sbloccato G7.3 (`pro_sedute` = default DICHIARATO + microcopy "proposta ≠ obbligo legale"; #3/#5 cablati;
+#2 con default CONSUNZIONE). Ricognizione call-site sul vivo prima di scrivere (regola della spec). Implementato in
+**due commit** (scelta founder): **G7.3a `9acd2c5`** (core) + **G7.3b `3f1404b`** (ritiro PUT chiuso + migrazione test
++ frontend). Suite **598 passed / 0 xfailed**, check-all verde (ruff + next build).
+
+**G7.3a — core.** `POST /contracts/{id}/terminate` + `GET /{id}/settlement-preview` (Strada B). Conguaglio puro G7.1
+cablato. **Due gambe che CONVIVONO** (non either/or): storno SEMPRE (`quota_stornata += residuo_corrente` → `residuo()`→0)
++ rimborso SE overpaid (`CashMovement` USCITA `RIMBORSO_CONTRATTO` + `totale_rimborsato +=`). Fonte-unica-importo:
+`residuo()` PRE-storno in UNA variabile, stesso importo per movimento e campo. B-2-attiva: stato terminale settato DIRETTO,
+mai via `_sync_contract_chiuso`. B-3: soft-delete SOLO rate non-saldate (mai SALDATA né i loro CashMovement → àncora regge).
+`kpi_incassato`→`netto_incassato()` (§6); esclusione-burn `RIMBORSO_CONTRATTO` (§7). +12 test (AC-7.3-1..9 + guardie).
+
+**G7.3b — ritiro PUT chiuso + migrazione + frontend.** `chiuso` rimosso da `ContractUpdate` → chiusura solo via auto-close
+o terminate (sempre con motivo). 16 test PUT chiuso=True migrati: 13 → terminate (canale canonico), 3 → ORM. Frontend:
+`TerminateContractDialog` (preview + microcopy-proposta + metodo condizionale), i 2 bottoni Blocco-3 → un "Termina",
+"Termina" anche nel dropdown `ContractsTable` per ogni non-chiuso (recesso anticipato di un ATTIVO = caso principale §5).
+
+**Decisioni/divergenze dalla spec (code-grounded, da portare a Bridge per G7.4):**
+- **`motivo_chiusura` DERIVATO dall'esito** (RIMBORSO→TERMINAZIONE_RIMBORSO, write-off→TERMINAZIONE_DECADENZA,
+  conguaglio~0→CONSUNZIONE), NON passato dal trainer. Sciolto il conflitto §1 ("scelto dal trainer") vs §9/AC-7.3-9
+  ("mappatura esito→motivo"): vince l'AC. Confermato dal founder (scelta esplicita). terminate non assegna MAI COMPLETAMENTO.
+- **Le "due gambe" CONVIVONO**, non sono mutuamente esclusive come legge la prosa di §1: il modulo G7.1 ha
+  `quota_da_stornare = residuo` SEMPRE + `importo_rimborso` solo se overpaid. Es. prezzo 1000/versato 500/2 sedute su 10 →
+  rimborso 300 **e** storno 500 → netto=200=reso, residuo=0. È il comportamento (già testato) del modulo, non un cambio.
+- **`sedute_erogate` = Event `Completato`** (servizio reso, IMPL_PLAN §4.2), NON `!= "Cancellato"` (che è `crediti_usati`
+  dell'auto-close). Corretta la mia nota di ricognizione che le aveva confuse: il conguaglio valuta ciò che è reso, non
+  ciò che è solo prenotato.
+- **Raffinamento a §8 (migrazione test):** oltre al presidio-NULL, **2 mini-presidi** (`aging_report`, `forecast_phantom`)
+  vanno a **ORM, non a terminate**: testano il *filtro-chiuso* (esclusione di un contratto chiuso che MANTIENE una rata
+  viva), e il soft-delete di terminate rimuoverebbe la rata → l'esclusione passerebbe per la cancellazione, non per il
+  filtro → presidio mascherato. Stessa lezione del presidio-NULL applicata al filtro-chiuso. Gli altri 13 → terminate
+  (canale canonico) perché l'esclusione lì è lifecycle-based (chiuso→escluso), che terminate realizza esattamente.
+- **Entry-point UI oltre i 2 bottoni Blocco-3:** aggiunto "Termina" al dropdown `ContractsTable` (ogni non-chiuso) — senza,
+  il caso d'uso principale (recesso anticipato di un ATTIVO, §5) non avrebbe avuto un punto d'accesso (la SuspendedCard
+  copre solo i SOSPESO).
+
+**Lezione (livello-3).** La stessa euristica del presidio-NULL — "una migrazione meccanica può lasciare un test verde ma
+morto" — si applica a OGNI test che verifica un *filtro su uno stato* mantenendo viva la condizione che il filtro deve
+escludere: se il nuovo canale (qui terminate) *altera* quella condizione (soft-delete della rata), il test verde non
+prova più ciò che presidiava. Discriminante operativo: il test ha bisogno che il dato (rata) **sopravviva** alla chiusura?
+→ ORM. Gli basta lo stato chiuso? → canale canonico. Ho trovato 2 casi oltre al presidio noto cercando questo pattern.
+
+**⏭️ Prossimo:** **G7.4** (reopen / unterminate espliciti) · **G7.5** (allineamento delle ~7 query-cassa residue al
+predicato bidirezionale: movement-stats, 2 forecast, financial-trend, monthly_revenue, **coppia flow_hint+flow_filter**,
++ ratifica rinumerazione "8+8" con liste vecchie superseded) · **G7.6** (runbook 3 muti id 4/9/13) → **G1 cifratura**.
+Lo snapshot `AUDIT_PRE_G7.3_RAGGIO_STORNO.md` resta vivo per G7.4/5/6 (archiviazione alla chiusura di G7, vedi checklist sopra).
+
+---
