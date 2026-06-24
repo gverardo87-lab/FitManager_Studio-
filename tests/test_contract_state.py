@@ -82,6 +82,34 @@ def test_residuo_clamp_e_round():
     assert cs.residuo(_contract(prezzo_totale=100.0, totale_versato=33.333)) == 66.67
 
 
+# ── G7.1: residuo esteso con quota_stornata + netto_incassato (getattr default 0) ──
+
+def test_residuo_default_senza_quota_stornata():
+    """Byte-invarianza: senza il campo (SimpleNamespace) → getattr default 0 → formula pre-G7."""
+    c = _contract(prezzo_totale=1000.0, totale_versato=200.0)
+    assert not hasattr(c, "quota_stornata")
+    assert cs.residuo(c) == 800.0
+
+
+def test_residuo_sottrae_quota_stornata():
+    c = SimpleNamespace(prezzo_totale=1000.0, totale_versato=200.0, quota_stornata=800.0)
+    assert cs.residuo(c) == 0.0  # 1000 − 200 − 800
+    c2 = SimpleNamespace(prezzo_totale=1000.0, totale_versato=200.0, quota_stornata=500.0)
+    assert cs.residuo(c2) == 300.0
+    # storno che eccede → clamp a 0, mai negativo
+    c3 = SimpleNamespace(prezzo_totale=1000.0, totale_versato=200.0, quota_stornata=9999.0)
+    assert cs.residuo(c3) == 0.0
+
+
+def test_netto_incassato():
+    # default (nessun rimborso) → == totale_versato
+    assert cs.netto_incassato(_contract(totale_versato=1000.0)) == 1000.0
+    # con rimborso → versato − rimborsato
+    assert cs.netto_incassato(SimpleNamespace(totale_versato=1000.0, totale_rimborsato=300.0)) == 700.0
+    # mai negativo
+    assert cs.netto_incassato(SimpleNamespace(totale_versato=100.0, totale_rimborsato=250.0)) == 0.0
+
+
 # ── Stato di vita: 4 quadranti + confini (§3) ──────────────────────
 
 def test_lifecycle_eliminato_precede_tutto():

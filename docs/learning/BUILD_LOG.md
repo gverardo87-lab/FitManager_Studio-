@@ -1306,3 +1306,39 @@ serve (non dove "appartiene logicamente") è ciò che rende G7.2 un fix pulito i
 `_sync_contract_chiuso` riapre solo se `motivo==COMPLETAMENTO` → `test_manual_close_*` xfail→xpass) → G7.3+ → G1.
 
 ---
+
+### 2026-06-24 — G7.1: conguaglio puro + convergenza SSoT residuo/netto (output-invariante)
+
+**Cosa.** Seconda tappa dello scorporo G7: la *logica* della terminazione, senza endpoint né scritture
+(il calcolo del conguaglio + l'estensione del SSoT). Output-invariante: oggi `quota_stornata` e
+`totale_rimborsato` sono 0 ovunque → nessun valore osservabile cambia (come Sez. A).
+
+**`contract_state.py` (SSoT esteso).**
+- `residuo()` ora sottrae `getattr(contract, "quota_stornata", 0)` (Strada B: il LORDO prezzo/versato resta
+  immutabile, lo storno abbassa il dovuto). `getattr` default 0 **non-negoziabile** (i 53 test usano
+  SimpleNamespace senza il campo; byte-identico finché G7.3 non scrive il primo storno).
+- nuovo `netto_incassato(contract) = max(versato − getattr(rimborsato,0), 0)` — DERIVATO, mai ridurre il LORDO.
+
+**`contract_settlement.py` (nuovo, puro — specchio di `contract_state`).** `SettlementPolicy` PLUGGABLE
+(`mode='pro_sedute'` default, **PROVISIONAL**); `valore_servizio_reso` su **BASE SEDUTE** (`prezzo·sedute/crediti`,
+cappato, tutto-reso se senza monte-sedute); `compute_settlement` → `Settlement` con conguaglio firmato →
+esito **RIMBORSO** (versato>reso, importo=abs) / **SALDO_A_PERDERE** (versato≤reso, write-off del residuo) /
+**NULLO**; `quota_da_stornare` = `residuo_corrente` (passato dal caller in UNA variabile, fonte-unica-importo
+§4.6). Enum `MotivoChiusura` a 4 (SPEC_G7.0 §2) centralizzato qui. Zero DB, zero scritture: G7.3 tradurrà.
+
+**SSoT consistency.** `ContractResponse.netto_incassato` (computed_field di G7.0) ora **delega** a
+`contract_state.netto_incassato(self)` (la response LEGGE, non ricalcola) — import locale, una sola formula.
+
+**Confine.** Nessun endpoint, nessuna scrittura di `quota_stornata`/`totale_rimborsato` (è G7.3). La
+reopen-allowlist è G7.2 (`test_manual_close_*` resta xfail).
+
+**Verifica.** +15 test (`test_contract_settlement.py` 12 + 3 in `test_contract_state.py`). I 53 test
+contract_state restano verdi (getattr-default = byte-identico). **AC-A1 guard-rail verde** (la riga `residuo()`
+estesa resta l'unica fonte allowlisted; nessun nuovo ricalcolo off-SSoT). Suite verde, check-all verde.
+
+**⏭️ Prossimo:** **G7.2** reopen-allowlist (`_sync_contract_chiuso` auto-riapre SOLO se
+`motivo_chiusura==COMPLETAMENTO`; NULL/TERMINAZIONE_* non si riaprono) → `test_manual_close_not_reopened_by_agenda_edit`
+xfail→xpass (poi rimuovere il marker) → **G7.3** endpoint terminate (servono i 3 input di Giacomo per la
+*valorizzazione*) → G7.4/5/6 → **G1**.
+
+---

@@ -57,7 +57,20 @@ def crediti_residui(contract, crediti_usati: int) -> int:
 
 
 def residuo(contract) -> float:
-    return round(max((contract.prezzo_totale or 0) - (contract.totale_versato or 0), 0.0), 2)
+    """Denaro ancora dovuto sul contratto (FDM §2). Strada B: il LORDO (prezzo/versato) è immutabile,
+    lo storno (`quota_stornata`, G7) abbassa il residuo senza riscrivere il prezzo. `getattr` con
+    default 0 NON-negoziabile: i test usano SimpleNamespace senza il campo e la finestra pre-G7.0 in
+    produzione non ha la colonna; oggi quota_stornata==0 ovunque → byte-identico."""
+    quota = getattr(contract, "quota_stornata", 0) or 0
+    return round(max((contract.prezzo_totale or 0) - (contract.totale_versato or 0) - quota, 0.0), 2)
+
+
+def netto_incassato(contract) -> float:
+    """Incassato NETTO dei rimborsi (Strada B, FDM §9.5): versato − rimborsato, mai negativo.
+    DERIVATO — il LORDO `totale_versato` resta immutabile (mai ridotto a ritroso); il rimborso da
+    terminazione (G7) cresce `totale_rimborsato`. `getattr` default 0: oggi == totale_versato."""
+    rimborsato = getattr(contract, "totale_rimborsato", 0) or 0
+    return round(max((contract.totale_versato or 0) - rimborsato, 0.0), 2)
 
 
 def is_scaduto(contract, today: date) -> bool:

@@ -146,9 +146,11 @@ class ContractResponse(BaseModel):
     @computed_field
     @property
     def netto_incassato(self) -> float:
-        """Incassato NETTO dei rimborsi (Strada B, FDM §9.5): versato − rimborsato, mai negativo.
-        DERIVATO — il LORDO (totale_versato) resta immutabile. Load-bearing da G7.3 (primo rimborso)."""
-        return round(max((self.totale_versato or 0) - (self.totale_rimborsato or 0), 0.0), 2)
+        """Incassato NETTO dei rimborsi (Strada B, FDM §9.5). Delega al SSoT
+        `contract_state.netto_incassato` (la response LEGGE, non ricalcola — G7.1).
+        Load-bearing da G7.3 (primo rimborso); oggi == totale_versato."""
+        from api.services import contract_state as cstate
+        return cstate.netto_incassato(self)
 
 
 # ════════════════════════════════════════════════════════════
