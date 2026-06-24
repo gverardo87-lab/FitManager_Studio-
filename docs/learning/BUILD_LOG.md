@@ -1416,3 +1416,75 @@ ricognizione call-site sul codice è ciò che ha rivelato il 2° ramo che il bri
 G7.2 è l'ultimo blocco chiudibile senza quella decisione esterna.
 
 ---
+
+### 2026-06-24 — Audit consolidamento PRE-G7.3 (workflow 12 agenti, READ-ONLY, code-grounded + verifica adversariale)
+
+**Cosa.** Prima di aprire G7.3 (bloccato sugli input esterni), audit del raggio d'esplosione del primo storno +
+inventario dei test-scorciatoia + caccia discrepanze doc-vs-codice. Metodo: sweep per classe → scettico che rilegge
+ogni sito + sweep di completezza per i siti mancati → discrepanze → sintesi. Sostituisce i numeri-a-memoria con un
+inventario verificato. Ratificato da Bridge-Claude. **Esiti durevoli (coordinate omesse di proposito — si ritrovano
+dal codice, vedi lezione):**
+
+- **Convergenza residuo Sez. A = COMPLETA.** Ogni calcolo di "denaro ancora dovuto" delega a `contract_state.residuo()`
+  (backend + letture FE); l'unica where-clause ORM `prezzo>versato` rimasta è safe (filtro `chiuso` + ricalcolo SSoT a valle).
+- **Invariante `totale_versato == Σ ENTRATA` REGGE sotto G7.3** → l'intervento sull'àncora è ADDITIVO (nuova leg
+  `totale_rimborsato == Σ USCITA RIMBORSO`). L'unico modo di romperla = soft-deletare una rata SALDATA + il suo
+  CashMovement ENTRATA. **BLOCKER-3 riformulato col meccanismo esatto:** NON riusare verbatim il cascade di
+  `delete_contract` (tocca le SALDATE); terminate non soft-elimina il contratto → riusarlo darebbe Σ ENTRATA < versato
+  **permanente**. Terminate soft-elimina SOLO rate non-saldate, mai SALDATA né i loro movimenti.
+- **Test PUT chiuso=True = 16 (non ~15).** Uno è un **PRESIDIO TRAVESTITO da scorciatoia**: l'unico test del ramo NULL
+  della reopen-allowlist G7.2. Migrarlo meccanicamente a un motivo lo lascerebbe verde e MORTO → **decisione di modello**
+  (FDM §9.5.6): ricondurre a simulazione ORM o ritirare con nota; mai migrare meccanicamente. Conseguenza tirata
+  dall'audit: se ogni chiusura post-G7.3 passa da terminate (setta sempre un motivo), `chiuso=True ∧ motivo=NULL` diventa
+  non costruibile via API → ramo NULL difensivo-irraggiungibile. Correzione a una premessa del pacchetto G7.2:
+  `test_manual_close_*` NON è "forward-guard non-toccare" — è questo presidio (ne esiste uno solo).
+- **`kpi_incassato` = unico vero sovrastimante aggregato** sotto G7.3 (somma `totale_versato` incl. chiusi → card
+  "Incassato" mente di Σ rimborsato). Fuori da entrambe le liste "9 query". Rimpiazzo `netto_incassato()` GIÀ pronto e
+  inutilizzato (pattern-firma del filone: enforcement esiste, consumer no). → **edit obbligatorio G7.3, HIGH** (si rompe
+  nell'istante del primo storno, non in G7.5).
+- **BLOCKER §4.7 parzialmente STALE.** B-1 (residuo→SSoT) incassato in Sez. A; la *guardia allowlist* di B-2 incassata
+  in G7.2 — ma la *regola endpoint* ("terminate setta `chiuso`/`motivo`/`data` direttamente, MAI via
+  `_sync_contract_chiuso`, che resetterebbe `chiuso=False` su un SOSPESO") resta viva e va nel codice G7.3. Vivi:
+  **B-3** (cascade non-verbatim, G7.3) + **B-4** (financial-trend doppia decomposizione, G7.5 per il confine sotto). Il
+  pacchetto G7.3 NON deve "far rispettare" B-1 (posizione già tenuta).
+- **Confine G7.3 vs G7.5 confermato.** G7.3 = endpoint 2 gambe + accendere `compute_settlement` (fonte-unica-importo:
+  `residuo()` PRE-storno, un solo importo per il movement E per il `+=`) + scrivere `quota_stornata`/`totale_rimborsato` +
+  USCITA RIMBORSO + soft-delete selettivo + `kpi_incassato`→netto + decisione presidio-NULL. G7.5 = allineamento delle
+  viste-cassa che riflettono RIMBORSO_CONTRATTO (burn, movement-stats, le 2 forecast, financial-trend, monthly_revenue,
+  **coppia flow_hint+flow_filter — mai uno solo**, `_build_cash_protection` a valle del burn). **Eccezione segnalata a
+  Bridge:** la catena variable-burn → `_build_cash_protection` è l'UNICA query G7.5 con profilo-ALLARME (falso CRITICO
+  sulla protezione cassa) e non cosmetico/conservativo → valutare il pull-forward dell'esclusione-burn in G7.3 (no-op
+  fino al primo rimborso, usa il predicato P0; esercitabile end-to-end nello stesso test) oppure garantire che G7.5
+  atterri nella stessa finestra di G7.3 prima che i rimborsi reali inizino. Tutte le altre viste G7.5 driftano in
+  direzione cosmetica/conservativa (margine sottostimato) o ottimistica-display (revenue/trend sovrastimati): nessun
+  allarme, nessuna blocca l'atto di terminare.
+- **Rinumerazione "8 cambiano + 8 invarianti" = DA RATIFICARE in G7.5, non fatto.** Tocca governance (`api/CLAUDE.md`
+  dice 8, gli altri 9). TASSONOMIA §7.2 risulta più fedele di IMPL_PLAN §5 (#5 `get_forecast` entrate-certe è eccedenza:
+  aggrega RATE non CashMovement → refund strutturalmente invisibile). In G7.5: un solo numero verificato + liste vecchie
+  marcate superseded.
+- **6 decisioni esterne bloccano G7.3** (nessuna fatto-di-codice): 3 note (SettlementPolicy tributarista; semantica enum
+  `motivo_chiusura` per chiusura money-neutral; R/T contratti muti) + 3 emerse dall'audit (target money-neutral per la
+  migrazione delle ~14 scorciatoie; destino del ramo NULL; terminate deve accettare scadenza futura).
+
+**Lezione (governance).** I numeri-a-memoria di questo dominio sbagliano sistematicamente: i siti residuo (erano di più
+e già delegati), ~15 test (sono 16), BLOCKER §4.7 (uno già morto), e file:riga "pervasivamente driftati di pochi-decine
+di righe per commit". → la memory e questo log catturano **esiti e decisioni, non coordinate**; i file:riga si ritrovano
+dal codice ogni volta. Mettere nuovi numeri-di-riga in memory creerebbe solo altro drift.
+
+**⏭️ Prossimo invariato:** G7.3 resta BLOCCATO sui 6 input esterni. Quando arriva la SettlementPolicy, Bridge riscrive
+il pacchetto G7.3 da questa mappa verificata (scope ristretto, BLOCKER riformulati, `kpi_incassato` dentro, presidio-NULL
+come decisione di modello).
+
+**☑️ Checklist chiusura G7.3** `[Bridge ratify 2026-06-24]`**:** lo snapshot `AUDIT_PRE_G7.3_RAGGIO_STORNO.md` è un
+**riferimento a tempo** (coordinate-bound a `d7bbcdc`, file:riga che driftano) — mappa operativa **finché G7.3 non è
+implementato**. **A G7.3 chiuso → archiviare `docs/technical/AUDIT_PRE_G7.3_RAGGIO_STORNO.md` in `docs/archive/`** con
+banner "snapshot pre-G7.3, coordinate driftate, esiti assorbiti in BUILD_LOG + FDM" (stesso trattamento degli IMPL_PLAN
+implementati nel riordino 2026-06-23). La riga nomina il file, non le sue righe (lezione del drift).
+
+**Micro-correzioni allo snapshot** `[Bridge ratify 2026-06-24]`**:** (1) `test_kpi_fatturato` confermato **invariante
+sotto qualsiasi storno** (legge `prezzo_totale`, non versato/rimborsato) → migrabile a qualsiasi motivo, esce dalla lista
+money-neutral (restano ~13 scorciatoie + presidio-NULL); (2) `_build_cash_protection` confermato con **ingresso-burn
+unico** → risanata in G7.3 a monte con la burn-exclusion, in G7.5 solo verifica (nessun fix proprio). Entrambi verificati
+sul codice vivo.
+
+---
