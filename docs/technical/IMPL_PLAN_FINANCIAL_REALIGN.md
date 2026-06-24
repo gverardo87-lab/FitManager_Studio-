@@ -300,6 +300,28 @@ Tutte le mutazioni DB **PRIMA** del `session.commit()` unico; dopo, solo `refres
 
 **Buildable now: ~90%.** Landabili SUBITO (no-op finché G7 non scrive RIMBORSO): P0 + consolidamento costanti + #2/#3/#4/#8 + P1 (#5). Dipendono da G7: leg reconciliation (#7), netting di `financial-trend` (#6).
 
+### 5-bis (D4) — guardia: `data_chiusura` non nel futuro `[Bridge ratify 2026-06-24]`
+
+Agganciato a G7.5 (non a un blocco proprio): condivide il terreno-cassa che G7.5 sta già allineando — forecast + protezione-cassa sono i posti dove un rimborso datato-futuro andrebbe a finire, quindi guardia e allineamento-viste atterrano coerenti.
+
+- **Tesi:** un rimborso da terminazione è denaro che esce ora o è già uscito, mai un impegno futuro. `ContractTerminate.data_chiusura > date.today()` → 422.
+- **Dove:** validator su `ContractTerminate` (schema) oppure check nel router `terminate_contract`. Posizionamento dal vivo: lo schema è preferibile se il messaggio può essere didattico come `PREZZO_OBBLIGATORIO_MSG`; il router se serve `date.today()` runtime.
+- **Interazione da VERIFICARE, non assumere:** `test_terminate_burn_esclude_rimborso` data il rimborso nel **mese scorso** (passato) per esercitare l'esclusione-burn nella finestra `_prev_months`. La guardia blocca solo il **futuro** → quel test resta valido; confermarlo girando la suite, non a occhio (guardia-nuova × test-esistente = punto di drift mappa/territorio).
+- **Confine — NON toccare il gemello G6.** `incassa_residuo` (`data_pagamento` libero) ha lo stesso tema sul lato ENTRATA, ma è fuori scope: irrigidire solo l'USCITA in questo giro, l'entrata resta com'è (nessuna regressione G6). Coerenza ENTRATA/USCITA da valutare in futuro, non ora.
+- **AC:** `data_chiusura` futura → 422; odierna/passata → 200; suite pre-esistente invariata (incl. il test burn nel mese scorso).
+
+### 5-ter (D2) — microcopy: avviso prenotate-escluse nella preview `[Bridge ratify 2026-06-24]`
+
+Rifinitura frontend di G7.3 senza dipendenze, accodata a D4 per non aprire un commit isolato.
+
+- **Tesi:** D1=A (base conguaglio = sedute **Completate**) rende il calcolo corretto ma non auto-evidente. `TerminateContractDialog` mostra "N / M erogate" ma non esplicita che le sedute solo *prenotate* sono escluse dal calcolo.
+- **Dove:** `TerminateContractDialog.tsx` — riga condizionale: *"Le sedute prenotate ma non ancora svolte non riducono il rimborso."*
+- **Condizionale, non sempre:** mostrare SOLO quando esistono prenotate-non-erogate (Programmati effettivi). Su un contratto senza prenotazioni residue la riga è rumore. Principio: *avvisa solo quando c'è qualcosa da avvertire*.
+- **Costo:** solo testo frontend. **NB code-grounded:** la preview attuale (`ContractSettlementPreview`) espone `sedute_erogate` (Completate) e `sedute_totali` (crediti_totali), **non** il conteggio dei Programmati → per un avviso *preciso* ("prenotate ma non svolte") servirebbe un campo nuovo `sedute_prenotate` nella preview (micro-tocco backend). Fallback senza backend: condizionare su `sedute_totali − sedute_erogate > 0` (meno preciso: include anche i crediti mai prenotati). Decisione dal vivo in G7.5.
+- **AC:** preview con prenotate-non-erogate mostra l'avviso; preview senza prenotazioni residue non lo mostra; `next build` verde.
+
+**Collocazione commit (D2+D4):** un **Commit dedicato dentro la finestra G7.5** (guardia D4 + riga D2), tesi falsificabile propria. NON un commit isolato fuori-sequenza prima di G7.4: la catena resta `G7.4 → G7.5 (+D2/D4) → G7.6 → G1`. G7.3a/b sono già committati e verdi → non rimetterci mano.
+
 ---
 
 ## 6. Prerequisiti trasversali (Blocco "Prereq P", PRIMA di G7)
@@ -393,6 +415,20 @@ Tutte le mutazioni DB **PRIMA** del `session.commit()` unico; dopo, solo `refres
 2. **Naming categoria movimento** — conferma `RIMBORSO_CONTRATTO` (USCITA) in `cash_categories.py`.
 3. **Conferma campo-storno** — `quota_stornata` accumulatore monotonico (gemello di `totale_rimborsato`), `residuo()` esteso a sottrarlo. Verdetti la confermano necessaria; serve OK al nome/semantica prima della migrazione.
 4. **Decisione per i 3 contratti muti** — R (reopen, default) vs T (terminazione retroattiva) per ciascuno; richiede contesto trainer. R eseguibile ora, T dopo G7.
+
+---
+
+## 11. Differiti / roadmap (post-G1)
+
+### G7.x-override (D1→D) — override umano dell'importo di rimborso `[Bridge ratify 2026-06-24]`
+
+**DIFFERITO post-G1. NON schedulato nella catena G7 attuale** (`G7.4 → G7.5 → G7.6 → G1 → [G7.x-override]`).
+
+- **Cos'è:** il software *propone* il conguaglio calcolato; l'umano può *sovrascrivere* l'importo finale. A (comportamento attuale, ratificato D1: il motore calcola e applica) è il caso particolare in cui l'umano accetta sempre la proposta.
+- **Perché è il completamento di §0, non una feature in più:** §0/ADR-014 fondano il *downgrade epistemico* (il software propone, non afferma l'obbligo legale). Oggi A lo onora nel microcopy ma **applica** il numero calcolato. D risolve la tensione alla radice: se l'umano dissente sul numero, il software sta davvero solo proponendo.
+- **A NON è debito tecnico verso D:** il motore (`compute_settlement`, due gambe, anteprima) è esattamente ciò che D riusa. D aggiunge solo `importo_rimborso_override: Optional[float]` + logica per preferirlo al calcolato. Il motore non si rifà.
+- **⚠️ GUARDIA CRITICA (fissata ora, da rispettare quando si apre):** l'override apre una porta al **mass-assignment** oggi chiusa per design (`ContractTerminate` non accetta importi). D deve aprirla SOLO per l'importo rimborso, SOLO quando l'esito è RIMBORSO, **CON UN CAP**: l'override non può superare `netto_incassato` (non si rimborsa più di quanto incassato al netto). Senza cap, D è una via per scrivere USCITE arbitrarie sul ledger. È il bordo di D — conoscerlo prima di aprirlo.
+- **Sequenza:** dopo G1 (cifratura). Coerente con "legale prima, eleganza dopo" — D è eleganza che rinforza il legale.
 
 ---
 
