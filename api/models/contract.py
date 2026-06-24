@@ -60,6 +60,17 @@ class Contract(SQLModel, table=True):
     esito_rinnovo_note: Optional[str] = None
     esito_rinnovo_il: Optional[date] = None
 
+    # Terminazione anticipata (SPEC_G7.0 / IMPL_PLAN §4.1 — G7). Colonne PLAIN, mai FK (pitfall #15),
+    # gemelle di esito_rinnovo_motivo. Strada B: il LORDO (prezzo_totale/totale_versato) è immutabile,
+    # il netto si DERIVA (netto_incassato = totale_versato − totale_rimborsato). totale_rimborsato e
+    # quota_stornata partono da 0 e CRESCONO soltanto. NB G7.0: residuo() NON le legge ancora (è G7.1).
+    totale_rimborsato: float = Field(default=0)   # LORDO rimborsi (monotòno); netto = versato − questo
+    quota_stornata: float = Field(default=0)      # write-off: azzera residuo senza riscrivere prezzo_totale
+    data_chiusura: Optional[date] = None          # quando la chiusura ha effetto (qualsiasi via a CHIUSO)
+    # esito economico, enum chiuso a 4: COMPLETAMENTO|CONSUNZIONE|TERMINAZIONE_RIMBORSO|TERMINAZIONE_DECADENZA.
+    # NULL = legacy (chiusi pre-G7) = COMPLETAMENTO implicito in classificazione, mai riaperto auto.
+    motivo_chiusura: Optional[str] = Field(default=None, index=True)
+
     # Relationships (lazy-loaded, non incluse in JSON di default)
     rates: List["Rate"] = Relationship(back_populates="contract")
     movements: List["CashMovement"] = Relationship(back_populates="contract")

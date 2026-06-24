@@ -15,7 +15,7 @@ Deep Relational IDOR chain:
 
 from datetime import date, datetime
 from typing import Optional, List
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, computed_field, field_validator, model_validator
 
 from api.schemas import clinical as clinical_schemas
 
@@ -135,8 +135,20 @@ class ContractResponse(BaseModel):
     note: Optional[str] = None
     chiuso: bool = False
     rinnovo_di: Optional[int] = None
+    # Terminazione (SPEC_G7.0): colonne reali. netto_incassato è derivato (sotto), oggi == totale_versato.
+    totale_rimborsato: float = 0
+    quota_stornata: float = 0
+    data_chiusura: Optional[date] = None
+    motivo_chiusura: Optional[str] = None
 
     model_config = {"from_attributes": True}
+
+    @computed_field
+    @property
+    def netto_incassato(self) -> float:
+        """Incassato NETTO dei rimborsi (Strada B, FDM §9.5): versato − rimborsato, mai negativo.
+        DERIVATO — il LORDO (totale_versato) resta immutabile. Load-bearing da G7.3 (primo rimborso)."""
+        return round(max((self.totale_versato or 0) - (self.totale_rimborsato or 0), 0.0), 2)
 
 
 # ════════════════════════════════════════════════════════════

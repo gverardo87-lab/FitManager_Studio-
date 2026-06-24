@@ -568,6 +568,7 @@ def pay_rate(
         ).one()
         if crediti_usati >= contract.crediti_totali:
             contract.chiuso = True
+            contract.motivo_chiusura = "COMPLETAMENTO"  # G7.0: qualifica la via a CHIUSO (load-bearing per la reopen-allowlist G7.2)
 
     session.add(contract)
 

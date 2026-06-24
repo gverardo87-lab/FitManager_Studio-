@@ -155,6 +155,42 @@ def test_drop_stale_catalog_tables_on_file_db(tmp_path):
     engine.dispose()
 
 
+def test_sync_schema_adds_termination_columns_and_index(test_engine):
+    """AC-7.0-2 (SPEC_G7.0): le 4 colonne di terminazione + l'indice ix_contratti_motivo_chiusura
+    vengono aggiunti su un crm.db deployato che ne è privo; ZERO FK sulle nuove colonne (pitfall #15);
+    idempotente al secondo boot."""
+    NEW = ("totale_rimborsato", "quota_stornata", "data_chiusura", "motivo_chiusura")
+    with test_engine.connect() as conn:
+        cols = [c[1] for c in conn.execute(text("PRAGMA table_info(contratti)")).fetchall()]
+        for c in NEW:
+            assert c in cols, f"setup: {c} deve esistere nel modello"
+        # Simula DB pre-G7: ricrea contratti senza le 4 colonne
+        cols_without = [c for c in cols if c not in NEW]
+        conn.execute(text(f"CREATE TABLE contratti_old AS SELECT {', '.join(cols_without)} FROM contratti"))
+        conn.execute(text("DROP TABLE contratti"))
+        conn.execute(text("ALTER TABLE contratti_old RENAME TO contratti"))
+        conn.commit()
+        cols_after = [c[1] for c in conn.execute(text("PRAGMA table_info(contratti)")).fetchall()]
+        assert not any(c in cols_after for c in NEW)
+
+    messages = sync_schema(test_engine)
+    assert any("totale_rimborsato" in m for m in messages)
+
+    with test_engine.connect() as conn:
+        cols_final = [c[1] for c in conn.execute(text("PRAGMA table_info(contratti)")).fetchall()]
+        for c in NEW:
+            assert c in cols_final, f"{c} non aggiunta"
+        idx = [r[1] for r in conn.execute(text("PRAGMA index_list(contratti)")).fetchall()]
+        assert "ix_contratti_motivo_chiusura" in idx, idx
+        fks = conn.execute(text("PRAGMA foreign_key_list(contratti)")).fetchall()
+        fk_cols = {f[3] for f in fks}
+        assert not (fk_cols & set(NEW)), f"FK su colonne nuove (vietato, pitfall #15)! {fks}"
+
+    # idempotente: secondo boot non ritocca le colonne di contratti
+    messages2 = sync_schema(test_engine)
+    assert not any("contratti" in m and "column" in m for m in messages2)
+
+
 def test_sync_schema_multiple_missing_columns(test_engine):
     """Verifica sync con piu' colonne mancanti sulla stessa tabella."""
     with test_engine.connect() as conn:

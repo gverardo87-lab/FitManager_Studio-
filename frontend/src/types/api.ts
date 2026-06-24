@@ -633,6 +633,13 @@ export interface Contract {
   note: string | null;
   chiuso: boolean;
   rinnovo_di: number | null;
+  // ── Terminazione (SPEC_G7.0): colonne reali su ContractResponse base (POST/PUT le ritornano) +
+  // netto_incassato derivato. Sul base Contract (non solo ListItem) perché propagano a tutti i discendenti.
+  totale_rimborsato: number;
+  quota_stornata: number;
+  data_chiusura: string | null;
+  motivo_chiusura: string | null;
+  netto_incassato: number;
   // ── Stato derivato dal SSoT (SPEC_VOCABOLARIO §2.2): il frontend LEGGE, non ricalcola.
   // Popolati su lista (ContractListItem) e dettaglio (ContractWithRates).
   lifecycle: ContractLifecycle;

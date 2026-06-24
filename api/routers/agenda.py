@@ -327,6 +327,8 @@ def _sync_contract_chiuso(session: Session, contract_id: int) -> None:
     if contract.chiuso != should_be_chiuso:
         old_chiuso = contract.chiuso
         contract.chiuso = should_be_chiuso
+        if should_be_chiuso:
+            contract.motivo_chiusura = "COMPLETAMENTO"  # G7.0: qualifica la via a CHIUSO (load-bearing per la reopen-allowlist G7.2)
         session.add(contract)
         # Audita la transizione: completamento (chiude) vs riapertura per crediti liberati
         log_contract_lifecycle_transition(

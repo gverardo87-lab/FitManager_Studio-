@@ -1263,3 +1263,46 @@ scaduta → `payment_overdue`, NON `suspended_contract`); **allineamento AC-B2**
 4 BLOCKER §4.7; il BLOCKER residuo→SSoT è già soddisfatto da Sez. A). Poi G1 cifratura; Giro 2 vocabolario.
 
 ---
+
+### 2026-06-24 — Bridge SPEC_G7.0 + implementazione G7.0 (schema terminazione, zero comportamento)
+
+**Bridge (Chat→Code).** Il founder ha prodotto in Claude Chat `SPEC_G7.0_SCHEMA_TERMINAZIONE` — primo blocco di
+uno **scorporo di G7 in 7 sotto-blocchi** (G7.0→G7.6) più sano del piano monolitico §4: isola lo schema dalla
+logica (`residuo()` resta intoccato, è G7.1) e **front-carica** la marcatura `motivo_chiusura=COMPLETAMENTO` in
+G7.0 perché la reopen-allowlist di G7.2 ci si aggancia. Verifica contro codice vivo: **spec accurata, zero
+correzioni, 3 chiarimenti** — (1) `incassa_residuo` (G6) già coperto (chiude via `_sync_contract_chiuso`); (2) il
+*clear* del motivo in riapertura è deferito a G7.2 (innocuo in G7.0); (3) `netto_incassato` come `@computed_field`
+è empiricamente SAFE col round-trip `model_dump()`+`**` perché i response usano `extra='ignore'`.
+
+**Implementato (G7.0 — commit a sé, rilasciabile, nessuna terminazione avviene).**
+- **4 colonne PLAIN** su `contratti` (mai FK, pitfall #15): `totale_rimborsato`/`quota_stornata` (float, monotòni,
+  default 0), `data_chiusura` (date?), `motivo_chiusura` (str?, indicizzato). Enum a 4
+  (COMPLETAMENTO|CONSUNZIONE|TERMINAZIONE_RIMBORSO|TERMINAZIONE_DECADENZA), NULL=legacy.
+- **Migrazione doppio binario**: Alembic `d83abb993ea8` (down_revision=`b2f1a9c7d4e3`, batch add_column ×4 +
+  `ix_contratti_motivo_chiusura`, float con `server_default='0'`); schema_sync aggiunge colonne+indice al boot sui
+  deployati (path esistente, zero codice nuovo). **Migrazione verificata su CLONE di un backup reale**
+  (`auto_20260620_082707.sqlite`, 39 contratti): colonne+indice, **zero FK sulle nuove**, righe preservate,
+  idempotente. Backup-first (copia temporanea, originale intatto).
+- **Marcatura COMPLETAMENTO (chirurgica)**: `pay_rate` auto-close inline + ramo chiusura di `_sync_contract_chiuso`
+  scrivono `motivo_chiusura="COMPLETAMENTO"` quando chiudono. Solo `setattr` aggiunto, nessuna riorganizzazione,
+  audit-diff intatto → byte-invariante.
+- **Response/TS**: `ContractResponse` += 4 campi + `netto_incassato` `@computed_field` (= max(versato−rimborsato,0),
+  oggi == versato); `types/api.ts` base `Contract` += 5 campi (qui ACCURATO sul base, ≠ residuo: sono colonne reali
+  + computed_field su ContractResponse base, ritornate anche da POST/PUT).
+- **`residuo()` NON toccato** (è G7.1). Nessun endpoint. Le 9 query inerti.
+
+**AC verdi.** AC-7.0-1 (clone backup reale) · AC-7.0-2 (`test_schema_sync` colonne+indice+idempotente, zero-FK) ·
+AC-7.0-3 (`test_termination_schema` completamento via pay_rate + agenda) · AC-7.0-5 (enum+NULL) · AC-7.0-6 (response
+5 campi + `next build` verde). **AC-7.0-4 byte-invarianza**: suite verde; `test_manual_close_not_reopened_by_agenda_edit`
+**resta xfail-strict** (G7.0 marca, ma NON installa l'allowlist — è G7.2). +7 test.
+
+**Lezione.** Lo scorporo di un blocco rischioso (G7) in sotto-blocchi rilasciabili isola la *tesi falsificabile* di
+ciascuno: G7.0 = "lo schema regge senza cambiare comportamento" (oracolo: suite byte-identica + migrazione su clone
+reale), separata da G7.1 = "il residuo converge col write-off". Il front-load della marcatura COMPLETAMENTO dove
+serve (non dove "appartiene logicamente") è ciò che rende G7.2 un fix pulito invece di un intreccio.
+
+**⏭️ Prossimo:** **G7.1** (`contract_settlement.py` conguaglio puro policy-pluggable + `residuo()` esteso con
+`quota_stornata` getattr-default + `netto_incassato()` in `contract_state`) → **G7.2** (reopen-allowlist:
+`_sync_contract_chiuso` riapre solo se `motivo==COMPLETAMENTO` → `test_manual_close_*` xfail→xpass) → G7.3+ → G1.
+
+---
