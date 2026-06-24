@@ -324,11 +324,22 @@ def _sync_contract_chiuso(session: Session, contract_id: int) -> None:
         and contract.stato_pagamento == "SALDATO"
     )
 
+    # G7.2 — reopen-allowlist (FDM §9.5.6): l'auto-riapertura credit-driven scatta SOLO per le
+    # chiusure da COMPLETAMENTO. Una chiusura con altro motivo — NULL (manuale/legacy, deliberata)
+    # o TERMINAZIONE_* (G7.3) — NON si riapre per i crediti liberati: solo reopen/unterminate
+    # ESPLICITI la riaprono. Allowlist POSITIVA (`== COMPLETAMENTO`), MAI denylist: il motivo NULL è
+    # il contro-esempio che una denylist (`motivo ∈ TERMINAZIONE_*`) mancherebbe → eviterebbe lo
+    # stato-zombie `chiuso=False ∧ quota_stornata>0`.
+    if contract.chiuso and not should_be_chiuso and contract.motivo_chiusura != "COMPLETAMENTO":
+        return
+
     if contract.chiuso != should_be_chiuso:
         old_chiuso = contract.chiuso
         contract.chiuso = should_be_chiuso
         if should_be_chiuso:
-            contract.motivo_chiusura = "COMPLETAMENTO"  # G7.0: qualifica la via a CHIUSO (load-bearing per la reopen-allowlist G7.2)
+            contract.motivo_chiusura = "COMPLETAMENTO"  # G7.0: qualifica la via a CHIUSO
+        else:
+            contract.motivo_chiusura = None  # G7.2 (AC-7.2-5): riapertura legittima → "aperto senza motivo"
         session.add(contract)
         # Audita la transizione: completamento (chiude) vs riapertura per crediti liberati
         log_contract_lifecycle_transition(

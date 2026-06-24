@@ -663,9 +663,17 @@ def unpay_rate(
     else:
         contract.stato_pagamento = "PARZIALE"
 
-    # E-auto) Auto-reopen: se non piu' saldato, riapri contratto chiuso
-    if contract.chiuso and contract.stato_pagamento != "SALDATO":
+    # E-auto) Auto-reopen: se non piu' saldato, riapri — MA solo le chiusure da COMPLETAMENTO
+    #   (G7.2 reopen-allowlist, FDM §9.5.6: stesso principio del ramo credit-driven di
+    #   _sync_contract_chiuso). Una terminazione (TERMINAZIONE_*, G7.3) o una chiusura manuale (NULL)
+    #   NON si riaprono per una revoca-pagamento → niente stato-zombie chiuso=False ∧ quota_stornata>0.
+    if (
+        contract.chiuso
+        and contract.stato_pagamento != "SALDATO"
+        and contract.motivo_chiusura == "COMPLETAMENTO"
+    ):
         contract.chiuso = False
+        contract.motivo_chiusura = None  # AC-7.2-5: riapertura → "aperto senza motivo"
 
     session.add(contract)
 

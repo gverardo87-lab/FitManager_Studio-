@@ -10,7 +10,6 @@ idempotente (no-op se `chiuso` non cambia).
 import json
 from datetime import date, timedelta
 
-import pytest
 from sqlmodel import select
 
 from api.models.audit_log import AuditLog
@@ -141,27 +140,27 @@ def test_no_transition_when_chiuso_unchanged(client, auth_headers, sample_contra
     assert _chiuso_transitions(session, cid) == []
 
 
-# ── [BRIDGE §1 + §6 LOAD-BEARING] difetto latente: _sync_contract_chiuso riapre una chiusura deliberata ──
-# Una chiusura NON-da-completamento (manuale oggi; terminazione domani con G7) ha crediti_usati <
-# crediti_totali → should_be_chiuso=False → qualsiasi mutazione d'agenda su un suo evento la RIAPRE
-# in silenzio (etichettata "riapertura_crediti"). Questo test chiude A MANO → motivo_chiusura resta NULL.
-# Fix vero in G7 = guard ALLOWLIST (addendum §6): auto-riapertura SOLO se motivo_chiusura==COMPLETAMENTO;
-# NULL (manuale/legacy) e TERMINAZIONE_* non si riaprono. NB: una denylist (motivo∈TERMINAZIONE_* /
-# quota_stornata>0) NON farebbe xpassare questo test (qui motivo=NULL). xpass SOLO quando atterrano
-# ENTRAMBI: (1) il completamento scrive motivo_chiusura=COMPLETAMENTO; (2) la guard è allowlist. Poi
-# rimuovere il marker. Delta modello: FDM §9.5.6, IMPL_PLAN §4.7.
+# ── [G7.2 — FIXED] reopen-allowlist su ENTRAMBI i rami di auto-riapertura ──────────────────────
+# Prima (bug latente bridge §1/§6): qualsiasi chiusura con crediti_usati < crediti_totali veniva
+# riaperta da una mutazione d'agenda (`_sync_contract_chiuso`, credit-driven) o da una revoca-pagamento
+# (`unpay_rate`, payment-driven) → latente sulle chiusure manuali (motivo=NULL), bomba per G7.3 (ogni
+# terminazione riaperta → zombie chiuso=False ∧ quota_stornata>0). Fix: allowlist POSITIVA su entrambi
+# i rami — riapri SOLO se motivo_chiusura==COMPLETAMENTO. Il NULL è il contro-esempio che una denylist
+# (motivo∈TERMINAZIONE_*) mancherebbe. Delta modello: FDM §9.5.6, IMPL_PLAN §4.7.
+# Verifica call-site (G7.2): COMPLETAMENTO scritto da pay_rate inline + ramo chiusura _sync; riapertura
+# in DUE rami distinti (_sync credit-driven + unpay_rate payment-driven) → allowlist su entrambi.
+# NB orologio: il conteggio crediti di _sync NON ha filtro data → niente flakiness di mezzanotte su
+# questo meccanismo (a differenza dei test workspace 22-23/06); date comunque ancorate a TODAY.
 
-@pytest.mark.xfail(
-    reason="Bug latente (bridge §1/§6): _sync_contract_chiuso riapre una chiusura deliberata (motivo=NULL). "
-    "Fix G7 = guard allowlist (riapri solo se motivo==COMPLETAMENTO) + il completamento marca il motivo.",
-    strict=True,
-)
+
 def test_manual_close_not_reopened_by_agenda_edit(client, auth_headers, sample_client, session):
+    """Ramo NULL: chiusura manuale (motivo=NULL, nessuno storno) → l'edit-agenda NON la riapre.
+    Ex xfail-strict (bug latente bridge §1/§6, dal 21/06) → ora presidio permanente (G7.2)."""
     # SOSPESO-like: crediti non esauriti (1/3) + residuo>0 (non saldato → no auto-close)
     c = _contract(client, auth_headers, sample_client["id"], prezzo=300.0, acconto=100.0, crediti=3)
     ev = _pt_event(client, auth_headers, sample_client["id"], c["id"])  # 1/3 crediti usati
 
-    # chiusura DELIBERATA (manuale)
+    # chiusura DELIBERATA (manuale, motivo_chiusura resta NULL)
     r = client.put(f"/api/contracts/{c['id']}", json={"chiuso": True}, headers=auth_headers)
     assert r.status_code == 200, r.text
 
@@ -170,4 +169,68 @@ def test_manual_close_not_reopened_by_agenda_edit(client, auth_headers, sample_c
 
     session.expire_all()
     contract = session.get(Contract, c["id"])
-    assert contract.chiuso is True  # la chiusura deliberata NON deve essere riaperta (oggi fallisce)
+    assert contract.chiuso is True  # la chiusura deliberata (NULL) NON viene riaperta (allowlist)
+
+
+def test_completamento_si_riapre_ancora(client, auth_headers, sample_client, session):
+    """AC-7.2-3 — ramo POSITIVO: un contratto auto-chiuso da completamento (saldato + crediti esauriti,
+    motivo=COMPLETAMENTO) torna riaperto quando l'edit-agenda libera un credito. Guardiano contro la
+    guardia troppo stretta (un `if False` passerebbe il caso NULL ma romperebbe il completamento)."""
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=100.0, acconto=100.0, crediti=1)  # SALDATO
+    ev = _pt_event(client, auth_headers, sample_client["id"], c["id"])  # esaurisce → auto-close (COMPLETAMENTO)
+    session.expire_all()
+    contract = session.get(Contract, c["id"])
+    assert contract.chiuso is True and contract.motivo_chiusura == "COMPLETAMENTO"
+
+    client.delete(f"/api/events/{ev['id']}", headers=auth_headers)  # libera il credito → _sync riapre
+    session.expire_all()
+    contract = session.get(Contract, c["id"])
+    assert contract.chiuso is False                  # riaperto (legittimo)
+    assert contract.motivo_chiusura is None          # AC-7.2-5: clear-on-reopen (opzione a)
+
+
+def test_terminazione_non_si_riapre_da_agenda(client, auth_headers, sample_client, session):
+    """AC-7.2-4 — forward-guard G7.3 (ramo credit-driven): chiusura con motivo TERMINAZIONE_RIMBORSO
+    + quota_stornata>0 (scritti a mano, l'endpoint terminate è G7.3) → l'edit-agenda NON la riapre.
+    Lo stato-zombie chiuso=False ∧ quota_stornata>0 non si formerà quando G7.3 arriverà."""
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=300.0, acconto=100.0, crediti=3)
+    ev = _pt_event(client, auth_headers, sample_client["id"], c["id"])  # 1/3 crediti
+    # simula la terminazione (G7.3 non esiste ancora): chiusura + motivo + storno via ORM
+    contract = session.get(Contract, c["id"])
+    contract.chiuso = True
+    contract.motivo_chiusura = "TERMINAZIONE_RIMBORSO"
+    contract.quota_stornata = 200.0
+    session.add(contract)
+    session.commit()
+
+    client.delete(f"/api/events/{ev['id']}", headers=auth_headers)  # edit-agenda → _sync_contract_chiuso
+
+    session.expire_all()
+    contract = session.get(Contract, c["id"])
+    assert contract.chiuso is True                              # NON riaperto (allowlist)
+    assert contract.motivo_chiusura == "TERMINAZIONE_RIMBORSO"  # invariato
+    assert contract.quota_stornata == 200.0                    # no zombie chiuso=False ∧ quota>0
+
+
+def test_terminazione_non_si_riapre_da_unpay(client, auth_headers, sample_client, session):
+    """AC-7.2-4 (gemello sul 2° ramo, payment-driven): una terminazione con una rata SALDATA che
+    sopravvive (G7.3 soft-elimina solo le NON-saldate) → la revoca di quella rata NON riapre il
+    contratto (allowlist anche in unpay_rate). Presidia che ENTRAMBI i rami siano coperti."""
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=100.0, acconto=0.0, crediti=3)
+    rate = _rate(client, auth_headers, c["id"], 100.0)
+    client.post(f"/api/rates/{rate['id']}/pay", json={"importo": 100.0, "metodo": "CONTANTI"}, headers=auth_headers)
+    # simula terminazione (G7.3 non esiste): chiusura + motivo + storno via ORM
+    contract = session.get(Contract, c["id"])
+    contract.chiuso = True
+    contract.motivo_chiusura = "TERMINAZIONE_DECADENZA"
+    contract.quota_stornata = 50.0
+    session.add(contract)
+    session.commit()
+
+    ur = client.post(f"/api/rates/{rate['id']}/unpay", headers=auth_headers)  # revoca → ramo reopen di unpay_rate
+    assert ur.status_code == 200, ur.text
+
+    session.expire_all()
+    contract = session.get(Contract, c["id"])
+    assert contract.chiuso is True                              # NON riaperto da unpay (allowlist)
+    assert contract.motivo_chiusura == "TERMINAZIONE_DECADENZA"  # invariato

@@ -1375,3 +1375,44 @@ ridondante è non-rilevabile per costruzione. Verificare sempre gli input-di-con
 dal codice "a occhio" (il bridge ha intercettato 2 AC non costruibili su 5).
 
 ---
+
+### 2026-06-24 — G7.2: reopen-allowlist (functional change) — il bug latente diventa presidio
+
+**Bridge (Chat→Code) + ricognizione call-site (primo passo richiesto).** Spec G7.2: l'auto-riapertura
+credit-driven di `_sync_contract_chiuso` riapre qualsiasi chiusura tornata a crediti non-esauriti, a
+prescindere dal motivo → latente sulle chiusure manuali (motivo=NULL), e bomba per G7.3 (ogni terminazione
+riaperta dall'agenda → zombie `chiuso=False ∧ quota_stornata>0`, viola FDM §9.5.6). Verifica sul codice vivo
+(mandata da Giacomo) prima di scrivere la guardia:
+- **`COMPLETAMENTO` scritto da 2 call-site** distinti: `pay_rate` inline (`rates.py:570`) + ramo chiusura di
+  `_sync_contract_chiuso` (`agenda.py:331`); `incassa_residuo` (G6) passa da `_sync` → eredita. Prereq (1) OK.
+- **Riapertura in DUE rami distinti** (non "copie"): `_sync_contract_chiuso` (credit-driven, agenda) **e**
+  `unpay_rate` (`rates.py:668`, payment-driven). → per la direttiva chat ("se due rami → allowlist su entrambi")
+  la guardia va su **entrambi**.
+
+**Implementato (allowlist POSITIVA su entrambi i rami).** `if reopening and motivo_chiusura != "COMPLETAMENTO":
+non riaprire`. Allowlist, **mai** denylist: il NULL è il contro-esempio che una denylist (`motivo ∈
+TERMINAZIONE_*`) mancherebbe (NULL non è in TERMINAZIONE_* → si riaprirebbe → bug intatto). **AC-7.2-5
+(clear-on-reopen, deferito da G7.0):** scelta **opzione (a)** — la riapertura legittima azzera
+`motivo_chiusura=None` ("aperto senza motivo"), pinnato in test. Solo `reopen`/`unterminate` espliciti (G7.4)
+riapriranno una terminazione.
+
+**Test.** `test_manual_close_not_reopened_by_agenda_edit`: rimosso `@pytest.mark.xfail(strict=True)` → **xpass**,
+ora presidio permanente (AC-7.2-2; suite passa a **0 xfailed**). +3 test: `test_completamento_si_riapre_ancora`
+(AC-7.2-3, ramo positivo + clear-motivo), `test_terminazione_non_si_riapre_da_agenda` (AC-7.2-4 forward-guard,
+motivo TERMINAZIONE_* + quota scritti via ORM dato che terminate è G7.3), `test_terminazione_non_si_riapre_da_unpay`
+(gemello sul 2° ramo). `test_unpay_reopens_closed_contract`/`test_unpay_autoreopen_logs_transition` (COMPLETAMENTO)
+restano verdi. **Igiene orologio:** verificato che il conteggio crediti di `_sync` NON ha filtro data → la classe
+flaky di mezzanotte (22-23/06) non si applica a questo meccanismo; date comunque ancorate (no `now()+δ`).
+
+**Lezione.** Quando una "guardia" deve distinguere il deliberato dall'automatico, formularla come **allowlist
+del caso buono** (`== COMPLETAMENTO`), non come denylist dei cattivi: l'insieme dei "cattivi" è aperto (il NULL
+legacy, futuri motivi) e una denylist lo manca silenziosamente. E un auto-comportamento (qui la riapertura) va
+cercato in **tutti** i suoi trigger (credit-driven + payment-driven), non solo in quello citato dalla spec — la
+ricognizione call-site sul codice è ciò che ha rivelato il 2° ramo che il bridge non vedeva.
+
+**⏭️ Prossimo:** **G7.3** endpoint terminate/preview (2 gambe atomiche, primo storno reale → accende le 9 query,
+4 BLOCKER §4.7). **BLOCCATO sui 3 input di Giacomo** per la valorizzazione (SettlementPolicy.mode, oggi
+`pro_sedute` PROVISIONAL): policy tributarista, conferma enum motivo_chiusura, R/T contratti muti id 4/9/13.
+G7.2 è l'ultimo blocco chiudibile senza quella decisione esterna.
+
+---
