@@ -1584,3 +1584,64 @@ di cosa viene invertito: rimborso annullato/residuo ripristinato/rate ripristina
 IMPL_PLAN §5-bis/5-ter) · **G7.6** (runbook 3 muti) → **G1 cifratura**.
 
 ---
+
+### 2026-06-24 — Igiene doc finanziari: rimozione stale-done dopo G7.0→G7.4 (audit 18 agenti)
+
+Prima di aprire G7.5, audit multi-agente code-grounded (18 agenti, find→verifica adversariale per doc-unit →
+cross-doc → sintesi) sui doc finanziari vivi: **zero falsi positivi**, ogni stale-done confermato aperto sul codice.
+**~13 stale-done [high]** che descrivevano come "da fare" lavoro G7.0-G7.4 già in produzione. Corretti **9 file**
+(commit `fca56a5`): `api/CLAUDE.md` (callout "In arrivo G7"→IMPLEMENTATA; SPEC_VOCABOLARIO "da implementare"→Giro 1
+fatto; Integrity Engine #4 reopen-allowlist; router map + endpoint), `docs/INDEX.md` (righe IMPL_PLAN/AUDIT/closing →
+G7.4 fatto, prossimo G7.5), `IMPL_PLAN` (RESUME POINT re-baseline a `1df3414`; §4 banner IMPLEMENTATO; **reopen NON via
+`PUT chiuso=False` → `POST /reopen`** [claim attivamente fuorviante, dava 422, replicato in 3+ doc]; BLOCKER §4.7 residuo
+chiuso; §7 OPZIONE R; diagramma §1), `FDM` (§3.1 colonne esistono; §6 bottoni cablati; §7 predicato cassa esiste; enum
+motivo DECISO; §11 schema fatto; ref `SPEC_TERMINAZIONE`→`SPEC_G7.0/G7.3`), `SPEC_REVISIONE_PRE_G7`/`SPEC_VOCABOLARIO`/
+`SPEC_G7.0 §8` (marker stato/superato), `AUDIT_PRE_G7.3` (banner: G7.3/G7.4 fatti, perimetro→SPEC_G7.3, vivo come
+mappa-query G7.5/6), `TASSONOMIA §7.2` (avanzamento tracciato altrove). **Deferito di proposito:** "8 vs 9 query"→ratifica
+G7.5; archiviazione spec→a chiusura G7; legittimamente-aperto invariato; log/ADR/snapshot-corpi non toccati (point-in-time).
+
+**Lezione (governance).** Dopo un blocco grosso (G7.0-G7.4), lo stale-done si concentra negli **header/banner/framing
+temporale** dei piani e degli hub d'ingresso (`api/CLAUDE.md`, `INDEX`), non nel corpo dei SSoT. Un audit code-grounded
+prima del blocco successivo evita che il prossimo implementatore (o Bridge) parta da istruzioni superate — es. "reopen via
+PUT chiuso=False" sarebbe stato seguito e avrebbe dato 422.
+
+---
+
+### 2026-06-25 — G7.5a: allineamento query-cassa al rimborso (contra-ricavo) + ratifica inventario
+
+Primo storno reale (terminate, G7.3) ora esiste → le query-cassa che aggregano i movimenti possono produrre numeri
+sbagliati con un `RIMBORSO_CONTRATTO`. Nessuna SPEC_G7.5 di Bridge (zero blocker esterni) → guidato da IMPL_PLAN §5 +
+AUDIT_PRE_G7.3 Classe C (mappa viva). **Decisioni founder (AskUserQuestion):** scope = **solo le query che mentono**
+(non le additive/display); struttura = **3 sub-commit**. Commit `4c918af`, suite **607 passed**.
+
+**Modello:** `RIMBORSO_CONTRATTO` = USCITA **contra-ricavo** (specchio esatto di `STORNO_SPESA_FISSA`, contra-uscita).
+Allineate le 3 query backend: **get_movement_stats** (single-treatment IMPL_PLAN §5: sottratto dalle entrate **E**
+escluso dalle uscite variabili — mai entrambi, il margine resta identico ma la classificazione è corretta; chart
+day-bucket come riduzione entrate + normalizzazione simmetrica per entrate negative); **get_forecast** ×2 (escluso da
+`past_var_totals` burn-variabile e `past_total_uscite` burn-KPI, null-safe coalesce); **monthly_revenue** (sottrae i
+RIMBORSO del mese → revenue netto). Tutte **byte-invarianti** finché non esiste un rimborso (suite pre-esistente verde).
+
+**Ratifica inventario (governance, chiude il "8 vs 9"):** `TASSONOMIA §7.2` code-grounded — il "9" non era un inventario
+verificato. Reale: **4 query cambiano** (movement-stats, forecast, monthly_revenue, financial-trend); le altre sono
+**invarianti** (saldo, burn-già-fatto, reconciliation-àncora) o **display/audit a basso valore** (#7 flow-timeline:
+per un `movement` legge il `tipo` reale, già corretto; #8 balance-uscite: cash-out grezzo corretto). Lasciate per scope con
+motivo in tabella. +3 test (`test_g75_cash_alignment.py`).
+
+---
+
+### 2026-06-25 — G7.5b: financial-trend contra-line `rimborsi_contratti` (BLOCKER-4)
+
+`get_financial_trend` vedeva **solo ENTRATA** → un rimborso era invisibile (sovrastima del netto contrattuale). Commit
+`68c470e`, suite **608 passed**, check-all verde. Soluzione = **query SEPARATA e additiva** `buckets_rimborsi` (USCITA
+`RIMBORSO_CONTRATTO` per mese): `cash_flow_reale` diventa **netto** (`incassi_contratti + altri_incassi − rimborsi`), ma
+`incassi_contratti` e le **due decomposizioni** (nuovi/rinnovi, acconti/rate) restano **LORDE** (BLOCKER-4: "nessun numero
+che sparisce" — il rimborso vive come **contra-linea separata**, non nettato dentro decomposizioni ambigue). Schema
+`FinancialTrendPeriod`/`Response` += `rimborsi_contratti`/`tot_rimborsi_contratti`; `types/api.ts`; `AndamentoTab`
+contra-linea rossa tratteggiata **condizionale** (solo se `tot_rimborsi>0` → niente linea piatta a zero) + caption.
+Byte-invariante senza rimborsi (additivo, default 0). +1 test (incassi LORDI invariati, cash_flow netto, decomposizioni
+lorde, totali).
+
+**⏸️ STOP (richiesto da Giacomo):** analisi congiunta col Bridge del lavoro G7.5a/b prima di G7.5c (D4 guardia
+`data_chiusura` non-futura + D2 campo derivato `sedute_prenotate`).
+
+---
