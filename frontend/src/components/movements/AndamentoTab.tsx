@@ -37,6 +37,7 @@ const trendConfig: ChartConfig = {
   incassi_contratti: { label: "Incassi da contratti", color: "var(--color-teal-500)" },
   altri_incassi: { label: "Altri incassi", color: "var(--color-amber-400)" },
   venduto: { label: "Venduto (competenza)", color: "var(--color-violet-500)" },
+  rimborsi_contratti: { label: "Rimborsi (contra-ricavo)", color: "var(--color-rose-500)" },
   // Composizione (Layer 3)
   incassi_nuovi: { label: "Nuovi", color: "var(--color-emerald-500)" },
   incassi_rinnovi: { label: "Rinnovi", color: "var(--color-blue-500)" },
@@ -118,7 +119,10 @@ export function AndamentoTab() {
             <h3 className="text-sm font-semibold">Incassato vs Venduto · ultimi {TREND_MONTHS} mesi</h3>
           </div>
           <p className="mb-3 text-[11px] text-muted-foreground">
-            Barre = incassato (cassa); linea = venduto (competenza). Lo scarto è il venduto non ancora incassato.
+            Barre = incassato (cassa); linea viola = venduto (competenza). Lo scarto è il venduto non ancora incassato.
+            {(data?.tot_rimborsi_contratti ?? 0) > 0
+              ? " Linea rossa tratteggiata = rimborsi da terminazione (contra-ricavo, già netti nel cash flow)."
+              : ""}
           </p>
           <ChartContainer config={trendConfig} className="h-[280px] w-full">
             <ComposedChart data={periodi} margin={{ left: 4, right: 4, top: 8 }}>
@@ -143,6 +147,17 @@ export function AndamentoTab() {
                 dot={{ r: 2.5 }}
                 activeDot={{ r: 4 }}
               />
+              {/* G7.5b: contra-linea rimborsi — solo se esistono (evita la linea piatta a zero) */}
+              {(data?.tot_rimborsi_contratti ?? 0) > 0 ? (
+                <Line
+                  dataKey="rimborsi_contratti"
+                  type="monotone"
+                  stroke="var(--color-rimborsi_contratti)"
+                  strokeWidth={2}
+                  strokeDasharray="4 3"
+                  dot={{ r: 2 }}
+                />
+              ) : null}
             </ComposedChart>
           </ChartContainer>
         </div>

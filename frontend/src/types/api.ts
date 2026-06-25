@@ -1809,15 +1809,16 @@ export interface FinancialTrendPeriod {
   anno: number;
   mese: number;
   label: string;             // es. "giu 2026"
-  incassi_contratti: number; // ENTRATA con contratto (acconti + rate)
+  incassi_contratti: number; // ENTRATA con contratto (acconti + rate), LORDO
   altri_incassi: number;     // ENTRATA fuori contratto, netto storni
-  cash_flow_reale: number;   // incassi_contratti + altri_incassi
+  cash_flow_reale: number;   // incassi_contratti + altri_incassi − rimborsi_contratti (G7.5b)
   venduto: number;           // competenza: Σ prezzo_totale venduto nel periodo (mai sommato alla cassa)
   // Composizione di incassi_contratti (due tagli, ognuno somma a incassi_contratti)
   incassi_nuovi: number;
   incassi_rinnovi: number;
   incassi_acconti: number;
   incassi_rate: number;
+  rimborsi_contratti: number; // G7.5b: USCITA RIMBORSO_CONTRATTO del periodo (contra-ricavo; cash_flow_reale è già netto)
 }
 
 export interface FinancialTrendResponse {
@@ -1831,6 +1832,7 @@ export interface FinancialTrendResponse {
   tot_incassi_rinnovi: number;
   tot_incassi_acconti: number;
   tot_incassi_rate: number;
+  tot_rimborsi_contratti: number; // G7.5b
 }
 
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•

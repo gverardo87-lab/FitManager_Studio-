@@ -626,7 +626,7 @@ class FinancialTrendPeriod(BaseModel):
     Tre nozioni mai fuse (TASSONOMIA_FINANZIARIA.md §1 Asse 1):
     - incassi_contratti: ENTRATA con id_contratto (acconti + rate) — spina dorsale riconciliabile
     - altri_incassi: ENTRATA fuori contratto (id_contratto IS NULL), AL NETTO degli storni
-    - cash_flow_reale: incassi_contratti + altri_incassi (tutto ciò che entra, netto storni)
+    - cash_flow_reale: incassi_contratti + altri_incassi − rimborsi_contratti (netto storni E rimborsi, G7.5b)
     """
     anno: int
     mese: int
@@ -634,6 +634,10 @@ class FinancialTrendPeriod(BaseModel):
     incassi_contratti: float
     altri_incassi: float
     cash_flow_reale: float
+    # G7.5b — USCITA RIMBORSO_CONTRATTO del periodo (contra-ricavo da terminazione). cash_flow_reale ne è
+    # già al netto; mostrato come **contra-linea separata** (gli incassi_* restano LORDI — BLOCKER-4: le due
+    # decomposizioni nuovi/rinnovi e acconti/rate non si toccano, "nessun numero che sparisce").
+    rimborsi_contratti: float = 0.0
     # Layer 2 — competenza (Σ prezzo_totale dei contratti VENDUTI nel periodo, su data_vendita).
     # Asse diverso dalla cassa: mai sommato. Lo scarto venduto−incassato = credito vivo.
     venduto: float = 0.0
@@ -662,6 +666,7 @@ class FinancialTrendResponse(BaseModel):
     tot_incassi_rinnovi: float = 0.0
     tot_incassi_acconti: float = 0.0
     tot_incassi_rate: float = 0.0
+    tot_rimborsi_contratti: float = 0.0  # G7.5b — totale rimborsi da terminazione (contra-ricavo)
 
 
 # ════════════════════════════════════════════════════════════

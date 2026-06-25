@@ -118,3 +118,28 @@ def test_forecast_burn_esclude_rimborso(client, auth_headers, sample_client, ses
     # uscite variabili stimate = media 3 mesi delle SOLE uscite variabili (rimborso ESCLUSO):
     # baseline 300 in un mese su 3 → 100. Senza esclusione sarebbe (300+300)/3 = 200.
     assert forecast["monthly_projection"][0]["uscite_variabili_stimate"] == 100.0
+
+
+# ── get_financial_trend: contra-linea rimborsi_contratti (G7.5b) — incassi LORDI, cash flow NETTO ──
+
+def test_financial_trend_rimborso_contra_line(client, auth_headers, sample_client, session):
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=500.0, crediti=10)
+    t = _trainer(session)
+    _complete_pt(session, t.id, sample_client["id"], c["id"], 2)  # reso 200 → rimborso 300
+    _terminate(client, auth_headers, c["id"])  # rimborso 300 questo mese
+
+    r = client.get("/api/movements/financial-trend?mesi=12", headers=auth_headers)
+    assert r.status_code == 200, r.text
+    trend = r.json()
+    cur = next(p for p in trend["periodi"] if p["anno"] == TODAY.year and p["mese"] == TODAY.month)
+    # incassi_contratti resta LORDO (acconto 500); il rimborso NON lo abbatte
+    assert cur["incassi_contratti"] == 500.0
+    # contra-linea separata + cash flow netto (500 − 300)
+    assert cur["rimborsi_contratti"] == 300.0
+    assert cur["cash_flow_reale"] == 200.0
+    # BLOCKER-4: le decomposizioni restano LORDE (non toccate dal rimborso)
+    assert cur["incassi_acconti"] == 500.0
+    assert cur["incassi_nuovi"] == 500.0
+    # totali
+    assert trend["tot_rimborsi_contratti"] == 300.0
+    assert trend["tot_cash_flow_reale"] == 200.0

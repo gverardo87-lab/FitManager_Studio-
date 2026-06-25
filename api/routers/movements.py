@@ -1704,6 +1704,26 @@ def get_financial_trend(
         if key in window_set:
             buckets_venduto[key] += prezzo or 0
 
+    # ── G7.5b: rimborsi da terminazione (USCITA RIMBORSO_CONTRATTO) per mese — contra-linea ──
+    # Query SEPARATA e additiva: NON tocca le decomposizioni LORDE di incassi_contratti (nuovi/rinnovi e
+    # acconti/rate restano lorde — BLOCKER-4: nessun numero che "sparisce"). Il netto vive in cash_flow_reale.
+    buckets_rimborsi: dict[tuple[int, int], float] = defaultdict(float)
+    rimborsi_rows = session.exec(
+        select(CashMovement.data_effettiva, CashMovement.importo).where(
+            CashMovement.trainer_id == trainer.id,
+            CashMovement.tipo == "USCITA",
+            CashMovement.categoria == CATEGORIA_RIMBORSO_CONTRATTO,
+            CashMovement.deleted_at == None,
+            CashMovement.data_effettiva >= first_day,
+        )
+    ).all()
+    for dr, imp in rimborsi_rows:
+        if isinstance(dr, str):
+            dr = date.fromisoformat(dr)
+        key = (dr.year, dr.month)
+        if key in window_set:
+            buckets_rimborsi[key] += imp or 0
+
     periodi: list[FinancialTrendPeriod] = []
     tot_c = 0.0
     tot_a = 0.0
@@ -1712,6 +1732,7 @@ def get_financial_trend(
     tot_rinnovi = 0.0
     tot_acconti = 0.0
     tot_rate = 0.0
+    tot_rimborsi = 0.0
     for anno, mese in window:
         c = round(buckets_contratti.get((anno, mese), 0.0), 2)
         a = round(buckets_altri.get((anno, mese), 0.0), 2)
@@ -1720,6 +1741,7 @@ def get_financial_trend(
         ri = round(buckets_rinnovi.get((anno, mese), 0.0), 2)
         ac = round(buckets_acconti.get((anno, mese), 0.0), 2)
         ra = round(buckets_rate.get((anno, mese), 0.0), 2)
+        rb = round(buckets_rimborsi.get((anno, mese), 0.0), 2)
         tot_c += c
         tot_a += a
         tot_v += v
@@ -1727,18 +1749,20 @@ def get_financial_trend(
         tot_rinnovi += ri
         tot_acconti += ac
         tot_rate += ra
+        tot_rimborsi += rb
         periodi.append(FinancialTrendPeriod(
             anno=anno,
             mese=mese,
             label=f"{_MESI_IT_SHORT[mese - 1]} {anno}",
             incassi_contratti=c,
             altri_incassi=a,
-            cash_flow_reale=round(c + a, 2),
+            cash_flow_reale=round(c + a - rb, 2),  # G7.5b: netto dei rimborsi del periodo
             venduto=v,
             incassi_nuovi=n,
             incassi_rinnovi=ri,
             incassi_acconti=ac,
             incassi_rate=ra,
+            rimborsi_contratti=rb,
         ))
 
     return FinancialTrendResponse(
@@ -1746,10 +1770,11 @@ def get_financial_trend(
         periodi=periodi,
         tot_incassi_contratti=round(tot_c, 2),
         tot_altri_incassi=round(tot_a, 2),
-        tot_cash_flow_reale=round(tot_c + tot_a, 2),
+        tot_cash_flow_reale=round(tot_c + tot_a - tot_rimborsi, 2),  # G7.5b: netto dei rimborsi
         tot_venduto=round(tot_v, 2),
         tot_incassi_nuovi=round(tot_nuovi, 2),
         tot_incassi_rinnovi=round(tot_rinnovi, 2),
         tot_incassi_acconti=round(tot_acconti, 2),
         tot_incassi_rate=round(tot_rate, 2),
+        tot_rimborsi_contratti=round(tot_rimborsi, 2),
     )
