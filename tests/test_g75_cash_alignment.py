@@ -26,10 +26,12 @@ def _trainer(session) -> Trainer:
     return session.exec(select(Trainer)).first()
 
 
-def _contract(client, auth_headers, client_id, *, prezzo, acconto, crediti):
+def _contract(client, auth_headers, client_id, *, prezzo, acconto, crediti, inizio=None):
+    # `inizio` (ISO str) opzionale: l'acconto è datato min(inizio, today) → con un inizio nel mese
+    # scorso l'ENTRATA cade nel mese scorso. Default = oggi.
     body = {
         "id_cliente": client_id, "tipo_pacchetto": "Pkg", "crediti_totali": crediti,
-        "prezzo_totale": prezzo, "data_inizio": TODAY.isoformat(),  # acconto datato oggi (min(inizio,today))
+        "prezzo_totale": prezzo, "data_inizio": inizio or TODAY.isoformat(),
         "data_scadenza": FUTURE, "acconto": acconto,
     }
     if acconto > 0:
@@ -143,3 +145,44 @@ def test_financial_trend_rimborso_contra_line(client, auth_headers, sample_clien
     # totali
     assert trend["tot_rimborsi_contratti"] == 300.0
     assert trend["tot_cash_flow_reale"] == 200.0
+
+
+# ── SENTINELLA (G7.5b): cash_flow_reale può andare NEGATIVO e NON va clampato a 0 ──
+
+def test_financial_trend_cash_flow_negativo_non_clampato(client, auth_headers, sample_client):
+    """SENTINELLA anti-regressione. `cash_flow_reale` PUÒ legittimamente essere NEGATIVO (un mese in cui
+    i rimborsi superano gli incassi) e va mostrato ESATTO, mai clampato a 0: un mese in rosso deve poter
+    esistere nella serie. Stessa perdita-silenziosa che BLOCKER-4 impedisce sull'asse decomposizioni, qui
+    sull'asse del netto. Questo test diventa ROSSO se qualcuno introduce un `max(0, ...)` su cash_flow_reale.
+
+    Verificato sul codice vivo: `get_financial_trend` NON clampa (movements.py: cash_flow_reale =
+    round(c + a - rb, 2); tot = round(tot_c + tot_a - tot_rimborsi, 2)) → l'invariante è intatto.
+
+    Costruzione (cap di dominio): un rimborso ≤ `netto_incassato` del suo contratto → un SINGOLO rimborso
+    non può eccedere gli incassi del proprio mese. Per ottenere `rimborsi > incassi NELLA FINESTRA` serve
+    che l'incasso del contratto rimborsato sia FUORI finestra: contratto B incassato il mese scorso,
+    terminato questo mese, query `mesi=1` (finestra = solo mese corrente) → il rimborso entra, l'acconto no.
+    Contratto A fornisce l'incasso LORDO del mese corrente (prova che il rimborso non lo abbatte, B-4).
+    """
+    last = _last_month_day().isoformat()
+
+    # A: incasso 100 questo mese, NON terminato → incassi_contratti LORDO del mese corrente
+    _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=100.0, crediti=10)
+    # B: acconto 500 datato il mese SCORSO (data_inizio mese scorso), 0 sedute, terminato questo mese
+    b = _contract(client, auth_headers, sample_client["id"],
+                  prezzo=500.0, acconto=500.0, crediti=10, inizio=last)
+    _terminate(client, auth_headers, b["id"])  # reso 0 → rimborso 500, datato oggi (questo mese)
+
+    # Finestra = solo mese corrente: l'acconto 500 di B (mese scorso) è ESCLUSO, il suo rimborso 500 è incluso.
+    r = client.get("/api/movements/financial-trend?mesi=1", headers=auth_headers)
+    assert r.status_code == 200, r.text
+    trend = r.json()
+    assert len(trend["periodi"]) == 1
+    cur = trend["periodi"][0]
+    # incassi del mese = solo A (100); B incassò il mese scorso, fuori finestra
+    assert cur["incassi_contratti"] == 100.0     # LORDO positivo — il rimborso 500 NON lo abbatte (B-4)
+    assert cur["rimborsi_contratti"] == 500.0
+    # cash_flow_reale = 100 − 500 = −400: NEGATIVO ed ESATTO, NON clampato a 0
+    assert cur["cash_flow_reale"] == -400.0
+    # totale finestra (un solo mese) coerente col netto negativo
+    assert trend["tot_cash_flow_reale"] == -400.0
