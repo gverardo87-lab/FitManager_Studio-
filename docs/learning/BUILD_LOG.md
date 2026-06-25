@@ -1684,3 +1684,31 @@ un eventuale "ricavo netto" è un KPI **additivo**, MAI una mutazione di `kpi_fa
 domande al tributarista). **Non blocca nulla** in corso (differito post-G1).
 
 ---
+
+### 2026-06-25 — G7.6: runbook remediation contratti muti (chiude la catena G7) + correzione data-driven
+
+Ultimo anello di G7. **Deliverable = solo documento** (`docs/operations/RUNBOOK_REMEDIATION_CONTRATTI_MUTI.md`): gli
+endpoint che usa (reopen G7.4, terminate G7.3) erano già in produzione e testati. Nessun codice nuovo.
+
+**Scoperta che ha riscritto il piano (verifica sul DB dev, READ-ONLY).** Il piano §7 descriveva "3 muti id 4/9/13"
+col profilo `crediti_usati=0` + scadenza futura + saldati (relazione viva → reopen). Sul crm.db dev attuale i muti
+(`chiuso=1 AND motivo_chiusura IS NULL AND deleted_at IS NULL`) sono **19**, con profilo **opposto e eterogeneo**:
+**16** hanno `crediti_usati == crediti_totali` + scadenza passata + saldati = **completamenti impliciti** (chiusi a
+ragione, manca solo l'etichetta `motivo`; la reopen-allowlist G7.2 li tratta già bene → **LEAVE**, zero azione), più
+inconsistenze sparse (contratto #29 rata non-saldata su chiuso; #4/#9/#13/#26/#28 sedute `Programmato` su chiuso).
+→ I muti **NON sono una popolazione uniforme** e **gli ID dipendono dal DB**. Il runbook è quindi un **albero
+decisionale per PROFILO** (LEAVE / R-reopen / T-terminate-via-reopen→terminate), **data-driven** (query diagnostica,
+mai per-ID), **per-contratto, mai bulk, reversibile, backup-first, solo via endpoint, decisione col trainer**.
+
+**Note tecniche del runbook:** T su un muto = 2 passi (reopen → terminate, `data_chiusura` retroattiva ma mai futura
+per D4); se `terminate` propone un RIMBORSO ma nessun rimborso reale è mai avvenuto → segnale che il caso è R, non T.
+Snapshot PRE/POST via `/api/dashboard/reconciliation` + `/api/movements/stats` + dump contratto + `audit_log`.
+
+**Esecuzione NON fatta in autonomia:** la bonifica vera gira sui DB reali (Chiara/Alessio) insieme al trainer, che
+decide R/T per contratto. Sul DB dev i muti sono in larga parte completamenti legittimi → nessun bulk-cleanup.
+
+Doc allineati: IMPL_PLAN §7 (banner consegnato + correzione data-driven) + RESUME POINT/§1/§10/file-list, INDEX
+(operations + riga RESUME), api/CLAUDE.md (callout G7.5/G7.6 fatti). **Con G7.6 la catena G7 è chiusa →
+⏭️ G1 (cifratura crm.db).**
+
+---

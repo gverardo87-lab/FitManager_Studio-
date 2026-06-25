@@ -35,16 +35,18 @@
 >
 > Suite **604 passed / 0 xfailed**.
 >
-> **⏭️ PROSSIMO: G7.5** (§5 + §5-bis/§5-ter): allineamento delle ~7 query-cassa residue al predicato bidirezionale +
-> ratifica conteggio (8-vs-9, vedi sotto) + **D4** guardia `data_chiusura` non-futura + **D2** campo `sedute_prenotate`.
-> Poi **G7.6** (runbook 3 muti) → **G1** (cifratura). I **4 BLOCKER §4.7 sono chiusi**: residuo→SSoT (Sez. A); allowlist
-> (G7.2); soft-delete selettivo (G7.3 B-3); financial-trend doppia decomposizione (resta in G7.5). `test_manual_close_*`
-> è già xpass (marker rimosso, presidio permanente).
+> **✅ G7.5 + G7.6 FATTI (2026-06-25). ⏭️ PROSSIMO: G1 (cifratura).** G7.5: allineamento query-cassa (a `4c918af`
+> movement-stats/forecast/monthly_revenue + ratifica inventario; b `68c470e` financial-trend contra-line + sentinella;
+> c `27bef81` D4 guardia `data_chiusura` non-futura + D2 `sedute_prenotate`). G7.6: runbook contratti muti consegnato
+> (§7, data-driven). I **4 BLOCKER §4.7 sono chiusi**: residuo→SSoT (Sez. A); allowlist (G7.2); soft-delete selettivo
+> (G7.3 B-3); financial-trend doppia decomposizione (G7.5b). `test_manual_close_*` è già xpass (presidio permanente).
+> Suite **611 passed**, tutto pushato fino a `25e8139`.
 >
 > **DECISIONI di Giacomo — RISOLTE per G7.0-G7.4:** policy conguaglio = `pro_sedute` default DICHIARATO **PROVISIONAL**
 > (la valorizzazione numerica resta gated dal tributarista, ma non blocca la struttura); enum `motivo_chiusura` = 4 valori
-> **DERIVATO dall'esito** (mai COMPLETAMENTO da terminate); `chiuso` **RIMOSSO** da `update_contract`. **Resta aperto:**
-> R/T per i 3 contratti muti (id 4/9/13) = **G7.6** runbook.
+> **DERIVATO dall'esito** (mai COMPLETAMENTO da terminate); `chiuso` **RIMOSSO** da `update_contract`. **Esecuzione
+> trainer-driven:** R/T per ciascun contratto muto = procedura **G7.6** consegnata (§7); la decisione per-contratto si
+> esegue coi DB reali insieme al trainer (gli endpoint reopen/terminate sono pronti).
 >
 > **Metodo:** model→spec→codice; commit per blocco con `check-all.sh`+`pytest` verde; bridge per i delta modello.
 
@@ -107,7 +109,7 @@
    kpi_incassato->netto + esclusione-burn; bottoni Blocco 3 cablati ("Termina"/"Riapri")
         │
         ▼
-[G7.5 (aperto): ~7 query-cassa + D4/D2]  ->  [G7.6: runbook 3 contratti muti id 4/9/13]  (dato vivo)
+[G7.5 ✅ FATTO: query-cassa + D4/D2]  ->  [G7.6 ✅ FATTO: runbook muti data-driven]  ->  [G1: cifratura]
    gamba REOPEN: POST /reopen (disponibile)  |  gamba TERMINATE: POST /terminate (disponibile)
 ```
 
@@ -367,7 +369,16 @@ Rifinitura frontend di G7.3 senza dipendenze, accodata a D4 per non aprire un co
 
 ---
 
-## 7. Remediation runbook — 3 contratti muti (id 4/9/13, dato vivo)
+## 7. Remediation runbook — contratti muti (`motivo_chiusura = NULL`, data-driven)
+
+> **✅ G7.6 CONSEGNATO (2026-06-25):** runbook scritto in `docs/operations/RUNBOOK_REMEDIATION_CONTRATTI_MUTI.md`.
+> **Correzione data-driven (verificata sul codice/DB):** gli ID dei muti **dipendono dal DB** — "id 4/9/13" era un
+> caso specifico. Il crm.db di sviluppo ha **19 muti eterogenei**: 16 sono **completamenti impliciti** (`crediti_usati
+> == crediti_totali`, saldati, scaduti → **LEAVE**, nessuna azione: la reopen-allowlist G7.2 li tratta già bene), più
+> alcune inconsistenze (rata non-saldata su chiuso, sedute `Programmato` su chiuso). Il runbook è quindi un **albero
+> decisionale per PROFILO** (LEAVE / R-reopen / T-terminate), per-contratto, mai per-ID, mai bulk. Endpoint già
+> pronti (reopen G7.4, terminate G7.3): G7.6 è **solo il documento** — l'esecuzione sui DB reali (Chiara/Alessio) è
+> operativa e **guidata dal trainer** (decisione R/T per contratto).
 
 **Deliverable a sé** (`docs/operations/RUNBOOK_REMEDIATION_CONTRATTI_MUTI.md`), procedura **per-contratto, auditata, reversibile, MAI bulk**.
 
@@ -477,4 +488,4 @@ con rimborso + storno lascia il KPI **"Fatturato" invariato**, e la domanda è s
 
 ---
 
-_File chiave: `api/services/{contract_state,contract_settlement(new),cash_categories(new)}.py`, `api/routers/{contracts,rates,agenda,movements,dashboard,_audit}.py`, `api/schemas/financial.py`, `api/models/contract.py`, `api/services/schema_sync.py`, `alembic/versions/` (nuova revision, down_revision `b2f1a9c7d4e3`), `frontend/src/hooks/{useContracts,useDashboard,useRates}.ts`, `frontend/src/app/(dashboard)/{contratti,rinnovi-incassi,cassa}/page.tsx`, `frontend/src/types/api.ts`, `docs/technical/IMPL_PLAN_FINANCIAL_REALIGN.md`, `docs/operations/RUNBOOK_REMEDIATION_CONTRATTI_MUTI.md` (new)._
+_File chiave: `api/services/{contract_state,contract_settlement(new),cash_categories(new)}.py`, `api/routers/{contracts,rates,agenda,movements,dashboard,_audit}.py`, `api/schemas/financial.py`, `api/models/contract.py`, `api/services/schema_sync.py`, `alembic/versions/` (nuova revision, down_revision `b2f1a9c7d4e3`), `frontend/src/hooks/{useContracts,useDashboard,useRates}.ts`, `frontend/src/app/(dashboard)/{contratti,rinnovi-incassi,cassa}/page.tsx`, `frontend/src/types/api.ts`, `docs/technical/IMPL_PLAN_FINANCIAL_REALIGN.md`, `docs/operations/RUNBOOK_REMEDIATION_CONTRATTI_MUTI.md` (✅ consegnato G7.6)._
