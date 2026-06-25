@@ -269,22 +269,27 @@ La ricognizione sul codice reale ha mappato l'impatto di una USCITA contrattuale
 Il predicato "contrattuale" **ora esiste** (`cash_categories.py`, P0); un `RIMBORSO_CONTRATTO` non allineato
 cadrebbe per **default** negli aggregati di uscite-variabili. Allineamenti richiesti:
 
-> *Questa tabella classifica il TRATTAMENTO-modello di ogni query (il ✅/⚠️ è classificazione, non un tracker).
-> Lo **stato di avanzamento** vive in `AUDIT_PRE_G7.3` (Domanda 1 Classe C) + `IMPL_PLAN §5`. Stato 2026-06-24:
-> #1 già corretto · **#2 FATTA (G7.3 §7, esclusione-burn)** · le restanti = **G7.5**. Il conteggio "9" e l'inventario
-> sono da **ratificare in G7.5** (drift noto col "8" di `api/CLAUDE.md`).*
+> *Questa tabella classifica il TRATTAMENTO-modello di ogni query. Lo **stato di avanzamento** vive in
+> `AUDIT_PRE_G7.3` (Classe C) + `IMPL_PLAN §5`.*
+>
+> **✅ Inventario RATIFICATO (G7.5, code-grounded — supera il "9" non-verificato dei doc).** Delle query mappate,
+> **4 CAMBIANO** con un rimborso e vanno allineate (#3 movement-stats, #4 forecast, #9 monthly_revenue, #5
+> financial-trend); le altre sono **invarianti** (#1 saldo, #2 burn, #6 reconciliation-àncora) o **display/audit a
+> basso valore** (#7 flow-timeline, #8 balance-uscite-grezze). **Stato 2026-06-25:** #1 corretto · #2/#3/#4/#9 ✅
+> allineate (G7.3 §7 + **G7.5a**) · #5 = **G7.5b** · #6/#7/#8 = **lasciate** per scelta di scope (additive/display,
+> non producono numeri errati — vedi note righe).
 
 | # | Query | file:riga | Trattamento corretto del rimborso |
 |---|---|---|---|
 | 1 | `_compute_saldo` / `_signed_importo` | `movements.py:66-118` | ✅ **già corretto** — l'USCITA sottrae dal saldo reale (così deve essere) |
 | 2 | `_compute_variable_burn_rate` | `movements.py:290-310` | ✅ **FATTO (G7.3 §7)** — escluso il `RIMBORSO_CONTRATTO` (contra-ricavo, non burn variabile) |
-| 3 | `get_movement_stats` (uscite variabili) | `movements.py:1148-1151` | ⚠️ **escludere** dalle uscite operative — non deve ridurre il `margine_netto` come fosse un costo |
-| 4 | `get_forecast` (burn/uscite) | `movements.py:1486-1535` | ⚠️ **escludere** dal burn proiettato — non gonfiare la proiezione spese a 90gg |
-| 5 | `get_financial_trend` L1/L2/L3 | `movements.py:1609-1654` | ⚠️ **includere come componente contrattuale** — oggi il trend vede **solo ENTRATA** (`:1612`): il rimborso sarebbe **invisibile**. Deve abbattere gli incassi netti da contratti del periodo |
-| 6 | `get_reconciliation` | `dashboard.py:127-208` | ⚠️ **rendere visibile** — oggi cieca alle uscite (§3); deve riconciliare `totale_rimborsato` vs `Σ USCITA RIMBORSO_CONTRATTO` |
-| 7 | `get_cash_audit_log` (`flow_hint`) | `movements.py:900-906` | ⚠️ **non forzare ENTRATA** — oggi forza il segno entrata per le entity "contract"; un rimborso è un flusso **in uscita** |
-| 8 | `get_balance` (`totale_uscite`) | `movements.py:396-415` | ⚠️ **dipende dall'uso** — se `totale_uscite` è la cassa-out **grezza** del saldo, il rimborso **ci sta** (è denaro uscito); se è/alimenta le **«uscite operative»**, **escluderlo** (contra-ricavo, non opex). Claude Code applica in base a cosa `get_balance` alimenta davvero |
-| 9 | `get_dashboard_summary` (`monthly_revenue`) | `dashboard.py:84-94` | ⚠️ **vista contrattuale (netto)** — KPI "revenue del mese" su `tipo==ENTRATA + id_contratto`: oggi NON sottrae i rimborsi → sovrastima il netto. Deve sottrarre i `RIMBORSO_CONTRATTO` del mese. *(`divergent_count` dello stesso summary resta corretto: confronta `totale_versato` lordo vs Σ ENTRATA, invariante che Strada B preserva.)* |
+| 3 | `get_movement_stats` (uscite variabili) | `movements.py` | ✅ **FATTO (G7.5a)** — `RIMBORSO_CONTRATTO` escluso dalle uscite variabili **e** sottratto dalle entrate (contra-ricavo, single-treatment); chart day-bucket come riduzione entrate |
+| 4 | `get_forecast` (burn/uscite) | `movements.py` | ✅ **FATTO (G7.5a)** — escluso da `past_var_totals` (burn variabile) **e** `past_total_uscite` (burn KPI) |
+| 5 | `get_financial_trend` L1/L2/L3 | `movements.py` | ⏳ **G7.5b** — `incassi_contratti` vede solo ENTRATA → rimborso invisibile. Soluzione: **contra-line `rimborsi_contratti`** separata (nessun numero che sparisce; le 2 decomposizioni nuovi/rinnovi e acconti/rate restano lorde) |
+| 6 | `get_reconciliation` | `dashboard.py` | ✅ **invariante (verificato AUDIT)** — l'àncora `versato == Σ CASE ENTRATA` REGGE (il rimborso USCITA contribuisce 0 al `CASE`). La leg `totale_rimborsato vs Σ USCITA RIMBORSO` è **additiva** (futuro, non must-fix) |
+| 7 | `get_cash_audit_log` (`flow_hint`) | `movements.py` | ↪️ **lasciato (scope G7.5)** — per un `movement`, `flow_hint` legge il `tipo` reale (RIMBORSO → USCITA, **già corretto**); solo la riga-audit `contract` è raggruppata ENTRATA (timeline UI, nessun numero errato). Fix-coppia flow_hint/flow_filter rimandato |
+| 8 | `get_balance` (`totale_uscite_storico`) | `movements.py` | ↪️ **lasciato (display)** — è cassa-out **grezza** (il rimborso È denaro uscito davvero); il `saldo` è già corretto via `_compute_saldo` (signed). Non alimenta la protezione-cassa (quella usa il burn, già fixato) |
+| 9 | `get_dashboard_summary` (`monthly_revenue`) | `dashboard.py` | ✅ **FATTO (G7.5a)** — sottrae i `RIMBORSO_CONTRATTO` del mese (revenue netto). *(`divergent_count` resta corretto: lordo `versato` vs Σ ENTRATA, invariante Strada B.)* |
 
 > **Principio unificante.** Le query si dividono in famiglie rispetto al rimborso:
 > - **Cassa/saldo reale** (#1, e #8 quando è saldo grezzo): il rimborso **deve** sottrarre (è denaro

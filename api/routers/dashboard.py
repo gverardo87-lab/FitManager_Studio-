@@ -33,6 +33,7 @@ from api.schemas.clinical import (
 )
 from api.routers.movements import _compute_saldo
 from api.services import contract_state as cstate
+from api.services.cash_categories import CATEGORIA_RIMBORSO_CONTRATTO
 from api.services.clinical_readiness import (
     compute_clinical_readiness_data,
     filter_clinical_readiness_items,
@@ -92,6 +93,19 @@ def get_dashboard_summary(
         )
     ).one()
     monthly_revenue = revenue_result or 0.0
+    # G7.5: al netto dei rimborsi del mese (RIMBORSO_CONTRATTO = USCITA contra-ricavo) → revenue NETTO,
+    # non lordo. Senza, un terminate-con-rimborso sovrastimerebbe il "revenue del mese".
+    rimborsi_result = session.exec(
+        select(func.sum(CashMovement.importo)).where(
+            CashMovement.trainer_id == trainer.id,
+            CashMovement.tipo == "USCITA",
+            CashMovement.categoria == CATEGORIA_RIMBORSO_CONTRATTO,
+            CashMovement.data_effettiva >= first_of_month,
+            CashMovement.data_effettiva < first_of_next,
+            CashMovement.deleted_at == None,
+        )
+    ).one()
+    monthly_revenue = monthly_revenue - (rimborsi_result or 0.0)
 
     # 3. Rate pendenti: scadute (data_scadenza < oggi) + in scadenza (prossimi 7 giorni)
     #    Deep filter: solo rate di contratti del trainer

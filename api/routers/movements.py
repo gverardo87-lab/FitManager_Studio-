@@ -1142,6 +1142,14 @@ def get_movement_stats(
         and m.id_spesa_ricorrente is not None
         and m.categoria == "STORNO_SPESA_FISSA"
     )
+    # G7.5: RIMBORSO_CONTRATTO è una USCITA **contra-ricavo** (specchio di STORNO_SPESA_FISSA,
+    # contra-uscita): riduce gli incassi (entrate al netto delle restituzioni), MAI un costo operativo
+    # variabile. Single-treatment (IMPL_PLAN §5): sottratto dalle entrate E escluso dalle uscite
+    # variabili — **mai entrambi** (il margine resta identico, farlo due volte sottrarrebbe due volte).
+    rimborsi_contratti = sum(
+        m.importo for m in movements
+        if m.tipo == "USCITA" and m.categoria == CATEGORIA_RIMBORSO_CONTRATTO
+    )
     totale_entrate = sum(
         m.importo
         for m in movements
@@ -1150,10 +1158,12 @@ def get_movement_stats(
             m.id_spesa_ricorrente is not None
             and m.categoria == "STORNO_SPESA_FISSA"
         )
-    )
+    ) - rimborsi_contratti
     totale_uscite_variabili = sum(
         m.importo for m in movements
-        if m.tipo == "USCITA" and m.id_spesa_ricorrente is None
+        if m.tipo == "USCITA"
+        and m.id_spesa_ricorrente is None
+        and m.categoria != CATEGORIA_RIMBORSO_CONTRATTO
     )
     totale_uscite_fisse_lorde = sum(
         m.importo for m in movements
@@ -1180,9 +1190,15 @@ def get_movement_stats(
             and m.id_spesa_ricorrente is not None
             and m.categoria == "STORNO_SPESA_FISSA"
         )
+        is_rimborso_contratto = (
+            m.tipo == "USCITA" and m.categoria == CATEGORIA_RIMBORSO_CONTRATTO
+        )
         if is_storno_fissa:
             # Lo storno riduce le uscite del giorno, non e' entrata operativa.
             uscite_per_giorno[day] -= m.importo
+        elif is_rimborso_contratto:
+            # G7.5: contra-ricavo — riduce le entrate del giorno, non è uscita operativa (specchio storno).
+            entrate_per_giorno[day] -= m.importo
         elif m.tipo == "ENTRATA":
             entrate_per_giorno[day] += m.importo
         else:
@@ -1193,6 +1209,11 @@ def get_movement_stats(
         if u < 0:
             entrate_per_giorno[day] += abs(u)
             uscite_per_giorno[day] = 0.0
+    # Simmetrico: un giorno con rimborsi > entrate produrrebbe entrate negative → ribalta su uscite.
+    for day, e in list(entrate_per_giorno.items()):
+        if e < 0:
+            uscite_per_giorno[day] += abs(e)
+            entrate_per_giorno[day] = 0.0
 
     running = saldo_inizio_mese
     chart_data = []
@@ -1495,6 +1516,8 @@ def get_forecast(
                 CashMovement.trainer_id == trainer.id,
                 CashMovement.tipo == "USCITA",
                 CashMovement.id_spesa_ricorrente == None,
+                # G7.5: un RIMBORSO_CONTRATTO è contra-ricavo, NON burn variabile → non gonfia la proiezione.
+                func.coalesce(CashMovement.categoria, "") != CATEGORIA_RIMBORSO_CONTRATTO,
                 extract("year", CashMovement.data_effettiva) == pa,
                 extract("month", CashMovement.data_effettiva) == pm,
                 CashMovement.deleted_at == None,
@@ -1532,6 +1555,8 @@ def get_forecast(
             select(func.coalesce(func.sum(CashMovement.importo), 0)).where(
                 CashMovement.trainer_id == trainer.id,
                 CashMovement.tipo == "USCITA",
+                # G7.5: escludi il RIMBORSO_CONTRATTO dal burn_rate KPI (contra-ricavo, non costo ricorrente).
+                func.coalesce(CashMovement.categoria, "") != CATEGORIA_RIMBORSO_CONTRATTO,
                 extract("year", CashMovement.data_effettiva) == pa,
                 extract("month", CashMovement.data_effettiva) == pm,
                 CashMovement.deleted_at == None,
