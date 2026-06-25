@@ -1112,6 +1112,21 @@ def _count_sedute_erogate(session: Session, contract_id: int) -> int:
     ).one()
 
 
+def _count_sedute_prenotate(session: Session, contract_id: int) -> int:
+    """Sedute PT **prenotate ma non svolte** = Event PT Programmati, non eliminati. Proiezione di Event
+    (gemello di `_count_sedute_erogate`, stato diverso), query SEPARATA: NON tocca il path del conguaglio
+    (codice verde). **SOLO display** nella preview (D2, G7.5c): NON entra in `compute_settlement` — il
+    conguaglio resta su base sedute Completate. Serve all'avviso UI 'le prenotate non riducono il rimborso'."""
+    return session.exec(
+        select(func.count(Event.id)).where(
+            Event.id_contratto == contract_id,
+            Event.categoria == "PT",
+            Event.stato == "Programmato",
+            Event.deleted_at == None,
+        )
+    ).one()
+
+
 def _motivo_from_esito(esito: SettlementEsito) -> str:
     """Mappa esito→motivo_chiusura (AC-7.3-9). terminate NON assegna MAI COMPLETAMENTO
     (riservato all'auto-close; lo riaprirebbe la reopen-allowlist G7.2)."""
@@ -1136,7 +1151,7 @@ def _settlement_for(session: Session, contract: Contract):
     )
 
 
-def _build_settlement_preview(contract: Contract, settlement) -> ContractSettlementPreview:
+def _build_settlement_preview(contract: Contract, settlement, sedute_prenotate: int = 0) -> ContractSettlementPreview:
     """Compone la preview leggibile dal conguaglio. Framing di PROPOSTA (§0/§4): mai "obbligo legale",
     sempre "calcolato col metodo standard, verifica con le condizioni del contratto"."""
     rimborso = settlement.esito == SettlementEsito.RIMBORSO
@@ -1159,6 +1174,7 @@ def _build_settlement_preview(contract: Contract, settlement) -> ContractSettlem
         quota_da_stornare=settlement.quota_da_stornare,
         sedute_erogate=settlement.sedute_erogate,
         sedute_totali=contract.crediti_totali,
+        sedute_prenotate=sedute_prenotate,
         metodo_rimborso_richiesto=rimborso,
         messaggio=msg,
     )
@@ -1179,7 +1195,11 @@ def settlement_preview(
     contract = _bouncer_contract_owned(session, contract_id, trainer.id)
     if contract.chiuso:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Il contratto è già chiuso")
-    return _build_settlement_preview(contract, _settlement_for(session, contract))
+    return _build_settlement_preview(
+        contract,
+        _settlement_for(session, contract),
+        _count_sedute_prenotate(session, contract.id),  # D2: solo display, query separata dal conguaglio
+    )
 
 
 @router.post("/{contract_id}/terminate", response_model=ContractResponse)

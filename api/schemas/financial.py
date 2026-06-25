@@ -181,6 +181,18 @@ class ContractTerminate(BaseModel):
             raise ValueError(f"Metodo invalido. Validi: {sorted(VALID_PAYMENT_METHODS)}")
         return v
 
+    @field_validator("data_chiusura")
+    @classmethod
+    def _data_chiusura_non_futura(cls, v: Optional[date]) -> Optional[date]:
+        # D4 (G7.5c): una terminazione registra denaro uscito ORA o in passato (il rimborso è
+        # cassa in uscita), mai un impegno futuro. Una data nel futuro è un errore d'inserimento.
+        if v is not None and v > date.today():
+            raise ValueError(
+                "La data di chiusura non può essere nel futuro: la terminazione (e l'eventuale "
+                "rimborso) registra denaro uscito ora o in passato, non un impegno futuro."
+            )
+        return v
+
 
 class ContractSettlementPreview(BaseModel):
     """
@@ -199,6 +211,7 @@ class ContractSettlementPreview(BaseModel):
     quota_da_stornare: float              # residuo corrente che verrà azzerato (write-off)
     sedute_erogate: int                   # sedute Completate (servizio reso) — base del pro-rata
     sedute_totali: Optional[int] = None   # crediti_totali (None = senza monte-sedute)
+    sedute_prenotate: int = 0             # D2 (G7.5c): PT prenotate-non-svolte — SOLO display (NON entra nel conguaglio)
     metodo_rimborso_richiesto: bool       # True se esito RIMBORSO → il form deve chiedere il metodo
     policy_mode: str = "pro_sedute"       # metodo di valorizzazione (default dichiarato, §0)
     messaggio: str                        # framing di proposta (§0/§4)

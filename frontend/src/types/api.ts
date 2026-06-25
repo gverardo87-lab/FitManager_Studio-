@@ -627,6 +627,7 @@ export interface ContractSettlementPreview {
   quota_da_stornare: number; // residuo che verrà azzerato (write-off)
   sedute_erogate: number;
   sedute_totali: number | null;
+  sedute_prenotate: number; // D2: PT prenotate-non-svolte — solo display (non entra nel conguaglio)
   metodo_rimborso_richiesto: boolean;
   policy_mode: string;
   messaggio: string;

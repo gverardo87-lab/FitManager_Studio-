@@ -132,6 +132,14 @@ export function TerminateContractDialog({
               ) : null}
             </dl>
 
+            {/* D2 (G7.5c): avviso prenotate-escluse — solo se ci sono PT prenotate ma non svolte */}
+            {data.sedute_prenotate > 0 ? (
+              <p className="text-[11px] text-muted-foreground">
+                Le {data.sedute_prenotate} sedute prenotate ma non ancora svolte non riducono il rimborso:
+                il conguaglio si basa solo sulle sedute già erogate.
+              </p>
+            ) : null}
+
             {/* Metodo rimborso (solo se l'esito è un rimborso) */}
             {needsMetodo ? (
               <div className="space-y-1.5">

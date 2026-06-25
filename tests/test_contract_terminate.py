@@ -52,15 +52,16 @@ def _contract(client, auth_headers, client_id, *, prezzo, acconto, crediti,
     return r.json()
 
 
-def _complete_pt(session, trainer_id, client_id, contract_id, n):
-    """Inserisce n sedute PT COMPLETATE via ORM (servizio reso)."""
+def _complete_pt(session, trainer_id, client_id, contract_id, n, stato="Completato"):
+    """Inserisce n sedute PT via ORM nello stato dato (default Completato = servizio reso;
+    'Programmato' = prenotate-non-svolte per D2)."""
     for i in range(n):
         session.add(Event(
             trainer_id=trainer_id,
             id_cliente=client_id,
             id_contratto=contract_id,
             categoria="PT",
-            stato="Completato",
+            stato=stato,
             titolo="Seduta",
             data_inizio=datetime(2026, 1, 1, 9 + i),
             data_fine=datetime(2026, 1, 1, 10 + i),
@@ -365,3 +366,46 @@ def test_terminate_gia_chiuso_400(client, auth_headers, sample_client, session):
     # anche la preview su un chiuso → 400
     r3 = client.get(f"/api/contracts/{c['id']}/settlement-preview", headers=auth_headers)
     assert r3.status_code == 400
+
+
+# ── D4 (G7.5c): data_chiusura non nel futuro ───────────────────────
+
+def test_terminate_data_chiusura_futura_422(client, auth_headers, sample_client, session):
+    """D4: una `data_chiusura` futura → 422 (un rimborso è denaro uscito ora/passato, mai impegno
+    futuro). Atomicità: nessuna scrittura. Controprova: data odierna → 200."""
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=100.0, crediti=10)
+    t = _trainer(session)
+    _complete_pt(session, t.id, sample_client["id"], c["id"], 2)  # write-off, niente metodo richiesto
+
+    futura = (TODAY + timedelta(days=10)).isoformat()
+    r = client.post(f"/api/contracts/{c['id']}/terminate",
+                    json={"data_chiusura": futura}, headers=auth_headers)
+    assert r.status_code == 422, r.text
+    session.expire_all()
+    assert session.get(Contract, c["id"]).chiuso is False  # boundary respinge → nessuna scrittura
+
+    # controprova: data odierna accettata
+    r2 = client.post(f"/api/contracts/{c['id']}/terminate",
+                     json={"data_chiusura": TODAY.isoformat()}, headers=auth_headers)
+    assert r2.status_code == 200, r2.text
+
+
+# ── D2 (G7.5c): la preview espone sedute_prenotate (SOLO display, non nel conguaglio) ──
+
+def test_settlement_preview_sedute_prenotate(client, auth_headers, sample_client, session):
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=500.0, crediti=10)
+    t = _trainer(session)
+    _complete_pt(session, t.id, sample_client["id"], c["id"], 2)                      # 2 erogate (Completato)
+    _complete_pt(session, t.id, sample_client["id"], c["id"], 3, stato="Programmato")  # 3 prenotate
+
+    p = client.get(f"/api/contracts/{c['id']}/settlement-preview", headers=auth_headers).json()
+    assert p["sedute_erogate"] == 2
+    assert p["sedute_prenotate"] == 3
+    # prova che le prenotate NON entrano nel conguaglio: reso = 1000 * 2/10 = 200 (solo le erogate)
+    assert p["valore_servizio_reso"] == 200.0
+
+    # contratto senza PT Programmati → sedute_prenotate == 0 (l'avviso FE non si mostra)
+    c2 = _contract(client, auth_headers, sample_client["id"], prezzo=500.0, acconto=0.0, crediti=5)
+    _complete_pt(session, t.id, sample_client["id"], c2["id"], 1)  # solo erogata
+    p2 = client.get(f"/api/contracts/{c2['id']}/settlement-preview", headers=auth_headers).json()
+    assert p2["sedute_prenotate"] == 0
