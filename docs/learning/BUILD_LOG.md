@@ -1645,3 +1645,42 @@ lorde, totali).
 `data_chiusura` non-futura + D2 campo derivato `sedute_prenotate`).
 
 ---
+
+### 2026-06-25 — G7.5c: guardia `data_chiusura` non-futura (D4) + `sedute_prenotate` in preview (D2)
+
+Chiude lo STOP precedente. Commit `27bef81`, suite **611 passed**, check-all verde. Due raffinamenti da IMPL_PLAN
+§5-bis/5-ter, entrambi **additivi** (nessun importo cambia, byte-invarianti sul percorso conguaglio).
+
+**D4 (§5-bis):** `field_validator` su `ContractTerminate.data_chiusura` (`financial.py`) — una data nel **futuro** →
+**422 al boundary, zero scritture**. Razionale: una terminazione (e l'eventuale rimborso) registra cassa uscita
+**ORA o in passato**, mai un impegno futuro; una data futura è errore d'inserimento, non uno stato valido. Test:
+422 + controprova `oggi`→200, atomicità (`chiuso` resta False).
+
+**D2 (§5-ter):** `settlement-preview` espone `sedute_prenotate` (Event PT `Programmato`, non eliminati) via
+`_count_sedute_prenotate` — **query SEPARATA dal path del conguaglio** (decisione di Giacomo via Bridge: strada
+additiva sicura, NON tocca `_settlement_for`/`_count_sedute_erogate`). `compute_settlement` invariato: il conguaglio
+resta su base sedute **Completate**. Solo display: microcopy FE "le prenotate non riducono il rimborso" condizionale a
+`>0`. Test: `valore_servizio_reso` invariato a 200 con 2 erogate + 3 prenotate, 0 se nessun Programmato.
+
+**⏭️ Prossimo:** **G7.6** (runbook 3 muti id 4/9/13) → **G1 cifratura**.
+
+---
+
+### 2026-06-25 — Decisione APERTA: Fatturato lordo (venduto) vs ricavo netto (KPI fiscale)
+
+Emersa da un **test manuale di terminazione** (DB dev): contratto 10 crediti / €550 / acconto €100 / rate non
+pianificate, terminato con 0 sedute → rimborso €100 + storno €450 → **il KPI "Fatturato" resta 550**. Verificato a
+terra che è **corretto per disegno**: `kpi_fatturato = Σ prezzo_totale` includendo i chiusi (`contracts.py:248`) è il
+**venduto/contrattualizzato**, metrica cumulativa storica (pitfall #14, INC-2026-06-08). La realtà economica della
+terminazione **è già riflessa negli altri due assi**: `kpi_incassato`→`netto_incassato()` (100→0, rimborso) e
+`kpi_residuo` (450→0, storno). Chiarito anche che **i €450 NON sono un movimento di cassa** (terminate scrive solo
+l'USCITA €100 `RIMBORSO_CONTRATTO`, `contracts.py:1252`): sono write-off di credito mai incassato (`quota_stornata`),
+mostrato come "Residuo azzerato" nel dialog (`TerminateContractDialog.tsx:129`), **non** nel libro cassa.
+
+**Punto aperto (tributarista + founder):** se per il contratto è stata emessa una **fattura**, fiscalmente una
+terminazione anticipata → **nota di credito** e il fatturato fiscale scenderebbe; ma il KPI di FitManager è
+**commerciale**, non un registro fatture. Decisione tracciata in **IMPL_PLAN §11** (write-up + guardia anti-regressione:
+un eventuale "ricavo netto" è un KPI **additivo**, MAI una mutazione di `kpi_fatturato`) e in **§10 punto 5** (lista
+domande al tributarista). **Non blocca nulla** in corso (differito post-G1).
+
+---

@@ -435,6 +435,7 @@ Rifinitura frontend di G7.3 senza dipendenze, accodata a D4 per non aprire un co
 2. **Naming categoria movimento** — conferma `RIMBORSO_CONTRATTO` (USCITA) in `cash_categories.py`.
 3. **Conferma campo-storno** — `quota_stornata` accumulatore monotonico (gemello di `totale_rimborsato`), `residuo()` esteso a sottrarlo. Verdetti la confermano necessaria; serve OK al nome/semantica prima della migrazione.
 4. **Decisione per i 3 contratti muti** — R (reopen, default) vs T (terminazione retroattiva) per ciascuno; richiede contesto trainer. R eseguibile ora, T dopo G7.
+5. **Semantica del KPI "Fatturato" (tributarista)** `[founder Q 2026-06-25]` — il fatturato deve restare **venduto lordo** (Σ prezzo, include i terminati) o serve anche un **ricavo netto** al netto di storni/rimborsi? **NON blocca nulla in corso** — decisione differita, write-up completo in **§11**. Da portare al tributarista insieme al punto 1 (è lo stesso tavolo: come si rappresentano fiscalmente terminazione, storno e rimborso).
 
 ---
 
@@ -449,6 +450,30 @@ Rifinitura frontend di G7.3 senza dipendenze, accodata a D4 per non aprire un co
 - **A NON è debito tecnico verso D:** il motore (`compute_settlement`, due gambe, anteprima) è esattamente ciò che D riusa. D aggiunge solo `importo_rimborso_override: Optional[float]` + logica per preferirlo al calcolato. Il motore non si rifà.
 - **⚠️ GUARDIA CRITICA (fissata ora, da rispettare quando si apre):** l'override apre una porta al **mass-assignment** oggi chiusa per design (`ContractTerminate` non accetta importi). D deve aprirla SOLO per l'importo rimborso, SOLO quando l'esito è RIMBORSO, **CON UN CAP**: l'override non può superare `netto_incassato` (non si rimborsa più di quanto incassato al netto). Senza cap, D è una via per scrivere USCITE arbitrarie sul ledger. È il bordo di D — conoscerlo prima di aprirlo.
 - **Sequenza:** dopo G1 (cifratura). Coerente con "legale prima, eleganza dopo" — D è eleganza che rinforza il legale.
+
+### Fatturato lordo (venduto) vs ricavo netto — KPI fiscale `[founder Q 2026-06-25]`
+
+**DIFFERITO. Non blocca la catena G7 né G1.** Emerso da test manuale di terminazione (DB dev): un contratto terminato
+con rimborso + storno lascia il KPI **"Fatturato" invariato**, e la domanda è se sia corretto.
+
+- **Stato attuale (verificato, CORRETTO per disegno):** `kpi_fatturato = round(Σ prezzo_totale, 2)` su **tutti** i
+  contratti, **inclusi i chiusi/terminati** (`api/routers/contracts.py:248`). È il **venduto/contrattualizzato** —
+  metrica **cumulativa storica**, risponde a *«quanto ho venduto»*, non *«quanto ho incassato e tenuto»*. Resta lordo
+  **deliberatamente** (pitfall #14, INC-2026-06-08: i KPI cumulativi DEVONO includere i chiusi). La realtà economica
+  della terminazione è già rappresentata sugli **altri due assi**: `kpi_incassato`→`netto_incassato()` (= versato −
+  rimborsato, scende col rimborso) e `kpi_residuo` (scende a 0 con lo storno). Coerente con BLOCKER-4 ("nessun numero
+  che sparisce"): rimborso e storno vivono come movimento/campo propri, non nettati dentro il fatturato.
+- **Il punto aperto è FISCALE, non un bug:** se per il contratto è stata emessa una **fattura** da €X e poi si termina,
+  fiscalmente serve una **nota di credito** e il *fatturato fiscale* scende. Ma il KPI "Fatturato" di FitManager è una
+  **metrica commerciale di contratti firmati**, NON un registro fatture. I due concetti possono legittimamente divergere.
+- **Decisione da prendere (founder + tributarista, §10 punto 5):** (a) il fatturato resta **solo** venduto-lordo (status
+  quo, niente lavoro); **oppure** (b) si aggiunge un **secondo KPI distinto** — "ricavo maturato" / "fatturato netto" —
+  al netto degli storni (e dei rimborsi). La formula candidata (`Σ (prezzo_totale − quota_stornata)`, eventualmente − Σ
+  rimborsi) è essa stessa parte della domanda al tributarista.
+- **⚠️ GUARDIA ANTI-REGRESSIONE (da rispettare se si apre b):** un eventuale "ricavo netto" è un KPI **ADDITIVO** —
+  **MAI** una mutazione di `kpi_fatturato`. Nettare `kpi_fatturato` stesso riaprirebbe INC-2026-06-08 (KPI cumulativi
+  che escludono i chiusi) e violerebbe pitfall #14. Il nuovo KPI affianca, non sostituisce; `kpi_fatturato` resta
+  `Σ prezzo_totale` su tutti i contratti.
 
 ---
 
