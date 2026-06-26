@@ -88,7 +88,9 @@ Un contratto si "esaurisce" lungo **tre assi distinti**, che NON vanno confusi:
 | **Crediti/sedute** | `crediti_totali` − `crediti_usati` | `crediti_residui = 0` |
 | **Denaro** | `prezzo_totale` − `totale_versato` = `residuo` | `residuo = 0` (saldato) |
 
-- **`crediti_usati` è computed-on-read**: `COUNT(eventi PT non cancellati, non eliminati)` sul contratto.
+- **`crediti_usati` è computed-on-read** = **occupazione-credito**: `COUNT(eventi PT in stato
+  `Programmato` o `Completato`, non eliminati)` sul contratto. **`Rinviato` e `Cancellato` NON occupano**
+  — il rinvio libera il credito spendibile (ADR-017/G7.8; `Rinviato` resta display via `sedute_rinviate`).
   `crediti_residui = max(crediti_totali − crediti_usati, 0)`.
 - **`residuo = max(prezzo_totale − totale_versato, 0)`**. `totale_versato` riconciliabile col mastro
   (`ReconciliationResponse`).

@@ -385,7 +385,8 @@ def get_expiring_contracts(
         FROM agenda e
         WHERE e.id_contratto IN :contract_ids
           AND e.categoria = 'PT'
-          AND e.stato != 'Cancellato'
+          -- G7.8: Rinviato libera il credito (ADR-017)
+          AND e.stato IN ('Programmato', 'Completato')
           AND e.deleted_at IS NULL
         GROUP BY e.id_contratto
     """).bindparams(bindparam("contract_ids", expanding=True)),
@@ -539,7 +540,8 @@ def _crediti_usati_map(session: Session, contract_ids: list[int]) -> dict[int, i
         .where(
             Event.id_contratto.in_(contract_ids),
             Event.categoria == "PT",
-            Event.stato != "Cancellato",
+            # G7.8: Rinviato libera il credito (ADR-017)
+            Event.stato.in_(["Programmato", "Completato"]),
             Event.deleted_at == None,
         )
         .group_by(Event.id_contratto)
@@ -990,7 +992,8 @@ def get_dashboard_alerts(
                        (SELECT COUNT(*) FROM agenda e
                         WHERE e.id_contratto = c.id
                           AND e.categoria = 'PT'
-                          AND e.stato != 'Cancellato'
+                          -- G7.8: Rinviato libera il credito (ADR-017)
+                          AND e.stato IN ('Programmato', 'Completato')
                           AND e.deleted_at IS NULL), 0
                    ) as crediti_usati
             FROM contratti c

@@ -195,7 +195,8 @@ def _check_overlap(
         Event.trainer_id == trainer_id,
         Event.data_inizio < data_fine,
         Event.data_fine > data_inizio,
-        Event.stato != "Cancellato",  # eventi cancellati non contano
+        # G7.8/§3-bis: Rinviato libera lo slot calendario → riprenotabile (D-GUARD)
+        Event.stato.in_(["Programmato", "Completato"]),
         Event.deleted_at == None,
     )
 
@@ -279,7 +280,8 @@ def _auto_assign_contract(
         .where(
             Event.id_contratto.in_(contract_ids),
             Event.categoria == "PT",
-            Event.stato != "Cancellato",
+            # G7.8: Rinviato libera il credito (ADR-017)
+            Event.stato.in_(["Programmato", "Completato"]),
             Event.deleted_at == None,
         )
         .group_by(Event.id_contratto)
@@ -314,7 +316,8 @@ def _sync_contract_chiuso(session: Session, contract_id: int) -> None:
         select(func.count(Event.id)).where(
             Event.id_contratto == contract.id,
             Event.categoria == "PT",
-            Event.stato != "Cancellato",
+            # G7.8: Rinviato libera il credito (ADR-017) → no auto-close sulle rinviate (D-AUTO-CLOSE)
+            Event.stato.in_(["Programmato", "Completato"]),
             Event.deleted_at == None,
         )
     ).one()
@@ -479,7 +482,8 @@ def create_event(
                 select(func.count(Event.id)).where(
                     Event.id_contratto == contract.id,
                     Event.categoria == "PT",
-                    Event.stato != "Cancellato",
+                    # G7.8: Rinviato libera il credito (ADR-017) → riprenotabile (D-GUARD)
+                    Event.stato.in_(["Programmato", "Completato"]),
                     Event.deleted_at == None,
                 )
             ).one()

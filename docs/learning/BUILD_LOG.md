@@ -1799,3 +1799,47 @@ prima del suo uso → ri-aggiunto dopo l'uso ([[feedback_formatter_strips_import
 **⏭️ Prossimo:** G7.8 (T1 rinvio libera credito) → resto G7.7 (M1 marker / M2 / trasparenza / igiene) → G1.
 
 ---
+
+### 2026-06-26 — G7.8 / ADR-017: il rinvio libera il credito (T1)
+
+Seconda segnalazione di Chiara ("rinviate scalate come svolte") chiusa. **`Rinviato` non occupa il
+credito**: occupazione-credito = `Programmato + Completato`. Cambio funzionale isolato, **asse denaro
+invariante per costruzione** (`compute_settlement` non legge mai `!= Cancellato` → oracolo settlement
+byte-identico, AC-1).
+
+**Core:** `contracts.py:149` → `crediti_usati_computed = programmate + completate` (rimossa `+ rinviate`;
+`rinviate` resta solo display via `sedute_rinviate`). **17 predicati credito** `!= "Cancellato"` →
+`.in_(["Programmato", "Completato"])` (e `IN ('Programmato', 'Completato')` per le 5 raw SQL): §3.1 (11
+siti verificati) + **i 5 produttori trovati dal bridge** (`rates.py:565` auto-close `pay_rate` →
+**D-AUTO-CLOSE sul ramo pagamento**; `workspace_engine.py:1247/1389/2145` worklist cockpit;
+`client_avatar.py:430`) + overlap `agenda.py:198` (§3-bis, D-GUARD). **`contracts.py:490` (breakdown
+GROUP BY) LASCIATO** di proposito (tiene il conteggio `Rinviato` per il display `sedute_rinviate`, §3.2).
+I ~21 `!= Cancellato` rimasti = siti LEAVE (recency/calendario/dossier), verificati uno a uno via grep.
+
+**Test (`test_rinvio_libera_credito.py`, +8):** AC-2 conteggio escluso (dettaglio + lista contratti +
+lista clienti = sito di Chiara), AC-3 D-AUTO-CLOSE su **entrambi** i rami (pay_rate non chiude su
+rinviate; agenda `_sync` riapre al rinvio), AC-4 D-GUARD (riprenotabile dopo rinvio), AC-5 overlap (slot
+liberato, no 409), AC-1 oracolo (conguaglio invariante con rinviate presenti). Suite **620 passed** (+8),
+ruff verde sui 7 file.
+
+**Doc (spec §10):** FDM §3 definizione occupazione-credito aggiornata (`Programmato + Completato`,
+`Rinviato` libera); `api/CLAUDE.md` (callout G7.7/G7.8 + monito anti-regressione sul Credit guard #8: mai
+riusare `!= 'Cancellato'` sui siti credito); spec già installata col fold-back bridge (governance `72eaa9b`).
+
+**Lezione / firma del bridge.** La spec v1 era esaustiva solo sui file in contesto; il bridge ha trovato
+5 produttori `crediti_usati` fuori-contesto — capofila `rates.py:565`, **gemello payment-driven**
+dell'auto-close di `agenda._sync` (la spec vedeva solo il ramo credit-driven). Senza, D-AUTO-CLOSE si
+sarebbe rotta sul pagamento dell'ultima rata. *Enumerazione manuale ≠ enforcement* — stesso pattern dei
+due rami di G7.2.
+
+**Deferito a R6 (igiene):** grep-guard anti-ritorno `!= 'Cancellato'` sui siti credito (allowlist
+calendario) + centralizzazione del predicato in costante condivisa (spec §12, refactoring puro separato).
+**Accertamento §7** (contratti già auto-chiusi COMPLETAMENTO *per rinviate* → SOSPESO post-fix): read-only,
+decisione umana caso per caso sui DB reali, coordinato col runbook G7.6 — NON in autonomia (popolazione
+distinta dai muti M4).
+
+**⏭️ Prossimo:** resto G7.7 — M1 (`reopen` inverso esatto via marker `rate.chiusa_da_terminazione`) · M2
+(`update_rate` guard `chiuso` + cap su asse residuo) · M3/M4/L1 (trasparenza display↔erogato) · igiene +
+grep-guard → **G1 cifratura**.
+
+---

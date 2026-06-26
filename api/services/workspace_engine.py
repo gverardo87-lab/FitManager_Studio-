@@ -1244,7 +1244,8 @@ def _load_expiring_contract_rows(
             FROM agenda e
             WHERE e.id_contratto IN :contract_ids
               AND e.categoria = 'PT'
-              AND e.stato != 'Cancellato'
+              -- G7.8: Rinviato libera il credito (ADR-017)
+              AND e.stato IN ('Programmato', 'Completato')
               AND e.deleted_at IS NULL
             GROUP BY e.id_contratto
             """
@@ -1386,7 +1387,8 @@ def _load_suspended_contract_rows(
             FROM agenda e
             WHERE e.id_contratto IN :contract_ids
               AND e.categoria = 'PT'
-              AND e.stato != 'Cancellato'
+              -- G7.8: Rinviato libera il credito (ADR-017)
+              AND e.stato IN ('Programmato', 'Completato')
               AND e.deleted_at IS NULL
             GROUP BY e.id_contratto
             """
@@ -2142,7 +2144,8 @@ def _build_contract_renewal_case_detail(
             FROM agenda e
             WHERE e.id_contratto = :contract_id
               AND e.categoria = 'PT'
-              AND e.stato != 'Cancellato'
+              -- G7.8: Rinviato libera il credito (ADR-017)
+              AND e.stato IN ('Programmato', 'Completato')
               AND e.deleted_at IS NULL
             """
         ),

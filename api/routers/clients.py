@@ -282,7 +282,8 @@ def _calc_credits_batch(
 
     - crediti_acquistati: SUM(crediti_totali) da TUTTI i contratti non eliminati
       (chiuso NON filtrato — chiuso blocca nuove operazioni, non invalida crediti)
-    - sedute_PT_usate: COUNT(eventi) con categoria='PT' e stato!='Cancellato'
+    - sedute_PT_usate: COUNT(eventi) con categoria='PT' e stato IN ('Programmato','Completato')
+      (G7.8/ADR-017: Rinviato libera il credito → non occupa)
     """
     if not client_ids:
         return {}
@@ -306,7 +307,8 @@ def _calc_credits_batch(
         .where(
             Event.id_cliente.in_(client_ids),
             Event.categoria == "PT",
-            Event.stato != "Cancellato",
+            # G7.8: Rinviato libera il credito (ADR-017)
+            Event.stato.in_(["Programmato", "Completato"]),
             Event.trainer_id == trainer_id,
             Event.deleted_at == None,
         )

@@ -562,7 +562,8 @@ def pay_rate(
             select(func.count(Event.id)).where(
                 Event.id_contratto == contract.id,
                 Event.categoria == "PT",
-                Event.stato != "Cancellato",
+                # G7.8: Rinviato libera il credito (ADR-017) → no auto-close sulle rinviate (D-AUTO-CLOSE)
+                Event.stato.in_(["Programmato", "Completato"]),
                 Event.deleted_at == None,
             )
         ).one()

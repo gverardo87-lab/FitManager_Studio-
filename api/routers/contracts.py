@@ -144,9 +144,10 @@ def _to_response_with_rates(
     cb = credit_breakdown or {}
     programmate = cb.get("Programmato", 0)
     completate = cb.get("Completato", 0)
-    rinviate = cb.get("Rinviato", 0)
+    rinviate = cb.get("Rinviato", 0)  # display only (sedute_rinviate): NON occupa il credito (G7.8)
     crediti_totali = contract.crediti_totali or 0
-    crediti_usati_computed = programmate + completate + rinviate
+    # [G7.8/ADR-017] occupazione-credito = Programmato + Completato; Rinviato libera il credito spendibile
+    crediti_usati_computed = programmate + completate
 
     # Override crediti_usati nel dict base (sovrascrive il valore ORM = 0)
     contract_data = ContractResponse.model_validate(contract).model_dump()
@@ -262,7 +263,8 @@ def list_contracts(
         .where(
             Event.id_contratto.in_(active_ids),
             Event.categoria == "PT",
-            Event.stato != "Cancellato",
+            # G7.8: Rinviato libera il credito (ADR-017)
+            Event.stato.in_(["Programmato", "Completato"]),
             Event.deleted_at == None,
         )
         .group_by(Event.id_contratto)
@@ -380,7 +382,8 @@ def list_contracts(
         .where(
             Event.id_contratto.in_(contract_ids),
             Event.categoria == "PT",
-            Event.stato != "Cancellato",
+            # G7.8: Rinviato libera il credito (ADR-017)
+            Event.stato.in_(["Programmato", "Completato"]),
             Event.deleted_at == None,
         )
         .group_by(Event.id_contratto)
@@ -526,7 +529,8 @@ def get_contract(
             .where(
                 Event.id_contratto.in_([c.id for c in chain]),
                 Event.categoria == "PT",
-                Event.stato != "Cancellato",
+                # G7.8: Rinviato libera il credito (ADR-017)
+                Event.stato.in_(["Programmato", "Completato"]),
                 Event.deleted_at == None,
             )
             .group_by(Event.id_contratto)
@@ -753,7 +757,8 @@ def delete_contract(
                 select(func.count(Event.id)).where(
                     Event.id_contratto == contract_id,
                     Event.categoria == "PT",
-                    Event.stato != "Cancellato",
+                    # G7.8: Rinviato libera il credito (ADR-017)
+                    Event.stato.in_(["Programmato", "Completato"]),
                     Event.deleted_at == None,
                 )
             ).one()

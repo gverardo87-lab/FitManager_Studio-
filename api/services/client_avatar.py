@@ -427,7 +427,8 @@ def build_avatars_batch(
             Event.trainer_id == trainer_id,
             Event.id_contratto != None,  # noqa: E711
             Event.categoria == "PT",
-            Event.stato != "Cancellato",
+            # G7.8: Rinviato libera il credito (ADR-017)
+            Event.stato.in_(["Programmato", "Completato"]),
             Event.deleted_at == None,  # noqa: E711
         ).group_by(Event.id_contratto)
     ).all()
