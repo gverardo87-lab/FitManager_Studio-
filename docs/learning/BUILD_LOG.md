@@ -1885,3 +1885,20 @@ copre il solo `:490`; il guard presidia la direzione inversa in generale.
 deploy di G7.8 è sbloccato (0 a rischio sul DB verificato).
 
 ---
+
+### 2026-06-26 — G7.8 #2 DECISA (founder, deferito a Chiara): blocca Completato→Rinviato (422)
+
+Decisione sul punto #2 aperto: **opzione (b) bloccare**. Una seduta già `Completato` non si rinvia. Guard
+in `update_event` (`agenda.py`, "Bouncer 4"): se `update_data.stato == "Rinviato"` **e** `event.stato ==
+"Completato"` → **422** "Non puoi rinviare una seduta già svolta: riportala a Programmato o annullala."
+Scope **SOLO** Completato→Rinviato: le altre uscite da Completato (→Programmato per riprogrammare,
+→Cancellato per non-avvenuta) **restano permesse** — correzioni legittime di un "done" errato, dove il
+valore DEVE seguire la realtà. Così la tesi di G7.8 ("il rinvio non muove denaro") torna un invariante
+*pulito*: l'unica transizione money-moving è vietata a monte, l'`update_event` ("scheduling only") non
+muove più denaro di nascosto. +1 test (`test_completato_non_si_rinvia_422`: 422 + stato invariato +
+controprova Programmato/Cancellato = 200). Suite **622 passed**, ruff verde. Commit a sé.
+
+**⏭️ Prossimo:** resto G7.7 — M1 (reopen marker `chiusa_da_terminazione`) · M2 (update_rate guard+cap) ·
+M3/M4/L1 (trasparenza) · R6 igiene (incl. grep-guard bidirezionale) → **G1 cifratura**.
+
+---

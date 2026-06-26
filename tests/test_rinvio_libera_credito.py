@@ -211,3 +211,31 @@ def test_ac1_settlement_invariante_con_rinviate(client, auth_headers, sample_cli
     assert p["sedute_erogate"] == 2
     assert p["valore_servizio_reso"] == 200.0   # 1000 * 2/10, le rinviate non spostano l'importo
     assert round(p["importo_rimborso"], 2) == 300.0  # conguaglio 200 − 500 = −300
+
+
+# ── Decisione #2 (G7.8/ADR-017): una seduta GIÀ SVOLTA non si rinvia (guard 422 in update_event) ──
+
+def test_completato_non_si_rinvia_422(client, auth_headers, sample_client, session):
+    """Decisione di dominio: Completato→Rinviato libererebbe credito E valore (unica transizione
+    money-moving di G7.8) → bloccata a monte con 422. Le altre uscite da Completato (Programmato per
+    riprogrammare, Cancellato per non-avvenuta) restano permesse — correzioni legittime di un 'done'
+    errato, dove il valore DEVE seguire la realtà."""
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=0.0, crediti=10)
+    ev = client.post("/api/events", json={
+        "data_inizio": f"{TODAY.isoformat()}T09:00:00", "data_fine": f"{TODAY.isoformat()}T10:00:00",
+        "categoria": "PT", "titolo": "Svolta", "id_cliente": sample_client["id"], "id_contratto": c["id"],
+    }, headers=auth_headers).json()
+    client.put(f"/api/events/{ev['id']}", json={"stato": "Completato"}, headers=auth_headers)
+
+    # Completato → Rinviato: rifiutato 422 (a monte, nessuna scrittura)
+    r = client.put(f"/api/events/{ev['id']}", json={"stato": "Rinviato"}, headers=auth_headers)
+    assert r.status_code == 422, r.text
+    session.expire_all()
+    assert session.get(Event, ev["id"]).stato == "Completato"   # invariato
+
+    # controprova: le altre uscite da Completato restano permesse
+    assert client.put(f"/api/events/{ev['id']}", json={"stato": "Programmato"},
+                      headers=auth_headers).status_code == 200
+    client.put(f"/api/events/{ev['id']}", json={"stato": "Completato"}, headers=auth_headers)
+    assert client.put(f"/api/events/{ev['id']}", json={"stato": "Cancellato"},
+                      headers=auth_headers).status_code == 200

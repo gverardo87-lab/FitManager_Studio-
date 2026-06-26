@@ -582,6 +582,17 @@ def update_event(
 
     # Tutto ok: applica partial update
     update_data = data.model_dump(exclude_unset=True)
+
+    # Bouncer 4 (G7.8/ADR-017, decisione di dominio): una seduta GIÀ SVOLTA non si rinvia. "Rinviare"
+    #   pospone una seduta NON ancora svolta; Completato→Rinviato libererebbe credito E valore (l'unica
+    #   transizione che muoverebbe l'asse denaro, fuori dalla tesi G7.8). Per correggere un "done" errato
+    #   restano permessi Programmato (riprogramma) e Cancellato (non avvenuta).
+    if update_data.get("stato") == "Rinviato" and event.stato == "Completato":
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Non puoi rinviare una seduta già svolta: riportala a Programmato o annullala.",
+        )
+
     changes = {}
     for field, value in update_data.items():
         old_val = getattr(event, field)
