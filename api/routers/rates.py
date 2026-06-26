@@ -93,7 +93,9 @@ def _cap_rateizzabile(session: Session, contract: Contract, exclude_rate_id: int
         )
     ).one())
     acconto = max(0, round((contract.totale_versato or 0) - somma_saldato, 2))
-    cap = round((contract.prezzo_totale or 0) - acconto, 2)
+    # M2: sottrai quota_stornata → il cap usa lo STESSO asse di contract_state.residuo() (lo storno non
+    #   è rateizzabile). Inerte sui contratti non terminati (quota_stornata==0); SSoT unica del residuo.
+    cap = round((contract.prezzo_totale or 0) - acconto - (contract.quota_stornata or 0), 2)
     spazio = round(cap - somma_previsto, 2)
 
     return spazio
@@ -362,6 +364,16 @@ def update_rate(
     - Se importo_previsto cambia, re-validazione residuo contratto + ricalcolo stato
     """
     rate = _bouncer_rate(session, rate_id, trainer.id)
+
+    # Guard chiuso (M2, allineato a create_rate): un contratto chiuso/terminato non accetta modifiche
+    #   alle rate. Senza, una SALDATA superstite di un terminato potrebbe tornare PARZIALE alzando
+    #   importo_previsto → residuo-fantasma a livello rata. Path canonico: riapri prima (POST /reopen).
+    contract = session.get(Contract, rate.id_contratto)
+    if contract and contract.chiuso:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Impossibile modificare rate di un contratto chiuso",
+        )
 
     update_data = data.model_dump(exclude_unset=True)
 

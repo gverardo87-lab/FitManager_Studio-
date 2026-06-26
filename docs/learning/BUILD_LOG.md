@@ -1935,3 +1935,25 @@ reopen ripristina solo la seconda; marker consumato). Suite **623 passed**, ruff
 **⏭️ Prossimo:** M2 (`update_rate` guard `chiuso` + cap su asse residuo) → trasparenza (M3/M4/L1) → R6 → G1.
 
 ---
+
+### 2026-06-26 — G7.7-M2: guard `chiuso` su `update_rate` + cap su asse residuo
+
+Audit M2 (DEBITO_SSOT). Due fix in `rates.py`:
+- **Guard `chiuso` su `update_rate`** (era assente, a differenza di `create_rate:307`): una rata SALDATA
+  superstite di un contratto terminato poteva tornare PARZIALE alzando `importo_previsto` →
+  residuo-fantasma a livello rata. Ora `if contract.chiuso → 400` ("Impossibile modificare rate di un
+  contratto chiuso"). Path canonico: riapri prima (`POST /reopen`).
+- **`_cap_rateizzabile` sottrae `quota_stornata`**: il cap rateizzabile usa ora lo STESSO asse di
+  `contract_state.residuo()` (lo storno non è rateizzabile). Inerte sui non-terminati (`quota_stornata==0`):
+  entrambi i caller (`create_rate`/`update_rate`) bloccano `chiuso`, quindi il cap con `quota_stornata>0` è
+  di fatto irraggiungibile via endpoint → difesa-in-profondità + SSoT unica del residuo (allineato per
+  costruzione, non per disciplina).
+
+**Test:** `test_m2_update_rate_su_terminato_400` (SALDATA superstite → PUT 400, rata invariata; dopo reopen
+la modifica torna possibile = guard chiuso-specifico, non blanket). Suite **624 passed**, ruff verde.
+
+**⏭️ Prossimo:** trasparenza — R4 backend (`sedute_completate` su `ContractListResponse` + M4 indicatore
+COMPLETAMENTO-prenotato) · R5 frontend (display↔erogato + M3 `ContrattiTab` badge SSoT) → R6 igiene
+(L2/L3 + grep-guard bidirezionale) → **G1 cifratura**.
+
+---

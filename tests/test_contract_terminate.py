@@ -452,3 +452,33 @@ def test_unpay_dopo_terminate_rifiutato_409(client, auth_headers, sample_client,
     assert reopen.status_code == 200, reopen.text
     unpay2 = client.post(f"/api/rates/{r1['id']}/unpay", headers=auth_headers)
     assert unpay2.status_code == 200, unpay2.text
+
+
+# ── M2 (G7.7-R2): rate di un contratto terminato non si modificano (guard chiuso) ──
+
+def test_m2_update_rate_su_terminato_400(client, auth_headers, sample_client, session):
+    """M2: una rata SALDATA superstite di un contratto terminato NON si modifica (guard `chiuso` in
+    update_rate, allineato a create_rate) → 400. Senza, alzando importo_previsto tornerebbe PARZIALE
+    (residuo-fantasma a livello rata). Dopo reopen la modifica torna possibile (guard chiuso-specifico)."""
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=0.0, crediti=10)
+    t = _trainer(session)
+    r1 = _rate(client, auth_headers, c["id"], 500.0)
+    client.post(f"/api/rates/{r1['id']}/pay", json={"importo": 500.0, "metodo": "CONTANTI"}, headers=auth_headers)
+    _complete_pt(session, t.id, sample_client["id"], c["id"], 5)  # reso 500 == versato → NULLO, nessun rimborso
+
+    assert client.post(f"/api/contracts/{c['id']}/terminate", json={}, headers=auth_headers).status_code == 200
+    session.expire_all()
+    contract = session.get(Contract, c["id"])
+    assert contract.chiuso is True
+    assert round(contract.quota_stornata, 2) == 500.0   # residuo (prezzo−versato) stornato
+
+    # modifica della SALDATA superstite → 400 (contratto chiuso); rata invariata
+    r = client.put(f"/api/rates/{r1['id']}", json={"importo_previsto": 600.0}, headers=auth_headers)
+    assert r.status_code == 400, r.text
+    session.expire_all()
+    assert session.get(Rate, r1["id"]).stato == "SALDATA"
+
+    # controprova: dopo reopen (contratto aperto) la modifica è di nuovo permessa
+    assert client.post(f"/api/contracts/{c['id']}/reopen", headers=auth_headers).status_code == 200
+    assert client.put(f"/api/rates/{r1['id']}", json={"importo_previsto": 600.0},
+                      headers=auth_headers).status_code == 200
