@@ -1843,3 +1843,45 @@ distinta dai muti M4).
 grep-guard → **G1 cifratura**.
 
 ---
+
+### 2026-06-26 — G7.8 follow-up (review founder/bridge): AC-3 4° quadrante + accertamento §7 + decisione aperta Completato→Rinviato
+
+Post-chiusura G7.8, review del founder (bridge method): 3 buchi di rete + 1 accertamento dati. G7.8 è
+verde e corretto in produzione — questi sono copertura test + una decisione di dominio non presa.
+
+**#1 (test, FATTO).** Aggiunto `test_ac3_autoclose_agenda_sync_non_chiude_su_rinvio` — il 4° quadrante
+della matrice AC-3 (pay_rate-non-chiude ✓ · _sync-riapre ✓ · **_sync-non-chiude-all'arrivo** ← era solo
+sfiorato dal test di riapertura). Isola la transizione full-of-rinviate→resta-aperto sul ramo edit-evento
++ asserisce `motivo_chiusura is None` (clear-on-reopen, AC-7.2-5). File a **9 test**. Commit test-only.
+
+**#4 (accertamento §7, READ-ONLY, FATTO).** Query §7 sul `data/crm.db` reale → **0 contratti a rischio**
+di riapertura-a-sorpresa col deploy G7.8. `motivo_chiusura='COMPLETAMENTO'` totali = **0** (la marcatura
+esiste solo da G7.0; nessun auto-close da allora); i **19 muti** sono tutti `motivo NULL` e **non si
+auto-riaprono** (reopen-allowlist G7.2 scatta SOLO su COMPLETAMENTO). Nessun contratto "torna vivo senza
+aver fatto nulla". *Caveat:* è il crm.db locale; se la macchina di Chiara ha auto-close post-G7.0,
+ri-girare la query lì prima del deploy. Popolazione distinta dai muti M4.
+
+**#2 (DECISIONE DI DOMINIO APERTA — Completato→Rinviato).** Grounded sul codice: `update_event`
+(`agenda.py:584-597`) applica `stato` **senza guardia di transizione** + chiama `_sync` se PT-con-contratto.
+Una Completata→Rinviata libera **sia il credito** (`crediti_usati` scende, post-G7.8 la Rinviata non
+conta) **sia il valore** (`_count_sedute_erogate == "Completato"`, `contracts.py:1114` → `valore_servizio_reso`
+cala). È l'**unica** transizione G7.8 dove l'asse denaro NON è invariante. Due opzioni (decide il
+dominio/Chiara, NON implementato): **(a)** permettere (comportamento attuale) + test documentativo che il
+valore cala; **(b)** bloccare in `update_event` con 422 ("non puoi rinviare una seduta già svolta — semmai
+cancellala o riportala a Programmato"). **Raccomandazione = (b)**: preserva la tesi G7.8 come invariante
+*pulita* (l'unica transizione money-moving viene vietata), è domain-coerente (il "rinvio" pospone una
+seduta **non** ancora svolta), deterministico (rule #6); l'`update_event` è documentato "scheduling only",
+denaro che ci passa è una sorpresa. Scope del guard: SOLO Completato→Rinviato (Completato→Programmato e
+→Cancellato restano correzioni legittime di un "done" sbagliato). Commit a sé una volta presa la decisione.
+
+**#3 (requisito R6, ANNOTATO nel task).** Il grep-guard di R6 è **bidirezionale**: (a) vietato
+reintrodurre `!= 'Cancellato'` sui siti credito §3.1; (b) vietato "armonizzare" il `!= 'Cancellato'` dei
+siti DISPLAY (breakdown `contracts.py:490` + ogni sito che conta Rinviato per mostrarlo) sostituendolo con
+`IN (...)` — manderebbe `sedute_rinviate` a zero in silenzio. Allowlist esplicita dei display con il
+**perché** annotato (non solo *che* sono esenti, altrimenti il prossimo li "pulisce"). `test_ac2_dettaglio…`
+copre il solo `:490`; il guard presidia la direzione inversa in generale.
+
+**⏭️ Prossimo:** decisione #2 dal founder → poi resto G7.7 (M1/M2/trasparenza/igiene) → G1. Lato §7 il
+deploy di G7.8 è sbloccato (0 a rischio sul DB verificato).
+
+---

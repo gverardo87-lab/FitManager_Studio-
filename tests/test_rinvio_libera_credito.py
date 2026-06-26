@@ -139,6 +139,27 @@ def test_ac3_autoclose_agenda_sync_riapre_su_rinvio(client, auth_headers, sample
     assert session.get(Contract, c["id"]).chiuso is False  # rinviata → credito liberato → riaperto
 
 
+def test_ac3_autoclose_agenda_sync_non_chiude_su_rinvio(client, auth_headers, sample_client, session):
+    """Ramo credit-driven (_sync), caso 'arriva e non chiude': un saldato con scadenza futura le cui
+    sedute vengono portate a Rinviato NON deve auto-chiudersi (crediti liberati). Isola la transizione
+    'pieno-di-rinviate → resta aperto' sul ramo edit-evento, che il test di riapertura non copre."""
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=100.0, acconto=100.0, crediti=1)  # SALDATO
+    ev = client.post("/api/events", json={
+        "data_inizio": f"{TODAY.isoformat()}T09:00:00", "data_fine": f"{TODAY.isoformat()}T10:00:00",
+        "categoria": "PT", "titolo": "Seduta", "id_cliente": sample_client["id"], "id_contratto": c["id"],
+    }, headers=auth_headers).json()
+    session.expire_all()
+    assert session.get(Contract, c["id"]).chiuso is True   # 1/1 Programmato → auto-close (baseline)
+
+    # NON passare da delete (che è il path di riapertura già testato): rinviare in-place
+    r = client.put(f"/api/events/{ev['id']}", json={"stato": "Rinviato"}, headers=auth_headers)
+    assert r.status_code == 200, r.text
+    session.expire_all()
+    contract = session.get(Contract, c["id"])
+    assert contract.chiuso is False              # rinviata → 0/1 occupato → non più chiuso
+    assert contract.motivo_chiusura is None      # clear-on-reopen (AC-7.2-5)
+
+
 # ── AC-4: D-GUARD — dopo il rinvio si può riprenotare ──
 
 def test_ac4_guard_riprenotabile_dopo_rinvio(client, auth_headers, sample_client, session):
