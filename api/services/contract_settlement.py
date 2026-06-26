@@ -22,7 +22,7 @@ from enum import Enum
 # ── Vocabolario chiusura (SPEC_G7.0 §2) — esito economico, enum chiuso a 4 ──
 class MotivoChiusura(str, Enum):
     COMPLETAMENTO = "COMPLETAMENTO"                # auto-close: saldato + crediti esauriti
-    CONSUNZIONE = "CONSUNZIONE"                    # (riservato) regola il residuo post-scadenza
+    CONSUNZIONE = "CONSUNZIONE"                    # terminazione a conguaglio ~0 (esito NULLO); in origine riservato per residuo post-scadenza (L2)
     TERMINAZIONE_RIMBORSO = "TERMINAZIONE_RIMBORSO"      # terminazione anticipata, gamba rimborso
     TERMINAZIONE_DECADENZA = "TERMINAZIONE_DECADENZA"    # terminazione/decadi, gamba storno (no cassa)
 

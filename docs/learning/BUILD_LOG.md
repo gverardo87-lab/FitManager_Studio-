@@ -1957,3 +1957,40 @@ COMPLETAMENTO-prenotato) · R5 frontend (display↔erogato + M3 `ContrattiTab` b
 (L2/L3 + grep-guard bidirezionale) → **G1 cifratura**.
 
 ---
+
+### 2026-06-26 — G7.7-R6: igiene (L2 vocabolario + L3 test gap + grep-guard ADR-016/017)
+
+Scelta founder: R6 prima della trasparenza UI, per chiudere la **spina dorsale backend** di G7.7 prima
+della UI. Tre filoni, low-risk:
+
+**L2 — vocabolario CONSUNZIONE.** Il commento dell'enum `MotivoChiusura.CONSUNZIONE`
+(`contract_settlement.py:25`) era "(riservato) residuo post-scadenza", ma il codice (`_motivo_from_esito`
++ `financial.py:207`) lo usa per le terminazioni a conguaglio ~0 (esito NULLO). Aggiornato il commento al
+doppio uso reale (no nuovo enum value, no behavior change; `TERMINAZIONE_PARI` resta opzione futura se si
+vuole separare i due significati).
+
+**L3 — gap di copertura (3 test, +10 casi).** (a) **property del tetto** `importo_rimborso <=
+totale_versato` su griglia 8 casi (incl. overpayment, crediti=0): un refactor della formula del conguaglio
+che violasse I3 passerebbe muto. (b) **prenotate-non-riducono sul WRITE-path** (`POST /terminate`, non
+solo la preview GET già coperta): 2 Completato + 3 Programmato → rimborso su 2 + USCITA su 2. (c) **seam
+auto-close → reopen → preview**: COMPLETAMENTO su prenotate (erogato=0) → reopen → settlement-preview =
+rimborso pieno. (Il 4° gap dell'audit — unpay-post-terminate — era già chiuso in H1.)
+
+**grep-guard (`tools/scripts/check-all.sh`, ADR-016/ADR-017).** Due guardie robuste (verificate: passano
+sul codice corretto, falliscono sulle violazioni simulate): (1) **euro-da-crediti** —
+`contract_settlement.py` non deve riferire l'occupazione (`crediti_residui|crediti_usati|sedute_rinviate|
+sedute_prenotate`) → la barriera strutturale di ADR-016 resa enforceable. (2) **bidirezionale
+display-exempt** (review G7.8 #3) — il `credit_breakdown` (GROUP BY stato, `contracts.py`) DEVE restare
+`!= "Cancellato"` per contare i Rinviato e alimentare `sedute_rinviate`: NON armonizzarlo a `IN(...)`
+(manderebbe sedute_rinviate a zero in silenzio). Marker `[G7.8 DISPLAY-EXEMPT]` esplicito al sito. La
+direzione opposta (Rinviato fuori dall'occupazione-credito) è già presidiata dai test AC-2/AC-3. **NB:** il
+guard vive in `check-all.sh` (gate documentato, obbligatorio pre-commit), non nel git pre-commit hook
+(ruff+next build) — integrarlo anche lì è follow-up opzionale.
+
+Suite **634 passed**, ruff verde. **Con R6 la spina dorsale backend di G7.7 è chiusa (H1 · M1 · M2 · R6).**
+
+**⏭️ Prossimo:** trasparenza UI — R4 backend (`sedute_completate` su `ContractListResponse` + M4 indicatore
+COMPLETAMENTO-prenotato) · R5 frontend (display↔erogato + M3 `ContrattiTab` badge SSoT, verifica
+Playwright) → **G1 cifratura**.
+
+---

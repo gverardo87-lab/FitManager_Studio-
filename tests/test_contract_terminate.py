@@ -482,3 +482,24 @@ def test_m2_update_rate_su_terminato_400(client, auth_headers, sample_client, se
     assert client.post(f"/api/contracts/{c['id']}/reopen", headers=auth_headers).status_code == 200
     assert client.put(f"/api/rates/{r1['id']}", json={"importo_previsto": 600.0},
                       headers=auth_headers).status_code == 200
+
+
+# ── L3 (G7.7-R6): le prenotate non riducono il rimborso sul path COMMITTATO (non solo preview) ──
+
+def test_l3_terminate_prenotate_non_riducono_rimborso_write(client, auth_headers, sample_client, session):
+    """L3: la forfeiture delle prenotate vale sul POST /terminate committato, non solo nel GET preview.
+    2 Completato + 3 Programmato → rimborso su 2 (reso 200), USCITA RIMBORSO su 2 — le 3 prenotate non
+    spostano né il campo `totale_rimborsato` né il movimento scritto."""
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=500.0, crediti=10)
+    t = _trainer(session)
+    _complete_pt(session, t.id, sample_client["id"], c["id"], 2)                       # 2 erogate → reso 200
+    _complete_pt(session, t.id, sample_client["id"], c["id"], 3, stato="Programmato")  # 3 prenotate
+
+    r = client.post(f"/api/contracts/{c['id']}/terminate",
+                    json={"metodo_rimborso": "CONTANTI"}, headers=auth_headers)
+    assert r.status_code == 200, r.text
+    session.expire_all()
+    contract = session.get(Contract, c["id"])
+    # conguaglio = 200 − 500 = −300 → rimborso 300 (le 3 Programmato NON contano nel reso)
+    assert round(contract.totale_rimborsato, 2) == 300.0
+    assert _sum_movements(session, c["id"], "USCITA", categoria=CATEGORIA_RIMBORSO_CONTRATTO) == 300.0

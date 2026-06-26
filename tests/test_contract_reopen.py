@@ -250,3 +250,23 @@ def test_reopen_non_resuscita_rate_pre_eliminate(client, auth_headers, sample_cl
     assert session.get(Rate, r2["id"]).deleted_at is None               # ripristinata
     assert session.get(Rate, r2["id"]).chiusa_da_terminazione is False   # marker consumato
     assert session.get(Rate, r1["id"]).deleted_at is not None           # NON resuscitata (era manuale)
+
+
+# ── L3 (G7.7-R6): auto-close COMPLETAMENTO su prenotate → reopen → preview rimborso pieno ──
+
+def test_l3_autoclose_completamento_reopen_preview_rimborso_pieno(client, auth_headers, sample_client, session):
+    """L3 (seam): un contratto auto-chiuso COMPLETAMENTO su sedute solo PRENOTATE (erogato=0), una volta
+    riaperto, mostra in settlement-preview il rimborso PIENO dovuto (reso=0 → tutto il versato). Cuce
+    auto-close → reopen → preview, che i test esistenti coprivano solo a pezzi."""
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=500.0, acconto=500.0, crediti=1)  # SALDATO
+    _pt_event_api(client, auth_headers, sample_client["id"], c["id"])  # 1 Programmato → auto-close COMPLETAMENTO
+    session.expire_all()
+    contract = session.get(Contract, c["id"])
+    assert contract.chiuso is True and contract.motivo_chiusura == "COMPLETAMENTO"
+
+    assert client.post(f"/api/contracts/{c['id']}/reopen", headers=auth_headers).status_code == 200
+    p = client.get(f"/api/contracts/{c['id']}/settlement-preview", headers=auth_headers).json()
+    assert p["sedute_erogate"] == 0                  # solo prenotata, nessuna Completata
+    assert p["valore_servizio_reso"] == 0.0
+    assert p["esito"] == "RIMBORSO"
+    assert round(p["importo_rimborso"], 2) == 500.0  # rimborso pieno (tutto il versato)

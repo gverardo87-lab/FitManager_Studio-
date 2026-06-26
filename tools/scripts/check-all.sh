@@ -37,6 +37,35 @@ fi
 
 echo ""
 
+echo "=== Backend: grep-guard invarianti finanziarie (ADR-016 / ADR-017) ==="
+GUARD_FAIL=0
+
+# ADR-016 — barriera "euro-da-crediti": il modulo di conguaglio NON deve leggere l'occupazione/crediti.
+#   Il denaro del recesso deriva SOLO dalle sedute Completate + prezzo/versato/residuo; mai da
+#   crediti_residui/crediti_usati/sedute_rinviate/sedute_prenotate (asse occupazione/display).
+if grep -nE 'crediti_residui|crediti_usati|sedute_rinviate|sedute_prenotate' api/services/contract_settlement.py; then
+    echo "  FAIL [ADR-016]: contract_settlement.py riferisce l'occupazione/crediti — il conguaglio usa solo le sedute Completate + prezzo/versato/residuo."
+    GUARD_FAIL=1
+fi
+
+# ADR-017 (bidirezionale) — il credit_breakdown (GROUP BY stato, contracts.py) DEVE restare
+#   '!= Cancellato' per contare i Rinviato e alimentare `sedute_rinviate` (DISPLAY-EXEMPT §3.2): NON
+#   "armonizzarlo" a IN(...), manderebbe sedute_rinviate a zero in silenzio. (La direzione opposta —
+#   Rinviato NON deve occupare il credito — e' presidiata dai test AC-2/AC-3 di test_rinvio_libera_credito.)
+if ! grep -A5 'select(Event.stato, func.count' api/routers/contracts.py | grep -q 'Event.stato != "Cancellato"'; then
+    echo "  FAIL [ADR-017]: il credit_breakdown non conta piu' Rinviato (display) — mantieni '!= \"Cancellato\"' sul SOLO sito GROUP BY."
+    GUARD_FAIL=1
+fi
+
+if [ "$GUARD_FAIL" -eq 0 ]; then
+    echo "  OK"
+else
+    echo "  FAIL - guardia finanziaria violata (ADR-016/ADR-017)."
+    FAIL=1
+fi
+
+echo ""
+
 echo "=== Frontend: next build ==="
 if (cd frontend && npx next build); then
     echo "  OK"

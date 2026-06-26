@@ -164,3 +164,27 @@ def test_settlement_rimborso_frazionario():
     assert s.conguaglio == -266.67
     assert s.esito == st.SettlementEsito.RIMBORSO
     assert s.importo_rimborso == 266.67
+
+
+# ── L3 (G7.7-R6): property del tetto importo_rimborso <= totale_versato ──
+
+
+@pytest.mark.parametrize("erogate,prezzo,crediti,versato", [
+    (0, 1000.0, 10, 1000.0), (2, 1000.0, 10, 500.0), (5, 1000.0, 10, 100.0),
+    (10, 1000.0, 10, 0.0), (3, 500.0, 5, 700.0),         # overpayment (versato > prezzo)
+    (1, 300.0, 0, 200.0), (0, 0.0, 0, 0.0),               # crediti=0 (tutto reso) / contratto vuoto
+    (7, 1234.56, 13, 999.99),                             # frazionario
+])
+def test_l3_tetto_importo_rimborso_le_versato(erogate, prezzo, crediti, versato):
+    """L3 property (gap di copertura dall'audit): `importo_rimborso <= totale_versato` per costruzione
+    (reso >= 0 → versato − reso <= versato). Un refactor della formula del conguaglio che violasse il
+    tetto (I3) passerebbe muto senza questo presidio su griglia (incl. overpayment e crediti=0)."""
+    residuo = max(prezzo - versato, 0.0)
+    s = st.compute_settlement(
+        sedute_erogate=erogate, prezzo_totale=prezzo, crediti_totali=crediti,
+        totale_versato=versato, residuo_corrente=residuo,
+    )
+    assert s.importo_rimborso <= (versato or 0) + 1e-9   # TETTO (I3)
+    assert s.importo_rimborso >= 0.0
+    assert s.quota_da_stornare >= 0.0
+    assert s.valore_servizio_reso >= 0.0
