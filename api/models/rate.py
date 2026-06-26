@@ -44,6 +44,9 @@ class Rate(SQLModel, table=True):
     stato: str = Field(default="PENDENTE")
     importo_saldato: float = Field(default=0)
     deleted_at: Optional[datetime] = None
+    # M1 (G7.7): marca le rate soft-eliminate da `terminate` → `reopen` ripristina SOLO queste
+    # (inverso esatto), non ogni rata con `deleted_at` (cancellazioni manuali / piano rigenerato). Default False.
+    chiusa_da_terminazione: bool = Field(default=False)
 
     # Relationships
     contract: Optional["Contract"] = Relationship(back_populates="rates")

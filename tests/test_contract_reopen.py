@@ -222,3 +222,31 @@ def test_reopen_then_reterminate(client, auth_headers, sample_client, session):
     assert cstate.residuo(contract) == 0.0
     # un solo movimento RIMBORSO attivo (il primo è stato soft-eliminato dalla reopen)
     assert _sum_movements(session, c["id"], "USCITA", categoria=CATEGORIA_RIMBORSO_CONTRATTO) == 300.0
+
+
+# ── M1 (G7.7): reopen inverso ESATTO — non resuscita rate eliminate fuori dal terminate ──
+
+def test_reopen_non_resuscita_rate_pre_eliminate(client, auth_headers, sample_client, session):
+    """M1: `reopen` ripristina SOLO le rate marcate `chiusa_da_terminazione` (soft-eliminate DA terminate),
+    non ogni rata con `deleted_at`. Una rata cancellata MANUALMENTE prima del terminate NON deve
+    resuscitare. Prima del fix: reopen le riapriva tutte → rate-fantasma in forecast/worklist."""
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=0.0, crediti=10)
+    # R1 PENDENTE poi cancellata MANUALMENTE (delete_rate) → deleted_at set, marker resta False
+    r1 = _rate(client, auth_headers, c["id"], 300.0)
+    assert client.delete(f"/api/rates/{r1['id']}", headers=auth_headers).status_code == 204
+    # R2 PENDENTE viva → la eliminerà il terminate (con marker)
+    r2 = _rate(client, auth_headers, c["id"], 500.0)
+
+    # terminate (0 sedute → write-off, nessun rimborso): soft-elimina+marca R2; R1 era già fuori
+    assert client.post(f"/api/contracts/{c['id']}/terminate", json={}, headers=auth_headers).status_code == 200
+    session.expire_all()
+    assert session.get(Rate, r2["id"]).chiusa_da_terminazione is True
+    assert session.get(Rate, r2["id"]).deleted_at is not None
+    assert session.get(Rate, r1["id"]).chiusa_da_terminazione is False   # mai marcata (cancellata a mano)
+
+    # reopen: ripristina SOLO R2 (marcata); R1 resta eliminata
+    assert client.post(f"/api/contracts/{c['id']}/reopen", headers=auth_headers).status_code == 200
+    session.expire_all()
+    assert session.get(Rate, r2["id"]).deleted_at is None               # ripristinata
+    assert session.get(Rate, r2["id"]).chiusa_da_terminazione is False   # marker consumato
+    assert session.get(Rate, r1["id"]).deleted_at is not None           # NON resuscitata (era manuale)

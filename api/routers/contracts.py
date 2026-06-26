@@ -1285,6 +1285,7 @@ def terminate_contract(
     ).all()
     for r in rate_non_saldate:
         r.deleted_at = now
+        r.chiusa_da_terminazione = True  # M1: marca per il reopen inverso esatto (solo queste si ripristinano)
         session.add(r)
         log_audit(session, "rate", r.id, "DELETE", trainer.id)
 
@@ -1345,8 +1346,9 @@ def reopen_contract(
        `RIMBORSO_CONTRATTO` attivi del contratto (`delete_movement` blocca `id_contratto` → ORM, come
        `unpay_rate`) + `totale_rimborsato -=` la loro somma.
     D) Gamba STORNO inversa: `quota_stornata = 0` → `residuo()` ripristinato (prezzo − versato).
-    E) Ripristino rate: `deleted_at=None` sulle rate non-saldate soft-eliminate (undo del soft-delete
-       di terminate). Le SALDATE non erano state toccate (B-3), restano com'erano.
+    E) Ripristino rate: `deleted_at=None` SOLO sulle rate marcate `chiusa_da_terminazione` (M1, inverso
+       esatto: non resuscita le cancellate manualmente / dal piano rigenerato). Il marker viene azzerato.
+       Le SALDATE non erano state toccate (B-3), restano com'erano.
     F) `chiuso=False` + `motivo_chiusura=None` + `data_chiusura=None`.
     G) Audit (importi invertiti + n. rate ripristinate) + transizione `chiuso` (motivo riapertura_esplicita).
 
@@ -1388,17 +1390,19 @@ def reopen_contract(
     # D) Gamba STORNO inversa: ripristina il residuo
     contract.quota_stornata = 0
 
-    # E) Ripristino rate non-saldate soft-eliminate da terminate (le SALDATE non erano state toccate)
+    # E) Ripristino SOLO le rate marcate da terminate (M1, inverso esatto; le SALDATE non erano toccate, B-3)
     rate_ripristinate = 0
     deleted_rates = session.exec(
         select(Rate).where(
             Rate.id_contratto == contract.id,
             Rate.stato.in_(["PENDENTE", "PARZIALE"]),
             Rate.deleted_at != None,
+            Rate.chiusa_da_terminazione == True,  # M1: SOLO le rate eliminate da QUESTO terminate
         )
     ).all()
     for r in deleted_rates:
         r.deleted_at = None
+        r.chiusa_da_terminazione = False  # M1: marker consumato (inverso esatto del terminate)
         session.add(r)
         log_audit(session, "rate", r.id, "RESTORE", trainer.id)
         rate_ripristinate += 1

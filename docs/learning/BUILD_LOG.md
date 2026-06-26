@@ -1902,3 +1902,36 @@ controprova Programmato/Cancellato = 200). Suite **622 passed**, ruff verde. Com
 M3/M4/L1 (trasparenza) · R6 igiene (incl. grep-guard bidirezionale) → **G1 cifratura**.
 
 ---
+
+### 2026-06-26 — G7.7-M1: `reopen` inverso esatto via marker `rate.chiusa_da_terminazione`
+
+Audit M1 (DEBITO_SSOT). `reopen` (G7.4) ripristinava OGNI rata non-saldata con `deleted_at != None` →
+resuscitava anche rate cancellate manualmente o da un piano rigenerato PRIMA del terminate (sul crm.db
+reale il contratto 20 ha 30 rate pre-eliminate). Rate-fantasma in forecast "entrate certe" / worklist /
+`is_insolvente`. **Fix con marker:** `terminate` MARCA (`chiusa_da_terminazione=True`) solo le rate che
+soft-elimina; `reopen` ripristina **SOLO** le marcate e azzera il marker (inverso esatto). Le cancellate
+per altre ragioni (marker False) non si toccano.
+
+**Schema (M1 = unico schema-touch di G7.7):** colonna `chiusa_da_terminazione bool NOT NULL default False`
+su `rate_programmate` (PLAIN, no FK). Migrazione Alembic `c7e1a2b3d4f5` (down=`d83abb993ea8`, pattern
+identico a G7.0). `Rate` model + `terminate` (mark) + `reopen` (filtro `== True` + clear del marker).
+
+**Verifica backup-first (come G7.0) su `auto_20260620_082707.sqlite` reale (111 rate, 39 contratti):**
+`sync_schema` aggiunge `chiusa_da_terminazione (INTEGER DEFAULT 0)`, **111 rate preservate, tutte
+backfillate a 0, FK_check CLEAN, integrity ok, idempotente** (re-run = no-op).
+
+**Learning (meccanismo schema, livello-3).** `alembic upgrade head` su un backup/crm.db reale **fallisce**
+(e3q8: tenta di ricreare tabelle già esistenti): l'`alembic_version` di TUTTI i DB — backup **e** crm.db
+dev — è **frozen a `27b8b9852489`** mentre lo schema è corrente. L'evoluzione schema su questo progetto
+passa **sempre da `schema_sync`** (column-sync generico al boot) + `create_db_and_tables` (DB fresh),
+**mai da `alembic upgrade` sui DB esistenti**. Alembic è il **record formale** (paper-trail), non il path
+di deploy → la verifica backup-first va fatta con `sync_schema`, non con `alembic upgrade`. **Tech-debt
+collaterale segnalato (non di M1):** le migrazioni si accumulano ma non sono mai replayed e
+`alembic_version` è fuorviante; andrebbe o ri-sincronizzato (stamp) o dismesso a favore di schema_sync.
+
+**Test:** `test_reopen_non_resuscita_rate_pre_eliminate` (rata cancellata a mano + rata del terminate →
+reopen ripristina solo la seconda; marker consumato). Suite **623 passed**, ruff verde.
+
+**⏭️ Prossimo:** M2 (`update_rate` guard `chiuso` + cap su asse residuo) → trasparenza (M3/M4/L1) → R6 → G1.
+
+---
