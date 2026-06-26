@@ -1712,3 +1712,61 @@ Doc allineati: IMPL_PLAN §7 (banner consegnato + correzione data-driven) + RESU
 ⏭️ G1 (cifratura crm.db).**
 
 ---
+
+### 2026-06-26 — Audit crediti/rimborso → G7.7 remediation + 2ª segnalazione Chiara → ADR-017 (il rinvio libera il credito)
+
+Step **docs-only / governance** (zero codice). Apre due filoni innescati dal trainer reale (Chiara) prima di G1.
+
+**Trigger 1 — audit senior crediti/contratti/rimborso** (`docs/operations/AUDIT_CREDITI_RIMBORSO_2026-06-26.md`,
+multi-agente L0-L5, 34 finding confermati su 54, grounding su `crm.db` reale 35 contratti). Esito: la logica di
+rimborso è **strutturalmente sana** (asse EROGATO canonico); la 1ª segnalazione di Chiara ("residui 4 ma rimborso su 2
+sedute") = **gap di trasparenza, non di matematica** (le prenotate non riducono il rimborso, by-design). **Un solo
+money-bug (H1): `unpay_rate` privo di guardia su contratto terminato** (`rates.py:656` decrementa `totale_versato`
+incondizionato; l'allowlist `:670-674` tiene `chiuso` ma non blocca il decremento) → `totale_rimborsato > totale_versato`,
+il clamp di `netto_incassato()` **maschera** l'over-rimborso. Resto = debito-SSoT (M1 `reopen` over-restore, M2
+`update_rate` senza guard `chiuso`, M3 `ContrattiTab` off-SSoT) + trasparenza (M4/L1) + igiene (L2/L3).
+
+**Piano G7.7 (R0-R6) + decisioni founder (AskUserQuestion):** remediation **completa**; `unpay` su terminato →
+**reject 409** (riapri prima, non reroute); `reopen` esatto via **marker `rate.chiusa_da_terminazione`**; M4 =
+**indicatore leggero** (nessun nuovo sotto-stato enum). **ADR-016** scritto: asse EROGATO canonico + forfeiture
+prenotate + riconciliazione I6 obbligatoria + grep-guard "euro-da-crediti".
+
+**Trigger 2 — 2ª segnalazione Chiara, più profonda** (spec `SPEC_RINVIO_LIBERA_CREDITO` prodotta dal founder in
+Claude Chat): *"i crediti delle sedute RINVIATE vengono scalati come se fossero state svolte"*. **L'audit l'aveva
+mancata** — ha preso l'occupazione esistente (`!= Cancellato`, incl. `Rinviato`) come corretta-per-disegno, scrutinando
+solo l'asse denaro. Tesi T1: `Rinviato` = slot **liberato**, non occupa il credito (occupazione = `Programmato +
+Completato`); **nessun euro cambia**.
+
+**Bridge code-grounded (ground truth = codice), HEAD `324be75`:**
+- **Bug confermato:** `contracts.py:149` somma `programmate + completate + rinviate`; lo schema servito
+  (`financial.py:404`) documenta `# crediti_totali - programmate - completate` (senza rinviate) → `crediti_residui`
+  **sottostimato**. Il codice contraddice il proprio contratto.
+- **Asse denaro invariante per costruzione:** `compute_settlement` legge solo `sedute_erogate` (`== Completato`) e
+  `residuo()` (prezzo/versato); **mai** `!= Cancellato` → oracolo settlement byte-identico (spec §5/§6 verificati).
+- **Inventario §3 INCOMPLETO** — la spec era esaustiva *solo sui file in contesto* (`clients/agenda/contracts/dashboard`,
+  classificati **correttamente al 100%**). **5 produttori di `crediti_usati` mancati**, integrati in §3.1: 🔴
+  `rates.py:565` (auto-close di `pay_rate`, **gemello payment-driven** di `_sync_contract_chiuso` — lo documenta il
+  commento `agenda.py:307`; senza, un saldato all-rinviate si auto-chiude COMPLETAMENTO al pagamento ultima rata →
+  **D-AUTO-CLOSE violata**), `workspace_engine.py:1247/1389/2145` (worklist cockpit), `client_avatar.py:430`. Più
+  `_check_overlap` (`agenda.py:198`), §3-bis **risolto = CAMBIA** (D-GUARD). **Stessa firma della scoperta dei due rami
+  di G7.2** (riapertura credit-driven + payment-driven): anche l'auto-chiusura ha due rami, la spec ne vedeva uno.
+
+**Governance prodotta (questo commit):** `ADR-016` **emendato** in 3 punti (Context, Decisione §1, Superseded-by → la
+definizione di occupazione è "precisata da ADR-017"; asse EROGATO e barriera strutturale invariati); **`ADR-017`
+accepted** (emenda ADR-016 §1; decisioni founder D-AUTO-CLOSE / D-MODELLO / D-GUARD + overlap CAMBIA); spec installata
+in `docs/technical/SPEC_RINVIO_LIBERA_CREDITO.md` col fold-back `[Bridge Code 2026-06-26]` (5 siti mancati, §3.3
+verificata + allowlist, §3-bis risolto, oracolo). `INDEX` + `adr/README` allineati (15 ADR attivi). **FDM NON toccato**
+(la definizione occupazione si aggiorna a implementazione di G7.8, spec §10) — l'edit prematuro al FDM era stato
+correttamente rifiutato dal founder.
+
+**Lezione (governance/bridge).** Un audit multi-agente code-grounded verifica la **coerenza interna** del codice ma
+può prendere per buona una **semantica di dominio sbagliata** (qui: `Rinviato` in occupazione). La correttezza esterna
+la dà il dominio (il trainer reale). Il bridge code-grounded è il punto in cui le due si incontrano: ha confermato la
+matematica del denaro **e** scoperto che l'inventario manuale della spec mancava i 5 produttori fuori-contesto — il
+fallimento ricorrente *enumerazione ≠ enforcement*, già visto in §4.7 e in G7.2.
+
+**⏭️ Sequenza (decisione founder):** **H1 (G7.7-R1, money-bug) → G7.8 (T1 rinvio) → resto G7.7** (M1 marker / M2 /
+trasparenza R4-R5 / igiene R6) → **G1 cifratura**. Differiti post-G1 invariati (G7.x-override, Fatturato-lordo-vs-netto,
+Giro 2 vocabolario). Zero codice prodotto in questo step.
+
+---
