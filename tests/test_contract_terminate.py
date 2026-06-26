@@ -409,3 +409,46 @@ def test_settlement_preview_sedute_prenotate(client, auth_headers, sample_client
     _complete_pt(session, t.id, sample_client["id"], c2["id"], 1)  # solo erogata
     p2 = client.get(f"/api/contracts/{c2['id']}/settlement-preview", headers=auth_headers).json()
     assert p2["sedute_prenotate"] == 0
+
+
+# ── H1 (G7.7-R1): unpay su contratto terminato (E2E) → 409, tetto preservato, reopen riabilita ──
+
+def test_unpay_dopo_terminate_rifiutato_409(client, auth_headers, sample_client, session):
+    """H1 (ADR-016/ADR-017) — E2E con terminate REALE. Dopo una terminazione con RIMBORSO, una rata
+    SALDATA superstite NON è revocabile (409). È il test che avrebbe colto il money-bug: senza guard,
+    `unpay` decrementerebbe `totale_versato` sotto `totale_rimborsato`, il clamp di netto_incassato()
+    maschererebbe l'over-rimborso (ΣRIMBORSO > ΣENTRATA). Verifica anche il path canonico: reopen → la
+    revoca torna possibile (riallineamento atomico). Sentinella del tetto totale_rimborsato ≤ totale_versato."""
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=0.0, crediti=10)
+    t = _trainer(session)
+    # 2 rate SALDATE da 500 → versato 1000; 2 sedute → reso 200 → conguaglio -800 → RIMBORSO 800 (quota 0)
+    r1 = _rate(client, auth_headers, c["id"], 500.0)
+    client.post(f"/api/rates/{r1['id']}/pay", json={"importo": 500.0, "metodo": "CONTANTI"}, headers=auth_headers)
+    r2 = _rate(client, auth_headers, c["id"], 500.0)
+    client.post(f"/api/rates/{r2['id']}/pay", json={"importo": 500.0, "metodo": "CONTANTI"}, headers=auth_headers)
+    _complete_pt(session, t.id, sample_client["id"], c["id"], 2)
+
+    r = client.post(f"/api/contracts/{c['id']}/terminate",
+                    json={"metodo_rimborso": "CONTANTI"}, headers=auth_headers)
+    assert r.status_code == 200, r.text
+    session.expire_all()
+    contract = session.get(Contract, c["id"])
+    assert round(contract.totale_rimborsato, 2) == 800.0
+    assert round(contract.totale_versato, 2) == 1000.0
+
+    # le 2 rate SALDATE sopravvivono al terminate (B-3) → unpay di una è rifiutato (409, riapri prima)
+    unpay = client.post(f"/api/rates/{r1['id']}/unpay", headers=auth_headers)
+    assert unpay.status_code == 409, unpay.text
+
+    # tetto preservato: nessun decremento, totale_rimborsato ≤ totale_versato; rata intatta
+    session.expire_all()
+    contract = session.get(Contract, c["id"])
+    assert round(contract.totale_versato, 2) == 1000.0
+    assert contract.totale_rimborsato <= contract.totale_versato
+    assert session.get(Rate, r1["id"]).stato == "SALDATA"
+
+    # path canonico: reopen annulla rimborso+storno → la revoca torna possibile
+    reopen = client.post(f"/api/contracts/{c['id']}/reopen", headers=auth_headers)
+    assert reopen.status_code == 200, reopen.text
+    unpay2 = client.post(f"/api/rates/{r1['id']}/unpay", headers=auth_headers)
+    assert unpay2.status_code == 200, unpay2.text

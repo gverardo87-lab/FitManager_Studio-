@@ -1770,3 +1770,32 @@ trasparenza R4-R5 / igiene R6) → **G1 cifratura**. Differiti post-G1 invariati
 Giro 2 vocabolario). Zero codice prodotto in questo step.
 
 ---
+
+### 2026-06-26 — G7.7-R1 / H1: guardia `unpay_rate` su contratto terminato (unico money-bug dell'audit)
+
+Primo **codice** del blocco G7.7. Chiude l'unico difetto che muove denaro in modo errato (audit §HIGH).
+`unpay_rate` non aveva guardia su un contratto terminato: le rate SALDATE sopravvivono al `terminate`
+(soft-elimina solo le non-saldate, B-3) → il bouncer ne trova una e, senza guardia, `unpay` decrementava
+`totale_versato` (`rates.py:656`) facendolo scendere sotto `totale_rimborsato`; il clamp di
+`netto_incassato()=max(versato−rimborsato,0)` **mascherava** un over-rimborso reale (mastro
+ΣRIMBORSO > ΣENTRATA, cassa già uscita).
+
+**Fix (`rates.py`, guard B-bis prima di ogni mutazione):** revoca rifiutata **409** se il contratto è
+`chiuso` E `quota_stornata>0 OR totale_rimborsato>0 OR motivo_chiusura.startswith("TERMINAZIONE_")`.
+Predicato = la *condizione di corruzione* (lo stato di conguaglio), **non** il flag `chiuso`: un blanket
+`if chiuso` regredirebbe l'auto-reopen legittimo da COMPLETAMENTO (quota/rimborso a 0). Policy founder =
+**reject, non reroute** (un solo inverso esplicito): path canonico `POST /reopen` (riallinea
+atomicamente rimborso+storno), poi la revoca.
+
+**Test:** migrato `test_terminazione_non_si_riapre_da_unpay` (era 200 + allowlist → ora **409**, presidio
+più forte: sul ramo unpay l'allowlist diventa difesa-in-profondità) + nuovo E2E
+`test_unpay_dopo_terminate_rifiutato_409` (terminate REALE, rimborso 800 → unpay SALDATA = 409 → tetto
+`rimborsato≤versato` retto → **reopen → unpay torna 200**). Il guard NON tocca l'auto-reopen da
+COMPLETAMENTO (`test_unpay_reopens_closed_contract` resta 200) né il ramo agenda (`_sync`: ricalcola
+crediti, non decrementa versato → nessun money-bug). Suite **612 passed** (+1), ruff verde sui file
+toccati. Gotcha: il PostToolUse ruff `--fix` ha strippato `from api.models.rate import Rate` aggiunto
+prima del suo uso → ri-aggiunto dopo l'uso ([[feedback_formatter_strips_imports]]).
+
+**⏭️ Prossimo:** G7.8 (T1 rinvio libera credito) → resto G7.7 (M1 marker / M2 / trasparenza / igiene) → G1.
+
+---

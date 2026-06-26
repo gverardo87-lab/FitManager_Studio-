@@ -14,6 +14,7 @@ from sqlmodel import select
 
 from api.models.audit_log import AuditLog
 from api.models.contract import Contract
+from api.models.rate import Rate
 
 TODAY = date.today()
 FUTURE = (TODAY + timedelta(days=120)).isoformat()
@@ -151,6 +152,8 @@ def test_no_transition_when_chiuso_unchanged(client, auth_headers, sample_contra
 # in DUE rami distinti (_sync credit-driven + unpay_rate payment-driven) → allowlist su entrambi.
 # NB orologio: il conteggio crediti di _sync NON ha filtro data → niente flakiness di mezzanotte su
 # questo meccanismo (a differenza dei test workspace 22-23/06); date comunque ancorate a TODAY.
+# [G7.7-R1/H1] Sul ramo unpay l'allowlist è ora difesa-in-profondità: il guard H1 RIFIUTA (409) la
+# revoca su una terminazione (storno/rimborso) PRIMA di arrivarci (test_terminazione_non_si_riapre_da_unpay).
 
 
 def test_manual_close_not_reopened_by_agenda_edit(client, auth_headers, sample_client, session):
@@ -220,13 +223,15 @@ def test_terminazione_non_si_riapre_da_agenda(client, auth_headers, sample_clien
 
 
 def test_terminazione_non_si_riapre_da_unpay(client, auth_headers, sample_client, session):
-    """AC-7.2-4 (gemello sul 2° ramo, payment-driven): una terminazione con una rata SALDATA che
-    sopravvive (G7.3 soft-elimina solo le NON-saldate) → la revoca di quella rata NON riapre il
-    contratto (allowlist anche in unpay_rate). Presidia che ENTRAMBI i rami siano coperti."""
+    """AC-7.2-4 (2° ramo, payment-driven) — RAFFORZATO da G7.7-R1/H1. Una terminazione con una rata
+    SALDATA superstite (terminate soft-elimina solo le NON-saldate) non si riapre da una revoca: ora il
+    guard H1 la RIFIUTA a monte (409, 'riapri prima') invece di lasciarla procedere e affidarsi alla
+    sola allowlist. Così `totale_versato` non scende sotto `totale_rimborsato` (tetto I3) e il clamp di
+    netto_incassato() non maschera un over-rimborso. Path canonico: POST /reopen."""
     c = _contract(client, auth_headers, sample_client["id"], prezzo=100.0, acconto=0.0, crediti=3)
     rate = _rate(client, auth_headers, c["id"], 100.0)
     client.post(f"/api/rates/{rate['id']}/pay", json={"importo": 100.0, "metodo": "CONTANTI"}, headers=auth_headers)
-    # simula terminazione (G7.3 non esiste): chiusura + motivo + storno via ORM
+    # simula terminazione (stato terminale via ORM, come gli altri forward-guard): chiusura + motivo + storno
     contract = session.get(Contract, c["id"])
     contract.chiuso = True
     contract.motivo_chiusura = "TERMINAZIONE_DECADENZA"
@@ -234,10 +239,13 @@ def test_terminazione_non_si_riapre_da_unpay(client, auth_headers, sample_client
     session.add(contract)
     session.commit()
 
-    ur = client.post(f"/api/rates/{rate['id']}/unpay", headers=auth_headers)  # revoca → ramo reopen di unpay_rate
-    assert ur.status_code == 200, ur.text
+    ur = client.post(f"/api/rates/{rate['id']}/unpay", headers=auth_headers)  # H1 guard → 409
+    assert ur.status_code == 409, ur.text
 
     session.expire_all()
     contract = session.get(Contract, c["id"])
-    assert contract.chiuso is True                              # NON riaperto da unpay (allowlist)
+    assert contract.chiuso is True                              # invariato (unpay rifiutato)
     assert contract.motivo_chiusura == "TERMINAZIONE_DECADENZA"  # invariato
+    assert contract.quota_stornata == 50.0                     # nessuna mutazione
+    assert round(contract.totale_versato, 2) == 100.0          # tetto: totale_versato NON decrementato
+    assert session.get(Rate, rate["id"]).stato == "SALDATA"    # atomicità: la rata non è stata toccata

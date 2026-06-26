@@ -640,6 +640,24 @@ def unpay_rate(
             detail="Nessun pagamento da revocare su questa rata",
         )
 
+    # B-bis) Guard terminazione (H1, ADR-016/ADR-017): un contratto TERMINATO con conguaglio (storno
+    #   e/o rimborso) NON accetta una revoca-pagamento diretta. Le rate SALDATE sopravvivono al terminate
+    #   (che soft-elimina solo le non-saldate); revocarne una farebbe scendere `totale_versato` sotto
+    #   `totale_rimborsato` → rompe il tetto I3 e il clamp di `netto_incassato()` maschera l'over-rimborso
+    #   (ΣRIMBORSO > ΣENTRATA). Path canonico: POST /reopen (riallinea atomicamente rimborso+storno), poi
+    #   la revoca. NON un blanket `if chiuso`: un auto-close da COMPLETAMENTO (quota/rimborso a 0) resta
+    #   revocabile e si auto-riapre (E-auto sotto).
+    contract = session.get(Contract, rate.id_contratto)
+    if contract.chiuso and (
+        (contract.quota_stornata or 0) > 0
+        or (contract.totale_rimborsato or 0) > 0
+        or (contract.motivo_chiusura or "").startswith("TERMINAZIONE_")
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Contratto terminato: riapri il contratto prima di revocare un pagamento.",
+        )
+
     # C) Riporta rata a PENDENTE (cattura old values per audit)
     old_importo_saldato = rate.importo_saldato
     old_stato = rate.stato
@@ -648,8 +666,7 @@ def unpay_rate(
     rate.stato = "PENDENTE"
     session.add(rate)
 
-    # D) Aggiorna totale_versato contratto
-    contract = session.get(Contract, rate.id_contratto)
+    # D) Aggiorna totale_versato contratto (contract già recuperato nel guard B-bis)
     old_totale_versato = contract.totale_versato
     old_stato_pagamento = contract.stato_pagamento
     old_chiuso = contract.chiuso
