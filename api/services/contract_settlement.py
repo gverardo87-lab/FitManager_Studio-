@@ -19,18 +19,20 @@ from dataclasses import dataclass
 from enum import Enum
 
 
-# ── Vocabolario chiusura (SPEC_G7.0 §2) — esito economico, enum chiuso a 4 ──
+# ── Vocabolario chiusura (SPEC_G7.0 §2 + ADR-018) — esito economico ──
 class MotivoChiusura(str, Enum):
     COMPLETAMENTO = "COMPLETAMENTO"                # auto-close: saldato + crediti esauriti
-    CONSUNZIONE = "CONSUNZIONE"                    # terminazione a conguaglio ~0 (esito NULLO); in origine riservato per residuo post-scadenza (L2)
-    TERMINAZIONE_RIMBORSO = "TERMINAZIONE_RIMBORSO"      # terminazione anticipata, gamba rimborso
-    TERMINAZIONE_DECADENZA = "TERMINAZIONE_DECADENZA"    # terminazione/decadi, gamba storno (no cassa)
+    CONSUNZIONE = "CONSUNZIONE"                    # terminazione a conguaglio ~0 (esito PARI); in origine riservato per residuo post-scadenza (L2)
+    TERMINAZIONE_RIMBORSO = "TERMINAZIONE_RIMBORSO"          # terminazione, ramo CREDITO_CLIENTE (rimborso al cliente)
+    TERMINAZIONE_SALDO_TRAINER = "TERMINAZIONE_SALDO_TRAINER"  # terminazione, ramo CREDITO_TRAINER (incasso/rinuncia/a-credito; ADR-018)
+    TERMINAZIONE_DECADENZA = "TERMINAZIONE_DECADENZA"        # LEGACY/storico: non più emesso da terminate su contratti vivi
 
 
 class SettlementEsito(str, Enum):
-    RIMBORSO = "RIMBORSO"                # conguaglio < 0: il trainer deve restituire (abs)
-    SALDO_A_PERDERE = "SALDO_A_PERDERE"  # conguaglio >= 0: write-off del dovuto (storno)
-    NULLO = "NULLO"                      # conguaglio ~ 0
+    """Fatto economico puro (ADR-018), balance-based — non un'azione (l'azione la sceglie il caller)."""
+    CREDITO_CLIENTE = "CREDITO_CLIENTE"  # versato > reso: il trainer deve restituire (rimborso)
+    CREDITO_TRAINER = "CREDITO_TRAINER"  # reso > versato: il cliente deve ancora → incassa/rinuncia/a-credito
+    PARI = "PARI"                        # reso ~ versato (entro dead-zone): nessun conguaglio
 
 
 # ── Policy di valorizzazione (l'UNICO punto policy-gated) ──
@@ -69,12 +71,20 @@ def valore_servizio_reso(
 
 @dataclass(frozen=True)
 class Settlement:
-    """Risultato puro del conguaglio. Il caller (G7.3) traduce esito+importi in movimenti/colonne."""
-    valore_servizio_reso: float
-    conguaglio: float          # valore_reso − totale_versato (firmato)
+    """Fatto economico puro del conguaglio (ADR-018). Il caller (G7.3/G7.9) traduce le grandezze in
+    azione + movimenti/colonne: rimborso (`credito_cliente`), incasso/rinuncia/a-credito
+    (`credito_trainer`), storno (`residuo_pre − incassato`). Nessuna decisione d'azione qui.
+
+    Con P=prezzo, V=versato, R=valore_servizio_reso:
+      credito_cliente = max(V−R, 0) · credito_trainer = max(R−V, 0) · quota_non_erogata = max(P−R, 0)
+      residuo_pre = max(P−V, 0) == residuo() PRE-storno (= residuo_corrente passato dal caller)."""
+    valore_servizio_reso: float   # R
+    conguaglio: float             # R − V (firmato), classificato con dead-zone ±0.009
     esito: SettlementEsito
-    importo_rimborso: float    # abs(conguaglio) se RIMBORSO, altrimenti 0
-    quota_da_stornare: float   # residuo corrente da azzerare (write-off), >= 0
+    credito_cliente: float        # max(V − R, 0): il trainer deve restituire (rimborso al cliente)
+    credito_trainer: float        # max(R − V, 0): il cliente deve ancora, per servizio già reso
+    quota_non_erogata: float      # max(P − R, 0): servizio mai erogato (storno legittimo)
+    residuo_pre: float            # max(P − V, 0) == residuo() PRE-storno
     sedute_erogate: int
 
 
@@ -87,35 +97,38 @@ def compute_settlement(
     residuo_corrente: float,
     policy: SettlementPolicy = DEFAULT_POLICY,
 ) -> Settlement:
-    """Conguaglio di terminazione (FDM §7), firmato rispetto al servizio reso.
+    """Conguaglio di terminazione (FDM §7 + ADR-018), **fatto economico puro** firmato sul servizio reso.
 
     `residuo_corrente` = `contract_state.residuo()` PRIMA dello storno, passato dal caller in UNA
-    variabile (fonte-unica-importo, IMPL_PLAN §4.6) e riusato per la gamba di storno.
+    variabile (fonte-unica-importo, IMPL_PLAN §4.6); diventa `residuo_pre`, riusato per la gamba di storno.
 
-    conguaglio = valore_servizio_reso − totale_versato:
-      • < 0  → il cliente ha pagato più del reso → **RIMBORSO** (importo = abs)
-      • >= 0 → il cliente ha pagato meno del reso → **SALDO_A_PERDERE** (write-off del residuo)
-      • ~ 0  → **NULLO**
+    conguaglio = valore_servizio_reso − totale_versato, classificato con dead-zone ±0.009:
+      • < 0  → versato > reso → **CREDITO_CLIENTE** (il trainer deve restituire `credito_cliente`)
+      • > 0  → reso > versato → **CREDITO_TRAINER** (il cliente deve ancora `credito_trainer`)
+      • ~ 0  → **PARI**
+    Le tre azioni sul ramo CREDITO_TRAINER (incassa ora / rinuncia / a credito) le sceglie il caller:
+    qui si espone solo il fatto (credito_trainer), mai il write-off come default.
     """
     reso = valore_servizio_reso(sedute_erogate, prezzo_totale, crediti_totali, policy)
     versato = totale_versato or 0
-    conguaglio = round(reso - versato, policy.arrotondamento)
+    prezzo = prezzo_totale or 0
+    a = policy.arrotondamento
+    conguaglio = round(reso - versato, a)
 
     if conguaglio < -0.009:
-        esito = SettlementEsito.RIMBORSO
-        importo_rimborso = round(abs(conguaglio), policy.arrotondamento)
+        esito = SettlementEsito.CREDITO_CLIENTE
     elif conguaglio > 0.009:
-        esito = SettlementEsito.SALDO_A_PERDERE
-        importo_rimborso = 0.0
+        esito = SettlementEsito.CREDITO_TRAINER
     else:
-        esito = SettlementEsito.NULLO
-        importo_rimborso = 0.0
+        esito = SettlementEsito.PARI
 
     return Settlement(
         valore_servizio_reso=reso,
         conguaglio=conguaglio,
         esito=esito,
-        importo_rimborso=importo_rimborso,
-        quota_da_stornare=round(max(residuo_corrente or 0, 0.0), policy.arrotondamento),
+        credito_cliente=round(max(versato - reso, 0.0), a),
+        credito_trainer=round(max(reso - versato, 0.0), a),
+        quota_non_erogata=round(max(prezzo - reso, 0.0), a),
+        residuo_pre=round(max(residuo_corrente or 0, 0.0), a),
         sedute_erogate=max(int(sedute_erogate or 0), 0),
     )

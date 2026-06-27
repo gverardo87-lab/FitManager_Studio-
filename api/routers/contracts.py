@@ -32,6 +32,7 @@ from api.schemas.financial import (
     ContractWithRatesResponse,
     ContractTerminate,
     ContractSettlementPreview,
+    VALID_AZIONI_CREDITO_TRAINER,
     RateResponse,
     RatePayment,
     RatePaymentReceipt,
@@ -48,6 +49,7 @@ from api.services import contract_state as cstate
 from api.services.cash_categories import (
     CATEGORIA_ACCONTO_CONTRATTO,
     CATEGORIA_PAGAMENTO_RATA,
+    CATEGORIA_INCASSO_CONGUAGLIO_CONTRATTO,
     CATEGORIA_RIMBORSO_CONTRATTO,
 )
 from api.services.contract_settlement import compute_settlement, SettlementEsito, MotivoChiusura
@@ -1206,13 +1208,14 @@ def _count_sedute_prenotate(session: Session, contract_id: int) -> int:
 
 
 def _motivo_from_esito(esito: SettlementEsito) -> str:
-    """Mappa esito→motivo_chiusura (AC-7.3-9). terminate NON assegna MAI COMPLETAMENTO
-    (riservato all'auto-close; lo riaprirebbe la reopen-allowlist G7.2)."""
-    if esito == SettlementEsito.RIMBORSO:
+    """Mappa esito→motivo_chiusura (AC-7.3-9 + ADR-018). terminate NON assegna MAI COMPLETAMENTO
+    (riservato all'auto-close; lo riaprirebbe la reopen-allowlist G7.2). TERMINAZIONE_DECADENZA è
+    legacy: non più emesso qui (il ramo trainer è ora TERMINAZIONE_SALDO_TRAINER)."""
+    if esito == SettlementEsito.CREDITO_CLIENTE:
         return MotivoChiusura.TERMINAZIONE_RIMBORSO.value
-    if esito == SettlementEsito.NULLO:
-        return MotivoChiusura.CONSUNZIONE.value
-    return MotivoChiusura.TERMINAZIONE_DECADENZA.value  # SALDO_A_PERDERE
+    if esito == SettlementEsito.CREDITO_TRAINER:
+        return MotivoChiusura.TERMINAZIONE_SALDO_TRAINER.value
+    return MotivoChiusura.CONSUNZIONE.value  # PARI (conguaglio ~ 0)
 
 
 def _settlement_for(session: Session, contract: Contract):
@@ -1230,16 +1233,25 @@ def _settlement_for(session: Session, contract: Contract):
 
 
 def _build_settlement_preview(contract: Contract, settlement, sedute_prenotate: int = 0) -> ContractSettlementPreview:
-    """Compone la preview leggibile dal conguaglio. Framing di PROPOSTA (§0/§4): mai "obbligo legale",
-    sempre "calcolato col metodo standard, verifica con le condizioni del contratto"."""
-    rimborso = settlement.esito == SettlementEsito.RIMBORSO
-    storno = settlement.quota_da_stornare > 0.009
-    if rimborso:
-        msg = f"Conguaglio calcolato (pro-rata sedute): risulta un rimborso di €{settlement.importo_rimborso:.2f} a favore del cliente."
+    """Compone la preview leggibile dal conguaglio (ADR-018). Framing di PROPOSTA (§0/§4): mai
+    "obbligo legale", sempre "calcolato col metodo standard, verifica con le condizioni del contratto"."""
+    cliente = settlement.esito == SettlementEsito.CREDITO_CLIENTE
+    trainer_credit = settlement.esito == SettlementEsito.CREDITO_TRAINER
+    storno = settlement.residuo_pre > 0.009
+    azioni_permesse: list[str] = []
+    if cliente:
+        msg = f"Conguaglio calcolato (pro-rata sedute): risulta un rimborso di €{settlement.credito_cliente:.2f} a favore del cliente."
         if storno:
-            msg += f" Il residuo di €{settlement.quota_da_stornare:.2f} per le sedute non erogate viene azzerato."
+            msg += f" Il residuo di €{settlement.residuo_pre:.2f} per le sedute non erogate viene azzerato."
+    elif trainer_credit:
+        azioni_permesse = sorted(VALID_AZIONI_CREDITO_TRAINER)
+        msg = (
+            f"Conguaglio calcolato (pro-rata sedute): il cliente ha ricevuto più servizio di quanto versato. "
+            f"Saldo a tuo favore €{settlement.credito_trainer:.2f}: scegli se incassarlo ora (importo modificabile) "
+            f"o rinunciarvi."
+        )
     elif storno:
-        msg = f"Conguaglio calcolato (pro-rata sedute): nessun rimborso. Il cliente ha già consumato il servizio reso; il residuo di €{settlement.quota_da_stornare:.2f} viene azzerato."
+        msg = f"Conguaglio calcolato (pro-rata sedute): nessun rimborso. Il cliente ha già consumato il servizio reso; il residuo di €{settlement.residuo_pre:.2f} viene azzerato."
     else:
         msg = "Conguaglio calcolato (pro-rata sedute): nessun rimborso e nessun residuo da azzerare."
     msg += " Importo proposto col metodo standard pro-rata sedute — verifica con le condizioni del tuo contratto."
@@ -1248,12 +1260,14 @@ def _build_settlement_preview(contract: Contract, settlement, sedute_prenotate: 
         motivo_chiusura=_motivo_from_esito(settlement.esito),
         valore_servizio_reso=settlement.valore_servizio_reso,
         conguaglio=settlement.conguaglio,
-        importo_rimborso=settlement.importo_rimborso,
-        quota_da_stornare=settlement.quota_da_stornare,
+        importo_rimborso=settlement.credito_cliente,
+        credito_trainer=settlement.credito_trainer,
+        quota_da_stornare=settlement.residuo_pre,
         sedute_erogate=settlement.sedute_erogate,
         sedute_totali=contract.crediti_totali,
         sedute_prenotate=sedute_prenotate,
-        metodo_rimborso_richiesto=rimborso,
+        metodo_rimborso_richiesto=cliente,
+        azioni_permesse=azioni_permesse,
         messaggio=msg,
     )
 
@@ -1288,15 +1302,19 @@ def terminate_contract(
     session: Session = Depends(get_session),
 ):
     """
-    Terminazione anticipata di un contratto vivo (G7.3, Strada B). Atto UMANO esplicito, terza via a
-    CHIUSO. Transazione UNICA atomica.
+    Terminazione anticipata di un contratto vivo (G7.3 + ADR-018, Strada B). Atto UMANO esplicito,
+    terza via a CHIUSO. Transazione UNICA atomica.
 
     Flusso (un solo commit):
     A) Bouncer 404 → B) guard chiuso 400
-    C) Conguaglio puro (fonte-unica-importo §2: `residuo()` PRE-storno in UNA variabile)
-    D) Gamba RIMBORSO (solo se esito RIMBORSO; richiede `metodo_rimborso` → 422):
-       CashMovement USCITA RIMBORSO_CONTRATTO + `totale_rimborsato +=` (STESSO importo)
-    E) Gamba STORNO (SEMPRE): `quota_stornata += residuo_corrente` → `residuo()` → 0
+    C) Conguaglio puro balance-based (fonte-unica-importo §2: `residuo()` PRE-storno in UNA variabile)
+    D) Gamba d'azione (un solo CashMovement), derivata dall'esito:
+       • CREDITO_CLIENTE → USCITA RIMBORSO_CONTRATTO (`metodo_rimborso` → 422) + `totale_rimborsato +=`
+       • CREDITO_TRAINER → scelta esplicita (422 se assente): INCASSA_ORA (ENTRATA INCASSO_CONGUAGLIO,
+         importo editabile [0, credito_trainer], `metodo_pagamento` → 422, `totale_versato +=`) oppure
+         RINUNCIA_ESPRESSA (no cassa, nota obbligatoria → 422). A_CREDITO è G7.10 (422 a schema).
+       • PARI → nessun movimento
+    E) Gamba STORNO (SEMPRE): `quota_stornata += residuo_pre − incasso_ora` → `residuo()` → 0
     F) Soft-delete SOLO rate NON-saldate (B-3): mai SALDATA né i loro CashMovement
     G) Stato terminale DIRETTO (B-2-attiva): chiuso/motivo/data — **MAI** via `_sync_contract_chiuso`
        (su un SOSPESO terminato `_sync` vedrebbe should_be_chiuso=False e riaprirebbe nello stesso commit)
@@ -1309,30 +1327,36 @@ def terminate_contract(
     if contract.chiuso:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Il contratto è già chiuso")
 
-    # C) Conguaglio puro (fonte-unica-importo: residuo PRE-storno)
+    # C) Conguaglio puro balance-based (fonte-unica-importo: residuo PRE-storno). ADR-018.
     settlement = _settlement_for(session, contract)
     motivo = _motivo_from_esito(settlement.esito)
     data_chiusura = data.data_chiusura or date.today()
     old_quota = contract.quota_stornata or 0
     old_rimborsato = contract.totale_rimborsato or 0
+    old_versato = contract.totale_versato or 0
     old_chiuso = contract.chiuso
 
-    # D) Gamba RIMBORSO (solo se il cliente ha pagato più del servizio reso)
+    client = session.get(Client, contract.id_cliente)
+    client_label = f"{client.nome} {client.cognome}" if client else f"Cliente #{contract.id_cliente}"
+
+    # D) Gamba d'azione, derivata dall'esito (ADR-018): un solo CashMovement per terminazione.
     movement = None
-    if settlement.esito == SettlementEsito.RIMBORSO:
+    incasso_ora = 0.0                 # X incassato dal trainer (ramo CREDITO_TRAINER + INCASSA_ORA)
+    saldo_trainer_rinunciato = 0.0    # parte del credito_trainer abbuonata (credito_trainer − X)
+
+    if settlement.esito == SettlementEsito.CREDITO_CLIENTE:
+        # Il cliente ha versato più del servizio reso → rimborso (richiede metodo_rimborso).
         if not data.metodo_rimborso:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="Metodo di rimborso obbligatorio per una terminazione con rimborso",
             )
-        client = session.get(Client, contract.id_cliente)
-        client_label = f"{client.nome} {client.cognome}" if client else f"Cliente #{contract.id_cliente}"
         movement = CashMovement(
             trainer_id=trainer.id,
             data_effettiva=data_chiusura,
             tipo="USCITA",
             categoria=CATEGORIA_RIMBORSO_CONTRATTO,
-            importo=settlement.importo_rimborso,   # fonte-unica-importo (§2)
+            importo=settlement.credito_cliente,   # fonte-unica-importo (§2)
             metodo=data.metodo_rimborso,
             id_cliente=contract.id_cliente,
             id_contratto=contract.id,
@@ -1340,10 +1364,65 @@ def terminate_contract(
             note=data.note or f"Rimborso terminazione - {client_label}",
         )
         session.add(movement)
-        contract.totale_rimborsato = old_rimborsato + settlement.importo_rimborso  # STESSO importo del movimento
+        contract.totale_rimborsato = old_rimborsato + settlement.credito_cliente  # STESSO importo del movimento
 
-    # E) Gamba STORNO (sempre): azzera il residuo senza riscrivere prezzo_totale (Strada B)
-    contract.quota_stornata = old_quota + settlement.quota_da_stornare  # == residuo_corrente PRE-storno
+    elif settlement.esito == SettlementEsito.CREDITO_TRAINER:
+        # Il cliente deve ancora per servizio già reso → scelta esplicita obbligatoria (ADR-018).
+        if data.azione_credito_trainer is None:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    f"Il cliente ha ricevuto più servizio di quanto versato (saldo a tuo favore "
+                    f"€{settlement.credito_trainer:.2f}): scegli se incassarlo ora o rinunciarvi."
+                ),
+            )
+        if data.azione_credito_trainer == "INCASSA_ORA":
+            if not data.metodo_pagamento:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="Metodo di pagamento obbligatorio per incassare il saldo a tuo favore",
+                )
+            # Importo proposto = credito_trainer; EDITABILE solo verso il basso (cap [0, credito_trainer]).
+            incasso_ora = (
+                settlement.credito_trainer if data.importo_incassato is None
+                else round(data.importo_incassato, 2)
+            )
+            if incasso_ora > settlement.credito_trainer + 0.009:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=(
+                        f"L'importo da incassare (€{incasso_ora:.2f}) non può superare il saldo a tuo "
+                        f"favore (€{settlement.credito_trainer:.2f}): non si fattura servizio non erogato."
+                    ),
+                )
+            incasso_ora = max(incasso_ora, 0.0)
+            saldo_trainer_rinunciato = round(settlement.credito_trainer - incasso_ora, 2)
+            if incasso_ora > 0.009:
+                movement = CashMovement(
+                    trainer_id=trainer.id,
+                    data_effettiva=data_chiusura,
+                    tipo="ENTRATA",
+                    categoria=CATEGORIA_INCASSO_CONGUAGLIO_CONTRATTO,
+                    importo=incasso_ora,
+                    metodo=data.metodo_pagamento,
+                    id_cliente=contract.id_cliente,
+                    id_contratto=contract.id,
+                    id_rata=None,
+                    note=data.note or f"Incasso conguaglio terminazione - {client_label}",
+                )
+                session.add(movement)
+                contract.totale_versato = old_versato + incasso_ora  # Strada B: cresce sul forward
+        elif data.azione_credito_trainer == "RINUNCIA_ESPRESSA":
+            if not (data.note and data.note.strip()):
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="Nota obbligatoria per rinunciare al saldo a tuo favore (presidio auditabile)",
+                )
+            saldo_trainer_rinunciato = settlement.credito_trainer
+        # A_CREDITO (credito differito) è respinto a livello schema (422) finché non arriva G7.10.
+
+    # E) Gamba STORNO (sempre): residuo_pre − incasso_ora → residuo() = 0 (Strada B, non riscrive prezzo).
+    contract.quota_stornata = old_quota + round(settlement.residuo_pre - incasso_ora, 2)
 
     # F) Soft-delete SOLO le rate NON-saldate (B-3). Le SALDATE e i loro CashMovement ENTRATA
     #    SOPRAVVIVONO: cancellarle romperebbe l'àncora `totale_versato == Σ ENTRATA` (Σ ENTRATA
@@ -1371,6 +1450,8 @@ def terminate_contract(
 
     # H) Audit atomico. flush per popolare l'id del movimento. Snapshot `sedute_erogate` (no-silent-loss:
     #    crediti_usati è event-derived e può driftare; è l'unico record del servizio forfettato).
+    #    Payload ADR-018 (§6.2): ricostruibile se il trainer ha incassato, abbuonato o rinunciato.
+    is_cliente = settlement.esito == SettlementEsito.CREDITO_CLIENTE
     if movement is not None:
         session.flush()
         log_audit(session, "movement", movement.id, "CREATE", trainer.id)
@@ -1379,8 +1460,17 @@ def terminate_contract(
         "data_chiusura": {"old": None, "new": data_chiusura},
         "quota_stornata": {"old": old_quota, "new": contract.quota_stornata},
         "totale_rimborsato": {"old": old_rimborsato, "new": contract.totale_rimborsato},
+        "totale_versato": {"old": old_versato, "new": contract.totale_versato or 0},
         "sedute_erogate_snapshot": settlement.sedute_erogate,
         "valore_servizio_reso": settlement.valore_servizio_reso,
+        "esito_balance": settlement.esito.value,
+        "credito_cliente": settlement.credito_cliente,
+        "credito_trainer": settlement.credito_trainer,
+        "quota_non_erogata": settlement.quota_non_erogata,
+        "azione_credito_trainer": data.azione_credito_trainer,
+        "importo_incassato": round(incasso_ora, 2),
+        "saldo_trainer_rinunciato": round(saldo_trainer_rinunciato, 2),
+        "movimento_cassa_id": movement.id if movement is not None else None,
     })
     # Transizione `chiuso` (P2): terminate la logga DA SÉ (non chiama _sync, che altrimenti la loggherebbe)
     log_contract_lifecycle_transition(
@@ -1388,8 +1478,8 @@ def terminate_contract(
         contract,
         old_chiuso=old_chiuso,
         motivo="terminazione",
-        importo_rimborsato=settlement.importo_rimborso if movement is not None else None,
-        residuo_annullato=settlement.quota_da_stornare,
+        importo_rimborsato=settlement.credito_cliente if is_cliente else None,
+        residuo_annullato=round(settlement.residuo_pre - incasso_ora, 2),
         data_chiusura=data_chiusura,
     )
     session.commit()
@@ -1418,6 +1508,8 @@ def reopen_contract(
     C) Gamba RIMBORSO inversa (se `totale_rimborsato>0`): soft-delete via ORM dei `CashMovement` USCITA
        `RIMBORSO_CONTRATTO` attivi del contratto (`delete_movement` blocca `id_contratto` → ORM, come
        `unpay_rate`) + `totale_rimborsato -=` la loro somma.
+    C-bis) Gamba INCASSO CONGUAGLIO inversa (ADR-018): soft-delete dei `CashMovement` ENTRATA
+       `INCASSO_CONGUAGLIO_CONTRATTO` + `totale_versato -=` la loro somma (inverso esatto di INCASSA_ORA).
     D) Gamba STORNO inversa: `quota_stornata = 0` → `residuo()` ripristinato (prezzo − versato).
     E) Ripristino rate: `deleted_at=None` SOLO sulle rate marcate `chiusa_da_terminazione` (M1, inverso
        esatto: non resuscita le cancellate manualmente / dal piano rigenerato). Il marker viene azzerato.
@@ -1440,6 +1532,7 @@ def reopen_contract(
     old_chiuso = contract.chiuso
     old_motivo = contract.motivo_chiusura
     old_rimborsato = contract.totale_rimborsato or 0
+    old_versato = contract.totale_versato or 0
     old_quota = contract.quota_stornata or 0
 
     # C) Gamba RIMBORSO inversa: annulla i movimenti di rimborso (via ORM — delete_movement blocca id_contratto)
@@ -1459,6 +1552,26 @@ def reopen_contract(
             log_audit(session, "movement", m.id, "DELETE", trainer.id)
             rimborso_invertito += m.importo
         contract.totale_rimborsato = round(max(old_rimborsato - rimborso_invertito, 0.0), 2)
+
+    # C-bis) Gamba INCASSO CONGUAGLIO inversa (ADR-018): annulla l'eventuale ENTRATA di conguaglio trainer
+    #   (INCASSA_ORA) e DECREMENTA `totale_versato` (prima volta che reopen tocca il lordo: eccezione
+    #   sanzionata, gemella di unpay_rate). Senza, reopen non sarebbe l'inverso esatto del nuovo incasso.
+    incasso_invertito = 0.0
+    incasso_movements = session.exec(
+        select(CashMovement).where(
+            CashMovement.id_contratto == contract.id,
+            CashMovement.categoria == CATEGORIA_INCASSO_CONGUAGLIO_CONTRATTO,
+            CashMovement.tipo == "ENTRATA",
+            CashMovement.deleted_at == None,
+        )
+    ).all()
+    for m in incasso_movements:
+        m.deleted_at = now
+        session.add(m)
+        log_audit(session, "movement", m.id, "DELETE", trainer.id)
+        incasso_invertito += m.importo
+    if incasso_invertito > 0.009:
+        contract.totale_versato = round(max(old_versato - incasso_invertito, 0.0), 2)
 
     # D) Gamba STORNO inversa: ripristina il residuo
     contract.quota_stornata = 0
@@ -1490,6 +1603,7 @@ def reopen_contract(
     log_audit(session, "contract", contract.id, "UPDATE", trainer.id, {
         "motivo_chiusura": {"old": old_motivo, "new": None},
         "totale_rimborsato": {"old": old_rimborsato, "new": contract.totale_rimborsato},
+        "totale_versato": {"old": old_versato, "new": contract.totale_versato or 0},
         "quota_stornata": {"old": old_quota, "new": 0},
         "rate_ripristinate": rate_ripristinate,
     })

@@ -7,7 +7,7 @@ G7.4 — Riapertura esplicita di un contratto chiuso (inverso di terminate / aut
 Copre:
 - riapertura di un auto-close COMPLETAMENTO (zero cassa) → solo chiuso=False
 - riapertura di una TERMINAZIONE_RIMBORSO → refund annullato + storno + rate ripristinate (round-trip)
-- riapertura di una TERMINAZIONE_DECADENZA (storno-only) → storno annullato, nessun rimborso
+- riapertura di una TERMINAZIONE_SALDO_TRAINER/rinuncia (storno-only) → storno annullato, nessun rimborso
 - invariante-àncora `totale_versato == Σ ENTRATA` + `totale_rimborsato == Σ USCITA RIMBORSO attivi` (→0)
 - guardie: non-chiuso → 400, bouncer 404
 """
@@ -159,19 +159,20 @@ def test_reopen_terminazione_rimborso_round_trip(client, auth_headers, sample_cl
     assert _sum_movements(session, c["id"], "USCITA", categoria=CATEGORIA_RIMBORSO_CONTRATTO) == 0.0
 
 
-# ── Riapertura di una TERMINAZIONE_DECADENZA (storno-only) ─────────
+# ── Riapertura di una TERMINAZIONE_SALDO_TRAINER/rinuncia (storno-only) ─────────
 
-def test_reopen_terminazione_decadenza_storno_only(client, auth_headers, sample_client, session):
+def test_reopen_terminazione_saldo_trainer_storno_only(client, auth_headers, sample_client, session):
     c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=100.0, crediti=10)
     t = _trainer(session)
-    _complete_pt(session, t.id, sample_client["id"], c["id"], 2)  # reso 200 → conguaglio +100 → write-off
+    _complete_pt(session, t.id, sample_client["id"], c["id"], 2)  # reso 200 > versato 100 → CREDITO_TRAINER (rinuncia)
     residuo_pre = cstate.residuo(session.get(Contract, c["id"]))  # 900
 
-    rt = client.post(f"/api/contracts/{c['id']}/terminate", json={}, headers=auth_headers)
+    rt = client.post(f"/api/contracts/{c['id']}/terminate",
+                     json={"azione_credito_trainer": "RINUNCIA_ESPRESSA", "note": "x"}, headers=auth_headers)
     assert rt.status_code == 200, rt.text
     session.expire_all()
     contract = session.get(Contract, c["id"])
-    assert contract.motivo_chiusura == "TERMINAZIONE_DECADENZA"
+    assert contract.motivo_chiusura == "TERMINAZIONE_SALDO_TRAINER"
     assert round(contract.quota_stornata, 2) == 900.0
 
     rr = client.post(f"/api/contracts/{c['id']}/reopen", headers=auth_headers)
@@ -268,5 +269,5 @@ def test_l3_autoclose_completamento_reopen_preview_rimborso_pieno(client, auth_h
     p = client.get(f"/api/contracts/{c['id']}/settlement-preview", headers=auth_headers).json()
     assert p["sedute_erogate"] == 0                  # solo prenotata, nessuna Completata
     assert p["valore_servizio_reso"] == 0.0
-    assert p["esito"] == "RIMBORSO"
+    assert p["esito"] == "CREDITO_CLIENTE"           # reso 0 < versato 500 → rimborso al cliente (ADR-018)
     assert round(p["importo_rimborso"], 2) == 500.0  # rimborso pieno (tutto il versato)

@@ -11,7 +11,10 @@ from datetime import date, timedelta
 TODAY = date.today()
 FUTURE = (TODAY + timedelta(days=120)).isoformat()
 TERMINATION_FIELDS = ("totale_rimborsato", "quota_stornata", "data_chiusura", "motivo_chiusura", "netto_incassato")
-VALID_MOTIVI = {"COMPLETAMENTO", "CONSUNZIONE", "TERMINAZIONE_RIMBORSO", "TERMINAZIONE_DECADENZA"}
+VALID_MOTIVI = {
+    "COMPLETAMENTO", "CONSUNZIONE", "TERMINAZIONE_RIMBORSO",
+    "TERMINAZIONE_SALDO_TRAINER", "TERMINAZIONE_DECADENZA",  # ADR-018: +SALDO_TRAINER (DECADENZA = legacy)
+}
 
 
 def _mini_contract(client, auth_headers, client_id, *, prezzo, acconto, crediti):
@@ -97,7 +100,7 @@ def test_motivo_chiusura_enum_and_null(client, auth_headers, sample_client):
     # contratto vivo (non chiuso) → motivo_chiusura NULL
     c = _mini_contract(client, auth_headers, sample_client["id"], prezzo=100.0, acconto=0.0, crediti=1)
     assert client.get(f"/api/contracts/{c['id']}", headers=auth_headers).json()["motivo_chiusura"] is None
-    # chiuso per completamento → motivo valorizzato ∈ enum a 4
+    # chiuso per completamento → motivo valorizzato ∈ enum (5 valori, ADR-018)
     _pt_event(client, auth_headers, sample_client["id"], c["id"])
     rr = client.post("/api/rates", json={
         "id_contratto": c["id"], "data_scadenza": FUTURE, "importo_previsto": 100.0,

@@ -37,7 +37,7 @@ fi
 
 echo ""
 
-echo "=== Backend: grep-guard invarianti finanziarie (ADR-016 / ADR-017) ==="
+echo "=== Backend: grep-guard invarianti finanziarie (ADR-016 / ADR-017 / ADR-018) ==="
 GUARD_FAIL=0
 
 # ADR-016 — barriera "euro-da-crediti": il modulo di conguaglio NON deve leggere l'occupazione/crediti.
@@ -54,6 +54,14 @@ fi
 #   Rinviato NON deve occupare il credito — e' presidiata dai test AC-2/AC-3 di test_rinvio_libera_credito.)
 if ! grep -A5 'select(Event.stato, func.count' api/routers/contracts.py | grep -q 'Event.stato != "Cancellato"'; then
     echo "  FAIL [ADR-017]: il credit_breakdown non conta piu' Rinviato (display) — mantieni '!= \"Cancellato\"' sul SOLO sito GROUP BY."
+    GUARD_FAIL=1
+fi
+
+# ADR-018 — l'incasso di conguaglio (INCASSA_ORA / credito differito G7.10) DEVE restare un inflow
+#   contrattuale: se esce da CONTRACT_CASH_IN, `is_contract_inflow` lo perde e il conguaglio sparisce
+#   silenziosamente dai ricavi (gli aggregati cassa che usano il predicato lo escluderebbero).
+if ! grep -A4 'CONTRACT_CASH_IN = frozenset' api/services/cash_categories.py | grep -q 'CATEGORIA_INCASSO_CONGUAGLIO_CONTRATTO'; then
+    echo "  FAIL [ADR-018]: INCASSO_CONGUAGLIO_CONTRATTO non e' piu' in CONTRACT_CASH_IN — l'incasso di conguaglio sparirebbe dai ricavi."
     GUARD_FAIL=1
 fi
 

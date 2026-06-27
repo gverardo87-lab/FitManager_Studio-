@@ -25,7 +25,10 @@ from api.models.rate import Rate
 from api.models.event import Event
 from api.models.trainer import Trainer
 from api.services import contract_state as cstate
-from api.services.cash_categories import CATEGORIA_RIMBORSO_CONTRATTO
+from api.services.cash_categories import (
+    CATEGORIA_RIMBORSO_CONTRATTO,
+    CATEGORIA_INCASSO_CONGUAGLIO_CONTRATTO,
+)
 from api.routers.movements import _compute_variable_burn_rate
 
 TODAY = date.today()
@@ -119,23 +122,29 @@ def test_terminate_rimborso_fonte_unica_importo(client, auth_headers, sample_cli
     assert refund == 300.0
 
 
-def test_terminate_write_off_fonte_unica(client, auth_headers, sample_client, session):
+def test_terminate_credito_trainer_rinuncia(client, auth_headers, sample_client, session):
+    """ADR-018: reso > versato → CREDITO_TRAINER. La RINUNCIA_ESPRESSA è l'ex 'write-off', ora
+    intenzionale e auditata (motivo TERMINAZIONE_SALDO_TRAINER, non più DECADENZA)."""
     c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=100.0, crediti=10)
     t = _trainer(session)
-    _complete_pt(session, t.id, sample_client["id"], c["id"], 2)  # reso = 200
+    _complete_pt(session, t.id, sample_client["id"], c["id"], 2)  # reso = 200, versato 100 → credito_trainer 100
 
-    r = client.post(f"/api/contracts/{c['id']}/terminate", json={}, headers=auth_headers)
+    r = client.post(f"/api/contracts/{c['id']}/terminate",
+                    json={"azione_credito_trainer": "RINUNCIA_ESPRESSA", "note": "Rinuncio al saldo"},
+                    headers=auth_headers)
     assert r.status_code == 200, r.text
 
     session.expire_all()
     contract = session.get(Contract, c["id"])
-    # conguaglio = 200 - 100 = +100 → SALDO_A_PERDERE (no rimborso); residuo_pre = 900 → quota_stornata
-    assert contract.motivo_chiusura == "TERMINAZIONE_DECADENZA"
+    # credito_trainer = 100, rinunciato → residuo_pre = 900 → quota_stornata; nessuna cassa
+    assert contract.motivo_chiusura == "TERMINAZIONE_SALDO_TRAINER"
     assert round(contract.totale_rimborsato, 2) == 0.0
-    assert round(contract.quota_stornata, 2) == 900.0          # AC-1 write-off: quota_delta == residuo_pre
+    assert round(contract.quota_stornata, 2) == 900.0          # residuo_pre azzerato (P − V)
+    assert round(contract.totale_versato, 2) == 100.0          # lordo invariato (nessun incasso)
     assert cstate.residuo(contract) == 0.0
     assert cstate.netto_incassato(contract) == 100.0
     assert _sum_movements(session, c["id"], "USCITA") == 0.0    # nessuna USCITA
+    assert _sum_movements(session, c["id"], "ENTRATA", categoria=CATEGORIA_INCASSO_CONGUAGLIO_CONTRATTO) == 0.0
 
 
 def test_terminate_nullo_consunzione(client, auth_headers, sample_client, session):
@@ -155,20 +164,24 @@ def test_terminate_nullo_consunzione(client, auth_headers, sample_client, sessio
 
 
 def test_terminate_mai_completamento(client, auth_headers, sample_client, session):
-    """AC-7.3-9: terminate non assegna MAI COMPLETAMENTO (lo riaprirebbe la reopen-allowlist G7.2)."""
-    for acconto, n in [(500.0, 2), (100.0, 2), (500.0, 5)]:
+    """AC-7.3-9 + ADR-018: terminate non assegna MAI COMPLETAMENTO (lo riaprirebbe la reopen-allowlist
+    G7.2). I tre rami (cliente/trainer/pari) mappano su TERMINAZIONE_RIMBORSO/SALDO_TRAINER/CONSUNZIONE."""
+    casi = [
+        (500.0, 2, {"metodo_rimborso": "CONTANTI"}, "TERMINAZIONE_RIMBORSO"),       # reso 200 < 500 → cliente
+        (100.0, 2, {"azione_credito_trainer": "RINUNCIA_ESPRESSA", "note": "x"},
+         "TERMINAZIONE_SALDO_TRAINER"),                                             # reso 200 > 100 → trainer
+        (500.0, 5, {}, "CONSUNZIONE"),                                              # reso 500 == 500 → pari
+    ]
+    for acconto, n, payload, atteso in casi:
         c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=acconto, crediti=10)
         t = _trainer(session)
         _complete_pt(session, t.id, sample_client["id"], c["id"], n)
-        r = client.post(f"/api/contracts/{c['id']}/terminate",
-                        json={"metodo_rimborso": "CONTANTI"}, headers=auth_headers)
+        r = client.post(f"/api/contracts/{c['id']}/terminate", json=payload, headers=auth_headers)
         assert r.status_code == 200, r.text
         session.expire_all()
         contract = session.get(Contract, c["id"])
         assert contract.motivo_chiusura != "COMPLETAMENTO"
-        assert contract.motivo_chiusura in (
-            "TERMINAZIONE_RIMBORSO", "TERMINAZIONE_DECADENZA", "CONSUNZIONE",
-        )
+        assert contract.motivo_chiusura == atteso
 
 
 # ── AC-7.3-2: B-2-attiva — terminare un SOSPESO NON lo riapre ──────
@@ -247,10 +260,11 @@ def test_settlement_preview_no_writes(client, auth_headers, sample_client, sessi
     r = client.get(f"/api/contracts/{c['id']}/settlement-preview", headers=auth_headers)
     assert r.status_code == 200, r.text
     body = r.json()
-    assert body["esito"] == "RIMBORSO"
+    assert body["esito"] == "CREDITO_CLIENTE"
     assert body["motivo_chiusura"] == "TERMINAZIONE_RIMBORSO"
     assert round(body["importo_rimborso"], 2) == 300.0
     assert body["metodo_rimborso_richiesto"] is True
+    assert body["azioni_permesse"] == []   # ramo cliente: nessuna scelta trainer
     assert "verifica" in body["messaggio"].lower()            # framing di proposta (§0/§4)
 
     # Nessuna scrittura: stato contratto invariato + nessun nuovo movimento
@@ -286,14 +300,19 @@ def test_terminate_legacy_muto_crediti_none(client, auth_headers, sample_client,
     session.commit()
     session.refresh(muto)
 
-    r = client.post(f"/api/contracts/{muto.id}/terminate", json={}, headers=auth_headers)
+    # crediti None → valore_reso = prezzo intero (300); conguaglio = 300-100 = +200 → CREDITO_TRAINER
+    # → scelta obbligatoria: senza azione 422, poi RINUNCIA chiude (ADR-018, AC §10.6/legacy-safe)
+    assert client.post(f"/api/contracts/{muto.id}/terminate", json={},
+                       headers=auth_headers).status_code == 422
+    r = client.post(f"/api/contracts/{muto.id}/terminate",
+                    json={"azione_credito_trainer": "RINUNCIA_ESPRESSA", "note": "legacy"},
+                    headers=auth_headers)
     assert r.status_code == 200, r.text
 
     session.expire_all()
     contract = session.get(Contract, muto.id)
-    # crediti None → valore_reso = prezzo intero (300); conguaglio = 300-100 = +200 → SALDO_A_PERDERE
     assert contract.chiuso is True
-    assert contract.motivo_chiusura == "TERMINAZIONE_DECADENZA"
+    assert contract.motivo_chiusura == "TERMINAZIONE_SALDO_TRAINER"
     assert round(contract.quota_stornata, 2) == 200.0          # residuo (300-100) azzerato
     assert cstate.residuo(contract) == 0.0
     assert round(contract.totale_versato, 2) == 100.0          # invariante: lordo immutato
@@ -357,10 +376,11 @@ def test_terminate_bouncer_404(client, auth_headers, sample_client):
 def test_terminate_gia_chiuso_400(client, auth_headers, sample_client, session):
     c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=100.0, crediti=10)
     t = _trainer(session)
-    _complete_pt(session, t.id, sample_client["id"], c["id"], 2)
-    r1 = client.post(f"/api/contracts/{c['id']}/terminate", json={}, headers=auth_headers)
+    _complete_pt(session, t.id, sample_client["id"], c["id"], 2)  # reso 200 > 100 → credito_trainer
+    r1 = client.post(f"/api/contracts/{c['id']}/terminate",
+                     json={"azione_credito_trainer": "RINUNCIA_ESPRESSA", "note": "x"}, headers=auth_headers)
     assert r1.status_code == 200, r1.text
-    # seconda terminazione sullo stesso contratto → 400
+    # seconda terminazione sullo stesso contratto → 400 (già chiuso, prima del check esito)
     r2 = client.post(f"/api/contracts/{c['id']}/terminate", json={}, headers=auth_headers)
     assert r2.status_code == 400
     # anche la preview su un chiuso → 400
@@ -375,18 +395,19 @@ def test_terminate_data_chiusura_futura_422(client, auth_headers, sample_client,
     futuro). Atomicità: nessuna scrittura. Controprova: data odierna → 200."""
     c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=100.0, crediti=10)
     t = _trainer(session)
-    _complete_pt(session, t.id, sample_client["id"], c["id"], 2)  # write-off, niente metodo richiesto
+    _complete_pt(session, t.id, sample_client["id"], c["id"], 2)  # reso 200 > 100 → credito_trainer (RINUNCIA)
+    azione = {"azione_credito_trainer": "RINUNCIA_ESPRESSA", "note": "x"}
 
     futura = (TODAY + timedelta(days=10)).isoformat()
     r = client.post(f"/api/contracts/{c['id']}/terminate",
-                    json={"data_chiusura": futura}, headers=auth_headers)
-    assert r.status_code == 422, r.text
+                    json={**azione, "data_chiusura": futura}, headers=auth_headers)
+    assert r.status_code == 422, r.text  # field_validator schema → respinto prima del router
     session.expire_all()
     assert session.get(Contract, c["id"]).chiuso is False  # boundary respinge → nessuna scrittura
 
     # controprova: data odierna accettata
     r2 = client.post(f"/api/contracts/{c['id']}/terminate",
-                     json={"data_chiusura": TODAY.isoformat()}, headers=auth_headers)
+                     json={**azione, "data_chiusura": TODAY.isoformat()}, headers=auth_headers)
     assert r2.status_code == 200, r2.text
 
 
@@ -545,3 +566,146 @@ def test_r4_m4_indicatore_completamento_prenotato(client, auth_headers, sample_c
     assert row["sedute_non_erogate_chiusura"] == 1     # M4: 1 prenotata non erogata alla chiusura
     d = client.get(f"/api/contracts/{c['id']}", headers=auth_headers).json()
     assert d["sedute_non_erogate_chiusura"] == 1
+
+
+# ════════════════════════════════════════════════════════════════════
+# G7.9 (ADR-018) — ramo CREDITO_TRAINER: scelta esplicita, incasso editabile, reopen inverso esatto.
+# Fixture canonica: prezzo 1000, 10 crediti, acconto 100, 4 sedute erogate → R=400, V=100 →
+# credito_trainer=300, quota_non_erogata (P−R)=600, residuo_pre (P−V)=900.
+# ════════════════════════════════════════════════════════════════════
+
+def _contract_credito_trainer(client, auth_headers, sample_client, session):
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=100.0, crediti=10)
+    t = _trainer(session)
+    _complete_pt(session, t.id, sample_client["id"], c["id"], 4)  # reso 400 > versato 100 → credito_trainer 300
+    return c
+
+
+def test_terminate_credito_trainer_senza_scelta_422(client, auth_headers, sample_client, session):
+    """AC §10.3-6: credito_trainer > 0 e nessuna azione → 422 (mai chiusura silenziosa). Zero scritture."""
+    c = _contract_credito_trainer(client, auth_headers, sample_client, session)
+    r = client.post(f"/api/contracts/{c['id']}/terminate", json={}, headers=auth_headers)
+    assert r.status_code == 422, r.text
+    session.expire_all()
+    contract = session.get(Contract, c["id"])
+    assert contract.chiuso is False
+    assert round(contract.quota_stornata, 2) == 0.0
+
+
+def test_terminate_incassa_ora_pieno(client, auth_headers, sample_client, session):
+    """AC §10.3-7: INCASSA_ORA con X = credito_trainer (300). ENTRATA INCASSO_CONGUAGLIO; versato sale;
+    quota_stornata == quota_non_erogata (P−R); residuo 0; netto == R."""
+    c = _contract_credito_trainer(client, auth_headers, sample_client, session)
+    r = client.post(f"/api/contracts/{c['id']}/terminate",
+                    json={"azione_credito_trainer": "INCASSA_ORA", "metodo_pagamento": "CONTANTI"},
+                    headers=auth_headers)
+    assert r.status_code == 200, r.text
+    session.expire_all()
+    contract = session.get(Contract, c["id"])
+    assert contract.motivo_chiusura == "TERMINAZIONE_SALDO_TRAINER"
+    assert _sum_movements(session, c["id"], "ENTRATA", categoria=CATEGORIA_INCASSO_CONGUAGLIO_CONTRATTO) == 300.0
+    assert round(contract.totale_versato, 2) == 400.0          # 100 + 300
+    assert round(contract.quota_stornata, 2) == 600.0          # P − R (non erogato)
+    assert cstate.residuo(contract) == 0.0
+    assert cstate.netto_incassato(contract) == 400.0           # == R (incasso pieno)
+    # àncora Strada B: Σ ENTRATA (acconto + conguaglio) == totale_versato
+    assert _sum_movements(session, c["id"], "ENTRATA") == round(contract.totale_versato, 2) == 400.0
+
+
+def test_terminate_incassa_ora_parziale_abbuono(client, auth_headers, sample_client, session):
+    """AC §10.3-8: INCASSA_ORA con X=200 < credito_trainer (300, edit verso il basso). I 100 abbuonati
+    confluiscono nello storno; audit registra saldo_trainer_rinunciato. residuo 0."""
+    c = _contract_credito_trainer(client, auth_headers, sample_client, session)
+    r = client.post(f"/api/contracts/{c['id']}/terminate",
+                    json={"azione_credito_trainer": "INCASSA_ORA", "metodo_pagamento": "POS",
+                          "importo_incassato": 200.0},
+                    headers=auth_headers)
+    assert r.status_code == 200, r.text
+    session.expire_all()
+    contract = session.get(Contract, c["id"])
+    assert _sum_movements(session, c["id"], "ENTRATA", categoria=CATEGORIA_INCASSO_CONGUAGLIO_CONTRATTO) == 200.0
+    assert round(contract.totale_versato, 2) == 300.0          # 100 + 200
+    assert round(contract.quota_stornata, 2) == 700.0          # residuo_pre 900 − incasso 200 (= 600 non erog. + 100 abbuono)
+    assert cstate.residuo(contract) == 0.0
+    assert cstate.netto_incassato(contract) == 300.0           # V + X (incasso parziale)
+
+
+def test_terminate_incassa_ora_oltre_cap_422(client, auth_headers, sample_client, session):
+    """AC §10.3-9: importo > credito_trainer (300) → 422 (non si fattura servizio non erogato). Zero scritture."""
+    c = _contract_credito_trainer(client, auth_headers, sample_client, session)
+    r = client.post(f"/api/contracts/{c['id']}/terminate",
+                    json={"azione_credito_trainer": "INCASSA_ORA", "metodo_pagamento": "CONTANTI",
+                          "importo_incassato": 400.0},
+                    headers=auth_headers)
+    assert r.status_code == 422, r.text
+    session.expire_all()
+    assert session.get(Contract, c["id"]).chiuso is False
+
+
+def test_terminate_incassa_ora_senza_metodo_422(client, auth_headers, sample_client, session):
+    """INCASSA_ORA senza metodo_pagamento → 422 (l'incasso muove cassa, serve il metodo)."""
+    c = _contract_credito_trainer(client, auth_headers, sample_client, session)
+    r = client.post(f"/api/contracts/{c['id']}/terminate",
+                    json={"azione_credito_trainer": "INCASSA_ORA"}, headers=auth_headers)
+    assert r.status_code == 422, r.text
+    session.expire_all()
+    assert session.get(Contract, c["id"]).chiuso is False
+
+
+def test_terminate_rinuncia_senza_nota_422(client, auth_headers, sample_client, session):
+    """AC §10.3-11: RINUNCIA_ESPRESSA senza nota → 422 (la nota è presidio auditabile). Zero scritture."""
+    c = _contract_credito_trainer(client, auth_headers, sample_client, session)
+    r = client.post(f"/api/contracts/{c['id']}/terminate",
+                    json={"azione_credito_trainer": "RINUNCIA_ESPRESSA"}, headers=auth_headers)
+    assert r.status_code == 422, r.text
+    session.expire_all()
+    assert session.get(Contract, c["id"]).chiuso is False
+
+
+def test_terminate_azione_a_credito_respinta_g710(client, auth_headers, sample_client, session):
+    """A_CREDITO (credito differito) è respinto a livello schema finché non arriva G7.10 → 422."""
+    c = _contract_credito_trainer(client, auth_headers, sample_client, session)
+    r = client.post(f"/api/contracts/{c['id']}/terminate",
+                    json={"azione_credito_trainer": "A_CREDITO"}, headers=auth_headers)
+    assert r.status_code == 422, r.text
+
+
+def test_reopen_dopo_incassa_ora_roundtrip(client, auth_headers, sample_client, session):
+    """AC §10.4-13: reopen dopo INCASSA_ORA è round-trip esatto: ENTRATA INCASSO_CONGUAGLIO annullata,
+    totale_versato torna al pre-terminate, quota_stornata azzerata, residuo ripristinato."""
+    c = _contract_credito_trainer(client, auth_headers, sample_client, session)
+    assert client.post(f"/api/contracts/{c['id']}/terminate",
+                       json={"azione_credito_trainer": "INCASSA_ORA", "metodo_pagamento": "CONTANTI"},
+                       headers=auth_headers).status_code == 200
+    session.expire_all()
+    contract = session.get(Contract, c["id"])
+    assert round(contract.totale_versato, 2) == 400.0
+
+    assert client.post(f"/api/contracts/{c['id']}/reopen", headers=auth_headers).status_code == 200
+    session.expire_all()
+    contract = session.get(Contract, c["id"])
+    assert contract.chiuso is False
+    assert round(contract.totale_versato, 2) == 100.0          # incasso conguaglio invertito
+    assert round(contract.quota_stornata, 2) == 0.0            # storno ripristinato
+    assert cstate.residuo(contract) == 900.0                   # P − V pre-terminate
+    # il movimento di conguaglio è soft-deleted (non più attivo)
+    assert _sum_movements(session, c["id"], "ENTRATA", categoria=CATEGORIA_INCASSO_CONGUAGLIO_CONTRATTO) == 0.0
+
+
+def test_incasso_conguaglio_conta_come_ricavo(client, auth_headers, sample_client, session):
+    """AC §10.5-15/17: l'incasso di conguaglio è un inflow contrattuale (predicato SSoT) e conta come
+    ricavo negli aggregati cassa (movement-stats totale_entrate), mai come rimborso o spesa."""
+    from api.services.cash_categories import is_contract_inflow, is_contract_outflow, signed_contractual_amount
+
+    assert is_contract_inflow(CATEGORIA_INCASSO_CONGUAGLIO_CONTRATTO) is True
+    assert is_contract_outflow(CATEGORIA_INCASSO_CONGUAGLIO_CONTRATTO) is False
+    assert signed_contractual_amount(CATEGORIA_INCASSO_CONGUAGLIO_CONTRATTO, 300.0) == 300.0  # +, non −
+
+    c = _contract_credito_trainer(client, auth_headers, sample_client, session)
+    assert client.post(f"/api/contracts/{c['id']}/terminate",
+                       json={"azione_credito_trainer": "INCASSA_ORA", "metodo_pagamento": "CONTANTI"},
+                       headers=auth_headers).status_code == 200
+    stats = client.get(f"/api/movements/stats?anno={TODAY.year}&mese={TODAY.month}", headers=auth_headers).json()
+    # acconto 100 + conguaglio 300 = 400 di entrate; il conguaglio NON è un'uscita/rimborso
+    assert round(stats["totale_entrate"], 2) == 400.0
+    assert round(stats["totale_uscite_variabili"], 2) == 0.0

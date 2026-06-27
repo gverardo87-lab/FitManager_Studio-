@@ -608,27 +608,32 @@ export interface ContractUpdate {
   note?: string | null;
 }
 
-/** POST /api/contracts/{id}/terminate (G7.3) — terminazione anticipata. Il `motivo_chiusura` è
- * DERIVATO server-side dall'esito del conguaglio: il body non lo contiene (anti mass-assignment). */
+/** POST /api/contracts/{id}/terminate (G7.3 + ADR-018) — terminazione anticipata. Il `motivo_chiusura`
+ * è DERIVATO server-side dall'esito del conguaglio: il body non lo contiene (anti mass-assignment). */
 export interface ContractTerminate {
-  metodo_rimborso?: string | null; // obbligatorio se l'esito è RIMBORSO
+  metodo_rimborso?: string | null; // ramo CREDITO_CLIENTE (rimborso)
+  azione_credito_trainer?: "INCASSA_ORA" | "RINUNCIA_ESPRESSA" | null; // ramo CREDITO_TRAINER
+  importo_incassato?: number | null; // INCASSA_ORA: proposta editabile [0, credito_trainer]
+  metodo_pagamento?: string | null; // INCASSA_ORA
   note?: string | null;
   data_chiusura?: string | null; // ISO date; default oggi
 }
 
-/** GET /api/contracts/{id}/settlement-preview (G7.3) — conguaglio calcolato PRIMA della conferma
- * (dry-run, zero scritture). `messaggio` = framing di proposta (mai "obbligo legale"). */
+/** GET /api/contracts/{id}/settlement-preview (G7.3 + ADR-018) — conguaglio calcolato PRIMA della
+ * conferma (dry-run, zero scritture). `messaggio` = framing di proposta (mai "obbligo legale"). */
 export interface ContractSettlementPreview {
-  esito: "RIMBORSO" | "SALDO_A_PERDERE" | "NULLO";
+  esito: "CREDITO_CLIENTE" | "CREDITO_TRAINER" | "PARI"; // balance-based (ADR-018)
   motivo_chiusura: string; // derivato dall'esito
   valore_servizio_reso: number;
   conguaglio: number;
-  importo_rimborso: number; // > 0 solo se esito RIMBORSO
-  quota_da_stornare: number; // residuo che verrà azzerato (write-off)
+  importo_rimborso: number; // credito_cliente: > 0 solo se esito CREDITO_CLIENTE
+  credito_trainer: number; // > 0 solo se esito CREDITO_TRAINER (default editabile per INCASSA_ORA)
+  quota_da_stornare: number; // residuo_pre che verrà regolato (storno + eventuale incasso/abbuono)
   sedute_erogate: number;
   sedute_totali: number | null;
   sedute_prenotate: number; // D2: PT prenotate-non-svolte — solo display (non entra nel conguaglio)
   metodo_rimborso_richiesto: boolean;
+  azioni_permesse: string[]; // ramo CREDITO_TRAINER: INCASSA_ORA, RINUNCIA_ESPRESSA (A_CREDITO da G7.10)
   policy_mode: string;
   messaggio: string;
 }

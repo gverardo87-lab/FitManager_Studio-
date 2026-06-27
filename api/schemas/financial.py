@@ -34,6 +34,9 @@ ClinicalReadinessWorklistResponse = clinical_schemas.ClinicalReadinessWorklistRe
 VALID_PAYMENT_METHODS = {"CONTANTI", "POS", "BONIFICO", "ASSEGNO", "ALTRO"}
 VALID_RATE_STATUSES = {"PENDENTE", "PARZIALE", "SALDATA"}
 VALID_PAYMENT_STATUSES = {"PENDENTE", "PARZIALE", "SALDATO"}
+# ADR-018: azioni del ramo CREDITO_TRAINER della terminazione. `A_CREDITO` (credito differito) è G7.10
+# → escluso qui finché l'entità `crediti_terminazione` non esiste (un payload con A_CREDITO → 422).
+VALID_AZIONI_CREDITO_TRAINER = {"INCASSA_ORA", "RINUNCIA_ESPRESSA"}
 
 
 # ════════════════════════════════════════════════════════════
@@ -158,27 +161,52 @@ class ContractResponse(BaseModel):
 
 class ContractTerminate(BaseModel):
     """
-    Input per la terminazione anticipata (G7.3). Atto UMANO esplicito su un contratto vivo.
+    Input per la terminazione anticipata (G7.3 + ADR-018). Atto UMANO esplicito su un contratto vivo.
 
     BLINDATO (mass-assignment): NESSUN campo calcolato in input — né `totale_versato`, né
-    `totale_rimborsato`/`quota_stornata`, né l'importo. Il conguaglio è calcolato server-side
-    (`compute_settlement`, base sedute) e il `motivo_chiusura` è DERIVATO dall'esito (AC-7.3-9),
-    NON scelto dal trainer.
+    `totale_rimborsato`/`quota_stornata`. Il conguaglio (e quindi `credito_cliente`/`credito_trainer`,
+    l'esito e il `motivo_chiusura`) è calcolato server-side (`compute_settlement`, base sedute), NON
+    scelto dal trainer. L'UNICO importo in input è `importo_incassato`, la **proposta editabile** del
+    saldo a favore del trainer (cap `[0, credito_trainer]` verificato nel router → 422).
 
-    - `metodo_rimborso`: obbligatorio SOLO se l'esito è RIMBORSO (verificato nel router → 422).
-    - `data_chiusura`: quando la chiusura ha effetto (default oggi nel router).
+    Ramo CREDITO_CLIENTE: `metodo_rimborso` obbligatorio (422 nel router).
+    Ramo CREDITO_TRAINER: `azione_credito_trainer` obbligatoria (422); poi
+      - `INCASSA_ORA` → `metodo_pagamento` obbligatorio; `importo_incassato` opzionale (default = credito_trainer);
+      - `RINUNCIA_ESPRESSA` → `note` non vuote obbligatorie.
+    `data_chiusura`: quando la chiusura ha effetto (default oggi nel router).
     """
     model_config = {"extra": "forbid"}
 
-    metodo_rimborso: Optional[str] = None
+    metodo_rimborso: Optional[str] = None                 # ramo CREDITO_CLIENTE
+    azione_credito_trainer: Optional[str] = None          # ramo CREDITO_TRAINER: INCASSA_ORA | RINUNCIA_ESPRESSA
+    importo_incassato: Optional[float] = None             # INCASSA_ORA: proposta editabile [0, credito_trainer]
+    metodo_pagamento: Optional[str] = None                # INCASSA_ORA: metodo dell'incasso di conguaglio
     note: Optional[str] = Field(None, max_length=500)
     data_chiusura: Optional[date] = None
 
-    @field_validator("metodo_rimborso")
+    @field_validator("metodo_rimborso", "metodo_pagamento")
     @classmethod
-    def _validate_metodo_rimborso(cls, v: Optional[str]) -> Optional[str]:
+    def _validate_metodo(cls, v: Optional[str]) -> Optional[str]:
         if v is not None and v not in VALID_PAYMENT_METHODS:
             raise ValueError(f"Metodo invalido. Validi: {sorted(VALID_PAYMENT_METHODS)}")
+        return v
+
+    @field_validator("azione_credito_trainer")
+    @classmethod
+    def _validate_azione(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and v not in VALID_AZIONI_CREDITO_TRAINER:
+            raise ValueError(
+                f"Azione non valida. Valide: {sorted(VALID_AZIONI_CREDITO_TRAINER)} "
+                "(il credito differito 'A_CREDITO' arriva con G7.10)."
+            )
+        return v
+
+    @field_validator("importo_incassato")
+    @classmethod
+    def _validate_importo_incassato(cls, v: Optional[float]) -> Optional[float]:
+        # Cap superiore (<= credito_trainer) verificato nel router (richiede R−V server-side).
+        if v is not None and v < 0:
+            raise ValueError("L'importo da incassare non può essere negativo.")
         return v
 
     @field_validator("data_chiusura")
@@ -203,16 +231,18 @@ class ContractSettlementPreview(BaseModel):
     `messaggio` porta il framing di proposta (load-bearing quanto i numeri): mai "da rimborsare",
     sempre "calcolato/proposto, verifica con le condizioni del contratto".
     """
-    esito: str                            # RIMBORSO | SALDO_A_PERDERE | NULLO
-    motivo_chiusura: str                  # derivato: TERMINAZIONE_RIMBORSO | TERMINAZIONE_DECADENZA | CONSUNZIONE
+    esito: str                            # CREDITO_CLIENTE | CREDITO_TRAINER | PARI (balance-based, ADR-018)
+    motivo_chiusura: str                  # derivato: TERMINAZIONE_RIMBORSO | TERMINAZIONE_SALDO_TRAINER | CONSUNZIONE
     valore_servizio_reso: float
     conguaglio: float                     # valore_reso − versato (firmato)
-    importo_rimborso: float               # > 0 solo se esito RIMBORSO
-    quota_da_stornare: float              # residuo corrente che verrà azzerato (write-off)
+    importo_rimborso: float               # credito_cliente: > 0 solo se esito CREDITO_CLIENTE
+    credito_trainer: float = 0.0          # > 0 solo se esito CREDITO_TRAINER (default proposto per INCASSA_ORA, editabile [0, credito_trainer])
+    quota_da_stornare: float              # residuo_pre che verrà regolato (storno + eventuale incasso/abbuono)
     sedute_erogate: int                   # sedute Completate (servizio reso) — base del pro-rata
     sedute_totali: Optional[int] = None   # crediti_totali (None = senza monte-sedute)
     sedute_prenotate: int = 0             # D2 (G7.5c): PT prenotate-non-svolte — SOLO display (NON entra nel conguaglio)
-    metodo_rimborso_richiesto: bool       # True se esito RIMBORSO → il form deve chiedere il metodo
+    metodo_rimborso_richiesto: bool       # True se esito CREDITO_CLIENTE → il form deve chiedere il metodo rimborso
+    azioni_permesse: List[str] = []       # ramo CREDITO_TRAINER: scelte offerte (INCASSA_ORA, RINUNCIA_ESPRESSA; A_CREDITO da G7.10)
     policy_mode: str = "pro_sedute"       # metodo di valorizzazione (default dichiarato, §0)
     messaggio: str                        # framing di proposta (§0/§4)
 

@@ -110,7 +110,7 @@ def test_close_contract_via_terminate(client, auth_headers, sample_contract):
 
     cr = client.get(f"/api/contracts/{sample_contract['id']}", headers=auth_headers)
     assert cr.json()["chiuso"] is True
-    assert cr.json()["motivo_chiusura"] in ("TERMINAZIONE_RIMBORSO", "TERMINAZIONE_DECADENZA", "CONSUNZIONE")
+    assert cr.json()["motivo_chiusura"] in ("TERMINAZIONE_RIMBORSO", "TERMINAZIONE_SALDO_TRAINER", "CONSUNZIONE")
 
 
 def test_delete_client_with_closed_contract(client, auth_headers, sample_client, sample_contract):

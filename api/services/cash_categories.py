@@ -16,13 +16,21 @@ from __future__ import annotations
 # ── Categorie contrattuali (legate a un contratto via id_contratto) ──
 CATEGORIA_ACCONTO_CONTRATTO = "ACCONTO_CONTRATTO"    # IN: acconto alla firma
 CATEGORIA_PAGAMENTO_RATA = "PAGAMENTO_RATA"          # IN: pagamento rata / incasso residuo diretto (G6)
+CATEGORIA_INCASSO_CONGUAGLIO_CONTRATTO = "INCASSO_CONGUAGLIO_CONTRATTO"  # IN: incasso del saldo a favore del trainer alla terminazione (G7.9, INCASSA_ORA) o del credito differito (G7.10)
 CATEGORIA_RIMBORSO_CONTRATTO = "RIMBORSO_CONTRATTO"  # OUT: rimborso da terminazione anticipata (G7)
 
 # ── Categoria di rettifica (NON-ricavo, id_contratto NULL) ──────────
 CATEGORIA_STORNO_SPESA_FISSA = "STORNO_SPESA_FISSA"  # rettifica di un'uscita fissa (legata a spesa ricorrente)
 
 # ── Set di classificazione (predicato contrattuale bidirezionale, §2) ──
-CONTRACT_CASH_IN = frozenset({CATEGORIA_ACCONTO_CONTRATTO, CATEGORIA_PAGAMENTO_RATA})
+# NB: gli aggregati cassa classificano l'inflow per `tipo == 'ENTRATA'` + presenza `id_contratto`
+# (mai per allowlist di categoria) → il conguaglio entra come ricavo automaticamente. Questo set è
+# la SSoT del predicato (`is_contract_inflow`) e del grep-guard: il conguaglio è un IN contrattuale.
+CONTRACT_CASH_IN = frozenset({
+    CATEGORIA_ACCONTO_CONTRATTO,
+    CATEGORIA_PAGAMENTO_RATA,
+    CATEGORIA_INCASSO_CONGUAGLIO_CONTRATTO,
+})
 CONTRACT_CASH_OUT = frozenset({CATEGORIA_RIMBORSO_CONTRATTO})
 CONTRACT_CASH_CATEGORIES = CONTRACT_CASH_IN | CONTRACT_CASH_OUT
 
