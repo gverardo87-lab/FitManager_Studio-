@@ -2190,3 +2190,54 @@ reopen round-trip, coerenza ricavi). `ruff` + `next build` + grep-guard verdi.
 reopen esteso) → **G1 cifratura crm.db**. In coda: verifica Playwright live del dialog a 3 vie.
 
 ---
+
+### 2026-06-28 — G7.10 / ADR-018: credito differito post-chiusura (entità `crediti_terminazione`)
+
+Secondo e ultimo blocco di ADR-018: l'azione **A_CREDITO** della terminazione ("chiudo oggi, il cliente
+paga dopo"). Il saldo a favore del trainer SOPRAVVIVE alla chiusura **senza** rompere `residuo()==0`.
+
+**Architettura (la chiave).** Il credito differito **non** vive nel contratto: a `terminate` A_CREDITO il
+dovuto viene **stornato** dal residuo del contratto (`quota_stornata` piena, come la rinuncia) e
+**ri-tracciato** come receivable parallelo `crediti_terminazione`, **FUORI** da `contract_state.residuo()`.
+Il contratto chiude con `residuo()==0`; il credito è tracciato altrove. Mai una Rate viva su contratto
+chiuso (no rata-fantasma). Quando il cliente paga, l'incasso (anche parziale) genera una ENTRATA
+`INCASSO_CONGUAGLIO_CONTRATTO` e fa crescere `totale_versato` (Strada B) → `residuo()` resta 0 (clamp,
+`quota_stornata` ha già assorbito il differito), `netto_incassato` cresce.
+
+**Implementazione (commit `16b70df`).**
+- **Entità** `api/models/credito_terminazione.py` (`importo`, `importo_incassato`, `stato`
+  APERTO/SALDATO/ANNULLATO, FK contratto/cliente/trainer) + **migrazione `b2c3d4e5f6a7`**. NB: essendo una
+  TABELLA NUOVA, `create_db_and_tables()` (metadata.create_all, idempotente, al boot — `main.py:237`) la
+  crea su **tutti** i DB business inclusi i deployati/frozen → la migrazione Alembic è solo record formale
+  (diverso da G7.0/M1 che aggiungevano COLONNE e richiedevano `schema_sync`).
+- `terminate` ramo `A_CREDITO`: crea il receivable (importo = credito_trainer), `incasso_ora=0` → la
+  formula storno uniforme `quota_stornata += residuo_pre − incasso_ora` assorbe il differito; zero cassa.
+- Endpoint `POST …/crediti-terminazione/{cid}/incassa` (parziale OK → SALDATO; **niente `_sync`**, il
+  contratto resta chiuso) **+ `/annulla`** (rinuncia residuo → ANNULLATO, zero cassa) **+ list per
+  contratto** + worklist `GET /dashboard/crediti-da-incassare` (aging-driven, gemella G6).
+- `reopen` esteso (gamba **C-ter**): i receivable → ANNULLATO. Gli incassi parziali erano **già** invertiti
+  da C-bis (stessa categoria `INCASSO_CONGUAGLIO_CONTRATTO`) → C-ter chiude solo il record. Inverso esatto.
+- FE: dialog terminate a **3 vie** (+"Metti a credito e chiudi") + `CreditiDaIncassareCard` (worklist
+  auto-nascosta) + `IncassaCreditoDialog` su `/rinnovi-incassi` + hook `useCreditiDaIncassare`/
+  `useIncassaCredito`/`useAnnullaCredito` + tipi.
+
+**Decisione di scope (v1).** A_CREDITO differisce l'**intero** `credito_trainer` (nessun edit dell'importo
+al terminate, a differenza di INCASSA_ORA): il caso "incasso parte ora + parte dopo" si ottiene con
+A_CREDITO + incasso parziale del receivable; il "forgive parziale" con A_CREDITO + `annulla` del residuo.
+Un solo importo editabile per ramo → niente combinazioni di azioni in una sola terminazione (§12 dello spec).
+
+**Verifica.** **658 test verdi** (+8 AC G7.10: receivable creato, incasso parziale→saldo, over-cap 422,
+annulla, bouncer 404, reopen round-trip con incasso parziale invertito, worklist). `ruff` + `next build` +
+grep-guard ADR-018 verdi.
+
+**Lezione trasferibile.** *Un credito che sopravvive alla chiusura non si forza dentro l'invariante che lo
+vieta — gli si dà un'entità a sé.* L'istinto sbagliato era tenere una Rate viva o gonfiare `residuo()` sul
+chiuso; entrambi rompono `residuo()==0`. La via giusta: stornare dal contratto (che torna a 0) e
+ri-tracciare il dovuto in un receivable parallelo, con la sua riconciliazione (l'incasso cresce
+`totale_versato`, `quota_stornata` lo compensa → `residuo()` resta 0). L'invariante non si piega: si
+aggiunge un piano ortogonale.
+
+**⏭️ Prossimo:** **G1 cifratura crm.db**. In coda: verifica Playwright live (dialog 3-vie G7.9 + worklist
+crediti G7.10). Differiti post-G1 invariati.
+
+---

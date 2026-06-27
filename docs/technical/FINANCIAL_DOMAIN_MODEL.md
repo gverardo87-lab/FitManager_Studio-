@@ -258,7 +258,8 @@ simmetriche e corrispondono alla distinzione contabile **rimborso ≠ nota di cr
   l'incassato. Lo storno copre solo `residuo_pre − incassato`. È **simmetrico** al RIMBORSO (entrata vs
   uscita). In alternativa il trainer rinuncia (`RINUNCIA`, gamba STORNO piena) — mai più un **write-off
   silenzioso**. Il credito **differito** (chiudo oggi, incasso dopo) è entità a sé (`crediti_terminazione`,
-  fuori da `residuo()`), normata in **G7.10** (ADR-018 §D-CREDITO-DIFFERITO).
+  fuori da `residuo()`), **implementata in G7.10** (ADR-018 §D-CREDITO-DIFFERITO): incassabile anche
+  parzialmente (worklist "Crediti da incassare"), annullabile, e annullata dal `reopen`.
 
 > **Esempio compatto.** Pacchetto da 20 sedute, prezzo 1000, prepagato `versato = 700`. Il cliente fa 4
 > sedute, poi recede. Con policy "pro-sedute a prezzo di pacchetto" → `valore_servizio_reso = 200`.
