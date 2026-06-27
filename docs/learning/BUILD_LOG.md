@@ -2051,3 +2051,40 @@ di G7.7.
 ⏭️ Prossimo: G1 cifratura crm.db** (con, in coda, la verifica Playwright di R5).
 
 ---
+
+### 2026-06-27 — G7.7-R5 follow-up frontend: scheda azionabile + summary mobile + guardrail scadenza
+
+Chiusura del follow-up frontend emerso dall'audit di dettaglio del 2026-06-27. Obiettivo: rendere il
+dettaglio contratto davvero azionabile dove il banner M4 spiegava il caso, preservare la trasparenza R5
+sotto `lg`, e togliere l'ambiguità UX sulla retrodatazione della scadenza senza toccare il modello.
+
+**Implementato.**
+- **Scheda dettaglio azionabile:** `/contratti/[id]` ora espone `Termina` / `Riapri` / `Incassa residuo`
+  nell'header, riusando i dialog canonici G7.3/G7.4/G6. Nessun nuovo endpoint, nessuna logica di dominio
+  duplicata. La guardia dell'incasso diretto è stata estratta in helper condiviso (`contract-action-guards.ts`)
+  per non driftare tra lista e dettaglio.
+- **Banner M4 allineato al percorso reale:** `ContractFinancialHero` non dice più solo `Riapri -> Termina`
+  in astratto; chiarisce che l'azione è disponibile dalla scheda stessa.
+- **Lista contratti sotto `lg`:** aggiunto summary compatto nella cella Cliente con `crediti_usati/totali`,
+  `N svolte` e `N prenotate non svolte` (solo se presenti). La colonna `Crediti` resta sede primaria su `lg+` —
+  nessun doppione desktop.
+- **Guardrail scadenza in modifica:** il form distingue esplicitamente `oggi` vs `passato`. `data_scadenza == oggi`
+  mostra che il contratto resta vigente fino a fine giornata; `data_scadenza < oggi` su un contratto oggi ATTIVO
+  richiede conferma esplicita prima del salvataggio. Nessun ricalcolo client-side di `SOSPESO/ESAURITO`: il testo
+  dichiara solo che il contratto diventa immediatamente scaduto, e il lifecycle finale resta derivato dal SSoT.
+
+**Verifica.**
+- `next build` verde dopo il wiring finale (unico fix locale: `ReopenContractDialog` allargato da `ContractListItem`
+  a `Contract` per il riuso dal dettaglio).
+- **Verifica visiva reale eseguita dal founder** sull'ambiente dev **8000/3000**: la spec frontend può essere
+  considerata chiusa.
+
+**Metodo / stato docs.**
+- `SPEC_G7.7_R5_TRASPARENZA_E_AZIONI_FRONTEND.md` chiusa e **archiviata** in `docs/archive/specs/` come design-record.
+- Il **gap backend** emerso nello stesso audit (retrodatazione `data_scadenza` che cambia il lifecycle senza audit
+  semantico dedicato) è stato **isolato come task separato** e NON entra in questo commit/task frontend.
+
+**⏭️ Prossimo:** commit atomico del task frontend chiuso; poi riaprire il filone backend sulla tracciabilità del
+`lifecycle` indotto da `update_contract` (spec separata, fuori da questa chiusura).
+
+---

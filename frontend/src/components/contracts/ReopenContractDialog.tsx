@@ -22,10 +22,10 @@ import {
 } from "@/components/ui/dialog";
 import { useReopenContract } from "@/hooks/useContracts";
 import { formatCurrency } from "@/lib/format";
-import type { ContractListItem } from "@/types/api";
+import type { Contract } from "@/types/api";
 
 interface ReopenContractDialogProps {
-  contract: ContractListItem | null;
+  contract: Contract | null;
   clientLabel: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;

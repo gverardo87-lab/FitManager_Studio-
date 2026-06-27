@@ -197,7 +197,7 @@ export function ContractFinancialHero({ contract }: { contract: ContractWithRate
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden="true" />
             <p className="text-xs text-amber-800 dark:text-amber-300">
               <strong>{contract.sedute_non_erogate_chiusura} sedute prenotate non erogate</strong> alla chiusura.
-              Per rimborsare il non svolto: <strong>Riapri → Termina</strong>.
+              Per rimborsare il non svolto: usa <strong>Riapri</strong> e poi <strong>Termina</strong> da questa scheda.
             </p>
           </div>
         ) : creditiTotali > 0 && completate < creditiTotali ? (

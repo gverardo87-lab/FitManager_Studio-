@@ -20,6 +20,7 @@ import {
 import { ContractForm, type ContractSubmitPayload, type RenewalDefaults } from "./ContractForm";
 import { useCreateContract, useUpdateContract, useRenewContract } from "@/hooks/useContracts";
 import type { Contract } from "@/types/api";
+import { toISOLocal } from "@/lib/format";
 
 interface ContractSheetProps {
   open: boolean;
@@ -59,9 +60,22 @@ export function ContractSheet({
     onOpenChange(newOpen);
   }, [onOpenChange]);
 
+  const requiresBackdateConfirm = useCallback((values: ContractSubmitPayload) => {
+    if (!contract || contract.lifecycle !== "attivo") return false;
+    if (!values.data_scadenza) return false;
+    const todayLocal = toISOLocal(new Date()).slice(0, 10);
+    return values.data_scadenza < todayLocal;
+  }, [contract]);
+
   const handleSubmit = (values: ContractSubmitPayload) => {
     const onSuccess = () => { dirtyRef.current = false; onOpenChange(false); };
     if (isEdit) {
+      if (requiresBackdateConfirm(values)) {
+        const confirmed = window.confirm(
+          "Stai impostando una scadenza nel passato. Il contratto risultera' immediatamente scaduto; lo stato reale verra' poi derivato in base ai crediti residui. Vuoi continuare?"
+        );
+        if (!confirmed) return;
+      }
       const { id_cliente: _id_cliente, acconto: _acconto, metodo_acconto: _metodo_acconto, ...updatePayload } = values;
       updateMutation.mutate({ id: contract.id, ...updatePayload }, { onSuccess });
     } else if (isRenewal && renewContractId) {

@@ -15,7 +15,7 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { format, parseISO, addDays, differenceInDays, startOfDay } from "date-fns";
+import { format, parseISO, addDays, differenceInDays, startOfDay, isBefore, isSameDay } from "date-fns";
 import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -179,6 +179,17 @@ export function ContractForm({
 
   const accontoValue = watch("acconto") ?? 0;
   const senzaScadenza = watch("senza_scadenza") ?? false;
+  const dataScadenzaValue = watch("data_scadenza");
+  const today = startOfDay(new Date());
+  const normalizedScadenza = dataScadenzaValue ? startOfDay(dataScadenzaValue) : undefined;
+  const showTodayNotice =
+    isEdit && !senzaScadenza && !!normalizedScadenza && isSameDay(normalizedScadenza, today);
+  const showBackdateWarning =
+    isEdit
+    && contract?.lifecycle === "attivo"
+    && !senzaScadenza
+    && !!normalizedScadenza
+    && isBefore(normalizedScadenza, today);
 
   const handleFormSubmit = (values: ContractFormValues) => {
     // Converti Date in string ISO per il backend. "Senza scadenza" → null (carnet, FDM §2).
@@ -336,6 +347,17 @@ export function ContractForm({
               {errors.data_scadenza.message}
             </p>
           )}
+          {!errors.data_scadenza && showTodayNotice ? (
+            <p className="text-xs text-muted-foreground">
+              Con una scadenza pari a oggi, il contratto e' ancora considerato vigente per tutta la giornata.
+            </p>
+          ) : null}
+          {!errors.data_scadenza && showBackdateWarning ? (
+            <p className="text-xs text-amber-700 dark:text-amber-300">
+              Una scadenza nel passato rende il contratto immediatamente scaduto. Lo stato mostrato dal sistema verra'
+              poi derivato in base ai crediti residui.
+            </p>
+          ) : null}
         </div>
       </div>
 

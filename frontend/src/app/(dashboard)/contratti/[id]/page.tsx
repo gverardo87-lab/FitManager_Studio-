@@ -26,6 +26,9 @@ import {
   Settings2,
   AlertTriangle,
   RefreshCw,
+  HandCoins,
+  Lock,
+  RotateCcw,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -45,10 +48,14 @@ import { ContractFinancialHero } from "@/components/contracts/ContractFinancialH
 import { PaymentPlanTab } from "@/components/contracts/PaymentPlanTab";
 import { ContractSheet } from "@/components/contracts/ContractSheet";
 import { DeleteContractDialog } from "@/components/contracts/DeleteContractDialog";
+import { IncassaResiduoDialog } from "@/components/contracts/IncassaResiduoDialog";
+import { TerminateContractDialog } from "@/components/contracts/TerminateContractDialog";
+import { ReopenContractDialog } from "@/components/contracts/ReopenContractDialog";
 import { useContract } from "@/hooks/useContracts";
 import { useContractEvents, type EventHydrated } from "@/hooks/useAgenda";
 import { resolveBackNavigation } from "@/lib/url-state";
 import { ContractLifecycleBadge } from "@/lib/contract-status";
+import { getIncassaResiduoAmount } from "@/components/contracts/contract-action-guards";
 
 // ════════════════════════════════════════════════════════════
 // PAGE COMPONENT
@@ -76,6 +83,9 @@ export default function ContractDetailPage({
   const { data: contract, isLoading } = useContract(contractId);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [incassaOpen, setIncassaOpen] = useState(false);
+  const [terminateOpen, setTerminateOpen] = useState(false);
+  const [reopenOpen, setReopenOpen] = useState(false);
 
   if (isLoading) return <PageSkeleton />;
   if (!contract) {
@@ -139,7 +149,29 @@ export default function ContractDetailPage({
             </div>
           </div>
         </div>
-        <div data-guide="contratto-azioni" className="flex gap-2">
+        <div data-guide="contratto-azioni" className="flex flex-wrap gap-2">
+          {getIncassaResiduoAmount(contract) > 0 ? (
+            <Button variant="outline" size="sm" onClick={() => setIncassaOpen(true)}>
+              <HandCoins className="mr-2 h-4 w-4" />
+              Incassa residuo
+            </Button>
+          ) : null}
+          {contract.lifecycle !== "chiuso" ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-rose-600 hover:text-rose-700"
+              onClick={() => setTerminateOpen(true)}
+            >
+              <Lock className="mr-2 h-4 w-4" />
+              Termina
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" onClick={() => setReopenOpen(true)}>
+              <RotateCcw className="mr-2 h-4 w-4" />
+              Riapri
+            </Button>
+          )}
           <Button variant="outline" size="sm" onClick={() => setSheetOpen(true)}>
             <Pencil className="mr-2 h-4 w-4" />
             Modifica
@@ -214,6 +246,28 @@ export default function ContractDetailPage({
         open={sheetOpen}
         onOpenChange={setSheetOpen}
         contract={contract}
+      />
+
+      <IncassaResiduoDialog
+        contractId={incassaOpen ? contract.id : null}
+        residuo={getIncassaResiduoAmount(contract)}
+        clientLabel={clientName ?? ""}
+        open={incassaOpen}
+        onOpenChange={setIncassaOpen}
+      />
+
+      <TerminateContractDialog
+        contractId={terminateOpen ? contract.id : null}
+        clientLabel={clientName ?? ""}
+        open={terminateOpen}
+        onOpenChange={setTerminateOpen}
+      />
+
+      <ReopenContractDialog
+        contract={reopenOpen ? contract : null}
+        clientLabel={clientName ?? ""}
+        open={reopenOpen}
+        onOpenChange={setReopenOpen}
       />
 
       {/* ── Dialog elimina (redirect dopo eliminazione) ── */}

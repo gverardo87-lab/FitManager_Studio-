@@ -56,16 +56,7 @@ import { ContractLifecycleBadge, ContractMoneyBadge } from "@/lib/contract-statu
 import { IncassaResiduoDialog } from "./IncassaResiduoDialog";
 import { TerminateContractDialog } from "./TerminateContractDialog";
 import { ReopenContractDialog } from "./ReopenContractDialog";
-
-/** Residuo incassabile direttamente: solo su contratto SCADUTO aperto (SOSPESO/ESAURITO),
- *  dove la via non è più la rateizzazione ma l'incasso diretto (G6). Per gli ATTIVO il
- *  percorso resta il piano rate. Il residuo arriva dal SSoT backend (contract_state.residuo()
- *  via ContractListResponse): il frontend LEGGE, non ricalcola (§8.1/§8.9, forward-safe per G7). */
-function residuoIncassabile(c: ContractListItem): number {
-  if (c.chiuso) return 0;
-  if (c.lifecycle !== "sospeso" && c.lifecycle !== "esaurito") return 0;
-  return c.residuo;
-}
+import { getIncassaResiduoAmount } from "./contract-action-guards";
 
 interface ContractsTableProps {
   contracts: ContractListItem[];
@@ -159,9 +150,24 @@ export function ContractsTable({
                 >
                   {/* ── Cliente (link a scheda contratto) ── */}
                   <TableCell className="font-medium">
-                    <Link href={`/contratti/${contract.id}`} className="hover:underline">
-                      {contract.client_cognome} {contract.client_nome}
-                    </Link>
+                    <div className="min-w-0">
+                      <Link href={`/contratti/${contract.id}`} className="hover:underline">
+                        {contract.client_cognome} {contract.client_nome}
+                      </Link>
+                      <div className="mt-1 space-y-0.5 lg:hidden">
+                        <p className="font-mono text-[10px] text-muted-foreground">
+                          {contract.crediti_usati}/{contract.crediti_totali ?? 0} crediti
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {contract.sedute_completate} svolte
+                        </p>
+                        {contract.sedute_non_erogate_chiusura > 0 ? (
+                          <p className="text-[10px] text-amber-600 dark:text-amber-400">
+                            {contract.sedute_non_erogate_chiusura} prenotate non svolte
+                          </p>
+                        ) : null}
+                      </div>
+                    </div>
                   </TableCell>
 
                   {/* ── Pacchetto (hidden mobile) ── */}
@@ -261,7 +267,7 @@ export function ContractsTable({
                             Dettagli
                           </Link>
                         </DropdownMenuItem>
-                        {residuoIncassabile(contract) > 0 ? (
+                        {getIncassaResiduoAmount(contract) > 0 ? (
                           <DropdownMenuItem
                             onClick={() => {
                               setIncassaContract(contract);
@@ -319,7 +325,7 @@ export function ContractsTable({
           props restano coerenti durante l'animazione di fade-out (no glitch residuo €0). */}
       <IncassaResiduoDialog
         contractId={incassaContract?.id ?? null}
-        residuo={incassaContract ? residuoIncassabile(incassaContract) : 0}
+        residuo={incassaContract ? getIncassaResiduoAmount(incassaContract) : 0}
         clientLabel={
           incassaContract
             ? `${incassaContract.client_cognome} ${incassaContract.client_nome}`
