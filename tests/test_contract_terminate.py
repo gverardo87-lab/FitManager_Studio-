@@ -503,3 +503,45 @@ def test_l3_terminate_prenotate_non_riducono_rimborso_write(client, auth_headers
     # conguaglio = 200 − 500 = −300 → rimborso 300 (le 3 Programmato NON contano nel reso)
     assert round(contract.totale_rimborsato, 2) == 300.0
     assert _sum_movements(session, c["id"], "USCITA", categoria=CATEGORIA_RIMBORSO_CONTRATTO) == 300.0
+
+
+# ── R4 (G7.7): trasparenza erogato↔occupazione (L1) + indicatore M4 ──
+
+def _list_row(client, auth_headers, contract_id):
+    return next(x for x in client.get("/api/contracts", headers=auth_headers).json()["items"]
+                if x["id"] == contract_id)
+
+
+def test_r4_lista_e_dettaglio_espongono_erogato(client, auth_headers, sample_client, session):
+    """R4/L1: lista E dettaglio espongono `sedute_completate` (erogato) da affiancare ai residui — la
+    radice della percezione di Chiara (oggi si vede solo l'occupazione)."""
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=0.0, crediti=10)
+    t = _trainer(session)
+    _complete_pt(session, t.id, sample_client["id"], c["id"], 2)                     # 2 erogate
+    _complete_pt(session, t.id, sample_client["id"], c["id"], 4, stato="Rinviato")   # 4 rinviate
+
+    row = _list_row(client, auth_headers, c["id"])
+    assert row["sedute_completate"] == 2               # erogato esposto in lista (L1)
+    assert row["sedute_non_erogate_chiusura"] == 0     # contratto aperto → indicatore M4 spento
+    d = client.get(f"/api/contracts/{c['id']}", headers=auth_headers).json()
+    assert d["sedute_completate"] == 2 and d["sedute_non_erogate_chiusura"] == 0
+
+
+def test_r4_m4_indicatore_completamento_prenotato(client, auth_headers, sample_client, session):
+    """M4: un contratto auto-chiuso COMPLETAMENTO su sedute solo PRENOTATE (erogato < crediti) espone
+    `sedute_non_erogate_chiusura` > 0 (segnala il rimborso recuperabile via Riapri→Termina)."""
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=200.0, acconto=200.0, crediti=1)  # SALDATO
+    # 1 evento PT Programmato via API → occupa 1/1 → auto-close COMPLETAMENTO, erogato=0
+    client.post("/api/events", json={
+        "data_inizio": f"{TODAY.isoformat()}T09:00:00", "data_fine": f"{TODAY.isoformat()}T10:00:00",
+        "categoria": "PT", "titolo": "Prenotata", "id_cliente": sample_client["id"], "id_contratto": c["id"],
+    }, headers=auth_headers)
+    session.expire_all()
+    contract = session.get(Contract, c["id"])
+    assert contract.chiuso is True and contract.motivo_chiusura == "COMPLETAMENTO"
+
+    row = _list_row(client, auth_headers, c["id"])
+    assert row["sedute_completate"] == 0               # nessuna erogata
+    assert row["sedute_non_erogate_chiusura"] == 1     # M4: 1 prenotata non erogata alla chiusura
+    d = client.get(f"/api/contracts/{c['id']}", headers=auth_headers).json()
+    assert d["sedute_non_erogate_chiusura"] == 1

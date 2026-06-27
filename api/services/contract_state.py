@@ -56,6 +56,20 @@ def crediti_residui(contract, crediti_usati: int) -> int:
     return max((contract.crediti_totali or 0) - (crediti_usati or 0), 0)
 
 
+def sedute_non_erogate_alla_chiusura(contract, sedute_completate: int) -> int:
+    """M4 (G7.7): per un contratto chiuso `COMPLETAMENTO` con servizio reso < monte-sedute, il numero di
+    sedute prenotate-ma-non-erogate alla chiusura — segnala un rimborso recuperabile (Riapri→Termina).
+    0 negli altri casi (non chiuso, motivo ≠ COMPLETAMENTO, senza monte-sedute, o tutto erogato).
+    Indicatore di trasparenza: l'auto-close conta l'OCCUPAZIONE (Programmato+Completato), quindi un
+    COMPLETAMENTO può chiudersi su sedute solo PRENOTATE; questo rende esplicito il delta erogato↔venduto."""
+    if not contract.chiuso or getattr(contract, "motivo_chiusura", None) != "COMPLETAMENTO":
+        return 0
+    crediti = contract.crediti_totali or 0
+    if crediti <= 0:
+        return 0
+    return max(crediti - (sedute_completate or 0), 0)
+
+
 def residuo(contract) -> float:
     """Denaro ancora dovuto sul contratto (FDM §2). Strada B: il LORDO (prezzo/versato) è immutabile,
     lo storno (`quota_stornata`, G7) abbassa il residuo senza riscrivere il prezzo. `getattr` con

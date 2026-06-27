@@ -1994,3 +1994,27 @@ COMPLETAMENTO-prenotato) · R5 frontend (display↔erogato + M3 `ContrattiTab` b
 Playwright) → **G1 cifratura**.
 
 ---
+
+### 2026-06-26 — G7.7-R4: trasparenza backend (L1 erogato in lista + M4 indicatore COMPLETAMENTO-prenotato)
+
+Prima metà della trasparenza (la parte che risponde alla 1ª segnalazione di Chiara: "residui 4 ma rimborso
+su 2"). R4 = backend + contratto-tipi; R5 = la UI che li mostra.
+
+**L1 — erogato in lista.** `ContractListResponse` ora espone `sedute_completate` (erogato puro), via una
+batch-query dedicata (`COUNT Completato` per contratto, anti-N+1). Il dettaglio già lo aveva (G7.8). Così
+lista/scheda/profilo potranno affiancare "erogate" ai "residui" senza ricalcolo client-side.
+
+**M4 — indicatore COMPLETAMENTO-prenotato.** Nuovo derivato SSoT
+`contract_state.sedute_non_erogate_alla_chiusura(contract, sedute_completate)`: per un contratto chiuso
+`COMPLETAMENTO` con erogato < monte-sedute, il numero di sedute prenotate-ma-non-erogate alla chiusura
+(segnala un rimborso recuperabile via Riapri→Termina — l'auto-close conta l'OCCUPAZIONE, quindi un
+COMPLETAMENTO può chiudersi su sole PRENOTATE). 0 negli altri casi. Esposto su lista + dettaglio; tipi TS
+allineati (`ContractListItem`/`ContractWithRates`).
+
+**Test:** `test_r4_lista_e_dettaglio_espongono_erogato` + `test_r4_m4_indicatore_completamento_prenotato`
+(+2). Suite verde, ruff verde, next build verde.
+
+**⏭️ Prossimo:** R5 frontend — affiancare "erogate" a "residui" (lista/scheda/profilo) + indicatore M4 +
+M3 (`ContrattiTab` → badge SSoT `ContractLifecycleBadge`/`ContractMoneyBadge`), con verifica Playwright.
+
+---

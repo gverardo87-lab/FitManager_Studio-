@@ -174,6 +174,7 @@ def _to_response_with_rates(
         sedute_completate=completate,
         sedute_rinviate=rinviate,
         crediti_residui=max(0, crediti_totali - crediti_usati_computed),
+        sedute_non_erogate_chiusura=cstate.sedute_non_erogate_alla_chiusura(contract, completate),  # M4
         lifecycle=state.lifecycle.value,
         money_substate=state.money.value,
         is_insolvente=cstate.is_insolvente(state),
@@ -390,6 +391,19 @@ def list_contracts(
     ).all()
     credits_used_map: dict[int, int] = {row[0]: int(row[1]) for row in credit_rows}
 
+    # ── Batch fetch: sedute EROGATE (Completato) per contratto — R4/L1 (erogato accanto ai residui) ──
+    completate_rows = session.exec(
+        select(Event.id_contratto, func.count(Event.id))
+        .where(
+            Event.id_contratto.in_(contract_ids),
+            Event.categoria == "PT",
+            Event.stato == "Completato",
+            Event.deleted_at == None,
+        )
+        .group_by(Event.id_contratto)
+    ).all()
+    completate_map: dict[int, int] = {row[0]: int(row[1]) for row in completate_rows}
+
     # ── Build enriched responses ──
     results = []
 
@@ -419,6 +433,10 @@ def list_contracts(
             is_insolvente=cstate.is_insolvente(state),
             in_scadenza=state.in_scadenza,
             residuo=state.residuo,  # SSoT (G6): il frontend legge questo, non ricalcola
+            sedute_completate=completate_map.get(contract.id, 0),  # R4/L1: erogato (servizio reso)
+            sedute_non_erogate_chiusura=cstate.sedute_non_erogate_alla_chiusura(
+                contract, completate_map.get(contract.id, 0)
+            ),  # M4: prenotate-non-erogate alla chiusura (solo COMPLETAMENTO)
         ))
 
     return {

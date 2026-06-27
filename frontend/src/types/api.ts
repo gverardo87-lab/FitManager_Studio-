@@ -682,6 +682,9 @@ export interface ContractListItem extends Contract {
   rate_pagate: number;
   ha_rate_scadute: boolean;
   residuo: number; // SSoT contract_state.residuo() — il frontend LEGGE, non ricalcola (G6)
+  // Trasparenza erogato↔occupazione (R4) — il frontend LEGGE, non ricalcola
+  sedute_completate: number; // erogato (servizio reso) da affiancare ai residui (L1)
+  sedute_non_erogate_chiusura: number; // M4: prenotate-non-erogate alla chiusura (solo chiuso COMPLETAMENTO)
 }
 
 /** Minimal contract info for renewal chain display */
@@ -717,6 +720,7 @@ export interface ContractWithRates extends Contract {
   sedute_completate: number;
   sedute_rinviate: number;
   crediti_residui: number;
+  sedute_non_erogate_chiusura: number; // M4: prenotate-non-erogate alla chiusura (solo chiuso COMPLETAMENTO)
   // Renewal chain
   contratto_originale: RenewalChainItem | null;
   rinnovi_successivi: RenewalChainItem[];

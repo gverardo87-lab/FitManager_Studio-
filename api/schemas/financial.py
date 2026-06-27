@@ -354,6 +354,9 @@ class ContractListResponse(ContractResponse):
     is_insolvente: bool = False        # scaduto (SOSPESO/ESAURITO) + rate scadute
     in_scadenza: bool = False          # ATTIVO entro SOGLIA_IN_SCADENZA_GG
     residuo: float = 0                 # SSoT contract_state.residuo() — il frontend LEGGE, non ricalcola (G6)
+    # ── Trasparenza erogato↔occupazione (R4: L1 + M4) — il frontend LEGGE, non ricalcola ──
+    sedute_completate: int = 0            # erogato (servizio reso) da affiancare ai residui (L1)
+    sedute_non_erogate_chiusura: int = 0  # M4: prenotate-non-erogate alla chiusura (solo chiuso COMPLETAMENTO)
 
 
 class RenewalChainItem(BaseModel):
@@ -402,6 +405,7 @@ class ContractWithRatesResponse(ContractResponse):
     sedute_completate: int = 0    # stato=Completato
     sedute_rinviate: int = 0      # stato=Rinviato
     crediti_residui: int = 0      # crediti_totali - programmate - completate
+    sedute_non_erogate_chiusura: int = 0  # M4: prenotate-non-erogate alla chiusura (solo chiuso COMPLETAMENTO)
 
     # ── Stato derivato dal SSoT contract_state (SPEC_VOCABOLARIO §2.2, scheda dettaglio) ──
     lifecycle: str = "attivo"          # attivo|sospeso|esaurito|chiuso
