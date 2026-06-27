@@ -76,3 +76,35 @@ def log_contract_lifecycle_transition(
     if data_chiusura is not None:
         changes["data_chiusura"] = data_chiusura
     log_audit(session, "contract", contract.id, "UPDATE", contract.trainer_id, changes)
+
+
+def log_contract_open_lifecycle_transition(
+    session: Session,
+    contract,
+    *,
+    old_lifecycle: str,
+    new_lifecycle: str,
+    trigger: str = "data_scadenza_update",
+    motivo: str,
+) -> None:
+    """
+    Audita una transizione del lifecycle *aperto* del contratto (ATTIVO/SOSPESO/ESAURITO)
+    causata da un update della scadenza.
+
+    Fratello di `log_contract_lifecycle_transition()`: NON riguarda il flag `chiuso` né i flussi
+    G6/G7, ma il crossing del confine temporale del SSoT (`is_vigente` <-> `is_scaduto`) dentro
+    `update_contract`.
+
+    - Idempotente: no-op se il lifecycle non cambia.
+    - Non committa: il chiamante resta responsabile della transazione atomica.
+    - `motivo` è audit-tecnico (`scadenza_retrodatata` / `scadenza_estesa`), NON `motivo_chiusura`.
+    """
+    if old_lifecycle == new_lifecycle:
+        return
+
+    changes: dict = {
+        "lifecycle": {"old": old_lifecycle, "new": new_lifecycle},
+        "trigger": trigger,
+        "motivo": motivo,
+    }
+    log_audit(session, "contract", contract.id, "UPDATE", contract.trainer_id, changes)

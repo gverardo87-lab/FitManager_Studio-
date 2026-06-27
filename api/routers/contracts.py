@@ -38,7 +38,11 @@ from api.schemas.financial import (
     RenewalChainItem,
     RenewalOutcomeCreate,
 )
-from api.routers._audit import log_audit, log_contract_lifecycle_transition
+from api.routers._audit import (
+    log_audit,
+    log_contract_lifecycle_transition,
+    log_contract_open_lifecycle_transition,
+)
 from api.routers.agenda import _sync_contract_chiuso
 from api.services import contract_state as cstate
 from api.services.cash_categories import (
@@ -197,6 +201,23 @@ def _check_client_ownership(session: Session, client_id: int, trainer_id: int) -
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Cliente non trovato",
         )
+
+
+def _occupied_credit_count(session: Session, contract_id: int) -> int:
+    """Occupazione-credito del contratto (G7.8): PT `Programmato` + `Completato`, mai `Rinviato`.
+
+    Helper locale a `contracts.py` per i siti che devono derivare il lifecycle dal SSoT senza
+    reimplementare inline la semantica dei crediti usati.
+    """
+    count = session.exec(
+        select(func.count(Event.id)).where(
+            Event.id_contratto == contract_id,
+            Event.categoria == "PT",
+            Event.stato.in_(["Programmato", "Completato"]),
+            Event.deleted_at == None,
+        )
+    ).one()
+    return int(count or 0)
 
 
 # ════════════════════════════════════════════════════════════
@@ -679,6 +700,21 @@ def update_contract(
 
     # Partial update
     update_data = data.model_dump(exclude_unset=True)
+    today = date.today()
+
+    # Debt spec 2: il trigger resta l'update della scadenza, ma la semantica del crossing si deriva
+    # sempre dal SSoT (ATTIVO/SOSPESO/ESAURITO), mai dal solo confronto data<oggi scritto inline.
+    audit_lifecycle_crossing = False
+    old_lifecycle = None
+    new_lifecycle = None
+    lifecycle_motivo = None
+    crediti_usati = None
+    if "data_scadenza" in update_data and not contract.chiuso:
+        crediti_usati = _occupied_credit_count(session, contract_id)
+        old_is_vigente = cstate.is_vigente(contract, today)
+        old_lifecycle = cstate.contract_lifecycle(contract, crediti_usati, today).value
+    else:
+        old_is_vigente = None
 
     # Cross-field validation: se entrambe le date sono fornite, verifica ordine
     new_inizio = update_data.get("data_inizio", contract.data_inizio)
@@ -714,7 +750,22 @@ def update_contract(
         if value != old_val:
             changes[field] = {"old": old_val, "new": value}
 
+    if "data_scadenza" in update_data and old_is_vigente is not None:
+        new_is_vigente = cstate.is_vigente(contract, today)
+        if old_is_vigente != new_is_vigente:
+            audit_lifecycle_crossing = True
+            new_lifecycle = cstate.contract_lifecycle(contract, crediti_usati or 0, today).value
+            lifecycle_motivo = "scadenza_estesa" if new_is_vigente else "scadenza_retrodatata"
+
     log_audit(session, "contract", contract.id, "UPDATE", trainer.id, changes or None)
+    if audit_lifecycle_crossing and old_lifecycle and new_lifecycle and lifecycle_motivo:
+        log_contract_open_lifecycle_transition(
+            session,
+            contract,
+            old_lifecycle=old_lifecycle,
+            new_lifecycle=new_lifecycle,
+            motivo=lifecycle_motivo,
+        )
     session.add(contract)
     session.commit()
     session.refresh(contract)

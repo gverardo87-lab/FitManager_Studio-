@@ -2088,3 +2088,48 @@ sotto `lg`, e togliere l'ambiguità UX sulla retrodatazione della scadenza senza
 `lifecycle` indotto da `update_contract` (spec separata, fuori da questa chiusura).
 
 ---
+
+### 2026-06-27 — Hardening audit backend su retrodatazione/estensione scadenza (`update_contract`)
+
+Chiusura del follow-up backend nato dallo stesso audit G7.7-R5: il path `PUT /contracts/{id}` poteva già
+cambiare il lifecycle reale di un contratto aperto tramite `data_scadenza`, ma lasciava solo il diff generico
+del campo, non una traccia semantica della transizione.
+
+**Problema isolato.** Il modello era già corretto (`scaduto` = `data_scadenza < today`, `oggi` ancora vigente;
+distinzione `SOSPESO` vs `ESAURITO` via crediti residui, non per comando manuale), quindi il debt NON era di
+dominio né di endpoint mancante. Era un debt di **audit/observability** dentro `update_contract`.
+
+**Implementato.**
+- Nuovo helper audit fratello di `log_contract_lifecycle_transition()` in `_audit.py`: registra le sole
+  transizioni del **lifecycle aperto** (`attivo/sospeso/esaurito`) indotte da `data_scadenza`, con:
+  `lifecycle.old`, `lifecycle.new`, `trigger=data_scadenza_update`, `motivo=scadenza_retrodatata|scadenza_estesa`.
+  Scelta intenzionale: NON overloadare l'helper G6/G7 di `chiuso`, che resta semanticamente dedicato alle
+  transizioni del flag terminale.
+- `update_contract` ora calcola il crossing col **SSoT** (`contract_state`) e con il conteggio canonico
+  dell'occupazione-credito (`Programmato + Completato`). Nessuna logica inline `if data<oggi => sospeso`:
+  il trigger è `data_scadenza`, la decisione del lifecycle resta al SSoT.
+- Il log dedicato scatta **solo** se l'edit attraversa davvero il confine `vigente <-> scaduto`.
+  Nessun falso positivo per `future -> future`, `past -> past` o contratti chiusi. Nessun nuovo endpoint,
+  nessun cambiamento al modello, nessuna regressione sulla semantica di **ESTENDI = PUT** del Blocco 3.
+
+**Verifica.**
+- Nuovo file mirato `tests/test_contract_expiry_lifecycle_audit.py`: **6/6 verdi**.
+  Copertura: `ATTIVO->SOSPESO`, `ATTIVO->ESAURITO`, `SOSPESO->ATTIVO`, `ESAURITO->ATTIVO`, più i 2 no-op
+  (`ATTIVO->ATTIVO`, `SOSPESO->SOSPESO`) che dimostrano l'assenza di audit spurio.
+- Regressione sul path già esistente di **ESTENDI**: `tests/test_suspended_contracts.py` **11/11 verdi**
+  (prova che il riuso di `update_contract` per i sospesi non è stato rotto).
+- `ruff check api/` verde.
+
+**Lezione trasferibile.** Un update CRUD può essere corretto sul dato ma insufficiente sul significato. Se un
+campo è anche una leva di derivazione di stato, il diff `old/new` del campo non basta più: serve una seconda
+traccia che dica *che cosa è cambiato nel modello*. Qui l'errore sarebbe stato inventare un endpoint `suspend`
+per colmare un debt che era solo di audit. Il metodo giusto è: preservare il comando esistente, rendere
+esplicita la semantica derivata e testare i crossing veri + i no-op.
+
+**Metodo / stato docs.**
+- `SPEC_RETRODATAZIONE_SCADENZA_E_AUDIT_LIFECYCLE.md` chiusa e **archiviata** in `docs/archive/specs/` come design-record.
+- Il dominio vivo non cambia: il follow-up è stato un hardening del path esistente, non una nuova policy di prodotto.
+
+**⏭️ Prossimo:** se vuoi mantenere il metodo “un task = un commit”, il prossimo passo è il commit atomico del task backend audit.
+
+---
