@@ -612,11 +612,39 @@ export interface ContractUpdate {
  * è DERIVATO server-side dall'esito del conguaglio: il body non lo contiene (anti mass-assignment). */
 export interface ContractTerminate {
   metodo_rimborso?: string | null; // ramo CREDITO_CLIENTE (rimborso)
-  azione_credito_trainer?: "INCASSA_ORA" | "RINUNCIA_ESPRESSA" | null; // ramo CREDITO_TRAINER
+  azione_credito_trainer?: "INCASSA_ORA" | "RINUNCIA_ESPRESSA" | "A_CREDITO" | null; // ramo CREDITO_TRAINER
   importo_incassato?: number | null; // INCASSA_ORA: proposta editabile [0, credito_trainer]
   metodo_pagamento?: string | null; // INCASSA_ORA
   note?: string | null;
   data_chiusura?: string | null; // ISO date; default oggi
+}
+
+/** Credito differito a favore del trainer (G7.10) — receivable FUORI da residuo() del contratto. */
+export interface CreditoTerminazione {
+  id: number;
+  id_contratto: number;
+  id_cliente: number;
+  importo: number;
+  importo_incassato: number;
+  residuo: number; // importo − importo_incassato
+  stato: "APERTO" | "SALDATO" | "ANNULLATO";
+  data_creazione: string;
+  data_chiusura?: string | null;
+}
+
+/** Item della worklist GET /dashboard/crediti-da-incassare (G7.10). */
+export interface CreditoDaIncassareItem {
+  id: number;
+  id_contratto: number;
+  id_cliente: number;
+  cliente_nome: string;
+  cliente_cognome: string;
+  client_telefono?: string | null;
+  importo: number;
+  importo_incassato: number;
+  residuo: number;
+  data_creazione: string | null;
+  giorni_aperto: number;
 }
 
 /** GET /api/contracts/{id}/settlement-preview (G7.3 + ADR-018) — conguaglio calcolato PRIMA della

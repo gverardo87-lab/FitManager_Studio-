@@ -43,7 +43,7 @@ import { formatCurrency } from "@/lib/format";
 const PAYMENT_METHODS = ["CONTANTI", "POS", "BONIFICO"] as const;
 const METHOD_LABEL: Record<string, string> = { CONTANTI: "Contanti", POS: "POS", BONIFICO: "Bonifico" };
 
-type Azione = "" | "INCASSA_ORA" | "RINUNCIA_ESPRESSA";
+type Azione = "" | "INCASSA_ORA" | "RINUNCIA_ESPRESSA" | "A_CREDITO";
 
 interface TerminateContractDialogProps {
   contractId: number | null;
@@ -90,7 +90,8 @@ export function TerminateContractDialog({
   const trainerSceltaValida =
     !trainerCredit ||
     (azione === "INCASSA_ORA" && incassoValido) ||
-    (azione === "RINUNCIA_ESPRESSA" && nota.trim().length > 0);
+    (azione === "RINUNCIA_ESPRESSA" && nota.trim().length > 0) ||
+    azione === "A_CREDITO";
 
   const canSubmit =
     contractId !== null && !!data && !preview.isLoading && !terminate.isPending && trainerSceltaValida;
@@ -106,10 +107,13 @@ export function TerminateContractDialog({
     if (needsMetodo) {
       payload = { metodo_rimborso: metodo };
     } else if (trainerCredit) {
-      payload =
-        azione === "INCASSA_ORA"
-          ? { azione_credito_trainer: "INCASSA_ORA", importo_incassato: incassoNum, metodo_pagamento: metodoPag }
-          : { azione_credito_trainer: "RINUNCIA_ESPRESSA", note: nota.trim() };
+      if (azione === "INCASSA_ORA") {
+        payload = { azione_credito_trainer: "INCASSA_ORA", importo_incassato: incassoNum, metodo_pagamento: metodoPag };
+      } else if (azione === "RINUNCIA_ESPRESSA") {
+        payload = { azione_credito_trainer: "RINUNCIA_ESPRESSA", note: nota.trim() };
+      } else {
+        payload = { azione_credito_trainer: "A_CREDITO" };
+      }
     }
     terminate.mutate(
       { contractId, ...payload },
@@ -208,7 +212,7 @@ export function TerminateContractDialog({
             {/* Ramo CREDITO_TRAINER: scelta esplicita obbligatoria (ADR-018) */}
             {trainerCredit ? (
               <div className="space-y-2.5">
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                   <Button
                     type="button"
                     variant={azione === "INCASSA_ORA" ? "default" : "outline"}
@@ -219,6 +223,14 @@ export function TerminateContractDialog({
                   </Button>
                   <Button
                     type="button"
+                    variant={azione === "A_CREDITO" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setAzione("A_CREDITO")}
+                  >
+                    Metti a credito e chiudi
+                  </Button>
+                  <Button
+                    type="button"
                     variant={azione === "RINUNCIA_ESPRESSA" ? "default" : "outline"}
                     size="sm"
                     onClick={() => setAzione("RINUNCIA_ESPRESSA")}
@@ -226,6 +238,13 @@ export function TerminateContractDialog({
                     Rinuncia e chiudi
                   </Button>
                 </div>
+
+                {azione === "A_CREDITO" ? (
+                  <p className="text-[11px] text-muted-foreground">
+                    Il cliente resta debitore di {formatCurrency(creditoTrainer)}: lo incassi quando paga, dalla
+                    worklist &quot;Crediti da incassare&quot;. Il contratto si chiude subito (residuo a zero).
+                  </p>
+                ) : null}
 
                 {azione === "INCASSA_ORA" ? (
                   <div className="space-y-2">

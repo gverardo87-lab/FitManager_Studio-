@@ -24,6 +24,7 @@ from api.models.contract import Contract
 from api.models.rate import Rate
 from api.models.movement import CashMovement
 from api.models.event import Event
+from api.models.credito_terminazione import CreditoTerminazione
 from api.schemas.financial import (
     ContractCreate,
     ContractUpdate,
@@ -32,6 +33,7 @@ from api.schemas.financial import (
     ContractWithRatesResponse,
     ContractTerminate,
     ContractSettlementPreview,
+    CreditoTerminazioneResponse,
     VALID_AZIONI_CREDITO_TRAINER,
     RateResponse,
     RatePayment,
@@ -1247,8 +1249,8 @@ def _build_settlement_preview(contract: Contract, settlement, sedute_prenotate: 
         azioni_permesse = sorted(VALID_AZIONI_CREDITO_TRAINER)
         msg = (
             f"Conguaglio calcolato (pro-rata sedute): il cliente ha ricevuto più servizio di quanto versato. "
-            f"Saldo a tuo favore €{settlement.credito_trainer:.2f}: scegli se incassarlo ora (importo modificabile) "
-            f"o rinunciarvi."
+            f"Saldo a tuo favore €{settlement.credito_trainer:.2f}: scegli se incassarlo ora (importo "
+            f"modificabile), metterlo a credito (il cliente paga dopo) o rinunciarvi."
         )
     elif storno:
         msg = f"Conguaglio calcolato (pro-rata sedute): nessun rimborso. Il cliente ha già consumato il servizio reso; il residuo di €{settlement.residuo_pre:.2f} viene azzerato."
@@ -1343,6 +1345,7 @@ def terminate_contract(
     movement = None
     incasso_ora = 0.0                 # X incassato dal trainer (ramo CREDITO_TRAINER + INCASSA_ORA)
     saldo_trainer_rinunciato = 0.0    # parte del credito_trainer abbuonata (credito_trainer − X)
+    credito_differito = None          # receivable creato dal ramo A_CREDITO (G7.10)
 
     if settlement.esito == SettlementEsito.CREDITO_CLIENTE:
         # Il cliente ha versato più del servizio reso → rimborso (richiede metodo_rimborso).
@@ -1419,7 +1422,20 @@ def terminate_contract(
                     detail="Nota obbligatoria per rinunciare al saldo a tuo favore (presidio auditabile)",
                 )
             saldo_trainer_rinunciato = settlement.credito_trainer
-        # A_CREDITO (credito differito) è respinto a livello schema (422) finché non arriva G7.10.
+        elif data.azione_credito_trainer == "A_CREDITO":
+            # G7.10: "chiudo oggi, il cliente paga dopo". Il credito_trainer NON resta nel contratto
+            # (romperebbe residuo()==0): viene STORNATO (gamba E, incasso_ora=0 → quota_stornata piena) e
+            # RI-TRACCIATO come receivable FUORI da residuo(). Nessuna cassa ora; mai una Rate su chiuso.
+            credito_differito = CreditoTerminazione(
+                trainer_id=trainer.id,
+                id_contratto=contract.id,
+                id_cliente=contract.id_cliente,
+                importo=settlement.credito_trainer,
+                importo_incassato=0.0,
+                stato="APERTO",
+                data_creazione=data_chiusura,
+            )
+            session.add(credito_differito)
 
     # E) Gamba STORNO (sempre): residuo_pre − incasso_ora → residuo() = 0 (Strada B, non riscrive prezzo).
     contract.quota_stornata = old_quota + round(settlement.residuo_pre - incasso_ora, 2)
@@ -1452,9 +1468,12 @@ def terminate_contract(
     #    crediti_usati è event-derived e può driftare; è l'unico record del servizio forfettato).
     #    Payload ADR-018 (§6.2): ricostruibile se il trainer ha incassato, abbuonato o rinunciato.
     is_cliente = settlement.esito == SettlementEsito.CREDITO_CLIENTE
+    if movement is not None or credito_differito is not None:
+        session.flush()  # popola gli id (movimento e/o receivable) per l'audit
     if movement is not None:
-        session.flush()
         log_audit(session, "movement", movement.id, "CREATE", trainer.id)
+    if credito_differito is not None:
+        log_audit(session, "credito_terminazione", credito_differito.id, "CREATE", trainer.id)
     log_audit(session, "contract", contract.id, "UPDATE", trainer.id, {
         "motivo_chiusura": {"old": None, "new": motivo},
         "data_chiusura": {"old": None, "new": data_chiusura},
@@ -1470,7 +1489,9 @@ def terminate_contract(
         "azione_credito_trainer": data.azione_credito_trainer,
         "importo_incassato": round(incasso_ora, 2),
         "saldo_trainer_rinunciato": round(saldo_trainer_rinunciato, 2),
+        "importo_differito": round(settlement.credito_trainer, 2) if credito_differito is not None else 0.0,
         "movimento_cassa_id": movement.id if movement is not None else None,
+        "credito_terminazione_id": credito_differito.id if credito_differito is not None else None,
     })
     # Transizione `chiuso` (P2): terminate la logga DA SÉ (non chiama _sync, che altrimenti la loggherebbe)
     log_contract_lifecycle_transition(
@@ -1509,7 +1530,10 @@ def reopen_contract(
        `RIMBORSO_CONTRATTO` attivi del contratto (`delete_movement` blocca `id_contratto` → ORM, come
        `unpay_rate`) + `totale_rimborsato -=` la loro somma.
     C-bis) Gamba INCASSO CONGUAGLIO inversa (ADR-018): soft-delete dei `CashMovement` ENTRATA
-       `INCASSO_CONGUAGLIO_CONTRATTO` + `totale_versato -=` la loro somma (inverso esatto di INCASSA_ORA).
+       `INCASSO_CONGUAGLIO_CONTRATTO` + `totale_versato -=` la loro somma (inverso esatto di INCASSA_ORA
+       e degli incassi parziali del credito differito G7.10).
+    C-ter) Gamba CREDITO DIFFERITO inversa (G7.10): i receivable `crediti_terminazione` del contratto →
+       `stato=ANNULLATO` (zero cassa; gli incassi parziali sono già invertiti da C-bis).
     D) Gamba STORNO inversa: `quota_stornata = 0` → `residuo()` ripristinato (prezzo − versato).
     E) Ripristino rate: `deleted_at=None` SOLO sulle rate marcate `chiusa_da_terminazione` (M1, inverso
        esatto: non resuscita le cancellate manualmente / dal piano rigenerato). Il marker viene azzerato.
@@ -1573,6 +1597,26 @@ def reopen_contract(
     if incasso_invertito > 0.009:
         contract.totale_versato = round(max(old_versato - incasso_invertito, 0.0), 2)
 
+    # C-ter) Gamba CREDITO DIFFERITO inversa (G7.10): annulla il receivable creato da A_CREDITO. Gli
+    #   eventuali incassi parziali (ENTRATA INCASSO_CONGUAGLIO) sono GIÀ invertiti da C-bis (stessa
+    #   categoria); qui resta da chiudere il record del receivable → stato ANNULLATO (zero cassa).
+    crediti_annullati = 0
+    open_credits = session.exec(
+        select(CreditoTerminazione).where(
+            CreditoTerminazione.id_contratto == contract.id,
+            CreditoTerminazione.stato != "ANNULLATO",
+            CreditoTerminazione.deleted_at == None,
+        )
+    ).all()
+    for cr in open_credits:
+        cr.stato = "ANNULLATO"
+        cr.data_chiusura = date.today()
+        session.add(cr)
+        log_audit(session, "credito_terminazione", cr.id, "UPDATE", trainer.id, {
+            "stato": {"old": "APERTO/SALDATO", "new": "ANNULLATO"},
+        })
+        crediti_annullati += 1
+
     # D) Gamba STORNO inversa: ripristina il residuo
     contract.quota_stornata = 0
 
@@ -1606,6 +1650,7 @@ def reopen_contract(
         "totale_versato": {"old": old_versato, "new": contract.totale_versato or 0},
         "quota_stornata": {"old": old_quota, "new": 0},
         "rate_ripristinate": rate_ripristinate,
+        "crediti_differiti_annullati": crediti_annullati,
     })
     log_contract_lifecycle_transition(
         session,
@@ -1618,3 +1663,147 @@ def reopen_contract(
     session.refresh(contract)
 
     return _to_response(contract)
+
+
+# ════════════════════════════════════════════════════════════
+# Credito differito post-chiusura (G7.10, ADR-018) — receivable FUORI da residuo()
+# ════════════════════════════════════════════════════════════
+
+def _bouncer_credito(session: Session, contract_id: int, credito_id: int, trainer_id: int) -> CreditoTerminazione:
+    """Ownership del receivable via la catena id_contratto → Contract.trainer_id (Deep Relational IDOR).
+    Non trovato = 404 (mai 403)."""
+    credito = session.exec(
+        select(CreditoTerminazione)
+        .join(Contract, CreditoTerminazione.id_contratto == Contract.id)
+        .where(
+            CreditoTerminazione.id == credito_id,
+            CreditoTerminazione.id_contratto == contract_id,
+            Contract.trainer_id == trainer_id,
+            CreditoTerminazione.deleted_at == None,
+        )
+    ).first()
+    if not credito:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Credito da incassare non trovato")
+    return credito
+
+
+@router.get("/{contract_id}/crediti-terminazione", response_model=list[CreditoTerminazioneResponse])
+def list_crediti_terminazione(
+    contract_id: int,
+    trainer: Trainer = Depends(get_current_trainer),
+    session: Session = Depends(get_session),
+):
+    """Crediti differiti (G7.10) di un contratto — per il dettaglio contratto chiuso con A_CREDITO."""
+    _bouncer_contract_owned(session, contract_id, trainer.id)
+    rows = session.exec(
+        select(CreditoTerminazione)
+        .where(
+            CreditoTerminazione.id_contratto == contract_id,
+            CreditoTerminazione.deleted_at == None,
+        )
+        .order_by(CreditoTerminazione.data_creazione.desc())
+    ).all()
+    return [CreditoTerminazioneResponse.model_validate(c) for c in rows]
+
+
+@router.post("/{contract_id}/crediti-terminazione/{credito_id}/incassa", response_model=CreditoTerminazioneResponse)
+def incassa_credito_terminazione(
+    contract_id: int,
+    credito_id: int,
+    data: RatePayment,
+    trainer: Trainer = Depends(get_current_trainer),
+    session: Session = Depends(get_session),
+):
+    """
+    Incassa (anche PARZIALE) un credito differito post-chiusura (G7.10). Gemello di G6 ma sul receivable.
+
+    Atomico (UN commit): bouncer 404 → guard stato APERTO 400 → cap `importo ≤ residuo_credito` 422 →
+    `CashMovement` ENTRATA `INCASSO_CONGUAGLIO_CONTRATTO` (id_rata=None) + `totale_versato +=` (Strada B) +
+    `importo_incassato +=`; a saldo (`importo_incassato == importo`) → `stato=SALDATO`. **Niente
+    `_sync_contract_chiuso`**: il contratto resta CHIUSO (terminato, motivo SALDO_TRAINER), residuo()==0
+    intatto (`quota_stornata` ha già assorbito il differito → l'incasso non riapre il residuo).
+    """
+    credito = _bouncer_credito(session, contract_id, credito_id, trainer.id)
+    if credito.stato != "APERTO":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Il credito non è più aperto (saldato o annullato)")
+    residuo_credito = round(max((credito.importo or 0) - (credito.importo_incassato or 0), 0.0), 2)
+    if residuo_credito <= 0.009:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Nessun residuo da incassare su questo credito")
+    if data.importo <= 0:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                            detail="L'importo da incassare deve essere positivo")
+    if data.importo > residuo_credito + 0.01:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Importo ({data.importo:.2f}) supera il residuo del credito ({residuo_credito:.2f})",
+        )
+
+    contract = session.get(Contract, contract_id)
+    client = session.get(Client, contract.id_cliente)
+    client_label = f"{client.nome} {client.cognome}" if client else f"Cliente #{contract.id_cliente}"
+
+    old_versato = contract.totale_versato or 0
+    movement = CashMovement(
+        trainer_id=trainer.id,
+        data_effettiva=data.data_pagamento or date.today(),
+        tipo="ENTRATA",
+        categoria=CATEGORIA_INCASSO_CONGUAGLIO_CONTRATTO,
+        importo=data.importo,
+        metodo=data.metodo,
+        id_cliente=contract.id_cliente,
+        id_contratto=contract.id,
+        id_rata=None,
+        note=data.note or f"Incasso credito differito - {client_label}",
+    )
+    session.add(movement)
+    contract.totale_versato = old_versato + data.importo  # Strada B: cresce sul forward
+    session.add(contract)
+
+    credito.importo_incassato = round((credito.importo_incassato or 0) + data.importo, 2)
+    if credito.importo_incassato >= (credito.importo or 0) - 0.009:
+        credito.stato = "SALDATO"
+        credito.data_chiusura = data.data_pagamento or date.today()
+    session.add(credito)
+
+    session.flush()
+    log_audit(session, "movement", movement.id, "CREATE", trainer.id)
+    log_audit(session, "credito_terminazione", credito.id, "UPDATE", trainer.id, {
+        "importo_incassato": {"old": round((credito.importo_incassato or 0) - data.importo, 2),
+                              "new": credito.importo_incassato},
+        "stato": credito.stato,
+    })
+    log_audit(session, "contract", contract.id, "UPDATE", trainer.id, {
+        "totale_versato": {"old": old_versato, "new": contract.totale_versato},
+    })
+    session.commit()
+    session.refresh(credito)
+    return CreditoTerminazioneResponse.model_validate(credito)
+
+
+@router.post("/{contract_id}/crediti-terminazione/{credito_id}/annulla", response_model=CreditoTerminazioneResponse)
+def annulla_credito_terminazione(
+    contract_id: int,
+    credito_id: int,
+    trainer: Trainer = Depends(get_current_trainer),
+    session: Session = Depends(get_session),
+):
+    """
+    Il trainer rinuncia al residuo NON incassato di un credito differito (G7.10) → `stato=ANNULLATO`.
+    Zero cassa: il dovuto era già stornato dal residuo del contratto al `terminate` (e ri-tracciato qui);
+    annullare il receivable smette solo di tracciarlo, non muove denaro. Bouncer 404; non-APERTO → 400.
+    """
+    credito = _bouncer_credito(session, contract_id, credito_id, trainer.id)
+    if credito.stato != "APERTO":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Il credito non è più aperto (saldato o già annullato)")
+    credito.stato = "ANNULLATO"
+    credito.data_chiusura = date.today()
+    session.add(credito)
+    log_audit(session, "credito_terminazione", credito.id, "UPDATE", trainer.id, {
+        "stato": {"old": "APERTO", "new": "ANNULLATO"},
+    })
+    session.commit()
+    session.refresh(credito)
+    return CreditoTerminazioneResponse.model_validate(credito)

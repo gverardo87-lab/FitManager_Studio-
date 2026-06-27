@@ -17,6 +17,8 @@ import type {
   ContractListResponse,
   ContractTerminate,
   ContractSettlementPreview,
+  CreditoTerminazione,
+  CreditoDaIncassareItem,
   RatePayment,
 } from "@/types/api";
 
@@ -232,6 +234,89 @@ export function useIncassaResiduo() {
     },
     onError: (error) => {
       toast.error(extractErrorMessage(error, "Errore nell'incasso del residuo"));
+    },
+  });
+}
+
+// ── Credito differito post-chiusura (G7.10) — worklist + incasso/annulla del receivable ──
+// L'incasso fa crescere totale_versato (Strada B) → stesse invalidazioni cassa di useIncassaResiduo.
+
+export function useCreditiDaIncassare() {
+  return useQuery<{ items: CreditoDaIncassareItem[]; total: number }>({
+    queryKey: ["dashboard", "crediti-da-incassare"],
+    queryFn: async () => {
+      const { data } = await apiClient.get<{ items: CreditoDaIncassareItem[]; total: number }>(
+        "/dashboard/crediti-da-incassare"
+      );
+      return data;
+    },
+  });
+}
+
+export function useCreditiTerminazione(contractId: number | null) {
+  return useQuery<CreditoTerminazione[]>({
+    queryKey: ["crediti-terminazione", contractId],
+    queryFn: async () => {
+      const { data } = await apiClient.get<CreditoTerminazione[]>(
+        `/contracts/${contractId}/crediti-terminazione`
+      );
+      return data;
+    },
+    enabled: contractId !== null,
+  });
+}
+
+function invalidateCreditoQueries(queryClient: ReturnType<typeof useQueryClient>) {
+  queryClient.invalidateQueries({ queryKey: ["contract"] });
+  queryClient.invalidateQueries({ queryKey: ["contracts"] });
+  queryClient.invalidateQueries({ queryKey: ["crediti-terminazione"] });
+  queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+  queryClient.invalidateQueries({ queryKey: ["movements"] });
+  queryClient.invalidateQueries({ queryKey: ["movement-stats"] });
+  queryClient.invalidateQueries({ queryKey: ["financial-trend"] });
+  queryClient.invalidateQueries({ queryKey: ["aging-report"] });
+  queryClient.invalidateQueries({ queryKey: ["cash-balance"] });
+}
+
+export function useIncassaCredito() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      contractId,
+      creditoId,
+      ...payload
+    }: RatePayment & { contractId: number; creditoId: number }) => {
+      const { data } = await apiClient.post<CreditoTerminazione>(
+        `/contracts/${contractId}/crediti-terminazione/${creditoId}/incassa`,
+        payload
+      );
+      return data;
+    },
+    onSuccess: () => {
+      invalidateCreditoQueries(queryClient);
+      toast.success("Credito incassato");
+    },
+    onError: (error) => {
+      toast.error(extractErrorMessage(error, "Errore nell'incasso del credito"));
+    },
+  });
+}
+
+export function useAnnullaCredito() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ contractId, creditoId }: { contractId: number; creditoId: number }) => {
+      const { data } = await apiClient.post<CreditoTerminazione>(
+        `/contracts/${contractId}/crediti-terminazione/${creditoId}/annulla`
+      );
+      return data;
+    },
+    onSuccess: () => {
+      invalidateCreditoQueries(queryClient);
+      toast.success("Credito annullato");
+    },
+    onError: (error) => {
+      toast.error(extractErrorMessage(error, "Errore nell'annullamento del credito"));
     },
   });
 }

@@ -23,6 +23,7 @@ from api.models.rate import Rate
 from api.models.event import Event
 from api.models.contract import Contract
 from api.models.exercise import Exercise
+from api.models.credito_terminazione import CreditoTerminazione
 from api.schemas.financial import (
     DashboardSummary, ReconciliationItem, ReconciliationResponse,
     AlertItem, DashboardAlerts,
@@ -739,6 +740,50 @@ def get_suspended_contracts(
             "client_telefono": client.telefono,
         })
 
+    return {"items": items, "total": len(items)}
+
+
+@router.get("/crediti-da-incassare")
+def get_crediti_da_incassare(
+    trainer: Trainer = Depends(get_current_trainer),
+    session: Session = Depends(get_session),
+):
+    """
+    Worklist "Crediti da incassare (post-chiusura)" (G7.10, ADR-018) — gemella di G6 "incassa residuo".
+
+    Elenca i receivable `crediti_terminazione` ANCORA APERTI: il credito a favore del trainer creato da
+    una terminazione `A_CREDITO` ("chiudo oggi, il cliente paga dopo"). Vive FUORI da `residuo()`: non è
+    un debito sul contratto (che resta CHIUSO, residuo 0), è un credito da incassare a sé.
+    Read-only, multi-tenant. Ordine: aging INVERTITO (più vecchio = più urgente).
+    """
+    today = date.today()
+    rows = session.exec(
+        select(CreditoTerminazione, Client)
+        .join(Client, CreditoTerminazione.id_cliente == Client.id)
+        .where(
+            CreditoTerminazione.trainer_id == trainer.id,
+            CreditoTerminazione.stato == "APERTO",
+            CreditoTerminazione.deleted_at == None,
+        )
+    ).all()
+    items = []
+    for credito, client in rows:
+        creato = _coerce_date(credito.data_creazione)
+        residuo = round(max((credito.importo or 0) - (credito.importo_incassato or 0), 0.0), 2)
+        items.append({
+            "id": credito.id,
+            "id_contratto": credito.id_contratto,
+            "id_cliente": credito.id_cliente,
+            "cliente_nome": client.nome,
+            "cliente_cognome": client.cognome,
+            "client_telefono": client.telefono,
+            "importo": credito.importo,
+            "importo_incassato": credito.importo_incassato or 0,
+            "residuo": residuo,
+            "data_creazione": creato.isoformat() if isinstance(creato, date) else None,
+            "giorni_aperto": (today - creato).days if isinstance(creato, date) else 0,
+        })
+    items.sort(key=lambda x: x["giorni_aperto"], reverse=True)
     return {"items": items, "total": len(items)}
 
 

@@ -56,6 +56,7 @@ import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import { ContractSheet } from "@/components/contracts/ContractSheet";
 import { IncassaResiduoDialog } from "@/components/contracts/IncassaResiduoDialog";
 import { TerminateContractDialog } from "@/components/contracts/TerminateContractDialog";
+import { CreditiDaIncassareCard } from "@/components/contracts/CreditiDaIncassareCard";
 import { useOverdueRates, useExpiringContracts, useClientsToRecover, useSuspendedContracts } from "@/hooks/useDashboard";
 import { usePayRate } from "@/hooks/useRates";
 import { useMarkRenewalOutcome, useUpdateContract } from "@/hooks/useContracts";
@@ -743,6 +744,9 @@ export default function RinnoviIncassiPage() {
           </div>
         </section>
       ) : null}
+
+      {/* ── Sezione: Crediti da incassare (post-chiusura, G7.10) — auto-nascosta se vuota ── */}
+      <CreditiDaIncassareCard />
 
       {/* ── Sezione: Clienti da recuperare (lapsed) ── */}
       {recoverItems.length > 0 ? (

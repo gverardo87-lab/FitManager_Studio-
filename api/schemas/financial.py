@@ -34,9 +34,9 @@ ClinicalReadinessWorklistResponse = clinical_schemas.ClinicalReadinessWorklistRe
 VALID_PAYMENT_METHODS = {"CONTANTI", "POS", "BONIFICO", "ASSEGNO", "ALTRO"}
 VALID_RATE_STATUSES = {"PENDENTE", "PARZIALE", "SALDATA"}
 VALID_PAYMENT_STATUSES = {"PENDENTE", "PARZIALE", "SALDATO"}
-# ADR-018: azioni del ramo CREDITO_TRAINER della terminazione. `A_CREDITO` (credito differito) è G7.10
-# → escluso qui finché l'entità `crediti_terminazione` non esiste (un payload con A_CREDITO → 422).
-VALID_AZIONI_CREDITO_TRAINER = {"INCASSA_ORA", "RINUNCIA_ESPRESSA"}
+# ADR-018: azioni del ramo CREDITO_TRAINER della terminazione. `A_CREDITO` = credito differito (G7.10):
+# il dovuto diventa un receivable `crediti_terminazione` FUORI da residuo(), incassabile (anche parziale) dopo.
+VALID_AZIONI_CREDITO_TRAINER = {"INCASSA_ORA", "RINUNCIA_ESPRESSA", "A_CREDITO"}
 
 
 # ════════════════════════════════════════════════════════════
@@ -195,10 +195,7 @@ class ContractTerminate(BaseModel):
     @classmethod
     def _validate_azione(cls, v: Optional[str]) -> Optional[str]:
         if v is not None and v not in VALID_AZIONI_CREDITO_TRAINER:
-            raise ValueError(
-                f"Azione non valida. Valide: {sorted(VALID_AZIONI_CREDITO_TRAINER)} "
-                "(il credito differito 'A_CREDITO' arriva con G7.10)."
-            )
+            raise ValueError(f"Azione non valida. Valide: {sorted(VALID_AZIONI_CREDITO_TRAINER)}.")
         return v
 
     @field_validator("importo_incassato")
@@ -242,9 +239,29 @@ class ContractSettlementPreview(BaseModel):
     sedute_totali: Optional[int] = None   # crediti_totali (None = senza monte-sedute)
     sedute_prenotate: int = 0             # D2 (G7.5c): PT prenotate-non-svolte — SOLO display (NON entra nel conguaglio)
     metodo_rimborso_richiesto: bool       # True se esito CREDITO_CLIENTE → il form deve chiedere il metodo rimborso
-    azioni_permesse: List[str] = []       # ramo CREDITO_TRAINER: scelte offerte (INCASSA_ORA, RINUNCIA_ESPRESSA; A_CREDITO da G7.10)
+    azioni_permesse: List[str] = []       # ramo CREDITO_TRAINER: scelte offerte (INCASSA_ORA, RINUNCIA_ESPRESSA, A_CREDITO)
     policy_mode: str = "pro_sedute"       # metodo di valorizzazione (default dichiarato, §0)
     messaggio: str                        # framing di proposta (§0/§4)
+
+
+class CreditoTerminazioneResponse(BaseModel):
+    """Credito differito a favore del trainer (G7.10, ADR-018) — receivable FUORI da `residuo()`.
+    `residuo` = `importo − importo_incassato` (quanto resta da incassare)."""
+    model_config = {"from_attributes": True}
+
+    id: int
+    id_contratto: int
+    id_cliente: int
+    importo: float
+    importo_incassato: float
+    stato: str                            # APERTO | SALDATO | ANNULLATO
+    data_creazione: date
+    data_chiusura: Optional[date] = None
+
+    @computed_field
+    @property
+    def residuo(self) -> float:
+        return round(max((self.importo or 0) - (self.importo_incassato or 0), 0.0), 2)
 
 
 # ════════════════════════════════════════════════════════════

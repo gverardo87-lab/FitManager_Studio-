@@ -662,14 +662,6 @@ def test_terminate_rinuncia_senza_nota_422(client, auth_headers, sample_client, 
     assert session.get(Contract, c["id"]).chiuso is False
 
 
-def test_terminate_azione_a_credito_respinta_g710(client, auth_headers, sample_client, session):
-    """A_CREDITO (credito differito) è respinto a livello schema finché non arriva G7.10 → 422."""
-    c = _contract_credito_trainer(client, auth_headers, sample_client, session)
-    r = client.post(f"/api/contracts/{c['id']}/terminate",
-                    json={"azione_credito_trainer": "A_CREDITO"}, headers=auth_headers)
-    assert r.status_code == 422, r.text
-
-
 def test_reopen_dopo_incassa_ora_roundtrip(client, auth_headers, sample_client, session):
     """AC §10.4-13: reopen dopo INCASSA_ORA è round-trip esatto: ENTRATA INCASSO_CONGUAGLIO annullata,
     totale_versato torna al pre-terminate, quota_stornata azzerata, residuo ripristinato."""
