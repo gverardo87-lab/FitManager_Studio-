@@ -201,6 +201,16 @@ export function ContractsTable({
                     <span className="font-mono text-sm">
                       {contract.crediti_usati}/{contract.crediti_totali ?? 0}
                     </span>
+                    {/* L1: erogato (servizio reso) affiancato all'occupazione */}
+                    {(contract.crediti_totali ?? 0) > 0 ? (
+                      <p className="text-[10px] text-muted-foreground">{contract.sedute_completate} svolte</p>
+                    ) : null}
+                    {/* M4: COMPLETAMENTO chiuso su sole prenotate → rimborso recuperabile */}
+                    {contract.sedute_non_erogate_chiusura > 0 ? (
+                      <p className="text-[10px] text-amber-600 dark:text-amber-400">
+                        {contract.sedute_non_erogate_chiusura} non svolte
+                      </p>
+                    ) : null}
                   </TableCell>
 
                   {/* ── Scadenza (hidden mobile) — neutra: l'urgenza la dà lo Stato + segnale riga ── */}

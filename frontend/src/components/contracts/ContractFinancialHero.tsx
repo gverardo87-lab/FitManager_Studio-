@@ -190,6 +190,22 @@ export function ContractFinancialHero({ contract }: { contract: ContractWithRate
             />
           </div>
         )}
+
+        {/* ── Riconciliazione recesso (R5/L1 + M4): il rimborso si basa sulle sole Completate ── */}
+        {creditiTotali > 0 && contract.sedute_non_erogate_chiusura > 0 ? (
+          <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 dark:border-amber-900/40 dark:bg-amber-900/20">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+            <p className="text-xs text-amber-800 dark:text-amber-300">
+              <strong>{contract.sedute_non_erogate_chiusura} sedute prenotate non erogate</strong> alla chiusura.
+              Per rimborsare il non svolto: <strong>Riapri → Termina</strong>.
+            </p>
+          </div>
+        ) : creditiTotali > 0 && completate < creditiTotali ? (
+          <p className="px-1 text-[10px] leading-snug text-muted-foreground">
+            Il rimborso da recesso si calcola sulle sole sedute <strong>Completate</strong> (erogate);
+            le prenotate non riducono il rimborso.
+          </p>
+        ) : null}
       </div>
     </div>
   );

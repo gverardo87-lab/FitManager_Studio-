@@ -2018,3 +2018,36 @@ allineati (`ContractListItem`/`ContractWithRates`).
 M3 (`ContrattiTab` → badge SSoT `ContractLifecycleBadge`/`ContractMoneyBadge`), con verifica Playwright.
 
 ---
+
+### 2026-06-26 — G7.7-R5: trasparenza frontend (L1 erogato + M3 badge SSoT + M4 indicatore)
+
+Seconda metà della trasparenza — la UI che mostra il dato esposto da R4. Chiude la radice della 1ª
+segnalazione di Chiara: lista/scheda/profilo affiancano ora l'erogato all'occupazione.
+
+**M3 — `ContrattiTab` ai badge SSoT.** Eliminata la cascata off-SSoT (`chiuso? : ha_rate_scadute? :
+Attivo`) che collassava Sospeso/Esaurito in "Attivo" verde (divergeva da `/contratti`). Ora la colonna
+Stato rende `ContractLifecycleBadge` (vita) + `ContractMoneyBadge` (denaro) da `lib/contract-status` +
+segnale "Rate scadute" (icona `AlertTriangle`, solo `!chiuso`). Un SOSPESO ora mostra "Sospeso" anche nel
+profilo. (Rimosso l'import `Badge` non più usato.)
+
+**L1 — erogato accanto all'occupazione.** Lista (`ContractsTable`) + profilo (`ContrattiTab`): sotto
+`crediti_usati/totali` ora compare "N svolte" (`sedute_completate`, erogato). Dettaglio
+(`ContractFinancialHero`): già mostrava Completate; aggiunta la microcopy di riconciliazione "il rimborso
+da recesso si calcola sulle sole Completate; le prenotate non riducono il rimborso" (solo se non tutto
+erogato).
+
+**M4 — indicatore COMPLETAMENTO-prenotato.** Dove `sedute_non_erogate_chiusura > 0`: lista/profilo
+mostrano "N prenotate non svolte" (amber); il dettaglio un banner amber "N sedute prenotate non erogate
+alla chiusura — per rimborsare: Riapri → Termina".
+
+**Verifica:** `next build` verde (TS pulito su tutte e 3 le superfici); dato corretto = R4 (test backend).
+**⚠️ Playwright live NON eseguito:** l'ambiente dev del founder è già in esecuzione (lock `.next/dev/lock`
+→ il mio `next dev` non parte; il backend in background ha fallito sul path relativo). Le edit sono
+display-only e hot-reloadano nell'istanza dev del founder (eyeball diretto possibile, previo backend su
+R4). **Verifica Playwright a schermo (light+dark) DA RIFARE quando l'ambiente è libero** — unico residuo
+di G7.7.
+
+**🏁 Con R5 la trasparenza è completa → la remediation dell'audit (H1·M1·M2·R6·R4·R5) + G7.8 è CHIUSA.
+⏭️ Prossimo: G1 cifratura crm.db** (con, in coda, la verifica Playwright di R5).
+
+---
