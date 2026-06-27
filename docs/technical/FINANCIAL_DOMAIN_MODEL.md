@@ -232,11 +232,11 @@ valore_servizio_reso = f(sedute_erogate, policy_prezzo_seduta)   # policy = DECI
 conguaglio           = valore_servizio_reso − totale_versato      # cassa sul servizio reso
 ```
 
-| `conguaglio` | Significato | Gamba |
+| `conguaglio` | Esito (balance-based, ADR-018) | Gamba |
 |---|---|---|
-| **< 0** | il cliente ha **versato più** del servizio reso | **RIMBORSO** (il trainer restituisce `−conguaglio`) |
-| **> 0** | il cliente ha **ricevuto più** di quanto versato | **da incassare** (G6) **oppure STORNO** (`saldo_a_perdere`) |
-| **= 0** | pari e patta | solo chiusura |
+| **< 0** | **CREDITO_CLIENTE**: ha **versato più** del servizio reso | **RIMBORSO** (il trainer restituisce `−conguaglio`) |
+| **> 0** | **CREDITO_TRAINER**: ha **ricevuto più** di quanto versato | **scelta esplicita** (mai write-off implicito): **INCASSA_ORA** (incasso editabile `[0, R−V]`) · **RINUNCIA** (abbuono auditato) · **A_CREDITO** (differito, G7.10) |
+| **= 0** | **PARI** | solo chiusura (storno della quota non erogata) |
 
 In parallelo, la **quota non erogata** del contratto (`prezzo − valore_servizio_reso`) è **annullata**
 (non sarà mai erogata): è lo **storno** che porta `residuo` a **zero** (§9.5). Le due gambe sono
@@ -246,11 +246,19 @@ simmetriche e corrispondono alla distinzione contabile **rimborso ≠ nota di cr
   **`RIMBORSO_CONTRATTO`** (con `id_contratto`) + `totale_rimborsato += −conguaglio`. È un **rimborso**:
   contante che torna al cliente. `totale_versato` **non si tocca**; il netto emerge da
   `netto_incassato = versato − rimborsato`.
-- **Gamba STORNO (cassa non si muove).** la quota non erogata e/o il dovuto a cui il trainer rinuncia
-  (`saldo_a_perdere`) si **stornano**: si **riduce il dovuto** senza movimento di cassa e **senza
-  riscrivere `prezzo_totale`** (che resta la verità della *competenza/venduto*, §8). È una **nota di
-  credito**: riduce un debito, non restituisce contante. Porta `residuo` a 0. Inoltre: le **rate future
-  PENDENTI** del contratto si **soft-deletano** (non più dovute) — §7-G7, prerequisito Forecast.
+- **Gamba STORNO (cassa non si muove).** la quota non erogata (`prezzo − valore_servizio_reso`) e/o il
+  dovuto a cui il trainer **esplicitamente rinuncia** si **stornano**: si **riduce il dovuto** senza
+  movimento di cassa e **senza riscrivere `prezzo_totale`** (che resta la verità della
+  *competenza/venduto*, §8). È una **nota di credito**: riduce un debito, non restituisce contante. Porta
+  `residuo` a 0. Inoltre: le **rate future PENDENTI** del contratto si **soft-deletano** (non più dovute).
+- **Gamba INCASSO CONGUAGLIO (cassa entra) — ADR-018, ramo `CREDITO_TRAINER`.** Quando `conguaglio > 0`
+  (il cliente deve ancora per servizio già reso) il trainer può **incassare** il saldo a suo favore
+  (`INCASSA_ORA`, importo proposto `R−V` **editabile verso il basso**): movimento **ENTRATA** datato di
+  categoria **`INCASSO_CONGUAGLIO_CONTRATTO`** (con `id_contratto`, `id_rata=NULL`) + `totale_versato +=`
+  l'incassato. Lo storno copre solo `residuo_pre − incassato`. È **simmetrico** al RIMBORSO (entrata vs
+  uscita). In alternativa il trainer rinuncia (`RINUNCIA`, gamba STORNO piena) — mai più un **write-off
+  silenzioso**. Il credito **differito** (chiudo oggi, incasso dopo) è entità a sé (`crediti_terminazione`,
+  fuori da `residuo()`), normata in **G7.10** (ADR-018 §D-CREDITO-DIFFERITO).
 
 > **Esempio compatto.** Pacchetto da 20 sedute, prezzo 1000, prepagato `versato = 700`. Il cliente fa 4
 > sedute, poi recede. Con policy "pro-sedute a prezzo di pacchetto" → `valore_servizio_reso = 200`.

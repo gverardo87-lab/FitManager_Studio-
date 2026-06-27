@@ -2133,3 +2133,60 @@ esplicita la semantica derivata e testare i crossing veri + i no-op.
 **⏭️ Prossimo:** se vuoi mantenere il metodo “un task = un commit”, il prossimo passo è il commit atomico del task backend audit.
 
 ---
+
+### 2026-06-27 — G7.9 / ADR-018: terminazione BILATERALE (tutela del trainer)
+
+3° audit senior (prodotto con Codex: `AUDIT_TERMINAZIONE_BILATERALE_2026-06-27.md` + spec omonima),
+verificato code-grounded e ratificato in **ADR-018**. Dopo G7.7/G7.8 il recesso era corretto sulla
+*matematica* (asse EROGATO) ma **asimmetrico sull'azione**: `compute_settlement` collassava `conguaglio≥0`
+su `SALDO_A_PERDERE` → `terminate` lo mappava su `TERMINAZIONE_DECADENZA` = **write-off implicito** del
+credito del trainer, senza scelta né traccia.
+
+**Prova economica.** P=1000 (10 sedute @100), cliente ne fa 7 (R=700), versato V=500 → oggi
+`quota_stornata=500` fonde **300** non-erogato (storno legittimo) + **200** = `R−V` servizio reso e non
+pagato → **credito reale del trainer abbuonato in silenzio**. BUG_DI_DOMINIO, non UX.
+
+**Governance (docs-only, commit `06f2771`).** ADR-018 (accepted, **estende ADR-016**, non emenda) + corpo
+della spec **riscritto unificato** (zero doppia-verità: niente sezione "Emendamenti" sopra un corpo vecchio)
++ INDEX + adr/README (16 ADR). **6 decisioni founder** (2 round AskUserQuestion): (D-IMPORTO) importo
+incassabile **editabile**, cap `[0, R−V]` solo verso il basso (mitiga `pro_sedute` PROVISIONAL senza
+attendere il tributarista); (D-CREDITO-DIFFERITO) "chiudo oggi, incasso dopo" **rientra in scope** come
+**G7.10** (entità dedicata `crediti_terminazione` FUORI da `residuo()`); (D-CATEGORIA) nuova
+`INCASSO_CONGUAGLIO_CONTRATTO`; (D-ESITO-PURO) balance-based; (D-MOTIVO) `TERMINAZIONE_SALDO_TRAINER`;
+(D-REOPEN) reopen inverte anche la nuova ENTRATA. **Split G7.9 (core, zero tabella) → G7.10 (differito).**
+
+**Implementazione G7.9 (commit `fdf70b6`).**
+- `contract_settlement.py` → esito `CREDITO_CLIENTE/CREDITO_TRAINER/PARI`; grandezze pure
+  `credito_cliente/credito_trainer/quota_non_erogata/residuo_pre`; `SALDO_A_PERDERE` esce dal modulo puro.
+- `terminate` → ramo `CREDITO_TRAINER` con **scelta obbligatoria** (422 senza): `INCASSA_ORA` (ENTRATA
+  `INCASSO_CONGUAGLIO_CONTRATTO`, `X` editabile `[0, R−V]`, `totale_versato += X`,
+  `quota_stornata += residuo_pre − X`) oppure `RINUNCIA_ESPRESSA` (nota obbl., audit
+  `saldo_trainer_rinunciato`). Formula storno uniforme su tutti i rami; `residuo()==0` per costruzione.
+- `reopen` → gamba **C-bis**: soft-delete della nuova ENTRATA + `totale_versato −=` (1ª volta che reopen
+  tocca il lordo — eccezione sanzionata, gemella di `unpay_rate`; coordinata col guard H1).
+- FE: `TerminateContractDialog` a **3 vie** (segmented control + importo editabile/nota), zero calcolo client.
+- grep-guard ADR-018 in `check-all.sh` (la categoria deve restare in `CONTRACT_CASH_IN`).
+
+**Verifica.** Backend **651 verdi** (full suite: solo 3 fallimenti da migrazione — cash-categories set,
+2 reopen su DECADENZA/esito — corretti; +9 AC nuovi: incassa pieno/parziale/over-cap/no-metodo, rinuncia,
+reopen round-trip, coerenza ricavi). `ruff` + `next build` + grep-guard verdi.
+
+**Lezioni trasferibili.**
+1. **La stessa policy cambia profilo di rischio col verso del denaro.** `pro_sedute` (PROVISIONAL) finché
+   decideva un *abbuono* era a sfavore del trainer (rischio basso); appena decide un importo *fatturato a un
+   cliente reale* il rischio è "bolletta indifendibile". Mitigazione scelta: **proposta editabile**, non gate.
+2. **Cross-check per convalidare una formula nuova.** `INCASSA_ORA` è economicamente identico a "incasso il
+   residuo pieno via G6, poi rimborso il non-erogato" (netto = R in entrambi) → conferma la §4.2 sulla
+   macchina esistente; modello mentale: *incassi ciò che hai reso, storni il resto*.
+3. **De-risking per ispezione dei consumer.** Gli aggregati cassa classificano l'inflow per
+   `tipo=='ENTRATA'` + presenza `id_contratto` (financial-trend) o per esclusione esplicita di
+   `RIMBORSO_CONTRATTO` (movement-stats/forecast) — **mai** per allowlist di categoria. Quindi la nuova
+   ENTRATA è **auto-inclusa** come ricavo ovunque: il cablaggio "in tutti i predicati G7.5" si è ridotto a
+   `CONTRACT_CASH_IN` + 1 test. Verificare *come* i consumer filtrano prima di stimare il blast radius.
+4. **Riconferma `[[feedback_formatter_strips_imports]]`**: il PostToolUse ruff --fix ha stripato la nuova
+   `CATEGORIA_INCASSO_CONGUAGLIO_CONTRATTO` perché aggiunta prima del suo uso → re-aggiunta dopo l'uso.
+
+**⏭️ Prossimo:** G7.10 (credito differito: entità `crediti_terminazione`, worklist, endpoint incasso,
+reopen esteso) → **G1 cifratura crm.db**. In coda: verifica Playwright live del dialog a 3 vie.
+
+---
