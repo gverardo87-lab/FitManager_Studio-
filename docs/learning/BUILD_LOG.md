@@ -2241,3 +2241,51 @@ aggiunge un piano ortogonale.
 crediti G7.10). Differiti post-G1 invariati.
 
 ---
+
+### 2026-06-28 — Governance: ADR-019 (mastro non-distruttivo + reopen ricalcola) + ADR-020 (wallet cliente)
+
+Programma nuovo aperto da **due osservazioni del founder** sul reopen, dopo G7.9/G7.10. **G1 messo in
+stand-by temporaneo** per dare priorita' a questo. **Governance docs-only** (zero codice, "governance first").
+
+**Trigger 1 — reopen non protetto.** `reopen` soft-cancella scritture di cassa (rimborso + incasso conguaglio)
+senza alert, **scavalcando la protezione del mastro** (`delete_movement` vieta — 400 — di eliminare un
+movimento con `id_contratto`). Un terminate con `INCASSA_ORA` (€300 incassati) riaperto mostra **zero warning**:
+€300 di reddito reale spariscono dal mastro.
+
+**Trigger 2 — rimborso rigido + simmetria a meta'.** ADR-018 ha reso flessibile il lato trainer (incassa/
+rinuncia/a-credito); il lato cliente e' rimasto a "rimborso pieno obbligato". Il founder: rimborso editabile
+(anche parziale/zero) + il non-rimborsato = **credito al cliente** da tracciare.
+
+**Audit specifico `AUDIT_REOPEN_SCENARIOS_2026-06-28.md`** (code-grounded): `reopen` e' **sovraccaricato** — un
+verbo per 3 operazioni (undo / storno-correttivo / riattivazione). Grounding fiscale: **niente layer
+documentale** (no fattura/nota-credito) → il `CashMovement` *e'* il dato fiscale → soft-cancellarlo in un
+periodo dichiarato lo altera retroattivamente. Matrice **S1–S7**.
+
+**Il principio (osservazione del founder, generalizzata e validata):** la posizione su un contratto e' sempre
+**debito** (vive nel contratto, `residuo`) o **credito** (esce in un ledger: wallet cliente / receivable
+trainer); **la cassa mossa non si tocca mai**; terminate e reopen **ricalcolano e instradano**. Questo
+**dissolve** la matrice (S1/S2/S3/S6/S7 → trattamento unico; restano S4/S5 = software-propone) e **converge coi
+best CRM aziendali** (Stripe/Chargebee/QuickBooks: customer credit balance + ledger immutabile +
+reactivation-recompute). Due scoperte derivate: (A) `residuo` net-aware `P−netto−storno` (oggi usa il lordo →
+sbaglia su un riaperto con rimborso); (B) il clamp `max(...,0)` **butta via gli overpayment in silenzio** → il
+wallet e' il sink generale.
+
+**Decisioni → 2 ADR:**
+- **ADR-019** (mastro non-distruttivo + reopen ricalcola): D-CASSA-IMMUTABILE (reopen non cancella la cassa) ·
+  D-RICALCOLA · D-RESIDUO-NETTO · D-INSTRADA (debito→contratto/credito→wallet) · D-PROPONE (S4/S5) · D-STAGING.
+  **Emenda G7.4** "reopen = inverso esatto" → "true-to-ledger".
+- **ADR-020** (wallet cliente = customer credit balance): rimborso editabile `[0,credito_cliente]` + non-
+  rimborsato/overpayment → wallet; rimborsabile + applicabile a contratti futuri; **asimmetria corretta** vs
+  trainer (si rinuncia a cio' che ti e' dovuto, non a cio' che devi); **v1 LEAN** (tracciato + applicato a mano;
+  auto-applicazione cross-contratto = stato distribuito, differita su domanda).
+
+**Distinzione senior architect vs developer (esplicitata col founder):** il *principio* (collassare la matrice
+in un invariante, convergente con l'industria) e' la mossa da architect; renderla da *developer* e' **non
+costruirlo tutto adesso** — adottare il principio come stella polare e **stadiare il build** (fetta economica
+prima: reopen-recompute + propose + wallet manuale; cross-contratto dopo, su domanda). Il vero costo non e'
+reopen ma il **wallet auto-spendibile cross-contratto** (consistenza di stato distribuito) → tenuto in panchina.
+
+**Doc:** audit in `docs/operations/`, ADR-019/020 in `docs/adr/`, INDEX + adr/README (18 ADR). **Prossimo:**
+spec di dettaglio del programma (blocchi + AC) → poi implementazione a fette. **G1 resta in stand-by.**
+
+---

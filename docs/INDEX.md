@@ -80,7 +80,8 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 
 | File | Scopo |
 |------|-------|
-| `AUDIT_TERMINAZIONE_BILATERALE_2026-06-27.md` | **Audit senior del gap residuo sul recesso bilaterale.** Dopo G7.7/G7.8 conferma che il calcolo su asse EROGATO regge, ma il ramo `servizio_reso > versato` resta sbilanciato: il codice materializza una rinuncia implicita del trainer invece di obbligare una scelta esplicita tra incasso contestuale e rinuncia auditata. Fondamento del blocco `SPEC_TERMINAZIONE_BILATERALE_E_TUTELA_TRAINER.md` |
+| `AUDIT_TERMINAZIONE_BILATERALE_2026-06-27.md` | **Audit senior del gap residuo sul recesso bilaterale.** Dopo G7.7/G7.8 conferma che il calcolo su asse EROGATO regge, ma il ramo `servizio_reso > versato` resta sbilanciato: il codice materializza una rinuncia implicita del trainer invece di obbligare una scelta esplicita tra incasso contestuale e rinuncia auditata. Fondamento del blocco `SPEC_TERMINAZIONE_BILATERALE_E_TUTELA_TRAINER.md` (ADR-018) |
+| `AUDIT_REOPEN_SCENARIOS_2026-06-28.md` | **Audit specifico sugli scenari di riapertura di un contratto terminato** (trigger founder). `reopen` è **sovraccaricato**: un verbo per 3 operazioni (undo / storno-correttivo / riattivazione), che soft-cancella scritture di cassa fiscalmente rilevanti scavalcando la protezione del mastro. Matrice S1–S7 + grounding fiscale (niente layer documentale → il `CashMovement` è il dato fiscale). **Principio unificante:** la cassa mossa non si tocca mai; reopen ricalcola; debito→contratto, credito→wallet; software-propone per le dipendenze a valle. Fonda **ADR-019** (mastro non-distruttivo) + **ADR-020** (wallet) |
 | `RELEASE_CHECKLIST.md` | Checklist release: preflight, build, verify, seal |
 | `RUNTIME_DIAGNOSTICS_PLAYBOOK.md` | Diagnostica runtime: log, errori, recovery |
 | `SUPPORT_RUNBOOK.md` | Runbook supporto: licenza, backup, restore, troubleshoot |
@@ -92,7 +93,7 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 
 ## adr/ — Architecture Decision Records
 
-16 ADR attivi (ADR-001 → ADR-018; ADR-002 rimossa come obsoleta, ADR-012 riservato). Ultimi: ADR-016 (asse EROGATO canonico per il recesso, blocco G7.7) + ADR-017 (il rinvio libera il credito — `Rinviato` fuori dall'occupazione, emenda ADR-016 §1, blocco G7.8), entrambi 2026-06-26 dalle 2 segnalazioni di Chiara; **ADR-018** (terminazione bilaterale — il ramo `servizio_reso > versato` esige una scelta esplicita incasso-editabile/rinuncia + credito differito fuori da `residuo()`, estende ADR-016; blocchi **G7.9 core + G7.10 differito**, 2026-06-27). Indice in `adr/README.md`.
+18 ADR attivi (ADR-001 → ADR-020; ADR-002 rimossa come obsoleta, ADR-012 riservato). Ultimi: **ADR-018** (terminazione bilaterale — incasso-editabile/rinuncia + credito differito `crediti_terminazione` fuori da `residuo()`, estende ADR-016; blocchi G7.9+G7.10, 2026-06-27); **ADR-019** (libro mastro **non-distruttivo** + `reopen` **ricalcola-e-instrada** — la cassa mossa non si tocca, `residuo` net-aware, debito→contratto/credito→wallet, software-propone per le dipendenze a valle; **emenda G7.4** reopen-inverso-esatto; 2026-06-28); **ADR-020** (**wallet del cliente** = customer credit balance — rimborso editabile + non-rimborsato/overpayment → credito spendibile/rimborsabile, completa il lato cliente di ADR-018; v1 lean; 2026-06-28). ADR-019/020 nascono dall'osservazione del founder su reopen (audit `AUDIT_REOPEN_SCENARIOS_2026-06-28.md`). Indice in `adr/README.md`.
 
 ## incidents/ — Post-mortem
 
