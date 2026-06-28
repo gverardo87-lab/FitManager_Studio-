@@ -108,3 +108,32 @@ C-ter (delete) — riapre pero' i problemi di integrita' fiscale di periodo. Nes
   rispetto alla cassa reale" (true-to-ledger). L'asse EROGATO, la bilateralita' e Strada B restano invariati.
 - **Estende ADR-016/018**. Instradamento del credito -> **ADR-020**.
 - Superseded by: —
+
+## Addendum 2026-06-28 — G8.1.1 (reopen reconciliation + transparency)
+
+Il test del flusso da parte del founder, dopo G8.1 shippato, ha confermato che il **calcolo** è
+corretto ma il **contorno** (presentazione + piano rate + guard di cap/stato) non si era allineato al
+modello net-aware/non-distruttivo. Tre conseguenze del principio, **non nuove decisioni** — il loro
+mancato recepimento confonde l'utente:
+
+- **D-CASSA-VISIBILE (F1, conseguenza di D-CASSA-IMMUTABILE).** Se la cassa di terminazione **resta**,
+  deve essere **visibile** sul contratto: il dettaglio espone lo storico dei `CashMovement` a livello
+  contratto (acconto, rimborso, conguaglio; `id_contratto` set, anche con `id_rata=None`), così il
+  `residuo` net-aware **riconcilia a vista**. Senza, un residuo guidato da una cassa invisibile sembra
+  sbagliato (oggi `get_contract` espone solo i movimenti legati a una rata via `id_rata`).
+- **D-RECONCILIA-RATE (F2, estende D-RICALCOLA al piano rate).** `reopen` non ricalcola solo il
+  `residuo`: **riconcilia anche il piano rate** al residuo ricalcolato. Decisione founder = **riallineo
+  automatico** — le rate restaurate eccedenti vengono **tagliate cronologicamente** (l'ultima a cavallo
+  ridotta, le successive azzerate/eliminate; una PARZIALE mai sotto `importo_saldato`); una
+  sotto-copertura lascia il resto come **"da pianificare"** (mai una rata-fantasma). L'inverso-esatto
+  M1/G7.7 ("ripristina le rate identiche") assumeva reopen = inverso esatto: **non vale più** sotto il
+  non-distruttivo (quando la cassa resta, il residuo ripristinato ≠ pre-terminate).
+- **D-NET-AWARE-OVUNQUE (F3/F4, completa D-RESIDUO-NETTO).** Ogni guard/stato che esprime "quanto è
+  dovuto / saldato" deriva dal SSoT net-aware, **mai** dal LORDO `totale_versato`: `_cap_rateizzabile`
+  usa `netto_incassato`; `stato_pagamento = SALDATO ⟺ residuo() ≤ 0.01` (non `versato ≥ prezzo`). Senza,
+  `pay_rate` (già net) e `_cap`/auto-close (lordo) **si contraddicono**, e un riaperto-con-rimborso può
+  marcare SALDATO/auto-close con `residuo() > 0` (violazione di `residuo == 0 ⟺ saldato` su CHIUSO).
+
+**Invarianti immutati:** `residuo == 0 ⟺ saldato`, cassa-immutabile, asse EROGATO (ADR-016), Strada B.
+Dettaglio + AC in `SPEC_INTEGRITA_CONTABILE_E_WALLET.md §14`. È **hardening** (completamento del recepimento
+del principio), non un nuovo blocco: **G8.1.1**.

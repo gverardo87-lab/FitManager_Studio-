@@ -128,6 +128,16 @@ Un contratto si "esaurisce" lungo **tre assi distinti**, che NON vanno confusi:
 > (`residuo ≡ 0`, settled). **reopen-recompute (G8.1/ADR-019):** un rimborso che «resta» su un contratto
 > **riaperto** (la cassa NON si cancella) rende `residuo` net-aware > 0 — il cliente ha riavuto denaro, deve
 > di più — è l'unico caso in cui il netto diverge dal lordo su un contratto **aperto**.
+>
+> **Consumer net-aware (G8.1.1 / ADR-019 Addendum) — regola d'oro.** Ogni guard/stato che esprime "quanto
+> è dovuto / saldato / rateizzabile" deriva da `residuo()` / `netto_incassato()`, **mai** dal LORDO
+> `totale_versato`: il cap rateizzabile (`_cap_rateizzabile`) sottrae il **netto**; `stato_pagamento =
+> SALDATO ⟺ residuo() ≤ 0.01` (non `versato ≥ prezzo` — che su un riaperto-con-rimborso marcherebbe SALDATO
+> con `residuo() > 0`, violando §9.5). E `reopen` ricalcola-e-instrada **anche il piano rate**: dopo aver
+> ripristinato le rate e ricalcolato il residuo, **riallinea il piano** (eccedenza tagliata
+> cronologicamente; sotto-copertura → "da pianificare") così che `Σ residui-rata ≤ residuo()`. Senza, il
+> guard di pagamento (net) e il cap/stato (lordo) si contraddicono. Dettaglio in
+> `SPEC_INTEGRITA_CONTABILE_E_WALLET.md §14`.
 
 ---
 

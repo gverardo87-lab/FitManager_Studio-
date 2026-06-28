@@ -2,7 +2,7 @@
 
 **Tipo:** specifica prescrittiva (cosa-deve-essere-vero; silente sul come). Bridge Chat->Code.  
 **Data:** 2026-06-28 · **Branch:** `FitManager_Studio`  
-**Stato:** ✅ **G8.1 IMPLEMENTATA** (2026-06-28; commit `f84d345`→`a51d180`, suite 678 verde, next build verde, Playwright live OK). G8.2 (wallet auto-spendibile cross-contratto) su domanda. · ratificata da **ADR-019** + **ADR-020**  
+**Stato:** ✅ **G8.1 IMPLEMENTATA** (2026-06-28; commit `f84d345`→`a51d180`, suite 678 verde, next build verde, Playwright live OK). **🔧 G8.1.1 (reconciliation + transparency, §14)** = governance FATTA (ADR-019 Addendum), **codice DA FARE** (F1 movimenti contratto · F2 reopen riallinea le rate · F3/F4 net-aware cap/stato). G8.2 (wallet auto-spendibile cross-contratto) su domanda. · ratificata da **ADR-019** + **ADR-020**  
 **Blocco proposto:** **G8** (programma post-G7 "integrita' contabile + completamento bilaterale"). **Fetta 1 = G8.1** (reopen non-distruttivo + residuo net-aware + wallet lean + rimborso editabile + UX-propone). **Fetta 2 = G8.2** (wallet auto-spendibile cross-contratto). G1 in stand-by.  
 **Mappa di verita:** `docs/adr/ADR-019-libro-mastro-non-distruttivo-reopen-ricalcola.md` · `docs/adr/ADR-020-wallet-cliente-customer-credit-balance.md` · `docs/operations/AUDIT_REOPEN_SCENARIOS_2026-06-28.md` · `docs/technical/FINANCIAL_DOMAIN_MODEL.md` · `api/services/contract_state.py` · `api/routers/contracts.py`
 
@@ -209,3 +209,82 @@ Scope (NON in G8.1): applicare un credito `crediti_cliente` come **acconto/scont
 6. le ancore reggono; la suite (migrata) e i quality gate passano.
 
 **G8.2** e' finito quando il credito wallet e' applicabile a un contratto futuro, con `reopen-preview` che rileva e propone la dipendenza a valle (S4).
+
+---
+
+## 14. G8.1.1 — reopen reconciliation + transparency (follow-up audit, 2026-06-28)
+
+**Origine:** test del flusso da parte del founder dopo G8.1 shippato. Il **calcolo** del residuo
+net-aware è corretto, ma il **contorno** (presentazione movimenti + piano rate + guard cap/stato) non si
+è allineato. **Emerge SOLO quando della cassa resta** dopo reopen (rimborso o conguaglio incassato); il
+reopen di una terminazione senza cassa (rinuncia / storno puro) ripristina tutto correttamente. Ratifica:
+**ADR-019 Addendum 2026-06-28**. È **hardening** (completamento del recepimento del principio), non nuovo blocco.
+
+### 14.1 Findings (code-grounded)
+
+- **F1 — movimenti contratto invisibili sul dettaglio [HIGH, trasparenza].** `get_contract` costruisce
+  `receipt_map` solo dai `CashMovement` con `id_rata` set → acconto, rimborso (`RIMBORSO_CONTRATTO`),
+  conguaglio (`INCASSO_CONGUAGLIO_CONTRATTO`) — tutti `id_rata=None` — non compaiono. Il `residuo`
+  net-aware "non torna" dai pagamenti visibili.
+- **F2 — rate restaurate ≠ nuovo residuo [HIGH, correttezza/UX].** `reopen` R5 ripristina le rate
+  `chiusa_da_terminazione` AS-IS (dimensionate al residuo PRE-terminate). Con cassa che resta, residuo
+  ricalcolato ≠ pre-terminate → conguaglio: rate > residuo → `pay_rate` blocca l'ultima rata (422);
+  rimborso: rate < residuo → buco. (L'inverso-esatto M1/G7.7 assumeva reopen = inverso esatto.)
+- **F3 — `_cap_rateizzabile` non net-aware [MED-HIGH, consistenza].** `cap = prezzo − (totale_versato −
+  saldato) − quota` usa il LORDO. Dopo reopen-rimborso, `pay_rate` (net, delega `residuo()`) permette di
+  pagare il residuo pieno ma create/update_rate (lordo) non permette di **pianificarlo** → i due guard si
+  contraddicono di `totale_rimborsato`.
+- **F4 — `stato_pagamento`/auto-close LORDO [MED-HIGH, può violare `residuo==0` su CHIUSO].** `SALDATO se
+  totale_versato ≥ prezzo`. Dopo reopen-rimborso, ri-incassando, `versato` tocca `prezzo` mentre
+  `residuo()` net > 0 → SALDATO + eventuale auto-close prematuro con residuo ≠ 0.
+
+**Sani (già net-aware):** `pay_rate` B-ter e `generate_payment_plan` delegano a `cstate.residuo()`.
+
+### 14.2 Decisioni
+
+- **F1 (D-CASSA-VISIBILE):** il dettaglio espone uno **storico movimenti del contratto** (tutti i
+  `CashMovement` con `id_contratto`, ENTRATA+USCITA, cronologico) — backend nel response + FE timeline.
+- **F2 (D-RECONCILIA-RATE) — riallineo AUTOMATICO (founder):** `reopen`, dopo aver ripristinato le rate e
+  ricalcolato il residuo, **riconcilia il piano**: se Σ residui-rata > `residuo()` taglia cronologicamente
+  (l'ultima rata a cavallo ridotta a coprire l'esatto residuo; le successive con `importo_saldato==0` →
+  soft-delete, con `importo_saldato>0` → `importo_previsto=importo_saldato` = SALDATA, **mai sotto il
+  saldato**); se Σ < `residuo()`, lascia il resto "da pianificare" (nessuna rata-fantasma). Nessun banner:
+  il piano esce già coerente.
+- **F3 (D-NET-AWARE):** `_cap_rateizzabile` usa `cstate.netto_incassato(contract)` al posto di
+  `totale_versato`. Backward-compat (`rimborsato=0` → byte-identico).
+- **F4 (D-NET-AWARE):** `stato_pagamento = SALDATO ⟺ cstate.residuo(contract) ≤ 0.01` (non `versato ≥
+  prezzo`). Backward-compat. L'auto-close resta `SALDATO AND crediti esauriti`.
+
+### 14.3 Test di accettazione (G8.1.1)
+
+1. **F1:** dopo reopen-con-rimborso, `GET /contracts/{id}` espone i movimenti contratto (acconto +
+   rimborso USCITA + eventuale conguaglio ENTRATA) con importo/segno/data; Σ riconcilia con `netto_incassato`.
+2. **F2-over:** terminato con conguaglio incassato (residuo ricalcolato < Σ rate restaurate) → reopen → Σ
+   residui-rata == `residuo()`; l'ultima a cavallo ridotta; le eccedenti soft-deleted; una PARZIALE
+   eccedente diventa SALDATA (mai sotto `importo_saldato`).
+3. **F2-under:** terminato con rimborso (residuo ricalcolato > Σ rate) → reopen → rate invariate,
+   `residuo() − Σ` resta "da pianificare" (`money_substate` PARZIALE/DA_PIANIFICARE).
+4. **F2-no-cash:** reopen di rinuncia/storno-puro (residuo == pre-terminate) → rate ripristinate identiche,
+   nessuna riconciliazione (il round-trip resta esatto dove non c'è cassa).
+5. **F3:** dopo reopen-rimborso, `_cap_rateizzabile` consente di pianificare fino a `residuo()` net (non si
+   ferma a `prezzo − versato`); byte-identico con `rimborsato=0`.
+6. **F4:** dopo reopen-rimborso, collezionando via rate fino a `versato == prezzo` ma `residuo() > 0`,
+   `stato_pagamento` NON è SALDATO e l'auto-close NON scatta; SALDATO solo a `residuo() == 0`.
+
+### 14.4 Perimetro
+
+- `api/routers/contracts.py` — `reopen` (R5 + riconciliazione rate F2); `get_contract` /
+  `_to_response_with_rates` + schema `financial.py` (movimenti contratto F1).
+- `api/routers/rates.py` — `_cap_rateizzabile` net-aware (F3); `stato_pagamento` net-aware (F4, + siti
+  gemelli `unpay_rate`/`update_rate` se condividono la condizione lordo).
+- `api/services/contract_state.py` — eventuale helper `is_saldato(contract)` (SSoT della condizione F4).
+- Frontend — sezione "Movimenti del contratto" sul dettaglio (F1); il piano rate riflette già il riallineo
+  (F2, nessun nuovo componente).
+- Test: `tests/test_contract_reopen.py` (F2 over/under/no-cash) + `test_rate_guards.py` (F3/F4) +
+  integrazione (F1).
+
+### 14.5 Sequenza
+
+(1) governance [questo §14 + ADR-019 Addendum + FDM] → (2) F3+F4 net-aware (SSoT, piccoli) → (3) F2
+reopen-reconcile + test scenari → (4) F1 backend + FE → (5) gate (suite + check-all + next build) +
+verifica Playwright.
