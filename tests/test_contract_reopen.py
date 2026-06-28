@@ -418,9 +418,10 @@ def test_f2_reopen_riallinea_eccedenza(client, auth_headers, sample_client, sess
     assert round(r1.importo_previsto - r1.importo_saldato, 2) == 200.0        # Σ residui-rata == residuo
 
 
-def test_f2_reopen_sottocopertura_da_pianificare(client, auth_headers, sample_client, session):
-    """F2-under: un rimborso alza il residuo sopra le rate restaurate → reopen NON taglia; il resto resta
-    'da pianificare' (rate invariate, Σ < residuo)."""
+def test_f2_reopen_sottocopertura_coperta_dal_rimborso(client, auth_headers, sample_client, session):
+    """F2-under (auto-copertura, scelta founder): il rimborso che resta (600) alza il residuo sopra la rata
+    restaurata → reopen RIALLINEA IN SU l'unica pendente (200 → 800) per coprire il rimborso ri-incassabile
+    → Σ == residuo, piano allineato. (Qui rimborso == gap → copertura piena.)"""
     c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=800.0, crediti=10)
     t = _trainer(session)
     rata1 = _rate(client, auth_headers, c["id"], 200.0)          # = residuo originale (1000−800)
@@ -435,8 +436,31 @@ def test_f2_reopen_sottocopertura_da_pianificare(client, auth_headers, sample_cl
     contract = session.get(Contract, c["id"])
     assert cstate.residuo(contract) == 800.0           # 1000 − netto(800−600=200) — il rimborso resta
     r1 = session.get(Rate, rata1["id"])
-    assert r1.deleted_at is None and round(r1.importo_previsto, 2) == 200.0   # invariata (sotto-copertura)
-    # Σ rate (200) < residuo (800) → 600 "da pianificare", nessuna rata-fantasma
+    # auto-copertura limitata al rimborso (600): la pendente cresce 200 → 800 = residuo
+    assert r1.deleted_at is None and round(r1.importo_previsto, 2) == 800.0
+    assert round(r1.importo_previsto - r1.importo_saldato, 2) == 800.0   # Σ residui-rata == residuo
+
+
+def test_f2_reopen_consunzione_senza_rimborso_non_fabbrica_rate(client, auth_headers, sample_client, session):
+    """F2-under SENZA rimborso (CONSUNZIONE/storno puro): il residuo torna 'da pianificare' com'era — reopen
+    NON fabbrica una rata-fantasma (auto-copertura limitata al rimborso, qui 0). Senza il limite, la rata
+    creata consumava lo spazio-piano e rompeva update_rate (regressione intercettata da test_m2)."""
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=0.0, crediti=10)
+    t = _trainer(session)
+    rata = _rate(client, auth_headers, c["id"], 500.0)
+    client.post(f"/api/rates/{rata['id']}/pay", json={"importo": 500.0, "metodo": "CONTANTI"}, headers=auth_headers)
+    _complete_pt(session, t.id, sample_client["id"], c["id"], 5)  # reso 500 == versato → PARI, nessun rimborso
+
+    assert client.post(f"/api/contracts/{c['id']}/terminate", json={}, headers=auth_headers).status_code == 200
+    assert client.post(f"/api/contracts/{c['id']}/reopen", headers=auth_headers).status_code == 200
+
+    session.expire_all()
+    contract = session.get(Contract, c["id"])
+    assert round(contract.totale_rimborsato, 2) == 0.0
+    assert cstate.residuo(contract) == 500.0
+    # nessuna rata-fantasma: resta solo la SALDATA (500); il residuo 500 è "da pianificare"
+    attive = session.exec(select(Rate).where(Rate.id_contratto == c["id"], Rate.deleted_at == None)).all()
+    assert len(attive) == 1 and attive[0].stato == "SALDATA"
 
 
 def test_f2_reopen_senza_cassa_round_trip_esatto(client, auth_headers, sample_client, session):
@@ -515,3 +539,66 @@ def test_f1_movimenti_esposti_dopo_reopen_con_cassa(client, auth_headers, sample
     contract = session.get(Contract, c["id"])
     netto = round((contract.totale_versato or 0) - (contract.totale_rimborsato or 0), 2)
     assert signed == netto == 200.0                            # 500 acconto − 300 rimborso
+
+
+# ── F2 auto-copertura (G8.1.1): reopen copre il residuo cresciuto dal rimborso (Garavelli) ──
+
+def test_f2_reopen_copre_ammanco_da_rimborso(client, auth_headers, sample_client, session):
+    """Riproduce Garavelli (1100, reso 330, rimborso 37): le rate ripristinate (LORDE, 733) NON coprono il
+    residuo net-aware (770); reopen RIALLINEA IN SU — l'ultima pendente assorbe l'ammanco → il piano pendente
+    copre il residuo pieno (770), `piano_allineato`, niente 'da pianificare' silenzioso (i 37 ri-incassabili)."""
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=1100.0, acconto=0.0, crediti=20)
+    t = _trainer(session)
+    _complete_pt(session, t.id, sample_client["id"], c["id"], 6)   # reso 6 * (1100/20) = 330
+
+    # versato 367 dentro una rata SALDATA (così netto<Σsaldato dopo il rimborso) + 2 pendenti (366.5)
+    rata = _rate(client, auth_headers, c["id"], 367.0)
+    client.post(f"/api/rates/{rata['id']}/pay", json={"importo": 367.0, "metodo": "BONIFICO"}, headers=auth_headers)
+    _rate(client, auth_headers, c["id"], 366.5)
+    _rate(client, auth_headers, c["id"], 366.5)
+
+    # terminate → overpaid 37 (versato 367 − reso 330) → rimborso 37; le 2 pendenti soft-eliminate
+    assert client.post(f"/api/contracts/{c['id']}/terminate",
+                       json={"metodo_rimborso": "CONTANTI"}, headers=auth_headers).status_code == 200
+
+    # reopen → residuo 770; pendenti ripristinate 733 < 770 → auto-copertura
+    assert client.post(f"/api/contracts/{c['id']}/reopen", headers=auth_headers).status_code == 200
+
+    session.expire_all()
+    contract = session.get(Contract, c["id"])
+    assert cstate.residuo(contract) == 770.0
+    pend = session.exec(select(Rate).where(
+        Rate.id_contratto == c["id"], Rate.stato.in_(["PENDENTE", "PARZIALE"]), Rate.deleted_at == None)).all()
+    somma_pend = round(sum((r.importo_previsto or 0) - (r.importo_saldato or 0) for r in pend), 2)
+    assert somma_pend == 770.0                                   # piano pendente copre il residuo pieno
+
+    detail = client.get(f"/api/contracts/{c['id']}", headers=auth_headers).json()
+    assert detail["importo_da_rateizzare"] == 770.0
+    assert detail["somma_rate_pendenti"] == 770.0
+    assert detail["piano_allineato"] is True
+
+
+# ── Fix A (G8.1.1): _cap_rateizzabile net-aware col rimborso (cap == residuo, non il LORDO) ──
+
+def test_cap_rateizzabile_net_aware_con_rimborso(client, auth_headers, sample_client, session):
+    """Il cap rate deve coincidere col residuo() net-aware anche quando `netto < Σ saldato` (rimborso): il
+    clamp lordo `max(0,…)` bloccava a 'prezzo' (spazio 0 sui riaperti-con-rimborso), impedendo di
+    ri-rateizzare il € rimborsato. Senza clamp: acconto negativo alza il cap a prezzo+rimborso."""
+    from api.routers.rates import _cap_rateizzabile
+    t = _trainer(session)
+    c = Contract(
+        trainer_id=t.id, id_cliente=sample_client["id"], tipo_pacchetto="Pkg",
+        prezzo_totale=1000.0, crediti_totali=10, data_inizio=TODAY,
+        data_scadenza=date.fromisoformat(FUTURE), totale_versato=500.0,
+        totale_rimborsato=200.0, quota_stornata=0.0, stato_pagamento="PARZIALE",
+    )
+    session.add(c)
+    session.commit()
+    session.refresh(c)
+    session.add(Rate(id_contratto=c.id, data_scadenza=TODAY, importo_previsto=500.0,
+                     importo_saldato=500.0, stato="SALDATA"))
+    session.commit()
+    # netto = 500 − 200 = 300; residuo = 1000 − 300 = 700. Il cap net-aware == residuo (spazio per
+    # ri-rateizzare il rimborso); col vecchio clamp lordo dava 500 (i 200 rimborsati spariti dal cap).
+    assert round(cstate.residuo(c), 2) == 700.0
+    assert round(_cap_rateizzabile(session, c), 2) == 700.0

@@ -1768,9 +1768,29 @@ def _reconcile_rate_plan(session: Session, contract, trainer_id: int) -> dict:
         ).order_by(Rate.data_scadenza, Rate.id)
     ).all())
     somma_residui = round(sum(max((r.importo_previsto or 0) - (r.importo_saldato or 0), 0.0) for r in rate), 2)
-    if somma_residui <= residuo + 0.01:
-        return {"residuo": residuo, "somma_rate_pre": somma_residui, "tagliate": 0, "rimosse": 0}
+    if abs(somma_residui - residuo) <= 0.01:
+        # Pari (es. reopen senza-cassa): round-trip esatto preservato.
+        return {"residuo": residuo, "somma_rate_pre": somma_residui, "tagliate": 0, "rimosse": 0, "cresciute": 0}
 
+    if somma_residui < residuo - 0.01:
+        # SOTTO-COPERTURA. Auto-copertura (scelta founder) LIMITATA al RIMBORSO che resta (re-incassabile):
+        # è il SOLO € che il reopen ha aggiunto al residuo e che il piano ripristinato non copre. L'eventuale
+        # ammanco oltre il rimborso è "da pianificare" ORIGINALE del trainer → NON lo fabbrichiamo (mai una
+        # rata-fantasma su residuo mai pianificato: romperebbe la CONSUNZIONE/storno-puro senza pendenti, dove
+        # il residuo torna "da pianificare" com'era). Cresce SOLO una rata pendente ESISTENTE (mirror del
+        # taglio cronologico); senza pendenti o senza rimborso → no-op (Fix A lascia aggiungere a mano).
+        # Non tocca cassa (solo importo_previsto).
+        ammanco = min(round(residuo - somma_residui, 2), round(contract.totale_rimborsato or 0, 2))
+        if ammanco > 0.01 and rate:
+            last = rate[-1]
+            last.importo_previsto = round((last.importo_previsto or 0) + ammanco, 2)
+            session.add(last)
+            log_audit(session, "rate", last.id, "UPDATE", trainer_id,
+                      {"importo_previsto": {"new": last.importo_previsto}, "riallineo": "reopen_cover"})
+            return {"residuo": residuo, "somma_rate_pre": somma_residui, "tagliate": 0, "rimosse": 0, "cresciute": 1}
+        return {"residuo": residuo, "somma_rate_pre": somma_residui, "tagliate": 0, "rimosse": 0, "cresciute": 0}
+
+    # ECCEDENZA (Σ residui-rata > residuo): taglio cronologico.
     now = datetime.now(timezone.utc)
     coperto = 0.0
     tagliate = 0
@@ -1805,7 +1825,7 @@ def _reconcile_rate_plan(session: Session, contract, trainer_id: int) -> dict:
             coperto = residuo
         else:
             coperto = round(coperto + residuo_rata, 2)
-    return {"residuo": residuo, "somma_rate_pre": somma_residui, "tagliate": tagliate, "rimosse": rimosse}
+    return {"residuo": residuo, "somma_rate_pre": somma_residui, "tagliate": tagliate, "rimosse": rimosse, "cresciute": 0}
 
 
 @router.post("/{contract_id}/reopen", response_model=ContractResponse)
@@ -1954,7 +1974,7 @@ def reopen_contract(
         "chiuso": {"old": True, "new": False},
         "quota_stornata": {"old": old_quota, "new": 0},
         "rate_ripristinate": rate_ripristinate,
-        "rate_riallineate": reconcile["tagliate"] + reconcile["rimosse"],  # F2: piano riconciliato al residuo
+        "rate_riallineate": reconcile["tagliate"] + reconcile["rimosse"] + reconcile["cresciute"],  # F2: piano riconciliato al residuo (taglio/crescita)
         "residuo_dopo": reconcile["residuo"],
         "crediti_differiti_annullati": crediti_annullati,
         "wallet_cliente_annullati": wallet_annullati,

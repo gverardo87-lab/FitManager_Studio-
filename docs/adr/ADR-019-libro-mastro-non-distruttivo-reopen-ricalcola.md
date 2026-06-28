@@ -156,3 +156,21 @@ saldo progressivo, tab "Storico" del dettaglio) + F6 (`GET /contracts/{id}/histo
 ruff + grep-guard ADR-019 + next build verdi. AC 1-10 (`SPEC §14`/§14.6) coperti da
 `test_contract_state.py` · `test_contract_reopen.py` (F1+F2) · `test_wallet_cliente.py` (confine wallet) ·
 `test_contract_history.py` (F6).
+
+**Follow-up F2/F3 (2026-06-28, test di flusso del founder — contratto Garavelli):** un rimborso rende
+`netto < Σ importo_saldato` (la cassa netta scende sotto i pagamenti-rata LORDI, Strada B), e il piano rate
+restava ancorato al lordo mentre `residuo()` è net-aware → sotto-coperto del rimborso (residuo 770, rate 733).
+Due conseguenze di **D-NET-AWARE-OVUNQUE** + **D-RECONCILIA-RATE**, non nuove decisioni:
+- **F3-bis (cap):** `_cap_rateizzabile` aveva un clamp `max(0, netto − saldato)` che ingoiava il rimborso →
+  `cap = prezzo`, spazio 0 → impossibile ri-rateizzare il rimborsato (incoerente con `residuo()` e
+  `generate_payment_plan`, già net-aware). **Tolto il clamp**: un acconto negativo è corretto e load-bearing,
+  alza il cap a `prezzo + rimborso − storno`. Inerte con `rimborsato==0`.
+- **F2-bis (reopen auto-copertura, scelta founder):** `_reconcile_rate_plan` gestiva solo l'eccedenza
+  (taglio); la **sotto-copertura** era no-op silenzioso ("da pianificare"). Ora copre **solo il RIMBORSO che
+  resta** (`min(ammanco, totale_rimborsato)`) — l'unico € che il reopen ha aggiunto al residuo e che il
+  piano ripristinato non copre — assorbendolo nell'ULTIMA rata pendente esistente (mirror del taglio). **MAI
+  fabbrica una rata** né copre oltre il rimborso: l'eventuale residuo "da pianificare" originale del trainer
+  resta tale (es. CONSUNZIONE/storno-puro senza pendenti → residuo torna "da pianificare" com'era; una rata
+  fabbricata consumerebbe lo spazio-piano e bloccherebbe `update_rate` — regressione intercettata da `test_m2`).
+Invarianti immutati (cassa-immutabile, `residuo==0 ⟺ saldato`, Strada B). Test:
+`test_contract_reopen.py::test_f2_reopen_copre_ammanco_da_rimborso` + `::test_cap_rateizzabile_net_aware_con_rimborso`.

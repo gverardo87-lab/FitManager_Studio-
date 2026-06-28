@@ -327,3 +327,29 @@ con `created_at` + `changes` JSON, già scritto da `log_contract_lifecycle_trans
 `schemas/financial.py` (`ContractMovementItem`, `ContractHistoryEvent`); FE: timeline cassa (F5) + timeline
 stato (F6) sul dettaglio (riuso pattern `PaymentHistory`/`CashAuditSheet`). Test: integrazione (F5
 movimenti + confine wallet) + nuovo `test_contract_history.py` (F6).
+
+### 14.7 F2-bis/F3-bis — reopen-con-rimborso: il piano rate copre il residuo net-aware (test di flusso founder)
+
+Un rimborso rende `netto_incassato < Σ importo_saldato` (cassa netta sotto i pagamenti-rata LORDI, Strada B):
+`residuo()` è net-aware ma il piano rate restava gross-bound → sotto-coperto del rimborso (es. Garavelli:
+residuo 770, rate ripristinate 733, mancano i 37 ri-incassabili). Già net-aware per contrasto:
+`importo_da_rateizzare = residuo()` e `generate_payment_plan`.
+
+- **F3-bis [richiesto]:** `_cap_rateizzabile` toglie il clamp `max(0, netto − saldato)` → cap `= prezzo +
+  rimborso − storno` (acconto negativo load-bearing). Senza, cap=prezzo, spazio 0 → impossibile ri-rateizzare
+  il rimborso a mano (incoerente con `residuo()`/`generate_payment_plan`). Inerte con `rimborsato==0`.
+- **F2-bis [decisione founder = auto-copertura]:** `_reconcile_rate_plan` copre la **sotto-copertura** solo
+  per il **rimborso che resta** (`min(ammanco, totale_rimborsato)`), assorbendolo nell'**ultima rata pendente
+  esistente** (mirror del taglio). **MAI fabbrica una rata** né copre oltre il rimborso: il residuo "da
+  pianificare" originale (es. CONSUNZIONE/storno senza pendenti) resta tale.
+
+**AC (F2-bis/F3-bis):**
+11. **F2-bis (rimborso):** dopo terminate-con-rimborso + reopen, l'ultima rata pendente cresce di
+    `min(ammanco, totale_rimborsato)` (quando rimborso==ammanco → Σ residui-rata `== residuo()`, piano
+    allineato); cassa non toccata. **Senza rimborso** (CONSUNZIONE/storno): nessuna rata fabbricata, il
+    residuo resta "da pianificare" (no-op) → `update_rate` sulla SALDATA superstite resta possibile.
+12. **F3-bis:** su un contratto con `rimborsato>0` e `netto < Σ saldato`, `_cap_rateizzabile == residuo()`
+    (non il LORDO `prezzo − versato`). Inerte con `rimborsato==0`.
+
+Test: `test_contract_reopen.py::test_f2_reopen_copre_ammanco_da_rimborso` (end-to-end Garavelli) +
+`::test_cap_rateizzabile_net_aware_con_rimborso` (unit Fix A).

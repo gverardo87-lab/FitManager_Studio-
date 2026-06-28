@@ -93,9 +93,12 @@ def _cap_rateizzabile(session: Session, contract: Contract, exclude_rate_id: int
         )
     ).one())
     # G8.1.1/F3: acconto sul NETTO (versato − rimborsato), non sul LORDO, così il cap coincide col
-    #   residuo() net-aware. Inerte con rimborsato==0; load-bearing su un riaperto-con-rimborso (dove
-    #   pay_rate, già net, permetterebbe di pagare il residuo pieno ma un cap lordo lo bloccherebbe).
-    acconto = max(0, round(cstate.netto_incassato(contract) - somma_saldato, 2))
+    #   residuo() net-aware. NIENTE clamp `max(0,…)`: su un riaperto-con-rimborso `netto < Σ saldato` (la
+    #   cassa netta è sotto i pagamenti-rata LORDI, Strada B tiene il versato lordo) → un acconto NEGATIVO
+    #   è corretto e LOAD-BEARING — alza il cap a `prezzo + rimborso` così il rimborso ri-incassabile
+    #   rientra nel piano. Col clamp, cap=prezzo → spazio 0 → impossibile aggiungere i € rimborsati
+    #   (incoerente con residuo()/generate_payment_plan che li vedono). Inerte con rimborsato==0 (netto≥saldato).
+    acconto = round(cstate.netto_incassato(contract) - somma_saldato, 2)
     # M2: sottrai quota_stornata → il cap usa lo STESSO asse di contract_state.residuo() (lo storno non
     #   è rateizzabile). Inerte sui contratti non terminati (quota_stornata==0); SSoT unica del residuo.
     cap = round((contract.prezzo_totale or 0) - acconto - (contract.quota_stornata or 0), 2)
