@@ -681,8 +681,11 @@ def _curate_contract_event(row: AuditLog) -> Optional[ContractHistoryEvent]:
             data=data,
         )
 
-    # 2) Riapertura esplicita (entry ricca): motivo_chiusura.new == None + chiuso togglato.
-    if isinstance(mc, dict) and mc.get("new") is None and "chiuso" in changes:
+    # 2) Riapertura (entry ricca): `motivo_chiusura` azzerato a None (l'unico discriminante affidabile —
+    #    a #2 si arriva solo se #1 NON ha visto un motivo valorizzato). NON pretendere "chiuso" tra le
+    #    chiavi: le riaperture in formato storico (G8.1) mettevano il toggle `chiuso` SOLO nella companion
+    #    lifecycle (poi deduplicata da #3) → richiederlo qui faceva sparire la riapertura dalla timeline.
+    if isinstance(mc, dict) and "new" in mc and mc.get("new") is None:
         parti = []
         residuo_dopo = changes.get("residuo_dopo")
         if residuo_dopo is not None:

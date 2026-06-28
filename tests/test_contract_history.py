@@ -9,13 +9,16 @@ Timeline CRM-grade derivata (curata) dall'`audit_log` (entity='contract'). Copre
 - bouncer: contratto inesistente/non-proprio → 404
 """
 
-from datetime import date, datetime, timedelta
+import json
+from datetime import date, datetime, timedelta, timezone
 
 from sqlmodel import select
 
 from api.models.contract import Contract
 from api.models.trainer import Trainer
 from api.models.event import Event
+from api.models.audit_log import AuditLog
+from api.routers.contracts import _curate_contract_event
 
 TODAY = date.today()
 FUTURE = (TODAY + timedelta(days=120)).isoformat()
@@ -146,3 +149,38 @@ def test_history_pagamento_intermedio_non_inquina(client, auth_headers, sample_c
 def test_history_contratto_inesistente_404(client, auth_headers):
     r = client.get("/api/contracts/999999/history", headers=auth_headers)
     assert r.status_code == 404
+
+
+# ── Regressione (Playwright-found): riapertura in formato STORICO senza chiave 'chiuso' ──
+
+def test_curate_riapertura_formato_storico_senza_chiuso():
+    """Le riaperture in formato G8.1 mettono `motivo_chiusura.new=None` ma NON la chiave `chiuso`
+    (il toggle stava SOLO nella companion lifecycle). La curation deve comunque produrre 'riaperto'
+    — pretendere `chiuso` la faceva sparire dalla timeline (due 'terminato' senza 'riaperto' in mezzo)."""
+    row = AuditLog(
+        entity_type="contract", entity_id=1, action="UPDATE", trainer_id=1,
+        changes=json.dumps({
+            "motivo_chiusura": {"old": "TERMINAZIONE_RIMBORSO", "new": None},
+            "totale_rimborsato": {"old": 37.0, "new": 37.0},
+            "quota_stornata": {"old": 733.0, "new": 0},
+            "rate_ripristinate": 1,
+        }),
+        created_at=datetime(2026, 6, 26, 16, 27, tzinfo=timezone.utc),
+    )
+    ev = _curate_contract_event(row)
+    assert ev is not None and ev.tipo == "riaperto"
+
+
+def test_curate_companion_riapertura_esplicita_dedup():
+    """La companion lifecycle bare della riapertura (chiuso + motivo='riapertura_esplicita', senza
+    motivo_chiusura) viene scartata → niente doppione accanto alla entry ricca."""
+    row = AuditLog(
+        entity_type="contract", entity_id=1, action="UPDATE", trainer_id=1,
+        changes=json.dumps({
+            "chiuso": {"old": True, "new": False},
+            "motivo": "riapertura_esplicita",
+            "importo_rimborsato": None,
+        }),
+        created_at=datetime(2026, 6, 26, 16, 27, tzinfo=timezone.utc),
+    )
+    assert _curate_contract_event(row) is None
