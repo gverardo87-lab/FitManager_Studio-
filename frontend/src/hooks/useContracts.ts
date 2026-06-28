@@ -17,8 +17,11 @@ import type {
   ContractListResponse,
   ContractTerminate,
   ContractSettlementPreview,
+  ReopenPreview,
   CreditoTerminazione,
   CreditoDaIncassareItem,
+  CreditoCliente,
+  RimborsoDaErogareItem,
   RatePayment,
 } from "@/types/api";
 
@@ -372,6 +375,7 @@ export function useTerminateContract() {
       queryClient.invalidateQueries({ queryKey: ["cash-balance"] });
       queryClient.invalidateQueries({ queryKey: ["forecast"] });
       queryClient.invalidateQueries({ queryKey: ["workspace"] });
+      queryClient.invalidateQueries({ queryKey: ["client-wallet"] });  // G8.1: terminate può creare un wallet
       toast.success("Contratto terminato");
     },
     onError: (error) => {
@@ -408,10 +412,87 @@ export function useReopenContract() {
       queryClient.invalidateQueries({ queryKey: ["cash-balance"] });
       queryClient.invalidateQueries({ queryKey: ["forecast"] });
       queryClient.invalidateQueries({ queryKey: ["workspace"] });
+      queryClient.invalidateQueries({ queryKey: ["client-wallet"] });  // G8.1: reopen annulla i wallet
       toast.success("Contratto riaperto");
     },
     onError: (error) => {
       toast.error(extractErrorMessage(error, "Errore nella riapertura del contratto"));
+    },
+  });
+}
+
+// ── Query: anteprima riapertura (G8.1/ADR-019, dry-run) ──
+// Impatto pieno PRIMA della conferma (zero scritture): cosa resta / cosa si annulla + rinnovo vivo.
+// Sempre fresco (staleTime 0): dipende dallo stato corrente. Abilitata solo a dialog aperto.
+
+export function useReopenPreview(contractId: number | null) {
+  return useQuery<ReopenPreview>({
+    queryKey: ["reopen-preview", contractId],
+    queryFn: async () => {
+      const { data } = await apiClient.get<ReopenPreview>(
+        `/contracts/${contractId}/reopen-preview`
+      );
+      return data;
+    },
+    enabled: contractId !== null,
+    staleTime: 0,
+    gcTime: 0,
+  });
+}
+
+// ── Wallet del cliente (G8.1, ADR-020) — worklist + erogazione + lista per profilo ──
+// L'erogazione fa USCITA RIMBORSO_CONTRATTO (id_contratto=None) → invalida la cassa, NON il contratto.
+
+export function useRimborsiDaErogare() {
+  return useQuery<{ items: RimborsoDaErogareItem[]; total: number }>({
+    queryKey: ["dashboard", "rimborsi-da-erogare"],
+    queryFn: async () => {
+      const { data } = await apiClient.get<{ items: RimborsoDaErogareItem[]; total: number }>(
+        "/dashboard/rimborsi-da-erogare"
+      );
+      return data;
+    },
+  });
+}
+
+export function useClientWalletCredits(clientId: number | null) {
+  return useQuery<CreditoCliente[]>({
+    queryKey: ["client-wallet", clientId],
+    queryFn: async () => {
+      const { data } = await apiClient.get<CreditoCliente[]>(`/clients/${clientId}/crediti`);
+      return data;
+    },
+    enabled: clientId !== null,
+  });
+}
+
+export function useEroghaRimborso() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      clientId,
+      creditoId,
+      ...payload
+    }: RatePayment & { clientId: number; creditoId: number }) => {
+      const { data } = await apiClient.post<CreditoCliente>(
+        `/clients/${clientId}/crediti/${creditoId}/eroga`,
+        payload
+      );
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["client-wallet"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["movements"] });
+      queryClient.invalidateQueries({ queryKey: ["movement-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["financial-trend"] });
+      queryClient.invalidateQueries({ queryKey: ["aging-report"] });
+      queryClient.invalidateQueries({ queryKey: ["cash-balance"] });
+      queryClient.invalidateQueries({ queryKey: ["forecast"] });
+      toast.success("Rimborso erogato");
+    },
+    onError: (error) => {
+      toast.error(extractErrorMessage(error, "Errore nell'erogazione del rimborso"));
     },
   });
 }

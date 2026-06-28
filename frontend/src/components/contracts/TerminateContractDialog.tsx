@@ -61,6 +61,8 @@ export function TerminateContractDialog({
   const preview = useSettlementPreview(open ? contractId : null);
   const terminate = useTerminateContract();
   const [metodo, setMetodo] = useState("CONTANTI");        // rimborso (ramo cliente)
+  const [rimborso, setRimborso] = useState("");            // importo editabile rimborso (ramo cliente, G8.1)
+  const [prevPreviewKey, setPrevPreviewKey] = useState<number | null>(null); // sync default rimborso
   const [azione, setAzione] = useState<Azione>("");        // ramo trainer
   const [incasso, setIncasso] = useState("");              // importo editabile INCASSA_ORA
   const [metodoPag, setMetodoPag] = useState("CONTANTI");  // metodo incasso (INCASSA_ORA)
@@ -72,6 +74,7 @@ export function TerminateContractDialog({
     setPrevOpen(open);
     if (open) {
       setMetodo("CONTANTI");
+      setRimborso("");
       setAzione("");
       setIncasso("");
       setMetodoPag("CONTANTI");
@@ -80,11 +83,23 @@ export function TerminateContractDialog({
   }
 
   const data = preview.data;
-  const needsMetodo = data?.metodo_rimborso_richiesto ?? false;        // ramo CREDITO_CLIENTE
+  const isRimborso = data?.metodo_rimborso_richiesto ?? false;         // ramo CREDITO_CLIENTE (rimborso)
   const trainerCredit = data?.esito === "CREDITO_TRAINER";             // ramo CREDITO_TRAINER
   const creditoTrainer = data?.credito_trainer ?? 0;
+  const creditoCliente = data?.importo_rimborso ?? 0;                  // cap del rimborso editabile
   const incassoNum = parseFloat(incasso);
   const incassoValido = !isNaN(incassoNum) && incassoNum >= 0 && incassoNum <= creditoTrainer + 0.001;
+  const rimborsoNum = parseFloat(rimborso);
+  const rimborsoValido = !isNaN(rimborsoNum) && rimborsoNum >= 0 && rimborsoNum <= creditoCliente + 0.001;
+  const walletResto = Math.max(creditoCliente - (isNaN(rimborsoNum) ? 0 : rimborsoNum), 0);
+
+  // Default del rimborso = pieno: sync quando arriva il preview CREDITO_CLIENTE (guard render-safe;
+  // gcTime 0 → il preview passa per undefined ad ogni apertura, quindi il default si ri-applica).
+  const previewKey = isRimborso ? creditoCliente : null;
+  if (previewKey !== prevPreviewKey) {
+    setPrevPreviewKey(previewKey);
+    setRimborso(previewKey != null ? previewKey.toFixed(2) : "");
+  }
 
   // Scelta obbligatoria nel ramo trainer (mai default implicito di rinuncia).
   const trainerSceltaValida =
@@ -93,8 +108,13 @@ export function TerminateContractDialog({
     (azione === "RINUNCIA_ESPRESSA" && nota.trim().length > 0) ||
     azione === "A_CREDITO";
 
+  // Ramo cliente: rimborso valido + metodo solo se rimborso > 0 (ADR-020).
+  const clienteSceltaValida =
+    !isRimborso || (rimborsoValido && (rimborsoNum <= 0.009 || metodo.length > 0));
+
   const canSubmit =
-    contractId !== null && !!data && !preview.isLoading && !terminate.isPending && trainerSceltaValida;
+    contractId !== null && !!data && !preview.isLoading && !terminate.isPending &&
+    trainerSceltaValida && clienteSceltaValida;
 
   const pickIncassaOra = () => {
     setAzione("INCASSA_ORA");
@@ -104,8 +124,9 @@ export function TerminateContractDialog({
   const handleTerminate = () => {
     if (contractId === null || !data) return;
     let payload: Partial<ContractTerminate> = {};
-    if (needsMetodo) {
-      payload = { metodo_rimborso: metodo };
+    if (isRimborso) {
+      payload = { importo_rimborso: rimborsoNum };
+      if (rimborsoNum > 0.009) payload.metodo_rimborso = metodo;
     } else if (trainerCredit) {
       if (azione === "INCASSA_ORA") {
         payload = { azione_credito_trainer: "INCASSA_ORA", importo_incassato: incassoNum, metodo_pagamento: metodoPag };
@@ -163,7 +184,7 @@ export function TerminateContractDialog({
               <dd className="text-right tabular-nums">{formatCurrency(data.valore_servizio_reso)}</dd>
               {data.importo_rimborso > 0 ? (
                 <>
-                  <dt className="font-medium text-rose-700 dark:text-rose-300">Rimborso al cliente</dt>
+                  <dt className="font-medium text-rose-700 dark:text-rose-300">Credito del cliente</dt>
                   <dd className="text-right font-medium tabular-nums text-rose-700 dark:text-rose-300">
                     {formatCurrency(data.importo_rimborso)}
                   </dd>
@@ -192,20 +213,42 @@ export function TerminateContractDialog({
               </p>
             ) : null}
 
-            {/* Ramo CREDITO_CLIENTE: metodo rimborso */}
-            {needsMetodo ? (
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium">Metodo di rimborso</Label>
-                <Select value={metodo} onValueChange={setMetodo}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PAYMENT_METHODS.map((m) => (
-                      <SelectItem key={m} value={m}>{METHOD_LABEL[m]}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            {/* Ramo CREDITO_CLIENTE: rimborso EDITABILE + metodo (solo se rimborso > 0) — ADR-020 */}
+            {isRimborso ? (
+              <div className="space-y-2.5">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">Importo da rimborsare</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={creditoCliente}
+                    step="0.01"
+                    value={rimborso}
+                    onChange={(e) => setRimborso(e.target.value)}
+                    aria-label="Importo da rimborsare"
+                  />
+                  <p className="text-[11px] text-muted-foreground">
+                    Massimo {formatCurrency(creditoCliente)}.
+                    {walletResto > 0.009
+                      ? ` Il non rimborsato (${formatCurrency(walletResto)}) resta come credito del cliente, da erogare quando vuoi.`
+                      : ""}
+                  </p>
+                </div>
+                {rimborsoNum > 0.009 ? (
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium">Metodo di rimborso</Label>
+                    <Select value={metodo} onValueChange={setMetodo}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PAYMENT_METHODS.map((m) => (
+                          <SelectItem key={m} value={m}>{METHOD_LABEL[m]}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ) : null}
               </div>
             ) : null}
 

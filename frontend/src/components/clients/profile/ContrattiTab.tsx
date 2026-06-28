@@ -1,16 +1,39 @@
 // src/components/clients/profile/ContrattiTab.tsx
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { AlertTriangle, FileText } from "lucide-react";
-import { useClientContracts } from "@/hooks/useContracts";
+import { AlertTriangle, Coins, FileText } from "lucide-react";
+import { useClientContracts, useClientWalletCredits } from "@/hooks/useContracts";
 import { formatCurrency } from "@/lib/format";
 import { ContractLifecycleBadge, ContractMoneyBadge } from "@/lib/contract-status";
 import { TabSkeleton, EmptyTab } from "./ProfileShared";
 import type { ContractListItem } from "@/types/api";
+
+/** Badge sola-lettura del credito a wallet del cliente (G8.1, ADR-020) — link alla worklist erogazione.
+ *  Self-hide se nessun credito aperto. */
+function WalletCreditBadge({ clientId }: { clientId: number }) {
+  const { data } = useClientWalletCredits(clientId);
+  const totale = (data ?? [])
+    .filter((c) => c.stato === "APERTO")
+    .reduce((sum, c) => sum + c.residuo, 0);
+  if (totale <= 0.009) return null;
+  return (
+    <Link
+      href="/rinnovi-incassi"
+      className="flex items-center gap-2 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800 transition-colors hover:bg-rose-100 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200"
+    >
+      <Coins className="h-4 w-4 shrink-0" />
+      <span>
+        Credito wallet del cliente:{" "}
+        <span className="font-semibold tabular-nums">{formatCurrency(totale)}</span> da erogare
+      </span>
+    </Link>
+  );
+}
 
 export function ContrattiTab({ clientId }: { clientId: number }) {
   const router = useRouter();
@@ -32,7 +55,9 @@ export function ContrattiTab({ clientId }: { clientId: number }) {
   }
 
   return (
-    <div className="rounded-lg border bg-white dark:bg-zinc-900 overflow-x-auto">
+    <div className="space-y-3">
+      <WalletCreditBadge clientId={clientId} />
+      <div className="rounded-lg border bg-white dark:bg-zinc-900 overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
@@ -87,6 +112,7 @@ export function ContrattiTab({ clientId }: { clientId: number }) {
           })}
         </TableBody>
       </Table>
+      </div>
     </div>
   );
 }

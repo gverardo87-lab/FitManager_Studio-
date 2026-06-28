@@ -57,6 +57,7 @@ import { ContractSheet } from "@/components/contracts/ContractSheet";
 import { IncassaResiduoDialog } from "@/components/contracts/IncassaResiduoDialog";
 import { TerminateContractDialog } from "@/components/contracts/TerminateContractDialog";
 import { CreditiDaIncassareCard } from "@/components/contracts/CreditiDaIncassareCard";
+import { RimborsiDaErogareCard } from "@/components/contracts/RimborsiDaErogareCard";
 import { useOverdueRates, useExpiringContracts, useClientsToRecover, useSuspendedContracts } from "@/hooks/useDashboard";
 import { usePayRate } from "@/hooks/useRates";
 import { useMarkRenewalOutcome, useUpdateContract } from "@/hooks/useContracts";
@@ -747,6 +748,9 @@ export default function RinnoviIncassiPage() {
 
       {/* ── Sezione: Crediti da incassare (post-chiusura, G7.10) — auto-nascosta se vuota ── */}
       <CreditiDaIncassareCard />
+
+      {/* ── Sezione: Rimborsi da erogare (wallet cliente, G8.1) — auto-nascosta se vuota ── */}
+      <RimborsiDaErogareCard />
 
       {/* ── Sezione: Clienti da recuperare (lapsed) ── */}
       {recoverItems.length > 0 ? (

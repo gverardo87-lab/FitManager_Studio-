@@ -611,7 +611,8 @@ export interface ContractUpdate {
 /** POST /api/contracts/{id}/terminate (G7.3 + ADR-018) — terminazione anticipata. Il `motivo_chiusura`
  * è DERIVATO server-side dall'esito del conguaglio: il body non lo contiene (anti mass-assignment). */
 export interface ContractTerminate {
-  metodo_rimborso?: string | null; // ramo CREDITO_CLIENTE (rimborso)
+  metodo_rimborso?: string | null; // ramo CREDITO_CLIENTE (richiesto solo se rimborso > 0)
+  importo_rimborso?: number | null; // CREDITO_CLIENTE (G8.1): rimborso editabile [0, credito_cliente]
   azione_credito_trainer?: "INCASSA_ORA" | "RINUNCIA_ESPRESSA" | "A_CREDITO" | null; // ramo CREDITO_TRAINER
   importo_incassato?: number | null; // INCASSA_ORA: proposta editabile [0, credito_trainer]
   metodo_pagamento?: string | null; // INCASSA_ORA
@@ -664,6 +665,51 @@ export interface ContractSettlementPreview {
   azioni_permesse: string[]; // ramo CREDITO_TRAINER: INCASSA_ORA, RINUNCIA_ESPRESSA (A_CREDITO da G7.10)
   policy_mode: string;
   messaggio: string;
+}
+
+/** GET /api/contracts/{id}/reopen-preview (G8.1 + ADR-019) — impatto di una riapertura NON-distruttiva
+ * (dry-run, zero scritture). La cassa NON si cancella: mostra cosa RESTA e cosa si ANNULLA. */
+export interface ReopenPreview {
+  residuo_dopo: number; // residuo() net-aware dopo la riapertura (quota azzerata)
+  rimborso_che_resta: number; // USCITA RIMBORSO non cancellata (diventa rimborso sul contratto)
+  incasso_che_resta: number; // ENTRATA conguaglio non cancellata (diventa pagamento)
+  rate_da_ripristinare: number;
+  receivable_da_annullare: number; // crediti_terminazione (G7.10) → ANNULLATO
+  wallet_da_annullare: number; // crediti_cliente (ADR-020) → ANNULLATO
+  ha_rinnovo_vivo: boolean; // S5: esiste un rinnovo figlio ancora aperto
+  id_rinnovo_vivo: number | null;
+  messaggio: string;
+}
+
+/** Wallet del cliente (G8.1, ADR-020) — credito a favore del cliente FUORI da residuo(). */
+export interface CreditoCliente {
+  id: number;
+  trainer_id: number;
+  id_cliente: number;
+  importo: number;
+  importo_erogato: number;
+  residuo: number; // importo − importo_erogato
+  stato: "APERTO" | "SALDATO" | "ANNULLATO";
+  causale: string; // RIMBORSO_DIFFERITO | OVERPAYMENT
+  id_contratto_origine: number;
+  data_creazione: string;
+  data_chiusura?: string | null;
+}
+
+/** Item della worklist GET /dashboard/rimborsi-da-erogare (G8.1, ADR-020). */
+export interface RimborsoDaErogareItem {
+  id: number;
+  id_contratto_origine: number;
+  id_cliente: number;
+  cliente_nome: string;
+  cliente_cognome: string;
+  client_telefono?: string | null;
+  importo: number;
+  importo_erogato: number;
+  residuo: number;
+  causale: string;
+  data_creazione: string | null;
+  giorni_aperto: number;
 }
 
 /**

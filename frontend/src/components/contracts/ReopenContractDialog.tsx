@@ -2,14 +2,15 @@
 "use client";
 
 /**
- * Riapertura di un contratto chiuso (G7.4) — dialog di conferma con riepilogo di cosa viene invertito.
+ * Riapertura di un contratto chiuso (G7.4 → G8.1/ADR-019: ricalcola-e-instrada, NON-distruttiva).
  *
- * `reopen` è l'inverso esplicito di terminate/auto-close: annulla l'eventuale rimborso (rimuove il
- * movimento di cassa USCITA), ripristina il residuo (storno→0) e le rate non saldate, riporta il
- * contratto ad aperto. Conferma esplicita perché tocca il libro mastro (annulla un rimborso registrato).
+ * reopen NON cancella più la cassa di terminazione: le scritture restano (fatti datati), il contratto
+ * RICALCOLA il residuo (net-aware) e instrada/annulla i ledger non-cash (storno, receivable, wallet).
+ * Il dialog mostra l'impatto pieno dal `reopen-preview` (cosa RESTA / cosa si ANNULLA) e, se esiste un
+ * rinnovo ancora attivo a valle, lo segnala perché l'utente decida (mai azione silenziosa, D-PROPONE).
  */
 
-import { Loader2, RotateCcw } from "lucide-react";
+import { Loader2, RotateCcw, AlertTriangle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -20,7 +21,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useReopenContract } from "@/hooks/useContracts";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useReopenContract, useReopenPreview } from "@/hooks/useContracts";
 import { formatCurrency } from "@/lib/format";
 import type { Contract } from "@/types/api";
 
@@ -38,7 +40,8 @@ export function ReopenContractDialog({
   onOpenChange,
 }: ReopenContractDialogProps) {
   const reopen = useReopenContract();
-  const hadRefund = (contract?.totale_rimborsato ?? 0) > 0.009;
+  const preview = useReopenPreview(open && contract ? contract.id : null);
+  const data = preview.data;
 
   const handleReopen = () => {
     if (contract === null) return;
@@ -54,20 +57,76 @@ export function ReopenContractDialog({
             Riapri contratto — {clientLabel}
           </DialogTitle>
           <DialogDescription>
-            Annulla la chiusura e riporta il contratto ad aperto. È l&apos;inverso della terminazione.
+            Annulla la chiusura e riporta il contratto ad aperto. La cassa già registrata NON viene
+            cancellata: il residuo si ricalcola di conseguenza.
           </DialogDescription>
         </DialogHeader>
 
-        <ul className="space-y-1.5 text-sm text-muted-foreground">
-          {hadRefund ? (
-            <li className="text-amber-700 dark:text-amber-300">
-              • Il rimborso di {formatCurrency(contract!.totale_rimborsato)} registrato verrà{" "}
-              <span className="font-medium">annullato</span> (il movimento di cassa in uscita sarà rimosso).
-            </li>
-          ) : null}
-          <li>• Il residuo del contratto tornerà dovuto (lo storno viene azzerato).</li>
-          <li>• Le rate non saldate eliminate alla terminazione vengono ripristinate.</li>
-        </ul>
+        {preview.isLoading ? (
+          <div className="space-y-2">
+            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        ) : preview.isError ? (
+          <div className="flex items-center gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+            Impossibile calcolare l&apos;impatto della riapertura. Riprova.
+          </div>
+        ) : data ? (
+          <div className="space-y-3">
+            {/* Messaggio riepilogo (framing ADR-019: la cassa resta) */}
+            <div className="rounded-md border border-sky-300 bg-sky-50 p-3 text-sm text-sky-900 dark:border-sky-500/40 dark:bg-sky-500/10 dark:text-sky-200">
+              {data.messaggio}
+            </div>
+
+            {/* Cosa resta / cosa si annulla */}
+            <ul className="space-y-1.5 text-sm text-muted-foreground">
+              {data.rimborso_che_resta > 0.009 ? (
+                <li>
+                  • Il rimborso di{" "}
+                  <span className="font-medium text-foreground">{formatCurrency(data.rimborso_che_resta)}</span>{" "}
+                  già erogato <span className="font-medium">resta</span> (diventa rimborso sul contratto).
+                </li>
+              ) : null}
+              {data.incasso_che_resta > 0.009 ? (
+                <li>
+                  • L&apos;incasso di conguaglio di{" "}
+                  <span className="font-medium text-foreground">{formatCurrency(data.incasso_che_resta)}</span>{" "}
+                  <span className="font-medium">resta</span> (diventa pagamento sul contratto).
+                </li>
+              ) : null}
+              <li>
+                • Il residuo del contratto si ricalcola a{" "}
+                <span className="font-medium text-foreground">{formatCurrency(data.residuo_dopo)}</span>.
+              </li>
+              {data.rate_da_ripristinare > 0 ? (
+                <li>
+                  • {data.rate_da_ripristinare}{" "}
+                  {data.rate_da_ripristinare === 1 ? "rata viene ripristinata" : "rate vengono ripristinate"}.
+                </li>
+              ) : null}
+              {data.receivable_da_annullare > 0 ? (
+                <li>• {data.receivable_da_annullare} credito differito viene annullato.</li>
+              ) : null}
+              {data.wallet_da_annullare > 0 ? (
+                <li>• {data.wallet_da_annullare} credito a wallet del cliente viene annullato.</li>
+              ) : null}
+            </ul>
+
+            {/* Avviso rinnovo vivo (S5, D-PROPONE) */}
+            {data.ha_rinnovo_vivo ? (
+              <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>
+                  Attenzione: esiste un <span className="font-medium">rinnovo ancora attivo</span>
+                  {data.id_rinnovo_vivo != null ? ` (contratto #${data.id_rinnovo_vivo})` : ""}. Riaprendo
+                  questo contratto potresti avere due contratti attivi sullo stesso periodo: verifica prima
+                  di procedere.
+                </span>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={reopen.isPending}>
