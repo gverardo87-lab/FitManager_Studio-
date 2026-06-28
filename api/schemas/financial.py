@@ -275,6 +275,28 @@ class CreditoTerminazioneResponse(BaseModel):
         return round(max((self.importo or 0) - (self.importo_incassato or 0), 0.0), 2)
 
 
+class CreditoClienteResponse(BaseModel):
+    """Wallet del cliente (G8.1, ADR-020) — credito a favore del cliente FUORI dal `residuo()`.
+    `residuo` = `importo − importo_erogato` (quanto resta da erogare in cassa)."""
+    model_config = {"from_attributes": True}
+
+    id: int
+    trainer_id: int
+    id_cliente: int
+    importo: float
+    importo_erogato: float
+    stato: str                            # APERTO | SALDATO | ANNULLATO
+    causale: str                          # RIMBORSO_DIFFERITO | OVERPAYMENT
+    id_contratto_origine: int
+    data_creazione: date
+    data_chiusura: Optional[date] = None
+
+    @computed_field
+    @property
+    def residuo(self) -> float:
+        return round(max((self.importo or 0) - (self.importo_erogato or 0), 0.0), 2)
+
+
 class ReopenPreview(BaseModel):
     """Impatto pieno di una riapertura, calcolato PRIMA della conferma (G8.1/ADR-019, dry-run).
 

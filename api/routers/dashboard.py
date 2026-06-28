@@ -24,6 +24,7 @@ from api.models.event import Event
 from api.models.contract import Contract
 from api.models.exercise import Exercise
 from api.models.credito_terminazione import CreditoTerminazione
+from api.models.credito_cliente import CreditoCliente
 from api.schemas.financial import (
     DashboardSummary, ReconciliationItem, ReconciliationResponse,
     AlertItem, DashboardAlerts,
@@ -780,6 +781,50 @@ def get_crediti_da_incassare(
             "importo": credito.importo,
             "importo_incassato": credito.importo_incassato or 0,
             "residuo": residuo,
+            "data_creazione": creato.isoformat() if isinstance(creato, date) else None,
+            "giorni_aperto": (today - creato).days if isinstance(creato, date) else 0,
+        })
+    items.sort(key=lambda x: x["giorni_aperto"], reverse=True)
+    return {"items": items, "total": len(items)}
+
+
+@router.get("/rimborsi-da-erogare")
+def get_rimborsi_da_erogare(
+    trainer: Trainer = Depends(get_current_trainer),
+    session: Session = Depends(get_session),
+):
+    """
+    Worklist "Rimborsi da erogare" (G8.1, ADR-020) — gemella di crediti-da-incassare, in USCITA.
+
+    Elenca i wallet `crediti_cliente` ANCORA APERTI: credito a favore del CLIENTE (rimborso differito da
+    una terminazione, o overpayment) da erogare in cassa. Vive FUORI da `residuo()`: non è un debito del
+    cliente, è denaro che il trainer deve restituire. Read-only, multi-tenant. Aging INVERTITO.
+    """
+    today = date.today()
+    rows = session.exec(
+        select(CreditoCliente, Client)
+        .join(Client, CreditoCliente.id_cliente == Client.id)
+        .where(
+            CreditoCliente.trainer_id == trainer.id,
+            CreditoCliente.stato == "APERTO",
+            CreditoCliente.deleted_at == None,
+        )
+    ).all()
+    items = []
+    for credito, client in rows:
+        creato = _coerce_date(credito.data_creazione)
+        residuo = round(max((credito.importo or 0) - (credito.importo_erogato or 0), 0.0), 2)
+        items.append({
+            "id": credito.id,
+            "id_contratto_origine": credito.id_contratto_origine,
+            "id_cliente": credito.id_cliente,
+            "cliente_nome": client.nome,
+            "cliente_cognome": client.cognome,
+            "client_telefono": client.telefono,
+            "importo": credito.importo,
+            "importo_erogato": credito.importo_erogato or 0,
+            "residuo": residuo,
+            "causale": credito.causale,
             "data_creazione": creato.isoformat() if isinstance(creato, date) else None,
             "giorni_aperto": (today - creato).days if isinstance(creato, date) else 0,
         })

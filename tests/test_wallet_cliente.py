@@ -76,6 +76,17 @@ def _wallet(session, contract_id):
         CreditoCliente.id_contratto_origine == contract_id)).first()
 
 
+def _sum_movements_client(session, client_id, tipo, categoria):
+    """Somma per id_cliente (l'erogazione wallet ha id_contratto=None → non la prende _sum_movements)."""
+    rows = session.exec(select(CashMovement).where(
+        CashMovement.id_cliente == client_id,
+        CashMovement.tipo == tipo,
+        CashMovement.categoria == categoria,
+        CashMovement.deleted_at == None,
+    )).all()
+    return round(sum(m.importo for m in rows), 2)
+
+
 # ── AC-9: rimborso pieno (default) → nessun wallet, residuo 0, netto == reso ──
 
 def test_rimborso_pieno_nessun_wallet(client, auth_headers, sample_client, session):
@@ -160,3 +171,67 @@ def test_reopen_annulla_wallet(client, auth_headers, sample_client, session):
     assert round(contract.totale_versato, 2) == 800.0         # invariato (nessuna cassa mossa)
     assert round(contract.totale_rimborsato, 2) == 0.0
     assert cstate.residuo(contract) == 200.0                  # P − netto = 1000 − 800 (riassorbe il credito)
+
+
+# ── AC-13: eroga (parziale → saldo) del wallet in cassa + cap 422 ──
+
+def test_eroga_wallet_parziale_poi_saldo(client, auth_headers, sample_client, session):
+    c = _credito_cliente_contract(client, auth_headers, sample_client, session)
+    client.post(f"/api/contracts/{c['id']}/terminate", json={"importo_rimborso": 0.0}, headers=auth_headers)
+    session.expire_all()
+    wallet = _wallet(session, c["id"])
+    cid = sample_client["id"]
+
+    # erogazione parziale 250 (di 600)
+    r = client.post(f"/api/clients/{cid}/crediti/{wallet.id}/eroga",
+                    json={"importo": 250.0, "metodo": "CONTANTI"}, headers=auth_headers)
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert round(body["importo_erogato"], 2) == 250.0
+    assert round(body["residuo"], 2) == 350.0
+    assert body["stato"] == "APERTO"
+    # USCITA RIMBORSO_CONTRATTO creata (id_contratto=None → conta per cliente, non per contratto)
+    assert _sum_movements_client(session, cid, "USCITA", CATEGORIA_RIMBORSO_CONTRATTO) == 250.0
+    session.expire_all()
+    contract = session.get(Contract, c["id"])
+    assert round(contract.totale_rimborsato, 2) == 0.0        # il contratto NON è toccato (id_contratto=None)
+    assert cstate.residuo(contract) == 0.0                    # resta saldato
+
+    # saldo finale 350 → SALDATO
+    r2 = client.post(f"/api/clients/{cid}/crediti/{wallet.id}/eroga",
+                     json={"importo": 350.0, "metodo": "BONIFICO"}, headers=auth_headers)
+    assert r2.status_code == 200, r2.text
+    assert r2.json()["stato"] == "SALDATO"
+    # esce dalla worklist
+    assert client.get("/api/dashboard/rimborsi-da-erogare", headers=auth_headers).json()["total"] == 0
+
+
+def test_eroga_oltre_residuo_422(client, auth_headers, sample_client, session):
+    c = _credito_cliente_contract(client, auth_headers, sample_client, session)
+    client.post(f"/api/contracts/{c['id']}/terminate", json={"importo_rimborso": 0.0}, headers=auth_headers)
+    session.expire_all()
+    wallet = _wallet(session, c["id"])
+    r = client.post(f"/api/clients/{sample_client['id']}/crediti/{wallet.id}/eroga",
+                    json={"importo": 700.0, "metodo": "CONTANTI"}, headers=auth_headers)  # > 600
+    assert r.status_code == 422, r.text
+
+
+# ── AC-14: worklist rimborsi-da-erogare + lista crediti del cliente ──
+
+def test_worklist_rimborsi_da_erogare(client, auth_headers, sample_client, session):
+    c = _credito_cliente_contract(client, auth_headers, sample_client, session)
+    client.post(f"/api/contracts/{c['id']}/terminate", json={"importo_rimborso": 0.0}, headers=auth_headers)
+
+    wl = client.get("/api/dashboard/rimborsi-da-erogare", headers=auth_headers).json()
+    assert wl["total"] == 1
+    item = wl["items"][0]
+    assert item["id_cliente"] == sample_client["id"]
+    assert round(item["residuo"], 2) == 600.0
+    assert item["causale"] == "RIMBORSO_DIFFERITO"
+    assert item["giorni_aperto"] == 0
+
+    # lista crediti del cliente (profilo)
+    crediti = client.get(f"/api/clients/{sample_client['id']}/crediti", headers=auth_headers).json()
+    assert len(crediti) == 1
+    assert crediti[0]["stato"] == "APERTO"
+    assert round(crediti[0]["residuo"], 2) == 600.0

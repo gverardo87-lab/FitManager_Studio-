@@ -30,8 +30,12 @@ from api.models.client import Client
 from api.models.contract import Contract
 from api.models.event import Event
 from api.models.rate import Rate
+from api.models.movement import CashMovement
+from api.models.credito_cliente import CreditoCliente
 from api.routers._audit import log_audit
 from api.schemas.clinical import ClinicalReadinessClientItem
+from api.schemas.financial import CreditoClienteResponse, RatePayment
+from api.services.cash_categories import CATEGORIA_RIMBORSO_CONTRATTO
 from api.services.clinical_readiness import compute_clinical_readiness_data
 from api.services.safety_engine import extract_client_conditions
 
@@ -1019,3 +1023,114 @@ def _to_response(client: Client, crediti_residui: int = 0) -> ClientResponse:
         crediti_residui=crediti_residui,
         anamnesi=json.loads(client.anamnesi_json) if client.anamnesi_json else None,
     )
+
+
+# ════════════════════════════════════════════════════════════
+# Wallet del cliente (G8.1, ADR-020) — crediti_cliente, gemello in USCITA di crediti_terminazione
+# ════════════════════════════════════════════════════════════
+
+def _bouncer_credito_cliente(session: Session, client_id: int, credito_id: int, trainer_id: int) -> CreditoCliente:
+    """Ownership del wallet via id_cliente → Client.trainer_id (Deep Relational IDOR). 404 mai 403."""
+    credito = session.exec(
+        select(CreditoCliente)
+        .join(Client, CreditoCliente.id_cliente == Client.id)
+        .where(
+            CreditoCliente.id == credito_id,
+            CreditoCliente.id_cliente == client_id,
+            Client.trainer_id == trainer_id,
+            CreditoCliente.deleted_at == None,
+        )
+    ).first()
+    if not credito:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Credito a wallet non trovato")
+    return credito
+
+
+@router.get("/{client_id}/crediti", response_model=List[CreditoClienteResponse])
+def list_crediti_cliente(
+    client_id: int,
+    trainer: Trainer = Depends(get_current_trainer),
+    session: Session = Depends(get_session),
+):
+    """Wallet del cliente (G8.1, ADR-020): i crediti a favore del cliente, per il profilo. 404 se non tuo."""
+    client = session.exec(
+        select(Client).where(Client.id == client_id, Client.trainer_id == trainer.id, Client.deleted_at == None)
+    ).first()
+    if not client:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cliente non trovato")
+    rows = session.exec(
+        select(CreditoCliente)
+        .where(CreditoCliente.id_cliente == client_id, CreditoCliente.deleted_at == None)
+        .order_by(CreditoCliente.data_creazione.desc())
+    ).all()
+    return [CreditoClienteResponse.model_validate(c) for c in rows]
+
+
+@router.post("/{client_id}/crediti/{credito_id}/eroga", response_model=CreditoClienteResponse)
+def eroga_credito_cliente(
+    client_id: int,
+    credito_id: int,
+    data: RatePayment,
+    trainer: Trainer = Depends(get_current_trainer),
+    session: Session = Depends(get_session),
+):
+    """
+    Eroga (anche PARZIALE) un credito a wallet del cliente in cassa (G8.1, ADR-020). Gemello in USCITA di
+    `incassa_credito_terminazione`.
+
+    Atomico (UN commit): bouncer 404 → guard APERTO 400 → residuo>0 400 → importo>0 422 → cap ≤ residuo 422
+    → `CashMovement` USCITA `RIMBORSO_CONTRATTO` + `importo_erogato +=`; a saldo → `SALDATO`.
+
+    **`id_contratto=None` (decisione di modello, ADR-019/020):** è un rimborso al CLIENTE attinto dal wallet,
+    NON una scrittura di settlement del contratto d'origine (già saldato, `residuo`=0). Non tocca
+    `totale_rimborsato`/`residuo` del contratto → l'àncora `totale_rimborsato == Σ USCITA RIMBORSO[id_contratto]`
+    resta pulita; il wallet traccia da sé l'erogato. Conta come rimborso negli aggregati cassa
+    (RIMBORSO_CONTRATTO contra-ricavo): corretto, è denaro davvero uscito.
+    """
+    credito = _bouncer_credito_cliente(session, client_id, credito_id, trainer.id)
+    if credito.stato != "APERTO":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Il credito non è più aperto (saldato o annullato)")
+    residuo_credito = round(max((credito.importo or 0) - (credito.importo_erogato or 0), 0.0), 2)
+    if residuo_credito <= 0.009:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Nessun residuo da erogare su questo credito")
+    if data.importo <= 0:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                            detail="L'importo da erogare deve essere positivo")
+    if data.importo > residuo_credito + 0.01:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Importo ({data.importo:.2f}) supera il residuo del credito ({residuo_credito:.2f})",
+        )
+
+    client = session.get(Client, credito.id_cliente)
+    client_label = f"{client.nome} {client.cognome}" if client else f"Cliente #{credito.id_cliente}"
+    old_erogato = credito.importo_erogato or 0
+    movement = CashMovement(
+        trainer_id=trainer.id,
+        data_effettiva=data.data_pagamento or date.today(),
+        tipo="USCITA",
+        categoria=CATEGORIA_RIMBORSO_CONTRATTO,
+        importo=data.importo,
+        metodo=data.metodo,
+        id_cliente=credito.id_cliente,
+        id_contratto=None,   # decoupled dal contratto d'origine (vedi docstring)
+        id_rata=None,
+        note=data.note or f"Erogazione credito wallet - {client_label}",
+    )
+    session.add(movement)
+    credito.importo_erogato = round(old_erogato + data.importo, 2)
+    if credito.importo_erogato >= (credito.importo or 0) - 0.009:
+        credito.stato = "SALDATO"
+        credito.data_chiusura = data.data_pagamento or date.today()
+    session.add(credito)
+    session.flush()
+    log_audit(session, "movement", movement.id, "CREATE", trainer.id)
+    log_audit(session, "credito_cliente", credito.id, "UPDATE", trainer.id, {
+        "importo_erogato": {"old": old_erogato, "new": credito.importo_erogato},
+        "stato": credito.stato,
+    })
+    session.commit()
+    session.refresh(credito)
+    return CreditoClienteResponse.model_validate(credito)
