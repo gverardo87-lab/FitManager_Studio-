@@ -72,11 +72,19 @@ def sedute_non_erogate_alla_chiusura(contract, sedute_completate: int) -> int:
 
 def residuo(contract) -> float:
     """Denaro ancora dovuto sul contratto (FDM §2). Strada B: il LORDO (prezzo/versato) è immutabile,
-    lo storno (`quota_stornata`, G7) abbassa il residuo senza riscrivere il prezzo. `getattr` con
-    default 0 NON-negoziabile: i test usano SimpleNamespace senza il campo e la finestra pre-G7.0 in
-    produzione non ha la colonna; oggi quota_stornata==0 ovunque → byte-identico."""
+    lo storno (`quota_stornata`, G7) abbassa il residuo senza riscrivere il prezzo.
+
+    NET-AWARE (G8.1 / ADR-019 D-RESIDUO-NETTO): sottrae `netto_incassato()` (versato − rimborsato),
+    NON il versato lordo. Finché `totale_rimborsato == 0` (ovunque tranne i contratti terminati) è
+    BYTE-IDENTICO al lordo. Cambia SOLO quando un rimborso «resta» su un contratto APERTO — possibile
+    solo dopo `reopen` (che da G8.1 non cancella più la cassa di terminazione, ADR-019): lì il cliente
+    ha riavuto denaro → deve di più → il residuo lo include attraverso il netto. È l'unico punto SSoT
+    toccato; i ~15 consumer ne ereditano la correzione.
+
+    `getattr` default 0 NON-negoziabile: i test usano SimpleNamespace senza i campi e la finestra
+    pre-G7.0 in produzione non ha le colonne (`netto_incassato` è già null-safe alla stessa maniera)."""
     quota = getattr(contract, "quota_stornata", 0) or 0
-    return round(max((contract.prezzo_totale or 0) - (contract.totale_versato or 0) - quota, 0.0), 2)
+    return round(max((contract.prezzo_totale or 0) - netto_incassato(contract) - quota, 0.0), 2)
 
 
 def netto_incassato(contract) -> float:

@@ -1316,7 +1316,9 @@ def terminate_contract(
          importo editabile [0, credito_trainer], `metodo_pagamento` → 422, `totale_versato +=`) oppure
          RINUNCIA_ESPRESSA (no cassa, nota obbligatoria → 422). A_CREDITO è G7.10 (422 a schema).
        • PARI → nessun movimento
-    E) Gamba STORNO (SEMPRE): `quota_stornata += residuo_pre − incasso_ora` → `residuo()` → 0
+    E) Gamba STORNO (SEMPRE): `quota_stornata += residuo_pre − incasso_ora + rimborso_out` → `residuo()` → 0
+       (net-aware G8.1/ADR-019: il rimborso che ESCE riduce il netto → entra nello storno, simmetrico
+       all'incasso che lo cresce; pre-G8.1 il rimborso non toccava il residuo e bastava `− incasso_ora`)
     F) Soft-delete SOLO rate NON-saldate (B-3): mai SALDATA né i loro CashMovement
     G) Stato terminale DIRETTO (B-2-attiva): chiuso/motivo/data — **MAI** via `_sync_contract_chiuso`
        (su un SOSPESO terminato `_sync` vedrebbe should_be_chiuso=False e riaprirebbe nello stesso commit)
@@ -1344,6 +1346,7 @@ def terminate_contract(
     # D) Gamba d'azione, derivata dall'esito (ADR-018): un solo CashMovement per terminazione.
     movement = None
     incasso_ora = 0.0                 # X incassato dal trainer (ramo CREDITO_TRAINER + INCASSA_ORA)
+    rimborso_out = 0.0                # X rimborsato al cliente (ramo CREDITO_CLIENTE) — entra nello storno (G8.1)
     saldo_trainer_rinunciato = 0.0    # parte del credito_trainer abbuonata (credito_trainer − X)
     credito_differito = None          # receivable creato dal ramo A_CREDITO (G7.10)
 
@@ -1368,6 +1371,7 @@ def terminate_contract(
         )
         session.add(movement)
         contract.totale_rimborsato = old_rimborsato + settlement.credito_cliente  # STESSO importo del movimento
+        rimborso_out = settlement.credito_cliente  # G8.1: il rimborso che ESCE va nello storno (residuo net-aware)
 
     elif settlement.esito == SettlementEsito.CREDITO_TRAINER:
         # Il cliente deve ancora per servizio già reso → scelta esplicita obbligatoria (ADR-018).
@@ -1437,8 +1441,11 @@ def terminate_contract(
             )
             session.add(credito_differito)
 
-    # E) Gamba STORNO (sempre): residuo_pre − incasso_ora → residuo() = 0 (Strada B, non riscrive prezzo).
-    contract.quota_stornata = old_quota + round(settlement.residuo_pre - incasso_ora, 2)
+    # E) Gamba STORNO (sempre): porta residuo() a 0 sotto il net-aware (G8.1/ADR-019). quota = P − netto =
+    #    residuo_pre − incasso_ora + rimborso_out. Il rimborso che ESCE (USCITA) riduce il netto incassato →
+    #    va aggiunto allo storno, simmetrico all'incasso che lo cresce. (Pre-G8.1 il rimborso non entrava nel
+    #    residuo → bastava residuo_pre − incasso_ora; net-aware lo richiede esplicito per tenere residuo()==0.)
+    contract.quota_stornata = old_quota + round(settlement.residuo_pre - incasso_ora + rimborso_out, 2)
 
     # F) Soft-delete SOLO le rate NON-saldate (B-3). Le SALDATE e i loro CashMovement ENTRATA
     #    SOPRAVVIVONO: cancellarle romperebbe l'àncora `totale_versato == Σ ENTRATA` (Σ ENTRATA

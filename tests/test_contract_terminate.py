@@ -107,14 +107,16 @@ def test_terminate_rimborso_fonte_unica_importo(client, auth_headers, sample_cli
 
     session.expire_all()
     contract = session.get(Contract, c["id"])
-    # conguaglio = 200 - 500 = -300 → RIMBORSO 300; residuo_pre = 1000-500 = 500 → quota_stornata
+    # conguaglio = 200 − 500 = −300 → RIMBORSO 300; residuo_pre = 1000−500 = 500
     assert contract.chiuso is True
     assert contract.motivo_chiusura == "TERMINAZIONE_RIMBORSO"
     assert contract.data_chiusura is not None
     assert round(contract.totale_rimborsato, 2) == 300.0
-    assert round(contract.quota_stornata, 2) == 500.0
+    # G8.1 net-aware: lo storno assorbe il rimborso che esce → quota = residuo_pre(500) + rimborso(300) = 800
+    # == P − reso == quota_non_erogata (1000 − 200): tutto il non-incassato-netto è stornato → residuo()=0
+    assert round(contract.quota_stornata, 2) == 800.0
     assert round(contract.totale_versato, 2) == 500.0          # LORDO immutato (Strada B)
-    assert cstate.residuo(contract) == 0.0                     # storno azzera il residuo
+    assert cstate.residuo(contract) == 0.0                     # storno + rimborso → residuo netto = 0
     assert cstate.netto_incassato(contract) == 200.0           # versato − rimborsato == reso
 
     # AC-1: fonte-unica-importo — il CashMovement USCITA ha lo STESSO importo del delta totale_rimborsato

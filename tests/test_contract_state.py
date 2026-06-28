@@ -110,6 +110,49 @@ def test_netto_incassato():
     assert cs.netto_incassato(SimpleNamespace(totale_versato=100.0, totale_rimborsato=250.0)) == 0.0
 
 
+# ── G8.1 (ADR-019): residuo NET-AWARE — sottrae (versato − rimborsato), non il versato lordo ──
+
+@pytest.mark.parametrize("prezzo,versato,quota", [
+    (500.0, 200.0, 0.0),
+    (500.0, 500.0, 0.0),
+    (500.0, 520.0, 0.0),       # overpayment → clamp a 0
+    (1000.0, 200.0, 800.0),    # storno pieno → 0
+    (1000.0, 200.0, 500.0),    # storno parziale
+    (100.0, 33.333, 0.0),      # arrotondamento a 2 decimali
+    (750.0, 0.0, 0.0),         # nessun versamento
+])
+def test_residuo_net_aware_byte_identico_senza_rimborso(prezzo, versato, quota):
+    """AC-1 (G8.1): con `totale_rimborsato == 0` il net-aware è BYTE-IDENTICO al lordo pre-G8.1,
+    sia con la colonna esplicita a 0 sia ASSENTE (getattr default 0). Griglia di contratti reali."""
+    lordo_atteso = round(max(prezzo - versato - quota, 0.0), 2)
+    c_zero = SimpleNamespace(prezzo_totale=prezzo, totale_versato=versato,
+                             totale_rimborsato=0.0, quota_stornata=quota)
+    assert cs.residuo(c_zero) == lordo_atteso
+    c_absent = SimpleNamespace(prezzo_totale=prezzo, totale_versato=versato, quota_stornata=quota)
+    assert not hasattr(c_absent, "totale_rimborsato")
+    assert cs.residuo(c_absent) == lordo_atteso
+
+
+def test_residuo_net_aware_include_rimborso_che_resta():
+    """AC-2 (G8.1): un rimborso che «resta» su un contratto APERTO (post-reopen, ADR-019) alza il
+    residuo attraverso il netto: `residuo = prezzo − (versato − rimborsato) − storno`. Il cliente ha
+    riavuto denaro → deve di più."""
+    # P=1000, versato 1000, rimborsato 300, storno 0 → netto 700 → residuo 300
+    c = SimpleNamespace(prezzo_totale=1000.0, totale_versato=1000.0,
+                        totale_rimborsato=300.0, quota_stornata=0.0)
+    assert cs.netto_incassato(c) == 700.0
+    assert cs.residuo(c) == 300.0
+    # con storno residuo: 1000 − (1000−300) − 100 = 200
+    c2 = SimpleNamespace(prezzo_totale=1000.0, totale_versato=1000.0,
+                         totale_rimborsato=300.0, quota_stornata=100.0)
+    assert cs.residuo(c2) == 200.0
+    # rimborso che porterebbe il netto sotto zero → netto clampato a 0 → residuo = prezzo intero
+    c3 = SimpleNamespace(prezzo_totale=500.0, totale_versato=200.0,
+                         totale_rimborsato=250.0, quota_stornata=0.0)
+    assert cs.netto_incassato(c3) == 0.0   # max(200−250, 0)
+    assert cs.residuo(c3) == 500.0         # max(500−0−0, 0)
+
+
 # ── Stato di vita: 4 quadranti + confini (§3) ──────────────────────
 
 def test_lifecycle_eliminato_precede_tutto():
