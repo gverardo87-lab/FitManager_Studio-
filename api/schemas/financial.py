@@ -312,6 +312,7 @@ class ReopenPreview(BaseModel):
     rate_da_ripristinare: int              # rate marcate chiusa_da_terminazione che tornano vive
     receivable_da_annullare: int           # crediti_terminazione (G7.10) che passano ad ANNULLATO
     wallet_da_annullare: int = 0           # crediti_cliente (ADR-020) che passano ad ANNULLATO (G8.1 Step 3)
+    wallet_erogato_riassorbito: float = 0.0  # D1 forma-d: erogato wallet che RIENTRA nel residuo (mai silenzioso)
     ha_rinnovo_vivo: bool = False          # S5: esiste un contratto figlio (rinnovo_di) ancora aperto
     id_rinnovo_vivo: Optional[int] = None  # id del rinnovo vivo, se presente
     messaggio: str                         # riepilogo leggibile (la cassa resta, il residuo si ricalcola)

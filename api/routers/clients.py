@@ -32,6 +32,7 @@ from api.models.event import Event
 from api.models.rate import Rate
 from api.models.movement import CashMovement
 from api.models.credito_cliente import CreditoCliente
+from api.models.credito_terminazione import CreditoTerminazione
 from api.routers._audit import log_audit
 from api.schemas.clinical import ClinicalReadinessClientItem
 from api.schemas.financial import CreditoClienteResponse, RatePayment
@@ -996,6 +997,30 @@ def delete_client(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Impossibile eliminare: il cliente ha contratti attivi",
+        )
+
+    # RESTRICT: posizione-cliente finanziaria aperta (G8.2-prep, audit Bug-4). Wallet da erogare (gli
+    # devi denaro) o credito differito da incassare (te ne deve): obbligazioni vive FUORI da residuo() →
+    # eliminare il cliente le orfanerebbe. Gestiscile (eroga/incassa/annulla) prima.
+    open_wallet = session.exec(
+        select(func.count(CreditoCliente.id)).where(
+            CreditoCliente.id_cliente == client_id,
+            CreditoCliente.stato == "APERTO",
+            CreditoCliente.deleted_at == None,
+        )
+    ).one()
+    open_receivable = session.exec(
+        select(func.count(CreditoTerminazione.id)).where(
+            CreditoTerminazione.id_cliente == client_id,
+            CreditoTerminazione.stato == "APERTO",
+            CreditoTerminazione.deleted_at == None,
+        )
+    ).one()
+    if open_wallet > 0 or open_receivable > 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Impossibile eliminare: il cliente ha una posizione finanziaria aperta "
+                   "(crediti a wallet da erogare o crediti differiti da incassare).",
         )
 
     client.deleted_at = datetime.now(timezone.utc)

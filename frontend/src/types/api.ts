@@ -676,6 +676,7 @@ export interface ReopenPreview {
   rate_da_ripristinare: number;
   receivable_da_annullare: number; // crediti_terminazione (G7.10) → ANNULLATO
   wallet_da_annullare: number; // crediti_cliente (ADR-020) → ANNULLATO
+  wallet_erogato_riassorbito: number; // D1 forma-d: erogato wallet che RIENTRA nel residuo (mai silenzioso)
   ha_rinnovo_vivo: boolean; // S5: esiste un rinnovo figlio ancora aperto
   id_rinnovo_vivo: number | null;
   messaggio: string;

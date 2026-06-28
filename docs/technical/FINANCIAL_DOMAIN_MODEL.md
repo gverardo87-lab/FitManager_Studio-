@@ -128,6 +128,13 @@ Un contratto si "esaurisce" lungo **tre assi distinti**, che NON vanno confusi:
 > (`residuo ≡ 0`, settled). **reopen-recompute (G8.1/ADR-019):** un rimborso che «resta» su un contratto
 > **riaperto** (la cassa NON si cancella) rende `residuo` net-aware > 0 — il cliente ha riavuto denaro, deve
 > di più — è l'unico caso in cui il netto diverge dal lordo su un contratto **aperto**.
+> **Wallet erogato riassorbito (G8.2-prep / D1 forma-d, ADR-019 Addendum II):** anche la cassa-wallet già
+> **erogata** (USCITA `id_contratto=None`, a livello cliente, fuori da `totale_rimborsato`) rientra nella
+> posizione: al `reopen` viene **riassorbita** in `totale_rimborsato` (gamba R2-bis) → il `residuo()` net-aware
+> la include **per costruzione** (la cassa non si tocca — è ri-attribuzione gestionale, non una nuova USCITA).
+> L'ancora del rimborso si **raffina**: `totale_rimborsato == Σ USCITA RIMBORSO[id_contratto] + Σ erogato
+> wallet RIASSORBITO` (invariante **I5**, verificato da `contract_state.assert_contract_invariants`). Chiude
+> il money-bug «wallet erogato perso al reopen» (`AUDIT_POSIZIONE_FINANZIARIA_E_INVARIANTI_2026-06-28.md`).
 >
 > **Consumer net-aware (G8.1.1 / ADR-019 Addendum) — regola d'oro.** Ogni guard/stato che esprime "quanto
 > è dovuto / saldato / rateizzabile" deriva da `residuo()` / `netto_incassato()`, **mai** dal LORDO

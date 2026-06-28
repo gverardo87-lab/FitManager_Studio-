@@ -253,3 +253,153 @@ def evaluate_contract(contract, crediti_usati: int, rates: Sequence, today: date
         rate_scadute=has_rate_scadute(rates, today),
         in_scadenza=(lf == Lifecycle.ATTIVO and is_in_scadenza(contract, today)),
     )
+
+
+# ── Sotto-stato pagamento — SSoT unico (G8.2-prep, de-dup di 4 copie inline) ─────────
+
+def recompute_stato_pagamento(contract) -> str:
+    """SALDATO/PARZIALE/PENDENTE del contratto — UNICA derivazione (Audit Bug-3). NET-AWARE via
+    `is_saldato()` (residuo()≤0.01, MAI `versato≥prezzo` lordo). Sostituisce le 4 copie inline
+    (pay_rate/unpay_rate/incassa_residuo/reopen) **byte-identico**: dove `versato>0` per costruzione
+    (post-pagamento) il ramo PENDENTE è semplicemente irraggiungibile, quindi l'ordine
+    PENDENTE→SALDATO→PARZIALE coincide con tutte le varianti pre-esistenti."""
+    if (contract.totale_versato or 0) <= 0:
+        return "PENDENTE"
+    if is_saldato(contract):
+        return "SALDATO"
+    return "PARZIALE"
+
+
+# ── Fotografia netta cliente↔contratto (PASSO 1, G8.2-prep · ADR-019 D1 forma-d) ─────
+
+@dataclass(frozen=True)
+class PosizioneContrattoCliente:
+    """Fotografia NETTA della posizione del cliente SU UN contratto: quanto ha dato netto di quanto ha
+    riavuto, contando ANCHE il wallet erogato (cassa a livello cliente, `id_contratto=None`, ma nata
+    da QUESTO contratto). Pura/additiva/zero-scrittura.
+
+    È il **gradino PER-CONTRATTO** che abilita la posizione-cliente intera (G8.2) come estensione della
+    stessa formula (Σ sui contratti del cliente), non una riscrittura. Modello billing-leader
+    (Stripe/Chargebee): ledger immutabile, posizione RICALCOLATA, mai riavvolta.
+
+    Con V=`totale_versato` (lordo, Strada B), Rf=`totale_rimborsato` (USCITA RIMBORSO id_contratto==C),
+    Werog=Σ `importo_erogato` dei wallet `crediti_cliente` ANCORA VIVI (stato≠ANNULLATO) nati da C:
+      restituito_al_cliente = Rf + Werog      # tutto il denaro tornato al cliente per questo contratto
+      netto_cliente         = V − Rf − Werog  # posizione netta del cliente (può essere il punto di
+                                              # partenza del residuo alla riapertura: residuo = P − netto)
+    `Werog` esclude i wallet ANNULLATO: la loro erogazione, alla riapertura, viene RIASSORBITA in
+    `totale_rimborsato` (PASSO 4) → contarla anche qui la sottrarrebbe due volte. È così che la
+    fotografia resta INVARIANTE attraverso il reopen (chiude Bug-1 dell'audit)."""
+    versato: float
+    rimborsato_contratto: float
+    wallet_erogato: float
+    restituito_al_cliente: float
+    netto_cliente: float
+
+
+def posizione_netta_contratto(contract, crediti_cliente: Sequence = ()) -> PosizioneContrattoCliente:
+    """Fotografia netta cliente↔contratto (PASSO 1). **PURA**: il caller fornisce i `crediti_cliente`
+    del cliente (batch-fetch, anti-N+1); si filtra qui per `id_contratto_origine == contract.id`.
+    Nessuna scrittura, nessuna tabella. `getattr` default-0/None: retro-compat coi contratti pre-G7."""
+    v = round(contract.totale_versato or 0, 2)
+    rf = round(getattr(contract, "totale_rimborsato", 0) or 0, 2)
+    werog = round(sum(
+        (getattr(c, "importo_erogato", 0) or 0)
+        for c in crediti_cliente
+        if getattr(c, "id_contratto_origine", None) == contract.id and getattr(c, "stato", None) != "ANNULLATO"
+    ), 2)
+    restituito = round(rf + werog, 2)
+    return PosizioneContrattoCliente(
+        versato=v,
+        rimborsato_contratto=rf,
+        wallet_erogato=werog,
+        restituito_al_cliente=restituito,
+        netto_cliente=round(v - restituito, 2),
+    )
+
+
+# ── Invarianti del dominio finanziario — checker osservabile (PASSO 2) ───────────────
+
+@dataclass(frozen=True)
+class InvariantViolation:
+    code: str       # I1 | I4 | I5
+    message: str
+
+
+def assert_contract_invariants(
+    contract,
+    crediti_cliente: Sequence = (),
+    *,
+    rimborso_cassa_diretto: Optional[float] = None,
+) -> list[InvariantViolation]:
+    """Verifica gli invarianti globali del dominio SU UN contratto, **SENZA** il mascheramento dei clamp
+    `max(0,…)` (espone `netto_raw`/`residuo_raw`). **PURA**: il caller fornisce i `crediti_cliente`
+    (per I5 = la fotografia netta del PASSO 1) e, se disponibile, `rimborso_cassa_diretto` =
+    Σ USCITA RIMBORSO_CONTRATTO con `id_contratto == contract.id` (ancora ledger forte per I5).
+
+    Ritorna la lista delle violazioni (vuota = OK). **'Predisposta per 409'**: i caller in produzione la
+    invocano in coda alla mutazione e OGGI LOGGANO (warn); l'escalation a 409 è una scelta successiva.
+    È la rete strutturale che chiude la CLASSE di bug (l'harness la usa su transizione × stato).
+
+    Invarianti (FDM + audit):
+      I1  `residuo()==0` su un contratto chiuso da settlement/completamento.
+      I4  campi monotòni ≥ 0 e `netto_raw = versato − rimborsato` ≥ 0 (il clamp di `netto_incassato`
+          maschererebbe l'over-rimborso Σuscita>Σentrata).
+      I5  «nessun euro della fotografia netta sparisce»: la cassa-wallet già erogata e RIASSORBITA
+          (wallet ANNULLATO nato da C) dev'essere coperta da `totale_rimborsato`. È verificabile SOLO
+          grazie al PASSO 1 e cattura Bug-1 (al reopen il wallet erogato spariva dalla posizione)."""
+    violations: list[InvariantViolation] = []
+    P = contract.prezzo_totale or 0
+    V = contract.totale_versato or 0
+    Rf = getattr(contract, "totale_rimborsato", 0) or 0
+    Q = getattr(contract, "quota_stornata", 0) or 0
+    netto_raw = round(V - Rf, 2)            # SENZA clamp (netto_incassato lo porterebbe a max(·,0))
+    residuo_raw = round(P - netto_raw - Q, 2)  # SENZA clamp (residuo lo porterebbe a max(·,0))
+
+    # I4 — campi non-negativi + netto onesto
+    if V < -0.01:
+        violations.append(InvariantViolation("I4", f"totale_versato negativo ({V:.2f})"))
+    if Rf < -0.01:
+        violations.append(InvariantViolation("I4", f"totale_rimborsato negativo ({Rf:.2f})"))
+    if Q < -0.01:
+        violations.append(InvariantViolation("I4", f"quota_stornata negativa ({Q:.2f})"))
+    if netto_raw < -0.01:
+        violations.append(InvariantViolation(
+            "I4", f"netto incassato negativo ({netto_raw:.2f}): Σrimborso > Σentrata, il clamp lo nasconderebbe"))
+
+    # I1 — chiuso da settlement/completamento ⇒ residuo() == 0 (residuo_raw non deve essere < 0: over-assorbimento)
+    motivo = getattr(contract, "motivo_chiusura", None) or ""
+    if getattr(contract, "chiuso", False) and (
+        motivo.startswith("TERMINAZIONE_") or motivo in ("COMPLETAMENTO", "CONSUNZIONE")
+    ):
+        res = residuo(contract)
+        if res > 0.01:
+            violations.append(InvariantViolation("I1", f"contratto chiuso ({motivo}) con residuo {res:.2f} ≠ 0"))
+        if residuo_raw < -0.01:
+            violations.append(InvariantViolation(
+                "I1", f"contratto chiuso ({motivo}) con residuo_raw {residuo_raw:.2f} < 0 (over-storno/over-rimborso)"))
+
+    # I5 — fotografia netta: la cassa-wallet RIASSORBITA (wallet ANNULLATO nato da C) dev'essere coperta
+    #      da totale_rimborsato. `importo_erogato` sopravvive all'ANNULLATO → la grandezza è stabile.
+    werog_riassorbito = round(sum(
+        (getattr(c, "importo_erogato", 0) or 0)
+        for c in crediti_cliente
+        if getattr(c, "id_contratto_origine", None) == contract.id and getattr(c, "stato", None) == "ANNULLATO"
+    ), 2)
+    if rimborso_cassa_diretto is not None:
+        # Ancora ledger FORTE: totale_rimborsato == Σ USCITA RIMBORSO[id_contratto==C] + Σ erogato riassorbito.
+        atteso = round((rimborso_cassa_diretto or 0) + werog_riassorbito, 2)
+        if abs(Rf - atteso) > 0.01:
+            violations.append(InvariantViolation(
+                "I5",
+                f"totale_rimborsato {Rf:.2f} ≠ rimborso diretto {rimborso_cassa_diretto or 0:.2f} + "
+                f"wallet riassorbito {werog_riassorbito:.2f} (euro perso/duplicato attraverso una transizione)"))
+    elif werog_riassorbito - Rf > 0.01:
+        # Forma PURA (senza ledger): il wallet riassorbito non può eccedere il rimborso registrato.
+        # Cattura Bug-1 quando NON c'è un rimborso diretto che lo mascheri (caso canonico del reopen).
+        violations.append(InvariantViolation(
+            "I5",
+            f"wallet erogato riassorbito {werog_riassorbito:.2f} non coperto da totale_rimborsato {Rf:.2f}"
+            f" (Bug-1: euro erogato perso alla riapertura)"))
+
+    return violations

@@ -260,3 +260,34 @@ def test_f1_eroga_wallet_non_in_movimenti_contratto(client, auth_headers, sample
     session.expire_all()
     contract = session.get(Contract, c["id"])
     assert signed == round(contract.totale_versato, 2) == 800.0   # immune all'erogazione wallet
+
+
+# ── Bug-4 (G8.2-prep): le delete RESTRICT sulla posizione-cliente aperta (wallet/receivable) ──
+
+def test_delete_client_bloccato_da_wallet_aperto(client, auth_headers, sample_client, session):
+    """delete_client → 400 se il cliente ha un wallet APERTO (gli devi denaro), anche SENZA contratti
+    attivi (il contratto terminato è chiuso). La posizione FUORI da residuo() non va orfanata."""
+    c = _credito_cliente_contract(client, auth_headers, sample_client, session)
+    client.post(f"/api/contracts/{c['id']}/terminate",
+                json={"importo_rimborso": 0.0}, headers=auth_headers)   # wallet 600 APERTO, contratto chiuso
+    r = client.delete(f"/api/clients/{sample_client['id']}", headers=auth_headers)
+    assert r.status_code == 400
+    assert "posizione finanziaria" in r.json()["detail"].lower()
+
+
+def test_delete_contract_bloccato_da_receivable_aperto(client, auth_headers, sample_client, session):
+    """delete_contract (no force) → 409 se il contratto ha un credito differito APERTO (A_CREDITO):
+    crediti tutti usati (RESTRICT 2 passa), nessuna rata (RESTRICT 1 passa) → solo la nuova RESTRICT 3
+    sui crediti aperti blocca. Senza, il receivable resterebbe orfano (Bug-4 dell'audit)."""
+    from api.models.credito_terminazione import CreditoTerminazione
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=100.0, crediti=10)
+    _complete_pt(session, _trainer(session).id, sample_client["id"], c["id"], 10)  # reso 1000 → credito_trainer 900
+    rt = client.post(f"/api/contracts/{c['id']}/terminate",
+                     json={"azione_credito_trainer": "A_CREDITO"}, headers=auth_headers)
+    assert rt.status_code == 200, rt.text
+    assert session.exec(select(CreditoTerminazione).where(
+        CreditoTerminazione.id_contratto == c["id"])).first().stato == "APERTO"
+
+    r = client.delete(f"/api/contracts/{c['id']}", headers=auth_headers)
+    assert r.status_code == 409
+    assert "crediti aperti" in r.json()["detail"].lower()

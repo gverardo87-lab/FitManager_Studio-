@@ -568,11 +568,8 @@ def pay_rate(
     old_chiuso = contract.chiuso
     contract.totale_versato = contract.totale_versato + data.importo
 
-    # E) Stato contratto: SALDATO se il residuo() net-aware è zero (G8.1.1/F4 — non `versato≥prezzo` lordo)
-    if cstate.is_saldato(contract):
-        contract.stato_pagamento = "SALDATO"
-    elif contract.totale_versato > 0:
-        contract.stato_pagamento = "PARZIALE"
+    # E) Stato contratto net-aware (G8.1.1/F4 — residuo()==0, non `versato≥prezzo` lordo). SSoT (de-dup).
+    contract.stato_pagamento = cstate.recompute_stato_pagamento(contract)
 
     # E-auto) Auto-close: contratto saldato + crediti esauriti → chiuso
     if contract.stato_pagamento == "SALDATO" and contract.crediti_totali:
@@ -691,13 +688,8 @@ def unpay_rate(
     old_chiuso = contract.chiuso
     contract.totale_versato = max(0, contract.totale_versato - importo_da_stornare)
 
-    # E) Ricalcola stato_pagamento
-    if contract.totale_versato <= 0:
-        contract.stato_pagamento = "PENDENTE"
-    elif cstate.is_saldato(contract):  # G8.1.1/F4: net-aware (residuo()==0), non versato≥prezzo lordo
-        contract.stato_pagamento = "SALDATO"
-    else:
-        contract.stato_pagamento = "PARZIALE"
+    # E) Ricalcola stato_pagamento net-aware (F4) — SSoT unico (G8.2-prep, de-dup di 4 copie inline)
+    contract.stato_pagamento = cstate.recompute_stato_pagamento(contract)
 
     # E-auto) Auto-reopen: se non piu' saldato, riapri — MA solo le chiusure da COMPLETAMENTO
     #   (G7.2 reopen-allowlist, FDM §9.5.6: stesso principio del ramo credit-driven di

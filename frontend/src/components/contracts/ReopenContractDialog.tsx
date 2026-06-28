@@ -111,6 +111,15 @@ export function ReopenContractDialog({
               {data.wallet_da_annullare > 0 ? (
                 <li>• {data.wallet_da_annullare} credito a wallet del cliente viene annullato.</li>
               ) : null}
+              {data.wallet_erogato_riassorbito > 0.009 ? (
+                <li>
+                  • Il cliente ha già riavuto{" "}
+                  <span className="font-medium text-foreground">
+                    {formatCurrency(data.wallet_erogato_riassorbito)}
+                  </span>{" "}
+                  dal wallet: <span className="font-medium">torna dovuto</span> sul contratto riaperto.
+                </li>
+              ) : null}
             </ul>
 
             {/* Avviso rinnovo vivo (S5, D-PROPONE) */}

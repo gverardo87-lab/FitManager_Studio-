@@ -602,3 +602,48 @@ def test_cap_rateizzabile_net_aware_con_rimborso(client, auth_headers, sample_cl
     # ri-rateizzare il rimborso); col vecchio clamp lordo dava 500 (i 200 rimborsati spariti dal cap).
     assert round(cstate.residuo(c), 2) == 700.0
     assert round(_cap_rateizzabile(session, c), 2) == 700.0
+
+
+# ── D1 forma-d (G8.2-prep): reopen RIASSORBE il wallet già erogato (chiude Bug-1 dell'audit) ──
+
+def test_reopen_riassorbe_wallet_erogato(client, auth_headers, sample_client, session):
+    """Bug-1 (audit): un wallet PARZIALMENTE EROGATO prima del reopen NON deve sparire dalla posizione.
+    L'erogato (cassa già uscita, `id_contratto=None`) viene RIASSORBITO in `totale_rimborsato` → rientra
+    nel residuo() net-aware del contratto riaperto: il cliente ha riavuto quel denaro → deve di più.
+    reopen-preview lo DICHIARA esplicitamente (mai silenzioso). Prima del PASSO 4 i 250 svanivano."""
+    from api.models.credito_cliente import CreditoCliente
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=800.0, crediti=10)
+    t = _trainer(session)
+    _complete_pt(session, t.id, sample_client["id"], c["id"], 2)  # reso 200 < versato 800 → credito_cliente 600
+
+    # terminate rimborso 0 → wallet 600; poi eroga 250 in cassa (USCITA id_contratto=None)
+    client.post(f"/api/contracts/{c['id']}/terminate", json={"importo_rimborso": 0.0}, headers=auth_headers)
+    session.expire_all()
+    wallet = session.exec(select(CreditoCliente).where(
+        CreditoCliente.id_contratto_origine == c["id"])).first()
+    client.post(f"/api/clients/{sample_client['id']}/crediti/{wallet.id}/eroga",
+                json={"importo": 250.0, "metodo": "CONTANTI"}, headers=auth_headers)
+
+    # reopen-preview: dichiara l'erogato che rientra + residuo ricalcolato (mai silenzioso)
+    pv = client.get(f"/api/contracts/{c['id']}/reopen-preview", headers=auth_headers).json()
+    assert round(pv["wallet_erogato_riassorbito"], 2) == 250.0
+    assert pv["residuo_dopo"] == 450.0                    # P − netto_cliente = 1000 − (800 − 250)
+    assert "250" in pv["messaggio"]
+
+    # reopen: i 250 erogati rientrano in totale_rimborsato; residuo 450 (NON 200 = bug)
+    assert client.post(f"/api/contracts/{c['id']}/reopen", headers=auth_headers).status_code == 200
+    session.expire_all()
+    contract = session.get(Contract, c["id"])
+    assert contract.chiuso is False
+    assert round(contract.totale_rimborsato, 2) == 250.0   # erogato wallet riassorbito (fold R2-bis)
+    assert cstate.residuo(contract) == 450.0               # il cliente ha riavuto 250 → deve di più
+    assert session.exec(select(CreditoCliente).where(
+        CreditoCliente.id_contratto_origine == c["id"])).first().stato == "ANNULLATO"
+    # àncora I5: il rimborso DIRETTO resta 0 (l'erogazione era id_contratto=None); il delta è il fold
+    assert _sum_movements(session, c["id"], "USCITA", categoria=CATEGORIA_RIMBORSO_CONTRATTO) == 0.0
+    # la cassa NON è stata cancellata né creata: l'USCITA wallet resta a livello cliente
+    assert cstate.assert_contract_invariants(
+        contract,
+        session.exec(select(CreditoCliente).where(CreditoCliente.id_contratto_origine == c["id"])).all(),
+        rimborso_cassa_diretto=0.0,
+    ) == []

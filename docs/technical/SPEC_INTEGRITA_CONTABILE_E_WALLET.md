@@ -353,3 +353,74 @@ residuo 770, rate ripristinate 733, mancano i 37 ri-incassabili). Già net-aware
 
 Test: `test_contract_reopen.py::test_f2_reopen_copre_ammanco_da_rimborso` (end-to-end Garavelli) +
 `::test_cap_rateizzabile_net_aware_con_rimborso` (unit Fix A).
+
+---
+
+## 15. G8.2-prep — la fotografia netta PER-CONTRATTO + elevazione G8.2 (2026-06-28)
+
+> Origine: audit `docs/technical/AUDIT_POSIZIONE_FINANZIARIA_E_INVARIANTI_2026-06-28.md`. Decisione di
+> dominio **D1 CHIUSA dal founder, forma (d)**: il reopen NON riavvolge il pregresso — scatta la
+> **fotografia netta** della posizione cliente↔contratto e quella diventa il punto di partenza del
+> contratto riaperto (modello billing-leader: ledger immutabile, posizione ricalcolata, credito letto-non-riavvolto).
+
+### 15.1 IMPLEMENTATO in questo giro (G8.2-prep, branch FitManager_Studio)
+
+**Perimetro:** la fotografia è **PER-CONTRATTO** (movimenti di QUESTO contratto + wallet con
+`id_contratto_origine == QUESTO contratto`). È il **gradino** che abilita G8.2 senza riscrittura.
+
+1. **Read-model — `contract_state.posizione_netta_contratto(contract, crediti_cliente)`** (PASSO 1, pura,
+   additiva, zero-scrittura): `netto_cliente = V − Rf − Werog` con `V=totale_versato`, `Rf=totale_rimborsato`
+   (USCITA RIMBORSO id_contratto==C), `Werog=Σ importo_erogato` dei wallet VIVI (`stato≠ANNULLATO`) nati da C.
+   Esclude i wallet ANNULLATO (già riassorbiti in `totale_rimborsato`) → la fotografia è **invariante**
+   attraverso il reopen.
+2. **Checker osservabile — `contract_state.assert_contract_invariants(contract, crediti_cliente, *, rimborso_cassa_diretto=None)`**
+   (PASSO 2, pura): verifica I1 (`residuo()==0` su chiuso), I4 (`netto_raw≥0`, niente clamp-mask), **I5**
+   («nessun euro della fotografia sparisce»: l'erogato dei wallet RIASSORBITI deve essere coperto da
+   `totale_rimborsato`). «Predisposta per 409»: oggi `reopen` la invoca **log-only** (`_log_invariant_violations`).
+3. **Harness di proprietà** (PASSO 3, `tests/test_financial_invariants_harness.py`): invariante × transizione
+   × stato di partenza (terminate nei rami, reopen, incassa_residuo, pay/unpay, eroga_wallet,
+   incassa_receivable). È la rete strutturale che chiude la CLASSE; era **rossa** sul caso Bug-1 prima del fix.
+4. **`reopen` ricalcola dalla fotografia (PASSO 4, FIX Bug-1):** il wallet già **erogato** (cassa uscita a
+   livello cliente, `id_contratto=None`) viene **RIASSORBITO** in `totale_rimborsato` (fold R2-bis) → rientra
+   nel `residuo()` net-aware PER COSTRUZIONE, non come ramo speciale. La cassa NON si tocca (ADR-019): è
+   ri-attribuzione gestionale. `reopen-preview` lo **dichiara** (`wallet_erogato_riassorbito` + messaggio
+   «il cliente risulta aver già riavuto €X, che torna dovuto»), mai silenzioso.
+   - Ancora del rimborso **raffinata**: `totale_rimborsato == Σ USCITA RIMBORSO[id_contratto] + Σ erogato wallet RIASSORBITO` (= I5).
+5. **Patch strutturali (PASSO 5):** `delete_client`/`delete_contract` → RESTRICT su posizione aperta
+   (wallet/receivable APERTO, audit Bug-4); estratto `contract_state.recompute_stato_pagamento()` che
+   sostituisce 4 copie inline (audit Bug-3, byte-identico).
+
+**AC (G8.2-prep):**
+13. eroga parziale del wallet → **reopen** → `totale_rimborsato` cresce dell'erogato, `residuo()` lo include
+    (es. acconto 800, reso 200, wallet 600, eroga 250 → reopen → `totale_rimborsato==250`, `residuo()==450`);
+    `assert_contract_invariants==[]`. (`test_contract_reopen.py::test_reopen_riassorbe_wallet_erogato`)
+14. l'harness è verde su **tutte** le transizioni (era rosso su `eroga_wallet_then_reopen` prima del PASSO 4).
+15. `delete_client`→400 con wallet APERTO; `delete_contract`→409 con receivable APERTO (`test_wallet_cliente.py`).
+
+### 15.2 IN PANCHINA — G8.2 (elevazione, NON implementata)
+
+La fotografia per-contratto è il perimetro ristretto della **stessa formula** che G8.2 estende; G8.2 **non la sostituisce**:
+
+- **(a) Posizione-cliente intera come read-model di prima classe:**
+  `client_position(cliente) = Σ residuo(contratti aperti) − Σ wallet APERTO + Σ receivable APERTO`,
+  esposta in `ClientResponse`/worklist. È `Σ` di `posizione_netta_contratto` sui contratti del cliente +
+  i crediti cross-contratto. Rende osservabile l'I5 **a livello cliente** (oggi è per-contratto).
+- **(b) Wallet auto-spendibile cross-contratto:** applicare `crediti_cliente` come acconto/sconto su un
+  contratto **futuro/altro** (debit wallet, causale `APPLICATO_CONTRATTO`, link `id_contratto_uso`).
+  Introduce **stato distribuito** (scenario S4: reopen di A il cui wallet è stato speso su B →
+  `reopen-preview` rileva e **propone**). Vedi §11.
+
+**Perché differirlo è corretto:** la classe «perdita silenziosa» è già chiusa dal giro per-contratto
+(Bug-1/3/4 + checker I5). G8.2 aggiunge *capability* (spendere il credito altrove), non *correttezza*; il
+suo costo è la consistenza distribuita, non necessaria per non-perdere-euro. Si apre con domanda reale.
+
+### 15.3 Decisioni di dominio
+
+- **D1 — wallet parzialmente erogato al reopen del contratto d'origine: CHIUSA, forma (d)** (snapshot/ri-attribuzione).
+  Scartate: (a) receivable a carico cliente, (b) confluisce-in-`totale_rimborsato`-come-rimborso-classico,
+  (c) write-off esplicito/blocco. La (d) tratta i termini (rimborso, conguaglio, wallet erogato) come **una
+  somma**, non casi speciali per-provenienza, ed è il modello dei billing leader.
+- **D2 — applicabilità cross-contratto del credito-cliente: APERTA, in panchina.** Opzioni + trade-off
+  (dall'audit §5.4): **(a) mai** (solo cash-out — status quo, nessuno stato distribuito); **(b) manuale**
+  («applica credito al contratto», esplicito/auditabile, niente auto-magia — mediana consigliata se serve);
+  **(c) automatico** (stato distribuito, costo più alto). **Decisione del founder** quando emergerà domanda reale.

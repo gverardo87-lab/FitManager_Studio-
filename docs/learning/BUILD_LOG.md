@@ -2360,3 +2360,24 @@ Dopo i due fix, Garavelli riaperto: residuo 770, **piano pendente 770** (366,5 +
 Gate: ruff + grep-guard + suite + next build verdi. Governance: api/CLAUDE.md (#10), questo log.
 
 ---
+
+### 2026-06-28 — Audit posizione finanziaria → G8.2-prep / D1 forma-d: la fotografia netta per-contratto (chiude Bug-1)
+
+Audit architetturale READ-ONLY (trigger founder) → `docs/technical/AUDIT_POSIZIONE_FINANZIARIA_E_INVARIANTI_2026-06-28.md`. **Tesi confermata sul write-model decentralizzato ma corretta:** il read-model È già centralizzato (`contract_state.py`, regola d'oro rispettata). Radice = nessun punto unico applica gli invarianti dopo le transizioni + nessuna posizione-CLIENTE di prima classe + clamp `max(0,…)` che silenziano. **Money-bug latente Bug-1:** `reopen` annullava il wallet **incondizionatamente** senza riassorbire la cassa già **erogata** (USCITA `id_contratto=None`, fuori da `totale_rimborsato`) → quegli euro sparivano dalla posizione del contratto riaperto (cassa nel mastro intatta, attribuzione persa). Scenario `eroga-parziale → reopen` non testato.
+
+**Decisione founder D1 — CHIUSA, forma (d) "fotografia netta":** il reopen NON riavvolge; scatta la posizione netta cliente↔contratto e quella è il punto di partenza. Rimborso/conguaglio/wallet erogato = termini della stessa somma (modello billing-leader: ledger immutabile, posizione ricalcolata). Perimetro = **PER-CONTRATTO** (posizione-cliente intera = G8.2, in panchina).
+
+**Implementazione G8.2-prep (5 passi, branch FitManager_Studio).**
+- **P1 — read-model:** `contract_state.posizione_netta_contratto(contract, crediti_cliente)` (pura, `netto = versato − rimborsato − Σ erogato wallet VIVI`). Esclude i wallet ANNULLATO (già riassorbiti) → la fotografia è **invariante attraverso il reopen**. È il gradino che abilita G8.2 senza riscrittura.
+- **P2 — checker:** `contract_state.assert_contract_invariants(...)` (pura): I1 (`residuo()==0` su chiuso), I4 (`netto_raw≥0` senza clamp-mask), **I5** («nessun euro della fotografia sparisce», ancora ledger `totale_rimborsato == Σ USCITA RIMBORSO[id_contratto] + Σ erogato wallet RIASSORBITO`). In `reopen` via `_log_invariant_violations` **log-only** (predisposta-per-409).
+- **P3 — harness:** `tests/test_financial_invariants_harness.py` (invariante × transizione × stato di partenza). Costruito per essere **rosso oggi** su `eroga_wallet_then_reopen` (Bug-1) e verde su tutto il resto → rosso→verde col P4. È la rete strutturale che chiude la CLASSE.
+- **P4 — fix (conseguenza):** `reopen` gamba **R2-bis** folda l'erogato dei wallet annullati in `totale_rimborsato` → rientra nel `residuo()` net-aware **per costruzione**. Cassa NON toccata (ri-attribuzione gestionale, ADR-019). `reopen-preview` espone `wallet_erogato_riassorbito` + messaggio «il cliente ha già riavuto €X, che torna dovuto» (mai silenzioso). Es. acconto 800/reso 200/wallet 600/eroga 250 → reopen → `totale_rimborsato=250`, **`residuo()=450`** (era 200 = bug). FE: type-sync + `<li>` nel `ReopenContractDialog`.
+- **P5 — patch strutturali:** `delete_client`/`delete_contract` RESTRICT su posizione aperta (wallet/receivable APERTO, **Bug-4**); estratto `contract_state.recompute_stato_pagamento()` = unica derivazione SALDATO/PARZIALE/PENDENTE (**Bug-3**, 4 copie inline pay/unpay/incassa/reopen, byte-identico).
+
+**Learning architetturale.** (1) *Read-model centralizzato ≠ write-model centralizzato:* `contract_state` poteva solo **segnalare** una violazione (residuo>0 su chiuso), mai **impedirla** — il checker osservabile (P2) + l'harness (P3) chiudono questo gap senza un rewrite del cuore finanziario. (2) *Il fold preserva la fotografia attraverso la transizione:* `posizione_netta_contratto` pre-reopen == post-reopen perché Werog migra da «erogato wallet vivo» a «totale_rimborsato» (wallet→ANNULLATO escluso) → il netto non cambia, l'attribuzione sì. (3) *Re-attribuzione ≠ tocco-cassa:* il `CashMovement` wallet resta `id_contratto=None` e datato; solo `totale_rimborsato` (colonna di posizione) assorbe — il mandato dell'audit lo sancisce lecito (ricalcolo della posizione, non riscrittura di documenti fiscali).
+
+**D2 — APERTA, in panchina:** wallet auto-spendibile cross-contratto (un credito di A applicabile a B) = stato distribuito; opzioni a/b/c (mai / manuale / automatico) → decisione founder a domanda reale. Vedi `SPEC_INTEGRITA §15`.
+
+**Gate.** Suite backend **711 verde** (era 696; +harness +behavioral +2 delete-guard), `ruff api/` + 4 grep-guard (ADR-016/017/018/019) + `tsc --noEmit` (FE) verdi. ⚠️ **`next build` pieno NON eseguito** (dev server del founder tiene `.next`/db/log lock — WinError 32; tsc usato come proxy). Governance allineata: ADR-019 **Addendum II**, SPEC_INTEGRITA **§15**, api/CLAUDE.md (blocco G8), INDEX, FDM §residuo-net-aware. **Prossimo:** `check-all.sh` completo + Playwright a env libero; poi **G1 cifratura**.
+
+---

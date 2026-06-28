@@ -174,3 +174,55 @@ Due conseguenze di **D-NET-AWARE-OVUNQUE** + **D-RECONCILIA-RATE**, non nuove de
   fabbricata consumerebbe lo spazio-piano e bloccherebbe `update_rate` — regressione intercettata da `test_m2`).
 Invarianti immutati (cassa-immutabile, `residuo==0 ⟺ saldato`, Strada B). Test:
 `test_contract_reopen.py::test_f2_reopen_copre_ammanco_da_rimborso` + `::test_cap_rateizzabile_net_aware_con_rimborso`.
+
+## Addendum 2026-06-28 (II) — G8.2-prep: la fotografia netta PER-CONTRATTO + chiusura D1 (forma-d)
+
+Audit fondante: `docs/technical/AUDIT_POSIZIONE_FINANZIARIA_E_INVARIANTI_2026-06-28.md`. L'audit ha
+confermato che il **read-model è già centralizzato** (`contract_state.py`) ma il **write-model è
+decentralizzato** (ogni transizione re-asserisce a mano gli invarianti, nessun punto unico, i clamp
+`max(0,…)` silenziano le violazioni), e ha trovato un **money-bug latente (Bug-1)**: `reopen` annullava il
+wallet **incondizionatamente** senza riassorbire la cassa già **erogata** (USCITA `id_contratto=None`, fuori
+da `totale_rimborsato`) → quegli euro **sparivano dalla posizione** del contratto riaperto (cassa nel mastro
+intatta, *attribuzione* cliente↔contratto persa). Lo scenario `eroga-parziale → reopen` non era coperto da test.
+
+**Decisione founder D1 — CHIUSA, forma (d) "fotografia netta":** il `reopen` **NON riavvolge** il pregresso.
+Al reopen scatta la **fotografia netta** della posizione cliente↔contratto e quella diventa il **punto di
+partenza** del contratto riaperto. Rimborso erogato, conguaglio incassato, wallet erogato sono **termini della
+stessa somma**, non casi speciali da ricollocare per-provenienza (modello billing-leader: ledger immutabile,
+posizione **ricalcolata**, credito **letto** non riavvolto). Confine di questo giro: la fotografia è
+**PER-CONTRATTO**; la posizione-cliente intera è elevazione successiva (**G8.2**, in panchina).
+
+Conseguenze del principio (non nuove decisioni — completano D-CASSA-IMMUTABILE / D-RICALCOLA / D-INSTRADA):
+
+- **D-FOTOGRAFIA-NETTA (chiude Bug-1).** Al `reopen`, l'erogato dei wallet annullati (`Σ importo_erogato`)
+  viene **riassorbito** in `totale_rimborsato` (gamba **R2-bis**) → rientra nel `residuo()` net-aware **per
+  costruzione** (`residuo = P − (versato − rimborsato) − 0`), non come ramo speciale. La **cassa NON si tocca**
+  (le USCITA wallet restano `id_contratto=None`, datate): il fold è **ri-attribuzione gestionale** della
+  posizione (mandato dell'audit: riattribuire/ricalcolare la posizione è lecito, non riscrive documenti
+  fiscali). `reopen-preview` **dichiara** l'importo che rientra (`wallet_erogato_riassorbito` + messaggio
+  «il cliente ha già riavuto €X, che torna dovuto»), mai silenzioso (D-PROPONE).
+- **Ancora del rimborso raffinata (I5).** `totale_rimborsato == Σ USCITA RIMBORSO[id_contratto] + Σ erogato
+  wallet RIASSORBITO` (wallet ANNULLATO nati dal contratto). La forma letterale (solo `id_contratto`) vale
+  finché nessun wallet è stato riassorbito; il fold la estende col secondo addendo.
+- **Read-model + checker osservabile.** `contract_state.posizione_netta_contratto(contract, crediti_cliente)`
+  (pura, `netto = versato − rimborsato − Σ erogato wallet VIVI`) è il **gradino** che abilita G8.2 senza
+  riscrittura. `contract_state.assert_contract_invariants(...)` (pura) verifica I1/I4/**I5** **senza** il
+  mascheramento dei clamp; in `reopen` è cablata **log-only** (`_log_invariant_violations`, «predisposta per
+  409»). Rete strutturale: harness di proprietà `tests/test_financial_invariants_harness.py` (invariante ×
+  transizione), rosso su Bug-1 prima del fix.
+- **Patch strutturali (audit).** `delete_client`/`delete_contract` → RESTRICT su posizione aperta
+  (wallet/receivable APERTO; Bug-4: prima orfanava la posizione). Estratto
+  `contract_state.recompute_stato_pagamento()` = unica derivazione SALDATO/PARZIALE/PENDENTE (Bug-3:
+  4 copie inline, byte-identico).
+
+**D2 — APERTA, in panchina:** wallet auto-spendibile **cross-contratto** (un credito di A applicabile a B) =
+stato distribuito. Opzioni (a) mai/solo-cash-out · (b) applicazione manuale · (c) automatico — **decisione del
+founder** a domanda reale. Vedi `SPEC_INTEGRITA_CONTABILE_E_WALLET.md §15`.
+
+**Stato implementazione (2026-06-28): ✅ IMPLEMENTATA (G8.2-prep).** Suite **711** verde; `ruff api/` +
+grep-guard ADR-016/017/018/019 + `tsc --noEmit` (FE) verdi. AC in `SPEC §15`; test:
+`test_financial_invariants_harness.py` (harness) · `test_contract_reopen.py::test_reopen_riassorbe_wallet_erogato`
+(fix Bug-1: acconto 800/reso 200/wallet 600/eroga 250 → reopen → `totale_rimborsato=250`, `residuo()=450`) ·
+`test_wallet_cliente.py` (delete-guard Bug-4). **Invarianti immutati:** cassa-immutabile, `residuo==0 ⟺ saldato`,
+asse EROGATO (ADR-016), Strada B. È **hardening del principio ADR-019** (chiude la classe «perdita silenziosa»),
+non un nuovo blocco.

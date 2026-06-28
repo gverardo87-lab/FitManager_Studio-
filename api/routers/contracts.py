@@ -12,6 +12,7 @@ Mai 403, mai rivelare l'esistenza di dati altrui.
 """
 
 import json
+import logging
 from typing import Optional
 from datetime import date, datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -66,11 +67,33 @@ from api.services.contract_settlement import compute_settlement, SettlementEsito
 CATEGORIA_ACCONTO = CATEGORIA_ACCONTO_CONTRATTO
 
 router = APIRouter(prefix="/contracts", tags=["contracts"])
+logger = logging.getLogger(__name__)
 
 
 # ════════════════════════════════════════════════════════════
 # HELPERS
 # ════════════════════════════════════════════════════════════
+
+def _log_invariant_violations(session: Session, contract: Contract, *, motivo: str) -> None:
+    """PASSO 2 (G8.2-prep): invoca `cstate.assert_contract_invariants` in coda a una mutazione finanziaria
+    e LOGGA (warn) le eventuali violazioni di I1/I4/I5. **'Predisposta per 409'**: oggi OSSERVA soltanto
+    (byte-identica sull'output, non blocca); l'escalation a errore è una scelta successiva. Fornisce la
+    fotografia netta (crediti_cliente del contratto) + l'ancora ledger di I5 (Σ USCITA RIMBORSO diretto)."""
+    crediti = session.exec(
+        select(CreditoCliente).where(CreditoCliente.id_contratto_origine == contract.id)
+    ).all()
+    rimborso_diretto = round(sum(m.importo for m in session.exec(
+        select(CashMovement).where(
+            CashMovement.id_contratto == contract.id,
+            CashMovement.tipo == "USCITA",
+            CashMovement.categoria == CATEGORIA_RIMBORSO_CONTRATTO,
+            CashMovement.deleted_at == None,
+        )
+    ).all()), 2)
+    for v in cstate.assert_contract_invariants(contract, crediti, rimborso_cassa_diretto=rimborso_diretto):
+        logger.warning(
+            "Invariante %s violato dopo '%s' sul contratto %s: %s", v.code, motivo, contract.id, v.message
+        )
 
 def _to_response(contract: Contract) -> ContractResponse:
     """Converte un Contract ORM in ContractResponse."""
@@ -1043,6 +1066,30 @@ def delete_contract(
                            f"Usa la chiusura (chiuso) per archiviarlo.",
                 )
 
+        # RESTRICT 3: crediti aperti ORIGINATI da questo contratto (G8.2-prep, audit Bug-4). Wallet del
+        # cliente (rimborso differito) o credito differito a favore del trainer, entrambi FUORI da residuo()
+        # → eliminare il contratto li orfanerebbe (anche il reopen che li annulla non sarebbe più possibile).
+        open_wallet = session.exec(
+            select(func.count(CreditoCliente.id)).where(
+                CreditoCliente.id_contratto_origine == contract_id,
+                CreditoCliente.stato == "APERTO",
+                CreditoCliente.deleted_at == None,
+            )
+        ).one()
+        open_receivable = session.exec(
+            select(func.count(CreditoTerminazione.id)).where(
+                CreditoTerminazione.id_contratto == contract_id,
+                CreditoTerminazione.stato == "APERTO",
+                CreditoTerminazione.deleted_at == None,
+            )
+        ).one()
+        if open_wallet > 0 or open_receivable > 0:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Impossibile eliminare: il contratto ha crediti aperti (wallet del cliente o "
+                       "credito differito). Gestiscili (eroga/incassa/annulla) prima di eliminare.",
+            )
+
     now = datetime.now(timezone.utc)
 
     # Fetch tutte le rate del contratto
@@ -1331,10 +1378,7 @@ def incassa_residuo(
     old_totale_versato = contract.totale_versato
     old_stato_pagamento = contract.stato_pagamento
     contract.totale_versato = contract.totale_versato + data.importo
-    if cstate.is_saldato(contract):  # G8.1.1/F4: net-aware (residuo()==0), non versato≥prezzo lordo
-        contract.stato_pagamento = "SALDATO"
-    elif contract.totale_versato > 0:
-        contract.stato_pagamento = "PARZIALE"
+    contract.stato_pagamento = cstate.recompute_stato_pagamento(contract)  # SSoT net-aware (F4), de-dup
     session.add(contract)
 
     # F) Registra nel libro mastro (CashMovement ENTRATA, id_rata=None → incasso diretto)
@@ -1854,23 +1898,29 @@ def reopen_contract(
     Operazione atomica (UN solo commit):
     A) Bouncer 404 → B) guard `chiuso==True` else 400
     R1) Cassa IMMUTABILE: i `CashMovement` USCITA `RIMBORSO_CONTRATTO` e ENTRATA
-        `INCASSO_CONGUAGLIO_CONTRATTO` NON si toccano; `totale_versato`/`totale_rimborsato` invariati.
+        `INCASSO_CONGUAGLIO_CONTRATTO` NON si toccano; `totale_versato` invariato (`totale_rimborsato`
+        cresce SOLO per il fold della fotografia netta, R2-bis — mai per una cancellazione di cassa).
     R2) Storno inverso: `quota_stornata = 0`.
+    R2-bis) FOLD fotografia netta (D1 forma-d): l'erogato dei wallet annullati (R4), cassa già uscita
+        a livello cliente (`id_contratto=None`), RIENTRA in `totale_rimborsato` → il residuo() net-aware
+        lo include PER COSTRUZIONE. Chiude Bug-1 (il wallet erogato non sparisce più alla riapertura).
     R3) Receivable trainer (G7.10): `crediti_terminazione` del contratto → `ANNULLATO` (non-cash). Gli
         eventuali incassi parziali RESTANO (R1) e diventano pagamenti sul contratto.
-    R4) Wallet cliente (ADR-020): i `crediti_cliente` di questa terminazione → `ANNULLATO` (G8.1 Step 3).
+    R4) Wallet cliente (ADR-020): i `crediti_cliente` di questa terminazione → `ANNULLATO` (G8.1 Step 3);
+        l'erogato già in cassa viene riassorbito (R2-bis), il residuo non-erogato si annulla senza cassa.
     R5) Ripristino rate: `deleted_at=None` SOLO sulle rate marcate `chiusa_da_terminazione` (M1, non
         resuscita le cancellate a mano / dal piano rigenerato). Marker azzerato. Le SALDATE intatte (B-3).
     R5-bis) Riallineo piano rate al residuo net-aware (G8.1.1/F2, `_reconcile_rate_plan`): eccedenza
         tagliata cronologicamente, sotto-copertura → "da pianificare". `stato_pagamento` ricalcolato (F4).
     R6) `chiuso=False` + `motivo_chiusura=None` + `data_chiusura=None`.
     R7) Residuo: ricalcolato AUTOMATICAMENTE dal SSoT net-aware (`P − netto − 0`); la cassa che resta
-        (rimborso uscito, conguaglio incassato) è già dentro `netto`. Nessuna scrittura.
+        (rimborso uscito, conguaglio incassato, wallet erogato riassorbito) è già dentro `netto`.
     G) Audit (cosa resta / cosa si annulla) + transizione `chiuso` (motivo riapertura_esplicita).
 
-    NB: le ancore `totale_versato == Σ ENTRATA` e `totale_rimborsato == Σ USCITA RIMBORSO` reggono
-    MEGLIO ora (nulla viene cancellato). Un'eventuale restituzione di denaro è un movimento NUOVO
-    esplicito, mai una cancellazione. `stato_pagamento` NON si tocca (coerente col pre-terminazione).
+    NB: l'àncora `totale_versato == Σ ENTRATA` regge invariata. L'àncora del rimborso si raffina a
+    `totale_rimborsato == Σ USCITA RIMBORSO[id_contratto] + Σ erogato wallet RIASSORBITO` (D1 forma-d):
+    il fold R2-bis aggiunge cassa-cliente (`id_contratto=None`) che il rimborso diretto non conta — è
+    l'invariante I5 verificato da `assert_contract_invariants`. Nessuna cancellazione di cassa (ADR-019).
     R8 (rinnovo vivo) è esposto da `GET /reopen-preview`, che il FE usa per avvisare/confermare.
     """
     # A) Bouncer ownership (404 mai 403)
@@ -1912,10 +1962,15 @@ def reopen_contract(
         })
         crediti_annullati += 1
 
-    # R4) Wallet cliente (ADR-020): i crediti_cliente di QUESTA terminazione → ANNULLATO. Le erogazioni
-    #   parziali già fatte (USCITA, G8.1 Step 4) RESTANO (R1); il credito residuo si riassorbe nel
-    #   contratto (il residuo net-aware lo riflette). È l'altra metà del "instrada il credito" (D-INSTRADA).
+    # R4) Wallet cliente (ADR-020 / D1 forma-d, FOTOGRAFIA NETTA): i crediti_cliente di QUESTA terminazione
+    #   → ANNULLATO. La fotografia (PASSO 1) tratta rimborso, conguaglio e wallet erogato come TERMINI DELLA
+    #   STESSA SOMMA, non casi speciali per-provenienza: la parte GIÀ EROGATA in cassa (USCITA
+    #   id_contratto=None, che RESTA — R1) viene RIASSORBITA nel contratto riaperto (fold in R2-bis) → il
+    #   cliente risulta aver riavuto quel denaro, che torna dovuto sul contratto. La parte non-erogata
+    #   (residuo del wallet) si annulla senza muovere denaro. Chiude Bug-1 (audit): il wallet erogato NON
+    #   sparisce più dalla posizione. La cassa NON si tocca (ADR-019): è ri-attribuzione gestionale.
     wallet_annullati = 0
+    wallet_erogato_riassorbito = 0.0
     open_wallets = session.exec(
         select(CreditoCliente).where(
             CreditoCliente.id_contratto_origine == contract.id,
@@ -1924,6 +1979,7 @@ def reopen_contract(
         )
     ).all()
     for w in open_wallets:
+        wallet_erogato_riassorbito += (w.importo_erogato or 0)  # cassa già uscita → rientra nella posizione
         w.stato = "ANNULLATO"
         w.data_chiusura = date.today()
         session.add(w)
@@ -1931,9 +1987,18 @@ def reopen_contract(
             "stato": {"old": "APERTO/SALDATO", "new": "ANNULLATO"},
         })
         wallet_annullati += 1
+    wallet_erogato_riassorbito = round(wallet_erogato_riassorbito, 2)
 
     # R2) Storno inverso: azzera la quota → il residuo() net-aware si ricalcola da sé (R7).
     contract.quota_stornata = 0
+
+    # R2-bis) FOLD della fotografia netta (D1 forma-d, chiude Bug-1): la cassa-wallet già erogata
+    #   (id_contratto=None) viene RIASSORBITA in `totale_rimborsato` → il residuo() net-aware (P − netto)
+    #   la include PER COSTRUZIONE sul contratto riaperto, senza ramo speciale. NON è una nuova USCITA (la
+    #   cassa resta intatta, ADR-019). Σ-ledger di I5: il rimborso diretto resta == Σ USCITA RIMBORSO
+    #   [id_contratto], il delta di `totale_rimborsato` è coperto dall'erogato dei wallet ora ANNULLATO.
+    #   Deve precedere `_reconcile_rate_plan` (il piano si riallinea al residuo già comprensivo del fold).
+    contract.totale_rimborsato = round(old_rimborsato + wallet_erogato_riassorbito, 2)
 
     # E) Ripristino SOLO le rate marcate da terminate (M1, inverso esatto; le SALDATE non erano toccate, B-3)
     rate_ripristinate = 0
@@ -1956,13 +2021,8 @@ def reopen_contract(
     #   cambiato il residuo → le rate ripristinate AS-IS potrebbero non combaciare). Auto-realign (founder).
     reconcile = _reconcile_rate_plan(session, contract, trainer.id)
 
-    # Ricalcola stato_pagamento net-aware (F4): il reopen ha cambiato il residuo.
-    if cstate.is_saldato(contract):
-        contract.stato_pagamento = "SALDATO"
-    elif (contract.totale_versato or 0) > 0:
-        contract.stato_pagamento = "PARZIALE"
-    else:
-        contract.stato_pagamento = "PENDENTE"
+    # Ricalcola stato_pagamento net-aware (F4): il reopen ha cambiato il residuo. SSoT unico (de-dup).
+    contract.stato_pagamento = cstate.recompute_stato_pagamento(contract)
 
     # F) Riapertura: stato terminale azzerato
     contract.chiuso = False
@@ -1982,8 +2042,10 @@ def reopen_contract(
         "residuo_dopo": reconcile["residuo"],
         "crediti_differiti_annullati": crediti_annullati,
         "wallet_cliente_annullati": wallet_annullati,
-        "rimborso_preservato": round(old_rimborsato, 2),        # ADR-019: cassa NON toccata
-        "totale_versato_preservato": round(old_versato, 2),
+        # D1 forma-d: l'erogato dei wallet annullati rientra nella posizione (fold net-aware, R2-bis).
+        "wallet_erogato_riassorbito": wallet_erogato_riassorbito,
+        "totale_rimborsato": {"old": round(old_rimborsato, 2), "new": contract.totale_rimborsato},
+        "totale_versato_preservato": round(old_versato, 2),       # ADR-019: cassa (versato) NON toccata
     })
     log_contract_lifecycle_transition(
         session,
@@ -1991,6 +2053,8 @@ def reopen_contract(
         old_chiuso=old_chiuso,
         motivo="riapertura_esplicita",
     )
+    # PASSO 2 (osservabilità, predisposta per 409): la posizione ricalcolata deve rispettare gli invarianti.
+    _log_invariant_violations(session, contract, motivo="reopen")
     session.commit()
     session.refresh(contract)
 
@@ -2015,8 +2079,22 @@ def reopen_preview(
     if not contract.chiuso:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Il contratto non è chiuso")
 
-    # residuo dopo la riapertura: la quota verrà azzerata (R2) → residuo() + quota = P − netto (R7).
-    residuo_dopo = round(cstate.residuo(contract) + (contract.quota_stornata or 0), 2)
+    # Wallet vivi della terminazione: alla riapertura l'erogato RIENTRA nella posizione (D1 forma-d, fold
+    # R2-bis), mentre il residuo del wallet si annulla. Calcolato qui per residuo_dopo + messaggio esplicito.
+    open_wallets = session.exec(
+        select(CreditoCliente).where(
+            CreditoCliente.id_contratto_origine == contract.id,
+            CreditoCliente.stato != "ANNULLATO",
+            CreditoCliente.deleted_at == None,
+        )
+    ).all()
+    wallet_da_annullare = len(open_wallets)
+    wallet_erogato_riassorbito = round(sum(w.importo_erogato or 0 for w in open_wallets), 2)
+
+    # residuo dopo la riapertura: quota azzerata (R2) + erogato wallet riassorbito (R2-bis) → P − netto (R7).
+    residuo_dopo = round(
+        cstate.residuo(contract) + (contract.quota_stornata or 0) + wallet_erogato_riassorbito, 2
+    )
     rimborso_che_resta = round(contract.totale_rimborsato or 0, 2)
     incasso_che_resta = round(sum(
         m.importo for m in session.exec(
@@ -2042,13 +2120,6 @@ def reopen_preview(
             CreditoTerminazione.deleted_at == None,
         )
     ).all())
-    wallet_da_annullare = len(session.exec(
-        select(CreditoCliente).where(
-            CreditoCliente.id_contratto_origine == contract.id,
-            CreditoCliente.stato != "ANNULLATO",
-            CreditoCliente.deleted_at == None,
-        )
-    ).all())
     # R8: rinnovo vivo a valle (figlio rinnovo_di ancora aperto). G8.1 PROPONE, non agisce (D-PROPONE).
     rinnovo_vivo = session.exec(
         select(Contract).where(
@@ -2069,6 +2140,12 @@ def reopen_preview(
         parti.append(f"{receivable_da_annullare} crediti differiti vengono annullati")
     if wallet_da_annullare:
         parti.append(f"{wallet_da_annullare} crediti a wallet del cliente vengono annullati")
+    if wallet_erogato_riassorbito > 0.009:
+        # D1 forma-d: mai silenzioso — l'erogato torna dovuto sul contratto (chiude Bug-1).
+        parti.append(
+            f"il cliente risulta aver già riavuto €{wallet_erogato_riassorbito:.2f} dal wallet, "
+            f"che torna dovuto sul contratto riaperto"
+        )
     dettaglio = "; ".join(parti) if parti else "nessuna cassa da preservare"
     messaggio = (
         f"Riaprendo, la cassa registrata NON viene cancellata: {dettaglio}. "
@@ -2087,6 +2164,7 @@ def reopen_preview(
         rate_da_ripristinare=rate_da_ripristinare,
         receivable_da_annullare=receivable_da_annullare,
         wallet_da_annullare=wallet_da_annullare,
+        wallet_erogato_riassorbito=wallet_erogato_riassorbito,
         ha_rinnovo_vivo=rinnovo_vivo is not None,
         id_rinnovo_vivo=rinnovo_vivo.id if rinnovo_vivo is not None else None,
         messaggio=messaggio,
