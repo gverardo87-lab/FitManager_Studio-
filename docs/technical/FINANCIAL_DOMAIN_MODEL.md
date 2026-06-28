@@ -119,10 +119,15 @@ Un contratto si "esaurisce" lungo **tre assi distinti**, che NON vanno confusi:
 > | `quota_stornata` | Σ del dovuto **abbonato** (write-off, gamba storno §3.1) — azzera il `residuo` senza riscrivere `prezzo_totale` | stored, parte da 0, **cresce solo** (immutable-forward) — gemello di `totale_rimborsato` |
 > | **`netto_incassato`** | `totale_versato − totale_rimborsato` | **derivato** — cassa effettivamente trattenuta |
 >
-> `residuo = max(prezzo_totale − totale_versato − quota_stornata, 0)` è la forma **canonica** (confermata
-> in ricognizione: il campo `quota_stornata` è necessario perché `residuo()` è letto anche nel **dettaglio**,
-> non solo nelle worklist gated dal lifecycle). Per i contratti non terminati `quota_stornata = 0` e la
-> formula collassa su `prezzo − versato`; per i terminati vale l'invariante §9.5 (`residuo ≡ 0`, settled).
+> `residuo = max(prezzo_totale − netto_incassato − quota_stornata, 0)` è la forma **canonica** (**NET-AWARE**,
+> G8.1/ADR-019: sottrae il **netto** `versato − rimborsato`, non il versato LORDO — confermato in ricognizione:
+> il campo `quota_stornata` è necessario perché `residuo()` è letto anche nel **dettaglio**, non solo nelle
+> worklist gated dal lifecycle). **Backward-compatible:** con `totale_rimborsato = 0` (ovunque tranne i
+> terminati) `netto_incassato == totale_versato` → byte-identico al lordo. Per i contratti non terminati
+> `quota_stornata = 0` e la formula collassa su `prezzo − versato`; per i terminati vale l'invariante §9.5
+> (`residuo ≡ 0`, settled). **reopen-recompute (G8.1/ADR-019):** un rimborso che «resta» su un contratto
+> **riaperto** (la cassa NON si cancella) rende `residuo` net-aware > 0 — il cliente ha riavuto denaro, deve
+> di più — è l'unico caso in cui il netto diverge dal lordo su un contratto **aperto**.
 
 ---
 

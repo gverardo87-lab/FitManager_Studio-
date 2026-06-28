@@ -2,7 +2,7 @@
 
 **Tipo:** specifica prescrittiva (cosa-deve-essere-vero; silente sul come). Bridge Chat->Code.  
 **Data:** 2026-06-28 · **Branch:** `FitManager_Studio`  
-**Stato:** DA IMPLEMENTARE · ratificata da **ADR-019** + **ADR-020**  
+**Stato:** ✅ **G8.1 IMPLEMENTATA** (2026-06-28; commit `f84d345`→`a51d180`, suite 678 verde, next build verde, Playwright live OK). G8.2 (wallet auto-spendibile cross-contratto) su domanda. · ratificata da **ADR-019** + **ADR-020**  
 **Blocco proposto:** **G8** (programma post-G7 "integrita' contabile + completamento bilaterale"). **Fetta 1 = G8.1** (reopen non-distruttivo + residuo net-aware + wallet lean + rimborso editabile + UX-propone). **Fetta 2 = G8.2** (wallet auto-spendibile cross-contratto). G1 in stand-by.  
 **Mappa di verita:** `docs/adr/ADR-019-libro-mastro-non-distruttivo-reopen-ricalcola.md` · `docs/adr/ADR-020-wallet-cliente-customer-credit-balance.md` · `docs/operations/AUDIT_REOPEN_SCENARIOS_2026-06-28.md` · `docs/technical/FINANCIAL_DOMAIN_MODEL.md` · `api/services/contract_state.py` · `api/routers/contracts.py`
 

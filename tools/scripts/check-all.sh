@@ -37,7 +37,7 @@ fi
 
 echo ""
 
-echo "=== Backend: grep-guard invarianti finanziarie (ADR-016 / ADR-017 / ADR-018) ==="
+echo "=== Backend: grep-guard invarianti finanziarie (ADR-016 / ADR-017 / ADR-018 / ADR-019) ==="
 GUARD_FAIL=0
 
 # ADR-016 — barriera "euro-da-crediti": il modulo di conguaglio NON deve leggere l'occupazione/crediti.
@@ -65,10 +65,21 @@ if ! grep -A4 'CONTRACT_CASH_IN = frozenset' api/services/cash_categories.py | g
     GUARD_FAIL=1
 fi
 
+# ADR-019 — reopen NON-distruttivo "ricalcola-e-instrada": la cassa mossa non si tocca. reopen_contract
+#   NON deve soft-cancellare un CashMovement (reintrodurre `m.deleted_at = now` muterebbe periodi gia'
+#   dichiarati e farebbe sparire reddito incassato). Si estrae il corpo di reopen_contract (fino a
+#   reopen_preview) e si verifica che non compaia insieme `CashMovement` + soft-delete `deleted_at = now`.
+#   ('select(CashMovement' = query CODE, non la prosa del docstring che cita CashMovement legittimamente).
+REOPEN_BODY=$(awk '/^def reopen_contract\(/{f=1} f&&/^def reopen_preview\(/{f=0} f' api/routers/contracts.py)
+if printf '%s\n' "$REOPEN_BODY" | grep -q 'select(CashMovement' && printf '%s\n' "$REOPEN_BODY" | grep -qE 'deleted_at *= *now'; then
+    echo "  FAIL [ADR-019]: reopen_contract interroga e soft-cancella un CashMovement — la cassa non si tocca (ricalcola-e-instrada, ADR-019)."
+    GUARD_FAIL=1
+fi
+
 if [ "$GUARD_FAIL" -eq 0 ]; then
     echo "  OK"
 else
-    echo "  FAIL - guardia finanziaria violata (ADR-016/ADR-017)."
+    echo "  FAIL - guardia finanziaria violata (ADR-016/ADR-017/ADR-018/ADR-019)."
     FAIL=1
 fi
 

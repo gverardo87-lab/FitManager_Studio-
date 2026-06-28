@@ -2292,3 +2292,25 @@ wallet auto-spendibile cross-contratto, su domanda). **Prossimo:** implementazio
 net-aware nel SSoT → Step 2 reopen-recompute → …). **G1 resta in stand-by.**
 
 ---
+
+### 2026-06-28 — G8.1 / ADR-019+020: integrità contabile + wallet cliente — IMPLEMENTATA
+
+Implementato il blocco **G8.1** (6 step, 6 commit `f84d345`→`a51d180`, branch FitManager_Studio). Il modello "ricalcola-e-instrada" è ora end-to-end: ogni euro tracciabile, nessun credito perso, la cassa mossa non si tocca.
+
+**Step 1 — `residuo` net-aware** (`f84d345`): `contract_state.residuo()` da `P − versato − storno` a `P − netto_incassato − storno` (`netto = versato − rimborsato`), delegando a `netto_incassato()` già esistente. Backward-compat (byte-identico dove `rimborsato=0`). **Coupling necessario:** la gamba storno di `terminate` assorbe il rimborso (`quota = residuo_pre − incasso_ora + rimborso_out = P − netto`) per tenere `residuo()==0` sul chiuso. AC-1 (griglia byte-identica) + AC-2 (rimborso che resta).
+
+**Step 2 — `reopen` non-distruttivo** (`8101281`): gambe delete C/C-bis RIMOSSE (la cassa di terminazione resta, fatti datati); reopen = R2 storno→0 · R3 receivable→ANNULLATO · R5 rate · R6 stato · R7 residuo net-aware auto. `GET /reopen-preview` (dry-run, R8 rinnovo-vivo S5) + schema `ReopenPreview`. **Coupling:** `compute_settlement` net-aware (`reso` vs `netto`) → ri-terminare un riaperto con rimborso-che-resta dà **PARI/CONSUNZIONE, niente doppio rimborso** (`test_reopen_then_reterminate` ora dimostra l'opposto di prima). 4 reopen-roundtrip migrati → "ricalcola" + AC-3/7/8.
+
+**Step 3 — wallet + rimborso editabile** (`cb933b3`): entità `crediti_cliente` (ADR-020, gemello-cliente di `crediti_terminazione`, FUORI da `residuo()`; migrazione `c8d9e0f1a2b3` = record formale, `create_db_and_tables` la crea al boot; crm.db **27→28**). `terminate` ramo CREDITO_CLIENTE: `importo_rimborso` editabile `[0, credito_cliente]` (default pieno, metodo solo se >0); il non-rimborsato → wallet (`RIMBORSO_DIFFERITO`). `reopen` R4 annulla il wallet. AC-9/10/11/12 + AC-6.
+
+**Step 4 — worklist + eroga** (`3fcc4f3`): `GET /dashboard/rimborsi-da-erogare` + `POST /clients/{id}/crediti/{cid}/eroga` (USCITA `RIMBORSO_CONTRATTO`, **`id_contratto=None`** → non tocca l'àncora `totale_rimborsato == Σ USCITA[id_contratto]`; il wallet traccia da sé via `importo_erogato`) + `GET /clients/{id}/crediti` + schema `CreditoClienteResponse`. AC-13/14.
+
+**Step 5 — frontend** (`a51d180`): `ReopenContractDialog` da lista statica (che MENTIVA "rimborso annullato") a impatto pieno dal `reopen-preview`; `TerminateContractDialog` ramo cliente con rimborso editabile + microcopy wallet; `RimborsiDaErogareCard` + `EroghaRimborsoDialog` su `/rinnovi-incassi`; badge wallet su profilo (`ContrattiTab`). Hook (`useReopenPreview`/`useRimborsiDaErogare`/`useEroghaRimborso`/`useClientWalletCredits`) + tipi. next build verde.
+
+**Step 6 — gate + doc:** grep-guard ADR-019 in `check-all.sh` (reopen non soft-cancella CashMovement, via estrazione awk del corpo di `reopen_contract`); doc allineati (FDM residuo net-aware §2, api/CLAUDE.md callout, root CLAUDE.md 28 tab, spec IMPLEMENTATA, questo log).
+
+**Learning catturato** (`320f16a`): *cassa immutabile + residuo net-aware* in `LEARNING_APP_ARCHITECTURE.md` (3 failure mode silenziosi: doppio rimborso, reddito che sparisce, overpayment perso).
+
+**Verifica:** suite backend **678 verde**, ruff verde, next build verde, **Playwright live OK** (read-only su crm.db reale: terminate editabile Agate €478,50 → riduce → microcopy wallet; reopen Agate-39 "rimborso €100 resta + residuo ricalcola a €550", il fix del dialog-che-mentiva; `/rinnovi-incassi` render pulito + auto-hide). **Prossimo:** G8.2 (wallet auto-spendibile cross-contratto) su domanda; **G1 cifratura** ripreso.
+
+---

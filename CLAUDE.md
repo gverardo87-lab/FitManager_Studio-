@@ -43,7 +43,7 @@ SSoT numeri e proiezioni: `docs/business/BUSINESS_PLAN.md` (v4.3). Strategia ope
         (business)  (tassonomia) (alimenti CREA)
 ```
 
-- **crm.db**: 27 tabelle business (clienti, contratti, workout, communication_log, crediti_terminazione). Tenant-isolated via `trainer_id`. SACRO — dati del trainer, backup/restore.
+- **crm.db**: 28 tabelle business (clienti, contratti, workout, communication_log, crediti_terminazione, crediti_cliente). Tenant-isolated via `trainer_id`. SACRO — dati del trainer, backup/restore.
 - **catalog.db**: 10 tabelle catalogo scientifico (500 esercizi builtin, 466 attivi `in_subset` + tassonomia muscoli/articolazioni/condizioni + relazioni + media). Read-only, shipped con installer. Zero `trainer_id`.
 - **nutrition.db**: 8 tabelle catalogo alimenti (CREA 2019 + USDA). Read-only, shipped con installer. 880 alimenti attivi, 210 ricette pietanze, 12 template dieta.
 - **Porte**: formula generica `frontend_port - 3000 + 8000 = backend_port` (derivazione runtime in `api-client.ts`).
