@@ -2285,7 +2285,10 @@ costruirlo tutto adesso** — adottare il principio come stella polare e **stadi
 prima: reopen-recompute + propose + wallet manuale; cross-contratto dopo, su domanda). Il vero costo non e'
 reopen ma il **wallet auto-spendibile cross-contratto** (consistenza di stato distribuito) → tenuto in panchina.
 
-**Doc:** audit in `docs/operations/`, ADR-019/020 in `docs/adr/`, INDEX + adr/README (18 ADR). **Prossimo:**
-spec di dettaglio del programma (blocchi + AC) → poi implementazione a fette. **G1 resta in stand-by.**
+**Doc:** audit in `docs/operations/`, ADR-019/020 in `docs/adr/`, INDEX + adr/README (18 ADR). **Spec di
+dettaglio SCRITTA:** `docs/technical/SPEC_INTEGRITA_CONTABILE_E_WALLET.md` (blocco **G8**, 2 fette — **G8.1**
+reopen-recompute + residuo net-aware + wallet lean + rimborso editabile + UX-propone [6 step, 16 AC]; **G8.2**
+wallet auto-spendibile cross-contratto, su domanda). **Prossimo:** implementazione **G8.1** (Step 1 = `residuo`
+net-aware nel SSoT → Step 2 reopen-recompute → …). **G1 resta in stand-by.**
 
 ---
