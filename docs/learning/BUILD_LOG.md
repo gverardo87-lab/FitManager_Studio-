@@ -2346,3 +2346,17 @@ Secondo test di flusso del founder su un reopen-con-rimborso (contratto Garavell
 Dopo i due fix, Garavelli riaperto: residuo 770, **piano pendente 770** (366,5 + 403,5), `piano_allineato=True`. +4 test (Garavelli end-to-end · cap unit Fix A · sotto-copertura coperta-dal-rimborso · CONSUNZIONE-senza-rimborso non-fabbrica). Governance: ADR-019 Addendum (F2-bis/F3-bis), SPEC §14.7, questo log. **Learning livello-3:** *net-aware non è un singolo punto ma un asse* — ogni calcolo che esprime "quanto è dovuto/rateizzabile" deve derivare dallo stesso SSoT (`residuo()`); un clamp difensivo (`max(0,…)`) su un termine intermedio maschera in silenzio l'asimmetria lordo/netto del rimborso, e un "no-op su sotto-copertura" la nasconde alla vista. Sintomo classico: un KPI (residuo) e il suo consumatore (piano rate) divergono di **esattamente** l'importo del rimborso. **Corollario (dalla regressione test_m2):** "auto-copertura" non è "chiudi ogni gap" — va circoscritta alla causa (il rimborso ri-incassabile), o invade il legittimo "da pianificare" e fabbrica stato che rompe invarianti a valle.
 
 ---
+
+### 2026-06-28 — Audit-2 (3° test di flusso founder, Garavelli): A deploy-lag, B versato-netto, C accorcia-scadenza
+
+3° giro di test del founder → 3 punti, audit on-demand.
+
+**① I «37 non rateizzati» — GIÀ RISOLTO da `be7fbb4`, vista stale (zero codice).** Il DB prova che F2-bis ha girato: `audit_log` su rate 102 con `reopen_cover` (28/06 18:31) → rata 102 = 403,50 (366,5+37), pendenti = 770 = residuo, allineato. Gli screenshot erano di PRIMA di quel reopen (uvicorn senza auto-reload: il server del founder serviva codice pre-fix al momento dello scatto). Il «37 scaduto non rateizzabile» in lista era il disallineamento, ora 0. → basta ricaricare. **Learning operativo:** un fix su processo backend long-running non è "live" finché il server non riparte; uno screenshot post-fix-commit può ancora mostrare lo stato pre-fix.
+
+**② `versato` LORDO fuorviante in lista + scheda [issue B, decisione founder = netto-primario].** Fuori dallo Storico, lista (`ContractsTable`) e scheda (`ContractFinancialHero` + tabella `PaymentPlanTab`) mostravano `totale_versato` LORDO (367) ignorando il rimborso (netto reale 330) — a vista «1100 − 367 ≠ 770». Fix FE-only (il netto = `totale_versato − totale_rimborsato`, già esposti dal backend; `ContractListItem extends Contract` → tipo TS già ok): hero + lista mostrano il NETTO come cifra primaria, barra su netto, nota «lordo 367 · −37 rimborso» + label «Incassato netto» (vs «Versato») quando c'è rimborso; la tabella di riconciliazione aggiunge la riga «Rimborsato +37» → `1100 − 367 + 37 = 770` torna a vista.
+
+**③ Accorcia-scadenza bloccata da rate oltre la data [issue C, decisione founder = sposta-rate].** `update_contract` dava 422 "Modifica prima le rate" anticipando `data_scadenza` con rate oltre il nuovo termine. Ora **auto-cap**: le rate NON-SALDATE oltre la nuova data sono riportate ALLA scadenza (Chargebee-style, come `generate_payment_plan`), il dovuto resta intero, audit `scadenza_anticipata`; le SALDATE non si toccano (niente riscrittura di storico cassa). +1 test `test_update_contract_accorcia_scadenza_sposta_rate`. Pitfall/guard #10 (api/CLAUDE.md) riscritto da "blocco 422" a "auto-cap".
+
+Gate: ruff + grep-guard + suite + next build verdi. Governance: api/CLAUDE.md (#10), questo log.
+
+---

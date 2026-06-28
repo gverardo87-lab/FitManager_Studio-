@@ -257,8 +257,11 @@ Il contratto e' il nodo centrale del sistema. 12 livelli di protezione:
 9. **Rate date boundary** (`create_rate`, `update_rate`): `data_scadenza` rata non puo' superare
    `contract.data_scadenza` (422). `generate_payment_plan`: auto-cap Chargebee-style
    (`if due_date > contract.data_scadenza: due_date = contract.data_scadenza`).
-10. **Contract shortening guard** (`update_contract`): nuova `data_scadenza` rifiutata se esistono
-    rate con date oltre il nuovo termine (422 con conteggio rate e messaggio chiaro).
+10. **Contract shortening auto-cap** (`update_contract`): anticipando `data_scadenza`, le rate
+    **NON-SALDATE** con data oltre il nuovo termine vengono **riportate alla nuova scadenza** (auto-cap
+    Chargebee-style, come `generate_payment_plan`), MAI bloccate (issue C / decisione founder: era 422
+    "Modifica prima le rate"). Il dovuto resta intero, le date si comprimono, ogni spostamento è auditato
+    (`scadenza_anticipata`). Le SALDATE non si toccano (pagamento già avvenuto, niente riscossione futura).
 11. **Expired contract detection** (lista contratti + lista clienti): `ha_rate_scadute` considera
     tutte le rate non saldate su contratti scaduti: `or_(Rate.data_scadenza < today, Contract.data_scadenza < today)`.
 12. **Renewal chain** (`POST /contracts/{id}/renew`): crea nuovo contratto con `rinnovo_di = id`.

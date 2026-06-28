@@ -38,8 +38,11 @@ export function ContractFinancialHero({ contract }: { contract: ContractWithRate
   const totale = contract.prezzo_totale ?? 0;
   const acconto = contract.acconto;
   const versato = contract.totale_versato;
+  const rimborsato = contract.totale_rimborsato ?? 0;
+  const netto = Math.round((versato - rimborsato) * 100) / 100;  // issue B: incassato reale (Strada B)
+  const haRimborso = rimborsato > 0.009;
   const residuo = contract.residuo;
-  const percentuale = contract.percentuale_versata;
+  const nettoPct = totale > 0 ? Math.round((netto / totale) * 100) : 0;
   const ratePagate = contract.rate_pagate;
   const rateTotali = contract.rate_totali;
   const rateScadute = contract.rate_scadute;
@@ -96,17 +99,22 @@ export function ContractFinancialHero({ contract }: { contract: ContractWithRate
               </div>
               <div className="min-w-0">
                 <p className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
-                  Versato
+                  {haRimborso ? "Incassato netto" : "Versato"}
                 </p>
                 <p className="text-base font-bold tabular-nums tracking-tight text-emerald-700 dark:text-emerald-400">
-                  {formatCurrency(versato)}
+                  {formatCurrency(netto)}
                 </p>
+                {haRimborso ? (
+                  <p className="text-[10px] tabular-nums text-muted-foreground">
+                    lordo {formatCurrency(versato)} · −{formatCurrency(rimborsato)} rimborso
+                  </p>
+                ) : null}
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Progress value={percentuale} className="h-1.5 flex-1" />
+              <Progress value={nettoPct} className="h-1.5 flex-1" />
               <span className="text-[10px] font-semibold tabular-nums text-muted-foreground">
-                {percentuale}%
+                {nettoPct}%
               </span>
             </div>
           </div>

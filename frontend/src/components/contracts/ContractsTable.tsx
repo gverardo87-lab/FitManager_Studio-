@@ -177,13 +177,15 @@ export function ContractsTable({
                   <TableCell className="hidden sm:table-cell">
                     {contract.prezzo_totale ? (() => {
                       const prezzo = contract.prezzo_totale!;
-                      const versato = contract.totale_versato;
-                      const ratio = prezzo > 0 ? versato / prezzo : 0;
+                      const rimborsato = contract.totale_rimborsato ?? 0;
+                      const netto = Math.round((contract.totale_versato - rimborsato) * 100) / 100; // issue B: incassato reale
+                      const haRimborso = rimborsato > 0.009;
+                      const ratio = prezzo > 0 ? netto / prezzo : 0;
                       return (
                         <div className="w-28 space-y-1">
                           <div className="flex items-baseline justify-between text-[11px]">
                             <span className="font-semibold tabular-nums">
-                              {formatCurrency(versato)}
+                              {formatCurrency(netto)}
                             </span>
                             <span className="text-muted-foreground">
                               / {formatCurrency(prezzo)}
@@ -195,6 +197,11 @@ export function ContractsTable({
                               style={{ width: `${Math.min(ratio * 100, 100)}%` }}
                             />
                           </div>
+                          {haRimborso ? (
+                            <p className="text-[10px] tabular-nums text-muted-foreground">
+                              lordo {formatCurrency(contract.totale_versato)} · −{formatCurrency(rimborsato)}
+                            </p>
+                          ) : null}
                         </div>
                       );
                     })() : (

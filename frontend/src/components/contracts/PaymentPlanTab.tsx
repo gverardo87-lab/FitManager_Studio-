@@ -225,6 +225,7 @@ function RatesList({
   const overdueCount = contract.rate_scadute;
   const prezzoTotale = contract.prezzo_totale ?? 0;
   const versato = contract.totale_versato;
+  const rimborsato = contract.totale_rimborsato ?? 0;  // issue B: il rimborso riconcilia prezzo−netto=residuo
   const daRateizzare = contract.importo_da_rateizzare;
   const sommaRatePendenti = contract.somma_rate_pendenti;
   const mancante = contract.importo_disallineamento;
@@ -247,6 +248,14 @@ function RatesList({
                 <td className="py-0.5 text-muted-foreground">Totale versato</td>
                 <td className="py-0.5 text-right font-semibold tabular-nums text-emerald-700 dark:text-emerald-400">
                   &minus;{formatCurrency(versato)}
+                </td>
+              </tr>
+            )}
+            {rimborsato > 0.009 && (
+              <tr>
+                <td className="py-0.5 text-muted-foreground">Rimborsato</td>
+                <td className="py-0.5 text-right font-semibold tabular-nums text-rose-700 dark:text-rose-400">
+                  +{formatCurrency(rimborsato)}
                 </td>
               </tr>
             )}

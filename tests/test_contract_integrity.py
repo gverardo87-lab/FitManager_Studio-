@@ -588,6 +588,32 @@ def test_update_contract_zero_price_rejected(client, auth_headers, sample_contra
     assert "prezzo" in str(r.json()).lower()
 
 
+def test_update_contract_accorcia_scadenza_sposta_rate(client, auth_headers, sample_client):
+    """Issue C (decisione founder): accorciando data_scadenza, le rate NON-SALDATE oltre la nuova data
+    vengono RIPORTATE alla nuova scadenza (auto-cap Chargebee-style) invece di bloccare con 422 — il dovuto
+    resta intero, le date si comprimono. Prima dava 422 'Modifica prima le rate'."""
+    cr = client.post("/api/contracts", json={
+        "id_cliente": sample_client["id"], "tipo_pacchetto": "Pkg", "crediti_totali": 10,
+        "prezzo_totale": 1000.0, "data_inizio": "2026-01-01", "data_scadenza": "2026-12-31",
+    }, headers=auth_headers)
+    assert cr.status_code == 201, cr.text
+    cid = cr.json()["id"]
+    r1 = client.post("/api/rates", json={"id_contratto": cid, "data_scadenza": "2026-05-01",
+                                         "importo_previsto": 400.0}, headers=auth_headers).json()
+    r2 = client.post("/api/rates", json={"id_contratto": cid, "data_scadenza": "2026-11-01",
+                                         "importo_previsto": 600.0}, headers=auth_headers).json()
+
+    # accorcia a 2026-07-01: r2 (2026-11-01) è oltre → niente 422, viene riportata alla scadenza
+    upd = client.put(f"/api/contracts/{cid}", json={"data_scadenza": "2026-07-01"}, headers=auth_headers)
+    assert upd.status_code == 200, upd.text
+
+    rates = client.get(f"/api/rates?id_contratto={cid}", headers=auth_headers).json()["items"]
+    by_id = {x["id"]: x for x in rates}
+    assert by_id[r1["id"]]["data_scadenza"] == "2026-05-01"          # entro la nuova scadenza → invariata
+    assert by_id[r2["id"]]["data_scadenza"] == "2026-07-01"          # oltre → spostata, NON bloccata
+    assert round(sum(x["importo_previsto"] for x in rates), 2) == 1000.0   # dovuto invariato
+
+
 def test_renew_zero_price_rejected(client, auth_headers, sample_contract, sample_client):
     """AC-B3: renew_contract usa ContractCreate → eredita il vincolo prezzo>0."""
     r = client.post(f"/api/contracts/{sample_contract['id']}/renew", json={

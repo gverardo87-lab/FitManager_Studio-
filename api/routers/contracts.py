@@ -920,23 +920,27 @@ def update_contract(
             detail="data_scadenza deve essere dopo data_inizio",
         )
 
-    # Rate boundary: nuova scadenza non puo' lasciare rate orfane
-    if "data_scadenza" in update_data:
-        conflicting = session.exec(
-            select(func.count(Rate.id)).where(
+    # Rate boundary (issue C / decisione founder): accorciando la scadenza, le rate NON-SALDATE oltre la
+    # nuova data vengono RIPORTATE alla nuova scadenza (auto-cap Chargebee-style, come generate_payment_plan)
+    # invece di bloccare con 422. Il dovuto resta intero, le date si comprimono — niente friction "modifica
+    # prima le rate". Le SALDATE non si toccano (pagamento già avvenuto: nessuna riscossione futura da
+    # ricollocare, né storico di cassa da riscrivere). Ogni spostamento è auditato.
+    if "data_scadenza" in update_data and update_data["data_scadenza"]:
+        nuova_scad = update_data["data_scadenza"]
+        rate_oltre = session.exec(
+            select(Rate).where(
                 Rate.id_contratto == contract_id,
                 Rate.deleted_at == None,
-                Rate.data_scadenza > update_data["data_scadenza"],
+                Rate.stato.in_(["PENDENTE", "PARZIALE"]),
+                Rate.data_scadenza > nuova_scad,
             )
-        ).one() or 0
-        if conflicting > 0:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"Impossibile anticipare la scadenza: {conflicting} "
-                       f"{'rata ha' if conflicting == 1 else 'rate hanno'} "
-                       f"data oltre il {update_data['data_scadenza']}. "
-                       f"Modifica prima le rate.",
-            )
+        ).all()
+        for r in rate_oltre:
+            old_due = r.data_scadenza
+            r.data_scadenza = nuova_scad
+            session.add(r)
+            log_audit(session, "rate", r.id, "UPDATE", trainer.id,
+                      {"data_scadenza": {"old": str(old_due), "new": str(nuova_scad)}, "motivo": "scadenza_anticipata"})
 
     changes = {}
     for field, value in update_data.items():
