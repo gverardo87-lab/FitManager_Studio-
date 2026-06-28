@@ -390,3 +390,128 @@ def test_l3_autoclose_completamento_reopen_preview_rimborso_pieno(client, auth_h
     assert p["valore_servizio_reso"] == 0.0
     assert p["esito"] == "CREDITO_CLIENTE"           # reso 0 < versato 500 → rimborso al cliente (ADR-018)
     assert round(p["importo_rimborso"], 2) == 500.0  # rimborso pieno (tutto il versato)
+
+
+# ── G8.1.1/F2: reopen riallinea il piano rate al residuo() net-aware ricalcolato ──
+
+def test_f2_reopen_riallinea_eccedenza(client, auth_headers, sample_client, session):
+    """F2-over: un conguaglio incassato abbassa il residuo sotto le rate restaurate → reopen taglia
+    cronologicamente (l'ultima a cavallo ridotta, le successive rimosse). Σ residui-rata == residuo()."""
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=200.0, crediti=10)
+    t = _trainer(session)
+    rata1 = _rate(client, auth_headers, c["id"], 500.0)
+    rata2 = _rate(client, auth_headers, c["id"], 300.0)          # Σ 800 = residuo originale (1000−200)
+    _complete_pt(session, t.id, sample_client["id"], c["id"], 8)  # reso 800 > versato 200 → credito_trainer 600
+
+    rt = client.post(f"/api/contracts/{c['id']}/terminate",
+                     json={"azione_credito_trainer": "INCASSA_ORA", "metodo_pagamento": "CONTANTI"},
+                     headers=auth_headers)
+    assert rt.status_code == 200, rt.text
+    assert client.post(f"/api/contracts/{c['id']}/reopen", headers=auth_headers).status_code == 200
+
+    session.expire_all()
+    contract = session.get(Contract, c["id"])
+    assert cstate.residuo(contract) == 200.0           # 1000 − netto(800) — il conguaglio resta
+    r1, r2 = session.get(Rate, rata1["id"]), session.get(Rate, rata2["id"])
+    assert r1.deleted_at is None and round(r1.importo_previsto, 2) == 200.0  # a cavallo → ridotta al residuo
+    assert r2.deleted_at is not None                                          # eccedente → rimossa
+    assert round(r1.importo_previsto - r1.importo_saldato, 2) == 200.0        # Σ residui-rata == residuo
+
+
+def test_f2_reopen_sottocopertura_da_pianificare(client, auth_headers, sample_client, session):
+    """F2-under: un rimborso alza il residuo sopra le rate restaurate → reopen NON taglia; il resto resta
+    'da pianificare' (rate invariate, Σ < residuo)."""
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=800.0, crediti=10)
+    t = _trainer(session)
+    rata1 = _rate(client, auth_headers, c["id"], 200.0)          # = residuo originale (1000−800)
+    _complete_pt(session, t.id, sample_client["id"], c["id"], 2)  # reso 200 < versato 800 → credito_cliente 600
+
+    rt = client.post(f"/api/contracts/{c['id']}/terminate",
+                     json={"metodo_rimborso": "CONTANTI"}, headers=auth_headers)  # rimborso pieno 600
+    assert rt.status_code == 200, rt.text
+    assert client.post(f"/api/contracts/{c['id']}/reopen", headers=auth_headers).status_code == 200
+
+    session.expire_all()
+    contract = session.get(Contract, c["id"])
+    assert cstate.residuo(contract) == 800.0           # 1000 − netto(800−600=200) — il rimborso resta
+    r1 = session.get(Rate, rata1["id"])
+    assert r1.deleted_at is None and round(r1.importo_previsto, 2) == 200.0   # invariata (sotto-copertura)
+    # Σ rate (200) < residuo (800) → 600 "da pianificare", nessuna rata-fantasma
+
+
+def test_f2_reopen_senza_cassa_round_trip_esatto(client, auth_headers, sample_client, session):
+    """F2-no-cash: reopen di una terminazione senza cassa (PARI) → residuo == pre-terminate → nessuna
+    riconciliazione, rate ripristinate IDENTICHE (il round-trip resta esatto dove non c'è cassa)."""
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=200.0, crediti=10)
+    t = _trainer(session)
+    rata1 = _rate(client, auth_headers, c["id"], 500.0)
+    rata2 = _rate(client, auth_headers, c["id"], 300.0)          # Σ 800 = residuo
+    _complete_pt(session, t.id, sample_client["id"], c["id"], 2)  # reso 200 == versato 200 → PARI
+
+    assert client.post(f"/api/contracts/{c['id']}/terminate", json={}, headers=auth_headers).status_code == 200
+    assert client.post(f"/api/contracts/{c['id']}/reopen", headers=auth_headers).status_code == 200
+
+    session.expire_all()
+    assert cstate.residuo(session.get(Contract, c["id"])) == 800.0   # == residuo pre-terminate
+    r1, r2 = session.get(Rate, rata1["id"]), session.get(Rate, rata2["id"])
+    assert r1.deleted_at is None and round(r1.importo_previsto, 2) == 500.0   # identica
+    assert r2.deleted_at is None and round(r2.importo_previsto, 2) == 300.0   # identica
+
+
+def test_f2_reopen_parziale_mai_sotto_saldato(client, auth_headers, sample_client, session):
+    """F2-PARZIALE: una rata con un pagamento parziale, finita nell'eccedenza, NON scende mai sotto
+    `importo_saldato` (la cassa non si orfaneggia) — ridotta a saldato+spazio, resta PARZIALE."""
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=0.0, crediti=10)
+    t = _trainer(session)
+    rata1 = _rate(client, auth_headers, c["id"], 500.0)
+    rata2 = _rate(client, auth_headers, c["id"], 500.0)          # Σ 1000 = residuo
+    client.post(f"/api/rates/{rata1['id']}/pay", json={"importo": 200.0, "metodo": "CONTANTI"},
+                headers=auth_headers)                            # rata1 → PARZIALE (saldato 200), versato 200
+    _complete_pt(session, t.id, sample_client["id"], c["id"], 8)  # reso 800 > versato 200 → credito_trainer 600
+
+    rt = client.post(f"/api/contracts/{c['id']}/terminate",
+                     json={"azione_credito_trainer": "INCASSA_ORA", "metodo_pagamento": "CONTANTI"},
+                     headers=auth_headers)
+    assert rt.status_code == 200, rt.text
+    assert client.post(f"/api/contracts/{c['id']}/reopen", headers=auth_headers).status_code == 200
+
+    session.expire_all()
+    contract = session.get(Contract, c["id"])
+    assert cstate.residuo(contract) == 200.0           # 1000 − netto(800)
+    r1, r2 = session.get(Rate, rata1["id"]), session.get(Rate, rata2["id"])
+    # rata1 a cavallo: previsto = saldato 200 + spazio 200 = 400, PARZIALE (MAI sotto il saldato 200)
+    assert r1.deleted_at is None and round(r1.importo_previsto, 2) == 400.0
+    assert round(r1.importo_saldato, 2) == 200.0 and r1.stato == "PARZIALE"
+    assert r2.deleted_at is not None                   # eccedente, saldato 0 → rimossa
+    assert round(r1.importo_previsto - r1.importo_saldato, 2) == 200.0  # Σ residui-rata == residuo
+
+
+# ── F1 (G8.1.1): storico cassa unificato sul dettaglio contratto ─────
+
+def test_f1_movimenti_esposti_dopo_reopen_con_cassa(client, auth_headers, sample_client, session):
+    """AC-7: dopo terminate-con-rimborso + reopen, `GET /contracts/{id}` espone i movimenti
+    contratto (acconto ENTRATA + rimborso USCITA che RESTA, ADR-019) con segno/data/causale;
+    Σ-con-segno (ENTRATA + / USCITA −) == netto_incassato == totale_versato − totale_rimborsato."""
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=500.0, crediti=10)
+    t = _trainer(session)
+    _complete_pt(session, t.id, sample_client["id"], c["id"], 2)  # reso 200
+    client.post(f"/api/contracts/{c['id']}/terminate",
+                json={"metodo_rimborso": "CONTANTI"}, headers=auth_headers)   # RIMBORSO 300
+    client.post(f"/api/contracts/{c['id']}/reopen", headers=auth_headers)     # cassa RESTA (ADR-019)
+
+    detail = client.get(f"/api/contracts/{c['id']}", headers=auth_headers)
+    assert detail.status_code == 200, detail.text
+    movimenti = detail.json()["movimenti"]
+
+    categorie = {m["categoria"] for m in movimenti}
+    assert CATEGORIA_RIMBORSO_CONTRATTO in categorie           # rimborso USCITA visibile
+    assert any(m["tipo"] == "ENTRATA" for m in movimenti)      # acconto ENTRATA visibile
+    assert all(m.get("data_effettiva") for m in movimenti)     # ogni riga ha data
+
+    signed = round(sum(
+        (m["importo"] if m["tipo"] == "ENTRATA" else -m["importo"]) for m in movimenti
+    ), 2)
+    session.expire_all()
+    contract = session.get(Contract, c["id"])
+    netto = round((contract.totale_versato or 0) - (contract.totale_rimborsato or 0), 2)
+    assert signed == netto == 200.0                            # 500 acconto − 300 rimborso

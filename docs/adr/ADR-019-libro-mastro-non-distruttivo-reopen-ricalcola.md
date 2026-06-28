@@ -147,3 +147,12 @@ curati scelta founder; audit grezzo resta in `/movements/audit-log`.
 **Invarianti immutati:** `residuo == 0 ⟺ saldato`, cassa-immutabile, asse EROGATO (ADR-016), Strada B.
 Dettaglio + AC in `SPEC_INTEGRITA_CONTABILE_E_WALLET.md §14` (F1–F4 §14.1-14.5, F5/F6 §14.6). È **hardening**
 (completamento del recepimento del principio), non un nuovo blocco: **G8.1.1**.
+
+**Stato implementazione (2026-06-28): ✅ IMPLEMENTATA.** F2 (`_reconcile_rate_plan` in `reopen`),
+F3 (`_cap_rateizzabile` net-aware), F4 (`is_saldato()` SSoT in `pay_rate`/`unpay_rate`/`incassa_residuo`),
+F1 (`get_contract` espone `movimenti` = tutti i `CashMovement` `id_contratto`), F5 (FE timeline cassa con
+saldo progressivo, tab "Storico" del dettaglio) + F6 (`GET /contracts/{id}/history` eventi curati +
+`_curate_contract_event` con dedup delle companion lifecycle + FE timeline stato). Suite **691** verde,
+ruff + grep-guard ADR-019 + next build verdi. AC 1-10 (`SPEC §14`/§14.6) coperti da
+`test_contract_state.py` · `test_contract_reopen.py` (F1+F2) · `test_wallet_cliente.py` (confine wallet) ·
+`test_contract_history.py` (F6).

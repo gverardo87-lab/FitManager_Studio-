@@ -235,3 +235,28 @@ def test_worklist_rimborsi_da_erogare(client, auth_headers, sample_client, sessi
     assert len(crediti) == 1
     assert crediti[0]["stato"] == "APERTO"
     assert round(crediti[0]["residuo"], 2) == 600.0
+
+
+# ── F1/AC-8: l'erogazione wallet (id_contratto=None) NON entra nei movimenti del contratto ──
+
+def test_f1_eroga_wallet_non_in_movimenti_contratto(client, auth_headers, sample_client, session):
+    """La cassa dell'erogazione wallet è a livello CLIENTE (id_contratto=None, ADR-020) → lo storico
+    cassa del contratto (F1) NON la mostra: Σ-con-segno dei movimenti contratto resta == netto del
+    contratto, immune all'erogazione."""
+    c = _credito_cliente_contract(client, auth_headers, sample_client, session)
+    cid = sample_client["id"]
+    client.post(f"/api/contracts/{c['id']}/terminate",
+                json={"importo_rimborso": 0.0}, headers=auth_headers)   # wallet 600, zero cassa contratto
+    session.expire_all()
+    wallet = _wallet(session, c["id"])
+    client.post(f"/api/clients/{cid}/crediti/{wallet.id}/eroga",
+                json={"importo": 250.0, "metodo": "CONTANTI"}, headers=auth_headers)  # USCITA client-level
+
+    movimenti = client.get(f"/api/contracts/{c['id']}", headers=auth_headers).json()["movimenti"]
+    # niente USCITA nel contratto (l'erogazione è altrove) → solo l'acconto ENTRATA 800
+    assert all(m["tipo"] == "ENTRATA" for m in movimenti), movimenti
+    assert CATEGORIA_RIMBORSO_CONTRATTO not in {m["categoria"] for m in movimenti}
+    signed = round(sum(m["importo"] for m in movimenti), 2)
+    session.expire_all()
+    contract = session.get(Contract, c["id"])
+    assert signed == round(contract.totale_versato, 2) == 800.0   # immune all'erogazione wallet

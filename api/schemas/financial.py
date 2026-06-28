@@ -469,6 +469,31 @@ class RenewalChainItem(BaseModel):
     lifecycle: str = "attivo"  # stato di vita reale del nodo catena (SPEC_VOCABOLARIO §2.7/G3)
 
 
+class ContractMovementItem(BaseModel):
+    """Movimento di cassa del contratto (G8.1.1/F1) — per lo storico cassa unificato sul dettaglio.
+    Tutti i `CashMovement` con `id_contratto` (ENTRATA+USCITA): acconto, pagamenti rata, rimborso,
+    conguaglio. L'erogazione wallet (`id_contratto=None`) NON è qui (cassa a livello cliente, sul profilo)."""
+    model_config = {"from_attributes": True}
+
+    id: int
+    tipo: str                       # ENTRATA | USCITA
+    categoria: str                  # ACCONTO_CONTRATTO | PAGAMENTO_RATA | RIMBORSO_CONTRATTO | INCASSO_CONGUAGLIO_CONTRATTO | ...
+    importo: float
+    data_effettiva: date
+    metodo: Optional[str] = None
+    id_rata: Optional[int] = None   # correla col piano rate (None = movimento a livello contratto)
+    note: Optional[str] = None
+
+
+class ContractHistoryEvent(BaseModel):
+    """Evento CURATO dello storico stato/attività del contratto (G8.1.1/F6) — parsato da `audit_log`.
+    Il grezzo completo resta in `/movements/audit-log`."""
+    tipo: str                       # creato | terminato | riaperto | saldato | stato | modificato | eliminato | ripristinato
+    titolo: str
+    dettaglio: Optional[str] = None
+    data: datetime
+
+
 class ContractWithRatesResponse(ContractResponse):
     """
     Response model per contratto con lista rate embedded.
@@ -478,6 +503,7 @@ class ContractWithRatesResponse(ContractResponse):
     - Formula chiave: importo_da_rateizzare = prezzo - acconto - somma_saldate
     """
     rate: List[RateResponse] = []
+    movimenti: List[ContractMovementItem] = []  # F1: storico cassa unificato (acconto+rate+rimborsi+conguagli)
 
     # ── Client info (per la pagina dettaglio) ──
     client_nome: str = ""

@@ -777,8 +777,37 @@ export interface RenewalChainItem {
 }
 
 /** ContractWithRatesResponse â€” GET /api/contracts/{id} */
+/** F1 (G8.1.1): movimento di cassa del contratto — storico cassa unificato sul dettaglio. */
+export interface ContractMovementItem {
+  id: number;
+  tipo: "ENTRATA" | "USCITA";
+  categoria: string | null;
+  importo: number;
+  data_effettiva: string; // ISO date
+  metodo: string | null;
+  id_rata: number | null;
+  note: string | null;
+}
+
+/** F6 (G8.1.1): evento curato dello storico stato/attività del contratto (da audit_log). */
+export interface ContractHistoryEvent {
+  tipo:
+    | "creato"
+    | "terminato"
+    | "riaperto"
+    | "saldato"
+    | "stato"
+    | "modificato"
+    | "eliminato"
+    | "ripristinato";
+  titolo: string;
+  dettaglio: string | null;
+  data: string; // ISO datetime
+}
+
 export interface ContractWithRates extends Contract {
   rate: Rate[];
+  movimenti: ContractMovementItem[]; // F1: storico cassa unificato (acconto+rate+rimborsi+conguagli)
   // Client info (per la pagina dettaglio)
   client_nome: string;
   client_cognome: string;

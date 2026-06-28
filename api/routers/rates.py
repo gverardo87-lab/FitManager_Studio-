@@ -92,7 +92,10 @@ def _cap_rateizzabile(session: Session, contract: Contract, exclude_rate_id: int
             Rate.id_contratto == contract.id, Rate.deleted_at == None,
         )
     ).one())
-    acconto = max(0, round((contract.totale_versato or 0) - somma_saldato, 2))
+    # G8.1.1/F3: acconto sul NETTO (versato − rimborsato), non sul LORDO, così il cap coincide col
+    #   residuo() net-aware. Inerte con rimborsato==0; load-bearing su un riaperto-con-rimborso (dove
+    #   pay_rate, già net, permetterebbe di pagare il residuo pieno ma un cap lordo lo bloccherebbe).
+    acconto = max(0, round(cstate.netto_incassato(contract) - somma_saldato, 2))
     # M2: sottrai quota_stornata → il cap usa lo STESSO asse di contract_state.residuo() (lo storno non
     #   è rateizzabile). Inerte sui contratti non terminati (quota_stornata==0); SSoT unica del residuo.
     cap = round((contract.prezzo_totale or 0) - acconto - (contract.quota_stornata or 0), 2)
@@ -506,7 +509,7 @@ def pay_rate(
     B-ter) Validazione: importo non supera residuo contratto
     C) Aggiorna importo_saldato e stato rata
     D) Aggiorna totale_versato contratto (incrementale)
-    E) Se totale_versato >= prezzo_totale -> stato_pagamento = SALDATO
+    E) Se residuo()==0 (net-aware, G8.1.1/F4) -> stato_pagamento = SALDATO
     E-auto) Auto-close: se saldato + crediti esauriti -> chiuso
     E-bis) Registra CashMovement ENTRATA nel libro mastro
     F) session.commit() SOLO qui (atomicita')
@@ -562,8 +565,8 @@ def pay_rate(
     old_chiuso = contract.chiuso
     contract.totale_versato = contract.totale_versato + data.importo
 
-    # E) Stato contratto: SALDATO se totale pagato copre il prezzo
-    if contract.prezzo_totale and contract.totale_versato >= contract.prezzo_totale - 0.01:
+    # E) Stato contratto: SALDATO se il residuo() net-aware è zero (G8.1.1/F4 — non `versato≥prezzo` lordo)
+    if cstate.is_saldato(contract):
         contract.stato_pagamento = "SALDATO"
     elif contract.totale_versato > 0:
         contract.stato_pagamento = "PARZIALE"
@@ -688,7 +691,7 @@ def unpay_rate(
     # E) Ricalcola stato_pagamento
     if contract.totale_versato <= 0:
         contract.stato_pagamento = "PENDENTE"
-    elif contract.prezzo_totale and contract.totale_versato >= contract.prezzo_totale - 0.01:
+    elif cstate.is_saldato(contract):  # G8.1.1/F4: net-aware (residuo()==0), non versato≥prezzo lordo
         contract.stato_pagamento = "SALDATO"
     else:
         contract.stato_pagamento = "PARZIALE"

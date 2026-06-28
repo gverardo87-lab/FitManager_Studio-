@@ -110,6 +110,24 @@ def test_netto_incassato():
     assert cs.netto_incassato(SimpleNamespace(totale_versato=100.0, totale_rimborsato=250.0)) == 0.0
 
 
+# ── G8.1.1/F4: is_saldato NET-AWARE (residuo()==0), non versato≥prezzo lordo ──
+
+def test_is_saldato_net_aware():
+    # saldato: versato copre il prezzo, nessun rimborso → residuo 0
+    assert cs.is_saldato(_contract(prezzo_totale=500.0, totale_versato=500.0)) is True
+    # non saldato: residuo > 0
+    assert cs.is_saldato(_contract(prezzo_totale=500.0, totale_versato=300.0)) is False
+    # NET-AWARE: versato == prezzo LORDO ma un rimborso lascia residuo > 0 → NON saldato (il lordo mentirebbe)
+    c_refund = SimpleNamespace(prezzo_totale=1000.0, totale_versato=1000.0, totale_rimborsato=300.0)
+    assert cs.residuo(c_refund) == 300.0
+    assert cs.is_saldato(c_refund) is False
+    # storno che azzera il residuo → saldato
+    c_storno = SimpleNamespace(prezzo_totale=1000.0, totale_versato=700.0, quota_stornata=300.0)
+    assert cs.is_saldato(c_storno) is True
+    # prezzo assente/0 → mai saldato (guardia, PREREQ-prezzo)
+    assert cs.is_saldato(_contract(prezzo_totale=0.0, totale_versato=0.0)) is False
+
+
 # ── G8.1 (ADR-019): residuo NET-AWARE — sottrae (versato − rimborsato), non il versato lordo ──
 
 @pytest.mark.parametrize("prezzo,versato,quota", [

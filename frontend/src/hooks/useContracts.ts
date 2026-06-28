@@ -18,6 +18,7 @@ import type {
   ContractTerminate,
   ContractSettlementPreview,
   ReopenPreview,
+  ContractHistoryEvent,
   CreditoTerminazione,
   CreditoDaIncassareItem,
   CreditoCliente,
@@ -48,6 +49,21 @@ export function useContract(id: number | null) {
     queryFn: async () => {
       const { data } = await apiClient.get<ContractWithRates>(
         `/contracts/${id}`
+      );
+      return data;
+    },
+    enabled: id !== null,
+  });
+}
+
+// ── Query: storico stato/attività del contratto (F6, G8.1.1) — timeline curata da audit_log ──
+
+export function useContractHistory(id: number | null) {
+  return useQuery<ContractHistoryEvent[]>({
+    queryKey: ["contract-history", id],
+    queryFn: async () => {
+      const { data } = await apiClient.get<ContractHistoryEvent[]>(
+        `/contracts/${id}/history`
       );
       return data;
     },

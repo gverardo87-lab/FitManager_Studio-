@@ -29,6 +29,7 @@ import {
   HandCoins,
   Lock,
   RotateCcw,
+  History,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -51,6 +52,7 @@ import { DeleteContractDialog } from "@/components/contracts/DeleteContractDialo
 import { IncassaResiduoDialog } from "@/components/contracts/IncassaResiduoDialog";
 import { TerminateContractDialog } from "@/components/contracts/TerminateContractDialog";
 import { ReopenContractDialog } from "@/components/contracts/ReopenContractDialog";
+import { ContractHistoryTab } from "@/components/contracts/ContractHistoryTab";
 import { useContract } from "@/hooks/useContracts";
 import { useContractEvents, type EventHydrated } from "@/hooks/useAgenda";
 import { resolveBackNavigation } from "@/lib/url-state";
@@ -222,6 +224,10 @@ export default function ContractDetailPage({
             <Calendar className="mr-2 h-4 w-4" />
             Sessioni
           </TabsTrigger>
+          <TabsTrigger value="storico">
+            <History className="mr-2 h-4 w-4" />
+            Storico
+          </TabsTrigger>
           <TabsTrigger value="dettagli">
             <Settings2 className="mr-2 h-4 w-4" />
             Dettagli
@@ -234,6 +240,10 @@ export default function ContractDetailPage({
 
         <TabsContent value="sessioni" className="mt-4">
           <SessioniTab contractId={contractId} />
+        </TabsContent>
+
+        <TabsContent value="storico" className="mt-4">
+          <ContractHistoryTab contract={contract} />
         </TabsContent>
 
         <TabsContent value="dettagli" className="mt-4">

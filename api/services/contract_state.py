@@ -95,6 +95,14 @@ def netto_incassato(contract) -> float:
     return round(max((contract.totale_versato or 0) - rimborsato, 0.0), 2)
 
 
+def is_saldato(contract) -> bool:
+    """Sotto-stato denaro SALDATO ⟺ `residuo() == 0` con prezzo valido (FDM §5, NET-AWARE). NON
+    `versato ≥ prezzo` (LORDO, G8.1.1/F4): su un contratto con rimborso il lordo può toccare il prezzo
+    mentre il netto no → SALDATO/auto-close prematuro con `residuo() > 0` (violazione di `residuo == 0`
+    su CHIUSO). Backward-compat: con `totale_rimborsato == 0` il netto == versato → identico al lordo."""
+    return (contract.prezzo_totale or 0) > 0 and residuo(contract) <= 0.01
+
+
 def is_scaduto(contract, today: date) -> bool:
     sc = _as_date(contract.data_scadenza)
     return sc is not None and sc < today

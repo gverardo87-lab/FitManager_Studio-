@@ -11,6 +11,7 @@ Regola 404: se il contratto non esiste O non appartiene al trainer -> 404.
 Mai 403, mai rivelare l'esistenza di dati altrui.
 """
 
+import json
 from typing import Optional
 from datetime import date, datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -26,6 +27,7 @@ from api.models.movement import CashMovement
 from api.models.event import Event
 from api.models.credito_terminazione import CreditoTerminazione
 from api.models.credito_cliente import CreditoCliente
+from api.models.audit_log import AuditLog
 from api.schemas.financial import (
     ContractCreate,
     ContractUpdate,
@@ -34,6 +36,8 @@ from api.schemas.financial import (
     ContractWithRatesResponse,
     ContractTerminate,
     ContractSettlementPreview,
+    ContractMovementItem,
+    ContractHistoryEvent,
     ReopenPreview,
     CreditoTerminazioneResponse,
     VALID_AZIONI_CREDITO_TRAINER,
@@ -549,6 +553,21 @@ def get_contract(
         resp.client_nome = client.nome
         resp.client_cognome = client.cognome
 
+    # F1 (G8.1.1): storico cassa unificato — TUTTI i movimenti con id_contratto=questo
+    # contratto (acconto, rate, rimborsi USCITA, conguagli ENTRATA). Σ con segno ==
+    # netto_incassato (ENTRATA +, USCITA −). Le erogazioni wallet hanno id_contratto=None
+    # (client-level, ADR-020) → NON compaiono qui. Ordine cronologico per data_effettiva.
+    movimenti = session.exec(
+        select(CashMovement)
+        .where(
+            CashMovement.id_contratto == contract_id,
+            CashMovement.trainer_id == trainer.id,
+            CashMovement.deleted_at == None,
+        )
+        .order_by(CashMovement.data_effettiva, CashMovement.id)
+    ).all()
+    resp.movimenti = [ContractMovementItem.model_validate(m) for m in movimenti]
+
     # Renewal chain: parent + children — ogni nodo porta il PROPRIO lifecycle reale
     # (SPEC_VOCABOLARIO §2.7/G3): un genitore SOSPESO non deve apparire "Chiuso"/"Attivo".
     today = date.today()
@@ -601,6 +620,173 @@ def get_contract(
     resp.rinnovi_successivi = [_chain_item(c) for c in children]
 
     return resp
+
+
+# ════════════════════════════════════════════════════════════
+# GET: Storico stato/attività del contratto (G8.1.1 / F6)
+# ════════════════════════════════════════════════════════════
+
+def _curate_contract_event(row: AuditLog) -> Optional[ContractHistoryEvent]:
+    """
+    F6 (G8.1.1): traduce UNA riga `audit_log` (entity='contract') in un evento curato
+    per la timeline di stato, oppure None se va nascosta.
+
+    Dedup delle entry "companion": terminate/reopen scrivono SIA l'entry ricca (con
+    `motivo_chiusura`) SIA la transizione lifecycle bare (`chiuso` + `motivo` tecnico).
+    Teniamo la ricca, scartiamo la companion (`motivo` 'terminazione'/'riapertura_esplicita').
+    Le mutazioni di pura cassa (solo `totale_versato`/`stato_pagamento`) NON entrano qui —
+    vivono nello storico cassa (F1/F5), così la timeline di stato resta leggibile.
+    """
+    data = row.created_at
+    changes: dict = {}
+    if row.changes:
+        try:
+            parsed = json.loads(row.changes)
+            if isinstance(parsed, dict):
+                changes = parsed
+        except (ValueError, TypeError):
+            changes = {}
+
+    if row.action == "CREATE":
+        is_rinnovo = "rinnovo_di" in changes
+        return ContractHistoryEvent(
+            tipo="creato",
+            titolo="Contratto creato per rinnovo" if is_rinnovo else "Contratto creato",
+            data=data,
+        )
+    if row.action == "DELETE":
+        return ContractHistoryEvent(tipo="eliminato", titolo="Contratto eliminato", data=data)
+    if row.action == "RESTORE":
+        return ContractHistoryEvent(tipo="ripristinato", titolo="Contratto ripristinato", data=data)
+
+    # ── action == UPDATE ──
+    mc = changes.get("motivo_chiusura")
+
+    # 1) Terminazione (entry ricca): motivo_chiusura.new valorizzato.
+    if isinstance(mc, dict) and mc.get("new"):
+        parti: list[str] = []
+        esito = changes.get("esito_balance")
+        if esito:
+            parti.append(f"esito {str(esito).replace('_', ' ').lower()}")
+        rimborso = changes.get("totale_rimborsato")
+        if isinstance(rimborso, dict):
+            rimb_delta = round(float(rimborso.get("new") or 0) - float(rimborso.get("old") or 0), 2)
+            if rimb_delta:
+                parti.append(f"rimborso €{rimb_delta:.2f}")
+        parti.append(f"motivo {mc['new']}")
+        return ContractHistoryEvent(
+            tipo="terminato",
+            titolo="Contratto terminato",
+            dettaglio=" · ".join(parti),
+            data=data,
+        )
+
+    # 2) Riapertura esplicita (entry ricca): motivo_chiusura.new == None + chiuso togglato.
+    if isinstance(mc, dict) and mc.get("new") is None and "chiuso" in changes:
+        parti = []
+        residuo_dopo = changes.get("residuo_dopo")
+        if residuo_dopo is not None:
+            parti.append(f"residuo €{float(residuo_dopo):.2f}")
+        rate_rial = changes.get("rate_riallineate")
+        if rate_rial:
+            parti.append(f"{int(rate_rial)} rate riallineate")
+        rimborso_preservato = changes.get("rimborso_preservato")
+        if rimborso_preservato:
+            parti.append(f"rimborso €{float(rimborso_preservato):.2f} preservato")
+        return ContractHistoryEvent(
+            tipo="riaperto",
+            titolo="Contratto riaperto",
+            dettaglio=" · ".join(parti) if parti else None,
+            data=data,
+        )
+
+    # 3) Transizione lifecycle bare (`chiuso` togglato, senza motivo_chiusura).
+    if "chiuso" in changes:
+        motivo = changes.get("motivo")
+        if motivo in ("terminazione", "riapertura_esplicita"):
+            return None  # companion della entry ricca → dedup
+        if motivo == "completamento":
+            return ContractHistoryEvent(tipo="saldato", titolo="Contratto completato e saldato", data=data)
+        if motivo == "riapertura_pagamento":
+            return ContractHistoryEvent(tipo="riaperto", titolo="Riaperto: pagamento revocato", data=data)
+        if motivo == "riapertura_crediti":
+            return ContractHistoryEvent(tipo="riaperto", titolo="Riaperto: crediti liberati", data=data)
+        chiuso_field = changes.get("chiuso")
+        chiuso_new = chiuso_field.get("new") if isinstance(chiuso_field, dict) else None
+        return ContractHistoryEvent(
+            tipo="stato",
+            titolo="Contratto chiuso" if chiuso_new else "Contratto riaperto",
+            data=data,
+        )
+
+    # 4) Transizione lifecycle aperto (ATTIVO/SOSPESO/ESAURITO crossing scadenza).
+    lc = changes.get("lifecycle")
+    if isinstance(lc, dict) and lc.get("old") and lc.get("new"):
+        return ContractHistoryEvent(tipo="stato", titolo=f"Stato: {lc['old']} → {lc['new']}", data=data)
+
+    # 5) Esito rinnovo.
+    if "esito_rinnovo" in changes:
+        esito = changes.get("esito_rinnovo")
+        return ContractHistoryEvent(
+            tipo="stato",
+            titolo=f"Esito rinnovo: {esito}" if esito else "Esito rinnovo rimosso",
+            data=data,
+        )
+
+    # 6) Modifica significativa di campi del contratto (prezzo/scadenza/sedute/pacchetto).
+    _SIGNIFICATIVI = {
+        "prezzo_totale": "prezzo",
+        "data_scadenza": "scadenza",
+        "data_inizio": "inizio",
+        "numero_sedute": "sedute",
+        "tipo_pacchetto": "pacchetto",
+    }
+    toccati = [label for key, label in _SIGNIFICATIVI.items() if key in changes]
+    if toccati:
+        return ContractHistoryEvent(
+            tipo="modificato",
+            titolo="Contratto modificato",
+            dettaglio="Aggiornati: " + ", ".join(toccati),
+            data=data,
+        )
+
+    # 7) Resto (pura cassa: totale_versato/stato_pagamento) → nascosto (vive in F1/F5).
+    return None
+
+
+@router.get("/{contract_id}/history", response_model=list[ContractHistoryEvent])
+def get_contract_history(
+    contract_id: int,
+    trainer: Trainer = Depends(get_current_trainer),
+    session: Session = Depends(get_session),
+):
+    """
+    F6 (G8.1.1): storico dello STATO DI VITA del contratto — timeline CRM-grade.
+
+    Read-only. Deriva eventi curati dall'`audit_log` (entity='contract'): creazione,
+    terminazione (esito+rimborso+motivo), riapertura, completamento/saldo, transizioni
+    di lifecycle, modifiche significative. Dedup delle entry companion. Ordine cronologico
+    ascendente (più vecchio in cima). Lo storico CASSA (acconto/rate/rimborsi/conguagli)
+    vive su `GET /contracts/{id}` campo `movimenti` (F1) — qui solo lo STATO.
+    """
+    contract = _bouncer_contract_owned(session, contract_id, trainer.id)
+
+    rows = session.exec(
+        select(AuditLog)
+        .where(
+            AuditLog.entity_type == "contract",
+            AuditLog.entity_id == contract.id,
+            AuditLog.trainer_id == trainer.id,
+        )
+        .order_by(AuditLog.created_at, AuditLog.id)
+    ).all()
+
+    events: list[ContractHistoryEvent] = []
+    for row in rows:
+        ev = _curate_contract_event(row)
+        if ev is not None:
+            events.append(ev)
+    return events
 
 
 # ════════════════════════════════════════════════════════════
@@ -1138,7 +1324,7 @@ def incassa_residuo(
     old_totale_versato = contract.totale_versato
     old_stato_pagamento = contract.stato_pagamento
     contract.totale_versato = contract.totale_versato + data.importo
-    if contract.prezzo_totale and contract.totale_versato >= contract.prezzo_totale - 0.01:
+    if cstate.is_saldato(contract):  # G8.1.1/F4: net-aware (residuo()==0), non versato≥prezzo lordo
         contract.stato_pagamento = "SALDATO"
     elif contract.totale_versato > 0:
         contract.stato_pagamento = "PARZIALE"
@@ -1554,6 +1740,71 @@ def terminate_contract(
     return _to_response(contract)
 
 
+def _reconcile_rate_plan(session: Session, contract, trainer_id: int) -> dict:
+    """G8.1.1/F2 (ADR-019 Addendum, D-RECONCILIA-RATE): dopo `reopen`, riallinea il piano rate non-saldate
+    al `residuo()` net-aware ricalcolato. L'inverso-esatto (M1) ripristina le rate al loro importo
+    PRE-terminate: se la cassa è rimasta (rimborso/conguaglio), il residuo ricalcolato ≠ pre-terminate →
+    le rate non combaciano.
+
+    - **Eccedenza** (Σ residui-rata > residuo): taglio CRONOLOGICO — si copre il residuo riempiendo dalle
+      rate più vecchie; la rata a cavallo è ridotta a coprire l'esatto residuo rimanente; le successive
+      sono azzerate (soft-delete se `importo_saldato==0`, altrimenti `importo_previsto=importo_saldato` →
+      SALDATA: **mai sotto il saldato**, la cassa non si orfaneggia).
+    - **Sotto-copertura** (Σ < residuo): nessuna mutazione — il resto resta "da pianificare".
+    - **Pari** (Σ == residuo, es. reopen senza-cassa): no-op (round-trip esatto preservato).
+
+    Non tocca cassa né `residuo()` (modifica solo `importo_previsto`/`stato`/`deleted_at` delle rate; il
+    `saldato` resta, quindi anche `totale_versato`/`netto`). Ritorna un riassunto per l'audit.
+    """
+    residuo = round(cstate.residuo(contract), 2)
+    rate = list(session.exec(
+        select(Rate).where(
+            Rate.id_contratto == contract.id,
+            Rate.stato.in_(["PENDENTE", "PARZIALE"]),
+            Rate.deleted_at == None,
+        ).order_by(Rate.data_scadenza, Rate.id)
+    ).all())
+    somma_residui = round(sum(max((r.importo_previsto or 0) - (r.importo_saldato or 0), 0.0) for r in rate), 2)
+    if somma_residui <= residuo + 0.01:
+        return {"residuo": residuo, "somma_rate_pre": somma_residui, "tagliate": 0, "rimosse": 0}
+
+    now = datetime.now(timezone.utc)
+    coperto = 0.0
+    tagliate = 0
+    rimosse = 0
+    for r in rate:
+        saldato = round(r.importo_saldato or 0, 2)
+        residuo_rata = round(max((r.importo_previsto or 0) - saldato, 0.0), 2)
+        spazio = round(residuo - coperto, 2)  # residuo ancora da coprire col piano
+        if spazio <= 0.01:
+            # Residuo già coperto → questa rata (e le successive) sono eccedenti.
+            if saldato <= 0.01:
+                r.deleted_at = now
+                session.add(r)
+                log_audit(session, "rate", r.id, "DELETE", trainer_id)
+                rimosse += 1
+            else:
+                r.importo_previsto = saldato          # mai sotto il saldato
+                r.stato = "SALDATA"
+                session.add(r)
+                log_audit(session, "rate", r.id, "UPDATE", trainer_id,
+                          {"importo_previsto": {"new": saldato}, "riallineo": "reopen"})
+                tagliate += 1
+        elif residuo_rata > spazio + 0.01:
+            # Rata a cavallo: riduci il previsto a coprire l'esatto residuo rimanente.
+            nuovo_previsto = round(saldato + spazio, 2)
+            r.importo_previsto = nuovo_previsto
+            r.stato = "PARZIALE" if saldato > 0.01 else "PENDENTE"
+            session.add(r)
+            log_audit(session, "rate", r.id, "UPDATE", trainer_id,
+                      {"importo_previsto": {"new": nuovo_previsto}, "riallineo": "reopen"})
+            tagliate += 1
+            coperto = residuo
+        else:
+            coperto = round(coperto + residuo_rata, 2)
+    return {"residuo": residuo, "somma_rate_pre": somma_residui, "tagliate": tagliate, "rimosse": rimosse}
+
+
 @router.post("/{contract_id}/reopen", response_model=ContractResponse)
 def reopen_contract(
     contract_id: int,
@@ -1583,6 +1834,8 @@ def reopen_contract(
     R4) Wallet cliente (ADR-020): i `crediti_cliente` di questa terminazione → `ANNULLATO` (G8.1 Step 3).
     R5) Ripristino rate: `deleted_at=None` SOLO sulle rate marcate `chiusa_da_terminazione` (M1, non
         resuscita le cancellate a mano / dal piano rigenerato). Marker azzerato. Le SALDATE intatte (B-3).
+    R5-bis) Riallineo piano rate al residuo net-aware (G8.1.1/F2, `_reconcile_rate_plan`): eccedenza
+        tagliata cronologicamente, sotto-copertura → "da pianificare". `stato_pagamento` ricalcolato (F4).
     R6) `chiuso=False` + `motivo_chiusura=None` + `data_chiusura=None`.
     R7) Residuo: ricalcolato AUTOMATICAMENTE dal SSoT net-aware (`P − netto − 0`); la cassa che resta
         (rimborso uscito, conguaglio incassato) è già dentro `netto`. Nessuna scrittura.
@@ -1672,6 +1925,18 @@ def reopen_contract(
         log_audit(session, "rate", r.id, "RESTORE", trainer.id)
         rate_ripristinate += 1
 
+    # R5-bis) G8.1.1/F2: riallinea il piano rate al residuo() net-aware ricalcolato (la cassa che resta ha
+    #   cambiato il residuo → le rate ripristinate AS-IS potrebbero non combaciare). Auto-realign (founder).
+    reconcile = _reconcile_rate_plan(session, contract, trainer.id)
+
+    # Ricalcola stato_pagamento net-aware (F4): il reopen ha cambiato il residuo.
+    if cstate.is_saldato(contract):
+        contract.stato_pagamento = "SALDATO"
+    elif (contract.totale_versato or 0) > 0:
+        contract.stato_pagamento = "PARZIALE"
+    else:
+        contract.stato_pagamento = "PENDENTE"
+
     # F) Riapertura: stato terminale azzerato
     contract.chiuso = False
     contract.motivo_chiusura = None
@@ -1686,6 +1951,8 @@ def reopen_contract(
         "chiuso": {"old": True, "new": False},
         "quota_stornata": {"old": old_quota, "new": 0},
         "rate_ripristinate": rate_ripristinate,
+        "rate_riallineate": reconcile["tagliate"] + reconcile["rimosse"],  # F2: piano riconciliato al residuo
+        "residuo_dopo": reconcile["residuo"],
         "crediti_differiti_annullati": crediti_annullati,
         "wallet_cliente_annullati": wallet_annullati,
         "rimborso_preservato": round(old_rimborsato, 2),        # ADR-019: cassa NON toccata
