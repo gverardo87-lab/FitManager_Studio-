@@ -2,7 +2,7 @@
 
 **Tipo:** specifica prescrittiva (cosa-deve-essere-vero; silente sul come). Bridge Chat->Code.  
 **Data:** 2026-06-28 · **Branch:** `FitManager_Studio`  
-**Stato:** ✅ **G8.1 IMPLEMENTATA** (2026-06-28; commit `f84d345`→`a51d180`, suite 678 verde, next build verde, Playwright live OK). **🔧 G8.1.1 (reconciliation + transparency, §14)** = governance FATTA (ADR-019 Addendum), **codice DA FARE** (F1 movimenti contratto · F2 reopen riallinea le rate · F3/F4 net-aware cap/stato). G8.2 (wallet auto-spendibile cross-contratto) su domanda. · ratificata da **ADR-019** + **ADR-020**  
+**Stato:** ✅ **G8.1 IMPLEMENTATA** (2026-06-28; commit `f84d345`→`a51d180`, suite 678 verde, next build verde, Playwright live OK). **🔧 G8.1.1 (reconciliation + transparency, §14)** = governance FATTA (ADR-019 Addendum), **codice DA FARE** (F2 reopen riallinea le rate · F3/F4 net-aware cap/stato · **F1/F5 storico cassa unificato** · **F6 storico stato** `GET /{id}/history`). G8.2 (wallet auto-spendibile cross-contratto) su domanda. · ratificata da **ADR-019** + **ADR-020**  
 **Blocco proposto:** **G8** (programma post-G7 "integrita' contabile + completamento bilaterale"). **Fetta 1 = G8.1** (reopen non-distruttivo + residuo net-aware + wallet lean + rimborso editabile + UX-propone). **Fetta 2 = G8.2** (wallet auto-spendibile cross-contratto). G1 in stand-by.  
 **Mappa di verita:** `docs/adr/ADR-019-libro-mastro-non-distruttivo-reopen-ricalcola.md` · `docs/adr/ADR-020-wallet-cliente-customer-credit-balance.md` · `docs/operations/AUDIT_REOPEN_SCENARIOS_2026-06-28.md` · `docs/technical/FINANCIAL_DOMAIN_MODEL.md` · `api/services/contract_state.py` · `api/routers/contracts.py`
 
@@ -286,5 +286,44 @@ reopen di una terminazione senza cassa (rinuncia / storno puro) ripristina tutto
 ### 14.5 Sequenza
 
 (1) governance [questo §14 + ADR-019 Addendum + FDM] → (2) F3+F4 net-aware (SSoT, piccoli) → (3) F2
-reopen-reconcile + test scenari → (4) F1 backend + FE → (5) gate (suite + check-all + next build) +
-verifica Playwright.
+reopen-reconcile + test scenari → (4) **F1+F5** (storico cassa unificato, backend+FE) + **F6** (storico
+stato, `GET /{id}/history` + FE) → (5) gate (suite + check-all + next build) + verifica Playwright.
+
+### 14.6 F5/F6 — storico cassa unificato + storico stato (CRM-grade, follow-up founder 2026-06-28)
+
+Il lato FRONTEND di F1 era sotto-specificato ("una sezione") e mancava lo **storico di stato**. Entrambi
+si appoggiano a dati **già registrati** (CashMovement `id_contratto`; `audit_log` `entity_type='contract'`
+con `created_at` + `changes` JSON, già scritto da `log_contract_lifecycle_transition` + payload terminate)
+→ gap di *surfacing*, non di modello.
+
+**F5 — Storico cassa del contratto, unificato [HIGH, trasparenza/CRM].**
+- Oggi il dettaglio mostra solo i pagamenti per-rata (`receipt_map` `id_rata`-linked); acconto, rimborso,
+  conguaglio (`id_rata=None`) invisibili.
+- **Decisione:** il backend (F1 esteso) espone TUTTI i `CashMovement` del contratto (`id_contratto` set,
+  ENTRATA+USCITA, cronologico) con `tipo`/`categoria`/`importo`/`data_effettiva`/`metodo`/`id_rata`. Il FE
+  rende una **timeline cassa unificata**: causale (Acconto · Pagamento rata · **Rimborso** − · **Conguaglio**
+  +) con icona/colore, segno ±, **saldo netto progressivo** (versato−rimborsato), footer di riconciliazione
+  `Versato lordo €X − Rimborsato €Y = Netto €Z · Residuo €R`. Fa quadrare il residuo a vista.
+- **Confine di modello:** l'erogazione wallet (`id_contratto=None`, cassa a livello CLIENTE) NON entra in
+  questa timeline → vive nella sezione wallet del profilo (coerente con Step 4 / ADR-020).
+
+**F6 — Storico stato/lifecycle del contratto (activity timeline) [MED-HIGH, CRM-grade].**
+- Oggi nessuna vista dello storico stato, benché l'`audit_log` lo registri (CREATE; transizioni `chiuso`
+  con motivo+rimborso+residuo_annullato+data; transizioni lifecycle aperto ATTIVO/SOSPESO/ESAURITO; update).
+- **Decisione (eventi CURATI, default founder):** nuovo `GET /contracts/{id}/history` (read-only, bouncer)
+  che parsa l'`audit_log` del contratto in **eventi leggibili curati** — Creato · Terminato (esito + rimborso
+  + motivo) · Riaperto · Saldato (auto-close completamento) · Scadenza modificata — ordinati per `created_at`.
+  L'audit grezzo completo resta in `/movements/audit-log`. Il FE rende una **timeline attività** sul dettaglio.
+
+**AC (F5/F6):**
+7. **F5:** dopo reopen-con-rimborso, il dettaglio espone i movimenti contratto (acconto + rimborso USCITA +
+   eventuale conguaglio ENTRATA) con segno/data/causale; Σ con segno == `netto_incassato`.
+8. **F5-confine:** un'erogazione wallet (`id_contratto=None`) NON compare nella timeline del contratto.
+9. **F6:** un contratto terminato-poi-riaperto espone in `/history` gli eventi in ordine: Creato → Terminato
+   (con esito+importo+motivo) → Riaperto; un auto-close COMPLETAMENTO appare come "Saldato".
+10. **F6-tenant:** `/history` è multi-tenant (404 su contratto altrui), zero scritture.
+
+**Perimetro aggiuntivo:** `contracts.py` (`get_contract`/response F1+F5 · nuovo `GET /{id}/history` F6) +
+`schemas/financial.py` (`ContractMovementItem`, `ContractHistoryEvent`); FE: timeline cassa (F5) + timeline
+stato (F6) sul dettaglio (riuso pattern `PaymentHistory`/`CashAuditSheet`). Test: integrazione (F5
+movimenti + confine wallet) + nuovo `test_contract_history.py` (F6).

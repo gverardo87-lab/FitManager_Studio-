@@ -134,6 +134,16 @@ mancato recepimento confonde l'utente:
   `pay_rate` (già net) e `_cap`/auto-close (lordo) **si contraddicono**, e un riaperto-con-rimborso può
   marcare SALDATO/auto-close con `residuo() > 0` (violazione di `residuo == 0 ⟺ saldato` su CHIUSO).
 
+**Estensione CRM-grade (F5/F6, follow-up founder 2026-06-28).** La trasparenza diventa standard CRM —
+D-CASSA-VISIBILE si concretizza in due timeline sul dettaglio contratto: **(F5) storico cassa unificato**
+(acconto + pagamenti rata + **rimborsi** − + **conguagli** +, con segno e **saldo netto progressivo** +
+footer di riconciliazione `lordo − rimborsato = netto · residuo`); l'erogazione wallet (`id_contratto=None`,
+cassa a livello CLIENTE) resta sul profilo cliente. **(F6) storico stato/attività** (Creato · Terminato
+[esito + importo + motivo] · Riaperto · Saldato), da `audit_log` via `GET /contracts/{id}/history` (eventi
+**curati**, read-only). Dato **già registrato** (`CashMovement` `id_contratto`; `audit_log`
+`entity_type='contract'` + `log_contract_lifecycle_transition`) → **surfacing, non nuovo modello**. Eventi
+curati scelta founder; audit grezzo resta in `/movements/audit-log`.
+
 **Invarianti immutati:** `residuo == 0 ⟺ saldato`, cassa-immutabile, asse EROGATO (ADR-016), Strada B.
-Dettaglio + AC in `SPEC_INTEGRITA_CONTABILE_E_WALLET.md §14`. È **hardening** (completamento del recepimento
-del principio), non un nuovo blocco: **G8.1.1**.
+Dettaglio + AC in `SPEC_INTEGRITA_CONTABILE_E_WALLET.md §14` (F1–F4 §14.1-14.5, F5/F6 §14.6). È **hardening**
+(completamento del recepimento del principio), non un nuovo blocco: **G8.1.1**.
