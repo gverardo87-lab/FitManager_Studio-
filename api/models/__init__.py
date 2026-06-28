@@ -21,6 +21,7 @@ from .workout_schedule import WorkoutScheduleSlot
 from .exercise_log import ExerciseLog
 from .communication_log import CommunicationLog
 from .credito_terminazione import CreditoTerminazione
+from .credito_cliente import CreditoCliente
 
 __all__ = [
     "Trainer",
@@ -53,4 +54,5 @@ __all__ = [
     "ExerciseLog",
     "CommunicationLog",
     "CreditoTerminazione",
+    "CreditoCliente",
 ]

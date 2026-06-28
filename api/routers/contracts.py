@@ -25,6 +25,7 @@ from api.models.rate import Rate
 from api.models.movement import CashMovement
 from api.models.event import Event
 from api.models.credito_terminazione import CreditoTerminazione
+from api.models.credito_cliente import CreditoCliente
 from api.schemas.financial import (
     ContractCreate,
     ContractUpdate,
@@ -1351,29 +1352,59 @@ def terminate_contract(
     rimborso_out = 0.0                # X rimborsato al cliente (ramo CREDITO_CLIENTE) — entra nello storno (G8.1)
     saldo_trainer_rinunciato = 0.0    # parte del credito_trainer abbuonata (credito_trainer − X)
     credito_differito = None          # receivable creato dal ramo A_CREDITO (G7.10)
+    wallet_cliente = None             # crediti_cliente creato dal ramo CREDITO_CLIENTE (G8.1, non-rimborsato)
 
     if settlement.esito == SettlementEsito.CREDITO_CLIENTE:
-        # Il cliente ha versato più del servizio reso → rimborso (richiede metodo_rimborso).
-        if not data.metodo_rimborso:
+        # G8.1/ADR-020: rimborso EDITABILE [0, credito_cliente] (default = pieno → retro-compatibile). Il
+        # non-rimborsato NON si perde: diventa un credito a wallet del cliente (RIMBORSO_DIFFERITO), FUORI
+        # dal residuo(). Niente "rinuncia" lato cliente: non si abbuona denaro dovuto al cliente (asimmetria).
+        rimborso_out = (
+            settlement.credito_cliente if data.importo_rimborso is None
+            else round(data.importo_rimborso, 2)
+        )
+        if rimborso_out > settlement.credito_cliente + 0.009:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="Metodo di rimborso obbligatorio per una terminazione con rimborso",
+                detail=(
+                    f"L'importo da rimborsare (€{rimborso_out:.2f}) non può superare il credito del "
+                    f"cliente (€{settlement.credito_cliente:.2f})."
+                ),
             )
-        movement = CashMovement(
-            trainer_id=trainer.id,
-            data_effettiva=data_chiusura,
-            tipo="USCITA",
-            categoria=CATEGORIA_RIMBORSO_CONTRATTO,
-            importo=settlement.credito_cliente,   # fonte-unica-importo (§2)
-            metodo=data.metodo_rimborso,
-            id_cliente=contract.id_cliente,
-            id_contratto=contract.id,
-            id_rata=None,
-            note=data.note or f"Rimborso terminazione - {client_label}",
-        )
-        session.add(movement)
-        contract.totale_rimborsato = old_rimborsato + settlement.credito_cliente  # STESSO importo del movimento
-        rimborso_out = settlement.credito_cliente  # G8.1: il rimborso che ESCE va nello storno (residuo net-aware)
+        rimborso_out = max(rimborso_out, 0.0)
+        if rimborso_out > 0.009:
+            if not data.metodo_rimborso:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="Metodo di rimborso obbligatorio per una terminazione con rimborso",
+                )
+            movement = CashMovement(
+                trainer_id=trainer.id,
+                data_effettiva=data_chiusura,
+                tipo="USCITA",
+                categoria=CATEGORIA_RIMBORSO_CONTRATTO,
+                importo=rimborso_out,                 # fonte-unica-importo: == delta totale_rimborsato
+                metodo=data.metodo_rimborso,
+                id_cliente=contract.id_cliente,
+                id_contratto=contract.id,
+                id_rata=None,
+                note=data.note or f"Rimborso terminazione - {client_label}",
+            )
+            session.add(movement)
+            contract.totale_rimborsato = old_rimborsato + rimborso_out
+        # Il non-rimborsato → wallet del cliente (ADR-020), fuori dal residuo (storno = residuo_pre + rimborso_out).
+        wallet_credit = round(settlement.credito_cliente - rimborso_out, 2)
+        if wallet_credit > 0.009:
+            wallet_cliente = CreditoCliente(
+                trainer_id=trainer.id,
+                id_cliente=contract.id_cliente,
+                importo=wallet_credit,
+                importo_erogato=0.0,
+                stato="APERTO",
+                causale="RIMBORSO_DIFFERITO",
+                id_contratto_origine=contract.id,
+                data_creazione=data_chiusura,
+            )
+            session.add(wallet_cliente)
 
     elif settlement.esito == SettlementEsito.CREDITO_TRAINER:
         # Il cliente deve ancora per servizio già reso → scelta esplicita obbligatoria (ADR-018).
@@ -1477,12 +1508,14 @@ def terminate_contract(
     #    crediti_usati è event-derived e può driftare; è l'unico record del servizio forfettato).
     #    Payload ADR-018 (§6.2): ricostruibile se il trainer ha incassato, abbuonato o rinunciato.
     is_cliente = settlement.esito == SettlementEsito.CREDITO_CLIENTE
-    if movement is not None or credito_differito is not None:
-        session.flush()  # popola gli id (movimento e/o receivable) per l'audit
+    if movement is not None or credito_differito is not None or wallet_cliente is not None:
+        session.flush()  # popola gli id (movimento, receivable e/o wallet) per l'audit
     if movement is not None:
         log_audit(session, "movement", movement.id, "CREATE", trainer.id)
     if credito_differito is not None:
         log_audit(session, "credito_terminazione", credito_differito.id, "CREATE", trainer.id)
+    if wallet_cliente is not None:
+        log_audit(session, "credito_cliente", wallet_cliente.id, "CREATE", trainer.id)
     log_audit(session, "contract", contract.id, "UPDATE", trainer.id, {
         "motivo_chiusura": {"old": None, "new": motivo},
         "data_chiusura": {"old": None, "new": data_chiusura},
@@ -1499,8 +1532,11 @@ def terminate_contract(
         "importo_incassato": round(incasso_ora, 2),
         "saldo_trainer_rinunciato": round(saldo_trainer_rinunciato, 2),
         "importo_differito": round(settlement.credito_trainer, 2) if credito_differito is not None else 0.0,
+        "importo_rimborsato": round(rimborso_out, 2),
+        "wallet_cliente_credito": round(settlement.credito_cliente - rimborso_out, 2) if is_cliente else 0.0,
         "movimento_cassa_id": movement.id if movement is not None else None,
         "credito_terminazione_id": credito_differito.id if credito_differito is not None else None,
+        "credito_cliente_id": wallet_cliente.id if wallet_cliente is not None else None,
     })
     # Transizione `chiuso` (P2): terminate la logga DA SÉ (non chiama _sync, che altrimenti la loggherebbe)
     log_contract_lifecycle_transition(
@@ -1596,8 +1632,25 @@ def reopen_contract(
         })
         crediti_annullati += 1
 
-    # R4) Wallet cliente (ADR-020): i crediti_cliente di QUESTA terminazione → ANNULLATO. L'entità wallet
-    #   arriva con lo Step 3; qui resta il segnaposto del principio "instrada il credito" (D-INSTRADA).
+    # R4) Wallet cliente (ADR-020): i crediti_cliente di QUESTA terminazione → ANNULLATO. Le erogazioni
+    #   parziali già fatte (USCITA, G8.1 Step 4) RESTANO (R1); il credito residuo si riassorbe nel
+    #   contratto (il residuo net-aware lo riflette). È l'altra metà del "instrada il credito" (D-INSTRADA).
+    wallet_annullati = 0
+    open_wallets = session.exec(
+        select(CreditoCliente).where(
+            CreditoCliente.id_contratto_origine == contract.id,
+            CreditoCliente.stato != "ANNULLATO",
+            CreditoCliente.deleted_at == None,
+        )
+    ).all()
+    for w in open_wallets:
+        w.stato = "ANNULLATO"
+        w.data_chiusura = date.today()
+        session.add(w)
+        log_audit(session, "credito_cliente", w.id, "UPDATE", trainer.id, {
+            "stato": {"old": "APERTO/SALDATO", "new": "ANNULLATO"},
+        })
+        wallet_annullati += 1
 
     # R2) Storno inverso: azzera la quota → il residuo() net-aware si ricalcola da sé (R7).
     contract.quota_stornata = 0
@@ -1634,6 +1687,7 @@ def reopen_contract(
         "quota_stornata": {"old": old_quota, "new": 0},
         "rate_ripristinate": rate_ripristinate,
         "crediti_differiti_annullati": crediti_annullati,
+        "wallet_cliente_annullati": wallet_annullati,
         "rimborso_preservato": round(old_rimborsato, 2),        # ADR-019: cassa NON toccata
         "totale_versato_preservato": round(old_versato, 2),
     })
@@ -1694,6 +1748,13 @@ def reopen_preview(
             CreditoTerminazione.deleted_at == None,
         )
     ).all())
+    wallet_da_annullare = len(session.exec(
+        select(CreditoCliente).where(
+            CreditoCliente.id_contratto_origine == contract.id,
+            CreditoCliente.stato != "ANNULLATO",
+            CreditoCliente.deleted_at == None,
+        )
+    ).all())
     # R8: rinnovo vivo a valle (figlio rinnovo_di ancora aperto). G8.1 PROPONE, non agisce (D-PROPONE).
     rinnovo_vivo = session.exec(
         select(Contract).where(
@@ -1712,6 +1773,8 @@ def reopen_preview(
         parti.append(f"{rate_da_ripristinare} rate tornano attive")
     if receivable_da_annullare:
         parti.append(f"{receivable_da_annullare} crediti differiti vengono annullati")
+    if wallet_da_annullare:
+        parti.append(f"{wallet_da_annullare} crediti a wallet del cliente vengono annullati")
     dettaglio = "; ".join(parti) if parti else "nessuna cassa da preservare"
     messaggio = (
         f"Riaprendo, la cassa registrata NON viene cancellata: {dettaglio}. "
@@ -1729,7 +1792,7 @@ def reopen_preview(
         incasso_che_resta=incasso_che_resta,
         rate_da_ripristinare=rate_da_ripristinare,
         receivable_da_annullare=receivable_da_annullare,
-        wallet_da_annullare=0,  # G8.1 Step 3 (entità wallet)
+        wallet_da_annullare=wallet_da_annullare,
         ha_rinnovo_vivo=rinnovo_vivo is not None,
         id_rinnovo_vivo=rinnovo_vivo.id if rinnovo_vivo is not None else None,
         messaggio=messaggio,

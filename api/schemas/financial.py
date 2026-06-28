@@ -166,10 +166,12 @@ class ContractTerminate(BaseModel):
     BLINDATO (mass-assignment): NESSUN campo calcolato in input — né `totale_versato`, né
     `totale_rimborsato`/`quota_stornata`. Il conguaglio (e quindi `credito_cliente`/`credito_trainer`,
     l'esito e il `motivo_chiusura`) è calcolato server-side (`compute_settlement`, base sedute), NON
-    scelto dal trainer. L'UNICO importo in input è `importo_incassato`, la **proposta editabile** del
-    saldo a favore del trainer (cap `[0, credito_trainer]` verificato nel router → 422).
+    scelto dal trainer. I DUE importi in input sono **proposte editabili**, mai conguagli arbitrari:
+    `importo_incassato` (saldo a favore del trainer, cap `[0, credito_trainer]`) e `importo_rimborso`
+    (rimborso al cliente, cap `[0, credito_cliente]`); il cap superiore è verificato nel router → 422.
 
-    Ramo CREDITO_CLIENTE: `metodo_rimborso` obbligatorio (422 nel router).
+    Ramo CREDITO_CLIENTE (G8.1/ADR-020): `importo_rimborso` EDITABILE `[0, credito_cliente]` (default =
+    pieno); `metodo_rimborso` obbligatorio SOLO se rimborso > 0; il non-rimborsato va a wallet cliente.
     Ramo CREDITO_TRAINER: `azione_credito_trainer` obbligatoria (422); poi
       - `INCASSA_ORA` → `metodo_pagamento` obbligatorio; `importo_incassato` opzionale (default = credito_trainer);
       - `RINUNCIA_ESPRESSA` → `note` non vuote obbligatorie.
@@ -177,7 +179,8 @@ class ContractTerminate(BaseModel):
     """
     model_config = {"extra": "forbid"}
 
-    metodo_rimborso: Optional[str] = None                 # ramo CREDITO_CLIENTE
+    metodo_rimborso: Optional[str] = None                 # ramo CREDITO_CLIENTE (richiesto solo se rimborso > 0)
+    importo_rimborso: Optional[float] = None              # CREDITO_CLIENTE (G8.1): rimborso editabile [0, credito_cliente]
     azione_credito_trainer: Optional[str] = None          # ramo CREDITO_TRAINER: INCASSA_ORA | RINUNCIA_ESPRESSA
     importo_incassato: Optional[float] = None             # INCASSA_ORA: proposta editabile [0, credito_trainer]
     metodo_pagamento: Optional[str] = None                # INCASSA_ORA: metodo dell'incasso di conguaglio
@@ -204,6 +207,14 @@ class ContractTerminate(BaseModel):
         # Cap superiore (<= credito_trainer) verificato nel router (richiede R−V server-side).
         if v is not None and v < 0:
             raise ValueError("L'importo da incassare non può essere negativo.")
+        return v
+
+    @field_validator("importo_rimborso")
+    @classmethod
+    def _validate_importo_rimborso(cls, v: Optional[float]) -> Optional[float]:
+        # Cap superiore (<= credito_cliente) verificato nel router (richiede V−R server-side).
+        if v is not None and v < 0:
+            raise ValueError("L'importo da rimborsare non può essere negativo.")
         return v
 
     @field_validator("data_chiusura")
