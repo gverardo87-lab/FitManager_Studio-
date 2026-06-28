@@ -22,7 +22,10 @@ from api.models.rate import Rate
 from api.models.trainer import Trainer
 from api.models.event import Event
 from api.services import contract_state as cstate
-from api.services.cash_categories import CATEGORIA_RIMBORSO_CONTRATTO
+from api.services.cash_categories import (
+    CATEGORIA_INCASSO_CONGUAGLIO_CONTRATTO,
+    CATEGORIA_RIMBORSO_CONTRATTO,
+)
 
 TODAY = date.today()
 FUTURE = (TODAY + timedelta(days=120)).isoformat()
@@ -101,6 +104,15 @@ def _active_rate_ids(session, contract_id):
     }
 
 
+def _count_active_movements(session, contract_id):
+    return len(session.exec(
+        select(CashMovement).where(
+            CashMovement.id_contratto == contract_id,
+            CashMovement.deleted_at == None,
+        )
+    ).all())
+
+
 # ── Riapertura di un auto-close COMPLETAMENTO (zero cassa) ──────────
 
 def test_reopen_completamento(client, auth_headers, sample_client, session):
@@ -122,25 +134,27 @@ def test_reopen_completamento(client, auth_headers, sample_client, session):
     assert round(contract.quota_stornata, 2) == 0.0
 
 
-# ── Round-trip: terminate RIMBORSO → reopen ripristina tutto ───────
+# ── Reopen NON-distruttivo: terminate RIMBORSO → reopen LASCIA la cassa, ricalcola (ADR-019) ──
 
-def test_reopen_terminazione_rimborso_round_trip(client, auth_headers, sample_client, session):
+def test_reopen_terminazione_rimborso_ricalcola(client, auth_headers, sample_client, session):
+    """G8.1/ADR-019: reopen NON cancella più il rimborso (era 'inverso esatto'). La USCITA resta (fatto
+    datato fiscalmente intoccabile), `totale_rimborsato` invariato; il residuo net-aware si ricalcola
+    INCLUDENDO il rimborso che resta — il cliente ha riavuto denaro → deve di più."""
     c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=500.0, crediti=10)
     t = _trainer(session)
     _complete_pt(session, t.id, sample_client["id"], c["id"], 2)  # reso 200
     rata = _rate(client, auth_headers, c["id"], 300.0)             # PENDENTE → terminate la soft-elimina
 
     rate_pre = _active_rate_ids(session, c["id"])
-    residuo_pre = cstate.residuo(session.get(Contract, c["id"]))   # 1000 - 500 = 500
 
-    # terminate → RIMBORSO 300, quota_stornata 500, rata soft-eliminata, chiuso
+    # terminate → RIMBORSO 300, quota_stornata 800 (= P − reso), rata soft-eliminata, chiuso
     rt = client.post(f"/api/contracts/{c['id']}/terminate",
                      json={"metodo_rimborso": "CONTANTI"}, headers=auth_headers)
     assert rt.status_code == 200, rt.text
     session.expire_all()
     assert session.get(Rate, rata["id"]).deleted_at is not None   # rata eliminata da terminate
 
-    # reopen → annulla refund + storno + ripristina rate + chiuso=False
+    # reopen → cassa RESTA (rimborso non cancellato) + storno azzerato + rate ripristinate
     rr = client.post(f"/api/contracts/{c['id']}/reopen", headers=auth_headers)
     assert rr.status_code == 200, rr.text
 
@@ -148,15 +162,17 @@ def test_reopen_terminazione_rimborso_round_trip(client, auth_headers, sample_cl
     contract = session.get(Contract, c["id"])
     assert contract.chiuso is False
     assert contract.motivo_chiusura is None
-    assert round(contract.totale_rimborsato, 2) == 0.0            # rimborso invertito
-    assert round(contract.quota_stornata, 2) == 0.0               # storno invertito
-    assert cstate.residuo(contract) == residuo_pre == 500.0       # residuo ripristinato
+    assert round(contract.totale_rimborsato, 2) == 300.0          # RESTA (ADR-019: la cassa non si tocca)
+    assert round(contract.quota_stornata, 2) == 0.0               # storno azzerato
+    # residuo ricalcolato net-aware: P − netto = 1000 − (500 − 300) = 800 (il rimborso che resta lo alza)
+    assert cstate.residuo(contract) == 800.0
     # rate ripristinate: lo stato attivo torna identico al pre-terminate
     assert _active_rate_ids(session, c["id"]) == rate_pre
     assert session.get(Rate, rata["id"]).deleted_at is None
-    # àncora: Σ ENTRATA invariata == versato; Σ USCITA RIMBORSO attivi azzerata
+    # àncora: Σ ENTRATA == versato (invariato); Σ USCITA RIMBORSO RESTA (non azzerata)
     assert _sum_movements(session, c["id"], "ENTRATA") == round(contract.totale_versato, 2) == 500.0
-    assert _sum_movements(session, c["id"], "USCITA", categoria=CATEGORIA_RIMBORSO_CONTRATTO) == 0.0
+    assert _sum_movements(session, c["id"], "USCITA", categoria=CATEGORIA_RIMBORSO_CONTRATTO) == \
+        round(contract.totale_rimborsato, 2) == 300.0
 
 
 # ── Riapertura di una TERMINAZIONE_SALDO_TRAINER/rinuncia (storno-only) ─────────
@@ -201,27 +217,130 @@ def test_reopen_bouncer_404(client, auth_headers, sample_client):
     assert r.status_code == 404
 
 
+# ── AC-3 (G8.1): reopen dopo INCASSA_ORA — l'incasso di conguaglio RESTA, residuo ricalcolato ──
+
+def test_reopen_dopo_incassa_ora_mantiene_entrata(client, auth_headers, sample_client, session):
+    """AC-3/ADR-019: il conguaglio incassato (INCASSA_ORA) è reddito reale → reopen NON lo fa sparire.
+    L'ENTRATA resta attiva, `totale_versato` invariato; diventa un pagamento sul contratto riaperto e
+    il residuo net-aware lo riflette (P − netto)."""
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=500.0, crediti=10)
+    t = _trainer(session)
+    _complete_pt(session, t.id, sample_client["id"], c["id"], 8)  # reso 800 > versato 500 → credito_trainer 300
+
+    rt = client.post(f"/api/contracts/{c['id']}/terminate",
+                     json={"azione_credito_trainer": "INCASSA_ORA", "metodo_pagamento": "CONTANTI"},
+                     headers=auth_headers)
+    assert rt.status_code == 200, rt.text
+    session.expire_all()
+    contract = session.get(Contract, c["id"])
+    assert round(contract.totale_versato, 2) == 800.0   # 500 + 300 conguaglio
+    assert _sum_movements(session, c["id"], "ENTRATA", categoria=CATEGORIA_INCASSO_CONGUAGLIO_CONTRATTO) == 300.0
+
+    rr = client.post(f"/api/contracts/{c['id']}/reopen", headers=auth_headers)
+    assert rr.status_code == 200, rr.text
+    session.expire_all()
+    contract = session.get(Contract, c["id"])
+    assert contract.chiuso is False
+    # l'ENTRATA di conguaglio RESTA attiva; versato invariato (ADR-019: cassa non toccata)
+    assert _sum_movements(session, c["id"], "ENTRATA", categoria=CATEGORIA_INCASSO_CONGUAGLIO_CONTRATTO) == 300.0
+    assert round(contract.totale_versato, 2) == 800.0
+    assert round(contract.quota_stornata, 2) == 0.0
+    # residuo ricalcolato: 1000 − netto(800) = 200 (il conguaglio incassato è un pagamento sul contratto)
+    assert cstate.residuo(contract) == 200.0
+    assert _sum_movements(session, c["id"], "ENTRATA") == round(contract.totale_versato, 2) == 800.0  # àncora
+
+
+# ── AC-7 (G8.1): le ancore reggono — reopen non cancella NESSUN CashMovement ──
+
+def test_reopen_non_cancella_cash_movements(client, auth_headers, sample_client, session):
+    """AC-7/ADR-019 (tesi falsificabile): dopo reopen, nessun CashMovement è soft-deleted. Il conteggio
+    dei movimenti attivi prima e dopo è identico; le ancore Σ ENTRATA==versato / Σ USCITA==rimborsato reggono."""
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=600.0, crediti=10)
+    t = _trainer(session)
+    _complete_pt(session, t.id, sample_client["id"], c["id"], 2)  # reso 200 < 600 → rimborso 400
+    client.post(f"/api/contracts/{c['id']}/terminate",
+                json={"metodo_rimborso": "BONIFICO"}, headers=auth_headers)
+    session.expire_all()
+    movimenti_pre = _count_active_movements(session, c["id"])     # acconto ENTRATA + rimborso USCITA = 2
+
+    client.post(f"/api/contracts/{c['id']}/reopen", headers=auth_headers)
+    session.expire_all()
+    contract = session.get(Contract, c["id"])
+    assert _count_active_movements(session, c["id"]) == movimenti_pre   # NESSUN movimento cancellato
+    assert _sum_movements(session, c["id"], "ENTRATA") == round(contract.totale_versato, 2)
+    assert _sum_movements(session, c["id"], "USCITA", categoria=CATEGORIA_RIMBORSO_CONTRATTO) == \
+        round(contract.totale_rimborsato, 2)
+
+
+# ── AC-8 (G8.1): reopen-preview espone l'impatto pieno (dry-run, zero scritture) ──
+
+def test_reopen_preview_dopo_rimborso(client, auth_headers, sample_client, session):
+    """AC-8: reopen-preview mostra residuo_dopo (ricalcolato), il rimborso che RESTA e le rate da
+    ripristinare, senza scrivere nulla. ha_rinnovo_vivo=False se non c'è un figlio aperto."""
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=500.0, crediti=10)
+    t = _trainer(session)
+    _complete_pt(session, t.id, sample_client["id"], c["id"], 2)  # reso 200 → rimborso 300
+    _rate(client, auth_headers, c["id"], 300.0)                    # PENDENTE → terminate la marca
+    client.post(f"/api/contracts/{c['id']}/terminate",
+                json={"metodo_rimborso": "CONTANTI"}, headers=auth_headers)
+
+    pv = client.get(f"/api/contracts/{c['id']}/reopen-preview", headers=auth_headers)
+    assert pv.status_code == 200, pv.text
+    body = pv.json()
+    assert body["residuo_dopo"] == 800.0          # P − netto = 1000 − (500 − 300)
+    assert body["rimborso_che_resta"] == 300.0
+    assert body["incasso_che_resta"] == 0.0
+    assert body["rate_da_ripristinare"] == 1
+    assert body["receivable_da_annullare"] == 0
+    assert body["ha_rinnovo_vivo"] is False
+    assert body["id_rinnovo_vivo"] is None
+    assert body["messaggio"]
+    session.expire_all()
+    assert session.get(Contract, c["id"]).chiuso is True   # dry-run: nessuna scrittura
+
+
+def test_reopen_preview_segnala_rinnovo_vivo(client, auth_headers, sample_client, session):
+    """AC-8 (S5): se esiste un rinnovo figlio ancora aperto, reopen-preview lo segnala (ha_rinnovo_vivo
+    + id) perché il FE proponga la gestione — reopen NON agisce in automatico (D-PROPONE)."""
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=500.0, acconto=0.0, crediti=5)
+    t = _trainer(session)
+    figlio = Contract(trainer_id=t.id, id_cliente=sample_client["id"], rinnovo_di=c["id"],
+                      chiuso=False, prezzo_totale=500.0, crediti_totali=5,
+                      data_inizio=TODAY, data_scadenza=TODAY + timedelta(days=120))
+    session.add(figlio)
+    session.commit()
+    session.refresh(figlio)
+    # chiudi il parent (PARI: reso 0 == versato 0 → CONSUNZIONE)
+    client.post(f"/api/contracts/{c['id']}/terminate", json={}, headers=auth_headers)
+
+    pv = client.get(f"/api/contracts/{c['id']}/reopen-preview", headers=auth_headers).json()
+    assert pv["ha_rinnovo_vivo"] is True
+    assert pv["id_rinnovo_vivo"] == figlio.id
+
+
 # ── Re-terminazione dopo riapertura (nessuno stato-zombie) ─────────
 
 def test_reopen_then_reterminate(client, auth_headers, sample_client, session):
+    """G8.1/ADR-019: dopo un reopen NON-distruttivo il primo rimborso RESTA (il netto lo sconta già).
+    Ri-terminando, il conguaglio net-aware vede netto == reso → PARI: NESSUN secondo rimborso (niente
+    doppio rimborso). Il vecchio modello 'funzionava' solo perché cancellava e rifaceva la cassa."""
     c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=500.0, crediti=10)
     t = _trainer(session)
-    _complete_pt(session, t.id, sample_client["id"], c["id"], 2)
+    _complete_pt(session, t.id, sample_client["id"], c["id"], 2)  # reso 200
 
     client.post(f"/api/contracts/{c['id']}/terminate", json={"metodo_rimborso": "CONTANTI"}, headers=auth_headers)
     client.post(f"/api/contracts/{c['id']}/reopen", headers=auth_headers)
-    # seconda terminazione dopo la riapertura: deve funzionare e ricalcolare da capo
-    rt2 = client.post(f"/api/contracts/{c['id']}/terminate",
-                      json={"metodo_rimborso": "CONTANTI"}, headers=auth_headers)
+    # seconda terminazione: netto = 500 − 300 = 200 == reso 200 → PARI (nessun rimborso, motivo CONSUNZIONE)
+    rt2 = client.post(f"/api/contracts/{c['id']}/terminate", json={}, headers=auth_headers)
     assert rt2.status_code == 200, rt2.text
 
     session.expire_all()
     contract = session.get(Contract, c["id"])
     assert contract.chiuso is True
-    assert contract.motivo_chiusura == "TERMINAZIONE_RIMBORSO"
-    assert round(contract.totale_rimborsato, 2) == 300.0   # un solo rimborso attivo, non accumulato
+    assert contract.motivo_chiusura == "CONSUNZIONE"        # PARI, non un secondo RIMBORSO
+    assert round(contract.totale_rimborsato, 2) == 300.0    # il rimborso originale, NON raddoppiato
     assert cstate.residuo(contract) == 0.0
-    # un solo movimento RIMBORSO attivo (il primo è stato soft-eliminato dalla reopen)
+    # un solo movimento RIMBORSO attivo: il primo RESTA, la riterminazione PARI non ne crea un secondo
     assert _sum_movements(session, c["id"], "USCITA", categoria=CATEGORIA_RIMBORSO_CONTRATTO) == 300.0
 
 

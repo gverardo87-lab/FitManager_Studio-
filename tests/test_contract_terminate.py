@@ -664,9 +664,10 @@ def test_terminate_rinuncia_senza_nota_422(client, auth_headers, sample_client, 
     assert session.get(Contract, c["id"]).chiuso is False
 
 
-def test_reopen_dopo_incassa_ora_roundtrip(client, auth_headers, sample_client, session):
-    """AC §10.4-13: reopen dopo INCASSA_ORA è round-trip esatto: ENTRATA INCASSO_CONGUAGLIO annullata,
-    totale_versato torna al pre-terminate, quota_stornata azzerata, residuo ripristinato."""
+def test_reopen_dopo_incassa_ora_ricalcola(client, auth_headers, sample_client, session):
+    """AC §10.4-13 → G8.1/ADR-019: reopen dopo INCASSA_ORA è NON-distruttivo. L'ENTRATA di conguaglio è
+    reddito reale: RESTA (totale_versato invariato) e diventa pagamento sul contratto; il residuo
+    net-aware si ricalcola (P − netto), lo storno si azzera."""
     c = _contract_credito_trainer(client, auth_headers, sample_client, session)
     assert client.post(f"/api/contracts/{c['id']}/terminate",
                        json={"azione_credito_trainer": "INCASSA_ORA", "metodo_pagamento": "CONTANTI"},
@@ -679,11 +680,12 @@ def test_reopen_dopo_incassa_ora_roundtrip(client, auth_headers, sample_client, 
     session.expire_all()
     contract = session.get(Contract, c["id"])
     assert contract.chiuso is False
-    assert round(contract.totale_versato, 2) == 100.0          # incasso conguaglio invertito
-    assert round(contract.quota_stornata, 2) == 0.0            # storno ripristinato
-    assert cstate.residuo(contract) == 900.0                   # P − V pre-terminate
-    # il movimento di conguaglio è soft-deleted (non più attivo)
-    assert _sum_movements(session, c["id"], "ENTRATA", categoria=CATEGORIA_INCASSO_CONGUAGLIO_CONTRATTO) == 0.0
+    assert round(contract.totale_versato, 2) == 400.0          # incasso conguaglio RESTA (ADR-019)
+    assert round(contract.quota_stornata, 2) == 0.0            # storno azzerato
+    # residuo ricalcolato net-aware: 1000 − netto(400) = 600 (il conguaglio incassato resta come pagamento)
+    assert cstate.residuo(contract) == 600.0
+    # il movimento di conguaglio RESTA attivo (non più soft-deleted)
+    assert _sum_movements(session, c["id"], "ENTRATA", categoria=CATEGORIA_INCASSO_CONGUAGLIO_CONTRATTO) == 300.0
 
 
 def test_incasso_conguaglio_conta_come_ricavo(client, auth_headers, sample_client, session):

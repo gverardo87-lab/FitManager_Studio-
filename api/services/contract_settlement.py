@@ -75,16 +75,16 @@ class Settlement:
     azione + movimenti/colonne: rimborso (`credito_cliente`), incasso/rinuncia/a-credito
     (`credito_trainer`), storno (`residuo_pre − incassato`). Nessuna decisione d'azione qui.
 
-    Con P=prezzo, V=versato, R=valore_servizio_reso:
-      credito_cliente = max(V−R, 0) · credito_trainer = max(R−V, 0) · quota_non_erogata = max(P−R, 0)
-      residuo_pre = max(P−V, 0) == residuo() PRE-storno (= residuo_corrente passato dal caller)."""
+    Con P=prezzo, N=netto incassato (versato − rimborsato, G8.1/ADR-019), R=valore_servizio_reso:
+      credito_cliente = max(N−R, 0) · credito_trainer = max(R−N, 0) · quota_non_erogata = max(P−R, 0)
+      residuo_pre = residuo() PRE-storno (net-aware, = residuo_corrente passato dal caller)."""
     valore_servizio_reso: float   # R
-    conguaglio: float             # R − V (firmato), classificato con dead-zone ±0.009
+    conguaglio: float             # R − N (firmato), classificato con dead-zone ±0.009
     esito: SettlementEsito
-    credito_cliente: float        # max(V − R, 0): il trainer deve restituire (rimborso al cliente)
-    credito_trainer: float        # max(R − V, 0): il cliente deve ancora, per servizio già reso
+    credito_cliente: float        # max(N − R, 0): il trainer deve restituire (rimborso al cliente)
+    credito_trainer: float        # max(R − N, 0): il cliente deve ancora, per servizio già reso
     quota_non_erogata: float      # max(P − R, 0): servizio mai erogato (storno legittimo)
-    residuo_pre: float            # max(P − V, 0) == residuo() PRE-storno
+    residuo_pre: float            # == residuo() PRE-storno (net-aware)
     sedute_erogate: int
 
 
@@ -95,6 +95,7 @@ def compute_settlement(
     crediti_totali: int | None,
     totale_versato: float | None,
     residuo_corrente: float,
+    totale_rimborsato: float | None = None,
     policy: SettlementPolicy = DEFAULT_POLICY,
 ) -> Settlement:
     """Conguaglio di terminazione (FDM §7 + ADR-018), **fatto economico puro** firmato sul servizio reso.
@@ -102,18 +103,24 @@ def compute_settlement(
     `residuo_corrente` = `contract_state.residuo()` PRIMA dello storno, passato dal caller in UNA
     variabile (fonte-unica-importo, IMPL_PLAN §4.6); diventa `residuo_pre`, riusato per la gamba di storno.
 
-    conguaglio = valore_servizio_reso − totale_versato, classificato con dead-zone ±0.009:
-      • < 0  → versato > reso → **CREDITO_CLIENTE** (il trainer deve restituire `credito_cliente`)
-      • > 0  → reso > versato → **CREDITO_TRAINER** (il cliente deve ancora `credito_trainer`)
+    NET-AWARE (G8.1/ADR-019): il conguaglio confronta il servizio reso con l'INCASSATO NETTO
+    `N = max(totale_versato − totale_rimborsato, 0)`, non col versato lordo. Con `totale_rimborsato`
+    assente/0 → `N == versato` → byte-identico a pre-G8.1 (al terminate il rimborso è sempre 0). Diventa
+    >0 solo ri-terminando un contratto RIAPERTO con un rimborso che resta (ADR-019): lì il netto già
+    sconta il rimborso → una ri-terminazione PARI non ri-rimborsa (niente doppio rimborso).
+
+    conguaglio = valore_servizio_reso − N, classificato con dead-zone ±0.009:
+      • < 0  → N > reso → **CREDITO_CLIENTE** (il trainer deve restituire `credito_cliente`)
+      • > 0  → reso > N → **CREDITO_TRAINER** (il cliente deve ancora `credito_trainer`)
       • ~ 0  → **PARI**
     Le tre azioni sul ramo CREDITO_TRAINER (incassa ora / rinuncia / a credito) le sceglie il caller:
     qui si espone solo il fatto (credito_trainer), mai il write-off come default.
     """
-    reso = valore_servizio_reso(sedute_erogate, prezzo_totale, crediti_totali, policy)
-    versato = totale_versato or 0
-    prezzo = prezzo_totale or 0
     a = policy.arrotondamento
-    conguaglio = round(reso - versato, a)
+    reso = valore_servizio_reso(sedute_erogate, prezzo_totale, crediti_totali, policy)
+    prezzo = prezzo_totale or 0
+    netto = round(max((totale_versato or 0) - (totale_rimborsato or 0), 0.0), a)
+    conguaglio = round(reso - netto, a)
 
     if conguaglio < -0.009:
         esito = SettlementEsito.CREDITO_CLIENTE
@@ -126,8 +133,8 @@ def compute_settlement(
         valore_servizio_reso=reso,
         conguaglio=conguaglio,
         esito=esito,
-        credito_cliente=round(max(versato - reso, 0.0), a),
-        credito_trainer=round(max(reso - versato, 0.0), a),
+        credito_cliente=round(max(netto - reso, 0.0), a),
+        credito_trainer=round(max(reso - netto, 0.0), a),
         quota_non_erogata=round(max(prezzo - reso, 0.0), a),
         residuo_pre=round(max(residuo_corrente or 0, 0.0), a),
         sedute_erogate=max(int(sedute_erogate or 0), 0),

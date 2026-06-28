@@ -5,7 +5,8 @@ Il credito a favore del trainer SOPRAVVIVE alla chiusura come receivable FUORI d
 - `terminate` A_CREDITO crea il receivable (importo = credito_trainer), storna il dovuto dal contratto
   (residuo()==0) e lo ri-traccia qui — mai una Rate viva su contratto chiuso;
 - l'incasso (anche parziale) genera ENTRATA `INCASSO_CONGUAGLIO_CONTRATTO` + `totale_versato +=`;
-- `reopen` annulla il receivable e (via C-bis) inverte gli incassi parziali.
+- `reopen` (G8.1/ADR-019, NON-distruttivo) annulla il receivable; gli incassi parziali RESTANO (fatti
+  datati) e diventano pagamenti sul contratto riaperto (il residuo net-aware li sconta).
 
 Fixture canonica: prezzo 1000, 10 crediti, acconto 100, 4 sedute erogate → R=400, V=100 →
 credito_trainer=300, residuo_pre (P−V)=900, quota_non_erogata (P−R)=600.
@@ -210,15 +211,16 @@ def test_reopen_dopo_a_credito_con_incasso_parziale(client, auth_headers, sample
     session.expire_all()
     assert round(session.get(Contract, c["id"]).totale_versato, 2) == 300.0
 
-    # reopen → receivable ANNULLATO + incasso parziale invertito (C-bis) + storno azzerato
+    # reopen (NON-distruttivo) → receivable ANNULLATO + incasso parziale RESTA (R1) + storno azzerato
     assert client.post(f"/api/contracts/{c['id']}/reopen", headers=auth_headers).status_code == 200
     session.expire_all()
     contract = session.get(Contract, c["id"])
     assert contract.chiuso is False
-    assert round(contract.totale_versato, 2) == 100.0          # incasso parziale invertito
+    assert round(contract.totale_versato, 2) == 300.0          # incasso parziale RESTA (ADR-019)
     assert round(contract.quota_stornata, 2) == 0.0            # storno azzerato
-    assert cstate.residuo(contract) == 900.0                   # residuo pre-terminate ripristinato (P−V)
-    assert _sum_movements(session, c["id"], "ENTRATA", categoria=CATEGORIA_INCASSO_CONGUAGLIO_CONTRATTO) == 0.0
+    # residuo ricalcolato net-aware: 1000 − 300 = 700 (il versato incassato resta → residuo più basso)
+    assert cstate.residuo(contract) == 700.0
+    assert _sum_movements(session, c["id"], "ENTRATA", categoria=CATEGORIA_INCASSO_CONGUAGLIO_CONTRATTO) == 200.0
 
     credito = session.get(CreditoTerminazione, cid)
     assert credito.stato == "ANNULLATO"

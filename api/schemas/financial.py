@@ -264,6 +264,26 @@ class CreditoTerminazioneResponse(BaseModel):
         return round(max((self.importo or 0) - (self.importo_incassato or 0), 0.0), 2)
 
 
+class ReopenPreview(BaseModel):
+    """Impatto pieno di una riapertura, calcolato PRIMA della conferma (G8.1/ADR-019, dry-run).
+
+    Gemello di ContractSettlementPreview per il reopen NON-distruttivo: mostra cosa RESTA (la cassa di
+    terminazione NON si cancella → diventa pagamento/rimborso sul contratto) e cosa si ANNULLA (storno,
+    receivable, wallet), col residuo ricalcolato net-aware. Se esiste un rinnovo vivo a valle (S5) lo
+    SEGNALA, perché il FE proponga la gestione — mai blocco cieco, mai azione silenziosa (D-PROPONE).
+    ZERO scritture.
+    """
+    residuo_dopo: float                    # residuo() net-aware dopo la riapertura (quota azzerata)
+    rimborso_che_resta: float              # USCITA RIMBORSO_CONTRATTO non cancellata (diventa rimborso sul contratto)
+    incasso_che_resta: float               # ENTRATA INCASSO_CONGUAGLIO non cancellata (diventa pagamento)
+    rate_da_ripristinare: int              # rate marcate chiusa_da_terminazione che tornano vive
+    receivable_da_annullare: int           # crediti_terminazione (G7.10) che passano ad ANNULLATO
+    wallet_da_annullare: int = 0           # crediti_cliente (ADR-020) che passano ad ANNULLATO (G8.1 Step 3)
+    ha_rinnovo_vivo: bool = False          # S5: esiste un contratto figlio (rinnovo_di) ancora aperto
+    id_rinnovo_vivo: Optional[int] = None  # id del rinnovo vivo, se presente
+    messaggio: str                         # riepilogo leggibile (la cassa resta, il residuo si ricalcola)
+
+
 # ════════════════════════════════════════════════════════════
 # RATE SCHEMAS
 # ════════════════════════════════════════════════════════════

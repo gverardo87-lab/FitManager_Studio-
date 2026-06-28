@@ -33,6 +33,7 @@ from api.schemas.financial import (
     ContractWithRatesResponse,
     ContractTerminate,
     ContractSettlementPreview,
+    ReopenPreview,
     CreditoTerminazioneResponse,
     VALID_AZIONI_CREDITO_TRAINER,
     RateResponse,
@@ -1230,6 +1231,7 @@ def _settlement_for(session: Session, contract: Contract):
         prezzo_totale=contract.prezzo_totale,
         crediti_totali=contract.crediti_totali,
         totale_versato=contract.totale_versato,
+        totale_rimborsato=contract.totale_rimborsato,  # G8.1: net-aware (ri-terminazione post-reopen)
         residuo_corrente=residuo_corrente,
     )
 
@@ -1523,34 +1525,37 @@ def reopen_contract(
     session: Session = Depends(get_session),
 ):
     """
-    Riapre un contratto chiuso (G7.4) — inverso ESPLICITO di terminate e dell'auto-close.
+    Riapre un contratto chiuso (G7.4 → G8.1/ADR-019: **ricalcola-e-instrada, NON-distruttivo**).
 
-    State-driven, non motivo-driven: inverte CIÒ CHE LO STATO mostra (rimborso, storno, rate),
-    qualunque sia il `motivo_chiusura`. È il path esplicito che la reopen-allowlist G7.2 demanda a
-    reopen (vs l'auto-riapertura credit/payment-driven, bloccata per le chiusure non-COMPLETAMENTO):
-    qui il trainer dichiara di voler annullare la chiusura, quindi NON c'è allowlist da rispettare.
-    Copre i 3 contratti muti del runbook G7.6 (motivo NULL, nessun storno → solo `chiuso=False`).
+    State-driven: porta il contratto allo stato CORRETTO rispetto alla cassa reale, qualunque sia il
+    `motivo_chiusura`. È il path esplicito che la reopen-allowlist G7.2 demanda (vs l'auto-riapertura
+    credit/payment-driven, bloccata per le chiusure non-COMPLETAMENTO). Copre i muti del runbook G7.6.
+
+    **PRINCIPIO ADR-019 — la cassa mossa non si tocca mai.** A differenza del vecchio "inverso esatto"
+    (G7.4/G7.9/G7.10, che soft-cancellava i CashMovement di terminazione scavalcando la protezione del
+    mastro e facendo SPARIRE reddito incassato), reopen ora LASCIA FERME le scritture di cassa (fatti
+    datati, fiscalmente intoccabili) e RICALCOLA: la cassa di terminazione che resta diventa
+    semplicemente pagamento/rimborso sul contratto riaperto, e `residuo()` net-aware (G8.1) la riflette.
 
     Operazione atomica (UN solo commit):
     A) Bouncer 404 → B) guard `chiuso==True` else 400
-    C) Gamba RIMBORSO inversa (se `totale_rimborsato>0`): soft-delete via ORM dei `CashMovement` USCITA
-       `RIMBORSO_CONTRATTO` attivi del contratto (`delete_movement` blocca `id_contratto` → ORM, come
-       `unpay_rate`) + `totale_rimborsato -=` la loro somma.
-    C-bis) Gamba INCASSO CONGUAGLIO inversa (ADR-018): soft-delete dei `CashMovement` ENTRATA
-       `INCASSO_CONGUAGLIO_CONTRATTO` + `totale_versato -=` la loro somma (inverso esatto di INCASSA_ORA
-       e degli incassi parziali del credito differito G7.10).
-    C-ter) Gamba CREDITO DIFFERITO inversa (G7.10): i receivable `crediti_terminazione` del contratto →
-       `stato=ANNULLATO` (zero cassa; gli incassi parziali sono già invertiti da C-bis).
-    D) Gamba STORNO inversa: `quota_stornata = 0` → `residuo()` ripristinato (prezzo − versato).
-    E) Ripristino rate: `deleted_at=None` SOLO sulle rate marcate `chiusa_da_terminazione` (M1, inverso
-       esatto: non resuscita le cancellate manualmente / dal piano rigenerato). Il marker viene azzerato.
-       Le SALDATE non erano state toccate (B-3), restano com'erano.
-    F) `chiuso=False` + `motivo_chiusura=None` + `data_chiusura=None`.
-    G) Audit (importi invertiti + n. rate ripristinate) + transizione `chiuso` (motivo riapertura_esplicita).
+    R1) Cassa IMMUTABILE: i `CashMovement` USCITA `RIMBORSO_CONTRATTO` e ENTRATA
+        `INCASSO_CONGUAGLIO_CONTRATTO` NON si toccano; `totale_versato`/`totale_rimborsato` invariati.
+    R2) Storno inverso: `quota_stornata = 0`.
+    R3) Receivable trainer (G7.10): `crediti_terminazione` del contratto → `ANNULLATO` (non-cash). Gli
+        eventuali incassi parziali RESTANO (R1) e diventano pagamenti sul contratto.
+    R4) Wallet cliente (ADR-020): i `crediti_cliente` di questa terminazione → `ANNULLATO` (G8.1 Step 3).
+    R5) Ripristino rate: `deleted_at=None` SOLO sulle rate marcate `chiusa_da_terminazione` (M1, non
+        resuscita le cancellate a mano / dal piano rigenerato). Marker azzerato. Le SALDATE intatte (B-3).
+    R6) `chiuso=False` + `motivo_chiusura=None` + `data_chiusura=None`.
+    R7) Residuo: ricalcolato AUTOMATICAMENTE dal SSoT net-aware (`P − netto − 0`); la cassa che resta
+        (rimborso uscito, conguaglio incassato) è già dentro `netto`. Nessuna scrittura.
+    G) Audit (cosa resta / cosa si annulla) + transizione `chiuso` (motivo riapertura_esplicita).
 
-    NB Strada B: come `unpay_rate` decrementa `totale_versato` (il "cresce-solo" vale sul forward;
-    l'inverso esplicito è l'eccezione sanzionata), qui si decrementano `totale_rimborsato`/`quota_stornata`.
-    `stato_pagamento` NON si tocca: terminate non l'aveva cambiato → resta coerente col pre-terminazione.
+    NB: le ancore `totale_versato == Σ ENTRATA` e `totale_rimborsato == Σ USCITA RIMBORSO` reggono
+    MEGLIO ora (nulla viene cancellato). Un'eventuale restituzione di denaro è un movimento NUOVO
+    esplicito, mai una cancellazione. `stato_pagamento` NON si tocca (coerente col pre-terminazione).
+    R8 (rinnovo vivo) è esposto da `GET /reopen-preview`, che il FE usa per avvisare/confermare.
     """
     # A) Bouncer ownership (404 mai 403)
     contract = _bouncer_contract_owned(session, contract_id, trainer.id)
@@ -1559,54 +1564,21 @@ def reopen_contract(
     if not contract.chiuso:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Il contratto non è chiuso")
 
-    now = datetime.now(timezone.utc)
     old_chiuso = contract.chiuso
     old_motivo = contract.motivo_chiusura
     old_rimborsato = contract.totale_rimborsato or 0
     old_versato = contract.totale_versato or 0
     old_quota = contract.quota_stornata or 0
 
-    # C) Gamba RIMBORSO inversa: annulla i movimenti di rimborso (via ORM — delete_movement blocca id_contratto)
-    rimborso_invertito = 0.0
-    if old_rimborsato > 0.009:
-        refund_movements = session.exec(
-            select(CashMovement).where(
-                CashMovement.id_contratto == contract.id,
-                CashMovement.categoria == CATEGORIA_RIMBORSO_CONTRATTO,
-                CashMovement.tipo == "USCITA",
-                CashMovement.deleted_at == None,
-            )
-        ).all()
-        for m in refund_movements:
-            m.deleted_at = now
-            session.add(m)
-            log_audit(session, "movement", m.id, "DELETE", trainer.id)
-            rimborso_invertito += m.importo
-        contract.totale_rimborsato = round(max(old_rimborsato - rimborso_invertito, 0.0), 2)
+    # R1) Cassa IMMUTABILE (ADR-019 D-CASSA-IMMUTABILE): NON si soft-cancellano i CashMovement di
+    #   terminazione (USCITA RIMBORSO_CONTRATTO, ENTRATA INCASSO_CONGUAGLIO_CONTRATTO) e NON si
+    #   decrementano `totale_versato`/`totale_rimborsato`. Restano fatti datati, fiscalmente intoccabili:
+    #   il rimborso uscito e il conguaglio incassato diventano rimborso/pagamento sul contratto riaperto,
+    #   e il residuo() net-aware (G8.1) li riflette da sé (R7). Le ancore Σ ENTRATA/USCITA reggono.
+    #   (Pre-G8.1 qui c'erano le gambe C/C-bis che CANCELLAVANO la cassa — rimosse, ADR-019.)
 
-    # C-bis) Gamba INCASSO CONGUAGLIO inversa (ADR-018): annulla l'eventuale ENTRATA di conguaglio trainer
-    #   (INCASSA_ORA) e DECREMENTA `totale_versato` (prima volta che reopen tocca il lordo: eccezione
-    #   sanzionata, gemella di unpay_rate). Senza, reopen non sarebbe l'inverso esatto del nuovo incasso.
-    incasso_invertito = 0.0
-    incasso_movements = session.exec(
-        select(CashMovement).where(
-            CashMovement.id_contratto == contract.id,
-            CashMovement.categoria == CATEGORIA_INCASSO_CONGUAGLIO_CONTRATTO,
-            CashMovement.tipo == "ENTRATA",
-            CashMovement.deleted_at == None,
-        )
-    ).all()
-    for m in incasso_movements:
-        m.deleted_at = now
-        session.add(m)
-        log_audit(session, "movement", m.id, "DELETE", trainer.id)
-        incasso_invertito += m.importo
-    if incasso_invertito > 0.009:
-        contract.totale_versato = round(max(old_versato - incasso_invertito, 0.0), 2)
-
-    # C-ter) Gamba CREDITO DIFFERITO inversa (G7.10): annulla il receivable creato da A_CREDITO. Gli
-    #   eventuali incassi parziali (ENTRATA INCASSO_CONGUAGLIO) sono GIÀ invertiti da C-bis (stessa
-    #   categoria); qui resta da chiudere il record del receivable → stato ANNULLATO (zero cassa).
+    # R3) Receivable trainer (G7.10): il differito non-cash si chiude → ANNULLATO. Gli incassi parziali
+    #   già registrati (ENTRATA INCASSO_CONGUAGLIO) RESTANO (R1) e contano come pagamento sul contratto.
     crediti_annullati = 0
     open_credits = session.exec(
         select(CreditoTerminazione).where(
@@ -1624,7 +1596,10 @@ def reopen_contract(
         })
         crediti_annullati += 1
 
-    # D) Gamba STORNO inversa: ripristina il residuo
+    # R4) Wallet cliente (ADR-020): i crediti_cliente di QUESTA terminazione → ANNULLATO. L'entità wallet
+    #   arriva con lo Step 3; qui resta il segnaposto del principio "instrada il credito" (D-INSTRADA).
+
+    # R2) Storno inverso: azzera la quota → il residuo() net-aware si ricalcola da sé (R7).
     contract.quota_stornata = 0
 
     # E) Ripristino SOLO le rate marcate da terminate (M1, inverso esatto; le SALDATE non erano toccate, B-3)
@@ -1650,26 +1625,115 @@ def reopen_contract(
     contract.data_chiusura = None
     session.add(contract)
 
-    # G) Audit atomico + transizione `chiuso` (la logga log_contract_lifecycle_transition, no doppio)
+    # G) Audit atomico + transizione `chiuso` (la logga log_contract_lifecycle_transition, no doppio).
+    #   ADR-019: la cassa resta (rimborso/versato INVARIATI) → si registrano i fatti datati preservati
+    #   accanto a ciò che si annulla (storno, receivable, rate ripristinate).
     log_audit(session, "contract", contract.id, "UPDATE", trainer.id, {
         "motivo_chiusura": {"old": old_motivo, "new": None},
-        "totale_rimborsato": {"old": old_rimborsato, "new": contract.totale_rimborsato},
-        "totale_versato": {"old": old_versato, "new": contract.totale_versato or 0},
+        "chiuso": {"old": True, "new": False},
         "quota_stornata": {"old": old_quota, "new": 0},
         "rate_ripristinate": rate_ripristinate,
         "crediti_differiti_annullati": crediti_annullati,
+        "rimborso_preservato": round(old_rimborsato, 2),        # ADR-019: cassa NON toccata
+        "totale_versato_preservato": round(old_versato, 2),
     })
     log_contract_lifecycle_transition(
         session,
         contract,
         old_chiuso=old_chiuso,
         motivo="riapertura_esplicita",
-        importo_rimborsato=rimborso_invertito if rimborso_invertito > 0 else None,
     )
     session.commit()
     session.refresh(contract)
 
     return _to_response(contract)
+
+
+@router.get("/{contract_id}/reopen-preview", response_model=ReopenPreview)
+def reopen_preview(
+    contract_id: int,
+    trainer: Trainer = Depends(get_current_trainer),
+    session: Session = Depends(get_session),
+):
+    """
+    Anteprima dell'impatto di una riapertura (G8.1/ADR-019, dry-run): **ZERO scritture**.
+
+    Gemello di settlement-preview per il reopen NON-distruttivo. Mostra cosa RESTA (la cassa di
+    terminazione non si cancella → diventa pagamento/rimborso sul contratto) e cosa si ANNULLA
+    (storno, receivable, wallet), col residuo ricalcolato net-aware. Segnala un eventuale rinnovo vivo
+    a valle (S5) perché il FE proponga la gestione. Bouncer 404; contratto non chiuso → 400.
+    """
+    contract = _bouncer_contract_owned(session, contract_id, trainer.id)
+    if not contract.chiuso:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Il contratto non è chiuso")
+
+    # residuo dopo la riapertura: la quota verrà azzerata (R2) → residuo() + quota = P − netto (R7).
+    residuo_dopo = round(cstate.residuo(contract) + (contract.quota_stornata or 0), 2)
+    rimborso_che_resta = round(contract.totale_rimborsato or 0, 2)
+    incasso_che_resta = round(sum(
+        m.importo for m in session.exec(
+            select(CashMovement).where(
+                CashMovement.id_contratto == contract.id,
+                CashMovement.categoria == CATEGORIA_INCASSO_CONGUAGLIO_CONTRATTO,
+                CashMovement.tipo == "ENTRATA",
+                CashMovement.deleted_at == None,
+            )
+        ).all()
+    ), 2)
+    rate_da_ripristinare = len(session.exec(
+        select(Rate).where(
+            Rate.id_contratto == contract.id,
+            Rate.deleted_at != None,
+            Rate.chiusa_da_terminazione == True,
+        )
+    ).all())
+    receivable_da_annullare = len(session.exec(
+        select(CreditoTerminazione).where(
+            CreditoTerminazione.id_contratto == contract.id,
+            CreditoTerminazione.stato != "ANNULLATO",
+            CreditoTerminazione.deleted_at == None,
+        )
+    ).all())
+    # R8: rinnovo vivo a valle (figlio rinnovo_di ancora aperto). G8.1 PROPONE, non agisce (D-PROPONE).
+    rinnovo_vivo = session.exec(
+        select(Contract).where(
+            Contract.rinnovo_di == contract.id,
+            Contract.chiuso == False,
+            Contract.deleted_at == None,
+        )
+    ).first()
+
+    parti: list[str] = []
+    if rimborso_che_resta > 0.009:
+        parti.append(f"il rimborso di €{rimborso_che_resta:.2f} già erogato resta (diventa rimborso sul contratto)")
+    if incasso_che_resta > 0.009:
+        parti.append(f"l'incasso di conguaglio di €{incasso_che_resta:.2f} resta (diventa pagamento)")
+    if rate_da_ripristinare:
+        parti.append(f"{rate_da_ripristinare} rate tornano attive")
+    if receivable_da_annullare:
+        parti.append(f"{receivable_da_annullare} crediti differiti vengono annullati")
+    dettaglio = "; ".join(parti) if parti else "nessuna cassa da preservare"
+    messaggio = (
+        f"Riaprendo, la cassa registrata NON viene cancellata: {dettaglio}. "
+        f"Il residuo si ricalcola a €{residuo_dopo:.2f}."
+    )
+    if rinnovo_vivo is not None:
+        messaggio += (
+            f" ATTENZIONE: esiste un rinnovo ancora attivo (contratto #{rinnovo_vivo.id}); "
+            f"verifica se va gestito prima di procedere."
+        )
+
+    return ReopenPreview(
+        residuo_dopo=residuo_dopo,
+        rimborso_che_resta=rimborso_che_resta,
+        incasso_che_resta=incasso_che_resta,
+        rate_da_ripristinare=rate_da_ripristinare,
+        receivable_da_annullare=receivable_da_annullare,
+        wallet_da_annullare=0,  # G8.1 Step 3 (entità wallet)
+        ha_rinnovo_vivo=rinnovo_vivo is not None,
+        id_rinnovo_vivo=rinnovo_vivo.id if rinnovo_vivo is not None else None,
+        messaggio=messaggio,
+    )
 
 
 # ════════════════════════════════════════════════════════════
