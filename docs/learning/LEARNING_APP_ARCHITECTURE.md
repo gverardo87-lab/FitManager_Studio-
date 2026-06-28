@@ -178,3 +178,38 @@ fa da guardia reale.
 **Domande aperte:**
 - [ ] Audit: altri `*_at` salvati UTC (`deleted_at`, `created_at`) confrontati con date locali altrove?
   Per ora solo `completed_at` aveva un confronto data-su-data; gli altri si usano come timestamp, non come "giorno".
+
+---
+
+## Cassa immutabile + residuo net-aware: «ricalcola e instrada» invece di cancellare — 28/06/2026
+**Contesto:** dopo la terminazione bilaterale (G7.9/G7.10), il `reopen` faceva l'«inverso esatto»: soft-cancellava i `CashMovement` di terminazione (rimborso USCITA, conguaglio ENTRATA) e decrementava i totali. Due osservazioni del founder hanno aperto G8.1 (ADR-019/020): (1) un terminate con €300 incassati, riaperto, faceva SPARIRE quei €300 di reddito senza alcun alert, scavalcando la protezione del mastro (`delete_movement` vieta di cancellare un movimento con `id_contratto`); (2) il rimborso lato cliente era rigido (sempre pieno).
+
+**Livello 1 — Cosa fa:** la posizione di un cliente su un contratto è SEMPRE una di due — **debito** (deve ancora → vive DENTRO il contratto, nel `residuo`) o **credito** (gli è dovuto → ESCE in un ledger per-parte: wallet cliente / receivable trainer). Da qui tre regole accoppiate:
+- **La cassa mossa non si tocca mai.** `reopen`/`terminate` NON cancellano `CashMovement`: li lasciano fermi (fatti datati) e **ricalcolano** lo stato. La cassa di terminazione che resta diventa pagamento/rimborso sul contratto riaperto.
+- **`residuo` net-aware:** `residuo = prezzo − netto_incassato − storno`, con `netto = versato − rimborsato` (non il versato LORDO). Così un rimborso che «resta» su un contratto riaperto alza il residuo (il cliente ha riavuto denaro → deve di più).
+- **Il credito esce dal contratto:** il clamp `max(residuo, 0)` non scarta più l'eccedenza in silenzio — ciò che non è dovuto-al-contratto va instradato in un ledger (wallet), dove non si perde.
+
+**Livello 2 — Perché lo voglio:** il `CashMovement` **è** il dato fiscale (non c'è un layer documentale sopra). Cancellarlo per un'azione di oggi **muta retroattivamente un periodo già dichiarato** e fa sparire reddito reale — un errore contabile, non un dettaglio UX. «Ricalcola-e-instrada» dà integrità di periodo **automatica** (nulla viene cancellato → le ancore `versato == Σ ENTRATA` / `rimborsato == Σ USCITA` reggono per costruzione) e collassa una matrice di scenari (undo / storno-correttivo / riattivazione) in UN trattamento.
+
+**Livello 3 — Perché funziona così sotto / cosa fanno i leader:** è il principio del **ledger append-only** della partita doppia: le scritture non si modificano, si **compensano** o si **ricalcola lo stato derivato** a partire da esse. Stripe/Chargebee/QuickBooks: il *customer credit balance* (wallet) è una primitiva separata dal receivable — in contabilità sono due libri diversi (anticipo/passività vs credito/attivo); una *reactivation* ricomputa il dovuto, non storna la cassa incassata. La chiave è che lo **stato derivato** (`residuo`) si ottiene da una funzione PURA sui dati grezzi immutabili (`prezzo`, `versato`, `rimborsato`, `storno`): cambi la funzione (lordo→netto) in UN punto (SSoT) e ~15 consumer ereditano la correzione, byte-identica dove `rimborsato=0`.
+
+**Comando/config reale:** `api/services/contract_state.py` + `api/routers/contracts.py`
+```python
+# SSoT: il residuo è net-aware (G8.1/ADR-019)
+def residuo(contract):
+    quota = getattr(contract, "quota_stornata", 0) or 0
+    return round(max((contract.prezzo_totale or 0) - netto_incassato(contract) - quota, 0.0), 2)
+# terminate: lo storno assorbe il rimborso che ESCE (simmetrico all'incasso che lo cresce)
+#   quota = residuo_pre − incasso_ora + rimborso_out  →  residuo()==0 a qualsiasi rimborso
+# reopen: NON cancella la cassa → R2 storno=0 · R3/R4 receivable+wallet ANNULLATO · residuo ricalcola da sé
+```
+
+**Failure mode:** tre, tutti silenziosi, tutti scoperti ragionando sull'invariante PRIMA del codice:
+1. **Residuo non-net-aware** → un rimborso che resta su un contratto riaperto lascia `residuo` sbagliato; peggio, **ri-terminare RADDOPPIA il rimborso** (il conguaglio confronta `reso` col versato LORDO, non vede i €300 già restituiti). Firma: `test_reopen_then_reterminate` che dà un secondo RIMBORSO invece di PARI.
+2. **reopen distruttivo** → reddito incassato che sparisce + periodo fiscale mutato a ritroso, zero alert. Firma: `Σ ENTRATA < totale_versato` dopo un reopen, o un movimento con `id_contratto` soft-deleted.
+3. **clamp che mangia l'overpayment** → `max(residuo,0)` scarta un credito del cliente → il cliente perde soldi dovuti. Firma: un versato > dovuto che non lascia traccia da nessuna parte.
+Diagnosi comune: **se un'operazione di "annullamento" tocca il libro cassa, è sbagliata** — deve toccare solo lo stato derivato e i ledger non-cash.
+
+**Domande aperte:**
+- [ ] La causale `OVERPAYMENT` del wallet è predisposta ma senza sorgente attiva (i guard di pagamento prevengono l'overpayment a monte). Quando emergerà (es. reopen che instrada un'eccedenza), va cablata in `reopen` (D-INSTRADA); oggi solo il rimborso-differito alimenta il wallet.
+- [ ] Wallet auto-spendibile cross-contratto (G8.2): introduce consistenza di stato distribuito (reopen di un contratto il cui wallet è già stato speso altrove → `reopen-preview` lo deve rilevare e PROPORRE). In panchina finché non c'è domanda reale.
