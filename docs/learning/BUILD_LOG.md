@@ -2381,3 +2381,48 @@ Audit architetturale READ-ONLY (trigger founder) → `docs/technical/AUDIT_POSIZ
 **Gate.** Suite backend **711 verde** (era 696; +harness +behavioral +2 delete-guard), `ruff api/` + 4 grep-guard (ADR-016/017/018/019) + `tsc --noEmit` (FE) verdi. ⚠️ **`next build` pieno NON eseguito** (dev server del founder tiene `.next`/db/log lock — WinError 32; tsc usato come proxy). Governance allineata: ADR-019 **Addendum II**, SPEC_INTEGRITA **§15**, api/CLAUDE.md (blocco G8), INDEX, FDM §residuo-net-aware. **Prossimo:** `check-all.sh` completo + Playwright a env libero; poi **G1 cifratura**.
 
 ---
+
+### 2026-06-29 — Audit difetti residui di integrità → Slice A/B/C (audit-trail · force-delete · storico reopen)
+
+3° passaggio adversariale (Codex) sul filone finanziario, poi **verificato riga-per-riga** sul codice vivo →
+`docs/operations/AUDIT_INTEGRITA_RESIDUI_2026-06-29.md`. **NON tocca l'aritmetica** (asse DENARO/EROGATO regge,
+98 test mirati verdi al baseline): tre difetti di **trasparenza/integrità amministrativa**, tutti **conseguenze
+di decisioni già accettate** (ADR-018/019) → **nessun nuovo ADR** (ADR-019 **Addendum III** + `SPEC_INTEGRITA §16`).
+**Metodo:** governance docs-only PRIMA (`a8c0ce1`), poi un commit backend-only per slice (A→B→C), poi questo log.
+
+**Slice A — audit della terminazione parziale a una sola verità** (`b895edb`, P1). La companion lifecycle di
+`terminate` passava `settlement.credito_cliente` (credito teorico) mentre la entry ricca passava `rimborso_out`
+(cassa uscita): con rimborso **parziale** (resto a wallet) due `importo_rimborsato` diversi per la stessa chiusura
+nell'audit grezzo. Regressione introdotta dal rimborso editabile (G8.1): pre-G8.1 `rimborso_out==credito_cliente`.
+Fix 1-spot (`contracts.py:1784`): la companion porta `rimborso_out`. Invariant-neutral (nessun invariante legge
+il JSON di audit). +2 test (AC-A1 parziale 200/100-a-wallet → entrambe le entry 200; AC-A2 pieno byte-identico).
+
+**Slice B — il guard posizione-aperta vale SEMPRE** (`7e0699e`, P2). `DELETE force=true` aggirava il RESTRICT su
+wallet/receivable APERTO (viveva solo nel ramo `not force`) → posizione viva orfanata su contratto soft-deleted,
+reopen poi impossibile (bouncer 404). Completamento di Bug-4 (G8.2-prep): `delete_client` aveva già il guard
+sempre-attivo, `delete_contract?force` era l'outlier. Fix: RESTRICT-3 dedentato fuori da `if not force:` → sempre
+409. Policy: `force` abbuona rate/crediti-seduta (write-off noto), MAI una posizione con controparte. +3 test
+(AC-B1 wallet+force→409 · AC-B2 receivable+force→409 · AC-B3 no-regressione: rate+crediti senza posizione→force 204).
+
+**Slice C — lo storico del reopen spiega la cassa preservata** (`fea9ff3`, P3). `_curate_contract_event` caso #2
+cercava `rimborso_preservato` (campo che `reopen` non emette mai) → la riga non si stampava, pur essendo
+l'informazione più importante del reopen non-distruttivo (ADR-019 D-CASSA-VISIBILE); l'intento era documentato
+(questo log, F6 G8.1.1) ma mai cablato. Fix del **consumatore**: deriva da `totale_rimborsato.new` +
+`wallet_erogato_riassorbito` (già emessi dal reopen). Wording completo: "rimborso €X preservato (di cui €Y da
+wallet riassorbito)". +3 test (AC-C1 E2E reopen-con-rimborso · AC-C2 unit wallet riassorbito · AC-C3 unit storno-puro).
+
+**Verifica.** Suite backend **718 passed** (+8), ruff verde, 4 grep-guard finanziari (ADR-016/017/018/019) verdi.
+`next build` pieno NON eseguito (FE invariato, zero file frontend toccati; dev server del founder tiene `.next`).
+**Rischio residuo dichiarato (fuori scope):** l'harness `assert_contract_invariants` resta cablato solo su `reopen`
+(log-only) — già differito da G8.2-prep; allargarne il rollout a terminate/incassa/pay/unpay/eroga è il blocco di
+hardening *dopo* A/B/C.
+
+**Learning livello-3 (UI corretta ≠ substrato corretto).** Un sistema può apparire **giusto in UI mentre il
+substrato forense è contraddittorio**: in P1 la curation dello storico deduplica la companion e legge
+`totale_rimborsato`, mascherando i due `importo_rimborsato` divergenti che una query diretta su `audit_log`
+vedrebbe. Corollario da P3: un **campo documentato che nessun produttore emette è codice morto silenzioso** nel
+consumatore — l'intento ("rimborso preservato", scritto nel log F6) non si auto-realizza, va cablato e
+**falsificato con un test E2E che attraversa producer→consumer**, non solo unit. Regola operativa: per ogni evento
+finanziario verificare la coerenza del **dato grezzo** (audit/ledger), non solo della sua proiezione UI.
+
+---

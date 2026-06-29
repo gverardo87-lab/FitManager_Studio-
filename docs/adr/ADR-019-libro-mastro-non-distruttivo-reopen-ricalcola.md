@@ -266,7 +266,10 @@ di hardening *dopo* A/B/C, non parte di questo fix minimo.
 **Invarianti immutati:** cassa-immutabile, `residuo==0 ⟺ saldato`, asse EROGATO (ADR-016), bilateralità
 (ADR-018), Strada B, residuo net-aware. Backend-only, zero schema-change, FE invariato.
 
-**Stato implementazione (2026-06-29): ⏳ DECISIONE PRESA, codice PENDENTE.** AC falsificabili in `SPEC §16`
-(1 tesi per slice). Ordine A → B → C, tre commit. Gate: cluster `test_contract_terminate` / `test_wallet_cliente`
-/ `test_contract_history` / `test_contract_integrity` / `test_credito_differito` verdi + 1-2 test nuovi per
-slice + `check-all.sh`. È **chiusura di gap residui del principio ADR-019**, non un nuovo blocco.
+**Stato implementazione (2026-06-29): ✅ IMPLEMENTATA.** Governance docs-only `a8c0ce1`; poi tre commit
+backend-only, uno per slice: **A** `b895edb` (companion lifecycle porta `rimborso_out`; +2 test AC-A1/A2) ·
+**B** `7e0699e` (RESTRICT-3 dedentato fuori da `if not force`; +3 test AC-B1/B2/B3) · **C** `fea9ff3`
+(`_curate_contract_event` deriva la cassa preservata da `totale_rimborsato.new`+`wallet_erogato_riassorbito`;
++1 E2E AC-C1 + 1 unit AC-C2/C3). AC in `SPEC §16`. Zero schema-change, FE invariato, ruff verde. **Invarianti
+immutati:** I1/I4/I5, cassa-immutabile, `residuo==0 ⟺ saldato`, asse EROGATO (ADR-016), Strada B. È **chiusura
+di gap residui del principio ADR-019**, non un nuovo blocco.
