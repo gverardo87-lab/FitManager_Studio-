@@ -490,3 +490,46 @@ preservato"; `residuo_dopo`/`rate_riallineate` continuano a comparire come oggi.
 Rollout di `assert_contract_invariants` oltre reopen (terminate/incassa/pay/unpay/eroga) — già differito da
 Addendum II ("predisposta per 409", log-only). È il blocco di hardening *dopo* A/B/C, non parte di questo fix.
 Nessun grep-guard nuovo: la rete falsificabile sono i test AC (la guardia ADR-019 reopen-non-distruttivo resta).
+
+## 17. G8.3 — INV-RATE: il piano rate è una partizione del residuo (ADR-021)
+
+Audit fondante: `docs/operations/AUDIT_PIANO_RATE_VS_RESIDUO_2026-06-29.md`. Un contratto SALDATO (`residuo()=0`)
+mostrava una rata PARZIALE/scaduta con residuo-rata **fantasma** = un incasso **non-rata** (conguaglio/incassa-
+residuo) che abbassa `residuo()` ma non tocca il piano rate (riconciliato **solo su reopen**). Stance **C**
+(ADR-021), backend-only, **zero schema-change**, asse DENARO invariato.
+
+> **INV-RATE** — contratto non chiuso: `Σ(previsto − saldato)` sulle rate attive non-saldate **≤ `residuo()`**.
+> Eccedenza = fantasma (vietata); sotto-copertura = "da pianificare" (legittima, F2-bis invariata).
+
+### 17.1 Implementazione (tre leve)
+
+- **B — D-RICONCILIA-OVUNQUE.** Chiamare `_reconcile_rate_plan(session, contract, trainer_id)` (esistente, ramo
+  ECCEDENZA già corretto: taglio cronologico, mai sotto il saldato) **dopo `incassa-residuo` (G6)** — l'unico path
+  su contratto aperto con rate attive che oggi abbassa il residuo senza riconciliare. `reopen` la chiama già.
+- **I6 — INV-RATE nell'harness.** `contract_state.assert_contract_invariants(...)` guadagna un parametro
+  `rate_attive: Sequence = ()` e l'invariante **I6**: sui non-chiusi, `Σ(previsto−saldato) ≤ residuo() + 0.01`.
+  L'harness `test_financial_invariants_harness.py` lo esercita su sequenze composte.
+- **A — proiezione difesa.** In `_to_response_with_rates`: se `cstate.is_saldato(contract)` → nessuna rata è
+  `is_scaduta` e `n_scadute=0` (un contratto saldato non ha rate scadute). Copre i dati già stale a vista.
+
+### 17.2 Test di accettazione (G8.3)
+
+- **AC-G83-1 (riconciliazione su incassa-residuo).** Contratto aperto, prezzo 400, 1 rata `previsto 400` PENDENTE.
+  `POST /incassa-residuo` di 120 → la rata viene riconciliata: `Σ residui-rata ≤ residuo()` (280); il piano resta
+  `piano_allineato`. **Fail:** rata resta `previsto 400` con `Σ residui-rata (400) > residuo (280)`.
+- **AC-G83-2 (INV-RATE nell'harness).** `assert_contract_invariants` ritorna una violazione **I6** su un contratto
+  con `Σ residui-rata > residuo` (es. residuo 0, rata `previsto 400`/`saldato 280`); zero violazioni dopo la
+  riconciliazione. La rete è esercitata da una **sequenza composta** (terminate-credito_trainer → incassa
+  conguaglio → reopen → paga rata) che riproduce lo scenario del contratto 35.
+- **AC-G83-3 (proiezione difesa).** `GET /contracts/{id}` su un contratto **saldato** con una rata stale
+  (`previsto 400`/`saldato 280`, scad passata) → `rate_scadute == 0`, nessuna rata `is_scaduta` (display non
+  contraddice `residuo()==0`).
+- **AC-G83-4 (no-regressione "da pianificare").** Sotto-copertura legittima (`Σ residui-rata < residuo`, nessun
+  incasso non-rata): nessuna mutazione, il resto resta "da pianificare" (F2-bis invariata, nessuna rata fabbricata).
+
+### 17.3 Fuori scope
+
+Cablare `assert_contract_invariants` (con I6) su **tutti** i path finanziari (terminate/pay/unpay/eroga) resta il
+rollout già differito da §16.4 / G8.2-prep (oggi solo `reopen`, log-only). Remediation one-shot dei contratti già
+stale = non necessaria (A li sana a vista, B al prossimo incasso/reopen); se il founder vuole pulire il dato del
+contratto 35 ora, una singola riconciliazione lo riporta a `previsto 280`/SALDATA.
