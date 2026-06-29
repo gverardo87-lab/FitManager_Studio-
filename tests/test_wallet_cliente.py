@@ -291,3 +291,57 @@ def test_delete_contract_bloccato_da_receivable_aperto(client, auth_headers, sam
     r = client.delete(f"/api/contracts/{c['id']}", headers=auth_headers)
     assert r.status_code == 409
     assert "crediti aperti" in r.json()["detail"].lower()
+
+
+# ── Slice B (AUDIT_INTEGRITA_RESIDUI_2026-06-29 §16.2, P2): il guard posizione-aperta vale SEMPRE,
+#    anche con force. `force` abbuona rate/crediti-seduta, MAI una posizione finanziaria con controparte. ──
+
+def test_b1_force_delete_bloccato_da_wallet_aperto(client, auth_headers, sample_client, session):
+    """AC-B1: `DELETE force=true` con wallet cliente APERTO → 409 (force NON bypassa la posizione). Senza il
+    fix il contratto sparirebbe lasciando il wallet orfano e il reopen impossibile (bouncer 404)."""
+    c = _credito_cliente_contract(client, auth_headers, sample_client, session)
+    client.post(f"/api/contracts/{c['id']}/terminate",
+                json={"importo_rimborso": 0.0}, headers=auth_headers)   # wallet 600 APERTO, contratto chiuso
+    assert _wallet(session, c["id"]).stato == "APERTO"
+
+    r = client.delete(f"/api/contracts/{c['id']}?force=true", headers=auth_headers)
+    assert r.status_code == 409
+    assert "crediti aperti" in r.json()["detail"].lower()
+    session.expire_all()
+    assert session.get(Contract, c["id"]).deleted_at is None   # non eliminato: la posizione regge
+
+
+def test_b2_force_delete_bloccato_da_receivable_aperto(client, auth_headers, sample_client, session):
+    """AC-B2: `DELETE force=true` con credito differito (receivable) APERTO → 409. Gemello lato trainer."""
+    from api.models.credito_terminazione import CreditoTerminazione
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=100.0, crediti=10)
+    _complete_pt(session, _trainer(session).id, sample_client["id"], c["id"], 10)  # reso 1000 → credito_trainer 900
+    rt = client.post(f"/api/contracts/{c['id']}/terminate",
+                     json={"azione_credito_trainer": "A_CREDITO"}, headers=auth_headers)
+    assert rt.status_code == 200, rt.text
+    assert session.exec(select(CreditoTerminazione).where(
+        CreditoTerminazione.id_contratto == c["id"])).first().stato == "APERTO"
+
+    r = client.delete(f"/api/contracts/{c['id']}?force=true", headers=auth_headers)
+    assert r.status_code == 409
+    assert "crediti aperti" in r.json()["detail"].lower()
+
+
+def test_b3_force_delete_passa_con_rate_e_crediti_senza_posizione(client, auth_headers, sample_client, session):
+    """AC-B3 (no-regressione, confine della Slice B): `DELETE force=true` con rate pendenti + crediti-seduta
+    residui MA nessuna posizione finanziaria aperta → 204. `force` continua ad abbuonare RESTRICT 1/2; solo
+    RESTRICT 3 (posizione aperta) resta sempre bloccante."""
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=0.0, crediti=10)
+    # rata pendente (RESTRICT 1) + 0/10 sedute usate (RESTRICT 2) → no-force darebbe 409, nessun wallet/receivable
+    r_rate = client.post("/api/rates", json={
+        "id_contratto": c["id"],
+        "data_scadenza": (TODAY + timedelta(days=20)).isoformat(),
+        "importo_previsto": 500.0,
+    }, headers=auth_headers)
+    assert r_rate.status_code == 201, r_rate.text
+
+    assert client.delete(f"/api/contracts/{c['id']}", headers=auth_headers).status_code == 409  # no-force: RESTRICT 1
+    r = client.delete(f"/api/contracts/{c['id']}?force=true", headers=auth_headers)
+    assert r.status_code == 204, r.text   # force abbuona rate/crediti-seduta
+    session.expire_all()
+    assert session.get(Contract, c["id"]).deleted_at is not None

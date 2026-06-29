@@ -1011,9 +1011,12 @@ def delete_contract(
     Soft-delete contratto — per errori o contratti completati.
 
     Bouncer: contract.id + trainer_id + non eliminato.
-    RESTRICT (obbligazioni pendenti) — skippato se force=True:
+    RESTRICT 1-2 (obbligazioni pendenti) — skippati se force=True:
     - Rate non saldate (PENDENTE/PARZIALE) -> 409
     - Crediti residui (sedute PT non consumate) -> 409
+    RESTRICT 3 (posizione finanziaria aperta) — SEMPRE attivo, force NON lo bypassa (Slice B, P2):
+    - Wallet cliente o credito differito APERTO (FUORI da residuo()) -> 409
+      (si chiude via eroga/incassa/annulla; una delete lo orfanerebbe + reopen poi impossibile)
     CASCADE (pulizia completa):
     - Se force: reverse pagamenti rate + soft-delete TUTTE le rate
     - Se keep_payments: detach movimenti dal contratto (restano nel ledger)
@@ -1066,29 +1069,32 @@ def delete_contract(
                            f"Usa la chiusura (chiuso) per archiviarlo.",
                 )
 
-        # RESTRICT 3: crediti aperti ORIGINATI da questo contratto (G8.2-prep, audit Bug-4). Wallet del
-        # cliente (rimborso differito) o credito differito a favore del trainer, entrambi FUORI da residuo()
-        # → eliminare il contratto li orfanerebbe (anche il reopen che li annulla non sarebbe più possibile).
-        open_wallet = session.exec(
-            select(func.count(CreditoCliente.id)).where(
-                CreditoCliente.id_contratto_origine == contract_id,
-                CreditoCliente.stato == "APERTO",
-                CreditoCliente.deleted_at == None,
-            )
-        ).one()
-        open_receivable = session.exec(
-            select(func.count(CreditoTerminazione.id)).where(
-                CreditoTerminazione.id_contratto == contract_id,
-                CreditoTerminazione.stato == "APERTO",
-                CreditoTerminazione.deleted_at == None,
-            )
-        ).one()
-        if open_wallet > 0 or open_receivable > 0:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Impossibile eliminare: il contratto ha crediti aperti (wallet del cliente o "
-                       "credito differito). Gestiscili (eroga/incassa/annulla) prima di eliminare.",
-            )
+    # RESTRICT 3 — SEMPRE, anche con force (Slice B, audit AUDIT_INTEGRITA_RESIDUI_2026-06-29 P2): posizione
+    # finanziaria APERTA originata da questo contratto. Wallet del cliente (rimborso differito) o credito
+    # differito a favore del trainer, entrambi FUORI da residuo(). `force` abbuona rate/crediti-seduta (write-off
+    # che il trainer conosce), MAI una posizione con controparte (denaro dovuto a/da il cliente): si chiude via
+    # eroga/incassa/annulla, mai con una delete che la orfanerebbe (reopen poi impossibile, bouncer 404).
+    # Simmetrico a delete_client (clients.py). Prima il guard viveva solo nel ramo `not force` → buco su force.
+    open_wallet = session.exec(
+        select(func.count(CreditoCliente.id)).where(
+            CreditoCliente.id_contratto_origine == contract_id,
+            CreditoCliente.stato == "APERTO",
+            CreditoCliente.deleted_at == None,
+        )
+    ).one()
+    open_receivable = session.exec(
+        select(func.count(CreditoTerminazione.id)).where(
+            CreditoTerminazione.id_contratto == contract_id,
+            CreditoTerminazione.stato == "APERTO",
+            CreditoTerminazione.deleted_at == None,
+        )
+    ).one()
+    if open_wallet > 0 or open_receivable > 0:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Impossibile eliminare: il contratto ha crediti aperti (wallet del cliente o "
+                   "credito differito). Gestiscili (eroga/incassa/annulla) prima di eliminare.",
+        )
 
     now = datetime.now(timezone.utc)
 
