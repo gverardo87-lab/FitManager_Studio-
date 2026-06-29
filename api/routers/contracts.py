@@ -716,9 +716,18 @@ def _curate_contract_event(row: AuditLog) -> Optional[ContractHistoryEvent]:
         rate_rial = changes.get("rate_riallineate")
         if rate_rial:
             parti.append(f"{int(rate_rial)} rate riallineate")
-        rimborso_preservato = changes.get("rimborso_preservato")
-        if rimborso_preservato:
-            parti.append(f"rimborso €{float(rimborso_preservato):.2f} preservato")
+        # Slice C (audit AUDIT_INTEGRITA_RESIDUI_2026-06-29, P3): la cassa preservata è l'informazione più
+        # importante del reopen non-distruttivo (ADR-019 D-CASSA-VISIBILE). Derivata dai campi GIÀ emessi dal
+        # reopen — `totale_rimborsato.new` (rimborso diretto preservato + erogato wallet riassorbito foldato,
+        # D1 forma-d) — non da `rimborso_preservato` (campo che il reopen non emette mai → riga muta).
+        rimborsato = changes.get("totale_rimborsato")
+        preservato = float(rimborsato.get("new") or 0) if isinstance(rimborsato, dict) else 0.0
+        if preservato > 0:
+            riassorbito = float(changes.get("wallet_erogato_riassorbito") or 0)
+            msg = f"rimborso €{preservato:.2f} preservato"
+            if riassorbito > 0:
+                msg += f" (di cui €{riassorbito:.2f} da wallet riassorbito)"
+            parti.append(msg)
         return ContractHistoryEvent(
             tipo="riaperto",
             titolo="Contratto riaperto",

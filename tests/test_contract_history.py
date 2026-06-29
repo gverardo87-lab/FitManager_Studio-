@@ -184,3 +184,60 @@ def test_curate_companion_riapertura_esplicita_dedup():
         created_at=datetime(2026, 6, 26, 16, 27, tzinfo=timezone.utc),
     )
     assert _curate_contract_event(row) is None
+
+
+# ── Slice C (AUDIT_INTEGRITA_RESIDUI_2026-06-29 §16.3, P3): lo storico del reopen spiega la cassa preservata ──
+
+def test_c_history_reopen_mostra_cassa_preservata_e2e(client, auth_headers, sample_client, session):
+    """AC-C1 (E2E, prova producer↔consumer): dopo terminate-con-rimborso → reopen, l'evento 'Riaperto' del
+    history espone la cassa preservata. Prima del fix la curation cercava `rimborso_preservato` (mai emesso)
+    → riga muta pur avendo i dati nell'audit (`totale_rimborsato`)."""
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=500.0, crediti=10)
+    t = _trainer(session)
+    _complete_pt(session, t.id, sample_client["id"], c["id"], 2)  # reso 200 → rimborso pieno 300
+    assert client.post(f"/api/contracts/{c['id']}/terminate",
+                       json={"metodo_rimborso": "CONTANTI"}, headers=auth_headers).status_code == 200
+    assert client.post(f"/api/contracts/{c['id']}/reopen", headers=auth_headers).status_code == 200
+
+    riaperto = next(e for e in _history(client, auth_headers, c["id"]) if e["tipo"] == "riaperto")
+    assert "rimborso €300.00 preservato" in (riaperto["dettaglio"] or ""), riaperto
+    assert "wallet riassorbito" not in (riaperto["dettaglio"] or "")   # nessun wallet in questo scenario
+
+
+def test_c_curate_reopen_cassa_preservata_derivata():
+    """AC-C2 + AC-C3 (unit): la curation #2 deriva la cassa preservata da `totale_rimborsato.new` +
+    `wallet_erogato_riassorbito` (campi già emessi dal reopen), MAI dal defunto `rimborso_preservato`."""
+    def _curate(changes):
+        return _curate_contract_event(AuditLog(
+            entity_type="contract", entity_id=1, action="UPDATE", trainer_id=1,
+            changes=json.dumps(changes),
+            created_at=datetime(2026, 6, 29, 12, 0, tzinfo=timezone.utc),
+        ))
+
+    # AC-C2: wallet erogato riassorbito (D1 forma-d: acconto 800/reso 200/wallet 600/eroga 250 → reopen)
+    ev = _curate({
+        "motivo_chiusura": {"old": "TERMINAZIONE_RIMBORSO", "new": None},
+        "chiuso": {"old": True, "new": False},
+        "totale_rimborsato": {"old": 0.0, "new": 250.0},
+        "wallet_erogato_riassorbito": 250.0,
+        "residuo_dopo": 450.0,
+    })
+    assert ev.tipo == "riaperto"
+    assert "rimborso €250.00 preservato" in ev.dettaglio
+    assert "(di cui €250.00 da wallet riassorbito)" in ev.dettaglio
+    assert "residuo €450.00" in ev.dettaglio
+
+    # AC-C3 (no-regressione): storno-puro senza cassa (CONSUNZIONE) → niente riga 'preservato',
+    # ma residuo/rate continuano a comparire (i campi già funzionanti non regrediscono)
+    ev2 = _curate({
+        "motivo_chiusura": {"old": "CONSUNZIONE", "new": None},
+        "chiuso": {"old": True, "new": False},
+        "totale_rimborsato": {"old": 0.0, "new": 0.0},
+        "wallet_erogato_riassorbito": 0.0,
+        "residuo_dopo": 500.0,
+        "rate_riallineate": 1,
+    })
+    assert ev2.tipo == "riaperto"
+    assert "preservato" not in (ev2.dettaglio or "")
+    assert "residuo €500.00" in ev2.dettaglio
+    assert "1 rate riallineate" in ev2.dettaglio
