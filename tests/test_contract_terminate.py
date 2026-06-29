@@ -15,6 +15,7 @@ Copre gli acceptance criteria del Commit A (core):
 La migrazione dei test PUT chiuso=True (§8) è del Commit B → non qui.
 """
 
+import json
 from datetime import date, datetime, timedelta
 
 from sqlmodel import select
@@ -24,6 +25,8 @@ from api.models.movement import CashMovement
 from api.models.rate import Rate
 from api.models.event import Event
 from api.models.trainer import Trainer
+from api.models.audit_log import AuditLog
+from api.models.credito_cliente import CreditoCliente
 from api.services import contract_state as cstate
 from api.services.cash_categories import (
     CATEGORIA_RIMBORSO_CONTRATTO,
@@ -705,3 +708,78 @@ def test_incasso_conguaglio_conta_come_ricavo(client, auth_headers, sample_clien
     # acconto 100 + conguaglio 300 = 400 di entrate; il conguaglio NON è un'uscita/rimborso
     assert round(stats["totale_entrate"], 2) == 400.0
     assert round(stats["totale_uscite_variabili"], 2) == 0.0
+
+
+# ════════════════════════════════════════════════════════════════════
+# Slice A (AUDIT_INTEGRITA_RESIDUI_2026-06-29 §16.1, P1) — l'audit della terminazione
+# con rimborso parziale ha UNA SOLA verità: la companion lifecycle porta la cassa uscita
+# (`rimborso_out`), non il credito teorico (`settlement.credito_cliente`).
+# ════════════════════════════════════════════════════════════════════
+
+def _audit_importi_rimborsati(session, contract_id):
+    """I valori `importo_rimborsato` in tutte le entry audit UPDATE del contratto (entry ricca di terminate
+    + companion lifecycle). Slice A: devono concordare = cassa effettivamente uscita, non credito teorico."""
+    rows = session.exec(
+        select(AuditLog).where(
+            AuditLog.entity_type == "contract",
+            AuditLog.entity_id == contract_id,
+            AuditLog.action == "UPDATE",
+        )
+    ).all()
+    valori = []
+    for r in rows:
+        if not r.changes:
+            continue
+        ch = json.loads(r.changes)
+        if isinstance(ch, dict) and "importo_rimborsato" in ch:
+            valori.append(round(float(ch["importo_rimborsato"]), 2))
+    return valori
+
+
+def test_a_audit_rimborso_parziale_una_sola_verita(client, auth_headers, sample_client, session):
+    """AC-A1: terminazione CREDITO_CLIENTE con rimborso PARZIALE (resto a wallet). Le due entry di audit
+    della chiusura (UPDATE ricca + transizione lifecycle) devono concordare su `importo_rimborsato` = la
+    CASSA USCITA (200), mai il credito teorico (300). Prima del fix la companion scriveva 300 → due verità
+    per la stessa chiusura nell'audit grezzo (la UI lo maschera deduplicando, una query forense no)."""
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=500.0, crediti=10)
+    t = _trainer(session)
+    _complete_pt(session, t.id, sample_client["id"], c["id"], 2)  # reso 200 → credito_cliente = 500−200 = 300
+
+    r = client.post(f"/api/contracts/{c['id']}/terminate",
+                    json={"metodo_rimborso": "CONTANTI", "importo_rimborso": 200.0}, headers=auth_headers)
+    assert r.status_code == 200, r.text
+
+    session.expire_all()
+    contract = session.get(Contract, c["id"])
+    # la scissione che faceva divergere i due audit: 200 in cassa, 100 a wallet
+    assert round(contract.totale_rimborsato, 2) == 200.0
+    wallet = session.exec(
+        select(CreditoCliente).where(CreditoCliente.id_contratto_origine == c["id"])
+    ).all()
+    assert len(wallet) == 1 and round(wallet[0].importo, 2) == 100.0
+
+    importi = _audit_importi_rimborsati(session, c["id"])
+    assert len(importi) == 2, f"attese 2 entry (ricca + companion) con importo_rimborsato, trovate {importi}"
+    assert all(v == 200.0 for v in importi), \
+        f"le due entry devono concordare sulla cassa uscita (200), mai il credito teorico (300): {importi}"
+
+
+def test_a_audit_rimborso_pieno_byte_identico(client, auth_headers, sample_client, session):
+    """AC-A2 (no-regressione): rimborso PIENO (default, `importo_rimborso` assente) → rimborso_out ==
+    credito_cliente, le due entry concordano a 300 (byte-identico al pre-fix). Nessun wallet creato."""
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=500.0, crediti=10)
+    t = _trainer(session)
+    _complete_pt(session, t.id, sample_client["id"], c["id"], 2)  # reso 200 → credito_cliente 300 → rimborso pieno
+
+    r = client.post(f"/api/contracts/{c['id']}/terminate",
+                    json={"metodo_rimborso": "CONTANTI"}, headers=auth_headers)
+    assert r.status_code == 200, r.text
+
+    session.expire_all()
+    importi = _audit_importi_rimborsati(session, c["id"])
+    assert len(importi) == 2 and all(v == 300.0 for v in importi), importi
+    # rimborso pieno → nessun wallet (tutto il credito è uscito in cassa)
+    wallet = session.exec(
+        select(CreditoCliente).where(CreditoCliente.id_contratto_origine == c["id"])
+    ).all()
+    assert wallet == []

@@ -1775,13 +1775,17 @@ def terminate_contract(
         "credito_terminazione_id": credito_differito.id if credito_differito is not None else None,
         "credito_cliente_id": wallet_cliente.id if wallet_cliente is not None else None,
     })
-    # Transizione `chiuso` (P2): terminate la logga DA SÉ (non chiama _sync, che altrimenti la loggherebbe)
+    # Transizione `chiuso`: terminate la logga DA SÉ (non chiama _sync, che altrimenti la loggherebbe).
+    # Slice A (audit AUDIT_INTEGRITA_RESIDUI_2026-06-29, P1): la companion porta la CASSA EFFETTIVAMENTE
+    # USCITA (`rimborso_out`), non il credito teorico (`settlement.credito_cliente`). Con rimborso parziale
+    # (resto a wallet) i due divergevano → due "importo_rimborsato" diversi per la stessa chiusura nell'audit
+    # grezzo. Ora == alla entry ricca (riga sopra). Byte-identico col rimborso pieno (rimborso_out==credito).
     log_contract_lifecycle_transition(
         session,
         contract,
         old_chiuso=old_chiuso,
         motivo="terminazione",
-        importo_rimborsato=settlement.credito_cliente if is_cliente else None,
+        importo_rimborsato=round(rimborso_out, 2) if is_cliente else None,
         residuo_annullato=round(settlement.residuo_pre - incasso_ora, 2),
         data_chiusura=data_chiusura,
     )
