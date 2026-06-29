@@ -226,3 +226,47 @@ grep-guard ADR-016/017/018/019 + `tsc --noEmit` (FE) verdi. AC in `SPEC §15`; t
 `test_wallet_cliente.py` (delete-guard Bug-4). **Invarianti immutati:** cassa-immutabile, `residuo==0 ⟺ saldato`,
 asse EROGATO (ADR-016), Strada B. È **hardening del principio ADR-019** (chiude la classe «perdita silenziosa»),
 non un nuovo blocco.
+
+## Addendum 2026-06-29 (III) — Difetti residui di integrità (audit-trail · force-delete · storico reopen)
+
+Audit fondante: `docs/operations/AUDIT_INTEGRITA_RESIDUI_2026-06-29.md` (terzo passaggio adversariale, poi
+verificato riga-per-riga sul codice vivo). Tre difetti residui che NON toccano l'aritmetica (asse DENARO/EROGATO
+regge) ma la **trasparenza/integrità amministrativa**. Sono tutti **conseguenze residue di decisioni già
+accettate** — **nessuna nuova decisione architetturale**, nessun nuovo ADR:
+
+- **P1 — la terminazione con rimborso parziale scrive due verità sul rimborso** (`contracts.py:1772` entry ricca
+  = `rimborso_out` cassa uscita · `contracts.py:1784` companion lifecycle = `settlement.credito_cliente` credito
+  teorico → con rimborso parziale, 400 vs 600 nello stesso evento di audit grezzo). **Regressione introdotta dal
+  rimborso editabile** (questo ADR + ADR-020): pre-G8.1 `rimborso_out == credito_cliente`, nessuna
+  contraddizione. Tocca l'**auditabilità** del modello bilaterale (ADR-018). La UI lo maschera (la curation
+  scarta la companion e legge `totale_rimborsato`), una query forense diretta no.
+  → **Fix (Slice A):** la companion porta la **cassa effettivamente uscita** (`rimborso_out`), non il credito
+  teorico. Invariant-neutral (I1/I4/I5 non leggono il JSON di audit).
+- **P2 — `DELETE /contracts/{id}?force=true` aggira il guard sui crediti aperti** (il RESTRICT su
+  `crediti_cliente`/`crediti_terminazione` APERTO vive solo nel ramo `not force`, `contracts.py:1032/1069-1091`;
+  la cascade non li annulla; le worklist non filtrano `Contract.deleted_at`) → wallet/receivable vivi su un
+  contratto soft-deleted, reopen impossibile (404). **Completamento di Bug-4** (Addendum II): il fix di Bug-4
+  chiuse il ramo `not force` e lasciò il buco su `force`. `delete_client` ha già il guard sempre-attivo
+  (`clients.py:1002`) → asimmetria da sanare.
+  → **Fix (Slice B):** il guard posizione-aperta vale **SEMPRE** (fuori da `if not force`). Policy:
+  **`force` abbuona rate/crediti-seduta, non una posizione finanziaria aperta con controparte** (si chiude via
+  eroga/incassa/annulla, path auditato). Simmetrico a `delete_client`.
+- **P3 — lo storico CRM-grade del reopen non spiega la cassa preservata** (la curation caso #2 cerca
+  `rimborso_preservato`, `contracts.py:719`, che `reopen` non emette mai). **Completamento di F6/D-CASSA-VISIBILE**
+  (Addendum I): l'intento — la cassa preservata è l'informazione più importante del reopen non-distruttivo — era
+  documentato (BUILD_LOG F6) ma mai cablato. Il dato esiste già (`totale_rimborsato`, `wallet_erogato_riassorbito`).
+  → **Fix (Slice C):** si corregge il **consumatore** (`_curate_contract_event`), si deriva dai campi già
+  emessi — non si allarga il produttore.
+
+**Rischio residuo dichiarato (FUORI scope):** l'harness `assert_contract_invariants` è cablato a runtime **solo
+su reopen** (`contracts.py:77/2057`, log-only); `terminate`/`incassa_residuo`/`pay`/`unpay`/`eroga`/`incassa`
+non lo invocano. Già noto e differito da Addendum II ("predisposta per 409"). Allargarne il rollout è il blocco
+di hardening *dopo* A/B/C, non parte di questo fix minimo.
+
+**Invarianti immutati:** cassa-immutabile, `residuo==0 ⟺ saldato`, asse EROGATO (ADR-016), bilateralità
+(ADR-018), Strada B, residuo net-aware. Backend-only, zero schema-change, FE invariato.
+
+**Stato implementazione (2026-06-29): ⏳ DECISIONE PRESA, codice PENDENTE.** AC falsificabili in `SPEC §16`
+(1 tesi per slice). Ordine A → B → C, tre commit. Gate: cluster `test_contract_terminate` / `test_wallet_cliente`
+/ `test_contract_history` / `test_contract_integrity` / `test_credito_differito` verdi + 1-2 test nuovi per
+slice + `check-all.sh`. È **chiusura di gap residui del principio ADR-019**, non un nuovo blocco.

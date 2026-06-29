@@ -424,3 +424,69 @@ suo costo è la consistenza distribuita, non necessaria per non-perdere-euro. Si
   (dall'audit §5.4): **(a) mai** (solo cash-out — status quo, nessuno stato distribuito); **(b) manuale**
   («applica credito al contratto», esplicito/auditabile, niente auto-magia — mediana consigliata se serve);
   **(c) automatico** (stato distribuito, costo più alto). **Decisione del founder** quando emergerà domanda reale.
+
+## 16. Difetti residui di integrità (audit 2026-06-29 → ADR-019 Addendum III)
+
+Audit fondante: `docs/operations/AUDIT_INTEGRITA_RESIDUI_2026-06-29.md`. Tre difetti residui di
+**trasparenza/integrità amministrativa** (NON aritmetica): tutti **conseguenze di decisioni già accettate**,
+backend-only, **zero schema-change**, FE invariato. Ordine A → B → C, tre commit, una tesi falsificabile per
+slice. Decisioni A/C confermate dal founder (2026-06-29); B per simmetria con `delete_client`.
+
+### 16.1 Slice A — audit della terminazione parziale a una sola verità (P1)
+
+**Difetto.** `terminate` scrive il rimborso due volte con due valori: entry ricca `importo_rimborsato =
+rimborso_out` (cassa uscita, `contracts.py:1772`), companion lifecycle `importo_rimborsato =
+settlement.credito_cliente` (credito teorico, `contracts.py:1784` → `_audit.py:72-73`). Con rimborso parziale
+divergono. Regressione del rimborso editabile (§5); invariant-neutral (nessun invariante legge il JSON di audit).
+
+**Fix.** Call-site `contracts.py:1784`: passare `rimborso_out` invece di `settlement.credito_cliente`.
+`residuo_annullato` (`contracts.py:1785`) **fuori scope** (semantica distinta, non una seconda contraddizione).
+
+**AC-A1.** Terminazione `CREDITO_CLIENTE` con `credito_cliente=600`, `importo_rimborso=400` (200→wallet): le due
+entry di `audit_log` della chiusura (UPDATE ricca + transizione lifecycle) concordano su `importo_rimborsato`
+(entrambe `400.0`). **Fail:** una `400`, l'altra `600`.
+**AC-A2 (no-regressione).** Rimborso pieno (`importo_rimborso == credito_cliente`): comportamento byte-identico
+al pre-fix (le due entry già concordavano).
+
+### 16.2 Slice B — il guard posizione-aperta vale SEMPRE (P2)
+
+**Difetto.** Il RESTRICT su `crediti_cliente`/`crediti_terminazione` APERTO è dentro `if not force:`
+(`contracts.py:1032`, guard `1069-1091`); `force=true` lo salta; la cascade non annulla i crediti; le worklist
+non filtrano `Contract.deleted_at` → posizione viva su contratto soft-deleted, reopen impossibile (404).
+Completamento di Bug-4 (§15); `delete_client` ha già il guard sempre-attivo (`clients.py:1002`).
+
+**Fix.** Estrarre il blocco RESTRICT-3 (open wallet/receivable) **fuori** da `if not force:` → sempre 409.
+**Policy:** `force` abbuona rate non saldate + crediti-seduta residui; **non** una posizione finanziaria aperta
+con controparte (si chiude via eroga/incassa/annulla). Rate e crediti-seduta restano bypassabili da `force`.
+
+**AC-B1.** `DELETE force=true` su contratto con `crediti_cliente` APERTO → **409**.
+**AC-B2.** `DELETE force=true` su contratto con `crediti_terminazione` APERTO → **409**.
+**AC-B3 (no-regressione).** `DELETE force=true` con rate pendenti / crediti-seduta residui **ma nessuna
+posizione finanziaria aperta** → procede (204), come oggi. **Fail:** il contratto sparisce ma una posizione
+APERTA resta in `/dashboard/crediti-da-incassare` o `/rimborsi-da-erogare`.
+
+### 16.3 Slice C — lo storico del reopen spiega la cassa preservata (P3)
+
+**Difetto.** `_curate_contract_event` caso #2 cerca `changes.get("rimborso_preservato")` (`contracts.py:719`),
+campo che `reopen` non emette mai → la riga "rimborso preservato" non si stampa. Intento documentato in F6 /
+D-CASSA-VISIBILE (§14.6, Addendum I) mai cablato; dato disponibile (`totale_rimborsato`,
+`wallet_erogato_riassorbito`, emessi a `contracts.py:2046-2047`).
+
+**Fix.** In `_curate_contract_event` caso #2, derivare dai campi già emessi:
+- `preservato = totale_rimborsato.new` (rimborso diretto + erogato wallet riassorbito che la fotografia netta
+  ha foldato, D1 forma-d §15). Se `> 0` → riga "rimborso €{preservato:.2f} preservato".
+- se `wallet_erogato_riassorbito > 0` → append "(di cui €Y da wallet riassorbito)" (wording completo, scelta
+  founder). Reopen senza cassa preservata (`new==0`) → nessuna riga.
+
+**AC-C1.** Reopen di un terminato con rimborso diretto preservato: `GET /contracts/{id}/history` → l'evento
+"Riaperto" ha `dettaglio` che contiene "rimborso €X preservato" (X = `totale_rimborsato.new`).
+**AC-C2.** Reopen con wallet erogato riassorbito (scenario D1: eroga-parziale → reopen): il dettaglio contiene
+anche "(di cui €Y da wallet riassorbito)".
+**AC-C3 (no-regressione).** Reopen storno-puro senza cassa (CONSUNZIONE/PARI): nessuna riga "rimborso
+preservato"; `residuo_dopo`/`rate_riallineate` continuano a comparire come oggi.
+
+### 16.4 Fuori scope (dichiarato)
+
+Rollout di `assert_contract_invariants` oltre reopen (terminate/incassa/pay/unpay/eroga) — già differito da
+Addendum II ("predisposta per 409", log-only). È il blocco di hardening *dopo* A/B/C, non parte di questo fix.
+Nessun grep-guard nuovo: la rete falsificabile sono i test AC (la guardia ADR-019 reopen-non-distruttivo resta).
