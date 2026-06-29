@@ -259,3 +259,80 @@ def test_incassa_residuo_no_transition_when_not_closing(client, auth_headers, sa
     r = _incassa(client, auth_headers, c["id"], 100.0)
     assert r.status_code == 200, r.text
     assert _chiuso_transitions(session, c["id"]) == []
+
+
+# ── G8.3 (ADR-021, INV-RATE): l'incasso NON-rata riconcilia il piano rate (Σ residui-rata ≤ residuo) ──
+
+
+def _rate(client, auth_headers, contract_id, importo, giorni=20):
+    r = client.post("/api/rates", json={
+        "id_contratto": contract_id,
+        "data_scadenza": (TODAY + timedelta(days=giorni)).isoformat(),
+        "importo_previsto": importo,
+    }, headers=auth_headers)
+    assert r.status_code == 201, r.text
+    return r.json()
+
+
+def test_g83_incassa_residuo_riconcilia_piano_rate(client, auth_headers, sample_client):
+    """AC-G83-1: un incasso NON-rata abbassa il residuo() → il piano rate si riallinea (INV-RATE). Contratto
+    400, rata 400; incassa-residuo 120 → la rata è tagliata a 280, niente residuo-rata fantasma. Prima del
+    fix la rata restava a 400 (fantasma 120 = l'incasso diretto)."""
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=400.0, acconto=0.0, crediti=10)
+    rata = _rate(client, auth_headers, c["id"], 400.0)
+
+    r = _incassa(client, auth_headers, c["id"], 120.0)
+    assert r.status_code == 200, r.text
+
+    d = client.get(f"/api/contracts/{c['id']}", headers=auth_headers).json()
+    assert d["residuo"] == 280.0
+    assert d["somma_rate_pendenti"] == 280.0          # rata riconciliata: Σ residui-rata == residuo
+    assert d["piano_allineato"] is True
+    rata_dopo = next(x for x in d["rate"] if x["id"] == rata["id"])
+    assert rata_dopo["importo_previsto"] == 280.0     # tagliata (mai sotto il saldato 0 → PENDENTE)
+    assert d["rate_scadute"] == 0
+
+
+def test_g83_incassa_residuo_sotto_copertura_non_muta_il_piano(client, auth_headers, sample_client):
+    """AC-G83-4 (no-regressione "da pianificare"): se Σ residui-rata < residuo (sotto-copertura legittima),
+    l'incasso non-rata NON fabbrica né gonfia rate. INV-RATE regge comunque (Σ ≤ residuo)."""
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=400.0, acconto=0.0, crediti=10)
+    rata = _rate(client, auth_headers, c["id"], 200.0)   # sotto-pianifica (residuo 400, Σ residui 200)
+
+    r = _incassa(client, auth_headers, c["id"], 100.0)
+    assert r.status_code == 200, r.text
+
+    d = client.get(f"/api/contracts/{c['id']}", headers=auth_headers).json()
+    assert d["residuo"] == 300.0
+    rata_dopo = next(x for x in d["rate"] if x["id"] == rata["id"])
+    assert rata_dopo["importo_previsto"] == 200.0       # invariata (mai fabbricata/gonfiata)
+    assert d["somma_rate_pendenti"] == 200.0
+    assert d["somma_rate_pendenti"] <= d["residuo"]     # INV-RATE regge (sotto-copertura legittima)
+
+
+def test_g83_proiezione_contratto_saldato_zero_rate_scadute(client, auth_headers, sample_client, session):
+    """AC-G83-3 (proiezione difesa): un contratto SALDATO (residuo 0) con una rata STALE (previsto 400,
+    saldato 280, scaduta) NON mostra rate scadute — il display non contraddice il residuo() SSoT. La rata
+    stale è costruita via ORM (lo stato che il bug originale lasciava in DB): il fix vive nel read-model."""
+    from api.models.contract import Contract
+    from api.models.rate import Rate
+    from api.models.trainer import Trainer
+    t = session.exec(select(Trainer)).first()
+    c = Contract(
+        trainer_id=t.id, id_cliente=sample_client["id"], tipo_pacchetto="Pkg", crediti_totali=10,
+        prezzo_totale=400.0, acconto=0.0, totale_versato=400.0, totale_rimborsato=0.0, quota_stornata=0.0,
+        stato_pagamento="SALDATO", data_inizio=TODAY, data_scadenza=TODAY + timedelta(days=60), chiuso=False,
+    )
+    session.add(c)
+    session.commit()
+    session.refresh(c)
+    session.add(Rate(
+        id_contratto=c.id, importo_previsto=400.0, importo_saldato=280.0, stato="PARZIALE",
+        data_scadenza=TODAY - timedelta(days=10),   # scaduta
+    ))
+    session.commit()
+
+    d = client.get(f"/api/contracts/{c.id}", headers=auth_headers).json()
+    assert d["residuo"] == 0.0
+    assert d["rate_scadute"] == 0                        # saldato → nessuna scaduta (proiezione difesa)
+    assert all(not x["is_scaduta"] for x in d["rate"])

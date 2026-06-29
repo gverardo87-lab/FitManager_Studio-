@@ -90,7 +90,13 @@ def _log_invariant_violations(session: Session, contract: Contract, *, motivo: s
             CashMovement.deleted_at == None,
         )
     ).all()), 2)
-    for v in cstate.assert_contract_invariants(contract, crediti, rimborso_cassa_diretto=rimborso_diretto):
+    # I6 (INV-RATE, G8.3/ADR-021): le rate attive → Σ residui-rata ≤ residuo() sui non-chiusi.
+    rate_attive = session.exec(
+        select(Rate).where(Rate.id_contratto == contract.id, Rate.deleted_at == None)
+    ).all()
+    for v in cstate.assert_contract_invariants(
+        contract, crediti, rimborso_cassa_diretto=rimborso_diretto, rate_attive=rate_attive
+    ):
         logger.warning(
             "Invariante %s violato dopo '%s' sul contratto %s: %s", v.code, motivo, contract.id, v.message
         )
@@ -116,6 +122,10 @@ def _to_response_with_rates(
     ordinato cronologicamente (piu' vecchio prima).
     """
     today = date.today()
+    # Proiezione difesa (G8.3/ADR-021, leva A): il residuo() SSoT clampa il piano rate nel read-model —
+    # un contratto saldato (residuo ≤ 0.01) NON ha rate scadute, anche se una rata è ancora stale (es. dato
+    # pre-riconciliazione). Copre a vista i contratti già stale finché D-RICONCILIA-OVUNQUE non li sana.
+    residuo_contratto = cstate.residuo(contract)
 
     # ── Enrich rate con campi computati ──
     enriched_rates = []
@@ -149,7 +159,9 @@ def _to_response_with_rates(
 
         # Campi computati per singola rata
         rate_data["importo_residuo"] = round(r.importo_previsto - r.importo_saldato, 2)
-        is_scaduta = r.stato != "SALDATA" and r.data_scadenza < today
+        # is_scaduta NON può contraddire il residuo() SSoT: su un contratto saldato (residuo ≤ 0.01)
+        # nessuna rata è scaduta (proiezione difesa G8.3/ADR-021).
+        is_scaduta = r.stato != "SALDATA" and r.data_scadenza < today and residuo_contratto > 0.01
         rate_data["is_scaduta"] = is_scaduta
         rate_data["giorni_ritardo"] = max(0, (today - r.data_scadenza).days) if is_scaduta else 0
 
@@ -171,7 +183,7 @@ def _to_response_with_rates(
     prezzo = contract.prezzo_totale or 0
     versato = contract.totale_versato or 0
 
-    residuo = cstate.residuo(contract)  # delega al SSoT (§2.2): byte-identica oggi, load-bearing con G7
+    residuo = residuo_contratto  # delega al SSoT (§2.2): byte-identica oggi, load-bearing con G7 (computato sopra)
     percentuale = round((versato / prezzo) * 100) if prezzo > 0 else 0
     # totale_versato e' la fonte di verita' (include acconto + rate + pagamenti legacy)
     importo_da_rateizzare = residuo
@@ -1395,6 +1407,12 @@ def incassa_residuo(
     contract.totale_versato = contract.totale_versato + data.importo
     contract.stato_pagamento = cstate.recompute_stato_pagamento(contract)  # SSoT net-aware (F4), de-dup
     session.add(contract)
+
+    # E-bis) D-RICONCILIA-OVUNQUE (G8.3/ADR-021): l'incasso NON-rata ha abbassato il residuo() → il piano
+    #   rate va riallineato (INV-RATE: Σ residui-rata ≤ residuo). `_reconcile_rate_plan` taglia l'eventuale
+    #   eccedenza (mai sotto il saldato) evitando la rata scaduta-fantasma; no-op se non ci sono rate o il
+    #   piano è già ≤ residuo. Stessa funzione del reopen (riconciliazione, non un secondo modello).
+    _reconcile_rate_plan(session, contract, trainer.id)
 
     # F) Registra nel libro mastro (CashMovement ENTRATA, id_rata=None → incasso diretto)
     client = session.get(Client, contract.id_cliente)

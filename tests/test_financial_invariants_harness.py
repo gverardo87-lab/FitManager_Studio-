@@ -23,6 +23,7 @@ from api.models.movement import CashMovement
 from api.models.event import Event
 from api.models.trainer import Trainer
 from api.models.credito_cliente import CreditoCliente
+from api.models.rate import Rate
 from api.services import contract_state as cstate
 from api.services.cash_categories import CATEGORIA_RIMBORSO_CONTRATTO
 
@@ -76,7 +77,8 @@ def _wallet(session, contract_id):
 
 def _invariants(session, contract_id):
     """Calcola le violazioni d'invariante per un contratto, con l'ancora ledger forte di I5
-    (`rimborso_cassa_diretto` = Σ USCITA RIMBORSO_CONTRATTO con id_contratto == contract_id)."""
+    (`rimborso_cassa_diretto` = Σ USCITA RIMBORSO_CONTRATTO con id_contratto == contract_id) e le rate
+    attive per I6 (INV-RATE, G8.3: Σ residui-rata ≤ residuo() sui non-chiusi)."""
     session.expire_all()
     contract = session.get(Contract, contract_id)
     crediti = session.exec(select(CreditoCliente).where(
@@ -87,7 +89,10 @@ def _invariants(session, contract_id):
         CashMovement.categoria == CATEGORIA_RIMBORSO_CONTRATTO,
         CashMovement.deleted_at == None,
     )).all()), 2)
-    return cstate.assert_contract_invariants(contract, crediti, rimborso_cassa_diretto=rimborso_diretto)
+    rate_attive = session.exec(select(Rate).where(
+        Rate.id_contratto == contract_id, Rate.deleted_at == None)).all()
+    return cstate.assert_contract_invariants(
+        contract, crediti, rimborso_cassa_diretto=rimborso_diretto, rate_attive=rate_attive)
 
 
 # ── Scenari (ogni builder applica UNA transizione e ritorna il contract_id) ──────────
@@ -155,6 +160,19 @@ def sc_incassa_residuo(client, auth_headers, sample_client, session):
     return c["id"]
 
 
+def sc_incassa_residuo_con_rata(client, auth_headers, sample_client, session):
+    """G8.3 (INV-RATE): incasso NON-rata su un contratto aperto CON una rata che copre il residuo. L'incasso
+    diretto (120) abbassa il residuo() → il piano rate deve riallinearsi (rata 400 → 280), altrimenti I6
+    fallisce (Σ residui-rata 400 > residuo 280 = la rata scaduta-fantasma del contratto 35)."""
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=400.0, acconto=0.0, crediti=10)
+    _rate(client, auth_headers, c["id"], 400.0)
+    r = client.post(f"/api/contracts/{c['id']}/incassa-residuo",
+                    json={"importo": 120.0, "metodo": "CONTANTI", "data_pagamento": TODAY.isoformat()},
+                    headers=auth_headers)
+    assert r.status_code == 200, r.text
+    return c["id"]
+
+
 def sc_pay_then_unpay(client, auth_headers, sample_client, session):
     """pay_rate → unpay_rate (la posizione torna a PENDENTE)."""
     c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=0.0, crediti=10)
@@ -209,6 +227,7 @@ SCENARIOS = [
     ("terminate_trainer_rinuncia", sc_terminate_trainer_rinuncia),
     ("terminate_pari", sc_terminate_pari),
     ("incassa_residuo", sc_incassa_residuo),
+    ("incassa_residuo_con_rata", sc_incassa_residuo_con_rata),  # G8.3 INV-RATE: il piano rate si riallinea
     ("pay_then_unpay", sc_pay_then_unpay),
     ("eroga_wallet_no_reopen", sc_eroga_wallet_no_reopen),
     ("reopen_no_wallet", sc_reopen_no_wallet),
@@ -218,7 +237,27 @@ SCENARIOS = [
 
 @pytest.mark.parametrize("name,build", SCENARIOS, ids=[s[0] for s in SCENARIOS])
 def test_invariants_hold_after_transition(name, build, client, auth_headers, sample_client, session):
-    """Per ogni transizione finanziaria, gli invarianti I1/I4/I5 reggono DOPO la transizione."""
+    """Per ogni transizione finanziaria, gli invarianti I1/I4/I5/I6 reggono DOPO la transizione."""
     contract_id = build(client, auth_headers, sample_client, session)
     violations = _invariants(session, contract_id)
     assert violations == [], f"[{name}] violazioni: {[(v.code, v.message) for v in violations]}"
+
+
+def test_i6_inv_rate_fantasma_rosso_poi_verde():
+    """AC-G83-2 (unit, la rete): I6 (INV-RATE, ADR-021) FALLISCE su un contratto saldato con una rata che
+    esige più del dovuto (residuo 0, rata previsto 400/saldato 280 → Σ residui-rata 120 > 0 = fantasma) e
+    TORNA verde quando la rata è riconciliata (previsto 280 → SALDATA, Σ residui-rata 0). Pura, nessun DB."""
+    contract = Contract(
+        trainer_id=1, id_cliente=1, tipo_pacchetto="Pkg", crediti_totali=10, prezzo_totale=400.0,
+        acconto=0.0, totale_versato=400.0, totale_rimborsato=0.0, quota_stornata=0.0,
+        stato_pagamento="SALDATO", data_inizio=TODAY, data_scadenza=TODAY + timedelta(days=60), chiuso=False,
+    )
+    fantasma = Rate(id_contratto=1, importo_previsto=400.0, importo_saldato=280.0, stato="PARZIALE",
+                    data_scadenza=TODAY)
+    viol = cstate.assert_contract_invariants(contract, [], rate_attive=[fantasma])
+    assert any(v.code == "I6" for v in viol), [(v.code, v.message) for v in viol]
+
+    fantasma.importo_previsto = 280.0      # riconciliata: mai sotto il saldato → SALDATA, esce dalla somma
+    fantasma.stato = "SALDATA"
+    viol2 = cstate.assert_contract_invariants(contract, [], rate_attive=[fantasma])
+    assert not any(v.code == "I6" for v in viol2), [(v.code, v.message) for v in viol2]

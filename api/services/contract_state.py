@@ -331,6 +331,7 @@ def assert_contract_invariants(
     crediti_cliente: Sequence = (),
     *,
     rimborso_cassa_diretto: Optional[float] = None,
+    rate_attive: Sequence = (),
 ) -> list[InvariantViolation]:
     """Verifica gli invarianti globali del dominio SU UN contratto, **SENZA** il mascheramento dei clamp
     `max(0,…)` (espone `netto_raw`/`residuo_raw`). **PURA**: il caller fornisce i `crediti_cliente`
@@ -347,7 +348,10 @@ def assert_contract_invariants(
           maschererebbe l'over-rimborso Σuscita>Σentrata).
       I5  «nessun euro della fotografia netta sparisce»: la cassa-wallet già erogata e RIASSORBITA
           (wallet ANNULLATO nato da C) dev'essere coperta da `totale_rimborsato`. È verificabile SOLO
-          grazie al PASSO 1 e cattura Bug-1 (al reopen il wallet erogato spariva dalla posizione)."""
+          grazie al PASSO 1 e cattura Bug-1 (al reopen il wallet erogato spariva dalla posizione).
+      I6  (INV-RATE, ADR-021) su un contratto NON chiuso il piano rate è una PARTIZIONE del residuo:
+          `Σ(previsto−saldato)` sulle rate attive non-saldate ≤ `residuo()`. L'eccedenza è denaro-fantasma
+          (rata che esige più del dovuto). Richiede `rate_attive`; sotto-copertura = legittima."""
     violations: list[InvariantViolation] = []
     P = contract.prezzo_totale or 0
     V = contract.totale_versato or 0
@@ -401,5 +405,22 @@ def assert_contract_invariants(
             "I5",
             f"wallet erogato riassorbito {werog_riassorbito:.2f} non coperto da totale_rimborsato {Rf:.2f}"
             f" (Bug-1: euro erogato perso alla riapertura)"))
+
+    # I6 (INV-RATE, ADR-021) — su un contratto NON chiuso il piano rate è una PARTIZIONE del residuo:
+    #   Σ(previsto − saldato) sulle rate attive non-saldate ≤ residuo(). L'ECCEDENZA è denaro-fantasma
+    #   (una rata esige più del dovuto del contratto → contratto saldato con rata scaduta-fantasma). La
+    #   SOTTO-copertura (Σ < residuo) è legittima ("da pianificare", F2-bis) e NON è una violazione.
+    if not getattr(contract, "chiuso", False) and rate_attive:
+        somma_residui_rate = round(sum(
+            max((getattr(r, "importo_previsto", 0) or 0) - (getattr(r, "importo_saldato", 0) or 0), 0.0)
+            for r in rate_attive
+            if getattr(r, "stato", None) != "SALDATA" and getattr(r, "deleted_at", None) is None
+        ), 2)
+        res = residuo(contract)
+        if somma_residui_rate - res > 0.01:
+            violations.append(InvariantViolation(
+                "I6",
+                f"Σ residui-rata {somma_residui_rate:.2f} > residuo() {res:.2f}: il piano rate eccede il "
+                f"dovuto (denaro-fantasma a livello rata)"))
 
     return violations
