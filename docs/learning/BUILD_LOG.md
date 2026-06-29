@@ -2426,3 +2426,51 @@ consumatore — l'intento ("rimborso preservato", scritto nel log F6) non si aut
 finanziario verificare la coerenza del **dato grezzo** (audit/ledger), non solo della sua proiezione UI.
 
 ---
+
+### 2026-06-29 — G8.3 / ADR-021: INV-RATE — il piano rate è una partizione del residuo
+
+Test di flusso del **trainer reale** (Chiara Pais, contratto 35): contratto **SALDATO** (`residuo()=0`) ma la UI
+mostra `RATE PAGATE 0/1` e **"1 scaduta"**. Il founder ha chiesto di **fermarsi** e capire l'errore architetturale
+e di metodo che perseveriamo, non l'ennesima toppa. Diagnosi sul DB reale (read-only) → audit
+`AUDIT_PIANO_RATE_VS_RESIDUO_2026-06-29.md` + **ADR-021**.
+
+**Ground truth.** Contratto 35: versato 400 = **280 via rata** (`mov 223`, `id_rata=106`) + **120 via conguaglio**
+(`mov 221`, `INCASSO_CONGUAGLIO_CONTRATTO`, **`id_rata=None`**). Rata 106: `previsto 400 / saldato 280` → PARZIALE,
+residuo-rata **120** = esattamente il conguaglio. La pistola fumante: `_to_response_with_rates` calcola `residuo`
+dal SSoT (0) **e** `rate_scadute` dal ledger rata (1) **e** `piano_allineato=False` / `disallineamento=−120` — il
+sistema **misura la propria contraddizione** e la spedisce alla UI.
+
+**Errore architetturale.** Due ledger dell'obbligazione, SSoT solo sul residuo. Il piano rate è un secondo ledger
+che la UI legge; riconciliato **solo su reopen** (`_reconcile_rate_plan`). Ogni canale non-rata che abbassa il
+residuo (`incassa-residuo`, conguaglio) lo lascia stale. **Errore di metodo:** test su operazioni isolate (non
+sequenze composte); l'harness non copriva l'invariante cross-ledger; patchiamo i transition point invece di
+imporre un invariante; e ignoriamo `piano_allineato=False` che già misura l'incoerenza.
+
+**Legge (founder = "legge mancante corretta") — INV-RATE:** contratto non chiuso → `Σ(previsto−saldato) ≤ residuo()`.
+Eccedenza = denaro-fantasma (vietata); sotto-copertura = "da pianificare" (legittima, F2-bis invariata).
+
+**Stance C (founder), tre leve, backend-only, zero schema-change, asse DENARO invariato:**
+- **B — D-RICONCILIA-OVUNQUE** (`20e11d0`): `_reconcile_rate_plan` (il cui ramo ECCEDENZA già taglia al residuo,
+  mai sotto il saldato) chiamata anche dopo `incassa-residuo`; il reopen la chiamava già. La rata stale → SALDATA
+  *per conseguenza*, mai a mano.
+- **I6 — INV-RATE nell'harness**: `assert_contract_invariants(rate_attive=…)` guadagna I6; `_log_invariant_violations`
+  (reopen) e l'harness `_invariants` lo passano; nuovo scenario `incassa_residuo_con_rata` + unit `test_i6…`
+  (rosso sul fantasma → verde dopo la riconciliazione). Chiude la **classe**.
+- **A — proiezione difesa**: `_to_response_with_rates` clampa `is_scaduta`/`rate_scadute` col `residuo()` (un saldato
+  non ha rate scadute) → copre a vista i dati **già stale** (contratto 35) finché B non li sana.
+
+**Verifica.** Suite **723** verde su data singola (720 nel primo run completo a cavallo della mezzanotte 29→30 +
+i **3 date-flake** — `suspended-contracts`/`clients-to-recover`, `TODAY` congelato all'import vs `date.today()` a
+runtime — confermati verdi isolati su 06-30), ruff verde, 4 grep-guard finanziari verdi. Governance docs-only PRIMA
+(`a44c01d`: ADR-021 + SPEC §17 + audit), poi codice (`20e11d0`), poi questo log.
+
+**Learning livello-3 (un SSoT non è SSoT finché ogni suo consumatore deriva da lui).** Avere eletto `residuo()` a
+SSoT del dovuto non basta: finché un **secondo ledger** (il piano rate) esprime la stessa grandezza ed è
+riconciliato solo su *un* path, ogni nuovo canale che muove il SSoT per un'altra strada lo desincronizza. Il
+sintomo è un sistema che **misura la propria incoerenza** (`piano_allineato=False`) e la mostra invece di
+risolverla. Il rimedio non è la riconciliazione al transition-point (capability) ma l'**invariante imposto +
+esercitato dall'harness su sequenze composte** (correttezza): chiude la classe, non l'istanza. Metodo: i bug di
+questa famiglia emergono **solo** dalle sequenze reali composte (terminate→incassa→reopen→paga), non dalle
+operazioni isolate — il test reale del trainer ha trovato ciò che 700+ unit-test non vedevano.
+
+---

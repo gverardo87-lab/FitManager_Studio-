@@ -686,6 +686,20 @@ non riconcilia con `kpi_incassato` — è atteso (TASSONOMIA §3).
 > Regola: ogni numero che il trainer legge come «quanto è entrato» dai contratti è **netto**; il
 > **lordo** sopravvive solo come **sorgente del netto** e **àncora della reconciliation**.
 
+### 9.6 INV-RATE — il piano rate è una partizione del residuo (v1.4, ADR-021)
+
+Il **piano rate** non è un'obbligazione indipendente: è una **proiezione** del SSoT `residuo()`. Invariante,
+per un contratto **non chiuso**:
+
+> **INV-RATE:** `Σ(importo_previsto − importo_saldato)` sulle rate attive non-saldate **≤ `residuo()`**.
+
+L'**eccedenza** (`Σ > residuo`) è **denaro-fantasma** — una rata che esige più del dovuto: produce il caso
+«contratto saldato con rata scaduta». La **sotto-copertura** (`Σ < residuo`) è legittima ("da pianificare"). La
+violazione nasce quando un incasso **non-rata** (`incassa-residuo`, conguaglio) abbassa `residuo()` senza
+riconciliare il piano. Enforcement: `_reconcile_rate_plan` su **ogni** path che muove il residuo (generalizza
+D-RECONCILIA-RATE da reopen-only) + invariante **I6** in `contract_state.assert_contract_invariants(rate_attive=…)`
+(harness) + proiezione nel read-model (un saldato non ha rate scadute). Asse DENARO invariato.
+
 ---
 
 ## 10. SSoT lato codice

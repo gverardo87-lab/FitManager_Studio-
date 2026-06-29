@@ -80,7 +80,17 @@ Adozione **stance C** (decisione founder 2026-06-29), tre leve complementari:
   **sempre** una partizione del residuo, riconciliata su ogni path che lo muove". **Estende ADR-019.**
 - Superseded by: —
 
-## Stato implementazione (2026-06-29): ⏳ DECISIONE PRESA, codice PENDENTE.
+## Stato implementazione (2026-06-29): ✅ IMPLEMENTATA (G8.3).
 
-AC falsificabili in `SPEC_INTEGRITA §17` (G8.3). È **chiusura della classe «piano rate ≠ residuo»**, non un nuovo
-prodotto.
+Tre leve (backend-only, zero schema-change):
+- **B — D-RICONCILIA-OVUNQUE:** `_reconcile_rate_plan` chiamata anche dopo `incassa-residuo` (`contracts.py`);
+  taglia l'eccedenza al residuo (mai sotto il saldato), niente rata scaduta-fantasma.
+- **I6 — INV-RATE:** `contract_state.assert_contract_invariants(..., rate_attive=…)` guadagna l'invariante I6
+  (`Σ residui-rata ≤ residuo()` sui non-chiusi); `_log_invariant_violations` (reopen) e l'harness lo passano.
+- **A — proiezione difesa:** `_to_response_with_rates` clampa `is_scaduta`/`rate_scadute` col residuo() SSoT
+  (un contratto saldato non ha rate scadute) → copre a vista i dati già stale.
+
+AC in `SPEC_INTEGRITA §17`: AC-G83-1 (riconcilia su incassa-residuo) + AC-G83-2 (I6 unit rosso→verde + harness
+scenario composto) + AC-G83-3 (proiezione) + AC-G83-4 (sotto-copertura no-op). **Invarianti immutati:** asse
+DENARO (`residuo()`/Strada B/cassa-immutabile), F2-bis "da pianificare". È **chiusura della classe «piano rate ≠
+residuo»**, non un nuovo prodotto.
