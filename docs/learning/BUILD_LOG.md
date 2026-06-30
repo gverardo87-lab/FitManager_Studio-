@@ -2519,3 +2519,31 @@ CODICE Stage 1** (modello `RettificaContratto` + `post_adjustment` + schema_sync
 G9.4 enforcement, G9.5 Hypothesis, G9.6 Money.
 
 ---
+
+### 2026-06-30 (sessione 2) — G9.2b decisioni di dettaglio (DEC-1/2/3) + design implementation-ready (docs-only)
+
+Ripresa verso **G9.2b CODICE Stage 1**. Letta la SSoT **sul codice vivo** (non dalla memoria): ADR-022 Add.I,
+SPEC_G9 §G9.2, `ledger.py`, `credito_terminazione.py`, `database.py`, `schema_sync.py`, i 3 write-site di
+`quota_stornata`. Prima di scrivere codice, **3 decisioni di dettaglio risolte da senior** e messe a record
+(SPEC_G9 **Appendice B**, implementation-ready):
+
+- **DEC-1 — il clamp `max(·,0)` di `incassa` si ritira; I4 (+I1 sui chiusi) fa da rete log-only.** È un'asserzione
+  travestita da correzione, **incompatibile** con l'ancora `quota_stornata == Σ rettifiche` (lo scopo di Opzione A) e
+  **irraggiungibile** (`old_quota ≥ credito_trainer ≥ Σ incassi`; test `700/600/200` mai clampati). **Seconda occhiata
+  sul caveat** («un log che nessuno legge»): DEC-1 *migliora* l'osservabilità vs il clamp (zero-segnale); `residuo()`
+  ha il suo `max(·,0)` a valle; doppia rete I1+I4 sui chiusi; il log-only è temporaneo (Stage 2 → `/reconciliation`,
+  G9.4 → 409). Presidi costo-zero: **test del path no-clamp** + **commento inline** anti-ripristino.
+- **DEC-2 — la penna arrotonda la colonna a 2dp.** Gli assert dei test fanno già `round(quota_stornata, 2)` → la
+  byte-identità a 2dp è sufficiente, **FP non è un rischio**.
+- **DEC-3 — `id_cliente` NON entra** in `rettifiche_contratto` (la memory-index lo citava per analogia — **corretto**):
+  sotto-libro del contratto, derivabile via `JOIN`, evita una verità-parallela; `trainer_id` resta (tenant-isolation).
+
+**Dato reale (sola lettura, `crm.db` dev): 38 contratti, 1 solo con `quota_stornata>0`** (TERMINAZIONE_RIMBORSO,
+250.0) → il backfill produrrà **1 riga** `BACKFILL_LEGACY`, verificabile a occhio sul clone al checkpoint.
+
+**Piano commit Stage 1 (baseline 755/0xfailed):** `G9.2b.1` modello+registrazione+migrazione · `G9.2b.2` penna
+`post_adjustment` · `G9.2b.3` backfill idempotente **[🔶 checkpoint founder, backup-first]** · `G9.2b.4` wiring 3
+write-site. **Docs-only oggi (zero codice):** SPEC_G9 Appendice B + ADR-022 Add.I decisioni di dettaglio.
+**⏭️ Ripresa domani: `feat: G9.2b.1`.**
+
+---

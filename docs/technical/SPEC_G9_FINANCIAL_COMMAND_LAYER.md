@@ -490,3 +490,101 @@ Nuovo `tests/test_invariant_gate.py` (sensore + fail-safe + Reperto #1) + estens
 3. `refactor: G9.0c — de-dup residuo_credito (DTO) + nota under-select KPI da telemetria`
 
 Ognuno passa `check-all.sh`. Reperto #1 resta **log-only** (zero blocco), in coda di triage.
+
+---
+
+## Appendice B — G9.2-b: design di dettaglio (implementation-ready, 2026-06-30 sessione 2)
+
+Design del solo **G9.2-b Stage 1**, ancorato al codice vivo (snapshot post-G9.2a). Decisioni founder *bake-nel-SPEC
+prima del codice* (questa appendice è il design-record). **Behavior-preserving: `residuo()` byte-identico; cambia
+chi/come scrive `quota_stornata`, non il valore.** Le coordinate `file:riga` vanno riverificate a implementazione.
+
+### B.0 — Stato verificato sul codice vivo (non dalla memoria)
+
+- **Penna esistente** `api/services/financial/ledger.py`: `post_inflow`/`post_outflow` = `CashMovement` + delta-colonna
+  in **un** atto, **no commit** (lo fa il caller), **NON** ricalcola `stato_pagamento` (la docstring: «quella è del
+  caller» — il codice diverge dallo SPEC §G9.1, vince il codice), categoria fuori-asse → `ValueError` fail-loud.
+- **Registrazione tabella**: `create_db_and_tables()` (`database.py:197`) crea **ogni** tabella SQLModel non-esclusa
+  via `CREATE TABLE IF NOT EXISTS` al boot, su **tutti** i DB business (inclusi i deployati). `sync_schema` salta le
+  tabelle inesistenti (`schema_sync.py:410-412`). Lifespan: `create_db_and_tables()` (`main.py:237`) →
+  `sync_schema(engine)` (`:241`). Head catena Alembic = `c8d9e0f1a2b3` (`crediti_cliente`).
+- **I 3 write-site di `quota_stornata`** (grep esaustivo): terminate `contracts.py:1676`, reopen `:1957`,
+  incassa_credito `:2232`. Tutto il resto (`rates.py:106/661`, `:2060` reopen-preview, `contract_state.py`) sono
+  **letture**.
+- **`residuo()`** `contract_state.py:73-87` legge la colonna `quota_stornata` → **non si tocca**. I4 (`:378`)
+  sorveglia `quota_stornata < −0.01`; I1 (`:383-393`) sorveglia residuo/residuo_raw sui contratti chiusi.
+
+### B.1 — I 3 delta esatti (la fedeltà vive qui)
+
+| Sito | Scrittura odierna | `importo_firmato` per la penna | causale | data_effettiva |
+|---|---|---|---|---|
+| terminate `:1676` | `quota = old + round(residuo_pre − incasso_ora + rimborso_out, 2)` | `+round(residuo_pre − incasso_ora + rimborso_out, 2)` | `STORNO_TERMINAZIONE` | `data_chiusura` |
+| reopen `:1957` | `quota = 0` | `−old_quota` | `REVERSAL_REOPEN` | `date.today()` |
+| incassa `:2232` | `quota = round(max(old − importo, 0), 2)` | `−data.importo` (DEC-1: niente clamp) | `REVERSAL_INCASSO_DIFFERITO` | `data_pagamento or today` |
+
+### B.2 — Modello (enumerazione esatta Add.I; `id_cliente` NO — vedi DEC-3)
+
+`RettificaContratto(table="rettifiche_contratto")`, append-only: `id`, `trainer_id`(FK `trainers.id`, idx),
+`id_contratto`(FK `contratti.id`, idx), `importo`(float **FIRMATO**: +storno / −reversal), `causale`(str),
+`data_effettiva`(date), `note`(opt), `deleted_at`(opt). Costanti `CAUSALE_*` + frozenset `CAUSALI_RETTIFICA`.
+Registrazione: import esplicito in `database.py` (specchio di `share_token`) → `create_db_and_tables` la crea al
+boot + record migrazione formale `down_revision='c8d9e0f1a2b3'` (Alembic FROZEN sui DB deployati → mai `upgrade`).
+
+### B.3 — Terza penna `post_adjustment` (gemello non-cash)
+
+`post_adjustment(session, *, contract, importo_firmato, causale, data_effettiva, trainer_id, note=None) ->
+RettificaContratto`: valida `causale ∈ CAUSALI_RETTIFICA` (else `ValueError` fail-loud, parità con `post_inflow`);
+crea la rettifica; `contract.quota_stornata = round((quota or 0) + importo_firmato, 2)` (DEC-2); `session.add` ×2;
+`return`. **NON** tocca `movimenti_cassa`, **NON** committa, **NON** ricalcola stato (come `post_inflow`/`post_outflow`).
+
+### B.4 — Backfill idempotente (dato reale: 1 storno legacy nel dev)
+
+`schema_sync._backfill_quota_stornata_rettifiche(engine)` (gemello di `_fix_cross_db_fk`, raw SQL, gira in frozen),
+chiamato in `sync_schema()` dopo `_drop_stale_catalog_tables`. Per ogni contratto con `quota_stornata > 0.009` e
+**zero** rettifiche → `INSERT` riga `BACKFILL_LEGACY` di pari importo (`data_effettiva = COALESCE(data_chiusura,
+today)`). Idempotente (guard zero-rettifiche → re-run no-op), additivo (colonna/`residuo()` intatti), solo `crm.db`
+(`sync_schema(engine)`). **Dato reale `crm.db` dev (sola lettura 2026-06-30): 38 contratti, 1 con `quota_stornata>0`
+(TERMINAZIONE_RIMBORSO, 250.0) → il backfill produce 1 riga.** Verifica **backup-first sul clone** al checkpoint.
+
+### Decisioni risolte (Stage 1)
+
+- **DEC-1 — il clamp `max(·,0)` di `incassa` si ritira; I4 (+I1 sui chiusi) fa da rete log-only.** Clamp e ancora
+  `quota_stornata == Σ rettifiche` sono **mutuamente esclusivi** (un floor sulla colonna ma non sul Σ rompe l'ancora
+  = lo scopo di Opzione A). Il clamp è **irraggiungibile** (`old_quota ≥ credito_trainer ≥ Σ incassi`; cap a
+  `:2208`; test: `900→700→600`, `500→200` mai clampati) → costo del drop = 0 sui dati validi. È un'asserzione
+  travestita da correzione (§A.1-bis, regola #6): droppando, lo stato corrotto diventa **rumoroso** (I4/I1) invece
+  che mascherato. **Seconda occhiata sul caveat** («un log che nessuno legge»): (1) DEC-1 *migliora* l'osservabilità
+  vs oggi (il clamp era zero-segnale); (2) `residuo()` ha comunque il suo `max(·,0)` a valle → nessun residuo
+  negativo propagato; (3) sui chiusi doppia rete I1+I4; (4) il log-only è **temporaneo** — **Stage 2 eleva l'ancora a
+  `/reconciliation` visibile, G9.4 a 409**. Presidi costo-zero in Stage 1: **test del path no-clamp** (loud testato) +
+  **commento inline** anti-ripristino del floor.
+- **DEC-2 — la penna arrotonda la colonna a 2dp** (`round((quota or 0)+importo_firmato, 2)`): coerenza di tipo del
+  denaro, e `round(running) == round(Σ)` per importi 2dp (l'ancora regge). `residuo()` byte-identico (ri-arrotonda
+  comunque). Nota: gli assert dei test fanno **già** `round(quota_stornata, 2) == …` → la byte-identità a 2dp è
+  sufficiente, **FP non è un rischio**.
+- **DEC-3 — `id_cliente` NON entra** in `rettifiche_contratto` (la memory-index lo citava per analogia con
+  `crediti_*` — **corretto**): lo storno è un **sotto-libro del contratto** (nessuna worklist storni-per-cliente),
+  `id_cliente` è derivabile via `JOIN` (mai stale) e una colonna ridondante non-richiesta sarebbe una
+  **verità-parallela dentro l'ADR che le vieta**. `trainer_id` resta (frontiera tenant-isolation, non denormalizzazione).
+
+### B.5 — Test plan (mappa AC §G9.2-b)
+
+| AC | Test |
+|---|---|
+| AC-G92-1/2 | `post_adjustment` crea rettifica + colonna in UN atto; `quota_stornata == Σ rettifiche` by-construction su ogni write-site; `residuo()` byte-identico ai valori già asseriti (`test_contract_terminate/reopen/credito_differito`) |
+| DEC-1 | path no-clamp: stato che porterebbe `quota < 0` → I4 **loggato** (loud testato), NON clamp silenzioso |
+| AC-G92-4 | harness sequenze composte: `terminate→incassa→reopen` e `terminate→reopen→ri-terminate` — `Σ==colonna` e `residuo()` invariato ad ogni passo |
+| backfill | legacy `quota>0` senza rettifiche → 1 riga `BACKFILL_LEGACY` pari importo; re-run no-op; colonna/residuo intatti; (validazione: clone `crm.db` dev → 1 riga `+250`) |
+| causale | causale fuori-enum → `ValueError` (fail-loud, parità con `post_inflow`) |
+
+### B.6 — Piano commit (4 commit atomici, branch sempre verde, baseline **755 passed / 0 xfailed**)
+
+1. `feat: G9.2b.1 — modello RettificaContratto + registrazione (create_db_and_tables) + record migrazione`
+2. `feat: G9.2b.2 — terza penna post_adjustment (non cablata)`
+3. `feat: G9.2b.3 — backfill idempotente quota_stornata→rettifiche al boot` — **🔶 CHECKPOINT founder** (tocca dati reali, backup-first su clone del `crm.db` dev)
+4. `feat: G9.2b.4 — wiring 3 write-site via post_adjustment (terminate/incassa/reopen)`
+
+Ognuno passa `check-all.sh`. **Stage 2** (separato): estendere `project_columns_from_ledger` (ritorni anche
+`quota_stornata = Σ rettifiche`) + ancora sensore `quota_stornata == Σ rettifiche` (log-only, terza ancora).
+⚠️ Nota per Stage 2: `test_lifecycle_audit.py:212/238` scrive `quota_stornata` **a mano** (no rettifiche) → l'ancora
+log-only loggerà su questi 2 test (non rompe la suite) — **atteso, non sorpresa**.

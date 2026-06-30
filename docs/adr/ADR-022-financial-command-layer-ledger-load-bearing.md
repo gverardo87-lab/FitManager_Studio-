@@ -253,3 +253,14 @@ FROZEN), backfill sui dati reali, e ri-tocco di `terminate`/`incassa_credito`/`r
 ancora sensore → full suite a ogni passo. Behavior-preserving (`residuo()` invariato).
 
 **Stato (2026-06-30): ACCETTATA (Opzione A), governance in corso, codice da fare (G9.2-b).**
+
+**Decisioni di dettaglio Stage 1 (2026-06-30 sessione 2; design implementation-ready in `SPEC_G9` Appendice B):**
+- **Il clamp `max(·,0)` di `incassa_credito_terminazione` si ritira** (DEC-1): è incompatibile con
+  `quota_stornata == Σ rettifiche` per costruzione (un floor sulla colonna ma non sul Σ romperebbe l'ancora, che è
+  lo scopo di Opzione A) ed è irraggiungibile in flussi validi (`old_quota ≥ credito_trainer ≥ Σ incassi`). Lo stato
+  corrotto resta **sorvegliato — rumoroso, non mascherato** — da I4 (+I1 sui chiusi) log-only in Stage 1, elevato a
+  `/reconciliation` in Stage 2 e a 409 in G9.4. Coerente con §A.1-bis dello SPEC_G9 (no maschera silenziosa) e con la
+  regola #6 (Determinismo). `residuo()` resta byte-identico (il suo `max(·,0)` a valle contiene comunque l'effetto).
+- **`id_cliente` NON entra in `rettifiche_contratto`** (DEC-3): l'enumerazione di D-STORNO-LEDGER-SEPARATO è la forma
+  esatta — lo storno è un sotto-libro del contratto (nessuna worklist per-cliente), `id_cliente` è derivabile via
+  `JOIN` (no verità-parallela proprio dentro l'ADR che le vieta). `trainer_id` resta (tenant-isolation).
