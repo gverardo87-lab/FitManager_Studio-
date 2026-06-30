@@ -3,8 +3,8 @@
 **Tipo:** specifica prescrittiva (cosa-deve-essere-vero; silente sul come dove possibile). Bridge Chat→Code.
 **Data:** 2026-06-30 · **Branch:** `FitManager_Studio`
 **Stato:** ⏳ **DA IMPLEMENTARE** (G9.0→G9.6). Governance docs-only. Zero codice prodotto. **G9.0 design di
-dettaglio pronto-da-implementare → Appendice A** (sensore fail-safe + agganci + reconciliation bidirezionale +
-quick-win + Reperto #1 log-only).
+dettaglio pronto-da-implementare → Appendice A** (sensore totale-per-costruzione [niente `except Exception`,
+A.1-bis] + agganci + reconciliation bidirezionale + quick-win + Reperto #1 log-only).
 **Blocco proposto:** **G9** — elevazione del write-model del dominio contrattuale-economico. Ratifica
 `ADR-022`. Sette gate sequenziali, branch sempre rilasciabile.
 **Mappa di verità:** `docs/adr/ADR-022-financial-command-layer-ledger-load-bearing.md` ·
@@ -301,35 +301,76 @@ Ogni transizione ha già `session` + `contract` in scope e committa in fondo.
 
 ### A.1 — Nuovo modulo `api/services/financial/invariant_gate.py`
 
-Si sposta il wrapper da `contracts.py` (router) a `services/` (è dominio, non routing) **rendendolo
-FAIL-SAFE** — il log-only deve essere *impossibile* da far fallire, altrimenti non è behavior-preserving:
+Si sposta il wrapper da `contracts.py` (router) a `services/` (è dominio, non routing). **NESSUN
+`try/except`** (correzione di review 2026-06-30, vedi A.1-bis): il sensore è **totale per costruzione**, non
+*fail-safe-by-catch*.
 
 ```python
 # api/services/financial/invariant_gate.py
 def log_invariant_violations(session, contract, *, motivo: str) -> None:
-    """Osserva (log-only) I1/I4/I5/I6 in coda a una transizione denaro. FAIL-SAFE: un errore
-    del sensore NON deve mai far fallire una transazione legittima ('predisposta per 409')."""
-    try:
-        crediti = session.exec(select(CreditoCliente).where(
-            CreditoCliente.id_contratto_origine == contract.id)).all()
-        rimborso_diretto = round(sum(m.importo for m in session.exec(select(CashMovement).where(
-            CashMovement.id_contratto == contract.id,
-            CashMovement.tipo == "USCITA",
-            CashMovement.categoria == CATEGORIA_RIMBORSO_CONTRATTO,
-            CashMovement.deleted_at == None)).all()), 2)
-        rate_attive = session.exec(select(Rate).where(
-            Rate.id_contratto == contract.id, Rate.deleted_at == None)).all()
-        for v in cstate.assert_contract_invariants(
-                contract, crediti, rimborso_cassa_diretto=rimborso_diretto, rate_attive=rate_attive):
-            logger.warning("Invariante %s violato dopo '%s' sul contratto %s: %s",
-                           v.code, motivo, contract.id, v.message)
-    except Exception:        # NON-NEGOZIABILE: il sensore non rompe mai la transazione
-        logger.exception("invariant_gate fallito dopo '%s' sul contratto %s", motivo, contract.id)
+    """Sensore osservabile (log-only) degli invarianti I1/I4/I5/I6 in coda a una transizione denaro.
+
+    NESSUN try/except: `assert_contract_invariants` è TOTALE per costruzione (pura, getattr-default →
+    non solleva su un Contract ben tipato) e le 3 query sono quelle che gli endpoint già eseguono. Se
+    questo solleva è un BUG del sensore → deve fallire RUMOROSAMENTE (dev/CI lo catturano via AC-G90-1),
+    MAI essere inghiottito: un sensore nato per chiudere i fallimenti silenziosi non può diventarne uno
+    (regola #6 Determinismo). Parità con la call esistente di `reopen` (contracts.py:2094), che già non
+    si protegge."""
+    crediti = session.exec(select(CreditoCliente).where(
+        CreditoCliente.id_contratto_origine == contract.id)).all()
+    rimborso_diretto = round(sum(m.importo for m in session.exec(select(CashMovement).where(
+        CashMovement.id_contratto == contract.id,
+        CashMovement.tipo == "USCITA",
+        CashMovement.categoria == CATEGORIA_RIMBORSO_CONTRATTO,
+        CashMovement.deleted_at == None)).all()), 2)
+    rate_attive = session.exec(select(Rate).where(
+        Rate.id_contratto == contract.id, Rate.deleted_at == None)).all()
+    for v in cstate.assert_contract_invariants(
+            contract, crediti, rimborso_cassa_diretto=rimborso_diretto, rate_attive=rate_attive):
+        logger.warning("Invariante %s violato dopo '%s' sul contratto %s: %s",
+                       v.code, motivo, contract.id, v.message)
 ```
 
-Due delta rispetto all'originale: **(1)** il `try/except` (correttezza behavior-preserving); **(2)** il cambio
-di layer router→service (zero cicli: importa solo `models`/`contract_state`/`cash_categories`, mai router). In
-`contracts.py` resta un thin re-export per non rompere la call esistente di `reopen`.
+Unico delta rispetto all'originale: il **cambio di layer** router→service (zero cicli: importa solo
+`models`/`contract_state`/`cash_categories`, mai router). In `contracts.py` resta un thin re-export per non
+rompere la call esistente di `reopen`. Il corpo è **byte-identico** all'helper `_log_invariant_violations`
+attuale (`contracts.py:77-102`) — niente `try/except` lì, niente qui.
+
+### A.1-bis — Perché NIENTE `try/except` (lezione di codice, 2026-06-30)
+
+La prima stesura avvolgeva il sensore in `except Exception: logger.exception(...)` per "garantire" che il
+log-only non rompesse mai la transazione. **È l'errore opposto a quello che G9 vuole chiudere.** Tre ragioni,
+code-grounded:
+
+1. **Auto-contraddizione.** Un `except Exception` largo degrada un fallimento DURO in una riga di log che
+   nessuno legge — il "fallimento silenzioso" vietato dalla regola non-negoziabile #6 (Determinismo) e dai
+   pitfall #2/#7 ("422 silenzioso", "500 mascherato"). Un *sensore di invarianti* nato per **chiudere** i
+   fallimenti silenziosi, se avvolto nel catch largo, **ne diventa uno**: un bug di refactor del sensore (un
+   attributo rinominato, una query sbagliata) verrebbe inghiottito e mai surfacato.
+2. **Non è lo stile del progetto.** L'**unico** `try/except` in `contracts.py` (~2.600 righe) cattura solo
+   l'eccezione **specifica attesa**: `except (ValueError, TypeError)` su un `json.loads`. Mai un
+   `except Exception` largo per controllo di flusso. E la call esistente del sensore (`reopen`,
+   `contracts.py:2094`) **non ha alcun guard** — il `try/except` era una mia deviazione, non un allineamento.
+3. **Non serve.** `assert_contract_invariants` è pura + `getattr(...,0)` → **non solleva** su un Contract ben
+   tipato; le 3 query sono `SELECT` identici a quelli già eseguiti dagli endpoint (se sollevano, è un DB rotto
+   → la transazione è comunque condannata, stesso destino del `commit()`). Non c'è nulla da catturare.
+
+**Principio (correctness by construction):** non "gestisci l'eccezione" ma "rendi il codice incapace di
+sollevarla". Se in futuro servisse hardening extra per la sicurezza-sui-dati-reali, la mossa giusta NON è un
+catch ma il **disaccoppiamento post-commit** (A.1-ter), mai un `except Exception` che inghiotte.
+
+### A.1-ter — Hardening (G9.3): osservazione post-commit, non guard
+
+G9.0 è **osservazione**; l'osservazione appartiene **dopo** il fatto, sulla verità **committata**. Eseguire il
+sensore **post-commit** (idealmente via listener SQLAlchemy `after_commit`, isolato dall'ORM) lo disaccoppia
+**per costruzione** dalla scrittura: un suo fallimento non può fare rollback del denaro (è già durevole). È la
+separazione che lo SPEC già distingue — **sensore = post-commit/osserva (G9.0)** vs **gate =
+pre-commit/blocca-rollback (G9.3/G9.4)**. Per G9.0 minimale si tiene la **parità pre-commit** con `reopen`
+(totale-per-costruzione); il disaccoppiamento post-commit atterra naturalmente con il **TransitionExecutor
+(G9.3)**, dove l'osservazione diventa una fase post-commit esplicita. Se mai un sensore post-commit non
+dovesse poter 500-are l'utente, il tool corretto è un guard **fail-loud-in-CI flag-gated** (re-raise salvo
+`INVARIANT_SENSOR_STRICT` off, default ON in dev/test — riusa l'interruttore `INVARIANT_ENFORCEMENT` di
+G9.4), **mai** un `except Exception` silenzioso.
 
 ### A.2 — Agganci (chiamata **immediatamente prima di `session.commit()`**, come reopen)
 
@@ -417,7 +458,7 @@ GROUP BY c.id
 
 | AC | Test |
 |---|---|
-| **AC-G90-1** | per ognuna delle transizioni #2-#7: stato che viola I1/I4 iniettato → log `warning` col codice atteso (`caplog`) **e** commit avviene comunque; + test che il `try/except` non propaga (sensore che lancia → transazione OK). |
+| **AC-G90-1** | per ognuna delle transizioni #2-#7: stato che viola I1/I4 iniettato → log `warning` col codice atteso (`caplog`) **e** commit avviene comunque (il sensore OSSERVA, non blocca). + test di **totalità**: su stati normali il sensore non solleva mai (è la garanzia che sostituisce il `try/except`; un suo bug fallisce-rumoroso nella suite, non viene inghiottito). |
 | **AC-G90-2** | divergenza `totale_rimborsato` iniettata → `/reconciliation` la riporta in `delta_rimborsi`; + caso wallet-riassorbito che **non** è divergenza (regge l'I5 raffinata). |
 | **AC-G90-3** | `residuo_credito` helper unico (parametrico + meta-test). |
 | **AC-G90-4** | HTTP invariato su matrice scenari registrati; suite + `ruff` + `next build` verdi; **zero 409 nuovi**. |
@@ -428,7 +469,7 @@ Nuovo `tests/test_invariant_gate.py` (sensore + fail-safe + Reperto #1) + estens
 
 ### A.7 — Piano di commit (3 commit atomici, branch sempre verde)
 
-1. `feat: G9.0a — invariant sensor ovunque (log-only, fail-safe) + estrazione invariant_gate.py`
+1. `feat: G9.0a — invariant sensor ovunque (log-only, totale-per-costruzione) + estrazione invariant_gate.py`
 2. `feat: G9.0b — /reconciliation bidirezionale (lato rimborso, I5 raffinata)`
 3. `refactor: G9.0c — de-dup residuo_credito (DTO) + nota under-select KPI da telemetria`
 

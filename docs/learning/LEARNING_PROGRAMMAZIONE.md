@@ -227,6 +227,30 @@ except Exception as e:
 
 - [ ] So spiegare la differenza tra "lanciare" e "catturare" un errore?
 
+> #### ⚠️ Sfumatura senior — quando `except Exception` è un ERRORE (lezione G9.0, 2026-06-30)
+>
+> L'esempio sopra (`except Exception as e: logger.error(...)`) è ottimo per **imparare il meccanismo**, ma
+> nel codice del progetto è un **anti-pattern** se usato per il controllo di flusso. Lezione emersa
+> progettando il sensore di invarianti di G9.0 (avevo scritto un `try/except` largo; era sbagliato).
+>
+> **1) Cosa.** Nel backend si cattura **solo l'eccezione specifica attesa**, mai `Exception` in generale.
+> Prova: l'**unico** `try/except` in tutto `contracts.py` (~2.600 righe) è
+> `except (ValueError, TypeError)` su un `json.loads` — cattura esattamente cosa può rompersi nel parsing,
+> niente di più.
+>
+> **2) Perché.** Un `except Exception: logger.warning(...)` largo trasforma un errore **duro** in una riga di
+> log che nessuno legge → è il **"fallimento silenzioso"** che la regola non-negoziabile #6 (Determinismo) e i
+> pitfall #2/#7 ("422 silenzioso", "500 mascherato") vietano. Caso emblematico: un *sensore* nato per
+> **chiudere** i fallimenti silenziosi, se lo avvolgi in un catch largo, **ne diventa uno** — un suo bug di
+> refactor verrebbe inghiottito invece che surfacato.
+>
+> **3) Come si applica (il principio).** Non "gestisci l'eccezione" ma **"rendi il codice incapace di
+> sollevarla"** (*correctness by construction*): una funzione pura con `getattr(..., 0)` non solleva; se
+> solleva è un bug che **deve** fallire rumoroso (la CI lo cattura). Per l'**osservabilità/instrumentation**
+> che non deve toccare la transazione, la mossa pulita è **disaccoppiarla** (eseguirla *dopo* il commit, sulla
+> verità persistita), **non** avvolgerla in un catch. Solo se serve davvero un guard di confine: fail-loud in
+> CI + flag, **mai** uno swallow. Dettaglio: `docs/technical/SPEC_G9_FINANCIAL_COMMAND_LAYER.md` §A.1-bis.
+
 ---
 
 ## Layer 1 — Python e JavaScript specifici
