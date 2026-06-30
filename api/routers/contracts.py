@@ -832,14 +832,6 @@ def create_contract(
     _check_client_ownership(session, data.id_cliente, trainer.id)
 
     # 2. Crea contratto con trainer_id iniettato
-    # stato_pagamento determinato dall'acconto
-    if data.acconto >= data.prezzo_totale:
-        stato_iniziale = "SALDATO"
-    elif data.acconto > 0:
-        stato_iniziale = "PARZIALE"
-    else:
-        stato_iniziale = "PENDENTE"
-
     contract = Contract(
         trainer_id=trainer.id,
         id_cliente=data.id_cliente,
@@ -849,35 +841,28 @@ def create_contract(
         data_inizio=data.data_inizio,
         data_scadenza=data.data_scadenza,
         acconto=data.acconto,
-        totale_versato=data.acconto,
-        stato_pagamento=stato_iniziale,
+        totale_versato=0,   # G9.1c: la penna lo porta ad acconto (sotto); stato_pagamento ricalcolato dopo
         note=data.note,
     )
     session.add(contract)
+    session.flush()  # ID del contratto: serve alla penna (acconto) e al suo CashMovement
 
-    # Flush per ottenere l'ID del contratto (necessario per il CashMovement)
-    session.flush()
-
-    # 3. Se acconto > 0, registra nel libro mastro (CashMovement ENTRATA)
-    # data_effettiva: il denaro è ricevuto al momento della firma, non alla data inizio.
-    # Per contratti backdatati si rispetta data_inizio; per contratti futuri si usa oggi.
+    # 3. Acconto = PRIMO pagamento, posto via penna unica (G9.1c): CashMovement + totale_versato in UN atto
+    #    (post_inflow → I5 per costruzione). data_effettiva: il denaro entra alla firma, non alla data inizio
+    #    (backdate-safe: si rispetta data_inizio per i contratti retrodatati, oggi per quelli futuri).
     if data.acconto > 0:
         client = session.get(Client, data.id_cliente)
         client_label = f"{client.nome} {client.cognome}" if client else f"Cliente #{data.id_cliente}"
         acconto_date = min(data.data_inizio, date.today())
-
-        movement = CashMovement(
-            trainer_id=trainer.id,
-            data_effettiva=acconto_date,
-            tipo="ENTRATA",
-            categoria=CATEGORIA_ACCONTO,
-            importo=data.acconto,
-            metodo=data.metodo_acconto,
-            id_cliente=data.id_cliente,
-            id_contratto=contract.id,
-            note=f"Acconto Contratto - {client_label}",
+        post_inflow(
+            session, contract=contract, importo=data.acconto, categoria=CATEGORIA_ACCONTO,
+            metodo=data.metodo_acconto, data_effettiva=acconto_date, trainer_id=trainer.id,
+            id_cliente=data.id_cliente, note=f"Acconto Contratto - {client_label}",
         )
-        session.add(movement)
+
+    # stato_pagamento dal SSoT net-aware (G9.1c: collassa la 4ª copia inline `stato_iniziale`) — dopo la penna.
+    contract.stato_pagamento = cstate.recompute_stato_pagamento(contract)
+    session.add(contract)
 
     log_audit(session, "contract", contract.id, "CREATE", trainer.id)
     session.commit()
@@ -1214,13 +1199,6 @@ def renew_contract(
     _check_client_ownership(session, data.id_cliente, trainer.id)
 
     # 3. Crea contratto rinnovato con link al precedente
-    if data.acconto >= data.prezzo_totale:
-        stato_iniziale = "SALDATO"
-    elif data.acconto > 0:
-        stato_iniziale = "PARZIALE"
-    else:
-        stato_iniziale = "PENDENTE"
-
     renewed = Contract(
         trainer_id=trainer.id,
         id_cliente=data.id_cliente,
@@ -1230,32 +1208,27 @@ def renew_contract(
         data_inizio=data.data_inizio,
         data_scadenza=data.data_scadenza,
         acconto=data.acconto,
-        totale_versato=data.acconto,
-        stato_pagamento=stato_iniziale,
+        totale_versato=0,   # G9.1c: la penna lo porta ad acconto (sotto); stato_pagamento ricalcolato dopo
         note=data.note,
         rinnovo_di=contract_id,
     )
     session.add(renewed)
     session.flush()
 
-    # 4. Se acconto > 0, registra nel libro mastro
+    # 4. Acconto del rinnovo = primo pagamento, posto via penna unica (G9.1c): movimento + colonna in un atto.
     if data.acconto > 0:
         client = session.get(Client, data.id_cliente)
         client_label = f"{client.nome} {client.cognome}" if client else f"Cliente #{data.id_cliente}"
         acconto_date = min(data.data_inizio, date.today())
-
-        movement = CashMovement(
-            trainer_id=trainer.id,
-            data_effettiva=acconto_date,
-            tipo="ENTRATA",
-            categoria=CATEGORIA_ACCONTO,
-            importo=data.acconto,
-            metodo=data.metodo_acconto,
-            id_cliente=data.id_cliente,
-            id_contratto=renewed.id,
-            note=f"Acconto Rinnovo Contratto - {client_label}",
+        post_inflow(
+            session, contract=renewed, importo=data.acconto, categoria=CATEGORIA_ACCONTO,
+            metodo=data.metodo_acconto, data_effettiva=acconto_date, trainer_id=trainer.id,
+            id_cliente=data.id_cliente, note=f"Acconto Rinnovo Contratto - {client_label}",
         )
-        session.add(movement)
+
+    # stato_pagamento dal SSoT net-aware (G9.1c: collassa la 4ª copia inline) — dopo la penna.
+    renewed.stato_pagamento = cstate.recompute_stato_pagamento(renewed)
+    session.add(renewed)
 
     log_audit(session, "contract", renewed.id, "CREATE", trainer.id, {"rinnovo_di": contract_id})
     session.commit()
