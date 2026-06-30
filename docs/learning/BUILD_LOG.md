@@ -2474,3 +2474,48 @@ questa famiglia emergono **solo** dalle sequenze reali composte (terminate→inc
 operazioni isolate — il test reale del trainer ha trovato ciò che 700+ unit-test non vedevano.
 
 ---
+
+## 2026-06-30 (sessione lunga) — G9 financial command layer: G9.0 → G9.2a + Reperto #1 + governance G9.2b
+
+Avvio del programma **G9** (ADR-022): rendere il libro mastro `CashMovement` **load-bearing** dando al SSoT di
+lettura `contract_state.py` il suo gemello di **scrittura**. Trigger: dopo G8.3 il founder ha chiesto «cosa
+farebbe un senior CRM leader che non stiamo facendo». Diagnosi (review multi-agente): write-model decentralizzato
+→ doppia-verità ledger↔colonne sincronizzata a mano in ~8 siti. **10 commit pushati** su `FitManager_Studio`.
+
+**G9.0 — sensore invarianti ovunque (gate chiuso).**
+- `f419169` G9.0a: estratto `_log_invariant_violations` → `api/services/financial/invariant_gate.py` (sensore
+  **TOTALE-per-costruzione, zero try/except**), cablato log-only sulle 6 transizioni denaro mancanti.
+- `2e1799e` G9.0b: `/reconciliation` BIDIREZIONALE (lato rimborso, ancora I5 raffinata).
+- `5b54ccd` G9.0c: SSoT unico `contract_state.residuo_credito` (de-dup 2 DTO) + nota KPI gross-SQL re-scoped.
+- `e683058` **Reperto #1** (emerso dal sensore il primo giorno): `incassa_credito_terminazione` accendeva I1
+  (residuo_raw<0) — `quota_stornata` assorbiva l'intero residuo_pre al terminate A_CREDITO ma non si riduceva
+  all'incasso del receivable. Fix: l'incasso REVERTE lo storno provvisorio (`quota_stornata −= importo`);
+  corretto anche `reopen-preview` (sovrastimava `residuo_dopo`). Esame: `quota_stornata` NON sommata in alcun KPI.
+- `ce69d72` chore: untrack `.claude/settings.local.json` (config locale già in `.gitignore`).
+
+**G9.1 — penna unica (gate chiuso).** `api/services/financial/ledger.py` `post_inflow`/`post_outflow`: crea il
+`CashMovement` E il delta-colonna nello STESSO atto → I5 (`totale_versato == Σ ENTRATA`) vero per costruzione.
+Adozione strangler-fig: `8674493` G9.1a (pay_rate + incassa_residuo) · `897a21a` G9.1b (terminate×2 +
+incassa_credito + eroga, net −30 righe) · `d21abac` G9.1c (acconto create_contract/renew + collasso 4ª copia
+inline `stato_pagamento`). **Tutte le scritture di cassa su contratto passano ora per la penna, zero eccezioni.**
+
+**G9.2a** (`97b4463`): `project_columns_from_ledger` (inverso per-contratto di reconciliation) + ancora
+ledger-versato nel sensore. Scoperta: wallet/receivable sono GIÀ postings → resta solo `quota_stornata` (storno).
+
+**G9.2b governance** (`a8ea4dd`): bivio architetturale — storno nel mastro cassa riapre la superficie esclusione
+scartata da ADR-019. **Decisione founder = Opzione A (ledger SEPARATO `rettifiche_contratto`)** → ADR-022 Addendum I.
+
+**Metodo/learning (dettaglio in ADR-022 / SPEC_G9 / `LEARNING_PROGRAMMAZIONE §0.8`):**
+- *Strumenta-poi-imponi*: il sensore log-only ha trovato un bug reale (Reperto #1 + reopen-preview) che nessun
+  test copriva — il suo scopo, il primo giorno.
+- *Correctness by construction, non `try/except`*: il founder ha intercettato un `except Exception` largo nel
+  sensore (auto-contraddittorio). → convenzione binding in `api/CLAUDE.md`.
+- *Estrazione fedele*: ogni migrazione verificata dalla **full-suite** (732→755 passed, 0 xfailed),
+  behavior-preserving, spesso net-negativa di righe (la penna toglie boilerplate).
+
+**Verifica.** Suite full **755 passed / 0 xfailed**, `check-all.sh` verde a ogni commit. **⏭️ Prossimo: G9.2b
+CODICE Stage 1** (modello `RettificaContratto` + `post_adjustment` + schema_sync + backfill idempotente + wiring
+3 write-site; `residuo()` byte-identico; **backup-first per il backfill** sui dati reali). Poi G9.3 TransitionExecutor,
+G9.4 enforcement, G9.5 Hypothesis, G9.6 Money.
+
+---
