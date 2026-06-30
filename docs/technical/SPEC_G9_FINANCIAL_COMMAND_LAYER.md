@@ -2,7 +2,9 @@
 
 **Tipo:** specifica prescrittiva (cosa-deve-essere-vero; silente sul come dove possibile). Bridge Chat→Code.
 **Data:** 2026-06-30 · **Branch:** `FitManager_Studio`
-**Stato:** ⏳ **DA IMPLEMENTARE** (G9.0→G9.6). Governance docs-only. Zero codice prodotto.
+**Stato:** ⏳ **DA IMPLEMENTARE** (G9.0→G9.6). Governance docs-only. Zero codice prodotto. **G9.0 design di
+dettaglio pronto-da-implementare → Appendice A** (sensore fail-safe + agganci + reconciliation bidirezionale +
+quick-win + Reperto #1 log-only).
 **Blocco proposto:** **G9** — elevazione del write-model del dominio contrattuale-economico. Ratifica
 `ADR-022`. Sette gate sequenziali, branch sempre rilasciabile.
 **Mappa di verità:** `docs/adr/ADR-022-financial-command-layer-ledger-load-bearing.md` ·
@@ -281,3 +283,153 @@ postings; storno-posting), `TASSONOMIA_FINANZIARIA.md` (categoria storno contra-
 penna), `api/CLAUDE.md` (Contract Integrity Engine → financial command layer; penna unica come punto-di-
 scrittura; invariant gate), `BUILD_LOG.md` (cronologia G9.x), e l'indice `docs/INDEX.md` / `docs/adr/README.md`.
 Depositare l'audit fondante `docs/operations/AUDIT_FINANCIAL_ARCHITECTURE_2026-06-30.md`.
+
+---
+
+## Appendice A — G9.0: design di dettaglio (implementation-ready, 2026-06-30)
+
+Design del solo G9.0, ancorato al codice vivo (snapshot post-G8.3). Esito di una lettura code-grounded dei
+~7 punti d'aggancio. **Tutto behavior-preserving; nessun 409 nuovo.** Decisioni founder 2026-06-30: *bake nel
+SPEC prima dell'implementazione* (questa appendice è il design-record); *Reperto #1 log-only, triage col dato*.
+
+### A.0 — Scoperta che orienta il gate
+
+`_log_invariant_violations` (`contracts.py:77-102`) **è già auto-contenuto**: prende solo `(session, contract,
+motivo)` e batch-fetcha da sé `crediti_cliente` (I5), `Σ USCITA RIMBORSO` diretto (I5 ancora-ledger) e
+`rate_attive` (I6). G9.0-a NON è "scrivere un sensore" — è **spostarlo di layer + ~6 chiamate da una riga**.
+Ogni transizione ha già `session` + `contract` in scope e committa in fondo.
+
+### A.1 — Nuovo modulo `api/services/financial/invariant_gate.py`
+
+Si sposta il wrapper da `contracts.py` (router) a `services/` (è dominio, non routing) **rendendolo
+FAIL-SAFE** — il log-only deve essere *impossibile* da far fallire, altrimenti non è behavior-preserving:
+
+```python
+# api/services/financial/invariant_gate.py
+def log_invariant_violations(session, contract, *, motivo: str) -> None:
+    """Osserva (log-only) I1/I4/I5/I6 in coda a una transizione denaro. FAIL-SAFE: un errore
+    del sensore NON deve mai far fallire una transazione legittima ('predisposta per 409')."""
+    try:
+        crediti = session.exec(select(CreditoCliente).where(
+            CreditoCliente.id_contratto_origine == contract.id)).all()
+        rimborso_diretto = round(sum(m.importo for m in session.exec(select(CashMovement).where(
+            CashMovement.id_contratto == contract.id,
+            CashMovement.tipo == "USCITA",
+            CashMovement.categoria == CATEGORIA_RIMBORSO_CONTRATTO,
+            CashMovement.deleted_at == None)).all()), 2)
+        rate_attive = session.exec(select(Rate).where(
+            Rate.id_contratto == contract.id, Rate.deleted_at == None)).all()
+        for v in cstate.assert_contract_invariants(
+                contract, crediti, rimborso_cassa_diretto=rimborso_diretto, rate_attive=rate_attive):
+            logger.warning("Invariante %s violato dopo '%s' sul contratto %s: %s",
+                           v.code, motivo, contract.id, v.message)
+    except Exception:        # NON-NEGOZIABILE: il sensore non rompe mai la transazione
+        logger.exception("invariant_gate fallito dopo '%s' sul contratto %s", motivo, contract.id)
+```
+
+Due delta rispetto all'originale: **(1)** il `try/except` (correttezza behavior-preserving); **(2)** il cambio
+di layer router→service (zero cicli: importa solo `models`/`contract_state`/`cash_categories`, mai router). In
+`contracts.py` resta un thin re-export per non rompere la call esistente di `reopen`.
+
+### A.2 — Agganci (chiamata **immediatamente prima di `session.commit()`**, come reopen)
+
+Il sensore vede lo stato post-mutazione: l'oggetto `contract` ha i nuovi valori in memoria e l'**autoflush**
+di SQLModel materializza i `CashMovement`/wallet pendenti prima delle query del sensore.
+
+| # | Transizione | File:riga (commit) | `motivo=` | Resa attesa |
+|---|---|---|---|---|
+| 1 | `reopen_contract` | `contracts.py:2095` | `"reopen"` | ✅ già cablato (`:2094`) |
+| 2 | `terminate_contract` | `contracts.py:~1825` | `"terminazione"` | I1 deve reggere (chiuso ⟹ residuo 0) |
+| 3 | `pay_rate` | `rates.py:~621` | `"pagamento"` | atteso pulito |
+| 4 | `unpay_rate` | `rates.py:~735` | `"revoca_pagamento"` | atteso pulito |
+| 5 | `incassa_residuo` | `contracts.py:~1445` | `"incassa_residuo"` | atteso pulito (già riconcilia le rate) |
+| 6 | `incassa_credito_terminazione` | `contracts.py:~2323` | `"incassa_credito_differito"` | ⚠️ **Reperto #1 (A.3)** |
+| 7 | `eroga_credito_cliente` | `clients.py:~1159` | `"eroga_wallet"` | basso-rendimento: usa `credito.id_contratto_origine` (l'`eroga` ha `id_contratto=None`, colonne intatte) |
+| (8) | `annulla_credito_terminazione` | `contracts.py:~2350` | `"annulla_credito_differito"` | **opzionale**: zero-cassa, colonne intatte |
+
+Gli agganci ad alto valore sono **#2–#6 + #7**; #8 è opzionale (zero-cassa). Per #7 il contratto da verificare
+è `credito.id_contratto_origine` (non c'è un `contract` in scope nell'endpoint wallet).
+
+### A.3 — ⚠️ Reperto #1: il sensore accenderà **I1** su `incassa_credito_terminazione` (atteso, log-only)
+
+Per **analisi statica** (non eseguito), cablare #6 farà loggare I1 su ogni incasso di credito differito:
+
+1. `terminate` ramo `A_CREDITO` (G7.10): `quota_stornata += residuo_pre` (storna **tutto** il residuo per
+   forzare `residuo()==0` su CHIUSO) **e** traccia `credito_trainer` come receivable fuori da `residuo()`.
+2. `incassa_credito_terminazione` (`contracts.py:2304`): `totale_versato += importo`, ma **`quota_stornata`
+   non viene mai ridotta**.
+3. `residuo_raw = prezzo − netto − quota_stornata` diventa **negativo** → `residuo()` resta 0 (clamp `max(·,0)`
+   → check I1 "res>0" passa) ma il check **`residuo_raw < −0.01`** (`contract_state.py:382`) **scatta**.
+
+**È G9.0 che funziona il primo giorno.** È *o* un over-reporting latente (la `quota_stornata` gonfiata
+sovrastima gli storni nel `financial-trend`) *o* un artefatto benigno del clamp. **Decisione founder: log-only,
+triage col dato** — G9.0 lo OSSERVA soltanto; il fix (probabile candidato: `incassa_credito_terminazione`
+riduce `quota_stornata` di pari importo, oppure il modello accetta il raw-negativo come dichiarato) è un
+mini-blocco successivo, deciso con la telemetria in mano. **G9.0 non aggiunge logica di fix.** Si documenta con
+un test `@example`-style (terminate A_CREDITO → incassa → assert I1-raw loggato) così è **atteso, non sorpresa**.
+
+### A.4 — G9.0-b: `/reconciliation` bidirezionale
+
+La query attuale (`dashboard.py:193-201`) confronta solo `totale_versato == Σ ENTRATA[id_contratto]`. Il lato
+mancante NON è un semplice `Σ USCITA`: la forma **I5 raffinata** (D1 forma-d) è
+`totale_rimborsato == Σ USCITA RIMBORSO_CONTRATTO[id_contratto] + Σ importo_erogato wallet ANNULLATO[id_contratto_origine]`
+(il secondo addendo nasce dal fold R2-bis del reopen). SQL esteso:
+
+```sql
+SELECT c.id, cl.nome, cl.cognome, c.totale_versato, c.totale_rimborsato,
+  COALESCE(SUM(CASE WHEN m.tipo='ENTRATA' THEN m.importo ELSE 0 END),0) AS ledger_entrate,
+  COALESCE(SUM(CASE WHEN m.tipo='USCITA' AND m.categoria='RIMBORSO_CONTRATTO'
+                    THEN m.importo ELSE 0 END),0) AS ledger_rimborsi_diretti,
+  COALESCE((SELECT SUM(cc.importo_erogato) FROM crediti_cliente cc
+            WHERE cc.id_contratto_origine = c.id AND cc.stato='ANNULLATO'
+              AND cc.deleted_at IS NULL),0) AS wallet_riassorbito
+FROM contratti c
+LEFT JOIN clienti cl ON cl.id = c.id_cliente
+LEFT JOIN movimenti_cassa m ON m.id_contratto = c.id AND m.deleted_at IS NULL
+WHERE c.trainer_id = :tid AND c.deleted_at IS NULL
+GROUP BY c.id
+```
+
+`delta_rimborsi = round(totale_rimborsato − (ledger_rimborsi_diretti + wallet_riassorbito), 2)`, flag se
+`abs > 0.01`. Estendere `ReconciliationItem`/`ReconciliationResponse` (`financial.py`) coi campi rimborso
+(additivo, response-only). NB: in **G9.2** questa derivazione diventerà una chiamata a
+`project_columns_from_ledger` (unica fonte); per G9.0 l'estensione SQL è il taglio minimo a basso rischio.
+
+### A.5 — G9.0-c: quick-win
+
+- **QW1 — de-dup delle 2 formule `residuo` dei DTO** ✅. `CreditoTerminazioneResponse.residuo`
+  (`financial.py:274`) e `CreditoClienteResponse.residuo` (`financial.py:296`) sono identiche
+  (`round(max(importo − consumato, 0.0), 2)`). Helper puro in `contract_state.py`:
+  `def residuo_credito(importo, consumato) -> float`. Entrambi i DTO lo chiamano. Test: parametrico +
+  meta-test (toccare l'helper cambia entrambi).
+- **QW2 — KPI gross-SQL: RE-SCOPED, non "corretto".** Il `prezzo_totale > totale_versato`
+  (`dashboard.py:463`, helper `_contracts_to_plan_candidates`) è un **pre-filtro Step-1 deliberato della
+  Sezione A** (`6d5ba31`): over-seleziona, la decisione finale la prende il SSoT `is_rate_planificabile` a
+  valle (`dashboard.py:450`). "Correggerlo" net-aware contraddirebbe quella decisione e re-implementerebbe il
+  SSoT in SQL. L'**unico rischio reale** è di **under-selezione** (un riaperto-con-rimborso: `rimborsato>0`,
+  `prezzo ≤ versato` lordo ma `residuo()` net-aware > 0, escluso allo Step-1, mai raggiunge il SSoT).
+  **Coerente con strumenta-poi-imponi: G9.0 NON lo tocca**; si lascia che la telemetria A.2 (o una query
+  mirata) confermi se esiste un contratto reale così. Se confermato, il fix minimale è un **allargamento
+  sicuro** del pre-filtro (`OR COALESCE(totale_rimborsato,0) > 0` — può solo *aggiungere* candidati al SSoT,
+  mai escludere), non un rewrite. Rispetta la Sezione A e il principio.
+
+### A.6 — Test plan (mappa agli AC §G9.0)
+
+| AC | Test |
+|---|---|
+| **AC-G90-1** | per ognuna delle transizioni #2-#7: stato che viola I1/I4 iniettato → log `warning` col codice atteso (`caplog`) **e** commit avviene comunque; + test che il `try/except` non propaga (sensore che lancia → transazione OK). |
+| **AC-G90-2** | divergenza `totale_rimborsato` iniettata → `/reconciliation` la riporta in `delta_rimborsi`; + caso wallet-riassorbito che **non** è divergenza (regge l'I5 raffinata). |
+| **AC-G90-3** | `residuo_credito` helper unico (parametrico + meta-test). |
+| **AC-G90-4** | HTTP invariato su matrice scenari registrati; suite + `ruff` + `next build` verdi; **zero 409 nuovi**. |
+| **Reperto #1** | test `@example`-style: terminate A_CREDITO → incassa_credito_terminazione → assert I1-raw loggato (documentato, atteso). |
+
+Nuovo `tests/test_invariant_gate.py` (sensore + fail-safe + Reperto #1) + estensione di
+`test_reconciliation`/`test_dashboard` (AC-G90-2) + un test per QW1.
+
+### A.7 — Piano di commit (3 commit atomici, branch sempre verde)
+
+1. `feat: G9.0a — invariant sensor ovunque (log-only, fail-safe) + estrazione invariant_gate.py`
+2. `feat: G9.0b — /reconciliation bidirezionale (lato rimborso, I5 raffinata)`
+3. `refactor: G9.0c — de-dup residuo_credito (DTO) + nota under-select KPI da telemetria`
+
+Ognuno passa `check-all.sh`. Reperto #1 resta **log-only** (zero blocco), in coda di triage.
