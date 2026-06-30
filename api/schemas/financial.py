@@ -272,7 +272,9 @@ class CreditoTerminazioneResponse(BaseModel):
     @computed_field
     @property
     def residuo(self) -> float:
-        return round(max((self.importo or 0) - (self.importo_incassato or 0), 0.0), 2)
+        """Quanto resta da incassare. SSoT unico (G9.0c): delega a `contract_state.residuo_credito`."""
+        from api.services import contract_state as cstate
+        return cstate.residuo_credito(self.importo, self.importo_incassato)
 
 
 class CreditoClienteResponse(BaseModel):
@@ -294,7 +296,9 @@ class CreditoClienteResponse(BaseModel):
     @computed_field
     @property
     def residuo(self) -> float:
-        return round(max((self.importo or 0) - (self.importo_erogato or 0), 0.0), 2)
+        """Quanto resta da erogare in cassa. SSoT unico (G9.0c): delega a `contract_state.residuo_credito`."""
+        from api.services import contract_state as cstate
+        return cstate.residuo_credito(self.importo, self.importo_erogato)
 
 
 class ReopenPreview(BaseModel):

@@ -103,6 +103,15 @@ def is_saldato(contract) -> bool:
     return (contract.prezzo_totale or 0) > 0 and residuo(contract) <= 0.01
 
 
+def residuo_credito(importo, consumato) -> float:
+    """Residuo di un credito a saldo progressivo: `importo − consumato`, mai negativo (clamp).
+    SSoT unico (G9.0c) dei due `computed_field` DTO finora duplicati: `crediti_terminazione`
+    (receivable trainer, `consumato = importo_incassato`) e `crediti_cliente` (wallet, `consumato =
+    importo_erogato`). Pura. `getattr`-friendly (None → 0). NON è il `residuo()` del contratto: i ledger
+    di credito vivono FUORI da `residuo()` (G7.10/ADR-020)."""
+    return round(max((importo or 0) - (consumato or 0), 0.0), 2)
+
+
 def is_scaduto(contract, today: date) -> bool:
     sc = _as_date(contract.data_scadenza)
     return sc is not None and sc < today

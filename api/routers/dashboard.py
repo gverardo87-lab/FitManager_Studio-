@@ -468,6 +468,12 @@ def _contracts_to_plan_candidates(session: Session, trainer_id: int, today: date
     Ritorna: list[(Contract, Client)] ordinati per scadenza più vicina.
     """
     # Step 1: contratti aperti con residuo positivo (prezzo > versato)
+    # G9.0c/QW2 (nota, SPEC_G9 §A.5): questo è un pre-filtro LORDO DELIBERATO (Sezione A) — over-seleziona,
+    # la decisione finale la prende il SSoT `is_rate_planificabile` a valle (mai inline). Rischio noto:
+    # UNDER-selezione di un riaperto-con-rimborso (`totale_rimborsato>0`, `prezzo≤versato` lordo ma
+    # `residuo()` net-aware>0), escluso qui e mai valutato dal SSoT. NON si tocca finché la telemetria del
+    # sensore (G9.0a) non conferma il caso reale; fix minimale eventuale = `OR totale_rimborsato>0` (può solo
+    # AGGIUNGERE candidati al SSoT, mai escludere), non un rewrite net-aware (contraddirebbe la Sezione A).
     rows = session.exec(
         select(Contract, Client)
         .join(Client, Contract.id_cliente == Client.id)
