@@ -56,6 +56,7 @@ from api.routers._audit import (
 from api.routers.agenda import _sync_contract_chiuso
 from api.services import contract_state as cstate
 from api.services.financial.invariant_gate import log_invariant_violations
+from api.services.financial.ledger import post_inflow  # G9.1 penna unica di posting
 from api.services.cash_categories import (
     CATEGORIA_ACCONTO_CONTRATTO,
     CATEGORIA_PAGAMENTO_RATA,
@@ -1375,10 +1376,18 @@ def incassa_residuo(
             detail=f"Importo ({data.importo:.2f}) supera il residuo del contratto ({residuo:.2f})",
         )
 
-    # E) Aggiorna totale_versato (incrementale, Strada B) + stato_pagamento
+    # E) Penna unica (G9.1): crea il CashMovement ENTRATA E incrementa totale_versato in UN solo atto
+    #    (post_inflow → I5 per costruzione, id_rata=None = incasso diretto); poi stato_pagamento net-aware.
     old_totale_versato = contract.totale_versato
     old_stato_pagamento = contract.stato_pagamento
-    contract.totale_versato = contract.totale_versato + data.importo
+    client = session.get(Client, contract.id_cliente)
+    client_label = f"{client.nome} {client.cognome}" if client else f"Cliente #{contract.id_cliente}"
+    post_inflow(
+        session, contract=contract, importo=data.importo, categoria=CATEGORIA_PAGAMENTO_RATA,
+        metodo=data.metodo, data_effettiva=data.data_pagamento, trainer_id=trainer.id,
+        id_cliente=contract.id_cliente, id_rata=None,
+        note=data.note or f"Incasso residuo diretto - {client_label}",
+    )
     contract.stato_pagamento = cstate.recompute_stato_pagamento(contract)  # SSoT net-aware (F4), de-dup
     session.add(contract)
 
@@ -1387,23 +1396,6 @@ def incassa_residuo(
     #   eccedenza (mai sotto il saldato) evitando la rata scaduta-fantasma; no-op se non ci sono rate o il
     #   piano è già ≤ residuo. Stessa funzione del reopen (riconciliazione, non un secondo modello).
     _reconcile_rate_plan(session, contract, trainer.id)
-
-    # F) Registra nel libro mastro (CashMovement ENTRATA, id_rata=None → incasso diretto)
-    client = session.get(Client, contract.id_cliente)
-    client_label = f"{client.nome} {client.cognome}" if client else f"Cliente #{contract.id_cliente}"
-    movement = CashMovement(
-        trainer_id=trainer.id,
-        data_effettiva=data.data_pagamento,
-        tipo="ENTRATA",
-        categoria=CATEGORIA_PAGAMENTO_RATA,
-        importo=data.importo,
-        metodo=data.metodo,
-        id_cliente=contract.id_cliente,
-        id_contratto=contract.id,
-        id_rata=None,
-        note=data.note or f"Incasso residuo diretto - {client_label}",
-    )
-    session.add(movement)
 
     # G) Auto-close canonico (date-independent): se saldato + crediti esauriti → chiuso.
     #    Riusa l'helper SSoT condiviso con agenda/pay_rate (no 3ª copia inline) — logga

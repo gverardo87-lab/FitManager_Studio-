@@ -42,6 +42,7 @@ from api.routers._audit import log_audit, log_contract_lifecycle_transition
 from api.services import contract_state as cstate  # SSoT residuo() (SPEC_REVISIONE_PRE_G7 §A)
 from api.services.cash_categories import CATEGORIA_PAGAMENTO_RATA  # SSoT categorie cassa
 from api.services.financial.invariant_gate import log_invariant_violations  # G9.0a sensore invarianti
+from api.services.financial.ledger import post_inflow  # G9.1 penna unica di posting
 
 router = APIRouter(prefix="/rates", tags=["rates"])
 
@@ -562,12 +563,20 @@ def pay_rate(
 
     session.add(rate)
 
-    # D) Aggiorna totale_versato contratto (incrementale)
-    #    contract gia' fetchato in B-ter. Approccio incrementale: totale_versato += importo.
+    # D) Penna unica (G9.1): crea il CashMovement ENTRATA E incrementa totale_versato in UN solo atto
+    #    (post_inflow → I5 `totale_versato == Σ ENTRATA` per costruzione). client_label per la nota del mastro.
+    #    recompute stato_pagamento e auto-close restano transition-logic del caller (sotto).
     old_totale_versato = contract.totale_versato
     old_stato_pagamento = contract.stato_pagamento
     old_chiuso = contract.chiuso
-    contract.totale_versato = contract.totale_versato + data.importo
+    client = session.get(Client, contract.id_cliente)
+    client_label = f"{client.nome} {client.cognome}" if client else f"Cliente #{contract.id_cliente}"
+    post_inflow(
+        session, contract=contract, importo=data.importo, categoria=CATEGORIA_PAGAMENTO_RATA,
+        metodo=data.metodo, data_effettiva=data.data_pagamento, trainer_id=trainer.id,
+        id_cliente=contract.id_cliente, id_rata=rate.id,
+        note=data.note or f"Pagamento Rata - {client_label}",
+    )
 
     # E) Stato contratto net-aware (G8.1.1/F4 — residuo()==0, non `versato≥prezzo` lordo). SSoT (de-dup).
     contract.stato_pagamento = cstate.recompute_stato_pagamento(contract)
@@ -588,25 +597,6 @@ def pay_rate(
             contract.motivo_chiusura = "COMPLETAMENTO"  # G7.0: qualifica la via a CHIUSO (load-bearing per la reopen-allowlist G7.2)
 
     session.add(contract)
-
-    # E-bis) Registra nel libro mastro (CashMovement ENTRATA)
-    # Nome cliente per descrizione contestuale nel Libro Mastro
-    client = session.get(Client, contract.id_cliente)
-    client_label = f"{client.nome} {client.cognome}" if client else f"Cliente #{contract.id_cliente}"
-
-    movement = CashMovement(
-        trainer_id=trainer.id,
-        data_effettiva=data.data_pagamento,
-        tipo="ENTRATA",
-        categoria=CATEGORIA_PAGAMENTO_RATA,
-        importo=data.importo,
-        metodo=data.metodo,
-        id_cliente=contract.id_cliente,
-        id_contratto=contract.id,
-        id_rata=rate.id,
-        note=data.note or f"Pagamento Rata - {client_label}",
-    )
-    session.add(movement)
 
     # F) Audit + Commit atomico — tutto o niente
     log_audit(session, "rate", rate.id, "UPDATE", trainer.id, {
