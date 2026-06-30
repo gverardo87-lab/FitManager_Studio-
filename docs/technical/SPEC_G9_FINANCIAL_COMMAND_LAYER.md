@@ -141,17 +141,20 @@ vero **per costruzione** sui path migrati (la telemetria G9.0 non logga più vio
 
 ## G9.2 — Dare casa nel ledger alle grandezze non-cash + `project_columns_from_ledger`
 
-- **G9.2-a — `project_columns_from_ledger(session, contract_id) -> {versato, rimborsato}`** (inverso esatto
-  della query di `/reconciliation`), usata come **asserzione pre-commit** nell'executor (G9.3): le colonne
-  ri-derivate dal ledger devono uguagliare le colonne scritte.
-- **G9.2-b — storno come posting di contra-ricavo non-cash.** `quota_stornata` (`contracts.py:1751`) — oggi
-  unico euro nel `residuo()` senza posting — diventa `Σ` di postings di **storno** espliciti (categoria
-  dedicata, non-cash, tracciata in `TASSONOMIA_FINANZIARIA.md`). Partire dal **solo storno** (basso
-  blast-radius). Il **fold R2-bis del reopen** (`:2038`) diventa un **posting di rettifica esplicito**.
-  Esito: `residuo = prezzo − Σ(postings firmati)` — una **somma verificabile**.
-- **G9.2-c — specchio di wallet/receivable.** `crediti_cliente` e `crediti_terminazione` restano tabelle
-  (UI/worklist immutate), ma le loro variazioni rilevanti per la posizione si **specchiano** come postings
-  così il residuo le veda dal ledger (senza ramo speciale).
+- **✅ G9.2-a (FATTO, `97b4463`) — `project_columns_from_ledger(session, contract_id) -> {versato, rimborsato}`**
+  (inverso per-contratto di `/reconciliation`) + ancora **ledger-versato** nel sensore (`totale_versato == Σ
+  ENTRATA`; il lato rimborso era già I5). Log-only.
+- **G9.2-b — storno in un ledger SEPARATO `rettifiche_contratto` (decisione founder: Opzione A, ADR-022 Addendum I).**
+  ⚠️ Revisione del piano originale: mettere lo storno nel **mastro cassa** riapriva la superficie scartata da
+  ADR-019 (categoria-storno da escludere ovunque). Lo storno è **non-cash** → ledger dedicato. **`quota_stornata
+  = Σ importo[rettifiche_contratto]`** (importo firmato: + storno, − reversal, append-only). Terza penna
+  `post_adjustment` (rettifica + colonna in un atto, gemello non-cash di post_inflow/out, NON tocca
+  `movimenti_cassa`). `terminate`→+storno, `incassa_credito`→−importo (Reperto #1), `reopen`→−quota (a 0).
+  **`residuo()` BYTE-IDENTICO** (legge `quota_stornata`, ora proiezione verificabile di `Σ rettifiche`, come
+  `versato` lo è di `Σ ENTRATA`). Backfill idempotente del `quota_stornata` legacy (boot, `BACKFILL_LEGACY`).
+- **✅ G9.2-c (di fatto GIÀ FATTO da G9.1) — wallet/receivable sono GIÀ postings.** `crediti_cliente` (erogazione
+  = USCITA RIMBORSO) e `crediti_terminazione` (incasso = ENTRATA INCASSO_CONGUAGLIO) producono già `CashMovement`
+  via la penna; `project_columns_from_ledger` conta già l'erogato wallet riassorbito. Nessun lavoro residuo.
 
 **AC-G92-1:** `project_columns_from_ledger` riproduce `totale_versato`/`totale_rimborsato` al centesimo su
 ogni contratto del DB di test (e, in validazione, sul clone backup reale). **AC-G92-2:** `quota_stornata ==

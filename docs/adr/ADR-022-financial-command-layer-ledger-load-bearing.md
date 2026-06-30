@@ -205,3 +205,51 @@ filoni indipendenti; la priorità relativa è scelta del founder. **Prossimo pas
 (sensore invarianti ovunque, log-only, + reconciliation bidirezionale + 2 quick-win), la mossa a leva più
 alta e rischio più basso — il checker è già scritto, gira su 1/7 dei write-path, e log-only ha rischio
 quasi-zero sui dati reali. Zero codice G9 prodotto a questa data.
+
+## Addendum I (2026-06-30) — G9.2-b: lo storno ha il suo ledger SEPARATO (risoluzione tensione ADR-019)
+
+**Contesto.** Arrivati a G9.2, `D-STORNO-HA-CASA` («`quota_stornata` diventa `Σ` di postings») entra in
+**tensione con ADR-019**: ADR-019 (Considered Options, Option B) scartò esplicitamente le scritture
+compensative **nel mastro cassa** perché «la categoria-storno [andrebbe] esclusa in **tutti** gli aggregati —
+di nuovo la superficie G7.5». Lo storno **non è cassa**: è una rettifica contabile (write-off). ADR-022 aveva
+deciso *che* lo storno fosse un posting, ma non *dove* vive. Inoltre, dopo G9.1+G9.2a si è accertato (codice
+vivo) che **wallet e receivable sono GIÀ postings** (`CashMovement`), e che `quota_stornata` è l'**unica**
+grandezza del `residuo()` ancora fuori da un ledger sommabile.
+
+**Decisione founder (2026-06-30): Opzione A — ledger separato.** Lo storno vive in un **ledger dedicato
+`rettifiche_contratto`**, distinto dal mastro cassa `movimenti_cassa`. Il mastro cassa resta **puro cassa**
+(ADR-019 onorato: nessuna categoria-storno da escludere negli aggregati). `residuo()` resta **byte-identico**
+(`prezzo − netto[ledger] − quota_stornata`): cambia solo che `quota_stornata` diventa una **proiezione
+verificabile** di `Σ rettifiche`, esattamente come `totale_versato` è proiezione di `Σ ENTRATA` (G9.1).
+
+Decisioni di dettaglio:
+
+1. **D-STORNO-LEDGER-SEPARATO** (raffina `D-STORNO-HA-CASA`). Nuova tabella `rettifiche_contratto`
+   (append-only): `id`, `trainer_id`, `id_contratto`, `importo` (**firmato**: + storno, − reversal), `causale`
+   (`STORNO_TERMINAZIONE` | `REVERSAL_INCASSO_DIFFERITO` | `REVERSAL_REOPEN` | `BACKFILL_LEGACY`),
+   `data_effettiva`, `note`, `deleted_at`. **`quota_stornata = Σ importo[rettifiche]`** per contratto.
+2. **D-TERZA-PENNA**. Una terza funzione del command layer, `post_adjustment(session, contract, importo_firmato,
+   causale, …)` in `ledger.py`: crea la `RettificaContratto` **e** applica `quota_stornata += importo_firmato`
+   nello STESSO atto → `quota_stornata == Σ rettifiche` vero per costruzione (gemello non-cash di
+   `post_inflow`/`post_outflow`). NON tocca `movimenti_cassa`.
+3. **D-APPEND-ONLY** (coerente con ADR-019). Le inversioni NON mutano/cancellano le rettifiche esistenti:
+   **appendono una rettifica negativa**. `terminate` → `+storno`; `incassa_credito_terminazione` (Reperto #1)
+   → `−importo`; `reopen` → `−(quota corrente)` per riportare a 0. La colonna `quota_stornata` resta lo
+   specchio del `Σ`. Lo storico (F5/F6) guadagna trasparenza (storno e reversal sono entry esplicite).
+4. **D-BACKFILL-IDEMPOTENTE**. I contratti esistenti hanno `quota_stornata > 0` (terminazioni passate) ma
+   ZERO rettifiche → per la coerenza `quota_stornata == Σ rettifiche` serve un **backfill una-tantum
+   idempotente**: per ogni contratto con `quota_stornata > 0` e nessuna rettifica, crea una riga
+   `BACKFILL_LEGACY` di pari importo (al boot, gemello del self-heal `schema_sync`; non tocca la colonna né il
+   `residuo()`). Additivo, reversibile, verificato backup-first.
+5. **D-ANCORA-STORNO**. `project_columns_from_ledger` (e il sensore) si estendono a verificare
+   `quota_stornata == Σ rettifiche` (log-only; gate in G9.4). Terza ancora dopo versato/rimborso.
+
+**Invarianti che NON cambiano:** `residuo()` (byte-identico), cassa-immutabile/pura (ADR-019), `residuo==0 ⟺
+saldato`, asse EROGATO (ADR-016), Strada B, INV-RATE (ADR-021). `movimenti_cassa` NON guadagna entry non-cash.
+
+**Costo/rischio (onesto):** è il cambio più grosso di G9 — nuova tabella (schema_sync create-at-boot, Alembic
+FROZEN), backfill sui dati reali, e ri-tocco di `terminate`/`incassa_credito`/`reopen` (i path già delicati).
+**Staging:** governance docs-only → modello+`post_adjustment`+schema_sync+backfill → wiring 3 write-site +
+ancora sensore → full suite a ogni passo. Behavior-preserving (`residuo()` invariato).
+
+**Stato (2026-06-30): ACCETTATA (Opzione A), governance in corso, codice da fare (G9.2-b).**
