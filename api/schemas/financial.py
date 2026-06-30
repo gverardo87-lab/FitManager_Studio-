@@ -703,12 +703,17 @@ class DashboardAlerts(BaseModel):
 # ════════════════════════════════════════════════════════════
 
 class ReconciliationItem(BaseModel):
-    """Singolo contratto con divergenza tra totale_versato e libro mastro."""
+    """Singolo contratto con divergenza tra le colonne denormalizzate e il libro mastro (versato e/o
+    rimborsato). G9.0b: la riconciliazione è BIDIREZIONALE — non più solo `totale_versato == Σ ENTRATA`."""
     contract_id: int
     client_name: str
     totale_versato: float
-    ledger_total: float
-    delta: float
+    ledger_total: float           # Σ ENTRATA[id_contratto]
+    delta: float                  # totale_versato − ledger_total (lato versato)
+    # ── G9.0b: lato rimborso (ancora I5 raffinata, ADR-019 D1 forma-d). Default 0 → backward-compat. ──
+    totale_rimborsato: float = 0
+    ledger_rimborsi: float = 0    # Σ USCITA RIMBORSO[id_contratto] + Σ erogato wallet ANNULLATO[origine]
+    delta_rimborsi: float = 0     # totale_rimborsato − ledger_rimborsi
 
 
 class ReconciliationResponse(BaseModel):

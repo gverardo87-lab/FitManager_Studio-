@@ -181,37 +181,52 @@ def get_reconciliation(
     session: Session = Depends(get_session),
 ):
     """
-    Audit riconciliazione: confronta totale_versato di ogni contratto
-    con la somma dei CashMovement ENTRATA legati.
+    Audit riconciliazione BIDIREZIONALE (G9.0b): confronta le colonne denormalizzate di ogni contratto
+    con il libro mastro, su ENTRAMBE le ancore.
 
-    Rileva divergenze in entrambe le direzioni:
-    - totale_versato > ledger: pagamenti registrati su contratto ma senza CashMovement
-    - ledger > totale_versato: CashMovement orfani o doppi
+    - Lato VERSATO: `totale_versato == Σ ENTRATA[id_contratto]`.
+    - Lato RIMBORSATO (ancora I5 raffinata, ADR-019 D1 forma-d):
+      `totale_rimborsato == Σ USCITA RIMBORSO_CONTRATTO[id_contratto] + Σ erogato wallet ANNULLATO[origine]`
+      (il secondo addendo è la cassa-wallet `id_contratto=None` riassorbita al reopen — senza, un reopen
+      con wallet erogato sembrerebbe una falsa divergenza).
 
-    Soglia: 0.01 EUR (tolleranza arrotondamento).
+    Un contratto è "divergente" se diverge su versato E/O rimborsato. Soglia: 0.01 EUR (arrotondamento).
     """
     rows = session.execute(text("""
-        SELECT c.id, cl.nome, cl.cognome, c.totale_versato,
-               COALESCE(SUM(CASE WHEN m.tipo = 'ENTRATA' THEN m.importo ELSE 0 END), 0) as ledger
+        SELECT c.id, cl.nome, cl.cognome, c.totale_versato, c.totale_rimborsato,
+               COALESCE(SUM(CASE WHEN m.tipo = 'ENTRATA' THEN m.importo ELSE 0 END), 0) as ledger_entrate,
+               COALESCE(SUM(CASE WHEN m.tipo = 'USCITA' AND m.categoria = :rimborso_cat
+                                 THEN m.importo ELSE 0 END), 0) as ledger_rimborsi_diretti,
+               COALESCE((SELECT SUM(cc.importo_erogato) FROM crediti_cliente cc
+                         WHERE cc.id_contratto_origine = c.id AND cc.stato = 'ANNULLATO'
+                           AND cc.deleted_at IS NULL), 0) as wallet_riassorbito
         FROM contratti c
         LEFT JOIN clienti cl ON cl.id = c.id_cliente
         LEFT JOIN movimenti_cassa m ON m.id_contratto = c.id AND m.deleted_at IS NULL
         WHERE c.trainer_id = :tid AND c.deleted_at IS NULL
         GROUP BY c.id
-    """), {"tid": trainer.id}).fetchall()
+    """), {"tid": trainer.id, "rimborso_cat": CATEGORIA_RIMBORSO_CONTRATTO}).fetchall()
 
     items = []
     aligned = 0
     for row in rows:
-        cid, nome, cognome, versato, ledger = row
-        delta = round(versato - ledger, 2)
-        if abs(delta) > 0.01:
+        cid, nome, cognome, versato, rimborsato, ledger_entrate, ledger_rimborsi_diretti, wallet_riassorbito = row
+        versato = versato or 0
+        rimborsato = rimborsato or 0
+        # Ancora I5 raffinata (D1 forma-d): USCITA RIMBORSO dirette + erogato wallet ANNULLATO riassorbito.
+        ledger_rimborsi = round((ledger_rimborsi_diretti or 0) + (wallet_riassorbito or 0), 2)
+        delta_versato = round(versato - (ledger_entrate or 0), 2)
+        delta_rimborsi = round(rimborsato - ledger_rimborsi, 2)
+        if abs(delta_versato) > 0.01 or abs(delta_rimborsi) > 0.01:
             items.append(ReconciliationItem(
                 contract_id=cid,
                 client_name=f"{nome or ''} {cognome or ''}".strip(),
                 totale_versato=round(versato, 2),
-                ledger_total=round(ledger, 2),
-                delta=delta,
+                ledger_total=round(ledger_entrate or 0, 2),
+                delta=delta_versato,
+                totale_rimborsato=round(rimborsato, 2),
+                ledger_rimborsi=ledger_rimborsi,
+                delta_rimborsi=delta_rimborsi,
             ))
         else:
             aligned += 1
