@@ -56,7 +56,7 @@ from api.routers._audit import (
 from api.routers.agenda import _sync_contract_chiuso
 from api.services import contract_state as cstate
 from api.services.financial.invariant_gate import log_invariant_violations
-from api.services.financial.ledger import post_inflow  # G9.1 penna unica di posting
+from api.services.financial.ledger import post_inflow, post_outflow  # G9.1 penna unica di posting
 from api.services.cash_categories import (
     CATEGORIA_ACCONTO_CONTRATTO,
     CATEGORIA_PAGAMENTO_RATA,
@@ -1615,20 +1615,12 @@ def terminate_contract(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                     detail="Metodo di rimborso obbligatorio per una terminazione con rimborso",
                 )
-            movement = CashMovement(
-                trainer_id=trainer.id,
-                data_effettiva=data_chiusura,
-                tipo="USCITA",
-                categoria=CATEGORIA_RIMBORSO_CONTRATTO,
-                importo=rimborso_out,                 # fonte-unica-importo: == delta totale_rimborsato
-                metodo=data.metodo_rimborso,
+            movement = post_outflow(  # penna unica (G9.1): USCITA + totale_rimborsato += in UN atto
+                session, contract=contract, importo=rimborso_out, categoria=CATEGORIA_RIMBORSO_CONTRATTO,
+                metodo=data.metodo_rimborso, data_effettiva=data_chiusura, trainer_id=trainer.id,
                 id_cliente=contract.id_cliente,
-                id_contratto=contract.id,
-                id_rata=None,
                 note=data.note or f"Rimborso terminazione - {client_label}",
-            )
-            session.add(movement)
-            contract.totale_rimborsato = old_rimborsato + rimborso_out
+            )  # totale_rimborsato += rimborso_out (== old_rimborsato + rimborso_out; fonte-unica-importo)
         # Il non-rimborsato → wallet del cliente (ADR-020), fuori dal residuo (storno = residuo_pre + rimborso_out).
         wallet_credit = round(settlement.credito_cliente - rimborso_out, 2)
         if wallet_credit > 0.009:
@@ -1676,20 +1668,12 @@ def terminate_contract(
             incasso_ora = max(incasso_ora, 0.0)
             saldo_trainer_rinunciato = round(settlement.credito_trainer - incasso_ora, 2)
             if incasso_ora > 0.009:
-                movement = CashMovement(
-                    trainer_id=trainer.id,
-                    data_effettiva=data_chiusura,
-                    tipo="ENTRATA",
-                    categoria=CATEGORIA_INCASSO_CONGUAGLIO_CONTRATTO,
-                    importo=incasso_ora,
-                    metodo=data.metodo_pagamento,
-                    id_cliente=contract.id_cliente,
-                    id_contratto=contract.id,
-                    id_rata=None,
-                    note=data.note or f"Incasso conguaglio terminazione - {client_label}",
-                )
-                session.add(movement)
-                contract.totale_versato = old_versato + incasso_ora  # Strada B: cresce sul forward
+                movement = post_inflow(  # penna unica (G9.1): ENTRATA + totale_versato += in UN atto
+                    session, contract=contract, importo=incasso_ora,
+                    categoria=CATEGORIA_INCASSO_CONGUAGLIO_CONTRATTO, metodo=data.metodo_pagamento,
+                    data_effettiva=data_chiusura, trainer_id=trainer.id, id_cliente=contract.id_cliente,
+                    id_rata=None, note=data.note or f"Incasso conguaglio terminazione - {client_label}",
+                )  # totale_versato += incasso_ora (== old_versato + incasso_ora; Strada B)
         elif data.azione_credito_trainer == "RINUNCIA_ESPRESSA":
             if not (data.note and data.note.strip()):
                 raise HTTPException(
@@ -2259,20 +2243,13 @@ def incassa_credito_terminazione(
     client_label = f"{client.nome} {client.cognome}" if client else f"Cliente #{contract.id_cliente}"
 
     old_versato = contract.totale_versato or 0
-    movement = CashMovement(
-        trainer_id=trainer.id,
-        data_effettiva=data.data_pagamento or date.today(),
-        tipo="ENTRATA",
-        categoria=CATEGORIA_INCASSO_CONGUAGLIO_CONTRATTO,
-        importo=data.importo,
-        metodo=data.metodo,
-        id_cliente=contract.id_cliente,
-        id_contratto=contract.id,
-        id_rata=None,
+    movement = post_inflow(  # penna unica (G9.1): ENTRATA + totale_versato += in UN atto
+        session, contract=contract, importo=data.importo,
+        categoria=CATEGORIA_INCASSO_CONGUAGLIO_CONTRATTO, metodo=data.metodo,
+        data_effettiva=data.data_pagamento or date.today(), trainer_id=trainer.id,
+        id_cliente=contract.id_cliente, id_rata=None,
         note=data.note or f"Incasso credito differito - {client_label}",
-    )
-    session.add(movement)
-    contract.totale_versato = old_versato + data.importo  # Strada B: cresce sul forward
+    )  # totale_versato += data.importo (== old_versato + data.importo; Strada B)
     # Reperto #1 fix (G9.0): l'incasso REVERTE lo storno PROVVISORIO di pari importo. Al terminate A_CREDITO
     # `quota_stornata` assorbì l'INTERO `residuo_pre` (per forzare residuo()==0 su CHIUSO), inclusa la parte
     # differita (`credito_trainer`) che NON era un write-off ma un differimento. Incassandola torna ricavo

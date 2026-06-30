@@ -30,7 +30,6 @@ from api.models.client import Client
 from api.models.contract import Contract
 from api.models.event import Event
 from api.models.rate import Rate
-from api.models.movement import CashMovement
 from api.models.credito_cliente import CreditoCliente
 from api.models.credito_terminazione import CreditoTerminazione
 from api.routers._audit import log_audit
@@ -38,6 +37,7 @@ from api.schemas.clinical import ClinicalReadinessClientItem
 from api.schemas.financial import CreditoClienteResponse, RatePayment
 from api.services.cash_categories import CATEGORIA_RIMBORSO_CONTRATTO
 from api.services.financial.invariant_gate import log_invariant_violations  # G9.0a sensore invarianti
+from api.services.financial.ledger import post_outflow  # G9.1 penna unica di posting
 from api.services.clinical_readiness import compute_clinical_readiness_data
 from api.services.safety_engine import extract_client_conditions
 
@@ -1133,19 +1133,12 @@ def eroga_credito_cliente(
     client = session.get(Client, credito.id_cliente)
     client_label = f"{client.nome} {client.cognome}" if client else f"Cliente #{credito.id_cliente}"
     old_erogato = credito.importo_erogato or 0
-    movement = CashMovement(
-        trainer_id=trainer.id,
-        data_effettiva=data.data_pagamento or date.today(),
-        tipo="USCITA",
-        categoria=CATEGORIA_RIMBORSO_CONTRATTO,
-        importo=data.importo,
-        metodo=data.metodo,
+    movement = post_outflow(  # penna unica (G9.1): contract=None → SOLO movimento, nessuna colonna toccata
+        session, contract=None, importo=data.importo, categoria=CATEGORIA_RIMBORSO_CONTRATTO,
+        metodo=data.metodo, data_effettiva=data.data_pagamento or date.today(), trainer_id=trainer.id,
         id_cliente=credito.id_cliente,
-        id_contratto=None,   # decoupled dal contratto d'origine (vedi docstring)
-        id_rata=None,
         note=data.note or f"Erogazione credito wallet - {client_label}",
-    )
-    session.add(movement)
+    )  # id_contratto=None (cassa a livello CLIENTE, ADR-019/020); l'erogato è tracciato dal wallet
     credito.importo_erogato = round(old_erogato + data.importo, 2)
     if credito.importo_erogato >= (credito.importo or 0) - 0.009:
         credito.stato = "SALDATO"
