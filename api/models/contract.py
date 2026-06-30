@@ -62,10 +62,11 @@ class Contract(SQLModel, table=True):
 
     # Terminazione anticipata (SPEC_G7.0 / IMPL_PLAN §4.1 — G7). Colonne PLAIN, mai FK (pitfall #15),
     # gemelle di esito_rinnovo_motivo. Strada B: il LORDO (prezzo_totale/totale_versato) è immutabile,
-    # il netto si DERIVA (netto_incassato = totale_versato − totale_rimborsato). totale_rimborsato e
-    # quota_stornata partono da 0 e CRESCONO soltanto. NB G7.0: residuo() NON le legge ancora (è G7.1).
+    # il netto si DERIVA (netto_incassato = totale_versato − totale_rimborsato). totale_rimborsato parte da 0
+    # e cresce soltanto; quota_stornata NON è strettamente monotòna (vedi inline). NB G7.0: residuo() NON le
+    # legge ancora (è G7.1).
     totale_rimborsato: float = Field(default=0)   # LORDO rimborsi (monotòno); netto = versato − questo
-    quota_stornata: float = Field(default=0)      # write-off: azzera residuo senza riscrivere prezzo_totale
+    quota_stornata: float = Field(default=0)      # write-off che azzera residuo senza riscrivere il prezzo. NON monotòna: reopen la azzera (ADR-019); l'incasso di un credito differito (G7.10) la riduce di pari importo (storno provvisorio revertito, Reperto #1 G9.0)
     data_chiusura: Optional[date] = None          # quando la chiusura ha effetto (qualsiasi via a CHIUSO)
     # esito economico, enum chiuso a 4: COMPLETAMENTO|CONSUNZIONE|TERMINAZIONE_RIMBORSO|TERMINAZIONE_DECADENZA.
     # NULL = legacy (chiusi pre-G7) = COMPLETAMENTO implicito in classificazione, mai riaperto auto.

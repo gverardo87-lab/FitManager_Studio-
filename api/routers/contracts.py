@@ -2241,8 +2241,9 @@ def incassa_credito_terminazione(
     Atomico (UN commit): bouncer 404 → guard stato APERTO 400 → cap `importo ≤ residuo_credito` 422 →
     `CashMovement` ENTRATA `INCASSO_CONGUAGLIO_CONTRATTO` (id_rata=None) + `totale_versato +=` (Strada B) +
     `importo_incassato +=`; a saldo (`importo_incassato == importo`) → `stato=SALDATO`. **Niente
-    `_sync_contract_chiuso`**: il contratto resta CHIUSO (terminato, motivo SALDO_TRAINER), residuo()==0
-    intatto (`quota_stornata` ha già assorbito il differito → l'incasso non riapre il residuo).
+    `_sync_contract_chiuso`**: il contratto resta CHIUSO (terminato, motivo SALDO_TRAINER). residuo()==0
+    resta intatto perché l'incasso REVERTE lo storno provvisorio (`quota_stornata −= importo`) mentre
+    `totale_versato +=`: i due si compensano (Reperto #1 G9.0, chiude I1 residuo_raw<0; corregge reopen-preview).
     """
     credito = _bouncer_credito(session, contract_id, credito_id, trainer.id)
     if credito.stato != "APERTO":
@@ -2280,6 +2281,13 @@ def incassa_credito_terminazione(
     )
     session.add(movement)
     contract.totale_versato = old_versato + data.importo  # Strada B: cresce sul forward
+    # Reperto #1 fix (G9.0): l'incasso REVERTE lo storno PROVVISORIO di pari importo. Al terminate A_CREDITO
+    # `quota_stornata` assorbì l'INTERO `residuo_pre` (per forzare residuo()==0 su CHIUSO), inclusa la parte
+    # differita (`credito_trainer`) che NON era un write-off ma un differimento. Incassandola torna ricavo
+    # (versato +=) e va tolta dallo storno → la quota converge a `quota_non_erogata` (P−R). Tiene residuo()==0
+    # (il + su versato e il − su quota si compensano) e azzera residuo_raw (chiude I1). Floor a 0 (I4).
+    old_quota = contract.quota_stornata or 0
+    contract.quota_stornata = round(max(old_quota - data.importo, 0.0), 2)
     session.add(contract)
 
     credito.importo_incassato = round((credito.importo_incassato or 0) + data.importo, 2)
@@ -2297,10 +2305,10 @@ def incassa_credito_terminazione(
     })
     log_audit(session, "contract", contract.id, "UPDATE", trainer.id, {
         "totale_versato": {"old": old_versato, "new": contract.totale_versato},
+        "quota_stornata": {"old": old_quota, "new": contract.quota_stornata},  # Reperto #1: storno provvisorio revertito
     })
-    # G9.0a (ADR-022): osserva gli invarianti (log-only). ⚠️ Reperto #1 (SPEC_G9 §A.3): qui scatta I1
-    # (residuo_raw<0) — `quota_stornata` assorbì `residuo_pre` al terminate A_CREDITO e non si riduce
-    # all'incasso del receivable. Log-only (telemetria); il fix è un mini-blocco successivo (triage col dato).
+    # G9.0a (ADR-022): osserva gli invarianti (log-only). Reperto #1 RISOLTO sopra (lo storno provvisorio è
+    # revertito all'incasso → residuo_raw==0, I1 non scatta più); il sensore resta come sentinella.
     log_invariant_violations(session, contract, motivo="incassa_credito_differito")
     session.commit()
     session.refresh(credito)

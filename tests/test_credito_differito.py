@@ -138,6 +138,7 @@ def test_incassa_credito_parziale_poi_saldo(client, auth_headers, sample_client,
     assert round(contract.totale_versato, 2) == 300.0      # 100 + 200 (Strada B)
     assert cstate.residuo(contract) == 0.0                 # il contratto resta saldato/chiuso
     assert _sum_movements(session, c["id"], "ENTRATA", categoria=CATEGORIA_INCASSO_CONGUAGLIO_CONTRATTO) == 200.0
+    assert round(contract.quota_stornata, 2) == 700.0      # Reperto #1: storno provvisorio revertito (900−200)
 
     # saldo finale 100 → SALDATO
     r2 = client.post(f"/api/contracts/{c['id']}/crediti-terminazione/{cid}/incassa",
@@ -145,7 +146,10 @@ def test_incassa_credito_parziale_poi_saldo(client, auth_headers, sample_client,
     assert r2.status_code == 200, r2.text
     assert r2.json()["stato"] == "SALDATO"
     session.expire_all()
-    assert round(session.get(Contract, c["id"]).totale_versato, 2) == 400.0
+    final = session.get(Contract, c["id"])
+    assert round(final.totale_versato, 2) == 400.0
+    assert round(final.quota_stornata, 2) == 600.0         # converge a quota_non_erogata (P−R)
+    assert cstate.residuo(final) == 0.0                    # residuo()==0 mantenuto a ogni incasso
     # esce dalla worklist (non più APERTO)
     assert client.get("/api/dashboard/crediti-da-incassare", headers=auth_headers).json()["total"] == 0
 

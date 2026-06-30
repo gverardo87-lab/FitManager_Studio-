@@ -409,6 +409,19 @@ riduce `quota_stornata` di pari importo, oppure il modello accetta il raw-negati
 mini-blocco successivo, deciso con la telemetria in mano. **G9.0 non aggiunge logica di fix.** Si documenta con
 un test `@example`-style (terminate A_CREDITO → incassa → assert I1-raw loggato) così è **atteso, non sorpresa**.
 
+**✅ RISOLTO (mini-blocco post-G9.0c, 2026-06-30).** Esame del blast radius: `quota_stornata` **NON è sommata in
+alcun KPI/financial-trend** (grep esaustivo) → nessun over-reporting nelle dashboard, più stretto del temuto. Ma
+DUE impatti reali oltre il segnale I1: (a) il valore-colonna `quota_stornata` sovrastimato; (b) **`reopen-preview`
+sovrastimava `residuo_dopo`** del differito incassato (`contracts.py:2111` legge `quota_stornata`). Causa: il
+terminate `A_CREDITO` storna l'INTERO `residuo_pre` (obbligatorio per tenere `residuo()==0` su CHIUSO), inclusa la
+parte differita (`credito_trainer`) che è un DIFFERIMENTO, non un write-off. **Fix:** `incassa_credito_terminazione`
+REVERTE lo storno provvisorio (`quota_stornata −= importo`) → `quota_stornata` converge a `quota_non_erogata` (P−R),
+`residuo()==0` tenuto (il + su versato e il − su quota si compensano), `residuo_raw==0` (I1 chiuso), reopen-preview
+corretto. La "monotonicità" di `quota_stornata` non era reale (reopen la azzera già) → raffinamento documentato in
+`contract.py`. L'invariante I1 **non cambia** (era giusto a segnalare: si corregge il DATO, non si silenzia il
+detector). L'`xfail(strict)` di A.6 è ora un test che PASSA (`test_reperto1_fix_incassa_credito_differito_invarianti_ok`);
++2 assert `quota_stornata` in `test_credito_differito`.
+
 ### A.4 — G9.0-b: `/reconciliation` bidirezionale
 
 La query attuale (`dashboard.py:193-201`) confronta solo `totale_versato == Σ ENTRATA[id_contratto]`. Il lato
@@ -462,7 +475,7 @@ GROUP BY c.id
 | **AC-G90-2** | divergenza `totale_rimborsato` iniettata → `/reconciliation` la riporta in `delta_rimborsi`; + caso wallet-riassorbito che **non** è divergenza (regge l'I5 raffinata). |
 | **AC-G90-3** | `residuo_credito` helper unico (parametrico + meta-test). |
 | **AC-G90-4** | HTTP invariato su matrice scenari registrati; suite + `ruff` + `next build` verdi; **zero 409 nuovi**. |
-| **Reperto #1** | test `@example`-style: terminate A_CREDITO → incassa_credito_terminazione → assert I1-raw loggato (documentato, atteso). |
+| **Reperto #1** | ✅ RISOLTO (mini-blocco): terminate A_CREDITO → incassa → invarianti REGGONO (`quota_stornata` revertita, residuo_raw==0). Era `xfail(strict)`, ora passa. Vedi §A.3 (✅ RISOLTO). |
 
 Nuovo `tests/test_invariant_gate.py` (sensore + fail-safe + Reperto #1) + estensione di
 `test_reconciliation`/`test_dashboard` (AC-G90-2) + un test per QW1.

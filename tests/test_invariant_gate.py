@@ -14,7 +14,6 @@ Copre AC-G90-1:
 import logging
 from datetime import date, datetime, timedelta
 
-import pytest
 from sqlmodel import select
 
 from api.models.contract import Contract
@@ -219,15 +218,10 @@ def test_wiring_incassa_credito_differito(client, auth_headers, sample_client, s
 
 # ── Reperto #1: I1 atteso su incassa_credito_terminazione (log-only, fix differito) ──
 
-@pytest.mark.xfail(
-    reason="Reperto #1 (G9.0, SPEC_G9 §A.3): incassa_credito_terminazione lascia quota_stornata gonfiata "
-           "del differito incassato → I1 residuo_raw<0. Log-only ora; fix in mini-blocco successivo (triage col dato).",
-    strict=True,
-)
-def test_reperto1_incassa_credito_differito_accende_i1(client, auth_headers, sample_client, session):
-    """Verifica empirica del Reperto #1: dopo A_CREDITO → incassa del receivable, gli invarianti NON reggono
-    (I1 residuo_raw<0). XFAIL strict = è il tripwire: quando il fix ridurrà `quota_stornata` all'incasso,
-    questo tornerà verde (xpass) e forzerà la rimozione dell'xfail."""
+def test_reperto1_fix_incassa_credito_differito_invarianti_ok(client, auth_headers, sample_client, session):
+    """Reperto #1 RISOLTO (mini-blocco G9.0): `incassa_credito_terminazione` REVERTE lo storno provvisorio
+    (`quota_stornata −= importo`) → `residuo_raw==0`, I1 non scatta più. Era `xfail(strict)`; ora passa.
+    Verifica anche che `quota_stornata` converge a `quota_non_erogata` (P−R) e `residuo()==0` resta."""
     c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=500.0, crediti=10)
     _complete_pt(session, _trainer(session).id, sample_client["id"], c["id"], 8)  # reso 800 → credito_trainer 300
     r = client.post(f"/api/contracts/{c['id']}/terminate",
@@ -238,5 +232,10 @@ def test_reperto1_incassa_credito_differito_accende_i1(client, auth_headers, sam
                      json={"importo": 300.0, "metodo": "CONTANTI", "data_pagamento": TODAY.isoformat()},
                      headers=auth_headers)
     assert r2.status_code == 200, r2.text
+    session.expire_all()
+    contract = session.get(Contract, c["id"])
+    # residuo_pre=500 stornato al terminate; incassati 300 → quota torna a quota_non_erogata = P−R = 200
+    assert round(contract.quota_stornata, 2) == 200.0
+    assert cstate.residuo(contract) == 0.0
     viol = _invariants(session, c["id"])
     assert viol == [], f"violazioni: {[(v.code, v.message) for v in viol]}"
