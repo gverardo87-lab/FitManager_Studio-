@@ -41,6 +41,7 @@ from api.schemas.financial import (
 from api.routers._audit import log_audit, log_contract_lifecycle_transition
 from api.services import contract_state as cstate  # SSoT residuo() (SPEC_REVISIONE_PRE_G7 §A)
 from api.services.cash_categories import CATEGORIA_PAGAMENTO_RATA  # SSoT categorie cassa
+from api.services.financial.invariant_gate import log_invariant_violations  # G9.0a sensore invarianti
 
 router = APIRouter(prefix="/rates", tags=["rates"])
 
@@ -618,6 +619,8 @@ def pay_rate(
     })
     # Audita la transizione `chiuso` (auto-close per completamento) — no-op se invariata
     log_contract_lifecycle_transition(session, contract, old_chiuso=old_chiuso, motivo="completamento")
+    # G9.0a (ADR-022): osserva gli invarianti (log-only) dopo il pagamento. Atteso pulito.
+    log_invariant_violations(session, contract, motivo="pagamento")
     session.commit()
     session.refresh(rate)
 
@@ -732,6 +735,8 @@ def unpay_rate(
     })
     # Audita la transizione `chiuso` (auto-reopen da revoca pagamento) — no-op se invariata
     log_contract_lifecycle_transition(session, contract, old_chiuso=old_chiuso, motivo="riapertura_pagamento")
+    # G9.0a (ADR-022): osserva gli invarianti (log-only) dopo la revoca pagamento. Atteso pulito.
+    log_invariant_violations(session, contract, motivo="revoca_pagamento")
     session.commit()
     session.refresh(rate)
 

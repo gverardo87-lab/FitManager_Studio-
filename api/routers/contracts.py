@@ -55,6 +55,7 @@ from api.routers._audit import (
 )
 from api.routers.agenda import _sync_contract_chiuso
 from api.services import contract_state as cstate
+from api.services.financial.invariant_gate import log_invariant_violations
 from api.services.cash_categories import (
     CATEGORIA_ACCONTO_CONTRATTO,
     CATEGORIA_PAGAMENTO_RATA,
@@ -73,33 +74,6 @@ logger = logging.getLogger(__name__)
 # ════════════════════════════════════════════════════════════
 # HELPERS
 # ════════════════════════════════════════════════════════════
-
-def _log_invariant_violations(session: Session, contract: Contract, *, motivo: str) -> None:
-    """PASSO 2 (G8.2-prep): invoca `cstate.assert_contract_invariants` in coda a una mutazione finanziaria
-    e LOGGA (warn) le eventuali violazioni di I1/I4/I5. **'Predisposta per 409'**: oggi OSSERVA soltanto
-    (byte-identica sull'output, non blocca); l'escalation a errore è una scelta successiva. Fornisce la
-    fotografia netta (crediti_cliente del contratto) + l'ancora ledger di I5 (Σ USCITA RIMBORSO diretto)."""
-    crediti = session.exec(
-        select(CreditoCliente).where(CreditoCliente.id_contratto_origine == contract.id)
-    ).all()
-    rimborso_diretto = round(sum(m.importo for m in session.exec(
-        select(CashMovement).where(
-            CashMovement.id_contratto == contract.id,
-            CashMovement.tipo == "USCITA",
-            CashMovement.categoria == CATEGORIA_RIMBORSO_CONTRATTO,
-            CashMovement.deleted_at == None,
-        )
-    ).all()), 2)
-    # I6 (INV-RATE, G8.3/ADR-021): le rate attive → Σ residui-rata ≤ residuo() sui non-chiusi.
-    rate_attive = session.exec(
-        select(Rate).where(Rate.id_contratto == contract.id, Rate.deleted_at == None)
-    ).all()
-    for v in cstate.assert_contract_invariants(
-        contract, crediti, rimborso_cassa_diretto=rimborso_diretto, rate_attive=rate_attive
-    ):
-        logger.warning(
-            "Invariante %s violato dopo '%s' sul contratto %s: %s", v.code, motivo, contract.id, v.message
-        )
 
 def _to_response(contract: Contract) -> ContractResponse:
     """Converte un Contract ORM in ContractResponse."""
@@ -1442,6 +1416,8 @@ def incassa_residuo(
         "totale_versato": {"old": old_totale_versato, "new": contract.totale_versato},
         "stato_pagamento": {"old": old_stato_pagamento, "new": contract.stato_pagamento},
     })
+    # G9.0a (ADR-022): osserva gli invarianti (log-only) dopo l'incasso residuo. Atteso pulito.
+    log_invariant_violations(session, contract, motivo="incassa_residuo")
     session.commit()
     session.refresh(contract)
 
@@ -1822,6 +1798,8 @@ def terminate_contract(
         residuo_annullato=round(settlement.residuo_pre - incasso_ora, 2),
         data_chiusura=data_chiusura,
     )
+    # G9.0a (ADR-022): osserva gli invarianti (log-only) dopo la terminazione. Atteso pulito (chiuso ⟹ residuo 0).
+    log_invariant_violations(session, contract, motivo="terminazione")
     session.commit()
     session.refresh(contract)
 
@@ -2091,7 +2069,7 @@ def reopen_contract(
         motivo="riapertura_esplicita",
     )
     # PASSO 2 (osservabilità, predisposta per 409): la posizione ricalcolata deve rispettare gli invarianti.
-    _log_invariant_violations(session, contract, motivo="reopen")
+    log_invariant_violations(session, contract, motivo="reopen")
     session.commit()
     session.refresh(contract)
 
@@ -2320,6 +2298,10 @@ def incassa_credito_terminazione(
     log_audit(session, "contract", contract.id, "UPDATE", trainer.id, {
         "totale_versato": {"old": old_versato, "new": contract.totale_versato},
     })
+    # G9.0a (ADR-022): osserva gli invarianti (log-only). ⚠️ Reperto #1 (SPEC_G9 §A.3): qui scatta I1
+    # (residuo_raw<0) — `quota_stornata` assorbì `residuo_pre` al terminate A_CREDITO e non si riduce
+    # all'incasso del receivable. Log-only (telemetria); il fix è un mini-blocco successivo (triage col dato).
+    log_invariant_violations(session, contract, motivo="incassa_credito_differito")
     session.commit()
     session.refresh(credito)
     return CreditoTerminazioneResponse.model_validate(credito)

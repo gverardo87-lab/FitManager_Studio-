@@ -37,6 +37,7 @@ from api.routers._audit import log_audit
 from api.schemas.clinical import ClinicalReadinessClientItem
 from api.schemas.financial import CreditoClienteResponse, RatePayment
 from api.services.cash_categories import CATEGORIA_RIMBORSO_CONTRATTO
+from api.services.financial.invariant_gate import log_invariant_violations  # G9.0a sensore invarianti
 from api.services.clinical_readiness import compute_clinical_readiness_data
 from api.services.safety_engine import extract_client_conditions
 
@@ -1156,6 +1157,13 @@ def eroga_credito_cliente(
         "importo_erogato": {"old": old_erogato, "new": credito.importo_erogato},
         "stato": credito.stato,
     })
+    # G9.0a (ADR-022): osserva gli invarianti (log-only) sul contratto d'ORIGINE del wallet. L'erogazione è
+    # cassa a livello CLIENTE (id_contratto=None) e non tocca le colonne del contratto → atteso pulito;
+    # cablato per completezza-di-principio (ogni transizione denaro è sorvegliata).
+    if credito.id_contratto_origine is not None:
+        origin = session.get(Contract, credito.id_contratto_origine)
+        if origin is not None:
+            log_invariant_violations(session, origin, motivo="eroga_wallet")
     session.commit()
     session.refresh(credito)
     return CreditoClienteResponse.model_validate(credito)
