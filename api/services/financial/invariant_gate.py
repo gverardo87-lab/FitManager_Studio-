@@ -27,6 +27,7 @@ from api.models.movement import CashMovement
 from api.models.rate import Rate
 from api.services import contract_state as cstate
 from api.services.cash_categories import CATEGORIA_RIMBORSO_CONTRATTO
+from api.services.financial.ledger import project_columns_from_ledger
 
 logger = logging.getLogger(__name__)
 
@@ -58,4 +59,15 @@ def log_invariant_violations(session: Session, contract: Contract, *, motivo: st
         logger.warning(
             "Invariante %s violato dopo '%s' sul contratto %s: %s",
             v.code, motivo, contract.id, v.message,
+        )
+
+    # G9.2-a: ancora ledger-VERSATO (`totale_versato == Σ ENTRATA[id_contratto]`). `assert_contract_invariants`
+    # copre già il lato RIMBORSO (I5); questo aggiunge il lato versato via `project_columns_from_ledger`, la
+    # derivazione unica delle colonne dal mastro. Log-only (gate duro in G9.4); su DB post-penna è vero per
+    # costruzione → una violazione segnala drift legacy o un write fuori-penna.
+    proj = project_columns_from_ledger(session, contract.id)
+    if abs((contract.totale_versato or 0) - proj["versato"]) > 0.01:
+        logger.warning(
+            "Ancora ledger-versato violata dopo '%s' sul contratto %s: totale_versato %.2f ≠ Σ ENTRATA %.2f",
+            motivo, contract.id, contract.totale_versato or 0, proj["versato"],
         )

@@ -239,3 +239,22 @@ def test_reperto1_fix_incassa_credito_differito_invarianti_ok(client, auth_heade
     assert cstate.residuo(contract) == 0.0
     viol = _invariants(session, c["id"])
     assert viol == [], f"violazioni: {[(v.code, v.message) for v in viol]}"
+
+
+# ── G9.2-a: il sensore osserva anche l'ancora ledger-VERSATO (totale_versato == Σ ENTRATA) ──
+
+def test_g92a_sensore_logga_drift_versato_vs_ledger(client, auth_headers, sample_client, session, caplog):
+    """Contratto penna-scritto: versato == Σ ENTRATA (nessun log). Drift artificiale → warning ledger-versato."""
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=200.0, crediti=10)
+    contract = session.get(Contract, c["id"])
+    with caplog.at_level(logging.WARNING, logger=GATE_LOGGER):
+        log_invariant_violations(session, contract, motivo="baseline")
+    assert "ledger-versato" not in caplog.text   # by-construction: versato == Σ ENTRATA
+
+    contract.totale_versato = (contract.totale_versato or 0) + 50.0   # drift fuori-penna
+    session.add(contract)
+    session.commit()
+    caplog.clear()
+    with caplog.at_level(logging.WARNING, logger=GATE_LOGGER):
+        log_invariant_violations(session, contract, motivo="dopo_drift")
+    assert "ledger-versato" in caplog.text, caplog.text

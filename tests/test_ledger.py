@@ -126,3 +126,20 @@ def test_g91c_renew_acconto_i5(client, auth_headers, sample_contract, session):
     assert round(contract.totale_versato, 2) == 300.0
     assert contract.stato_pagamento == "PARZIALE"
     assert _sum(session, contract.id, "ENTRATA") == 300.0    # I5 anche sul rinnovo
+
+
+# ── G9.2-a: project_columns_from_ledger (colonne derivate dal mastro) ──
+
+def test_g92a_project_columns_from_ledger(client, auth_headers, sample_client, session):
+    from api.services.financial.ledger import project_columns_from_ledger
+    c = _create(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=200.0)  # ENTRATA acconto 200
+    rata = client.post("/api/rates", json={
+        "id_contratto": c["id"], "data_scadenza": FUTURE, "importo_previsto": 300.0,
+    }, headers=auth_headers).json()
+    client.post(f"/api/rates/{rata['id']}/pay",
+                json={"importo": 300.0, "metodo": "CONTANTI"}, headers=auth_headers)  # ENTRATA rata 300
+    session.expire_all()
+    contract = session.get(Contract, c["id"])
+    proj = project_columns_from_ledger(session, c["id"])
+    assert proj["versato"] == round(contract.totale_versato, 2) == 500.0   # Σ ENTRATA = acconto + rata
+    assert proj["rimborsato"] == round(contract.totale_rimborsato, 2) == 0.0
