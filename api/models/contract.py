@@ -66,7 +66,7 @@ class Contract(SQLModel, table=True):
     # e cresce soltanto; quota_stornata NON è strettamente monotòna (vedi inline). NB G7.0: residuo() NON le
     # legge ancora (è G7.1).
     totale_rimborsato: float = Field(default=0)   # LORDO rimborsi (monotòno); netto = versato − questo
-    quota_stornata: float = Field(default=0)      # write-off che azzera residuo senza riscrivere il prezzo. NON monotòna: reopen la azzera (ADR-019); l'incasso di un credito differito (G7.10) la riduce di pari importo (storno provvisorio revertito, Reperto #1 G9.0)
+    quota_stornata: float = Field(default=0)      # write-off che azzera residuo senza riscrivere il prezzo. NON monotòna: reopen la azzera (ADR-019); l'incasso di un credito differito (G7.10) la riduce di pari importo (storno provvisorio revertito, Reperto #1 G9.0). G9.2b: PROIEZIONE di Σ importo[rettifiche_contratto] — scritta SOLO via ledger.post_adjustment
     data_chiusura: Optional[date] = None          # quando la chiusura ha effetto (qualsiasi via a CHIUSO)
     # esito economico, enum chiuso a 4: COMPLETAMENTO|CONSUNZIONE|TERMINAZIONE_RIMBORSO|TERMINAZIONE_DECADENZA.
     # NULL = legacy (chiusi pre-G7) = COMPLETAMENTO implicito in classificazione, mai riaperto auto.

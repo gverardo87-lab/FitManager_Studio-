@@ -56,7 +56,12 @@ from api.routers._audit import (
 from api.routers.agenda import _sync_contract_chiuso
 from api.services import contract_state as cstate
 from api.services.financial.invariant_gate import log_invariant_violations
-from api.services.financial.ledger import post_inflow, post_outflow  # G9.1 penna unica di posting
+from api.services.financial.ledger import post_adjustment, post_inflow, post_outflow  # G9.1/G9.2b penne di posting
+from api.models.rettifica_contratto import (  # G9.2b: causali del ledger rettifiche (non-cash)
+    CAUSALE_REVERSAL_INCASSO_DIFFERITO,
+    CAUSALE_REVERSAL_REOPEN,
+    CAUSALE_STORNO_TERMINAZIONE,
+)
 from api.services.cash_categories import (
     CATEGORIA_ACCONTO_CONTRATTO,
     CATEGORIA_PAGAMENTO_RATA,
@@ -1673,7 +1678,12 @@ def terminate_contract(
     #    residuo_pre − incasso_ora + rimborso_out. Il rimborso che ESCE (USCITA) riduce il netto incassato →
     #    va aggiunto allo storno, simmetrico all'incasso che lo cresce. (Pre-G8.1 il rimborso non entrava nel
     #    residuo → bastava residuo_pre − incasso_ora; net-aware lo richiede esplicito per tenere residuo()==0.)
-    contract.quota_stornata = old_quota + round(settlement.residuo_pre - incasso_ora + rimborso_out, 2)
+    #    G9.2b: via terza penna — riga +Δ nel ledger rettifiche + delta-colonna in UN atto (quota == Σ).
+    post_adjustment(
+        session, contract=contract,
+        importo_firmato=round(settlement.residuo_pre - incasso_ora + rimborso_out, 2),
+        causale=CAUSALE_STORNO_TERMINAZIONE, data_effettiva=data_chiusura, trainer_id=trainer.id,
+    )
 
     # F) Soft-delete SOLO le rate NON-saldate (B-3). Le SALDATE e i loro CashMovement ENTRATA
     #    SOPRAVVIVONO: cancellarle romperebbe l'àncora `totale_versato == Σ ENTRATA` (Σ ENTRATA
@@ -1954,7 +1964,15 @@ def reopen_contract(
     wallet_erogato_riassorbito = round(wallet_erogato_riassorbito, 2)
 
     # R2) Storno inverso: azzera la quota → il residuo() net-aware si ricalcola da sé (R7).
-    contract.quota_stornata = 0
+    #     G9.2b: via terza penna — riga −quota nel ledger rettifiche + colonna a 0 in UN atto (quota == Σ).
+    #     Nessuna riga-zero nel ledger append-only (se non c'è storno da revertire).
+    if old_quota:
+        post_adjustment(
+            session, contract=contract, importo_firmato=-old_quota,
+            causale=CAUSALE_REVERSAL_REOPEN, data_effettiva=date.today(), trainer_id=trainer.id,
+        )
+    else:
+        contract.quota_stornata = 0  # normalizza l'eventuale None legacy (nessuno storno da revertire)
 
     # R2-bis) FOLD della fotografia netta (D1 forma-d, chiude Bug-1): la cassa-wallet già erogata
     #   (id_contratto=None) viene RIASSORBITA in `totale_rimborsato` → il residuo() net-aware (P − netto)
@@ -2227,10 +2245,17 @@ def incassa_credito_terminazione(
     # `quota_stornata` assorbì l'INTERO `residuo_pre` (per forzare residuo()==0 su CHIUSO), inclusa la parte
     # differita (`credito_trainer`) che NON era un write-off ma un differimento. Incassandola torna ricavo
     # (versato +=) e va tolta dallo storno → la quota converge a `quota_non_erogata` (P−R). Tiene residuo()==0
-    # (il + su versato e il − su quota si compensano) e azzera residuo_raw (chiude I1). Floor a 0 (I4).
+    # (il + su versato e il − su quota si compensano) e azzera residuo_raw (chiude I1).
+    # DEC-1 (G9.2b): NESSUN clamp max(·,0) — un floor sulla colonna ma non sul Σ rettifiche romperebbe
+    # l'àncora quota == Σ. Il clamp era comunque irraggiungibile (old_quota ≥ credito_trainer ≥ Σ incassi,
+    # cap sopra); uno stato corrotto ora diventa RUMOROSO (I4/I1 log-only, 409 in G9.4), non mascherato.
+    # MAI ripristinare il floor qui.
     old_quota = contract.quota_stornata or 0
-    contract.quota_stornata = round(max(old_quota - data.importo, 0.0), 2)
-    session.add(contract)
+    post_adjustment(
+        session, contract=contract, importo_firmato=-data.importo,
+        causale=CAUSALE_REVERSAL_INCASSO_DIFFERITO,
+        data_effettiva=data.data_pagamento or date.today(), trainer_id=trainer.id,
+    )
 
     credito.importo_incassato = round((credito.importo_incassato or 0) + data.importo, 2)
     if credito.importo_incassato >= (credito.importo or 0) - 0.009:
