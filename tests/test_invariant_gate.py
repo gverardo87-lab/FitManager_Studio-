@@ -102,10 +102,14 @@ def _invariants(session, contract_id):
 
 
 def _spy(monkeypatch, module):
-    """Sostituisce il sensore nel router `module` con uno spy che registra i `motivo`."""
+    """Sostituisce il sensore nel modulo dato con uno spy che registra i `motivo`.
+
+    `module` è il nome sotto `api.routers.` (es. "rates") oppure un path completo (es.
+    "api.services.financial.transitions" — G9.3: le transizioni rilocate nell'executor)."""
     calls = []
+    target = module if module.startswith("api.") else f"api.routers.{module}"
     monkeypatch.setattr(
-        f"api.routers.{module}.log_invariant_violations",
+        f"{target}.log_invariant_violations",
         lambda session, contract, *, motivo: calls.append(motivo),
     )
     return calls
@@ -169,7 +173,7 @@ def test_wiring_incassa_residuo(client, auth_headers, sample_client, session, mo
 
 
 def test_wiring_terminate(client, auth_headers, sample_client, session, monkeypatch):
-    calls = _spy(monkeypatch, "contracts")
+    calls = _spy(monkeypatch, "api.services.financial.transitions")  # G9.3a: il sensore vive nell'executor
     c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=500.0, crediti=10)
     _complete_pt(session, _trainer(session).id, sample_client["id"], c["id"], 2)  # reso 200 < versato → rimborso
     r = client.post(f"/api/contracts/{c['id']}/terminate",
