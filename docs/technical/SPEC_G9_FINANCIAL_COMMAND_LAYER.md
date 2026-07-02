@@ -590,3 +590,103 @@ Ognuno passa `check-all.sh`. **✅ Stage 2 FATTO (`8a6902c`, 2026-07-02)**: `pro
 ritorna anche `stornato = Σ rettifiche` + ancora sensore `quota_stornata == Σ rettifiche` (log-only, terza
 ancora dopo versato/rimborso; +2 test, suite **771 passed**). Il caveat previsto (`test_lifecycle_audit.py`
 scrive `quota_stornata` a mano → log atteso) si è confermato innocuo: suite verde, log-only.
+
+---
+
+## Appendice C — G9.3: design di dettaglio (implementation-ready, 2026-07-02)
+
+Design del solo G9.3, ancorato al codice vivo (snapshot post-G9.2b, `eeaa290`). **Behavior-preserving:
+rilocazione quasi-verbatim, HTTP identico, suite verde al primo passaggio.** Coordinate `file:riga` da
+riverificare a implementazione.
+
+### C.0 — Stato verificato sul codice vivo
+
+- **terminate** `contracts.py:1518-1765` (~247 righe: bouncer → guard 400 → settlement → gamba d'azione
+  3-vie → storno via penna → soft-delete rate → stato terminale → audit → sensore → commit → `_to_response`).
+- **reopen** `contracts.py:1853-2043` (~190 righe: bouncer → guard 400 → R1-R7 → audit → sensore → commit).
+- **Helpers condivisi**: `_count_sedute_erogate`/`_count_sedute_prenotate` (`:1401/:1415`),
+  `_motivo_from_esito` (`:1430`), `_settlement_for` (`:1441`) — usati da terminate E da `settlement_preview`
+  (read-only). `_reconcile_rate_plan` (`:1768`) — usato da reopen E da `incassa_residuo` (`:1376`, G8.3 leva B).
+- **Auto-close duplicato** (3 siti): `pay_rate` E-auto inline (`rates.py:584-597`, SOLO chiusura, lifecycle
+  `"completamento"`); `unpay_rate` auto-reopen inline (`rates.py:687-697`, SOLO riapertura, allowlist
+  `== COMPLETAMENTO`, lifecycle `"riapertura_pagamento"`); `agenda._sync_contract_chiuso` (`agenda.py:301-353`,
+  BIDIREZIONALE, allowlist su riapertura, lifecycle `"completamento"`/`"riapertura_crediti"`) chiamato da
+  agenda ×3 + `incassa_residuo` (G6).
+- **`api/routers/__init__.py` è VUOTO** → un service può importare `api.routers._audit` senza ciclo
+  (nessun autoload dei router). Verificato.
+
+### C.1 — Nuovo modulo `api/services/financial/transitions.py`
+
+Vi si trasferiscono (rilocazione fedele): `execute_terminate(session, contract, data, trainer) → Contract`,
+`execute_reopen(session, contract, trainer) → Contract`, i 4 helper settlement (C.0), `_reconcile_rate_plan`
+(rinominato `reconcile_rate_plan`, pubblico: lo consuma anche `incassa_residuo`), la FSM (C.3) e
+`sync_contract_chiuso` unificato (C.4). I router diventano: bouncer + delega + `session.refresh` + serialize
+(≤ ~40 righe, AC-G93-1). `settlement_preview`/`reopen_preview`/`_build_settlement_preview` RESTANO nel router
+(read-only, presentazione) e importano gli helper da `transitions`.
+
+### C.2 — Decisioni di dettaglio (risolte code-grounded)
+
+- **D-C1 — comando = schema Pydantic esistente** (`ContractTerminate`): niente DTO parallelo (sarebbe una
+  verità-doppia del contratto d'ingresso). L'executor riceve `(session, contract, data, trainer)`.
+- **D-C2 — bouncer nel router, guard di dominio nell'executor**: ownership è routing (404 mai 403);
+  "già chiuso → 400" / "non chiuso → 400" sono precondizioni della transizione → executor (quasi-verbatim).
+- **D-C3 — `HTTPException` resta nell'executor**: la rilocazione fedele non converte le ~8 raise in
+  eccezioni di dominio (conversione = refactor comportamentale, fuori scope; candidata a G9.4 quando il
+  gate introduce i SUOI 409). Debito annotato qui.
+- **D-C4 — sensore PRE-commit (invariato)**: il pattern §G9.3 mette l'osservazione prima del commit perché
+  in G9.4 il gate deve poter fare **rollback** — un enforcement post-commit non può annullare nulla.
+  L'idea post-commit di A.1-ter si applicava all'osservazione pura; superata dal fatto che il sensore
+  diventerà gate. Parità byte-identica con oggi.
+- **D-C7 — `_audit` importato dal service**: `transitions.py` importa `log_audit`/
+  `log_contract_lifecycle_transition` da `api.routers._audit` (zero cicli, C.0). Layering imperfetto
+  (service→modulo-in-routers) accettato come debito esplicito; lo spostamento di `_audit.py` in `services/`
+  è un rename meccanico rinviato (non fa parte del contratto di questo gate).
+
+### C.3 — FSM esplicita di `(chiuso, motivo_chiusura)` — tabella stati×transizioni
+
+| Da \ Via | auto-close (pagamento/crediti) | `terminate` | auto-reopen (revoca/crediti) | `reopen` esplicito |
+|---|---|---|---|---|
+| APERTO `(False, None)` | → CHIUSO `COMPLETAMENTO` | → CHIUSO `TERMINAZIONE_*`/`CONSUNZIONE` | — | — (400) |
+| CHIUSO `COMPLETAMENTO` | no-op | — (400) | → APERTO `(False, None)` | → APERTO |
+| CHIUSO `TERMINAZIONE_*`/`CONSUNZIONE` | no-op | — (400) | **VIETATO** (allowlist G7.2) | → APERTO |
+| CHIUSO `NULL` (legacy/manuale) | no-op | — (400) | **VIETATO** (allowlist) | → APERTO |
+
+In codice: `AUTO_REOPEN_ALLOWLIST = frozenset({"COMPLETAMENTO"})` + predicato `puo_auto_riaprire(contract)`
+in `transitions.py`; i 2 siti che oggi hard-codano `== "COMPLETAMENTO"` (unpay, `_sync`) lo consultano.
+La tabella vive nel docstring del modulo (design-record eseguibile: ogni riga ha il suo test).
+
+### C.4 — Unificazione auto-close: `sync_contract_chiuso` con direzioni per-caller
+
+Un'unica funzione in `transitions.py` (corpo = l'attuale `_sync_contract_chiuso`, il più completo dei 3):
+
+```text
+sync_contract_chiuso(session, contract_id, *, reopen_motivo="riapertura_crediti",
+                     directions=frozenset({"close","reopen"})) -> None
+```
+
+Adozione: `agenda._sync_contract_chiuso` → thin wrapper deprecato che delega (i 3 call-site di agenda e
+`incassa_residuo` invariati); `pay_rate` E-auto inline → `directions={"close"}`; `unpay_rate` auto-reopen
+inline → `directions={"reopen"}, reopen_motivo="riapertura_pagamento"`. **Perché le direzioni:** oggi il
+path payment-driven chiude-solo e riapre-solo; un `_sync` bidirezionale su `unpay` potrebbe CHIUDERE in un
+corner patologico (revoca ≤0.01€ su zombie legacy SALDATO+esauriti) — comportamento nuovo, vietato dal
+contratto behavior-preserving. La CONDIZIONE (should_be_chiuso + allowlist) è una sola (AC-G93-3); la
+direzione permessa è policy del trigger. Audit: chiusura logga sempre `"completamento"`; riapertura logga
+il `reopen_motivo` del trigger (parità byte-identica coi 3 siti attuali). NB: `pay_rate` oggi NON chiama
+`_sync` ma un inline equivalente — il delta è solo che la lifecycle-log migra dentro la funzione unificata
+(oggi `pay_rate` la chiama subito dopo, no-op se invariata → stesso output).
+
+### C.5 — Test plan (mappa AC §G9.3)
+
+| AC | Test |
+|---|---|
+| AC-G93-1 | terminate/reopen vivono in `transitions.py`; router ≤ ~40 righe (asserzione strutturale nel commit, non test runtime) |
+| AC-G93-2 | suite 771 verde al primo passaggio (behavior-preserving); zero test modificati nei 2 commit di rilocazione |
+| AC-G93-3 | nuovo test: payment-driven (pay ultima rata) e credit-driven (completa ultima seduta) → stesso stato terminale `(chiuso=True, COMPLETAMENTO)` a parità di condizioni; + riapertura vietata su TERMINAZIONE_* da entrambi i trigger (FSM riga 3) |
+| AC-G93-4 | la post-condizione è il sensore (ancore versato/rimborso/storno + I1-I6) già cablato in coda a ogni handler — un test verifica che `execute_terminate`/`execute_reopen` lo invochino (spy) |
+
+### C.6 — Piano commit (baseline 771 passed / 0 xfailed, ognuno passa check-all)
+
+1. `docs: G9.3 design di dettaglio (Appendice C in SPEC_G9)` — questo documento
+2. `feat: G9.3a — transitions.py: execute_terminate + helpers settlement (rilocazione fedele, router sottile)`
+3. `feat: G9.3b — transitions.py: execute_reopen + reconcile_rate_plan (rilocazione fedele, router sottile)`
+4. `feat: G9.3c — FSM esplicita + sync_contract_chiuso unificato (direzioni per-caller) + test AC-G93-3/4`
