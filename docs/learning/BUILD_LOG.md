@@ -2585,3 +2585,22 @@ a ogni commit. **⏭️ Prossimo: G9.2b Stage 2** (estendere `project_columns_fr
 mano → log atteso, non sorpresa). Poi G9.3 TransitionExecutor.
 
 ---
+## 2026-07-02 (sessione 2) — G9.2b Stage 2: terza ancora nel sensore (CHIUDE G9.2) + verifier nel processo
+
+**Stage 2 (`8a6902c`):** `project_columns_from_ledger` ritorna anche `stornato = Σ importo[rettifiche_contratto]`
+(terza proiezione dopo versato/rimborsato) e il sensore `invariant_gate` osserva l'**ancora ledger-storno**
+`quota_stornata == Σ rettifiche` (log-only, gate duro in G9.4) accanto a quella del versato (G9.2a). Sui path
+via terza penna è vera per costruzione → una violazione segnala un write fuori-penna o drift legacy. Il caveat
+previsto in SPEC §B.6 (`test_lifecycle_audit` scrive quota a mano → log atteso) confermato innocuo. +2 test.
+Suite full **771 passed / 0 xfailed**. **🏁 G9.2 (a+b Stage 1+2) CHIUSO — le 3 colonne cassa/storno del
+contratto sono ora proiezioni verificabili e osservate dei 2 ledger.**
+
+**Processo consolidato (novità di metodo):** prima del push di Stage 1 è stato lanciato l'agente
+**`financial-invariant-verifier`** (read-only, adversariale) sul diff `b012bb8..0fa1b15` → verdetto **PASS**:
+V1 firewall `contract_state.py`/`contract_settlement.py` fuori dal diff · V2 harness I1/I4/I5/I6 integro ·
+V3 zero coverage-gap (ogni simbolo money-mutating ha un oracolo collectable che lo esercita) · V4 i 4
+grep-guard ADR-016/017/018/019 vivi e non aggirati · V5 ancora-sensore classificata PIANIFICATO-E-TRACCIATO
+(ora chiusa da Stage 2). 194 test money-band ri-eseguiti indipendentemente. **Il loop di consegna del filone
+finanziario è ora: implementazione → full suite → verifier adversariale → push.**
+
+---

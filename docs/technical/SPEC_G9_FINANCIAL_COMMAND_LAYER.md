@@ -2,9 +2,9 @@
 
 **Tipo:** specifica prescrittiva (cosa-deve-essere-vero; silente sul come dove possibile). Bridge Chat→Code.
 **Data:** 2026-06-30 · **Branch:** `FitManager_Studio`
-**Stato:** 🟢 **G9.0 + G9.1 + G9.2 FATTI** (G9.2b Stage 1 chiuso 2026-07-02: `1795425`→`d0c01f8`, suite 769).
-Prossimi: G9.2b Stage 2 (ancora `quota_stornata == Σ rettifiche` nel sensore + `project_columns_from_ledger`
-esteso) → G9.3. Design di dettaglio: **G9.0 → Appendice A** (sensore totale-per-costruzione [niente
+**Stato:** 🟢 **G9.0 + G9.1 + G9.2 FATTI E CHIUSI** (G9.2b Stage 1 `1795425`→`d0c01f8` + Stage 2 `8a6902c`,
+2026-07-02, suite 771; verifier financial-invariant-verifier = PASS su Stage 1). Prossimo: **G9.3
+TransitionExecutor**. Design di dettaglio: **G9.0 → Appendice A** (sensore totale-per-costruzione [niente
 `except Exception`, A.1-bis] + agganci + reconciliation bidirezionale + quick-win + Reperto #1 risolto),
 **G9.2b → Appendice B** (DEC-1/2/3).
 **Blocco proposto:** **G9** — elevazione del write-model del dominio contrattuale-economico. Ratifica
@@ -586,7 +586,7 @@ today)`). Idempotente (guard zero-rettifiche → re-run no-op), additivo (colonn
 3. ✅ `feat: G9.2b.3 — backfill idempotente quota_stornata→rettifiche al boot` (`f0b8672`, +4 test) — **🔶 CHECKPOINT superato** su clone del `crm.db` dev (backup API read-only): 38 contratti, 1 riga `BACKFILL_LEGACY` (+250, contratto 32), re-run no-op, ancora `quota == Σ` verde su tutti. ⚠️ Correzione di design emersa dal test legacy-DB: il backfill va **DOPO la column-sync** (non dopo `_drop_stale_catalog_tables`) — su un DB pre-G7.0 la colonna `quota_stornata` nasce dall'ALTER; prima crasherebbe il boot.
 4. ✅ `feat: G9.2b.4 — wiring 3 write-site via post_adjustment (terminate/incassa/reopen)` (`d0c01f8`, +5 test wiring/sequenze composte AC-G92-4; DEC-1 clamp ritirato; suite **769 passed / 0 xfailed**)
 
-Ognuno passa `check-all.sh`. **Stage 2** (separato): estendere `project_columns_from_ledger` (ritorni anche
-`quota_stornata = Σ rettifiche`) + ancora sensore `quota_stornata == Σ rettifiche` (log-only, terza ancora).
-⚠️ Nota per Stage 2: `test_lifecycle_audit.py:212/238` scrive `quota_stornata` **a mano** (no rettifiche) → l'ancora
-log-only loggerà su questi 2 test (non rompe la suite) — **atteso, non sorpresa**.
+Ognuno passa `check-all.sh`. **✅ Stage 2 FATTO (`8a6902c`, 2026-07-02)**: `project_columns_from_ledger`
+ritorna anche `stornato = Σ rettifiche` + ancora sensore `quota_stornata == Σ rettifiche` (log-only, terza
+ancora dopo versato/rimborso; +2 test, suite **771 passed**). Il caveat previsto (`test_lifecycle_audit.py`
+scrive `quota_stornata` a mano → log atteso) si è confermato innocuo: suite verde, log-only.
