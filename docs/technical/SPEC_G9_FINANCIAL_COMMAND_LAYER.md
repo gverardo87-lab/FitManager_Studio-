@@ -2,9 +2,11 @@
 
 **Tipo:** specifica prescrittiva (cosa-deve-essere-vero; silente sul come dove possibile). Bridge Chat→Code.
 **Data:** 2026-06-30 · **Branch:** `FitManager_Studio`
-**Stato:** ⏳ **DA IMPLEMENTARE** (G9.0→G9.6). Governance docs-only. Zero codice prodotto. **G9.0 design di
-dettaglio pronto-da-implementare → Appendice A** (sensore totale-per-costruzione [niente `except Exception`,
-A.1-bis] + agganci + reconciliation bidirezionale + quick-win + Reperto #1 log-only).
+**Stato:** 🟢 **G9.0 + G9.1 + G9.2 FATTI** (G9.2b Stage 1 chiuso 2026-07-02: `1795425`→`d0c01f8`, suite 769).
+Prossimi: G9.2b Stage 2 (ancora `quota_stornata == Σ rettifiche` nel sensore + `project_columns_from_ledger`
+esteso) → G9.3. Design di dettaglio: **G9.0 → Appendice A** (sensore totale-per-costruzione [niente
+`except Exception`, A.1-bis] + agganci + reconciliation bidirezionale + quick-win + Reperto #1 risolto),
+**G9.2b → Appendice B** (DEC-1/2/3).
 **Blocco proposto:** **G9** — elevazione del write-model del dominio contrattuale-economico. Ratifica
 `ADR-022`. Sette gate sequenziali, branch sempre rilasciabile.
 **Mappa di verità:** `docs/adr/ADR-022-financial-command-layer-ledger-load-bearing.md` ·
@@ -144,7 +146,7 @@ vero **per costruzione** sui path migrati (la telemetria G9.0 non logga più vio
 - **✅ G9.2-a (FATTO, `97b4463`) — `project_columns_from_ledger(session, contract_id) -> {versato, rimborsato}`**
   (inverso per-contratto di `/reconciliation`) + ancora **ledger-versato** nel sensore (`totale_versato == Σ
   ENTRATA`; il lato rimborso era già I5). Log-only.
-- **G9.2-b — storno in un ledger SEPARATO `rettifiche_contratto` (decisione founder: Opzione A, ADR-022 Addendum I).**
+- **✅ G9.2-b Stage 1 (FATTO 2026-07-02, 4 commit `1795425`/`45f6178`/`f0b8672`/`d0c01f8`) — storno in un ledger SEPARATO `rettifiche_contratto` (decisione founder: Opzione A, ADR-022 Addendum I).**
   ⚠️ Revisione del piano originale: mettere lo storno nel **mastro cassa** riapriva la superficie scartata da
   ADR-019 (categoria-storno da escludere ovunque). Lo storno è **non-cash** → ledger dedicato. **`quota_stornata
   = Σ importo[rettifiche_contratto]`** (importo firmato: + storno, − reversal, append-only). Terza penna
@@ -579,10 +581,10 @@ today)`). Idempotente (guard zero-rettifiche → re-run no-op), additivo (colonn
 
 ### B.6 — Piano commit (4 commit atomici, branch sempre verde, baseline **755 passed / 0 xfailed**)
 
-1. `feat: G9.2b.1 — modello RettificaContratto + registrazione (create_db_and_tables) + record migrazione`
-2. `feat: G9.2b.2 — terza penna post_adjustment (non cablata)`
-3. `feat: G9.2b.3 — backfill idempotente quota_stornata→rettifiche al boot` — **🔶 CHECKPOINT founder** (tocca dati reali, backup-first su clone del `crm.db` dev)
-4. `feat: G9.2b.4 — wiring 3 write-site via post_adjustment (terminate/incassa/reopen)`
+1. ✅ `feat: G9.2b.1 — modello RettificaContratto + registrazione (create_db_and_tables) + record migrazione` (`1795425`, migrazione `d9e0f1a2b3c4`)
+2. ✅ `feat: G9.2b.2 — terza penna post_adjustment (non cablata)` (`45f6178`, +5 test)
+3. ✅ `feat: G9.2b.3 — backfill idempotente quota_stornata→rettifiche al boot` (`f0b8672`, +4 test) — **🔶 CHECKPOINT superato** su clone del `crm.db` dev (backup API read-only): 38 contratti, 1 riga `BACKFILL_LEGACY` (+250, contratto 32), re-run no-op, ancora `quota == Σ` verde su tutti. ⚠️ Correzione di design emersa dal test legacy-DB: il backfill va **DOPO la column-sync** (non dopo `_drop_stale_catalog_tables`) — su un DB pre-G7.0 la colonna `quota_stornata` nasce dall'ALTER; prima crasherebbe il boot.
+4. ✅ `feat: G9.2b.4 — wiring 3 write-site via post_adjustment (terminate/incassa/reopen)` (`d0c01f8`, +5 test wiring/sequenze composte AC-G92-4; DEC-1 clamp ritirato; suite **769 passed / 0 xfailed**)
 
 Ognuno passa `check-all.sh`. **Stage 2** (separato): estendere `project_columns_from_ledger` (ritorni anche
 `quota_stornata = Σ rettifiche`) + ancora sensore `quota_stornata == Σ rettifiche` (log-only, terza ancora).

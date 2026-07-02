@@ -2547,3 +2547,41 @@ write-site. **Docs-only oggi (zero codice):** SPEC_G9 Appendice B + ADR-022 Add.
 **⏭️ Ripresa domani: `feat: G9.2b.1`.**
 
 ---
+## 2026-07-02 — G9.2b Stage 1: ledger rettifiche_contratto + terza penna post_adjustment (chiude G9.2)
+
+Implementato il design dell'**Appendice B** di SPEC_G9 (bake-nel-SPEC del 2026-06-30, DEC-1/2/3). Da oggi
+`quota_stornata` è una **proiezione verificabile** di `Σ importo[rettifiche_contratto]` — l'ultima grandezza
+del contratto senza posting ha la sua derivazione ledger. **4 commit atomici pushabili**, branch verde a ognuno:
+
+- `1795425` **G9.2b.1** — modello `RettificaContratto` (`rettifiche_contratto`, append-only, importo FIRMATO
+  + storno/− reversal, 4 causali `CAUSALE_*`) + registrazione (`models/__init__` + import esplicito in
+  `database.py`, specchio di share_token) + record migrazione `d9e0f1a2b3c4` (Alembic FROZEN → la crea
+  `create_db_and_tables` al boot). crm.db 28→29 tabelle.
+- `45f6178` **G9.2b.2** — terza penna `ledger.post_adjustment` (gemello non-cash di post_inflow/out):
+  rettifica + delta-colonna in UN atto, causale fuori-enum → ValueError, DEC-2 round 2dp, DEC-1 **nessun
+  clamp**. NON tocca `movimenti_cassa` (lo storno nel mastro cassa riaprirebbe la superficie ADR-019).
+- `f0b8672` **G9.2b.3** — backfill idempotente al boot (`schema_sync._backfill_quota_stornata_rettifiche`,
+  gemello di `_fix_cross_db_fk`): quota legacy >0 senza rettifiche → 1 riga `BACKFILL_LEGACY`.
+  **🔶 Checkpoint superato sul clone del crm.db dev** (backup API read-only): 38 contratti → 1 riga attesa
+  (+250, contratto 32, TERMINAZIONE_RIMBORSO), re-run no-op, ancora verde su tutti.
+- `d0c01f8` **G9.2b.4** — wiring 3 write-site: terminate→`+Δ STORNO_TERMINAZIONE`, reopen→`−quota
+  REVERSAL_REOPEN` (niente righe-zero), incassa differito→`−importo REVERSAL_INCASSO_DIFFERITO` col clamp
+  `max(·,0)` RITIRATO (DEC-1). `residuo()` byte-identico. Zero scritture manuali fuori dalla penna.
+
+**Learning (2 scoperte dal codice, non dal design):**
+1. **Ordine del backfill in `sync_schema`**: lo SPEC lo collocava dopo `_drop_stale_catalog_tables`, ma il
+   test legacy-DB esistente ha rivelato che su un DB pre-G7.0 la colonna `quota_stornata` nasce dalla
+   column-sync (ALTER) → il backfill DEVE seguirla o crasha il boot con "no such column". Il test suite
+   come rete anche sul codice di migrazione, non solo sul dominio.
+2. **Il crm.db dev reale aveva già la tabella** (0 righe) al momento del checkpoint: il backend dev in
+   auto-reload aveva bootato `create_db_and_tables` appena creato il modello. Innocuo per costruzione
+   (backfill idempotente al prossimo boot) — ma conferma che ogni modello nuovo tocca i DB reali PRIMA
+   del commit se un dev server gira: il design additivo-idempotente non è un lusso.
+
+**Verifica.** Suite **769 passed / 0 xfailed** (baseline 755 + 14: 5 penna, 4 backfill, 5 wiring incl.
+sequenze composte AC-G92-4 terminate→incassa→reopen e terminate→reopen→ri-terminate), `check-all.sh` verde
+a ogni commit. **⏭️ Prossimo: G9.2b Stage 2** (estendere `project_columns_from_ledger` con `quota_stornata
+= Σ rettifiche` + terza ancora log-only nel sensore; NB `test_lifecycle_audit.py:212/238` scrive quota a
+mano → log atteso, non sorpresa). Poi G9.3 TransitionExecutor.
+
+---
