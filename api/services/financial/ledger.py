@@ -21,6 +21,7 @@ from sqlmodel import Session, select
 from api.models.contract import Contract
 from api.models.credito_cliente import CreditoCliente
 from api.models.movement import CashMovement
+from api.models.rettifica_contratto import CAUSALI_RETTIFICA, RettificaContratto
 from api.services.cash_categories import (
     CATEGORIA_RIMBORSO_CONTRATTO,
     CONTRACT_CASH_IN,
@@ -104,6 +105,44 @@ def post_outflow(
         contract.totale_rimborsato = (contract.totale_rimborsato or 0) + importo
         session.add(contract)
     return movement
+
+
+def post_adjustment(
+    session: Session,
+    *,
+    contract: Contract,
+    importo_firmato: float,
+    causale: str,
+    data_effettiva: date,
+    trainer_id: int,
+    note: Optional[str] = None,
+) -> RettificaContratto:
+    """Registra una rettifica NON-CASH (G9.2b, ADR-022 Addendum I): crea la `RettificaContratto` E applica
+    il delta su `quota_stornata` nello STESSO atto → l'àncora `quota_stornata == Σ importo[rettifiche]`
+    è vera per costruzione. Gemello non-cash di `post_inflow`/`post_outflow`: NON tocca `movimenti_cassa`
+    (lo storno non muove euro — metterlo nel mastro cassa riaprirebbe la superficie di esclusione scartata
+    da ADR-019), NON committa, NON ricalcola `stato_pagamento` — quella è del caller.
+
+    `importo_firmato`: + storno, − reversal (ledger append-only). La colonna è arrotondata a 2dp (DEC-2:
+    per importi 2dp `round(running) == round(Σ)` → l'àncora regge). NESSUN clamp a 0 (DEC-1): un floor
+    sulla colonna ma non sul Σ romperebbe l'àncora — uno stato che porterebbe la quota sotto zero è un BUG
+    del caller e deve diventare RUMOROSO (I4/I1 log-only, poi 409 in G9.4), mai mascherato."""
+    if causale not in CAUSALI_RETTIFICA:
+        raise ValueError(
+            f"post_adjustment: causale {causale!r} non è una rettifica contrattuale (CAUSALI_RETTIFICA={sorted(CAUSALI_RETTIFICA)})"
+        )
+    rettifica = RettificaContratto(
+        trainer_id=trainer_id,
+        id_contratto=contract.id,
+        importo=importo_firmato,
+        causale=causale,
+        data_effettiva=data_effettiva,
+        note=note,
+    )
+    session.add(rettifica)
+    contract.quota_stornata = round((contract.quota_stornata or 0) + importo_firmato, 2)
+    session.add(contract)
+    return rettifica
 
 
 def project_columns_from_ledger(session: Session, contract_id: int) -> dict:
