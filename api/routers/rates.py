@@ -32,17 +32,17 @@ from api.models.client import Client
 from api.models.contract import Contract
 from api.models.rate import Rate
 from api.models.movement import CashMovement
-from api.models.event import Event
 from api.schemas.financial import (
     RateCreate, RateUpdate, RatePayment,
     RateResponse, PaymentPlanCreate,
     AgingItem, AgingBucket, AgingResponse,
 )
-from api.routers._audit import log_audit, log_contract_lifecycle_transition
+from api.routers._audit import log_audit
 from api.services import contract_state as cstate  # SSoT residuo() (SPEC_REVISIONE_PRE_G7 §A)
 from api.services.cash_categories import CATEGORIA_PAGAMENTO_RATA  # SSoT categorie cassa
 from api.services.financial.invariant_gate import log_invariant_violations  # G9.0a sensore invarianti
-from api.services.financial.ledger import post_inflow  # G9.1 penna unica di posting
+from api.services.financial.ledger import post_inflow
+from api.services.financial.transitions import sync_contract_chiuso  # G9.3d auto-close unificato
 
 router = APIRouter(prefix="/rates", tags=["rates"])
 
@@ -568,7 +568,6 @@ def pay_rate(
     #    recompute stato_pagamento e auto-close restano transition-logic del caller (sotto).
     old_totale_versato = contract.totale_versato
     old_stato_pagamento = contract.stato_pagamento
-    old_chiuso = contract.chiuso
     client = session.get(Client, contract.id_cliente)
     client_label = f"{client.nome} {client.cognome}" if client else f"Cliente #{contract.id_cliente}"
     post_inflow(
@@ -581,21 +580,6 @@ def pay_rate(
     # E) Stato contratto net-aware (G8.1.1/F4 — residuo()==0, non `versato≥prezzo` lordo). SSoT (de-dup).
     contract.stato_pagamento = cstate.recompute_stato_pagamento(contract)
 
-    # E-auto) Auto-close: contratto saldato + crediti esauriti → chiuso
-    if contract.stato_pagamento == "SALDATO" and contract.crediti_totali:
-        crediti_usati = session.exec(
-            select(func.count(Event.id)).where(
-                Event.id_contratto == contract.id,
-                Event.categoria == "PT",
-                # G7.8: Rinviato libera il credito (ADR-017) → no auto-close sulle rinviate (D-AUTO-CLOSE)
-                Event.stato.in_(["Programmato", "Completato"]),
-                Event.deleted_at == None,
-            )
-        ).one()
-        if crediti_usati >= contract.crediti_totali:
-            contract.chiuso = True
-            contract.motivo_chiusura = "COMPLETAMENTO"  # G7.0: qualifica la via a CHIUSO (load-bearing per la reopen-allowlist G7.2)
-
     session.add(contract)
 
     # F) Audit + Commit atomico — tutto o niente
@@ -607,8 +591,9 @@ def pay_rate(
         "totale_versato": {"old": old_totale_versato, "new": contract.totale_versato},
         "stato_pagamento": {"old": old_stato_pagamento, "new": contract.stato_pagamento},
     })
-    # Audita la transizione `chiuso` (auto-close per completamento) — no-op se invariata
-    log_contract_lifecycle_transition(session, contract, old_chiuso=old_chiuso, motivo="completamento")
+    # E-auto) Auto-close UNIFICATO (G9.3d): payment-driven → SOLO direzione close. Un solo percorso
+    # logico con agenda/_sync (condizione SALDATO+crediti esauriti, ADR-017); logga lui la transizione.
+    sync_contract_chiuso(session, contract.id, directions=frozenset({"close"}))
     # G9.0a (ADR-022): osserva gli invarianti (log-only) dopo il pagamento. Atteso pulito.
     log_invariant_violations(session, contract, motivo="pagamento")
     session.commit()
@@ -678,23 +663,10 @@ def unpay_rate(
     # D) Aggiorna totale_versato contratto (contract già recuperato nel guard B-bis)
     old_totale_versato = contract.totale_versato
     old_stato_pagamento = contract.stato_pagamento
-    old_chiuso = contract.chiuso
     contract.totale_versato = max(0, contract.totale_versato - importo_da_stornare)
 
     # E) Ricalcola stato_pagamento net-aware (F4) — SSoT unico (G8.2-prep, de-dup di 4 copie inline)
     contract.stato_pagamento = cstate.recompute_stato_pagamento(contract)
-
-    # E-auto) Auto-reopen: se non piu' saldato, riapri — MA solo le chiusure da COMPLETAMENTO
-    #   (G7.2 reopen-allowlist, FDM §9.5.6: stesso principio del ramo credit-driven di
-    #   _sync_contract_chiuso). Una terminazione (TERMINAZIONE_*, G7.3) o una chiusura manuale (NULL)
-    #   NON si riaprono per una revoca-pagamento → niente stato-zombie chiuso=False ∧ quota_stornata>0.
-    if (
-        contract.chiuso
-        and contract.stato_pagamento != "SALDATO"
-        and contract.motivo_chiusura == "COMPLETAMENTO"
-    ):
-        contract.chiuso = False
-        contract.motivo_chiusura = None  # AC-7.2-5: riapertura → "aperto senza motivo"
 
     session.add(contract)
 
@@ -723,8 +695,10 @@ def unpay_rate(
         "totale_versato": {"old": old_totale_versato, "new": contract.totale_versato},
         "stato_pagamento": {"old": old_stato_pagamento, "new": contract.stato_pagamento},
     })
-    # Audita la transizione `chiuso` (auto-reopen da revoca pagamento) — no-op se invariata
-    log_contract_lifecycle_transition(session, contract, old_chiuso=old_chiuso, motivo="riapertura_pagamento")
+    # E-auto) Auto-reopen UNIFICATO (G9.3d): payment-driven → SOLO direzione reopen, allowlist G7.2
+    # dentro la transizione (puo_auto_riaprire); logga lui la transizione (riapertura_pagamento).
+    sync_contract_chiuso(session, contract.id, directions=frozenset({"reopen"}),
+                         reopen_motivo="riapertura_pagamento")
     # G9.0a (ADR-022): osserva gli invarianti (log-only) dopo la revoca pagamento. Atteso pulito.
     log_invariant_violations(session, contract, motivo="revoca_pagamento")
     session.commit()

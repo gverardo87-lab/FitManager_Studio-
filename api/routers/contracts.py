@@ -52,16 +52,16 @@ from api.routers._audit import (
     log_audit,
     log_contract_open_lifecycle_transition,
 )
-from api.routers.agenda import _sync_contract_chiuso
 from api.services import contract_state as cstate
 from api.services.financial.invariant_gate import log_invariant_violations
-from api.services.financial.transitions import (  # G9.3: TransitionExecutor + helpers settlement
+from api.services.financial.transitions import (  # G9.3: TransitionExecutor + helpers settlement + auto-close
     count_sedute_prenotate,
     execute_reopen,
     execute_terminate,
     motivo_from_esito,
     reconcile_rate_plan,
     settlement_for,
+    sync_contract_chiuso,
 )
 from api.services.financial.ledger import post_adjustment, post_inflow  # G9.1/G9.2b penne di posting
 from api.models.rettifica_contratto import (  # G9.2b: causali del ledger rettifiche (non-cash)
@@ -1330,7 +1330,7 @@ def incassa_residuo(
     D) Cap anti-overpayment: importo > residuo → 422
     E) `totale_versato += importo` + ricalcolo `stato_pagamento`
     F) CashMovement ENTRATA (categoria PAGAMENTO_RATA, id_rata=None) nel libro mastro
-    G) Auto-close canonico via `_sync_contract_chiuso` (logga la transizione `chiuso`)
+    G) Auto-close canonico via `sync_contract_chiuso` unificato (logga la transizione `chiuso`)
     H) Audit contract UPDATE (`totale_versato`+`stato_pagamento`; `chiuso` lo logga G)
     """
     # A) Bouncer ownership (404 mai 403)
@@ -1382,7 +1382,7 @@ def incassa_residuo(
     # G) Auto-close canonico (date-independent): se saldato + crediti esauriti → chiuso.
     #    Riusa l'helper SSoT condiviso con agenda/pay_rate (no 3ª copia inline) — logga
     #    da sé la transizione `chiuso` con motivo "completamento".
-    _sync_contract_chiuso(session, contract.id)
+    sync_contract_chiuso(session, contract.id)
 
     # H) Audit + commit atomico. La transizione `chiuso` è già loggata da G (P2):
     #    qui si registra solo l'UPDATE denaro, identico a pay_rate (no doppio log).

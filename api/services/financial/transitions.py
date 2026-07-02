@@ -46,6 +46,32 @@ from api.services.financial.ledger import post_adjustment, post_inflow, post_out
 
 
 # ════════════════════════════════════════════════════════════
+# FSM di chiusura (G9.3c) — tabella stati×transizioni di (chiuso, motivo_chiusura)
+# ════════════════════════════════════════════════════════════
+#
+# | Da \ Via                        | auto-close (pag./crediti) | terminate                 | auto-reopen (revoca/crediti) | reopen esplicito |
+# |---------------------------------|---------------------------|---------------------------|------------------------------|------------------|
+# | APERTO (False, None)            | → CHIUSO COMPLETAMENTO    | → CHIUSO TERMINAZIONE_*/  | —                            | — (400)          |
+# |                                 |                           |   CONSUNZIONE             |                              |                  |
+# | CHIUSO COMPLETAMENTO            | no-op                     | — (400)                   | → APERTO (False, None)       | → APERTO         |
+# | CHIUSO TERMINAZIONE_*/CONSUNZ.  | no-op                     | — (400)                   | VIETATO (allowlist G7.2)     | → APERTO         |
+# | CHIUSO NULL (legacy/manuale)    | no-op                     | — (400)                   | VIETATO (allowlist)          | → APERTO         |
+#
+# Ogni transizione vive in QUESTO modulo: terminate/reopen negli executor sopra, auto-close/auto-reopen
+# in `sync_contract_chiuso` sotto. L'allowlist è POSITIVA (== COMPLETAMENTO), MAI denylist: il motivo
+# NULL (chiusura manuale/legacy, deliberata) è il contro-esempio che una denylist mancherebbe →
+# eviterebbe lo stato-zombie `chiuso=False ∧ quota_stornata>0` (G7.2, FDM §9.5.6).
+
+AUTO_REOPEN_ALLOWLIST = frozenset({"COMPLETAMENTO"})
+
+
+def puo_auto_riaprire(contract: Contract) -> bool:
+    """Reopen-allowlist G7.2 (FDM §9.5.6): l'auto-riapertura (credit/payment-driven) scatta SOLO per le
+    chiusure da COMPLETAMENTO. TERMINAZIONE_*/CONSUNZIONE/NULL si riaprono SOLO via `execute_reopen`."""
+    return contract.motivo_chiusura in AUTO_REOPEN_ALLOWLIST
+
+
+# ════════════════════════════════════════════════════════════
 # Helpers settlement (condivisi da execute_terminate e settlement_preview)
 # ════════════════════════════════════════════════════════════
 
@@ -617,3 +643,78 @@ def execute_reopen(session: Session, *, contract: Contract, trainer: Trainer) ->
     session.commit()
     session.refresh(contract)
     return contract
+
+
+# ════════════════════════════════════════════════════════════
+# Auto-close/auto-reopen UNIFICATO (G9.3d) — un solo percorso logico, direzioni per-caller
+# ════════════════════════════════════════════════════════════
+
+def sync_contract_chiuso(
+    session: Session,
+    contract_id: int,
+    *,
+    reopen_motivo: str = "riapertura_crediti",
+    directions: frozenset = frozenset({"close", "reopen"}),
+) -> None:
+    """
+    Ricalcola se il contratto deve essere chiuso o riaperto (auto-close/auto-reopen, FSM righe 1-2).
+
+    UN solo percorso logico (AC-G93-3): condizione `should_be_chiuso = SALDATO + crediti esauriti` +
+    reopen-allowlist G7.2 (`puo_auto_riaprire`). Prima viveva in 3 copie: `agenda._sync_contract_chiuso`
+    (bidirezionale), `pay_rate` E-auto inline (solo close), `unpay_rate` auto-reopen inline (solo reopen).
+
+    `directions` (D-C6): la CONDIZIONE è una sola, la direzione permessa è policy del trigger —
+    payment-close passa `{"close"}`, payment-reopen `{"reopen"}` (byte-parity coi vecchi inline: un sync
+    bidirezionale su `unpay` potrebbe CHIUDERE in un corner patologico, comportamento nuovo vietato).
+    `reopen_motivo`: la chiusura logga sempre `"completamento"`; la riapertura logga il motivo del
+    trigger (`"riapertura_crediti"` credit-driven, `"riapertura_pagamento"` payment-driven).
+
+    NB (documentato, non-reachable-by-construction): il guard `not crediti_totali → return` vale anche
+    per la direzione reopen — un chiuso COMPLETAMENTO con `crediti_totali` NULL non esiste (tutti i
+    writer di COMPLETAMENTO esigono `crediti_totali` truthy); il vecchio inline di `unpay` lo avrebbe
+    riaperto, questo no. Stato solo costruibile a mano via ORM.
+    """
+    contract = session.get(Contract, contract_id)
+    if not contract or not contract.crediti_totali:
+        return
+
+    crediti_usati = session.exec(
+        select(func.count(Event.id)).where(
+            Event.id_contratto == contract.id,
+            Event.categoria == "PT",
+            # G7.8: Rinviato libera il credito (ADR-017) → no auto-close sulle rinviate (D-AUTO-CLOSE)
+            Event.stato.in_(["Programmato", "Completato"]),
+            Event.deleted_at == None,  # noqa: E711
+        )
+    ).one()
+
+    should_be_chiuso = (
+        crediti_usati >= contract.crediti_totali
+        and contract.stato_pagamento == "SALDATO"
+    )
+
+    # FSM riga 3-4 — reopen-allowlist G7.2 (predicato `puo_auto_riaprire`): l'auto-riapertura scatta SOLO
+    # per le chiusure da COMPLETAMENTO; NULL/TERMINAZIONE_* si riaprono solo via `execute_reopen`.
+    if contract.chiuso and not should_be_chiuso and not puo_auto_riaprire(contract):
+        return
+
+    if contract.chiuso != should_be_chiuso:
+        # D-C6: direzione permessa dal trigger (la condizione resta unica)
+        if should_be_chiuso and "close" not in directions:
+            return
+        if not should_be_chiuso and "reopen" not in directions:
+            return
+        old_chiuso = contract.chiuso
+        contract.chiuso = should_be_chiuso
+        if should_be_chiuso:
+            contract.motivo_chiusura = "COMPLETAMENTO"  # G7.0: qualifica la via a CHIUSO
+        else:
+            contract.motivo_chiusura = None  # G7.2 (AC-7.2-5): riapertura legittima → "aperto senza motivo"
+        session.add(contract)
+        # Audita la transizione: completamento (chiude) vs riapertura (motivo del trigger)
+        log_contract_lifecycle_transition(
+            session,
+            contract,
+            old_chiuso=old_chiuso,
+            motivo="completamento" if should_be_chiuso else reopen_motivo,
+        )
