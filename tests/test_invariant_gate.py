@@ -183,7 +183,7 @@ def test_wiring_terminate(client, auth_headers, sample_client, session, monkeypa
 
 
 def test_wiring_reopen(client, auth_headers, sample_client, session, monkeypatch):
-    calls = _spy(monkeypatch, "contracts")
+    calls = _spy(monkeypatch, "api.services.financial.transitions")  # G9.3b: il sensore vive nell'executor
     c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=500.0, crediti=10)
     _complete_pt(session, _trainer(session).id, sample_client["id"], c["id"], 2)
     client.post(f"/api/contracts/{c['id']}/terminate",

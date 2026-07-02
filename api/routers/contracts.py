@@ -50,7 +50,6 @@ from api.schemas.financial import (
 )
 from api.routers._audit import (
     log_audit,
-    log_contract_lifecycle_transition,
     log_contract_open_lifecycle_transition,
 )
 from api.routers.agenda import _sync_contract_chiuso
@@ -58,14 +57,15 @@ from api.services import contract_state as cstate
 from api.services.financial.invariant_gate import log_invariant_violations
 from api.services.financial.transitions import (  # G9.3: TransitionExecutor + helpers settlement
     count_sedute_prenotate,
+    execute_reopen,
     execute_terminate,
     motivo_from_esito,
+    reconcile_rate_plan,
     settlement_for,
 )
 from api.services.financial.ledger import post_adjustment, post_inflow  # G9.1/G9.2b penne di posting
 from api.models.rettifica_contratto import (  # G9.2b: causali del ledger rettifiche (non-cash)
     CAUSALE_REVERSAL_INCASSO_DIFFERITO,
-    CAUSALE_REVERSAL_REOPEN,
 )
 from api.services.cash_categories import (
     CATEGORIA_ACCONTO_CONTRATTO,
@@ -1377,7 +1377,7 @@ def incassa_residuo(
     #   rate va riallineato (INV-RATE: Σ residui-rata ≤ residuo). `_reconcile_rate_plan` taglia l'eventuale
     #   eccedenza (mai sotto il saldato) evitando la rata scaduta-fantasma; no-op se non ci sono rate o il
     #   piano è già ≤ residuo. Stessa funzione del reopen (riconciliazione, non un secondo modello).
-    _reconcile_rate_plan(session, contract, trainer.id)
+    reconcile_rate_plan(session, contract, trainer.id)
 
     # G) Auto-close canonico (date-independent): se saldato + crediti esauriti → chiuso.
     #    Riusa l'helper SSoT condiviso con agenda/pay_rate (no 3ª copia inline) — logga
@@ -1483,91 +1483,6 @@ def terminate_contract(
     return _to_response(contract)
 
 
-def _reconcile_rate_plan(session: Session, contract, trainer_id: int) -> dict:
-    """G8.1.1/F2 (ADR-019 Addendum, D-RECONCILIA-RATE): dopo `reopen`, riallinea il piano rate non-saldate
-    al `residuo()` net-aware ricalcolato. L'inverso-esatto (M1) ripristina le rate al loro importo
-    PRE-terminate: se la cassa è rimasta (rimborso/conguaglio), il residuo ricalcolato ≠ pre-terminate →
-    le rate non combaciano.
-
-    - **Eccedenza** (Σ residui-rata > residuo): taglio CRONOLOGICO — si copre il residuo riempiendo dalle
-      rate più vecchie; la rata a cavallo è ridotta a coprire l'esatto residuo rimanente; le successive
-      sono azzerate (soft-delete se `importo_saldato==0`, altrimenti `importo_previsto=importo_saldato` →
-      SALDATA: **mai sotto il saldato**, la cassa non si orfaneggia).
-    - **Sotto-copertura** (Σ < residuo): nessuna mutazione — il resto resta "da pianificare".
-    - **Pari** (Σ == residuo, es. reopen senza-cassa): no-op (round-trip esatto preservato).
-
-    Non tocca cassa né `residuo()` (modifica solo `importo_previsto`/`stato`/`deleted_at` delle rate; il
-    `saldato` resta, quindi anche `totale_versato`/`netto`). Ritorna un riassunto per l'audit.
-    """
-    residuo = round(cstate.residuo(contract), 2)
-    rate = list(session.exec(
-        select(Rate).where(
-            Rate.id_contratto == contract.id,
-            Rate.stato.in_(["PENDENTE", "PARZIALE"]),
-            Rate.deleted_at == None,
-        ).order_by(Rate.data_scadenza, Rate.id)
-    ).all())
-    somma_residui = round(sum(max((r.importo_previsto or 0) - (r.importo_saldato or 0), 0.0) for r in rate), 2)
-    if abs(somma_residui - residuo) <= 0.01:
-        # Pari (es. reopen senza-cassa): round-trip esatto preservato.
-        return {"residuo": residuo, "somma_rate_pre": somma_residui, "tagliate": 0, "rimosse": 0, "cresciute": 0}
-
-    if somma_residui < residuo - 0.01:
-        # SOTTO-COPERTURA. Auto-copertura (scelta founder) LIMITATA al RIMBORSO che resta (re-incassabile):
-        # è il SOLO € che il reopen ha aggiunto al residuo e che il piano ripristinato non copre. L'eventuale
-        # ammanco oltre il rimborso è "da pianificare" ORIGINALE del trainer → NON lo fabbrichiamo (mai una
-        # rata-fantasma su residuo mai pianificato: romperebbe la CONSUNZIONE/storno-puro senza pendenti, dove
-        # il residuo torna "da pianificare" com'era). Cresce SOLO una rata pendente ESISTENTE (mirror del
-        # taglio cronologico); senza pendenti o senza rimborso → no-op (Fix A lascia aggiungere a mano).
-        # Non tocca cassa (solo importo_previsto).
-        ammanco = min(round(residuo - somma_residui, 2), round(contract.totale_rimborsato or 0, 2))
-        if ammanco > 0.01 and rate:
-            last = rate[-1]
-            last.importo_previsto = round((last.importo_previsto or 0) + ammanco, 2)
-            session.add(last)
-            log_audit(session, "rate", last.id, "UPDATE", trainer_id,
-                      {"importo_previsto": {"new": last.importo_previsto}, "riallineo": "reopen_cover"})
-            return {"residuo": residuo, "somma_rate_pre": somma_residui, "tagliate": 0, "rimosse": 0, "cresciute": 1}
-        return {"residuo": residuo, "somma_rate_pre": somma_residui, "tagliate": 0, "rimosse": 0, "cresciute": 0}
-
-    # ECCEDENZA (Σ residui-rata > residuo): taglio cronologico.
-    now = datetime.now(timezone.utc)
-    coperto = 0.0
-    tagliate = 0
-    rimosse = 0
-    for r in rate:
-        saldato = round(r.importo_saldato or 0, 2)
-        residuo_rata = round(max((r.importo_previsto or 0) - saldato, 0.0), 2)
-        spazio = round(residuo - coperto, 2)  # residuo ancora da coprire col piano
-        if spazio <= 0.01:
-            # Residuo già coperto → questa rata (e le successive) sono eccedenti.
-            if saldato <= 0.01:
-                r.deleted_at = now
-                session.add(r)
-                log_audit(session, "rate", r.id, "DELETE", trainer_id)
-                rimosse += 1
-            else:
-                r.importo_previsto = saldato          # mai sotto il saldato
-                r.stato = "SALDATA"
-                session.add(r)
-                log_audit(session, "rate", r.id, "UPDATE", trainer_id,
-                          {"importo_previsto": {"new": saldato}, "riallineo": "reopen"})
-                tagliate += 1
-        elif residuo_rata > spazio + 0.01:
-            # Rata a cavallo: riduci il previsto a coprire l'esatto residuo rimanente.
-            nuovo_previsto = round(saldato + spazio, 2)
-            r.importo_previsto = nuovo_previsto
-            r.stato = "PARZIALE" if saldato > 0.01 else "PENDENTE"
-            session.add(r)
-            log_audit(session, "rate", r.id, "UPDATE", trainer_id,
-                      {"importo_previsto": {"new": nuovo_previsto}, "riallineo": "reopen"})
-            tagliate += 1
-            coperto = residuo
-        else:
-            coperto = round(coperto + residuo_rata, 2)
-    return {"residuo": residuo, "somma_rate_pre": somma_residui, "tagliate": tagliate, "rimosse": rimosse, "cresciute": 0}
-
-
 @router.post("/{contract_id}/reopen", response_model=ContractResponse)
 def reopen_contract(
     contract_id: int,
@@ -1575,189 +1490,14 @@ def reopen_contract(
     session: Session = Depends(get_session),
 ):
     """
-    Riapre un contratto chiuso (G7.4 → G8.1/ADR-019: **ricalcola-e-instrada, NON-distruttivo**).
-
-    State-driven: porta il contratto allo stato CORRETTO rispetto alla cassa reale, qualunque sia il
-    `motivo_chiusura`. È il path esplicito che la reopen-allowlist G7.2 demanda (vs l'auto-riapertura
-    credit/payment-driven, bloccata per le chiusure non-COMPLETAMENTO). Copre i muti del runbook G7.6.
-
-    **PRINCIPIO ADR-019 — la cassa mossa non si tocca mai.** A differenza del vecchio "inverso esatto"
-    (G7.4/G7.9/G7.10, che soft-cancellava i CashMovement di terminazione scavalcando la protezione del
-    mastro e facendo SPARIRE reddito incassato), reopen ora LASCIA FERME le scritture di cassa (fatti
-    datati, fiscalmente intoccabili) e RICALCOLA: la cassa di terminazione che resta diventa
-    semplicemente pagamento/rimborso sul contratto riaperto, e `residuo()` net-aware (G8.1) la riflette.
-
-    Operazione atomica (UN solo commit):
-    A) Bouncer 404 → B) guard `chiuso==True` else 400
-    R1) Cassa IMMUTABILE: i `CashMovement` USCITA `RIMBORSO_CONTRATTO` e ENTRATA
-        `INCASSO_CONGUAGLIO_CONTRATTO` NON si toccano; `totale_versato` invariato (`totale_rimborsato`
-        cresce SOLO per il fold della fotografia netta, R2-bis — mai per una cancellazione di cassa).
-    R2) Storno inverso: `quota_stornata = 0`.
-    R2-bis) FOLD fotografia netta (D1 forma-d): l'erogato dei wallet annullati (R4), cassa già uscita
-        a livello cliente (`id_contratto=None`), RIENTRA in `totale_rimborsato` → il residuo() net-aware
-        lo include PER COSTRUZIONE. Chiude Bug-1 (il wallet erogato non sparisce più alla riapertura).
-    R3) Receivable trainer (G7.10): `crediti_terminazione` del contratto → `ANNULLATO` (non-cash). Gli
-        eventuali incassi parziali RESTANO (R1) e diventano pagamenti sul contratto.
-    R4) Wallet cliente (ADR-020): i `crediti_cliente` di questa terminazione → `ANNULLATO` (G8.1 Step 3);
-        l'erogato già in cassa viene riassorbito (R2-bis), il residuo non-erogato si annulla senza cassa.
-    R5) Ripristino rate: `deleted_at=None` SOLO sulle rate marcate `chiusa_da_terminazione` (M1, non
-        resuscita le cancellate a mano / dal piano rigenerato). Marker azzerato. Le SALDATE intatte (B-3).
-    R5-bis) Riallineo piano rate al residuo net-aware (G8.1.1/F2, `_reconcile_rate_plan`): eccedenza
-        tagliata cronologicamente, sotto-copertura → "da pianificare". `stato_pagamento` ricalcolato (F4).
-    R6) `chiuso=False` + `motivo_chiusura=None` + `data_chiusura=None`.
-    R7) Residuo: ricalcolato AUTOMATICAMENTE dal SSoT net-aware (`P − netto − 0`); la cassa che resta
-        (rimborso uscito, conguaglio incassato, wallet erogato riassorbito) è già dentro `netto`.
-    G) Audit (cosa resta / cosa si annulla) + transizione `chiuso` (motivo riapertura_esplicita).
-
-    NB: l'àncora `totale_versato == Σ ENTRATA` regge invariata. L'àncora del rimborso si raffina a
-    `totale_rimborsato == Σ USCITA RIMBORSO[id_contratto] + Σ erogato wallet RIASSORBITO` (D1 forma-d):
-    il fold R2-bis aggiunge cassa-cliente (`id_contratto=None`) che il rimborso diretto non conta — è
-    l'invariante I5 verificato da `assert_contract_invariants`. Nessuna cancellazione di cassa (ADR-019).
-    R8 (rinnovo vivo) è esposto da `GET /reopen-preview`, che il FE usa per avvisare/confermare.
+    Riapre un contratto chiuso (G7.4 → ADR-019 → ADR-022/G9.3): il corpo vive nel TransitionExecutor
+    `transitions.execute_reopen` (ricalcola-e-instrada NON-distruttivo: cassa immutabile, storno
+    revertito via terza penna, receivable/wallet annullati, fold R2-bis, rate ripristinate+riconciliate,
+    audit, sensore, commit atomico). Qui restano SOLO bouncer + delega + serialize (AC-G93-1).
     """
-    # A) Bouncer ownership (404 mai 403)
+    # A) Bouncer ownership (404 mai 403) — routing concern, resta nel router (D-C2)
     contract = _bouncer_contract_owned(session, contract_id, trainer.id)
-
-    # B) Guard: solo un contratto chiuso si riapre
-    if not contract.chiuso:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Il contratto non è chiuso")
-
-    old_chiuso = contract.chiuso
-    old_motivo = contract.motivo_chiusura
-    old_rimborsato = contract.totale_rimborsato or 0
-    old_versato = contract.totale_versato or 0
-    old_quota = contract.quota_stornata or 0
-
-    # R1) Cassa IMMUTABILE (ADR-019 D-CASSA-IMMUTABILE): NON si soft-cancellano i CashMovement di
-    #   terminazione (USCITA RIMBORSO_CONTRATTO, ENTRATA INCASSO_CONGUAGLIO_CONTRATTO) e NON si
-    #   decrementano `totale_versato`/`totale_rimborsato`. Restano fatti datati, fiscalmente intoccabili:
-    #   il rimborso uscito e il conguaglio incassato diventano rimborso/pagamento sul contratto riaperto,
-    #   e il residuo() net-aware (G8.1) li riflette da sé (R7). Le ancore Σ ENTRATA/USCITA reggono.
-    #   (Pre-G8.1 qui c'erano le gambe C/C-bis che CANCELLAVANO la cassa — rimosse, ADR-019.)
-
-    # R3) Receivable trainer (G7.10): il differito non-cash si chiude → ANNULLATO. Gli incassi parziali
-    #   già registrati (ENTRATA INCASSO_CONGUAGLIO) RESTANO (R1) e contano come pagamento sul contratto.
-    crediti_annullati = 0
-    open_credits = session.exec(
-        select(CreditoTerminazione).where(
-            CreditoTerminazione.id_contratto == contract.id,
-            CreditoTerminazione.stato != "ANNULLATO",
-            CreditoTerminazione.deleted_at == None,
-        )
-    ).all()
-    for cr in open_credits:
-        cr.stato = "ANNULLATO"
-        cr.data_chiusura = date.today()
-        session.add(cr)
-        log_audit(session, "credito_terminazione", cr.id, "UPDATE", trainer.id, {
-            "stato": {"old": "APERTO/SALDATO", "new": "ANNULLATO"},
-        })
-        crediti_annullati += 1
-
-    # R4) Wallet cliente (ADR-020 / D1 forma-d, FOTOGRAFIA NETTA): i crediti_cliente di QUESTA terminazione
-    #   → ANNULLATO. La fotografia (PASSO 1) tratta rimborso, conguaglio e wallet erogato come TERMINI DELLA
-    #   STESSA SOMMA, non casi speciali per-provenienza: la parte GIÀ EROGATA in cassa (USCITA
-    #   id_contratto=None, che RESTA — R1) viene RIASSORBITA nel contratto riaperto (fold in R2-bis) → il
-    #   cliente risulta aver riavuto quel denaro, che torna dovuto sul contratto. La parte non-erogata
-    #   (residuo del wallet) si annulla senza muovere denaro. Chiude Bug-1 (audit): il wallet erogato NON
-    #   sparisce più dalla posizione. La cassa NON si tocca (ADR-019): è ri-attribuzione gestionale.
-    wallet_annullati = 0
-    wallet_erogato_riassorbito = 0.0
-    open_wallets = session.exec(
-        select(CreditoCliente).where(
-            CreditoCliente.id_contratto_origine == contract.id,
-            CreditoCliente.stato != "ANNULLATO",
-            CreditoCliente.deleted_at == None,
-        )
-    ).all()
-    for w in open_wallets:
-        wallet_erogato_riassorbito += (w.importo_erogato or 0)  # cassa già uscita → rientra nella posizione
-        w.stato = "ANNULLATO"
-        w.data_chiusura = date.today()
-        session.add(w)
-        log_audit(session, "credito_cliente", w.id, "UPDATE", trainer.id, {
-            "stato": {"old": "APERTO/SALDATO", "new": "ANNULLATO"},
-        })
-        wallet_annullati += 1
-    wallet_erogato_riassorbito = round(wallet_erogato_riassorbito, 2)
-
-    # R2) Storno inverso: azzera la quota → il residuo() net-aware si ricalcola da sé (R7).
-    #     G9.2b: via terza penna — riga −quota nel ledger rettifiche + colonna a 0 in UN atto (quota == Σ).
-    #     Nessuna riga-zero nel ledger append-only (se non c'è storno da revertire).
-    if old_quota:
-        post_adjustment(
-            session, contract=contract, importo_firmato=-old_quota,
-            causale=CAUSALE_REVERSAL_REOPEN, data_effettiva=date.today(), trainer_id=trainer.id,
-        )
-    else:
-        contract.quota_stornata = 0  # normalizza l'eventuale None legacy (nessuno storno da revertire)
-
-    # R2-bis) FOLD della fotografia netta (D1 forma-d, chiude Bug-1): la cassa-wallet già erogata
-    #   (id_contratto=None) viene RIASSORBITA in `totale_rimborsato` → il residuo() net-aware (P − netto)
-    #   la include PER COSTRUZIONE sul contratto riaperto, senza ramo speciale. NON è una nuova USCITA (la
-    #   cassa resta intatta, ADR-019). Σ-ledger di I5: il rimborso diretto resta == Σ USCITA RIMBORSO
-    #   [id_contratto], il delta di `totale_rimborsato` è coperto dall'erogato dei wallet ora ANNULLATO.
-    #   Deve precedere `_reconcile_rate_plan` (il piano si riallinea al residuo già comprensivo del fold).
-    contract.totale_rimborsato = round(old_rimborsato + wallet_erogato_riassorbito, 2)
-
-    # E) Ripristino SOLO le rate marcate da terminate (M1, inverso esatto; le SALDATE non erano toccate, B-3)
-    rate_ripristinate = 0
-    deleted_rates = session.exec(
-        select(Rate).where(
-            Rate.id_contratto == contract.id,
-            Rate.stato.in_(["PENDENTE", "PARZIALE"]),
-            Rate.deleted_at != None,
-            Rate.chiusa_da_terminazione == True,  # M1: SOLO le rate eliminate da QUESTO terminate
-        )
-    ).all()
-    for r in deleted_rates:
-        r.deleted_at = None
-        r.chiusa_da_terminazione = False  # M1: marker consumato (inverso esatto del terminate)
-        session.add(r)
-        log_audit(session, "rate", r.id, "RESTORE", trainer.id)
-        rate_ripristinate += 1
-
-    # R5-bis) G8.1.1/F2: riallinea il piano rate al residuo() net-aware ricalcolato (la cassa che resta ha
-    #   cambiato il residuo → le rate ripristinate AS-IS potrebbero non combaciare). Auto-realign (founder).
-    reconcile = _reconcile_rate_plan(session, contract, trainer.id)
-
-    # Ricalcola stato_pagamento net-aware (F4): il reopen ha cambiato il residuo. SSoT unico (de-dup).
-    contract.stato_pagamento = cstate.recompute_stato_pagamento(contract)
-
-    # F) Riapertura: stato terminale azzerato
-    contract.chiuso = False
-    contract.motivo_chiusura = None
-    contract.data_chiusura = None
-    session.add(contract)
-
-    # G) Audit atomico + transizione `chiuso` (la logga log_contract_lifecycle_transition, no doppio).
-    #   ADR-019: la cassa resta (rimborso/versato INVARIATI) → si registrano i fatti datati preservati
-    #   accanto a ciò che si annulla (storno, receivable, rate ripristinate).
-    log_audit(session, "contract", contract.id, "UPDATE", trainer.id, {
-        "motivo_chiusura": {"old": old_motivo, "new": None},
-        "chiuso": {"old": True, "new": False},
-        "quota_stornata": {"old": old_quota, "new": 0},
-        "rate_ripristinate": rate_ripristinate,
-        "rate_riallineate": reconcile["tagliate"] + reconcile["rimosse"] + reconcile["cresciute"],  # F2: piano riconciliato al residuo (taglio/crescita)
-        "residuo_dopo": reconcile["residuo"],
-        "crediti_differiti_annullati": crediti_annullati,
-        "wallet_cliente_annullati": wallet_annullati,
-        # D1 forma-d: l'erogato dei wallet annullati rientra nella posizione (fold net-aware, R2-bis).
-        "wallet_erogato_riassorbito": wallet_erogato_riassorbito,
-        "totale_rimborsato": {"old": round(old_rimborsato, 2), "new": contract.totale_rimborsato},
-        "totale_versato_preservato": round(old_versato, 2),       # ADR-019: cassa (versato) NON toccata
-    })
-    log_contract_lifecycle_transition(
-        session,
-        contract,
-        old_chiuso=old_chiuso,
-        motivo="riapertura_esplicita",
-    )
-    # PASSO 2 (osservabilità, predisposta per 409): la posizione ricalcolata deve rispettare gli invarianti.
-    log_invariant_violations(session, contract, motivo="reopen")
-    session.commit()
-    session.refresh(contract)
-
+    contract = execute_reopen(session, contract=contract, trainer=trainer)
     return _to_response(contract)
 
 
