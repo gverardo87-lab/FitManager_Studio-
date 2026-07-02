@@ -210,3 +210,78 @@ def test_sync_schema_multiple_missing_columns(test_engine):
     assert len(added_cols) >= 2
     assert any("indirizzo" in m for m in added_cols)
     assert any("codice_fiscale" in m for m in added_cols)
+
+
+# ── G9.2b (ADR-022 Addendum I): backfill quota_stornata legacy → rettifiche_contratto ──
+
+def _seed_contract_con_quota(engine, *, quota, data_chiusura="2026-05-10"):
+    """Contratto legacy con quota_stornata scritta a mano (pre-terza-penna), zero rettifiche."""
+    with engine.connect() as conn:
+        conn.execute(text(
+            "INSERT INTO trainers (email, nome, cognome, hashed_password, is_active, created_at, saldo_iniziale_cassa) "
+            "VALUES ('t@t.it', 'T', 'T', 'x', 1, '2026-01-01', 0)"
+        ))
+        conn.execute(text(
+            "INSERT INTO clienti (trainer_id, nome, cognome, stato) VALUES (1, 'C', 'C', 'Attivo')"
+        ))
+        conn.execute(text(
+            "INSERT INTO contratti (trainer_id, id_cliente, prezzo_totale, totale_versato, quota_stornata, "
+            "chiuso, data_chiusura, motivo_chiusura, crediti_usati, acconto, totale_rimborsato, stato_pagamento) "
+            "VALUES (1, 1, 1000, 750, :quota, 1, :dc, 'TERMINAZIONE_RIMBORSO', 0, 0, 0, 'SALDATO')"
+        ), {"quota": quota, "dc": data_chiusura})
+        conn.commit()
+
+
+def test_backfill_quota_stornata_crea_riga_legacy(test_engine):
+    """Legacy quota>0 senza rettifiche → 1 riga BACKFILL_LEGACY di pari importo; colonna intatta."""
+    _seed_contract_con_quota(test_engine, quota=250.0)
+    messages = sync_schema(test_engine)
+    assert any("BACKFILL_LEGACY" in m for m in messages)
+    with test_engine.connect() as conn:
+        rows = conn.execute(text(
+            "SELECT id_contratto, importo, causale, data_effettiva, trainer_id FROM rettifiche_contratto"
+        )).fetchall()
+        assert len(rows) == 1
+        assert rows[0][0] == 1 and rows[0][1] == 250.0 and rows[0][2] == "BACKFILL_LEGACY"
+        assert rows[0][3] == "2026-05-10"      # data_effettiva = data_chiusura del contratto
+        assert rows[0][4] == 1                 # trainer_id dal contratto (tenant-isolation)
+        # Additivo: la colonna non si tocca — l'ancora quota == Σ rettifiche vale da subito
+        quota = conn.execute(text("SELECT quota_stornata FROM contratti WHERE id=1")).fetchone()[0]
+        assert quota == 250.0
+
+
+def test_backfill_idempotente_rerun_noop(test_engine):
+    """Secondo boot: il guard zero-rettifiche rende il backfill un no-op (mai doppia riga)."""
+    _seed_contract_con_quota(test_engine, quota=250.0)
+    sync_schema(test_engine)
+    messages2 = sync_schema(test_engine)
+    assert not any("BACKFILL_LEGACY" in m for m in messages2)
+    with test_engine.connect() as conn:
+        n = conn.execute(text("SELECT COUNT(*) FROM rettifiche_contratto")).fetchone()[0]
+        assert n == 1
+
+
+def test_backfill_skip_contratto_gia_con_rettifiche(test_engine):
+    """Un contratto che HA già rettifiche non viene backfillato (la sua quota deriva dai posting)."""
+    _seed_contract_con_quota(test_engine, quota=300.0)
+    with test_engine.connect() as conn:
+        conn.execute(text(
+            "INSERT INTO rettifiche_contratto (trainer_id, id_contratto, importo, causale, data_effettiva) "
+            "VALUES (1, 1, 300.0, 'STORNO_TERMINAZIONE', '2026-05-10')"
+        ))
+        conn.commit()
+    messages = sync_schema(test_engine)
+    assert not any("BACKFILL_LEGACY" in m for m in messages)
+    with test_engine.connect() as conn:
+        n = conn.execute(text("SELECT COUNT(*) FROM rettifiche_contratto")).fetchone()[0]
+        assert n == 1
+
+
+def test_backfill_skip_quota_zero(test_engine):
+    """quota_stornata == 0 → nessuna riga (il backfill copre solo il legacy con storno reale)."""
+    _seed_contract_con_quota(test_engine, quota=0.0)
+    messages = sync_schema(test_engine)
+    assert not any("BACKFILL_LEGACY" in m for m in messages)
+    with test_engine.connect() as conn:
+        n = conn.execute(text("SELECT COUNT(*) FROM rettifiche_contratto")).fetchone()[0]
+        assert n == 0

@@ -16,6 +16,7 @@ Garanzie:
 from __future__ import annotations
 
 import logging
+from datetime import date
 from typing import Any, Callable
 
 from sqlalchemy import text
@@ -369,6 +370,51 @@ def _drop_stale_catalog_tables(db_engine: Engine) -> list[str]:
     return messages
 
 
+def _backfill_quota_stornata_rettifiche(db_engine: Engine) -> list[str]:
+    """Backfill idempotente (G9.2b, ADR-022 Addendum I): dà una derivazione ledger al
+    `quota_stornata` legacy scritto a mano PRIMA della terza penna `post_adjustment`.
+
+    Per ogni contratto con `quota_stornata > 0.009` e ZERO rettifiche → 1 riga
+    `BACKFILL_LEGACY` di pari importo (`data_effettiva = data_chiusura`, fallback oggi).
+    Da lì l'àncora `quota_stornata == Σ importo[rettifiche_contratto]` vale anche sul
+    legacy. Additivo (colonna e `residuo()` intatti), idempotente (guard zero-rettifiche
+    → re-run no-op), raw SQL (gira in frozen, come `_fix_cross_db_fk`). Nessun filtro
+    `deleted_at` sui contratti: l'àncora è universale, vale anche sui soft-deleted.
+    """
+    messages: list[str] = []
+    with db_engine.connect() as conn:
+        existing = {row[0] for row in conn.execute(text(
+            "SELECT name FROM sqlite_master WHERE type='table'"
+        )).fetchall()}
+        if not {"contratti", "rettifiche_contratto"} <= existing:
+            return []  # tabella non ancora creata (la crea create_db_and_tables al boot, prima di sync)
+
+        candidates = conn.execute(text(
+            """
+            SELECT c.id, c.trainer_id, c.quota_stornata, COALESCE(c.data_chiusura, :today)
+            FROM contratti c
+            WHERE c.quota_stornata > 0.009
+              AND NOT EXISTS (SELECT 1 FROM rettifiche_contratto r WHERE r.id_contratto = c.id)
+            """
+        ), {"today": date.today().isoformat()}).fetchall()
+        for cid, tid, quota, data_eff in candidates:
+            conn.execute(text(
+                """
+                INSERT INTO rettifiche_contratto
+                    (trainer_id, id_contratto, importo, causale, data_effettiva, note)
+                VALUES (:tid, :cid, :importo, 'BACKFILL_LEGACY', :data_eff,
+                        'Backfill quota_stornata legacy pre-G9.2b (ADR-022 Addendum I)')
+                """
+            ), {"tid": tid, "cid": cid, "importo": quota, "data_eff": data_eff})
+            msg = f"rettifiche_contratto — backfill BACKFILL_LEGACY contratto {cid} (+{quota})"
+            messages.append(msg)
+            logger.info("  schema_sync: %s", msg)
+        if messages:
+            conn.commit()
+
+    return messages
+
+
 def sync_schema(db_engine: Engine) -> list[str]:
     """
     Confronta modelli ORM vs DB reale e aggiunge colonne mancanti.
@@ -450,6 +496,11 @@ def sync_schema(db_engine: Engine) -> list[str]:
         _set_db_version(connection, app_version)
 
         connection.commit()
+
+    # Backfill G9.2b: quota_stornata legacy → 1 riga BACKFILL_LEGACY (idempotente, additivo).
+    # DEVE seguire la column-sync: su un DB pre-G7.0 la colonna quota_stornata nasce QUI sopra
+    # (ALTER TABLE) — eseguirlo prima crasherebbe il boot con "no such column".
+    messages.extend(_backfill_quota_stornata_rettifiche(db_engine))
 
     if columns_added == 0:
         logger.info("  schema_sync: schema up to date (%d tables checked)", tables_checked)
