@@ -29,6 +29,7 @@ from api.config import (
 )
 import api.models.share_token  # noqa: F401 — registra ShareToken nel metadata SQLModel
 import api.models.nutrition  # noqa: F401 — registra modelli nutrition nel metadata SQLModel
+import api.models.rettifica_contratto  # noqa: F401 — registra RettificaContratto nel metadata SQLModel (G9.2b)
 
 logger = logging.getLogger("fitmanager.database")
 

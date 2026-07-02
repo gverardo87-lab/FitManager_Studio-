@@ -22,6 +22,7 @@ from .exercise_log import ExerciseLog
 from .communication_log import CommunicationLog
 from .credito_terminazione import CreditoTerminazione
 from .credito_cliente import CreditoCliente
+from .rettifica_contratto import RettificaContratto
 
 __all__ = [
     "Trainer",
@@ -55,4 +56,5 @@ __all__ = [
     "CommunicationLog",
     "CreditoTerminazione",
     "CreditoCliente",
+    "RettificaContratto",
 ]
