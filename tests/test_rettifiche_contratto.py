@@ -236,3 +236,25 @@ def test_wiring_terminate_reopen_ri_terminate(client, auth_headers, sample_clien
     assert round(contract.quota_stornata, 2) == 900.0                 # stato identico al 1° terminate
     assert len(_causali(session, c["id"])) == 3                       # +900, −900, +900 (append-only)
     assert round(cstate.residuo(contract), 2) == 0.0
+
+
+# ── G9.2b Stage 2 — project_columns_from_ledger espone anche lo storno (Σ rettifiche) ──
+
+def test_stage2_project_columns_stornato(client, auth_headers, sample_client, session):
+    """La proiezione deriva quota_stornata dal ledger rettifiche: colonna == proiezione ad ogni passo."""
+    from api.services.financial.ledger import project_columns_from_ledger
+    c = _contract(client, auth_headers, sample_client["id"])
+    _complete_pt(session, sample_client["id"], c["id"], 4)
+    client.post(f"/api/contracts/{c['id']}/terminate", json={
+        "azione_credito_trainer": "RINUNCIA_ESPRESSA", "note": "x",
+    }, headers=auth_headers)
+    session.expire_all()
+    contract = session.get(Contract, c["id"])
+    proj = project_columns_from_ledger(session, c["id"])
+    assert proj["stornato"] == round(contract.quota_stornata, 2) == 900.0
+    r = client.post(f"/api/contracts/{c['id']}/reopen", headers=auth_headers)
+    assert r.status_code == 200
+    session.expire_all()
+    contract = session.get(Contract, c["id"])
+    proj = project_columns_from_ledger(session, c["id"])
+    assert proj["stornato"] == round(contract.quota_stornata, 2) == 0.0

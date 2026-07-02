@@ -146,12 +146,13 @@ def post_adjustment(
 
 
 def project_columns_from_ledger(session: Session, contract_id: int) -> dict:
-    """Deriva le colonne (versato, rimborsato) di un contratto dal SOLO libro mastro — inverso per-contratto
-    della `/reconciliation` (G9.2-a, ADR-022 D-LEDGER-LOAD-BEARING). È la derivazione UNICA che rende le
-    colonne denormalizzate PROIEZIONI verificabili del ledger:
+    """Deriva le colonne (versato, rimborsato, stornato) di un contratto dai SOLI libri mastro — inverso
+    per-contratto della `/reconciliation` (G9.2-a/b, ADR-022 D-LEDGER-LOAD-BEARING). È la derivazione UNICA
+    che rende le colonne denormalizzate PROIEZIONI verificabili dei ledger:
 
         versato    = Σ ENTRATA[id_contratto]
         rimborsato = Σ USCITA RIMBORSO[id_contratto] + Σ erogato wallet ANNULLATO[origine]  (I5 raffinata, D1 forma-d)
+        stornato   = Σ importo[rettifiche_contratto]  (ledger non-cash, G9.2b — ADR-022 Addendum I)
 
     PURA-lettura (solo SELECT). Usata come asserzione (oggi log-only nel sensore; gate duro in G9.4) e come
     fonte unica che `/reconciliation` e l'enforcement chiameranno."""
@@ -179,4 +180,14 @@ def project_columns_from_ledger(session: Session, contract_id: int) -> dict:
             )
         ).all()
     )
-    return {"versato": versato, "rimborsato": round(rimborsi_diretti + wallet_riassorbito, 2)}
+    stornato = round(sum(r.importo for r in session.exec(
+        select(RettificaContratto).where(
+            RettificaContratto.id_contratto == contract_id,
+            RettificaContratto.deleted_at == None,  # noqa: E711
+        )
+    ).all()), 2)
+    return {
+        "versato": versato,
+        "rimborsato": round(rimborsi_diretti + wallet_riassorbito, 2),
+        "stornato": stornato,
+    }

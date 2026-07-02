@@ -71,3 +71,14 @@ def log_invariant_violations(session: Session, contract: Contract, *, motivo: st
             "Ancora ledger-versato violata dopo '%s' sul contratto %s: totale_versato %.2f ≠ Σ ENTRATA %.2f",
             motivo, contract.id, contract.totale_versato or 0, proj["versato"],
         )
+
+    # G9.2-b Stage 2: ancora ledger-STORNO (`quota_stornata == Σ importo[rettifiche_contratto]`, ADR-022
+    # Addendum I D-ANCORA-STORNO). Terza ancora dopo versato/rimborso: sui path via terza penna è vera per
+    # costruzione → una violazione segnala un write fuori-penna o drift legacy pre-backfill. Log-only
+    # (gate duro in G9.4). NB: i test che scrivono `quota_stornata` a mano (test_lifecycle_audit) la
+    # accendono — atteso, non sorpresa (SPEC_G9 §B.6).
+    if abs((contract.quota_stornata or 0) - proj["stornato"]) > 0.01:
+        logger.warning(
+            "Ancora ledger-storno violata dopo '%s' sul contratto %s: quota_stornata %.2f ≠ Σ rettifiche %.2f",
+            motivo, contract.id, contract.quota_stornata or 0, proj["stornato"],
+        )

@@ -258,3 +258,29 @@ def test_g92a_sensore_logga_drift_versato_vs_ledger(client, auth_headers, sample
     with caplog.at_level(logging.WARNING, logger=GATE_LOGGER):
         log_invariant_violations(session, contract, motivo="dopo_drift")
     assert "ledger-versato" in caplog.text, caplog.text
+
+
+# ── G9.2b Stage 2: il sensore osserva anche l'ancora ledger-STORNO (quota_stornata == Σ rettifiche) ──
+
+def test_g92b_sensore_logga_drift_storno_vs_ledger(client, auth_headers, sample_client, session, caplog):
+    """Storno penna-scritto: quota == Σ rettifiche (nessun log). Drift a mano → warning ledger-storno."""
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=200.0, crediti=10)
+    # 0 sedute erogate → esito CREDITO_CLIENTE (200): terminazione con rimborso pieno.
+    # Storno via terza penna = residuo_pre (800) + rimborso_out (200) = 1000.
+    r = client.post(f"/api/contracts/{c['id']}/terminate", json={
+        "metodo_rimborso": "CONTANTI",
+    }, headers=auth_headers)
+    assert r.status_code == 200, r.text
+    session.expire_all()
+    contract = session.get(Contract, c["id"])
+    with caplog.at_level(logging.WARNING, logger=GATE_LOGGER):
+        log_invariant_violations(session, contract, motivo="baseline")
+    assert "ledger-storno" not in caplog.text   # by-construction: quota == Σ rettifiche (terza penna)
+
+    contract.quota_stornata = (contract.quota_stornata or 0) + 50.0   # write fuori-penna (drift)
+    session.add(contract)
+    session.commit()
+    caplog.clear()
+    with caplog.at_level(logging.WARNING, logger=GATE_LOGGER):
+        log_invariant_violations(session, contract, motivo="dopo_drift")
+    assert "ledger-storno" in caplog.text, caplog.text
