@@ -2604,3 +2604,38 @@ grep-guard ADR-016/017/018/019 vivi e non aggirati · V5 ancora-sensore classifi
 finanziario è ora: implementazione → full suite → verifier adversariale → push.**
 
 ---
+## 2026-07-02 (sessione 3) — G9.3 TransitionExecutor + FSM + auto-close unificato (CHIUDE G9.3)
+
+Il gate più strutturale di G9: il write-model delle transizioni contrattuali ha ora UNA casa. Metodo
+consolidato: design-record PRIMA del codice (**Appendice C** di SPEC_G9, `757091b` — decisioni D-C1..D-C7
+code-grounded), poi strangler-fig una transizione alla volta. **4 commit, branch verde a ognuno:**
+
+- `757091b` **design** — Appendice C implementation-ready. Decisioni chiave: comando = schema Pydantic
+  esistente (no DTO parallelo) · bouncer nel router, guard di dominio nell'executor · HTTPException resta
+  (conversione = G9.4) · sensore PRE-commit (il gate G9.4 deve poter fare ROLLBACK — l'idea post-commit di
+  A.1-ter valeva per l'osservazione pura) · `_audit` importabile da un service senza cicli (routers/__init__
+  vuoto, debito di layering annotato) · direzioni per-caller sull'auto-close (corner 1-cent-unpay).
+- `44d0494` **G9.3a** — `api/services/financial/transitions.py`: `execute_terminate` (~247 righe rilocate
+  quasi-verbatim) + i 4 helper settlement (pubblici: li consuma anche `settlement_preview`, che resta nel
+  router). Router terminate → 19 righe.
+- `43fa250` **G9.3b** — `execute_reopen` (~190 righe) + `reconcile_rate_plan` pubblico (lo consumano
+  execute_reopen E incassa_residuo: la dipendenza si inverte, router→service). Router reopen → 18 righe.
+- `6a2aaf9` **G9.3c/d** — **FSM esplicita** di `(chiuso, motivo_chiusura)` nel docstring del modulo
+  (tabella stati×transizioni, design-record eseguibile) + `AUTO_REOPEN_ALLOWLIST`/`puo_auto_riaprire`
+  (la reopen-allowlist G7.2 vive in UN posto) + **`sync_contract_chiuso` UNIFICATO**: le 3 copie
+  (agenda._sync bidirezionale · pay_rate E-auto inline solo-close · unpay_rate inline solo-reopen)
+  convergono su UN percorso logico con **direzioni per-caller** (D-C6: la condizione è una sola, la
+  direzione permessa è policy del trigger — un sync bidirezionale su unpay potrebbe CHIUDERE in un corner
+  patologico, comportamento nuovo vietato dal contratto behavior-preserving). Audit per-path preservato
+  (completamento / riapertura_pagamento / riapertura_crediti). +6 test AC-G93-3/FSM/direzioni.
+
+**AC verificati:** AC-G93-1 router 19/18 righe (≤~40) · AC-G93-2 suite verde al primo passaggio a ogni
+commit (unico ritocco test: lo spy del sensore segue il corpo nel nuovo modulo — target monkeypatch,
+non comportamento) · AC-G93-3 payment-driven e credit-driven → stesso stato terminale (test) · AC-G93-4
+sensore = post-condizione di ogni executor (spy test).
+
+**Verifica.** Suite full **777 passed / 0 xfailed** (771 + 6), check-all verde a ogni commit.
+**⏭️ Prossimo: G9.4** (invarianti → 409+rollback dietro flag `INVARIANT_ENFORCEMENT` + ritiro dei 4
+grep-guard → test semantici). Poi G9.5 Hypothesis, G9.6 Money (differito).
+
+---

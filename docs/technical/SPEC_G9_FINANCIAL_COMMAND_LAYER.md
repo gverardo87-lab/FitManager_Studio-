@@ -2,11 +2,11 @@
 
 **Tipo:** specifica prescrittiva (cosa-deve-essere-vero; silente sul come dove possibile). Bridge Chat→Code.
 **Data:** 2026-06-30 · **Branch:** `FitManager_Studio`
-**Stato:** 🟢 **G9.0 + G9.1 + G9.2 FATTI E CHIUSI** (G9.2b Stage 1 `1795425`→`d0c01f8` + Stage 2 `8a6902c`,
-2026-07-02, suite 771; verifier financial-invariant-verifier = PASS su Stage 1). Prossimo: **G9.3
-TransitionExecutor**. Design di dettaglio: **G9.0 → Appendice A** (sensore totale-per-costruzione [niente
-`except Exception`, A.1-bis] + agganci + reconciliation bidirezionale + quick-win + Reperto #1 risolto),
-**G9.2b → Appendice B** (DEC-1/2/3).
+**Stato:** 🟢 **G9.0 → G9.3 FATTI E CHIUSI** (G9.2: Stage 1 `1795425`→`d0c01f8` + Stage 2 `8a6902c`; G9.3:
+design `757091b` + a `44d0494` + b `43fa250` + c/d `6a2aaf9`, 2026-07-02, suite **777**; verifier PASS su
+G9.2). Prossimi: **G9.4 enforcement** (409+flag, ritiro grep-guard) · G9.5 Hypothesis · G9.6 Money (differito).
+Design di dettaglio: **G9.0 → Appendice A**, **G9.2b → Appendice B** (DEC-1/2/3), **G9.3 → Appendice C**
+(D-C1..D-C7, FSM, direzioni per-caller).
 **Blocco proposto:** **G9** — elevazione del write-model del dominio contrattuale-economico. Ratifica
 `ADR-022`. Sette gate sequenziali, branch sempre rilasciabile.
 **Mappa di verità:** `docs/adr/ADR-022-financial-command-layer-ledger-load-bearing.md` ·
@@ -169,7 +169,7 @@ invariante×transizione verde (incl. sequenze composte terminate→incassa→reo
 
 ---
 
-## G9.3 — TransitionExecutor + FSM di chiusura esplicita
+## ✅ G9.3 — TransitionExecutor + FSM di chiusura esplicita (FATTO 2026-07-02: `757091b` design + `44d0494`/`43fa250`/`6a2aaf9`; suite 777; AC-G93-1 terminate 19 righe / reopen 18)
 
 `api/services/financial/transitions.py`: command-handler tipati per transizione su un comando DTO + la penna
 di G9.1. Spostare i corpi di **terminate** (`contracts.py:1573-1828`) e **reopen** (`:1916-2098`) in
