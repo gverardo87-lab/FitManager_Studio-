@@ -27,7 +27,7 @@ import {
 import { useUpdateEvent, type EventHydrated } from "@/hooks/useAgenda";
 import { surfaceRoleClassName } from "@/components/ui/surface-role";
 import { CATEGORY_COLORS, STATUS_COLORS } from "@/lib/dashboard-helpers";
-import { EVENT_STATUSES } from "@/types/api";
+import { EVENT_STATUSES, EVENT_STATUS_LABELS } from "@/types/api";
 
 interface AgendaLiveProps {
   events: EventHydrated[];
@@ -193,7 +193,7 @@ export function AgendaLive({ events, isLoading }: AgendaLiveProps) {
                         <SelectContent>
                           {EVENT_STATUSES.map((status) => (
                             <SelectItem key={status} value={status} className="text-xs">
-                              {status}
+                              {EVENT_STATUS_LABELS[status]}
                             </SelectItem>
                           ))}
                         </SelectContent>

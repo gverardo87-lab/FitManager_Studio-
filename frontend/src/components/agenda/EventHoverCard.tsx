@@ -16,14 +16,15 @@ import { useState, useRef, useCallback, useEffect, type ReactNode } from "react"
 import { createPortal } from "react-dom";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
-import { CheckCircle2, RotateCcw, X, Clock, User } from "lucide-react";
+import { CheckCircle2, RotateCcw, X, Clock, User, UserX } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import { CATEGORY_LABELS } from "./calendar-setup";
 import type { CalendarEvent } from "./calendar-setup";
-import type { EventCategory } from "@/types/api";
+import type { EventCategory, EventStatus } from "@/types/api";
+import { EVENT_STATUS_LABELS } from "@/types/api";
 
 const CATEGORY_DOT_COLORS: Record<string, string> = {
   PT: "bg-blue-500",
@@ -37,6 +38,9 @@ const STATUS_BADGES: Record<string, { bg: string; text: string }> = {
   Completato: { bg: "bg-emerald-100 dark:bg-emerald-900/40", text: "text-emerald-700 dark:text-emerald-300" },
   Cancellato: { bg: "bg-zinc-100 dark:bg-zinc-800", text: "text-zinc-500" },
   Rinviato: { bg: "bg-amber-100 dark:bg-amber-900/40", text: "text-amber-700 dark:text-amber-300" },
+  // G7.8-bis: stati-penale (occupano il credito)
+  Cancellato_Tardivo: { bg: "bg-rose-100 dark:bg-rose-900/40", text: "text-rose-700 dark:text-rose-300" },
+  No_Show: { bg: "bg-red-100 dark:bg-red-900/40", text: "text-red-700 dark:text-red-300" },
 };
 
 interface EventHoverCardProps {
@@ -146,7 +150,7 @@ export function EventHoverCard({ event, onQuickAction, children }: EventHoverCar
                 <span className="text-xs font-semibold">{catLabel}</span>
               </div>
               <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${statusBadge.bg} ${statusBadge.text}`}>
-                {event.stato}
+                {EVENT_STATUS_LABELS[event.stato as EventStatus] ?? event.stato}
               </span>
             </div>
 
@@ -214,6 +218,19 @@ export function EventHoverCard({ event, onQuickAction, children }: EventHoverCar
                   <Button
                     variant="outline"
                     size="sm"
+                    title="No show (scala il credito)"
+                    className="h-7 w-8 shrink-0 p-0 text-[11px] text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAction("No_Show");
+                    }}
+                  >
+                    <UserX className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    title="Cancella (libera il credito)"
                     className="h-7 w-8 shrink-0 p-0 text-[11px] text-red-500 hover:text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
                     onClick={(e) => {
                       e.stopPropagation();

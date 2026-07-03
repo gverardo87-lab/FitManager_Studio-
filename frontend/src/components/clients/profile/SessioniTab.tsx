@@ -1,6 +1,7 @@
 // src/components/clients/profile/SessioniTab.tsx
 "use client";
 
+import { EVENT_STATUS_LABELS, type EventStatus } from "@/types/api";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
@@ -62,10 +63,12 @@ export function SessioniTab({ clientId }: { clientId: number }) {
                       ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
                       : e.stato === "Cancellato"
                       ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                      : e.stato === "Cancellato_Tardivo" || e.stato === "No_Show"
+                      ? "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-300"
                       : ""
                   }
                 >
-                  {e.stato}
+                  {EVENT_STATUS_LABELS[e.stato as EventStatus] ?? e.stato}
                 </Badge>
               </TableCell>
             </TableRow>

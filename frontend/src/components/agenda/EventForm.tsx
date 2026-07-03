@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
 import { useClients } from "@/hooks/useClients";
-import { EVENT_CATEGORIES, EVENT_STATUSES } from "@/types/api";
+import { EVENT_CATEGORIES, EVENT_STATUSES, EVENT_STATUS_LABELS } from "@/types/api";
 import { CATEGORY_LABELS } from "./calendar-setup";
 import type { CalendarEvent } from "./calendar-setup";
 
@@ -227,7 +227,7 @@ export function EventForm({
                 <SelectContent>
                   {EVENT_STATUSES.map((s) => (
                     <SelectItem key={s} value={s}>
-                      {s}
+                      {EVENT_STATUS_LABELS[s]}
                     </SelectItem>
                   ))}
                 </SelectContent>

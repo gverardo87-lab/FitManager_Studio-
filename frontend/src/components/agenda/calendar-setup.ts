@@ -107,6 +107,9 @@ const STATUS_OVERRIDES: Record<string, StatusStyle> = {
   Completato: { backgroundColor: "#dcfce7", color: "#166534" },
   Cancellato: { backgroundColor: "#f4f4f5", color: "#a1a1aa", opacity: 0.5 },
   Rinviato:   { backgroundColor: "#fef3c7", color: "#92400e" },
+  // G7.8-bis: stati-penale — pienamente visibili (occupano il credito, MAI attenuati come Cancellato)
+  Cancellato_Tardivo: { backgroundColor: "#ffe4e6", color: "#9f1239" },
+  No_Show:            { backgroundColor: "#fee2e2", color: "#991b1b" },
 };
 
 export function getEventStyle(event: CalendarEvent): React.CSSProperties {
@@ -180,6 +183,8 @@ export const STATUS_LEGEND: StatusLegendItem[] = [
   { stato: "Completato",  label: "Completato",  backgroundColor: "#dcfce7", color: "#166534" },
   { stato: "Cancellato",  label: "Cancellato",  backgroundColor: "#f4f4f5", color: "#a1a1aa" },
   { stato: "Rinviato",    label: "Rinviato",    backgroundColor: "#fef3c7", color: "#92400e" },
+  { stato: "Cancellato_Tardivo", label: "Cancell. tardiva", backgroundColor: "#ffe4e6", color: "#9f1239" },
+  { stato: "No_Show",     label: "No show",     backgroundColor: "#fee2e2", color: "#991b1b" },
 ];
 
 export interface CategoryLegendItem {

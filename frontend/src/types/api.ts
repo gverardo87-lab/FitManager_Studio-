@@ -33,8 +33,19 @@ export type MovementType = (typeof MOVEMENT_TYPES)[number];
 export const EVENT_CATEGORIES = ["PT", "SALA", "CORSO", "COLLOQUIO", "PERSONALE"] as const;
 export type EventCategory = (typeof EVENT_CATEGORIES)[number];
 
-export const EVENT_STATUSES = ["Programmato", "Completato", "Cancellato", "Rinviato"] as const;
+export const EVENT_STATUSES = ["Programmato", "Completato", "Cancellato", "Rinviato", "Cancellato_Tardivo", "No_Show"] as const;
 export type EventStatus = (typeof EVENT_STATUSES)[number];
+
+// G7.8-bis (ADR-017 Add. I): label di display — il valore enum resta il contratto col backend
+// (VALID_STATUSES di agenda.py), la UI non mostra mai l'underscore.
+export const EVENT_STATUS_LABELS: Record<EventStatus, string> = {
+  Programmato: "Programmato",
+  Completato: "Completato",
+  Cancellato: "Cancellato",
+  Rinviato: "Rinviato",
+  Cancellato_Tardivo: "Cancell. tardiva",
+  No_Show: "No show",
+};
 
 export const PLAN_FREQUENCIES = ["MENSILE", "SETTIMANALE", "TRIMESTRALE"] as const;
 export type PlanFrequency = (typeof PLAN_FREQUENCIES)[number];
