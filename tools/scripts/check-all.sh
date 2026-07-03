@@ -96,6 +96,28 @@ fi
 
 echo ""
 
+echo "=== Docs: guard ciclo-di-vita (AGENTS.md par.7, riordino 2026-07-03) ==="
+DOCS_FAIL=0
+# La POSIZIONE e' lo STATO: technical/ = solo SSoT evergreen, mai spec/piani.
+# NB: compgen -G, non `ls glob1 glob2` (ls torna nonzero se UN glob non matcha -> guard cieco).
+if compgen -G "docs/technical/SPEC_*.md" >/dev/null || compgen -G "docs/technical/IMPL_PLAN_*.md" >/dev/null; then
+    echo "  FAIL [docs]: SPEC_*/IMPL_PLAN_* in docs/technical/ - le spec vivono in docs/specs/ (aperte) o docs/archive/specs/ (chiuse)."
+    DOCS_FAIL=1
+fi
+# Una spec IMPLEMENTATA non resta tra le vive (fold-back + archiviazione nello stesso commit del gate).
+if grep -l "^\*\*Stato:\*\* ✅" docs/specs/*.md >/dev/null 2>&1; then
+    echo "  FAIL [docs]: spec con Stato IMPLEMENTATA in docs/specs/ - consuntiva e archivia (AGENTS.md par.7)."
+    grep -l "^\*\*Stato:\*\* ✅" docs/specs/*.md | sed 's/^/         /'
+    DOCS_FAIL=1
+fi
+if [ "$DOCS_FAIL" -eq 0 ]; then
+    echo "  OK"
+else
+    FAIL=1
+fi
+
+echo ""
+
 echo "=== Frontend: next build ==="
 if (cd frontend && npx next build); then
     echo "  OK"
