@@ -65,14 +65,20 @@ if ! grep -A4 'CONTRACT_CASH_IN = frozenset' api/services/cash_categories.py | g
     GUARD_FAIL=1
 fi
 
-# ADR-019 — reopen NON-distruttivo "ricalcola-e-instrada": la cassa mossa non si tocca. reopen_contract
+# ADR-019 — reopen NON-distruttivo "ricalcola-e-instrada": la cassa mossa non si tocca. execute_reopen
 #   NON deve soft-cancellare un CashMovement (reintrodurre `m.deleted_at = now` muterebbe periodi gia'
-#   dichiarati e farebbe sparire reddito incassato). Si estrae il corpo di reopen_contract (fino a
-#   reopen_preview) e si verifica che non compaia insieme `CashMovement` + soft-delete `deleted_at = now`.
-#   ('select(CashMovement' = query CODE, non la prosa del docstring che cita CashMovement legittimamente).
-REOPEN_BODY=$(awk '/^def reopen_contract\(/{f=1} f&&/^def reopen_preview\(/{f=0} f' api/routers/contracts.py)
-if printf '%s\n' "$REOPEN_BODY" | grep -q 'select(CashMovement' && printf '%s\n' "$REOPEN_BODY" | grep -qE 'deleted_at *= *now'; then
-    echo "  FAIL [ADR-019]: reopen_contract interroga e soft-cancella un CashMovement — la cassa non si tocca (ricalcola-e-instrada, ADR-019)."
+#   dichiarati e farebbe sparire reddito incassato). G9.3b: il corpo vive in transitions.py (executor) —
+#   si estrae execute_reopen (fino a sync_contract_chiuso) e si verifica che non compaiano insieme
+#   `select(CashMovement` (query CODE, non la prosa dei docstring) + soft-delete `deleted_at = now`.
+#   Anti-vacuita': il corpo estratto DEVE contenere il marker R1 della cassa immutabile — se sparisce
+#   (funzione rinominata/rilocata di nuovo) il guard FALLISCE invece di passare a vuoto (lezione G9.3:
+#   il verifier ha trovato questo guard vacuo dopo la rilocazione contracts.py->transitions.py).
+REOPEN_BODY=$(awk '/^def execute_reopen\(/{f=1} f&&/^def sync_contract_chiuso\(/{f=0} f' api/services/financial/transitions.py)
+if ! printf '%s\n' "$REOPEN_BODY" | grep -q 'Cassa IMMUTABILE'; then
+    echo "  FAIL [ADR-019]: corpo di execute_reopen non trovato in transitions.py (guard vacuo dopo un refactor?) — ripuntare il guard."
+    GUARD_FAIL=1
+elif printf '%s\n' "$REOPEN_BODY" | grep -q 'select(CashMovement' && printf '%s\n' "$REOPEN_BODY" | grep -qE 'deleted_at *= *now'; then
+    echo "  FAIL [ADR-019]: execute_reopen interroga e soft-cancella un CashMovement — la cassa non si tocca (ricalcola-e-instrada, ADR-019)."
     GUARD_FAIL=1
 fi
 
