@@ -556,7 +556,7 @@ def get_contract(
     # Credit breakdown: PT events GROUP BY stato (1 query)
     # [G7.8 DISPLAY-EXEMPT §3.2] Questo GROUP BY conta ANCHE i Rinviato → alimenta `sedute_rinviate`
     #   (display). Resta `!= "Cancellato"` di proposito: NON migrarlo a IN('Programmato','Completato'),
-    #   manderebbe `sedute_rinviate` a zero in silenzio. La SOMMA crediti_usati (~riga 149) esclude i
+    #   manderebbe `sedute_rinviate` a zero in silenzio. La SOMMA crediti_usati (dal SSoT) esclude i
     #   Rinviato; qui NO. Presidiato dal grep-guard ADR-017 in check-all.sh.
     credit_breakdown: dict[str, int] = {}
     credit_rows = session.exec(

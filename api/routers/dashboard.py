@@ -359,7 +359,7 @@ def get_expiring_contracts(
 
     Restituisce dati completi per risoluzione inline dalla Dashboard
     (Sheet con progress bar crediti e countdown). Include credit engine
-    computed-on-read: crediti_usati da COUNT eventi PT non cancellati.
+    computed-on-read: crediti_usati da COUNT eventi PT in STATI_OCCUPAZIONE_CREDITO (SSoT).
 
     Ordinamento: scadenza piu' vicina prima.
     """

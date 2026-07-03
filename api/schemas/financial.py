@@ -537,7 +537,7 @@ class ContractWithRatesResponse(ContractResponse):
     sedute_completate: int = 0    # stato=Completato
     sedute_rinviate: int = 0      # stato=Rinviato
     sedute_penali: int = 0        # G7.8-bis: Cancellato_Tardivo+No_Show (occupano il credito, non svolte)
-    crediti_residui: int = 0      # crediti_totali - programmate - completate
+    crediti_residui: int = 0      # crediti_totali − occupati (SSoT STATI_OCCUPAZIONE_CREDITO, penali incluse)
     sedute_non_erogate_chiusura: int = 0  # M4: prenotate-non-erogate alla chiusura (solo chiuso COMPLETAMENTO)
 
     # ── Stato derivato dal SSoT contract_state (SPEC_VOCABOLARIO §2.2, scheda dettaglio) ──
