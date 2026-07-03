@@ -38,6 +38,7 @@ from api.services.client_avatar_highlights import AvatarContext, compute_highlig
 from api.services.client_freshness import build_measurement_freshness
 from api.services.clinical_readiness import _get_anamnesi_state
 from api.services.safety_engine import extract_client_conditions
+from api.services.contract_state import STATI_OCCUPAZIONE_CREDITO
 
 logger = logging.getLogger(__name__)
 
@@ -428,7 +429,7 @@ def build_avatars_batch(
             Event.id_contratto != None,  # noqa: E711
             Event.categoria == "PT",
             # G7.8: Rinviato libera il credito (ADR-017)
-            Event.stato.in_(["Programmato", "Completato"]),
+            Event.stato.in_(STATI_OCCUPAZIONE_CREDITO),
             Event.deleted_at == None,  # noqa: E711
         ).group_by(Event.id_contratto)
     ).all()

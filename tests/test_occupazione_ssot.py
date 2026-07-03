@@ -1,0 +1,69 @@
+"""G7.8-bis-prep — SSoT del predicato occupazione credito (`STATI_OCCUPAZIONE_CREDITO`).
+
+Enforcement semantico (lezione Giro-2/G9.3: enumerazione manuale dei siti ≠ enforcement): il predicato
+vive in UN simbolo (`contract_state.STATI_OCCUPAZIONE_CREDITO`) e nessun sito può re-inlineare il
+literal — né in ORM (`stato.in_([...])`) né in raw SQL (`IN ('Programmato', ...)`). Questo test è il
+gemello semantico che G9.4 prescrive al posto dei grep-guard testuali: vive nella suite, fallisce sul
+simbolo, non su un pattern di testo in uno script bash.
+"""
+
+from datetime import date, timedelta
+from pathlib import Path
+
+from api.services.contract_state import STATI_OCCUPAZIONE_CREDITO
+
+TODAY = date.today()
+
+API_DIR = Path(__file__).resolve().parent.parent / "api"
+SSOT_FILE = API_DIR / "services" / "contract_state.py"
+
+
+def test_ssot_baseline_g78():
+    """Baseline G7.8 (ADR-017): occupano Programmato+Completato; Rinviato/Cancellato liberano.
+    G7.8-bis estenderà DELIBERATAMENTE questo set (Cancellato_Tardivo, No_Show) aggiornando QUESTO test."""
+    assert STATI_OCCUPAZIONE_CREDITO == frozenset({"Programmato", "Completato"})
+
+
+def test_nessun_literal_occupazione_fuori_ssot():
+    """Nessun file di api/ re-inlinea il predicato occupazione: ORM `.in_(["Programmato", ...])` o
+    raw SQL `IN ('Programmato', ...)`. L'unico punto di verità è il frozenset in contract_state.py."""
+    violazioni = []
+    for py in API_DIR.rglob("*.py"):
+        if py == SSOT_FILE:
+            continue
+        src = py.read_text(encoding="utf-8")
+        for i, line in enumerate(src.splitlines(), start=1):
+            # Solo il PAIO CHIUSO esatto (predicato di conteggio a 2 stati): non matcha enum più larghi
+            # come VALID_STATUSES di agenda (asse validazione-stati, legittimo e diverso).
+            if '["Programmato", "Completato"]' in line or "('Programmato', 'Completato')" in line:
+                violazioni.append(f"{py.relative_to(API_DIR.parent)}:{i}: {line.strip()}")
+    assert not violazioni, (
+        "Predicato occupazione re-inlineato fuori dal SSoT (usa STATI_OCCUPAZIONE_CREDITO):\n"
+        + "\n".join(violazioni)
+    )
+
+
+def test_expiring_contracts_endpoint_conta_occupazione(client, auth_headers, sample_client, session):
+    """Smoke del sito raw-SQL migrato (dashboard `/expiring-contracts`, ex L406): il conteggio
+    crediti usati passa dal SSoT via bindparam expanding — Rinviato NON conta (ADR-017)."""
+    scadenza = (TODAY + timedelta(days=10)).isoformat()
+    r = client.post("/api/contracts", json={
+        "id_cliente": sample_client["id"], "tipo_pacchetto": "Pkg", "crediti_totali": 10,
+        "prezzo_totale": 1000.0, "data_inizio": TODAY.isoformat(), "data_scadenza": scadenza,
+        "acconto": 0.0,
+    }, headers=auth_headers)
+    assert r.status_code == 201, r.text
+    cid = r.json()["id"]
+    for hour, stato in ((9, "Completato"), (11, "Programmato"), (14, "Rinviato")):
+        er = client.post("/api/events", json={
+            "titolo": "PT", "categoria": "PT", "stato": stato,
+            "id_cliente": sample_client["id"], "id_contratto": cid,
+            "data_inizio": f"2026-01-05T{hour:02d}:00:00", "data_fine": f"2026-01-05T{hour + 1:02d}:00:00",
+        }, headers=auth_headers)
+        assert er.status_code in (200, 201), er.text
+
+    resp = client.get("/api/dashboard/expiring-contracts", headers=auth_headers)
+    assert resp.status_code == 200, resp.text
+    items = [i for i in resp.json()["items"] if i["contract_id"] == cid]
+    assert len(items) == 1
+    assert items[0]["crediti_usati"] == 2          # Completato + Programmato; Rinviato liberato

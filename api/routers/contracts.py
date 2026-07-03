@@ -242,7 +242,7 @@ def _occupied_credit_count(session: Session, contract_id: int) -> int:
         select(func.count(Event.id)).where(
             Event.id_contratto == contract_id,
             Event.categoria == "PT",
-            Event.stato.in_(["Programmato", "Completato"]),
+            Event.stato.in_(cstate.STATI_OCCUPAZIONE_CREDITO),
             Event.deleted_at == None,
         )
     ).one()
@@ -315,7 +315,7 @@ def list_contracts(
             Event.id_contratto.in_(active_ids),
             Event.categoria == "PT",
             # G7.8: Rinviato libera il credito (ADR-017)
-            Event.stato.in_(["Programmato", "Completato"]),
+            Event.stato.in_(cstate.STATI_OCCUPAZIONE_CREDITO),
             Event.deleted_at == None,
         )
         .group_by(Event.id_contratto)
@@ -434,7 +434,7 @@ def list_contracts(
             Event.id_contratto.in_(contract_ids),
             Event.categoria == "PT",
             # G7.8: Rinviato libera il credito (ADR-017)
-            Event.stato.in_(["Programmato", "Completato"]),
+            Event.stato.in_(cstate.STATI_OCCUPAZIONE_CREDITO),
             Event.deleted_at == None,
         )
         .group_by(Event.id_contratto)
@@ -617,7 +617,7 @@ def get_contract(
                 Event.id_contratto.in_([c.id for c in chain]),
                 Event.categoria == "PT",
                 # G7.8: Rinviato libera il credito (ADR-017)
-                Event.stato.in_(["Programmato", "Completato"]),
+                Event.stato.in_(cstate.STATI_OCCUPAZIONE_CREDITO),
                 Event.deleted_at == None,
             )
             .group_by(Event.id_contratto)
@@ -1046,7 +1046,7 @@ def delete_contract(
                     Event.id_contratto == contract_id,
                     Event.categoria == "PT",
                     # G7.8: Rinviato libera il credito (ADR-017)
-                    Event.stato.in_(["Programmato", "Completato"]),
+                    Event.stato.in_(cstate.STATI_OCCUPAZIONE_CREDITO),
                     Event.deleted_at == None,
                 )
             ).one()

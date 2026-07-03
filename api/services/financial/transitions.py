@@ -683,7 +683,7 @@ def sync_contract_chiuso(
             Event.id_contratto == contract.id,
             Event.categoria == "PT",
             # G7.8: Rinviato libera il credito (ADR-017) → no auto-close sulle rinviate (D-AUTO-CLOSE)
-            Event.stato.in_(["Programmato", "Completato"]),
+            Event.stato.in_(cstate.STATI_OCCUPAZIONE_CREDITO),
             Event.deleted_at == None,  # noqa: E711
         )
     ).one()

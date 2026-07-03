@@ -40,6 +40,7 @@ from api.services.financial.invariant_gate import log_invariant_violations  # G9
 from api.services.financial.ledger import post_outflow  # G9.1 penna unica di posting
 from api.services.clinical_readiness import compute_clinical_readiness_data
 from api.services.safety_engine import extract_client_conditions
+from api.services.contract_state import STATI_OCCUPAZIONE_CREDITO
 
 router = APIRouter(prefix="/clients", tags=["clients"])
 
@@ -314,7 +315,7 @@ def _calc_credits_batch(
             Event.id_cliente.in_(client_ids),
             Event.categoria == "PT",
             # G7.8: Rinviato libera il credito (ADR-017)
-            Event.stato.in_(["Programmato", "Completato"]),
+            Event.stato.in_(STATI_OCCUPAZIONE_CREDITO),
             Event.trainer_id == trainer_id,
             Event.deleted_at == None,
         )

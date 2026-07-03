@@ -1245,12 +1245,14 @@ def _load_expiring_contract_rows(
             WHERE e.id_contratto IN :contract_ids
               AND e.categoria = 'PT'
               -- G7.8: Rinviato libera il credito (ADR-017)
-              AND e.stato IN ('Programmato', 'Completato')
+              AND e.stato IN :stati_occupazione
               AND e.deleted_at IS NULL
             GROUP BY e.id_contratto
             """
-        ).bindparams(bindparam("contract_ids", expanding=True)),
-        {"contract_ids": contract_ids},
+        ).bindparams(bindparam("contract_ids", expanding=True),
+                     bindparam("stati_occupazione", expanding=True)),
+        {"contract_ids": contract_ids,
+         "stati_occupazione": tuple(sorted(cstate.STATI_OCCUPAZIONE_CREDITO))},
     ).fetchall()
     credits_map = {row[0]: row[1] for row in credit_rows}
 
@@ -1388,12 +1390,14 @@ def _load_suspended_contract_rows(
             WHERE e.id_contratto IN :contract_ids
               AND e.categoria = 'PT'
               -- G7.8: Rinviato libera il credito (ADR-017)
-              AND e.stato IN ('Programmato', 'Completato')
+              AND e.stato IN :stati_occupazione
               AND e.deleted_at IS NULL
             GROUP BY e.id_contratto
             """
-        ).bindparams(bindparam("contract_ids", expanding=True)),
-        {"contract_ids": contract_ids},
+        ).bindparams(bindparam("contract_ids", expanding=True),
+                     bindparam("stati_occupazione", expanding=True)),
+        {"contract_ids": contract_ids,
+         "stati_occupazione": tuple(sorted(cstate.STATI_OCCUPAZIONE_CREDITO))},
     ).fetchall()
     credits_map = {row[0]: row[1] for row in credit_rows}
 
@@ -2145,11 +2149,12 @@ def _build_contract_renewal_case_detail(
             WHERE e.id_contratto = :contract_id
               AND e.categoria = 'PT'
               -- G7.8: Rinviato libera il credito (ADR-017)
-              AND e.stato IN ('Programmato', 'Completato')
+              AND e.stato IN :stati_occupazione
               AND e.deleted_at IS NULL
             """
-        ),
-        {"contract_id": contract_id},
+        ).bindparams(bindparam("stati_occupazione", expanding=True)),
+        {"contract_id": contract_id,
+         "stati_occupazione": tuple(sorted(cstate.STATI_OCCUPAZIONE_CREDITO))},
     ).scalar_one()
     total_credits = contract.crediti_totali or 0
     residual_credits = max(total_credits - used_credits, 0)

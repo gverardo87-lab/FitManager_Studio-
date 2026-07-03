@@ -31,6 +31,7 @@ from api.models.client import Client
 from api.models.contract import Contract
 from api.routers._audit import log_audit
 from api.services.financial.transitions import sync_contract_chiuso
+from api.services.contract_state import STATI_OCCUPAZIONE_CREDITO
 
 router = APIRouter(prefix="/events", tags=["events"])
 
@@ -197,7 +198,7 @@ def _check_overlap(
         Event.data_inizio < data_fine,
         Event.data_fine > data_inizio,
         # G7.8/§3-bis: Rinviato libera lo slot calendario → riprenotabile (D-GUARD)
-        Event.stato.in_(["Programmato", "Completato"]),
+        Event.stato.in_(STATI_OCCUPAZIONE_CREDITO),
         Event.deleted_at == None,
     )
 
@@ -282,7 +283,7 @@ def _auto_assign_contract(
             Event.id_contratto.in_(contract_ids),
             Event.categoria == "PT",
             # G7.8: Rinviato libera il credito (ADR-017)
-            Event.stato.in_(["Programmato", "Completato"]),
+            Event.stato.in_(STATI_OCCUPAZIONE_CREDITO),
             Event.deleted_at == None,
         )
         .group_by(Event.id_contratto)
@@ -436,7 +437,7 @@ def create_event(
                     Event.id_contratto == contract.id,
                     Event.categoria == "PT",
                     # G7.8: Rinviato libera il credito (ADR-017) → riprenotabile (D-GUARD)
-                    Event.stato.in_(["Programmato", "Completato"]),
+                    Event.stato.in_(STATI_OCCUPAZIONE_CREDITO),
                     Event.deleted_at == None,
                 )
             ).one()

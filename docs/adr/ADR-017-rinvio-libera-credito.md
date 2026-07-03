@@ -112,3 +112,38 @@ tornerebbe la definizione vigente. Nessun dato alterato.
 - Supersedes: emenda `ADR-016` §1 (definizione dell'asse OCCUPAZIONE). L'asse EROGATO e la forfeiture
   (ADR-016 §1 prima parte e §2) restano invariati.
 - Superseded by: —
+
+---
+
+## Addendum I (2026-07-03) — Late Cancel & No Show: completamento dell'Opzione C (G7.8-bis)
+
+**Stato: accepted** (ratifica founder 2026-07-03, sequenza Step 0→1). Spec prescrittiva:
+`docs/technical/SPEC_LATE_CANCEL_NO_SHOW.md` (+ §6 bridge code-grounded).
+
+L'ADR originale scartò l'Opzione C ("Modello Mindbody" — stati-penale che occupano il credito) SOLO
+per scope pre-lancio, non nel merito. La richiesta del PT reale la riporta in scope. Decisioni:
+
+- **D-STATI-PENALE**: due nuovi stati Event PT — `Cancellato_Tardivo` (annullata fuori tempo massimo)
+  e `No_Show` (mancata presentazione). Semantica a 3 assi: **occupano il credito** (come Completato,
+  definitivi), **contabilizzano nel conguaglio di recesso** (penale dovuta al trainer, ADR-016
+  asse-EROGATO esteso a asse-CONTABILIZZABILE), **NON sono performance** (Training Science li ignora).
+  `Rinviato`/`Cancellato` continuano a liberare (il cuore di questo ADR resta invariato).
+- **D-SSOT-PREDICATO (Step 0, behavior-preserving — FATTO)**: il predicato occupazione è estratto a
+  simbolo unico `contract_state.STATI_OCCUPAZIONE_CREDITO`; i 17 siti di conteggio (ORM + raw SQL)
+  consumano il simbolo; il test semantico `tests/test_occupazione_ssot.py` vieta i literal
+  (enforcement al posto dell'enumerazione — lezione Giro-2). Aggiungere uno stato = 1 riga.
+- **D-CONTEGGI-SEPARATI**: nel settlement, `count_sedute_erogate` resta SOLO-Completato (nome onesto);
+  `count_sedute_penali` conta gli stati-penale; il conguaglio riceve la SOMMA (contabilizzabile);
+  l'audit snapshot registra i due numeri SEPARATI. Il modulo puro `contract_settlement.py` resta
+  cieco all'occupazione (ADR-016) — firma invariata.
+- **D-DENYLIST-INTATTE**: i 21 siti calendario/recency a denylist `!= 'Cancellato'` NON cambiano
+  (censimento e razionale in SPEC §6.2): un No_Show è un appuntamento reale della relazione.
+  Escluderlo da una metrica sarà sempre una decisione esplicita per-sito, mai un default.
+- **D-PENALE-PROVISIONAL**: la trattenuta della penale nel conguaglio di recesso è esigibile solo se
+  pattuita nel contratto col cliente — stesso trattamento di `pro_sedute` (PROVISIONAL, gated dal
+  tributarista); il software propone, il microcopy resta proposta-non-obbligo.
+
+Consequences: l'auto-close scatta anche a saturazione con penali (via `sync_contract_chiuso`, un solo
+sito post-G9.3); il credit_breakdown espone i nuovi stati (display pieno in G8.4); FSM Event: il guard
+"Bouncer 4" resta scope-ristretto a `→Rinviato` (G7.8#2), le transizioni fra stati non-performance e
+`Completato→penale` (correzione) sono permesse.

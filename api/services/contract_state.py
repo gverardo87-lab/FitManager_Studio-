@@ -20,6 +20,17 @@ from typing import Optional, Sequence
 SOGLIA_IN_SCADENZA_GG = 30   # ATTIVO entra in "in scadenza"
 SOGLIA_CHURN_GG = 90         # unica: raffreddamento lapsed = finestra retention = confine churn
 
+# ── Occupazione credito (ADR-017 / G7.8) — SSoT del predicato, dichiarato UNA volta ─────────────
+# Stati Event PT che OCCUPANO un credito del contratto: prenotato-non-svolto (Programmato,
+# reversibile) + servizio reso (Completato, definitivo). `Rinviato` e `Cancellato` LIBERANO il
+# credito (il rinvio libera il credito, ADR-017). Estratto a simbolo in G7.8-bis-prep: OGNI sito
+# di conteggio crediti consuma QUESTO frozenset, MAI il literal (lezione Giro-2/G9.3: enumerazione
+# manuale dei siti ≠ enforcement; il test semantico tests/test_occupazione_ssot.py vieta i literal).
+# G7.8-bis vi aggiungerà gli stati-penale (Cancellato_Tardivo, No_Show): un solo punto di modifica.
+# NB: i siti calendario/recency a denylist (`!= "Cancellato"`, DISPLAY-EXEMPT ADR-017 §3.2) sono
+# un ASSE DIVERSO e restano denylist — censimento in SPEC_LATE_CANCEL_NO_SHOW §6.
+STATI_OCCUPAZIONE_CREDITO = frozenset({"Programmato", "Completato"})
+
 
 class Lifecycle(str, Enum):
     ELIMINATO = "eliminato"

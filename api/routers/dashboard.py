@@ -403,11 +403,13 @@ def get_expiring_contracts(
         WHERE e.id_contratto IN :contract_ids
           AND e.categoria = 'PT'
           -- G7.8: Rinviato libera il credito (ADR-017)
-          AND e.stato IN ('Programmato', 'Completato')
+          AND e.stato IN :stati_occupazione
           AND e.deleted_at IS NULL
         GROUP BY e.id_contratto
-    """).bindparams(bindparam("contract_ids", expanding=True)),
-        {"contract_ids": contract_ids},
+    """).bindparams(bindparam("contract_ids", expanding=True),
+                    bindparam("stati_occupazione", expanding=True)),
+        {"contract_ids": contract_ids,
+         "stati_occupazione": tuple(sorted(cstate.STATI_OCCUPAZIONE_CREDITO))},
     ).fetchall()
 
     credits_map = {row[0]: row[1] for row in credit_rows}
@@ -564,7 +566,7 @@ def _crediti_usati_map(session: Session, contract_ids: list[int]) -> dict[int, i
             Event.id_contratto.in_(contract_ids),
             Event.categoria == "PT",
             # G7.8: Rinviato libera il credito (ADR-017)
-            Event.stato.in_(["Programmato", "Completato"]),
+            Event.stato.in_(cstate.STATI_OCCUPAZIONE_CREDITO),
             Event.deleted_at == None,
         )
         .group_by(Event.id_contratto)
@@ -1104,7 +1106,7 @@ def get_dashboard_alerts(
                         WHERE e.id_contratto = c.id
                           AND e.categoria = 'PT'
                           -- G7.8: Rinviato libera il credito (ADR-017)
-                          AND e.stato IN ('Programmato', 'Completato')
+                          AND e.stato IN :stati_occupazione
                           AND e.deleted_at IS NULL), 0
                    ) as crediti_usati
             FROM contratti c
@@ -1122,7 +1124,9 @@ def get_dashboard_alerts(
               )
         ) sub
         WHERE sub.crediti_usati < sub.crediti_totali
-    """), {"tid": trainer.id, "deadline": deadline_30.isoformat(), "today": today.isoformat()}).fetchall()
+    """).bindparams(bindparam("stati_occupazione", expanding=True)),
+        {"tid": trainer.id, "deadline": deadline_30.isoformat(), "today": today.isoformat(),
+         "stati_occupazione": tuple(sorted(cstate.STATI_OCCUPAZIONE_CREDITO))}).fetchall()
 
     if expiring_rows:
         for row in expiring_rows:
