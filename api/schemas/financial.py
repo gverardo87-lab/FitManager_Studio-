@@ -249,6 +249,7 @@ class ContractSettlementPreview(BaseModel):
     sedute_erogate: int                   # sedute Completate (servizio reso) — base del pro-rata
     sedute_totali: Optional[int] = None   # crediti_totali (None = senza monte-sedute)
     sedute_prenotate: int = 0             # D2 (G7.5c): PT prenotate-non-svolte — SOLO display (NON entra nel conguaglio)
+    sedute_penali: int = 0                # G7.8-bis: Cancellato_Tardivo+No_Show — ENTRANO nel contabilizzato (penale)
     metodo_rimborso_richiesto: bool       # True se esito CREDITO_CLIENTE → il form deve chiedere il metodo rimborso
     azioni_permesse: List[str] = []       # ramo CREDITO_TRAINER: scelte offerte (INCASSA_ORA, RINUNCIA_ESPRESSA, A_CREDITO)
     policy_mode: str = "pro_sedute"       # metodo di valorizzazione (default dichiarato, §0)
@@ -535,6 +536,7 @@ class ContractWithRatesResponse(ContractResponse):
     sedute_programmate: int = 0   # stato=Programmato
     sedute_completate: int = 0    # stato=Completato
     sedute_rinviate: int = 0      # stato=Rinviato
+    sedute_penali: int = 0        # G7.8-bis: Cancellato_Tardivo+No_Show (occupano il credito, non svolte)
     crediti_residui: int = 0      # crediti_totali - programmate - completate
     sedute_non_erogate_chiusura: int = 0  # M4: prenotate-non-erogate alla chiusura (solo chiuso COMPLETAMENTO)
 

@@ -55,6 +55,7 @@ from api.routers._audit import (
 from api.services import contract_state as cstate
 from api.services.financial.invariant_gate import log_invariant_violations
 from api.services.financial.transitions import (  # G9.3: TransitionExecutor + helpers settlement + auto-close
+    count_sedute_penali,
     count_sedute_prenotate,
     execute_reopen,
     execute_terminate,
@@ -178,9 +179,12 @@ def _to_response_with_rates(
     programmate = cb.get("Programmato", 0)
     completate = cb.get("Completato", 0)
     rinviate = cb.get("Rinviato", 0)  # display only (sedute_rinviate): NON occupa il credito (G7.8)
+    penali = cb.get("Cancellato_Tardivo", 0) + cb.get("No_Show", 0)  # G7.8-bis: occupano (penale)
     crediti_totali = contract.crediti_totali or 0
-    # [G7.8/ADR-017] occupazione-credito = Programmato + Completato; Rinviato libera il credito spendibile
-    crediti_usati_computed = programmate + completate
+    # [G7.8/ADR-017 + G7.8-bis] occupazione-credito DERIVATA DAL SSoT (penali incluse; Rinviato libera).
+    # Era `programmate + completate` a mano: re-implementazione semantica che il literal-grep non vede —
+    # da qui in poi somma le chiavi di STATI_OCCUPAZIONE_CREDITO, un solo punto di verità.
+    crediti_usati_computed = sum(cb.get(stato, 0) for stato in cstate.STATI_OCCUPAZIONE_CREDITO)
 
     # Override crediti_usati nel dict base (sovrascrive il valore ORM = 0)
     contract_data = ContractResponse.model_validate(contract).model_dump()
@@ -206,6 +210,7 @@ def _to_response_with_rates(
         sedute_programmate=programmate,
         sedute_completate=completate,
         sedute_rinviate=rinviate,
+        sedute_penali=penali,  # G7.8-bis: display trasparenza (occupano il credito, non sono svolte)
         crediti_residui=max(0, crediti_totali - crediti_usati_computed),
         sedute_non_erogate_chiusura=cstate.sedute_non_erogate_alla_chiusura(contract, completate),  # M4
         lifecycle=state.lifecycle.value,
@@ -1402,7 +1407,8 @@ def incassa_residuo(
 # Terminazione anticipata (G7.3) — conguaglio + atto atomico a 2 gambe
 # ════════════════════════════════════════════════════════════
 
-def _build_settlement_preview(contract: Contract, settlement, sedute_prenotate: int = 0) -> ContractSettlementPreview:
+def _build_settlement_preview(contract: Contract, settlement, sedute_prenotate: int = 0,
+                              sedute_penali: int = 0) -> ContractSettlementPreview:
     """Compone la preview leggibile dal conguaglio (ADR-018). Framing di PROPOSTA (§0/§4): mai
     "obbligo legale", sempre "calcolato col metodo standard, verifica con le condizioni del contratto"."""
     cliente = settlement.esito == SettlementEsito.CREDITO_CLIENTE
@@ -1436,6 +1442,7 @@ def _build_settlement_preview(contract: Contract, settlement, sedute_prenotate: 
         sedute_erogate=settlement.sedute_erogate,
         sedute_totali=contract.crediti_totali,
         sedute_prenotate=sedute_prenotate,
+        sedute_penali=sedute_penali,
         metodo_rimborso_richiesto=cliente,
         azioni_permesse=azioni_permesse,
         messaggio=msg,
@@ -1461,6 +1468,7 @@ def settlement_preview(
         contract,
         settlement_for(session, contract),
         count_sedute_prenotate(session, contract.id),  # D2: solo display, query separata dal conguaglio
+        count_sedute_penali(session, contract.id),     # G7.8-bis: trasparenza (entrano nel contabilizzato)
     )
 
 

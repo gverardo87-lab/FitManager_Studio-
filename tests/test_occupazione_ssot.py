@@ -10,7 +10,11 @@ simbolo, non su un pattern di testo in uno script bash.
 from datetime import date, timedelta
 from pathlib import Path
 
-from api.services.contract_state import STATI_OCCUPAZIONE_CREDITO
+from api.services.contract_state import (
+    STATI_OCCUPAZIONE_CREDITO,
+    STATI_OCCUPAZIONE_SLOT,
+    STATI_PENALE,
+)
 
 TODAY = date.today()
 
@@ -18,10 +22,16 @@ API_DIR = Path(__file__).resolve().parent.parent / "api"
 SSOT_FILE = API_DIR / "services" / "contract_state.py"
 
 
-def test_ssot_baseline_g78():
-    """Baseline G7.8 (ADR-017): occupano Programmato+Completato; Rinviato/Cancellato liberano.
-    G7.8-bis estenderà DELIBERATAMENTE questo set (Cancellato_Tardivo, No_Show) aggiornando QUESTO test."""
-    assert STATI_OCCUPAZIONE_CREDITO == frozenset({"Programmato", "Completato"})
+def test_ssot_baseline_g78bis():
+    """G7.8-bis (ADR-017 Addendum I): le penali OCCUPANO il credito; Rinviato/Cancellato liberano.
+    L'asse CALENDARIO diverge (D-CALENDAR-OVERLAP): le penali NON bloccano lo slot orario.
+    Estensione DELIBERATA della baseline G7.8 — ogni futura modifica del set passa da qui."""
+    assert STATI_OCCUPAZIONE_CREDITO == frozenset(
+        {"Programmato", "Completato", "Cancellato_Tardivo", "No_Show"})
+    assert STATI_PENALE == frozenset({"Cancellato_Tardivo", "No_Show"})
+    assert STATI_OCCUPAZIONE_SLOT == frozenset({"Programmato", "Completato"})
+    assert STATI_PENALE < STATI_OCCUPAZIONE_CREDITO          # le penali sono un sottoinsieme proprio
+    assert STATI_PENALE.isdisjoint(STATI_OCCUPAZIONE_SLOT)   # e non bloccano mai lo slot
 
 
 def test_nessun_literal_occupazione_fuori_ssot():

@@ -31,7 +31,7 @@ from api.models.client import Client
 from api.models.contract import Contract
 from api.routers._audit import log_audit
 from api.services.financial.transitions import sync_contract_chiuso
-from api.services.contract_state import STATI_OCCUPAZIONE_CREDITO
+from api.services.contract_state import STATI_OCCUPAZIONE_CREDITO, STATI_OCCUPAZIONE_SLOT
 
 router = APIRouter(prefix="/events", tags=["events"])
 
@@ -39,7 +39,7 @@ router = APIRouter(prefix="/events", tags=["events"])
 VALID_CATEGORIES = {"PT", "SALA", "CORSO", "COLLOQUIO", "PERSONALE"}
 
 # Stati validi (mirror di core/constants.py EventStatus)
-VALID_STATUSES = {"Programmato", "Completato", "Cancellato", "Rinviato"}
+VALID_STATUSES = {"Programmato", "Completato", "Cancellato", "Rinviato", "Cancellato_Tardivo", "No_Show"}  # G7.8-bis: stati-penale (ADR-017 Add. I)
 
 
 # --- Input schemas ---
@@ -197,8 +197,9 @@ def _check_overlap(
         Event.trainer_id == trainer_id,
         Event.data_inizio < data_fine,
         Event.data_fine > data_inizio,
-        # G7.8/§3-bis: Rinviato libera lo slot calendario → riprenotabile (D-GUARD)
-        Event.stato.in_(STATI_OCCUPAZIONE_CREDITO),
+        # G7.8/§3-bis + G7.8-bis D-CALENDAR-OVERLAP: Rinviato E le penali liberano lo slot →
+        # riprenotabile. Asse CALENDARIO ≠ asse credito (le penali occupano il credito, non lo slot).
+        Event.stato.in_(STATI_OCCUPAZIONE_SLOT),
         Event.deleted_at == None,
     )
 

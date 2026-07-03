@@ -2,7 +2,7 @@
 contract_settlement — conguaglio puro per la terminazione anticipata (G7.1).
 
 Specchio di `contract_state.py`: funzioni **PURE** (zero DB). Il caller (endpoint `terminate`, G7.3)
-deriva `sedute_erogate` server-side (count Event Completato PT) e passa i campi del contratto; qui si
+deriva `sedute_erogate` server-side (G7.8-bis: Completato + stati-penale = CONTABILIZZABILE, ADR-017 Add. I) e passa i campi del contratto; qui si
 calcola SOLO la matematica del conguaglio. **Policy-pluggable**: la *valorizzazione* del servizio reso
 è l'unica parte gated dalla decisione del tributarista (default `pro_sedute`, marcato **PROVISIONAL**);
 la *meccanica* (conguaglio firmato → esito) è ferma.

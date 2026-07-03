@@ -89,6 +89,22 @@ def count_sedute_erogate(session: Session, contract_id: int) -> int:
     ).one()
 
 
+def count_sedute_penali(session: Session, contract_id: int) -> int:
+    """Sedute PT **perse per colpa del cliente** (G7.8-bis, ADR-017 Add. I): Cancellato_Tardivo +
+    No_Show. CONTABILIZZANO nel conguaglio di recesso (penale dovuta al trainer, D-RECESSO-PENALE)
+    ma NON sono servizio reso in senso atletico — l'audit le registra SEPARATE dalle erogate vere
+    (D-CONTEGGI-SEPARATI). ⚠️ PROVISIONAL come pro_sedute: esigibile solo se pattuita nel contratto
+    col cliente (punto tributarista, D-PENALE-PROVISIONAL)."""
+    return session.exec(
+        select(func.count(Event.id)).where(
+            Event.id_contratto == contract_id,
+            Event.categoria == "PT",
+            Event.stato.in_(cstate.STATI_PENALE),
+            Event.deleted_at == None,  # noqa: E711
+        )
+    ).one()
+
+
 def count_sedute_prenotate(session: Session, contract_id: int) -> int:
     """Sedute PT **prenotate ma non svolte** = Event PT Programmati, non eliminati. Proiezione di Event
     (gemello di `count_sedute_erogate`, stato diverso), query SEPARATA: NON tocca il path del conguaglio
@@ -119,9 +135,12 @@ def settlement_for(session: Session, contract: Contract):
     """Conguaglio di terminazione (puro, zero scritture). Fonte-unica-importo (§2): il
     `residuo_corrente = contract_state.residuo()` PRE-storno passa in UNA variabile a compute_settlement."""
     residuo_corrente = cstate.residuo(contract)
-    sedute_erogate = count_sedute_erogate(session, contract.id)
+    # G7.8-bis (D-RECESSO-PENALE): la base del conguaglio è il CONTABILIZZABILE = erogate vere
+    # (Completato) + penali (Cancellato_Tardivo/No_Show, quota dovuta al trainer). Il modulo puro
+    # resta cieco all'occupazione (ADR-016): riceve UN intero, qui si decide cosa ci entra.
+    sedute_contabilizzabili = count_sedute_erogate(session, contract.id) + count_sedute_penali(session, contract.id)
     return compute_settlement(
-        sedute_erogate=sedute_erogate,
+        sedute_erogate=sedute_contabilizzabili,
         prezzo_totale=contract.prezzo_totale,
         crediti_totali=contract.crediti_totali,
         totale_versato=contract.totale_versato,
@@ -329,6 +348,10 @@ def execute_terminate(
     #    crediti_usati è event-derived e può driftare; è l'unico record del servizio forfettato).
     #    Payload ADR-018 (§6.2): ricostruibile se il trainer ha incassato, abbuonato o rinunciato.
     is_cliente = settlement.esito == SettlementEsito.CREDITO_CLIENTE
+    # D-CONTEGGI-SEPARATI (G7.8-bis): l'audit registra erogate VERE e penali come numeri distinti
+    # (difesa documentale del trainer); settlement.sedute_erogate = la loro somma (contabilizzato).
+    sedute_erogate_vere = count_sedute_erogate(session, contract.id)
+    sedute_penali = count_sedute_penali(session, contract.id)
     if movement is not None or credito_differito is not None or wallet_cliente is not None:
         session.flush()  # popola gli id (movimento, receivable e/o wallet) per l'audit
     if movement is not None:
@@ -343,7 +366,9 @@ def execute_terminate(
         "quota_stornata": {"old": old_quota, "new": contract.quota_stornata},
         "totale_rimborsato": {"old": old_rimborsato, "new": contract.totale_rimborsato},
         "totale_versato": {"old": old_versato, "new": contract.totale_versato or 0},
-        "sedute_erogate_snapshot": settlement.sedute_erogate,
+        "sedute_erogate_snapshot": sedute_erogate_vere,
+        "sedute_penali_snapshot": sedute_penali,
+        "sedute_contabilizzate_snapshot": settlement.sedute_erogate,  # base del conguaglio (vere+penali)
         "valore_servizio_reso": settlement.valore_servizio_reso,
         "esito_balance": settlement.esito.value,
         "credito_cliente": settlement.credito_cliente,

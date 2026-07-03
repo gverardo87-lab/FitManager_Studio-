@@ -26,10 +26,20 @@ SOGLIA_CHURN_GG = 90         # unica: raffreddamento lapsed = finestra retention
 # credito (il rinvio libera il credito, ADR-017). Estratto a simbolo in G7.8-bis-prep: OGNI sito
 # di conteggio crediti consuma QUESTO frozenset, MAI il literal (lezione Giro-2/G9.3: enumerazione
 # manuale dei siti ≠ enforcement; il test semantico tests/test_occupazione_ssot.py vieta i literal).
-# G7.8-bis vi aggiungerà gli stati-penale (Cancellato_Tardivo, No_Show): un solo punto di modifica.
+# G7.8-bis (ADR-017 Addendum I): gli stati-penale OCCUPANO il credito — la lezione persa per colpa
+# del cliente è scalata a titolo di penale (D-STATI-PENALE). Un solo punto di modifica, per costruzione.
 # NB: i siti calendario/recency a denylist (`!= "Cancellato"`, DISPLAY-EXEMPT ADR-017 §3.2) sono
 # un ASSE DIVERSO e restano denylist — censimento in SPEC_LATE_CANCEL_NO_SHOW §6.
-STATI_OCCUPAZIONE_CREDITO = frozenset({"Programmato", "Completato"})
+STATI_OCCUPAZIONE_CREDITO = frozenset({"Programmato", "Completato", "Cancellato_Tardivo", "No_Show"})
+
+# Stati-penale (G7.8-bis): occupano il credito e CONTABILIZZANO nel conguaglio di recesso
+# (D-RECESSO-PENALE, quota dovuta al trainer) ma NON sono performance (Training Science li ignora).
+STATI_PENALE = frozenset({"Cancellato_Tardivo", "No_Show"})
+
+# Asse CALENDARIO (D-CALENDAR-OVERLAP): quali stati BLOCCANO uno slot orario. Le penali liberano lo
+# slot (il trainer può riprogrammare nello stesso orario storico) → qui NON entrano. Diverge
+# dall'occupazione credito da G7.8-bis: prima coincidevano, ora sono due assi dichiarati.
+STATI_OCCUPAZIONE_SLOT = frozenset({"Programmato", "Completato"})
 
 
 class Lifecycle(str, Enum):
