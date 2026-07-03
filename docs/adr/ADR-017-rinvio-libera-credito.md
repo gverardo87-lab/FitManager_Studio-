@@ -4,7 +4,7 @@
 - Status: accepted
 - Deciders: Giacomo Verardo (AVGV Technologies); analisi e bridge code-grounded di Claude Code
 - Related upgrade ID: G7.8 (rinvio → libera credito)
-- Spec di dettaglio (contratto d'implementazione): `docs/technical/SPEC_RINVIO_LIBERA_CREDITO.md`
+- Spec di dettaglio (contratto d'implementazione): `docs/archive/specs/SPEC_RINVIO_LIBERA_CREDITO.md`
 - Emenda: `ADR-016` §1 (definizione dell'asse OCCUPAZIONE)
 - Correlati: `ADR-014` (gestione finanziaria); modello vivo: `FINANCIAL_DOMAIN_MODEL.md`, `TASSONOMIA_FINANZIARIA.md`
 
@@ -118,7 +118,7 @@ tornerebbe la definizione vigente. Nessun dato alterato.
 ## Addendum I (2026-07-03) — Late Cancel & No Show: completamento dell'Opzione C (G7.8-bis)
 
 **Stato: accepted** (ratifica founder 2026-07-03, sequenza Step 0→1). Spec prescrittiva:
-`docs/technical/SPEC_LATE_CANCEL_NO_SHOW.md` (+ §6 bridge code-grounded).
+`docs/archive/specs/SPEC_LATE_CANCEL_NO_SHOW.md` (+ §6 bridge code-grounded).
 
 L'ADR originale scartò l'Opzione C ("Modello Mindbody" — stati-penale che occupano il credito) SOLO
 per scope pre-lancio, non nel merito. La richiesta del PT reale la riporta in scope. Decisioni:

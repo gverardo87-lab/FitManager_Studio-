@@ -1,3 +1,6 @@
+> 🗄️ **REGISTRO DISMESSO (2026-07-03, riordino docs).** Ultimo UPG reale: 2026-03-26. Il log di
+> sviluppo UNICO è `docs/learning/BUILD_LOG.md`. Questo file resta come storico; non aggiungere righe.
+
 # Upgrade Log
 
 Registro unico degli upgrade tecnici e UX.

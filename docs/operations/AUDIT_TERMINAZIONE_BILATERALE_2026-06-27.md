@@ -296,7 +296,7 @@ La risposta tecnica corretta non e' alterare l'asse EROGATO, ne reintrodurre res
 
 Questo audit e' il fondamento del blocco di lavoro formalizzato in:
 
-- [SPEC_TERMINAZIONE_BILATERALE_E_TUTELA_TRAINER.md](/C:/Users/gvera/Projects/FitManager_AI_Studio/docs/technical/SPEC_TERMINAZIONE_BILATERALE_E_TUTELA_TRAINER.md)
+- [SPEC_TERMINAZIONE_BILATERALE_E_TUTELA_TRAINER.md](/C:/Users/gvera/Projects/FitManager_AI_Studio/docs/archive/specs/SPEC_TERMINAZIONE_BILATERALE_E_TUTELA_TRAINER.md)
 
 ---
 
@@ -307,7 +307,7 @@ Verificato in audit documentale e code-reading contro:
 - `docs/learning/BUILD_LOG.md` fino al follow-up backend del **2026-06-27**
 - `api/CLAUDE.md`
 - `docs/technical/FINANCIAL_DOMAIN_MODEL.md`
-- `docs/technical/SPEC_G7.3_TERMINAZIONE_ENDPOINT.md`
+- `docs/archive/specs/SPEC_G7.3_TERMINAZIONE_ENDPOINT.md`
 - `docs/operations/AUDIT_CREDITI_RIMBORSO_2026-06-26.md`
 - `api/services/contract_settlement.py`
 - `api/routers/contracts.py`

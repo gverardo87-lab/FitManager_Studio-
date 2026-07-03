@@ -2,7 +2,7 @@
 
 **Tipo:** specifica prescrittiva (cosa-deve-essere-vero; silente sul come). Bridge Chat->Code.  
 **Data:** 2026-06-28 · **Branch:** `FitManager_Studio`  
-**Stato:** ✅ **G8.1 IMPLEMENTATA** (2026-06-28; commit `f84d345`→`a51d180`). ✅ **G8.1.1 IMPLEMENTATA** (2026-06-28; reconciliation + transparency, §14/§14.6): F2 reopen riallinea le rate al residuo · F3/F4 cap/`stato_pagamento` net-aware (`is_saldato()`) · F1/F5 storico cassa unificato sul dettaglio (tab "Storico", saldo progressivo) · F6 storico stato `GET /{id}/history` (eventi curati da `audit_log`, dedup companion). Suite **691** verde, ruff + grep-guard ADR-019 + next build verdi. G8.2 (wallet auto-spendibile cross-contratto) su domanda. · ratificata da **ADR-019** + **ADR-020**  
+**Stato:** ✅ **G8.1 IMPLEMENTATA** (2026-06-28; commit `f84d345`→`a51d180`). ✅ **G8.1.1 IMPLEMENTATA** (2026-06-28; reconciliation + transparency, §14/§14.6): F2 reopen riallinea le rate al residuo · F3/F4 cap/`stato_pagamento` net-aware (`is_saldato()`) · F1/F5 storico cassa unificato sul dettaglio (tab "Storico", saldo progressivo) · F6 storico stato `GET /{id}/history` (eventi curati da `audit_log`, dedup companion). Suite 691 al gate (oggi 787). ✅ G8.3/ADR-021 (INV-RATE) chiuso a valle. **G8.2 (wallet auto-spendibile cross-contratto) = residuo aperto in backlog (INDEX), su domanda.** Archiviata 2026-07-03 (riordino docs). · ratificata da **ADR-019** + **ADR-020**  
 **Blocco proposto:** **G8** (programma post-G7 "integrita' contabile + completamento bilaterale"). **Fetta 1 = G8.1** (reopen non-distruttivo + residuo net-aware + wallet lean + rimborso editabile + UX-propone). **Fetta 2 = G8.2** (wallet auto-spendibile cross-contratto). G1 in stand-by.  
 **Mappa di verita:** `docs/adr/ADR-019-libro-mastro-non-distruttivo-reopen-ricalcola.md` · `docs/adr/ADR-020-wallet-cliente-customer-credit-balance.md` · `docs/operations/AUDIT_REOPEN_SCENARIOS_2026-06-28.md` · `docs/technical/FINANCIAL_DOMAIN_MODEL.md` · `api/services/contract_state.py` · `api/routers/contracts.py`
 
@@ -358,7 +358,7 @@ Test: `test_contract_reopen.py::test_f2_reopen_copre_ammanco_da_rimborso` (end-t
 
 ## 15. G8.2-prep — la fotografia netta PER-CONTRATTO + elevazione G8.2 (2026-06-28)
 
-> Origine: audit `docs/technical/AUDIT_POSIZIONE_FINANZIARIA_E_INVARIANTI_2026-06-28.md`. Decisione di
+> Origine: audit `docs/archive/AUDIT_POSIZIONE_FINANZIARIA_E_INVARIANTI_2026-06-28.md`. Decisione di
 > dominio **D1 CHIUSA dal founder, forma (d)**: il reopen NON riavvolge il pregresso — scatta la
 > **fotografia netta** della posizione cliente↔contratto e quella diventa il punto di partenza del
 > contratto riaperto (modello billing-leader: ledger immutabile, posizione ricalcolata, credito letto-non-riavvolto).

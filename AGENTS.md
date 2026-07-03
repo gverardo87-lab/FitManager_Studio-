@@ -223,3 +223,30 @@ Quando si scopre un bug in produzione o un problema critico:
 4. **Hotfix**: seguire procedura in sezione 5 "Branching Strategy → Hotfix"
 
 Severita': P0 (sistema inutilizzabile) → P3 (cosmetico).
+
+## 7) Ciclo di vita dei documenti (IL metodo — ratificato 2026-07-03)
+
+**Principio: la POSIZIONE è lo STATO.** Un agente (o un umano) decide cosa caricare dal path, senza
+dover leggere gli header. Contratto di contesto sintetico anche in `CLAUDE.md`.
+
+| Specie | Casa | Ciclo di vita |
+|--------|------|---------------|
+| **ADR** (`docs/adr/`) | La LEGGE | Nasce quando cambia una regola del dominio. Immortale: mai archiviato, evolve per **Addendum**. Indice in `adr/README.md` |
+| **SPEC** (`docs/specs/`) | Il lavoro APERTO | Nasce da/with un ADR, prescrive UN blocco. Riga `Stato:` obbligatoria in testa. **A chiusura blocco: consuntivo (commit, suite, esiti) + spostamento in `docs/archive/specs/` nello STESSO commit docs del gate** |
+| **SSoT evergreen** (`docs/technical/`) | Com'è FATTO il sistema | FDM, TASSONOMIA, SECURITY_MODEL, TUNNEL, ecc. Aggiornati dal fold-back di ogni gate che li tocca. **Zero SPEC_*/IMPL_PLAN_* qui** (guard in `check-all.sh`) |
+| **AUDIT/ROADMAP** | Fotografie | Foldate nelle decisioni che generano (ADR/SPEC), poi → `docs/archive/` con header di esito. Mai riferimento vivo |
+| **LOG** | `docs/learning/BUILD_LOG.md` | UNICO log di sviluppo, append-only, mai riscritto. (`docs/upgrades/` dismesso 2026-07-03) |
+
+**Definition of Done di un gate** (estende il Delivery Loop §2):
+
+```
+implementazione + test → full suite verde → verifier adversariale (financial-invariant-verifier
+sui money-path; docs-code-drift-auditor su richiesta) → FOLD-BACK DOCS (Stato spec consuntivato ·
+INDEX · BUILD_LOG · ADR/Addendum se è cambiata una regola · archiviazione se il blocco è chiuso)
+→ push (su ok del founder)
+```
+
+Regole falsificabili (presidiate da guard, non da disciplina):
+- nessuna `SPEC_*`/`IMPL_PLAN_*` vive in `docs/technical/`;
+- nessuna spec con `Stato: ✅ IMPLEMENTATA` resta in `docs/specs/`;
+- `docs/archive/` non è MAI contesto di lavoro.

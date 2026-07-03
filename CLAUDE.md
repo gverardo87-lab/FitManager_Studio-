@@ -6,9 +6,9 @@ Dati sul PC del professionista, zero cloud obbligatorio, privacy-first.
 ## Stack
 
 ```
-Python 3.12 + FastAPI + SQLModel + SQLite (WAL)     → api/     (144 file)
-Next.js 16 + React 19 + TypeScript 5 + shadcn/ui    → frontend/ (293 file)
-Langchain + Ollama (moduli AI dormenti)              → core/    (27 file)
+Python 3.12 + FastAPI + SQLModel + SQLite (WAL)     → api/     (178 file)
+Next.js 16 + React 19 + TypeScript 5 + shadcn/ui    → frontend/ (350 file)
+Langchain + Ollama (moduli AI dormenti)              → core/    (15 file)
 ```
 
 Distribuzione: Nuitka (Python→C→nativo) + Next.js standalone + Inno Setup (Windows installer).
@@ -43,7 +43,7 @@ SSoT numeri e proiezioni: `docs/business/BUSINESS_PLAN.md` (v4.3). Strategia ope
         (business)  (tassonomia) (alimenti CREA)
 ```
 
-- **crm.db**: 28 tabelle business (clienti, contratti, workout, communication_log, crediti_terminazione, crediti_cliente). Tenant-isolated via `trainer_id`. SACRO — dati del trainer, backup/restore.
+- **crm.db**: 29 tabelle business (clienti, contratti, workout, communication_log, crediti_terminazione, crediti_cliente, rettifiche_contratto). Tenant-isolated via `trainer_id`. SACRO — dati del trainer, backup/restore.
 - **catalog.db**: 10 tabelle catalogo scientifico (500 esercizi builtin, 466 attivi `in_subset` + tassonomia muscoli/articolazioni/condizioni + relazioni + media). Read-only, shipped con installer. Zero `trainer_id`.
 - **nutrition.db**: 8 tabelle catalogo alimenti (CREA 2019 + USDA). Read-only, shipped con installer. 880 alimenti attivi, 210 ricette pietanze, 12 template dieta.
 - **Porte**: formula generica `frontend_port - 3000 + 8000 = backend_port` (derivazione runtime in `api-client.ts`).
@@ -59,7 +59,7 @@ SSoT numeri e proiezioni: `docs/business/BUSINESS_PLAN.md` (v4.3). Strategia ope
 cd frontend && npm run dev                                         # frontend dev (porta 3001)
 
 # --- Test ---
-./venv/Scripts/python -m pytest tests/ -v                          # 361 test backend
+./venv/Scripts/python -m pytest tests/ -v                          # ~790 test backend (SSoT: la suite stessa)
 cd frontend && npm test                                            # 69 vitest (data protection)
 
 # --- Quality gate (obbligatorio prima di commit) ---
@@ -321,13 +321,22 @@ Skills installate in `.agents/skills/` — knowledge base attive per audit e cod
 |-----------|-----------|-----------------|
 | `docs/business/` | BP, Strategy Plan, Financial Model, Partner, Legal, Competitive | Pricing, proiezioni, partner, fondi, NASpI |
 | `docs/product/` | Roadmap post-lancio, FitScan, Video production/strategy | Pianificazione feature, video, post-lancio |
-| `docs/technical/` | Security, License, Tailscale, Deploy, Nutrition Engine | Architettura, sicurezza, infra |
+| `docs/specs/` | **SOLO spec APERTE** (il fronte di lavoro: `ls docs/specs/` = work-queue) | Quando implementi un blocco |
+| `docs/technical/` | SOLO SSoT evergreen (FDM, Tassonomia, Security, Tunnel, License, Deploy) | Architettura, sicurezza, infra |
 | `docs/operations/` | Release checklist, Diagnostics, Support, Upgrade | Release, troubleshooting, supporto |
 | `docs/adr/` | Architecture Decision Records (13 ADR attivi + ADR-012 riservato) | Decisioni architetturali |
 | `docs/incidents/` | Post-mortem incidenti | Pattern sospetti, regressioni |
 | `docs/learning/` | Apprendimento founder-developer (concetti, metodo, build log) | Mai — materiale didattico, non spec |
 
 Indice completo con ogni file: `docs/INDEX.md`.
+
+### Contratto di contesto (riordino 2026-07-03 — la POSIZIONE è lo STATO)
+
+- `docs/adr/` = la LEGGE (decisioni immortali, evolvono per Addendum, mai archiviate).
+- `docs/technical/` = com'è FATTO il sistema (solo SSoT evergreen; **zero SPEC_*/IMPL_PLAN_*** — guard in check-all).
+- `docs/specs/` = cosa stiamo COSTRUENDO ORA (solo spec aperte, riga `Stato:` obbligatoria in testa; a chiusura blocco → consuntivo + `docs/archive/specs/` nello stesso commit docs del gate).
+- `docs/archive/` = storia: **MAI caricare come contesto di lavoro**.
+- Log di sviluppo UNICO = `docs/learning/BUILD_LOG.md` (UPGRADE_LOG dismesso 2026-07-03). Ciclo di vita completo: `AGENTS.md`.
 
 ### Regola di cattura learning (automatica)
 

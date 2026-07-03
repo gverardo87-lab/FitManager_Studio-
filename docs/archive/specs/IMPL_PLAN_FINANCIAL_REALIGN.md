@@ -1,6 +1,6 @@
 # IMPL_PLAN — Riallineamento finanziario v1.3 (strategia di implementazione)
 
-**Versione:** 1.3 (2026-06-21) · **Stato:** materiale di lavoro (effimero, → `docs/archive/` a implementazione conclusa)
+**Versione:** 1.3 (2026-06-21) · **Stato:** ✅ **CONCLUSO E ARCHIVIATO** (2026-07-03) — il filone è arrivato a G9.3; il piano attivo è `docs/specs/SPEC_G9_FINANCIAL_COMMAND_LAYER.md`. I resume-point interni sono STORICI.
 **Modello (SSoT):** `FINANCIAL_DOMAIN_MODEL.md` v1.3 + `TASSONOMIA_FINANZIARIA.md` v1.2
 **Supera:** `docs/archive/specs/IMPL_PLAN_RINNOVI_SCADUTI.md` (storico).
 
@@ -67,7 +67,7 @@
 **NESSUN codice prima di questi passi documentali** (bridge rule: il modello è già deciso, qui si allinea la documentazione vincolante):
 
 1. Copiare **FDM v1.3** + **TASSONOMIA v1.2** in `docs/technical/` (sostituiscono v1.2/v1.1). Aggiornare `docs/INDEX.md` e `BUILD_LOG.md`.
-2. Aggiornare `docs/technical/IMPL_PLAN_FINANCIAL_REALIGN.md` alla v1.3:
+2. Aggiornare `docs/archive/specs/IMPL_PLAN_FINANCIAL_REALIGN.md` alla v1.3:
    - Blocco 3 **ri-scoped** a "Estendi-solo" (le due chiusure si disegnano disabilitate);
    - inserire un **Blocco Prereq P** (P1/P2/P3) prima della terminazione;
    - inserire il **NUOVO Blocco Terminazione (G7)** dopo il Blocco 4;
@@ -488,4 +488,4 @@ con rimborso + storno lascia il KPI **"Fatturato" invariato**, e la domanda è s
 
 ---
 
-_File chiave: `api/services/{contract_state,contract_settlement(new),cash_categories(new)}.py`, `api/routers/{contracts,rates,agenda,movements,dashboard,_audit}.py`, `api/schemas/financial.py`, `api/models/contract.py`, `api/services/schema_sync.py`, `alembic/versions/` (nuova revision, down_revision `b2f1a9c7d4e3`), `frontend/src/hooks/{useContracts,useDashboard,useRates}.ts`, `frontend/src/app/(dashboard)/{contratti,rinnovi-incassi,cassa}/page.tsx`, `frontend/src/types/api.ts`, `docs/technical/IMPL_PLAN_FINANCIAL_REALIGN.md`, `docs/operations/RUNBOOK_REMEDIATION_CONTRATTI_MUTI.md` (✅ consegnato G7.6)._
+_File chiave: `api/services/{contract_state,contract_settlement(new),cash_categories(new)}.py`, `api/routers/{contracts,rates,agenda,movements,dashboard,_audit}.py`, `api/schemas/financial.py`, `api/models/contract.py`, `api/services/schema_sync.py`, `alembic/versions/` (nuova revision, down_revision `b2f1a9c7d4e3`), `frontend/src/hooks/{useContracts,useDashboard,useRates}.ts`, `frontend/src/app/(dashboard)/{contratti,rinnovi-incassi,cassa}/page.tsx`, `frontend/src/types/api.ts`, `docs/archive/specs/IMPL_PLAN_FINANCIAL_REALIGN.md`, `docs/operations/RUNBOOK_REMEDIATION_CONTRATTI_MUTI.md` (✅ consegnato G7.6)._

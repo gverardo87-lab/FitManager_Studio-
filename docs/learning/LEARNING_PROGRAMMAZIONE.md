@@ -249,7 +249,7 @@ except Exception as e:
 > solleva è un bug che **deve** fallire rumoroso (la CI lo cattura). Per l'**osservabilità/instrumentation**
 > che non deve toccare la transazione, la mossa pulita è **disaccoppiarla** (eseguirla *dopo* il commit, sulla
 > verità persistita), **non** avvolgerla in un catch. Solo se serve davvero un guard di confine: fail-loud in
-> CI + flag, **mai** uno swallow. Dettaglio: `docs/technical/SPEC_G9_FINANCIAL_COMMAND_LAYER.md` §A.1-bis.
+> CI + flag, **mai** uno swallow. Dettaglio: `docs/specs/SPEC_G9_FINANCIAL_COMMAND_LAYER.md` §A.1-bis.
 
 ---
 

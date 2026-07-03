@@ -2689,3 +2689,34 @@ recesso = punto tributarista (D-PENALE-PROVISIONAL, come pro_sedute) · FDM/TASS
 con l'asse a 6 stati (prossima sessione docs).
 
 ---
+## 2026-07-03 (sessione 2) — Riordino strutturale docs/ + IL metodo (ciclo di vita dei documenti)
+
+**Trigger founder:** «stiamo accumulando spec in un'unica cartella che saturerà; a volte generiamo ADR,
+altre spec che non archiviamo mai; UPGRADE_LOG mai più aggiornato; gli agenti lavorano con contesto
+sbagliato. Un senior si fermerebbe, stabilirebbe IL metodo, farebbe un audit e ordine.» Audit con
+`docs-code-drift-auditor` (read-only): 8 HIGH (INDEX che descrive G9 "da implementare" a G9.3 chiuso,
+SPEC_RINVIO senza riga Stato e col predicato 2-stati superato, CLAUDE.md con 28 tabelle/361 test/conteggi
+file stale, api/CLAUDE.md col predicato occupazione vecchio) + 15 link BLOCCANTI mappati + conferma che
+`docs/upgrades/` è morto da marzo.
+
+**IL metodo (AGENTS.md §7, ratificato): la POSIZIONE è lo STATO.**
+`docs/adr/` = la legge (immortale, Addendum) · `docs/technical/` = SSoT evergreen (zero spec) ·
+**`docs/specs/` = NUOVA, solo spec aperte** (`ls docs/specs/` = work-queue) · `docs/archive/` = storia,
+mai contesto · BUILD_LOG = log unico (UPGRADE_LOG dismesso formalmente). Definition of Done del gate
+estesa: … → verifier → **fold-back docs (Stato+INDEX+BUILD_LOG+archiviazione) → push**.
+
+**Eseguito:** 3 spec vive → `docs/specs/` (G9, G8.4, VOCABOLARIO) · 8 spec implementate + IMPL_PLAN →
+`archive/specs/` · 2 AUDIT + ROADMAP (con header di esito: §1.2/§1.3 già shippate) → `archive/` ·
+chirurgia Stato su SPEC_RINVIO ("IMPLEMENTATA, SUPERATA da G7.8-bis 4-stati") · 15 link ripuntati
+(incl. `api/services/financial/__init__.py` e il docstring dell'harness) · INDEX riscritto (sezione
+`specs/` con work-queue + backlog esplicito: G8.2, G9.4-9.6, wallet append-only, forecast ponderato,
+punto tributarista, FDM 6-stati) · CLAUDE.md corretto (29 tabelle, ~790 test, contratto di contesto) ·
+api/CLAUDE.md predicato occupazione → simbolo SSoT · adr/README + Addendum ADR-017.
+
+**Guard ciclo-di-vita in `check-all.sh`** (le regole vivono nei check, non nella disciplina): FAIL se
+SPEC_*/IMPL_PLAN_* in technical/ o spec IMPLEMENTATA in specs/. **Il liveness-test del guard ha trovato
+un bug nel guard stesso**: `ls glob1 glob2` torna nonzero se UN glob non matcha → check cieco; fix con
+`compgen -G`. Lezione (terza della serie guard): OGNI guard nuovo va provato sul caso FAIL, non solo sul
+caso PASS — un guard mai visto fallire non è ancora un guard.
+
+---

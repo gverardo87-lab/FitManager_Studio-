@@ -4,7 +4,7 @@
 **Data:** 2026-06-27 · **Branch:** `FitManager_Studio`  
 **Stato:** ✅ **IMPLEMENTATO** (G7.9 il 2026-06-27 · G7.10 il 2026-06-28) · ratificata da **ADR-018** (accepted)  
 **Blocchi:** **G7.9** ✅ (core: esito balance-based + incasso contestuale *editabile* + rinuncia) · **G7.10** ✅ (credito differito: entità `crediti_terminazione` + worklist + incasso/annulla + reopen esteso). Post G7.7/G7.8. Resta come design-record + AC.  
-**Mappa di verita:** `docs/adr/ADR-018-terminazione-bilaterale-credito-trainer.md` · `docs/operations/AUDIT_TERMINAZIONE_BILATERALE_2026-06-27.md` · `docs/technical/FINANCIAL_DOMAIN_MODEL.md` v1.3 · `docs/technical/SPEC_G7.3_TERMINAZIONE_ENDPOINT.md` · `api/services/contract_settlement.py` · `api/routers/contracts.py` · `api/services/contract_state.py`
+**Mappa di verita:** `docs/adr/ADR-018-terminazione-bilaterale-credito-trainer.md` · `docs/operations/AUDIT_TERMINAZIONE_BILATERALE_2026-06-27.md` · `docs/technical/FINANCIAL_DOMAIN_MODEL.md` v1.3 · `docs/archive/specs/SPEC_G7.3_TERMINAZIONE_ENDPOINT.md` · `api/services/contract_settlement.py` · `api/routers/contracts.py` · `api/services/contract_state.py`
 
 ## Impact map
 

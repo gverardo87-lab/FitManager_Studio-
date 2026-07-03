@@ -9,8 +9,8 @@ Costruito per fallire OGGI sul caso `eroga_wallet_then_reopen` (Bug-1 dell'audit
 spariva dalla posizione alla riapertura) e tornare verde dopo il PASSO 4 (reopen ricalcola dalla
 fotografia netta). Tutti gli altri scenari sono già verdi (sono corretti).
 
-Riferimento: docs/technical/AUDIT_POSIZIONE_FINANZIARIA_E_INVARIANTI_2026-06-28.md (I1/I4/I5),
-docs/technical/SPEC_INTEGRITA_CONTABILE_E_WALLET.md (blocco G8.2).
+Riferimento: docs/archive/AUDIT_POSIZIONE_FINANZIARIA_E_INVARIANTI_2026-06-28.md (I1/I4/I5),
+docs/archive/specs/SPEC_INTEGRITA_CONTABILE_E_WALLET.md (blocco G8.2).
 """
 
 from datetime import date, datetime, timedelta

@@ -1,5 +1,10 @@
 # SPEC_RINVIO_LIBERA_CREDITO
 
+**Stato:** ✅ **IMPLEMENTATA** (G7.8, `f4101c4`, 2026-06-27) — **ESTESA da G7.8-bis** (2026-07-03,
+`4944a49`+`db322eb`, ADR-017 Addendum I): l'occupazione è ora un SSoT a **4 stati**
+(`contract_state.STATI_OCCUPAZIONE_CREDITO`, penali `Cancellato_Tardivo`/`No_Show` incluse) — il
+predicato a 2 stati prescritto qui sotto è SUPERATO. Vedi `docs/archive/specs/SPEC_LATE_CANCEL_NO_SHOW.md`.
+
 > Blocco: **G7.8** · ADR di copertura: **ADR-017** (emenda ADR-016 §1, **accepted** 2026-06-26)
 > Provenienza: segnalazione trainer reale (Chiara) — "i crediti delle sedute rinviate vengono scalati
 > come se fossero state svolte". Decisioni di dominio ratificate dal founder il 2026-06-26.

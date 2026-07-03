@@ -177,7 +177,7 @@ Invarianti immutati (cassa-immutabile, `residuo==0 ⟺ saldato`, Strada B). Test
 
 ## Addendum 2026-06-28 (II) — G8.2-prep: la fotografia netta PER-CONTRATTO + chiusura D1 (forma-d)
 
-Audit fondante: `docs/technical/AUDIT_POSIZIONE_FINANZIARIA_E_INVARIANTI_2026-06-28.md`. L'audit ha
+Audit fondante: `docs/archive/AUDIT_POSIZIONE_FINANZIARIA_E_INVARIANTI_2026-06-28.md`. L'audit ha
 confermato che il **read-model è già centralizzato** (`contract_state.py`) ma il **write-model è
 decentralizzato** (ogni transizione re-asserisce a mano gli invarianti, nessun punto unico, i clamp
 `max(0,…)` silenziano le violazioni), e ha trovato un **money-bug latente (Bug-1)**: `reopen` annullava il
