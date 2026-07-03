@@ -43,7 +43,12 @@ GUARD_FAIL=0
 # ADR-016 — barriera "euro-da-crediti": il modulo di conguaglio NON deve leggere l'occupazione/crediti.
 #   Il denaro del recesso deriva SOLO dalle sedute Completate + prezzo/versato/residuo; mai da
 #   crediti_residui/crediti_usati/sedute_rinviate/sedute_prenotate (asse occupazione/display).
-if grep -nE 'crediti_residui|crediti_usati|sedute_rinviate|sedute_prenotate' api/services/contract_settlement.py; then
+#   Anti-vacuita' (stessa lezione del guard ADR-019, G9.3): il file sorvegliato DEVE contenere ancora
+#   la logica (compute_settlement) — un positive-fail su file svuotato/rilocato passerebbe in silenzio.
+if ! grep -q 'def compute_settlement' api/services/contract_settlement.py; then
+    echo "  FAIL [ADR-016]: compute_settlement non trovato in contract_settlement.py (guard vacuo dopo un refactor?) — ripuntare il guard."
+    GUARD_FAIL=1
+elif grep -nE 'crediti_residui|crediti_usati|sedute_rinviate|sedute_prenotate' api/services/contract_settlement.py; then
     echo "  FAIL [ADR-016]: contract_settlement.py riferisce l'occupazione/crediti — il conguaglio usa solo le sedute Completate + prezzo/versato/residuo."
     GUARD_FAIL=1
 fi

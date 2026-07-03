@@ -2639,3 +2639,19 @@ sensore = post-condizione di ogni executor (spy test).
 grep-guard → test semantici). Poi G9.5 Hypothesis, G9.6 Money (differito).
 
 ---
+### 2026-07-02 (sessione 3, addendum) — verifier G9.3: guard ADR-019 vacuo trovato e chiuso
+
+Il **verifier adversariale** sul diff G9.3 ha classificato la rilocazione **byte-identica** (V1 diff
+meccanico corpo-per-corpo, 176/0 fascia money) MA ha trovato l'unico difetto reale: il **grep-guard
+ADR-019 era diventato VACUO** — estraeva il corpo di reopen da `contracts.py`, dove dopo G9.3b vive solo
+il delegatore → passava perché il codice sorvegliato era sparito dal file greppato (falso PASS, la classe
+di errore peggiore per un guard). **Fix `e748151`**: ripuntato su `execute_reopen` in `transitions.py` +
+**check anti-vacuità** (il corpo estratto DEVE contenere il marker `Cassa IMMUTABILE`, altrimenti FAIL
+esplicito). **Fix gemello sul residuo LOW**: ADR-016 era l'unico altro positive-fail senza anti-vacuità →
+stesso presidio (`def compute_settlement` richiesto nel file). Follow-up verifier: **PASS — MONEY AXIS
+PRESERVED**. **Lezione (classe generale):** un guard *positive-fail* (fallisce se un pattern APPARE) va
+sempre accoppiato a un check di **presenza** del codice sorvegliato — ogni rilocazione futura che svuota
+il file greppato deve rompere il guard, non zittirlo. È la conferma empirica del razionale G9.4 (grep-guard
+testuali → test semantici sul simbolo).
+
+---
