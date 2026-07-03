@@ -160,6 +160,10 @@ describe("guardedOpenChange — Save bypass", () => {
   it("save resetta dirty prima di chiudere → nessun confirm", () => {
     const onOpenChange = vi.fn();
     const { dirtyRef, guardedOpenChange: _guardedOpenChange } = createGuardedOpenChange(onOpenChange);
+    // L'intento è "confirm MAI CHIAMATO", non "confirm non esiste": jsdom recenti definiscono
+    // window.confirm di default → l'assert toBeUndefined era environment-dependent (pre-esistente).
+    const confirmSpy = vi.fn();
+    vi.stubGlobal("confirm", confirmSpy);
 
     // Utente ha modificato
     dirtyRef.current = true;
@@ -170,8 +174,9 @@ describe("guardedOpenChange — Save bypass", () => {
     onOpenChange(false);
 
     // Nessun confirm mostrato
-    expect(window.confirm).toBeUndefined();
+    expect(confirmSpy).not.toHaveBeenCalled();
     expect(onOpenChange).toHaveBeenCalledWith(false);
+    vi.unstubAllGlobals();
   });
 });
 
