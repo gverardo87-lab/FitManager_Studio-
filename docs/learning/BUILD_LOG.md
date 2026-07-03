@@ -2655,3 +2655,37 @@ il file greppato deve rompere il guard, non zittirlo. È la conferma empirica de
 testuali → test semantici sul simbolo).
 
 ---
+## 2026-07-03 — G7.8-bis Late Cancel & No Show (Step 0 prep-SSoT + Step 1 stati-penale)
+
+Dalle 2 spec del founder (ROADMAP_FINANCIAL_UPGRADES + SPEC_LATE_CANCEL_NO_SHOW, prodotte con AI
+esterna): analisi bridge code-grounded → 2 correzioni sostanziali all'inventario (§3.2 puntava a
+`contract_settlement.py` che è PURO — il conteggio vive in `transitions.py`; l'inventario taceva i
+21 siti denylist `!= 'Cancellato'` la cui semantica cambia in silenzio con stati nuovi) → **sequenza
+ratificata Step 0 → Step 1** invece dell'esecuzione diretta della spec.
+
+- **`4944a49` Step 0 (G7.8bis-prep, behavior-preserving):** predicato occupazione estratto a SSoT
+  `contract_state.STATI_OCCUPAZIONE_CREDITO`; TUTTI i 17 siti (12 ORM + 5 raw-SQL via bindparam
+  expanding) consumano il simbolo. `tests/test_occupazione_ssot.py` = **test semantico che vieta i
+  literal** (enforcement, non enumerazione — il gemello G9.4-style del grep-guard ADR-017). Censimento
+  denylist in SPEC §6.2 (decisione: NON cambiano — un No_Show è un appuntamento reale della relazione).
+  Governance: **ADR-017 Addendum I** (D-STATI-PENALE / D-SSOT-PREDICATO / D-CONTEGGI-SEPARATI /
+  D-DENYLIST-INTATTE / D-PENALE-PROVISIONAL). Suite 780.
+- **`db322eb` Step 1 (G7.8-bis):** i 2 stati-penale entrano nel SSoT (+2 stati in 1 frozenset = il
+  dividendo dello Step 0) su 3 assi: occupano il credito · contabilizzano nel conguaglio
+  (`count_sedute_penali`, audit con conteggi SEPARATI vere/penali/contabilizzate) · non sono
+  performance. **Nuovo asse dichiarato `STATI_OCCUPAZIONE_SLOT`**: le penali liberano lo slot
+  calendario (D-CALENDAR-OVERLAP) — l'overlap-check DIVERGE dall'asse credito (prima coincidevano;
+  senza il censimento Step 0, i No_Show avrebbero bloccato slot in silenzio). Suite **787**.
+
+**2 scoperte dal codice:** (1) `_check_overlap` consumava lo stesso predicato dell'occupazione — la
+divergenza degli assi andava DICHIARATA con una seconda costante, non ereditata; (2) il dettaglio
+contratto ri-implementava l'occupazione **sommando chiavi del breakdown a mano**
+(`programmate + completate`) — un sito semantico invisibile al literal-grep, ora derivato dal SSoT.
+Lezione: l'enforcement testuale (grep/literal-test) copre i re-inline sintattici, NON le
+re-implementazioni semantiche — quelle le trova solo la lettura del consumer.
+
+**⏭️ Residui:** display pieno penali nel FE (badge/timeline) → G8.4 · esigibilità della penale nel
+recesso = punto tributarista (D-PENALE-PROVISIONAL, come pro_sedute) · FDM/TASSONOMIA da aggiornare
+con l'asse a 6 stati (prossima sessione docs).
+
+---

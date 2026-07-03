@@ -1,7 +1,7 @@
 # SPEC G7.8-bis — Late Cancel e No Show
 
 **Tipo:** specifica prescrittiva (bridge Chat→Code), blocco di completamento dell'agenda e dell'asse occupazione crediti.
-**Stato:** ⏳ **PROPOSTA**
+**Stato:** ✅ **IMPLEMENTATA** (2026-07-03: Step 0 `4944a49` prep-SSoT + Step 1 `db322eb` stati-penale; suite 787; ADR-017 Addendum I accepted; correzioni bridge in §6)
 **Origine:** emersa nell'allineamento roadmap del 2026-07-03; rappresenta il completamento dell'**ADR-017** (Opzione C "Modello Mindbody", inizialmente differita per motivi di scope pre-lancio).
 **SSoT di dominio:** `FINANCIAL_DOMAIN_MODEL.md` (integrazione penali agenda e cassa) · `TASSONOMIA_FINANZIARIA.md`.
 **Posizione nella sequenza (Blocco G7/G8):**
