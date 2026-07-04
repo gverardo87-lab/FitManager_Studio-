@@ -30,8 +30,12 @@ from api.models.event import Event
 from api.models.client import Client
 from api.models.contract import Contract
 from api.routers._audit import log_audit
-from api.services.financial.transitions import sync_contract_chiuso
-from api.services.contract_state import STATI_OCCUPAZIONE_CREDITO, STATI_OCCUPAZIONE_SLOT
+from api.services.financial.transitions import puo_auto_riaprire, sync_contract_chiuso
+from api.services.contract_state import (
+    STATI_OCCUPAZIONE_CREDITO,
+    STATI_OCCUPAZIONE_SLOT,
+    STATI_SERVIZIO_CONTABILIZZATO,
+)
 
 router = APIRouter(prefix="/events", tags=["events"])
 
@@ -301,6 +305,34 @@ def _auto_assign_contract(
     return None
 
 
+_FENCE_DETAIL = (
+    "Contratto terminato: la seduta è entrata nel conguaglio di chiusura e non è modificabile. "
+    "Riapri il contratto per correggere la storia, poi termina di nuovo."
+)
+
+
+def _assert_storia_liquidata_intatta(session: Session, event, new_stato: str | None = None) -> None:
+    """Temporal fence (G7.8-ter / ADR-023): la base del conguaglio è immutabile su contratto liquidato.
+
+    Blocca (409) la mutazione di un evento quando: l'evento appartiene a un contratto `chiuso` NON
+    auto-riapribile (motivo TERMINAZIONE_*/CONSUNZIONE/NULL — riuso della reopen-allowlist G7.2 via
+    `puo_auto_riaprire`) E la mutazione tocca la base CONTABILIZZATA (stato di partenza o di arrivo in
+    `STATI_SERVIZIO_CONTABILIZZATO` = Completato + penali; per il delete conta lo stato attuale).
+    NON blocca la pulizia dei `Programmato` orfani (D-TF-PULIZIA: Programmato→Cancellato/Rinviato,
+    delete di non-contabilizzati) né date/titolo/note. Varco unico: POST /reopen (D-TF-VARCO) — dopo,
+    la storia torna editabile e la ri-terminazione ricalcola sul corretto."""
+    if not event.id_contratto:
+        return
+    tocca_base = event.stato in STATI_SERVIZIO_CONTABILIZZATO or (
+        new_stato is not None and new_stato in STATI_SERVIZIO_CONTABILIZZATO
+    )
+    if not tocca_base:
+        return
+    contract = session.get(Contract, event.id_contratto)
+    if contract is not None and contract.chiuso and not puo_auto_riaprire(contract):
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=_FENCE_DETAIL)
+
+
 def _sync_contract_chiuso(session: Session, contract_id: int) -> None:
     """Alias deprecato (G9.3d): delega alla transizione UNIFICATA `transitions.sync_contract_chiuso`
     (bidirezionale, reopen_motivo="riapertura_crediti" — il trigger di agenda è credit-driven).
@@ -548,6 +580,13 @@ def update_event(
             detail="Non puoi rinviare una seduta già svolta: riportala a Programmato o annullala.",
         )
 
+    # Bouncer 5 (G7.8-ter/ADR-023, temporal fence): su contratto LIQUIDATO (chiuso non auto-riapribile)
+    #   la base del conguaglio (Completato + penali) è immutabile — 409 che indirizza a POST /reopen.
+    #   I Programmato orfani restano ripulibili (D-TF-PULIZIA).
+    new_stato = update_data.get("stato")
+    if new_stato is not None and new_stato != event.stato:
+        _assert_storia_liquidata_intatta(session, event, new_stato)
+
     changes = {}
     for field, value in update_data.items():
         old_val = getattr(event, field)
@@ -590,6 +629,10 @@ def delete_event(
 
     if not event:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Evento non trovato")
+
+    # Temporal fence (G7.8-ter/ADR-023): un evento CONTABILIZZATO di un contratto liquidato non si
+    # elimina — sparirebbe dalla base del conguaglio già liquidato. Varco: POST /reopen.
+    _assert_storia_liquidata_intatta(session, event)
 
     event.deleted_at = datetime.now(timezone.utc)
     session.add(event)

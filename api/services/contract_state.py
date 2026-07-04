@@ -41,6 +41,13 @@ STATI_PENALE = frozenset({"Cancellato_Tardivo", "No_Show"})
 # dall'occupazione credito da G7.8-bis: prima coincidevano, ora sono due assi dichiarati.
 STATI_OCCUPAZIONE_SLOT = frozenset({"Programmato", "Completato"})
 
+# Asse CONTABILIZZATO (G7.8-ter / ADR-023): la base di compute_settlement (G7.9 + G7.8-bis) — le sedute
+# il cui valore entra nel conguaglio di terminazione. Ciò che è entrato in una liquidazione non si
+# riscrive finché il contratto resta liquidato (temporal fence, varco unico = reopen). I conteggi
+# `count_sedute_erogate` (Completato) + `count_sedute_penali` (STATI_PENALE) in transitions.py DEVONO
+# restare la partizione esatta di questo set (presidio in test_occupazione_ssot.py).
+STATI_SERVIZIO_CONTABILIZZATO = frozenset({"Completato"}) | STATI_PENALE
+
 
 class Lifecycle(str, Enum):
     ELIMINATO = "eliminato"

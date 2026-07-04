@@ -14,6 +14,7 @@ from api.services.contract_state import (
     STATI_OCCUPAZIONE_CREDITO,
     STATI_OCCUPAZIONE_SLOT,
     STATI_PENALE,
+    STATI_SERVIZIO_CONTABILIZZATO,
 )
 
 TODAY = date.today()
@@ -32,6 +33,10 @@ def test_ssot_baseline_g78bis():
     assert STATI_OCCUPAZIONE_SLOT == frozenset({"Programmato", "Completato"})
     assert STATI_PENALE < STATI_OCCUPAZIONE_CREDITO          # le penali sono un sottoinsieme proprio
     assert STATI_PENALE.isdisjoint(STATI_OCCUPAZIONE_SLOT)   # e non bloccano mai lo slot
+    # G7.8-ter (ADR-023): l'asse CONTABILIZZATO = Completato + penali — la base del conguaglio,
+    # protetta dal temporal fence. count_sedute_erogate/penali devono restare la sua partizione esatta.
+    assert STATI_SERVIZIO_CONTABILIZZATO == frozenset({"Completato"}) | STATI_PENALE
+    assert STATI_SERVIZIO_CONTABILIZZATO < STATI_OCCUPAZIONE_CREDITO
 
 
 def test_nessun_literal_occupazione_fuori_ssot():
