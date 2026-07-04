@@ -2720,3 +2720,28 @@ un bug nel guard stesso**: `ls glob1 glob2` torna nonzero se UN glob non matcha 
 caso PASS — un guard mai visto fallire non è ancora un guard.
 
 ---
+## 2026-07-04 — G7.8-ter Temporal fence (ADR-023): la storia contabilizzata di una liquidazione è immutabile
+
+**Trigger founder (2026-07-03):** «il fattore tempo sulle modifiche ai crediti — riaperture/rinvii/
+cancellazioni su contratti terminati riapre l'aspetto finanziario; se non protetto genera mismatch
+irreversibili». Prima della spec: **ricerca competitor su fonti ufficiali** (3 agenti — Mindbody,
+WellnessLiving, Zen Planner/Daxko, Glofox, Vagaro + QuickBooks/Xero/Stripe/Trainerize/PushPress;
+citazioni durevoli in `docs/archive/RICERCA_COMPETITOR_TEMPORAL_FENCE_2026-07-03.md`) → **5 leggi
+convergenti** (presenze libere/denaro no · mai ricalcolo incrociato automatico · la liquidazione
+CONGELA · correzione forward-only · la grazia sta PRIMA del denaro) + il pattern del varco maturo:
+esplicito, role-gated, auditato (QBO Exceptions-report). Perimetro code-grounded: il denaro era già
+tutto fenced (H1/M2/B-ter); il buco era SOLO `update_event.stato`/`delete_event`.
+
+**Opzione C ratificata → `bca28e0` governance** (ADR-023 accepted + SPEC in docs/specs/ + INDEX) →
+**`292949f` implementazione**: terzo asse SSoT `STATI_SERVIZIO_CONTABILIZZATO` (= Completato+penali,
+la base di compute_settlement) + helper unico `_assert_storia_liquidata_intatta` + Bouncer 5 su
+update_event + guard su delete_event (409 con microcopy che indirizza a `POST /reopen`). Raffinamento
+chiave emerso dal codice: il terminate NON tocca gli eventi futuri → la **pulizia dei `Programmato`
+orfani resta libera** (D-TF-PULIZIA) — il fence protegge la BASE, non l'agenda. Legacy NULL dentro,
+COMPLETAMENTO fuori (auto-reopen simmetrico invariato). +10 test AC-TF 1:1 con la SPEC (incl. varco:
+reopen → correggi → ri-termina ricalcola sul corretto). Suite full **797 passed / 0 xfailed**.
+
+**Il quadro temporale del dominio è ora completo:** cassa append-only (ADR-019) · denaro fenced
+(G7.7) · storia contabilizzata fenced (ADR-023) · varco unico esplicito e auditato (`reopen`).
+
+---

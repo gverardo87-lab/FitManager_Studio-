@@ -1,6 +1,6 @@
 # SPEC G7.8-ter — Temporal fence: eventi contabilizzati di contratti liquidati
 
-**Stato:** ⏳ **DA IMPLEMENTARE** (governance docs-only, zero codice prodotto)
+**Stato:** ✅ **IMPLEMENTATA** (2026-07-04, `292949f`; governance `bca28e0`; suite **797 passed**; 10 test AC-TF 1:1 + baseline SSoT estesa. Archiviata a chiusura gate, metodo AGENTS.md §7)
 **Tipo:** specifica prescrittiva (bridge Chat→Code) · **ADR di copertura:** `ADR-023` (accepted 2026-07-03)
 **Origine:** audit fattore-tempo del founder (2026-07-03) + ricerca competitor su fonti ufficiali
 (Mindbody, WellnessLiving, Zen Planner/Daxko, Glofox/ABC, Vagaro — leggi L1-L5 in ADR-023).

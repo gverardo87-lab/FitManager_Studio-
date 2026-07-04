@@ -567,6 +567,27 @@ Concetti trasferibili emersi durante il lavoro reale (non roadmap, ma lezioni di
 
 **Domande aperte:** [ ] criterio di selezione dei ~50-80 fondamentali (pattern, frequenza di prescrizione, copertura muscolare) da decidere col founder, eventualmente validato da Alessio.
 
+### Semantica nuova, interpreti sparsi — il falso allarme come sintomo strutturale (2026-07-03)
+
+**Contesto:** la card "Entrate" della Cassa segnava −140,42 € a luglio; il Mastro filtrato "Solo entrate" non mostrava nulla di negativo. Allarme rosso del founder ("bug nelle logiche di rimborso"), investigazione d'emergenza → zero bug: era il contra-ricavo G7.5 applicato correttamente (375 incassati − 515,42 rimborsati dalle terminazioni di test). INC: `INC-2026-07-03-falso-allarme-entrate-negative-cassa.md`.
+
+**Livello 1 — Cosa fa.** Quando il sistema introduce una *semantica nuova* (una categoria di cassa come `RIMBORSO_CONTRATTO`, uno stato come `Cancellato_Tardivo`, una causale), quella semantica nasce in UN punto (chi la scrive) ma deve essere *interpretata* in N punti (chi la legge: KPI, liste, grafici, forecast, burn rate). Se gli N interpreti sono query inline sparse, ognuno decide da se' il trattamento — e nessuna struttura elenca chi deve ancora decidere.
+
+**Livello 2 — Perche' lo voglio (riconoscere la classe).** Tutte le "rincorse" del progetto hanno questa stessa anatomia: `crediti_usati` prodotto da 5 siti (blind-spot ADR-017), colonne contratto scritte a mano in 7 siti (ADR-022), cascade FK dimenticati (pitfall #10), cache non invalidate (pitfall #8), query-cassa da riallineare a ogni categoria (G7.5). Riconoscere che sono UNA classe di problema — e non N problemi diversi — cambia il rimedio: non serve "pensarci di piu' la prossima volta", serve rendere strutturalmente impossibile *non* pensarci.
+
+**Livello 3 — Perche' funziona cosi' sotto (il metodo in 4 regole).** L'anticipazione non e' una virtu' cognitiva, e' una proprieta' del codice:
+1. **Chiudi l'insieme** — l'asse di variabilita' e' un set chiuso enumerato in un modulo solo (`CONTRACT_CASH_IN/OUT`, `STATI_OCCUPAZIONE_CREDITO`, `CAUSALI_RETTIFICA`);
+2. **Un solo interprete per asse** — i consumer chiamano la funzione pura del SSoT (`contract_state`, la penna di `ledger.py`), mai logica re-inlineata;
+3. **Totalita' per costruzione** — l'interprete su valore ignoto fa errore rumoroso (la penna G9.1 fa `ValueError`), MAI default implicito (le query-aggregato di lettura oggi classificano "per esclusione": fail-silent, il gemello cattivo);
+4. **Il gemello che vigila** — un test di esaustivita' fallisce quando nasce un membro senza trattamento dichiarato (`test_occupazione_ssot.py`): la rincorsa la fa la CI, non l'umano in produzione.
+Quando le 4 regole valgono, "aggiungere uno scenario" = aggiungere un membro all'enum, e il sistema stesso elenca i punti che devono decidere (perche' falliscono finche' non decidi).
+
+**Corollario di trasparenza:** un KPI che e' un NETTO (lordo − contra) non si mostra mai nudo: espone i componenti in API e in UI. Un numero giusto ma inspiegabile dalla UI stessa e' un difetto di prodotto — genera falsi allarmi, e i falsi allarmi sono incident reali (costano investigazione e fiducia).
+
+**Failure mode:** se introduco una categoria/stato nuovo e verifico solo "il flusso che lo crea funziona", gli interpreti non aggiornati lo classificano in silenzio col default sbagliato → il sintomo emerge settimane dopo come "numero strano" in una superficie lontana, e lo scopre un utente (o il founder in panico) invece di un test rosso il giorno della nascita.
+
+**Domande aperte:** [ ] gate G9 per il read-model della cassa (addendum ADR-022 + SPEC) — [ ] agente auditor "nascita di una semantica" che rilevi nel diff interpreti impliciti non totali (in discussione).
+
 ---
 
 ## Stato avanzamento

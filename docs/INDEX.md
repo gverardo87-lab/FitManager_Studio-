@@ -78,7 +78,6 @@ commit docs del gate (ciclo di vita: `AGENTS.md`).
 |------|-------|-------|
 | `SPEC_G9_FINANCIAL_COMMAND_LAYER.md` | 🟢 G9.0→G9.3 CHIUSI · **G9.4-G9.6 aperti** | Write-model del dominio finanziario (ADR-022): penna unica ✅, ledger rettifiche ✅, TransitionExecutor+FSM ✅; restano **G9.4** enforcement 409+flag + grep-guard→test semantici, **G9.5** Hypothesis, **G9.6** Money (differito) |
 | `SPEC_G8.4_TRASPARENZA_FINANZIARIA_FE.md` | ⏳ DA IMPLEMENTARE | Trasparenza finanziaria frontend (fette UX-pure F1/F2/F3/F5/F6 + F4 governance-first; D-3 goodwill scorporato in G8.5). Include: display penali G7.8-bis, validazione nota-abbuono in dialog |
-| `SPEC_TEMPORAL_FENCE_EVENTI_LIQUIDATI.md` | ⏳ DA IMPLEMENTARE (G7.8-ter) | **Temporal fence (ADR-023):** la base del conguaglio (Completato+penali) è immutabile su contratto liquidato; 2 guard 409 in agenda (update stato/delete); varco unico = reopen; pulizia Programmato orfani libera. Da ricerca competitor 5 leader (leggi L1-L5) |
 | `SPEC_VOCABOLARIO_E_CLASSIFICAZIONE_CONTRATTI.md` | ✅ Giro 1 · **⏳ Giro 2 pendente** | Consumo-SSoT stati contratto su tutte le superfici: restano `rinnovi-incassi` + `workspace_engine` off-SSoT + grep-guard |
 
 **Backlog (non-spec, censito qui):** G8.2 wallet auto-cross-contratto (in panchina, D2 aperta) · wallet
@@ -120,6 +119,7 @@ punto tributarista: policy `pro_sedute` + penale nel recesso (PROVISIONAL) · FD
 | `INC-2026-06-08-kpi-fatturato-contratti-chiusi.md` | P1: KPI fatturato/incassato escludevano i contratti chiusi — metriche storiche errate (v1.0.9) |
 | `INC-2026-06-15-installer-frpc-lock.md` | P2: upgrade installer bloccato (codice 5) da `frpc.exe` orfano — Job Object kill-on-close + installer chiude i processi (v1.0.12) |
 | `INC-2026-06-18-fingerprint-partial-license-lockout.md` | P1: hash fingerprint parziale → falso `wrong_machine` → blocco CRM intermittente. Fail-closed + no cache dei fallimenti (v1.0.13) |
+| `INC-2026-07-03-falso-allarme-entrate-negative-cassa.md` | P2 trasparenza (FALSO ALLARME): entrate nette −140,42 € percepite come bug rimborsi — calcolo esatto al centesimo, root cause = KPI netto opaco + read-model cassa decentralizzato. Origine del gate read-model G9 |
 
 ## learning/ — Diario di apprendimento personale
 
@@ -147,7 +147,7 @@ Formazione del founder-developer in parallelo allo sviluppo. Concetti tecnici st
 
 | Directory | Contenuto |
 |-----------|-----------|
-| `archive/specs/` | Spec storiche frozen (non modificare, **mai contesto di lavoro**): UPG storici + spec implementate. Batch 2026-07-03 (riordino): SPEC_G7.0, SPEC_G7.3, SPEC_REVISIONE_PRE_G7, SPEC_RINVIO (G7.8, superata da G7.8-bis), SPEC_TERMINAZIONE_BILATERALE (G7.9/10), SPEC_INTEGRITA (G8.1-G8.3), SPEC_LATE_CANCEL (G7.8-bis), IMPL_PLAN_FINANCIAL_REALIGN. Batch precedenti: SPEC_RINNOVO/TEMPORALE/RINNOVI_SCADUTI + IMPL_PLAN (06-23), G7.7_R5 + RETRODATAZIONE (06-27) |
+| `archive/specs/` | Spec storiche frozen (non modificare, **mai contesto di lavoro**): UPG storici + spec implementate. Batch 2026-07-03 (riordino): SPEC_G7.0, SPEC_G7.3, SPEC_REVISIONE_PRE_G7, SPEC_RINVIO (G7.8, superata da G7.8-bis), SPEC_TERMINAZIONE_BILATERALE (G7.9/10), SPEC_INTEGRITA (G8.1-G8.3), SPEC_LATE_CANCEL (G7.8-bis), IMPL_PLAN_FINANCIAL_REALIGN; 2026-07-04: SPEC_TEMPORAL_FENCE (G7.8-ter, ADR-023). Batch precedenti: SPEC_RINNOVO/TEMPORALE/RINNOVI_SCADUTI + IMPL_PLAN (06-23), G7.7_R5 + RETRODATAZIONE (06-27) |
 | `archive/` (root) | Snapshot storici: audit sicurezza pre/post-hardening, strategia anti-RE, pre-delivery audit 04-17, session handoff, DUAL_ENV, Tailscale + (2026-07-03) AUDIT_PRE_G7.3, AUDIT_POSIZIONE_FINANZIARIA, ROADMAP_FINANCIAL_UPGRADES (fotografia foldata) |
 | `archive/nutrition-v2-strategy.md` | Strategia nutrition v2 (obsoleta, 226 alimenti → ora 880) |
 | `upgrades/` | 🗄️ **DISMESSO 2026-07-03** — assorbito da `learning/BUILD_LOG.md` (unico log di sviluppo); resta come storico UPG |
