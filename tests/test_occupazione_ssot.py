@@ -82,3 +82,36 @@ def test_expiring_contracts_endpoint_conta_occupazione(client, auth_headers, sam
     items = [i for i in resp.json()["items"] if i["contract_id"] == cid]
     assert len(items) == 1
     assert items[0]["crediti_usati"] == 2          # Completato + Programmato; Rinviato liberato
+
+
+def test_partizione_contabilizzato_runtime(client, auth_headers, sample_client, session):
+    """G7.8-ter (LOW del verifier): presidio RUNTIME della partizione — la base del conguaglio derivata
+    da transitions (erogate + penali) DEVE coincidere col COUNT diretto su STATI_SERVIZIO_CONTABILIZZATO."""
+    from sqlmodel import func, select
+    from api.models.event import Event
+    from api.services.contract_state import STATI_SERVIZIO_CONTABILIZZATO
+    from api.services.financial.transitions import count_sedute_erogate, count_sedute_penali
+
+    r = client.post("/api/contracts", json={
+        "id_cliente": sample_client["id"], "tipo_pacchetto": "Pkg", "crediti_totali": 10,
+        "prezzo_totale": 1000.0, "data_inizio": TODAY.isoformat(),
+        "data_scadenza": (TODAY + timedelta(days=120)).isoformat(), "acconto": 0.0,
+    }, headers=auth_headers)
+    cid = r.json()["id"]
+    for day, stato in ((5, "Completato"), (6, "Completato"), (7, "No_Show"),
+                       (8, "Cancellato_Tardivo"), (9, "Programmato"), (10, "Rinviato")):
+        er = client.post("/api/events", json={
+            "titolo": "PT", "categoria": "PT", "stato": stato,
+            "id_cliente": sample_client["id"], "id_contratto": cid,
+            "data_inizio": f"2026-02-{day:02d}T09:00:00", "data_fine": f"2026-02-{day:02d}T10:00:00",
+        }, headers=auth_headers)
+        assert er.status_code in (200, 201), er.text
+
+    diretta = session.exec(
+        select(func.count(Event.id)).where(
+            Event.id_contratto == cid, Event.categoria == "PT",
+            Event.stato.in_(STATI_SERVIZIO_CONTABILIZZATO),
+            Event.deleted_at == None,  # noqa: E711
+        )
+    ).one()
+    assert count_sedute_erogate(session, cid) + count_sedute_penali(session, cid) == diretta == 4
