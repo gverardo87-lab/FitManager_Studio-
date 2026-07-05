@@ -48,6 +48,16 @@ STATI_OCCUPAZIONE_SLOT = frozenset({"Programmato", "Completato"})
 # restare la partizione esatta di questo set (presidio in test_occupazione_ssot.py).
 STATI_SERVIZIO_CONTABILIZZATO = frozenset({"Completato"}) | STATI_PENALE
 
+# ── Asse stati credito/wallet (A9, G9.4-bis.0 / ADR-022 Addendum II) ────────────────────────────
+# Lifecycle condiviso da `crediti_terminazione` (receivable trainer, G7.10) e `crediti_cliente`
+# (wallet, ADR-020): APERTO → SALDATO | ANNULLATO. Prima del SSoT: ~24 siti literal in 6 file
+# (censimento AUDIT_CENSIMENTO_ASSI_SEMANTICI_CASSA_2026-07-04 §2-A9). NON è l'asse A7
+# `stato_pagamento` del contratto (PENDENTE/PARZIALE/SALDATO): stringa uguale, dominio diverso.
+# I default nei modelli ORM restano literal (leaf, commentati) — la LOGICA consuma questi simboli.
+STATO_CREDITO_APERTO = "APERTO"
+STATO_CREDITO_SALDATO = "SALDATO"
+STATO_CREDITO_ANNULLATO = "ANNULLATO"
+
 
 class Lifecycle(str, Enum):
     ELIMINATO = "eliminato"
@@ -343,7 +353,7 @@ def posizione_netta_contratto(contract, crediti_cliente: Sequence = ()) -> Posiz
     werog = round(sum(
         (getattr(c, "importo_erogato", 0) or 0)
         for c in crediti_cliente
-        if getattr(c, "id_contratto_origine", None) == contract.id and getattr(c, "stato", None) != "ANNULLATO"
+        if getattr(c, "id_contratto_origine", None) == contract.id and getattr(c, "stato", None) != STATO_CREDITO_ANNULLATO
     ), 2)
     restituito = round(rf + werog, 2)
     return PosizioneContrattoCliente(
@@ -425,7 +435,7 @@ def assert_contract_invariants(
     werog_riassorbito = round(sum(
         (getattr(c, "importo_erogato", 0) or 0)
         for c in crediti_cliente
-        if getattr(c, "id_contratto_origine", None) == contract.id and getattr(c, "stato", None) == "ANNULLATO"
+        if getattr(c, "id_contratto_origine", None) == contract.id and getattr(c, "stato", None) == STATO_CREDITO_ANNULLATO
     ), 2)
     if rimborso_cassa_diretto is not None:
         # Ancora ledger FORTE: totale_rimborsato == Σ USCITA RIMBORSO[id_contratto==C] + Σ erogato riassorbito.

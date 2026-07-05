@@ -48,7 +48,12 @@ from api.schemas.financial import (
     FinancialTrendResponse,
 )
 from api.routers._audit import log_audit
-from api.services.cash_categories import CATEGORIA_ACCONTO_CONTRATTO, CATEGORIA_RIMBORSO_CONTRATTO
+from api.services.cash_categories import (
+    CATEGORIA_ACCONTO_CONTRATTO,
+    CATEGORIA_RIMBORSO_CONTRATTO,
+    CATEGORIA_STORNO_SPESA_FISSA,
+)
+from api.services.financial.ledger import signed_importo_case
 from api.services.recurring_expense_schedule import (
     VALID_RECURRING_EXPENSE_FREQUENCIES,
     get_recurring_expense_occurrences_in_month,
@@ -64,10 +69,8 @@ router = APIRouter(prefix="/movements", tags=["movements"])
 # SALDO ENGINE: Calcolo saldo cassa cumulativo
 # ════════════════════════════════════════════════════════════
 
-_signed_importo = case(
-    (CashMovement.tipo == "ENTRATA", CashMovement.importo),
-    else_=-CashMovement.importo,
-)
+# F8 (G9.4-bis.0): l'espressione firmata vive in financial/ledger.py (unica definizione)
+_signed_importo = signed_importo_case
 
 
 def _build_movement_filters(
@@ -1140,7 +1143,7 @@ def get_movement_stats(
         for m in movements
         if m.tipo == "ENTRATA"
         and m.id_spesa_ricorrente is not None
-        and m.categoria == "STORNO_SPESA_FISSA"
+        and m.categoria == CATEGORIA_STORNO_SPESA_FISSA
     )
     # G7.5: RIMBORSO_CONTRATTO è una USCITA **contra-ricavo** (specchio di STORNO_SPESA_FISSA,
     # contra-uscita): riduce gli incassi (entrate al netto delle restituzioni), MAI un costo operativo
@@ -1156,7 +1159,7 @@ def get_movement_stats(
         if m.tipo == "ENTRATA"
         and not (
             m.id_spesa_ricorrente is not None
-            and m.categoria == "STORNO_SPESA_FISSA"
+            and m.categoria == CATEGORIA_STORNO_SPESA_FISSA
         )
     ) - rimborsi_contratti
     totale_uscite_variabili = sum(
@@ -1188,7 +1191,7 @@ def get_movement_stats(
         is_storno_fissa = (
             m.tipo == "ENTRATA"
             and m.id_spesa_ricorrente is not None
-            and m.categoria == "STORNO_SPESA_FISSA"
+            and m.categoria == CATEGORIA_STORNO_SPESA_FISSA
         )
         is_rimborso_contratto = (
             m.tipo == "USCITA" and m.categoria == CATEGORIA_RIMBORSO_CONTRATTO
@@ -1667,7 +1670,7 @@ def get_financial_trend(
         key = (d.year, d.month)
         if key not in window_set:
             continue
-        if m.categoria == "STORNO_SPESA_FISSA":
+        if m.categoria == CATEGORIA_STORNO_SPESA_FISSA:
             continue  # rettifica di uscita, non un ricavo
         imp = m.importo or 0
         if m.id_contratto is not None:

@@ -40,7 +40,11 @@ from api.services.financial.invariant_gate import log_invariant_violations  # G9
 from api.services.financial.ledger import post_outflow  # G9.1 penna unica di posting
 from api.services.clinical_readiness import compute_clinical_readiness_data
 from api.services.safety_engine import extract_client_conditions
-from api.services.contract_state import STATI_OCCUPAZIONE_CREDITO
+from api.services.contract_state import (
+    STATI_OCCUPAZIONE_CREDITO,
+    STATO_CREDITO_APERTO,
+    STATO_CREDITO_SALDATO,
+)
 
 router = APIRouter(prefix="/clients", tags=["clients"])
 
@@ -1007,14 +1011,14 @@ def delete_client(
     open_wallet = session.exec(
         select(func.count(CreditoCliente.id)).where(
             CreditoCliente.id_cliente == client_id,
-            CreditoCliente.stato == "APERTO",
+            CreditoCliente.stato == STATO_CREDITO_APERTO,
             CreditoCliente.deleted_at == None,
         )
     ).one()
     open_receivable = session.exec(
         select(func.count(CreditoTerminazione.id)).where(
             CreditoTerminazione.id_cliente == client_id,
-            CreditoTerminazione.stato == "APERTO",
+            CreditoTerminazione.stato == STATO_CREDITO_APERTO,
             CreditoTerminazione.deleted_at == None,
         )
     ).one()
@@ -1115,7 +1119,7 @@ def eroga_credito_cliente(
     (RIMBORSO_CONTRATTO contra-ricavo): corretto, è denaro davvero uscito.
     """
     credito = _bouncer_credito_cliente(session, client_id, credito_id, trainer.id)
-    if credito.stato != "APERTO":
+    if credito.stato != STATO_CREDITO_APERTO:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="Il credito non è più aperto (saldato o annullato)")
     residuo_credito = round(max((credito.importo or 0) - (credito.importo_erogato or 0), 0.0), 2)
@@ -1142,7 +1146,7 @@ def eroga_credito_cliente(
     )  # id_contratto=None (cassa a livello CLIENTE, ADR-019/020); l'erogato è tracciato dal wallet
     credito.importo_erogato = round(old_erogato + data.importo, 2)
     if credito.importo_erogato >= (credito.importo or 0) - 0.009:
-        credito.stato = "SALDATO"
+        credito.stato = STATO_CREDITO_SALDATO
         credito.data_chiusura = data.data_pagamento or date.today()
     session.add(credito)
     session.flush()

@@ -198,14 +198,15 @@ def get_reconciliation(
                COALESCE(SUM(CASE WHEN m.tipo = 'USCITA' AND m.categoria = :rimborso_cat
                                  THEN m.importo ELSE 0 END), 0) as ledger_rimborsi_diretti,
                COALESCE((SELECT SUM(cc.importo_erogato) FROM crediti_cliente cc
-                         WHERE cc.id_contratto_origine = c.id AND cc.stato = 'ANNULLATO'
+                         WHERE cc.id_contratto_origine = c.id AND cc.stato = :stato_annullato
                            AND cc.deleted_at IS NULL), 0) as wallet_riassorbito
         FROM contratti c
         LEFT JOIN clienti cl ON cl.id = c.id_cliente
         LEFT JOIN movimenti_cassa m ON m.id_contratto = c.id AND m.deleted_at IS NULL
         WHERE c.trainer_id = :tid AND c.deleted_at IS NULL
         GROUP BY c.id
-    """), {"tid": trainer.id, "rimborso_cat": CATEGORIA_RIMBORSO_CONTRATTO}).fetchall()
+    """), {"tid": trainer.id, "rimborso_cat": CATEGORIA_RIMBORSO_CONTRATTO,
+         "stato_annullato": cstate.STATO_CREDITO_ANNULLATO}).fetchall()
 
     items = []
     aligned = 0
@@ -786,7 +787,7 @@ def get_crediti_da_incassare(
         .join(Client, CreditoTerminazione.id_cliente == Client.id)
         .where(
             CreditoTerminazione.trainer_id == trainer.id,
-            CreditoTerminazione.stato == "APERTO",
+            CreditoTerminazione.stato == cstate.STATO_CREDITO_APERTO,
             CreditoTerminazione.deleted_at == None,
         )
     ).all()
@@ -829,7 +830,7 @@ def get_rimborsi_da_erogare(
         .join(Client, CreditoCliente.id_cliente == Client.id)
         .where(
             CreditoCliente.trainer_id == trainer.id,
-            CreditoCliente.stato == "APERTO",
+            CreditoCliente.stato == cstate.STATO_CREDITO_APERTO,
             CreditoCliente.deleted_at == None,
         )
     ).all()

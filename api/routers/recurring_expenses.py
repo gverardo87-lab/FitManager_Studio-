@@ -14,7 +14,6 @@ from datetime import date, datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field, field_validator
-from sqlalchemy import case
 from sqlmodel import Session, select, func
 
 from api.database import get_session
@@ -23,6 +22,8 @@ from api.models.trainer import Trainer
 from api.models.recurring_expense import RecurringExpense
 from api.models.movement import CashMovement
 from api.routers._audit import log_audit
+from api.services.cash_categories import CATEGORIA_STORNO_SPESA_FISSA
+from api.services.financial.ledger import signed_importo_case
 from api.services.recurring_expense_schedule import (
     VALID_RECURRING_EXPENSE_FREQUENCIES,
     get_recurring_expense_occurrences_in_month,
@@ -47,10 +48,8 @@ def _resolve_occurrence_date(expense: RecurringExpense, key: str) -> Optional[da
     return resolve_recurring_expense_occurrence_date(expense, key)
 
 
-_signed_importo = case(
-    (CashMovement.tipo == "ENTRATA", CashMovement.importo),
-    else_=-CashMovement.importo,
-)
+# F8 (G9.4-bis.0): l'espressione firmata vive in financial/ledger.py (unica definizione)
+_signed_importo = signed_importo_case
 
 
 def _compute_saldo_for_preview(
@@ -575,7 +574,7 @@ def close_recurring_expense(
                 deleted_storno.deleted_at = None
                 deleted_storno.data_effettiva = movement.data_effettiva
                 deleted_storno.importo = movement.importo
-                deleted_storno.categoria = "STORNO_SPESA_FISSA"
+                deleted_storno.categoria = CATEGORIA_STORNO_SPESA_FISSA
                 deleted_storno.note = f"Storno spesa ricorrente: {expense.nome} ({movement.mese_anno})"
                 deleted_storno.operatore = "STORNO_UTENTE"
                 session.add(deleted_storno)
@@ -589,7 +588,7 @@ def close_recurring_expense(
                 trainer_id=trainer.id,
                 data_effettiva=movement.data_effettiva,
                 tipo="ENTRATA",
-                categoria="STORNO_SPESA_FISSA",
+                categoria=CATEGORIA_STORNO_SPESA_FISSA,
                 importo=movement.importo,
                 note=f"Storno spesa ricorrente: {expense.nome} ({movement.mese_anno})",
                 operatore="STORNO_UTENTE",

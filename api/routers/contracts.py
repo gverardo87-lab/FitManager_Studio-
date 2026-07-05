@@ -1073,14 +1073,14 @@ def delete_contract(
     open_wallet = session.exec(
         select(func.count(CreditoCliente.id)).where(
             CreditoCliente.id_contratto_origine == contract_id,
-            CreditoCliente.stato == "APERTO",
+            CreditoCliente.stato == cstate.STATO_CREDITO_APERTO,
             CreditoCliente.deleted_at == None,
         )
     ).one()
     open_receivable = session.exec(
         select(func.count(CreditoTerminazione.id)).where(
             CreditoTerminazione.id_contratto == contract_id,
-            CreditoTerminazione.stato == "APERTO",
+            CreditoTerminazione.stato == cstate.STATO_CREDITO_APERTO,
             CreditoTerminazione.deleted_at == None,
         )
     ).one()
@@ -1532,7 +1532,7 @@ def reopen_preview(
     open_wallets = session.exec(
         select(CreditoCliente).where(
             CreditoCliente.id_contratto_origine == contract.id,
-            CreditoCliente.stato != "ANNULLATO",
+            CreditoCliente.stato != cstate.STATO_CREDITO_ANNULLATO,
             CreditoCliente.deleted_at == None,
         )
     ).all()
@@ -1564,7 +1564,7 @@ def reopen_preview(
     receivable_da_annullare = len(session.exec(
         select(CreditoTerminazione).where(
             CreditoTerminazione.id_contratto == contract.id,
-            CreditoTerminazione.stato != "ANNULLATO",
+            CreditoTerminazione.stato != cstate.STATO_CREDITO_ANNULLATO,
             CreditoTerminazione.deleted_at == None,
         )
     ).all())
@@ -1679,7 +1679,7 @@ def incassa_credito_terminazione(
     `totale_versato +=`: i due si compensano (Reperto #1 G9.0, chiude I1 residuo_raw<0; corregge reopen-preview).
     """
     credito = _bouncer_credito(session, contract_id, credito_id, trainer.id)
-    if credito.stato != "APERTO":
+    if credito.stato != cstate.STATO_CREDITO_APERTO:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="Il credito non è più aperto (saldato o annullato)")
     residuo_credito = round(max((credito.importo or 0) - (credito.importo_incassato or 0), 0.0), 2)
@@ -1725,7 +1725,7 @@ def incassa_credito_terminazione(
 
     credito.importo_incassato = round((credito.importo_incassato or 0) + data.importo, 2)
     if credito.importo_incassato >= (credito.importo or 0) - 0.009:
-        credito.stato = "SALDATO"
+        credito.stato = cstate.STATO_CREDITO_SALDATO
         credito.data_chiusura = data.data_pagamento or date.today()
     session.add(credito)
 
@@ -1761,14 +1761,14 @@ def annulla_credito_terminazione(
     annullare il receivable smette solo di tracciarlo, non muove denaro. Bouncer 404; non-APERTO → 400.
     """
     credito = _bouncer_credito(session, contract_id, credito_id, trainer.id)
-    if credito.stato != "APERTO":
+    if credito.stato != cstate.STATO_CREDITO_APERTO:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="Il credito non è più aperto (saldato o già annullato)")
-    credito.stato = "ANNULLATO"
+    credito.stato = cstate.STATO_CREDITO_ANNULLATO
     credito.data_chiusura = date.today()
     session.add(credito)
     log_audit(session, "credito_terminazione", credito.id, "UPDATE", trainer.id, {
-        "stato": {"old": "APERTO", "new": "ANNULLATO"},
+        "stato": {"old": cstate.STATO_CREDITO_APERTO, "new": cstate.STATO_CREDITO_ANNULLATO},
     })
     session.commit()
     session.refresh(credito)

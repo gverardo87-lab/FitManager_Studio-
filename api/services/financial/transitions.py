@@ -242,7 +242,7 @@ def execute_terminate(
                 id_cliente=contract.id_cliente,
                 importo=wallet_credit,
                 importo_erogato=0.0,
-                stato="APERTO",
+                stato=cstate.STATO_CREDITO_APERTO,
                 causale="RIMBORSO_DIFFERITO",
                 id_contratto_origine=contract.id,
                 data_creazione=data_chiusura,
@@ -304,7 +304,7 @@ def execute_terminate(
                 id_cliente=contract.id_cliente,
                 importo=settlement.credito_trainer,
                 importo_incassato=0.0,
-                stato="APERTO",
+                stato=cstate.STATO_CREDITO_APERTO,
                 data_creazione=data_chiusura,
             )
             session.add(credito_differito)
@@ -550,12 +550,12 @@ def execute_reopen(session: Session, *, contract: Contract, trainer: Trainer) ->
     open_credits = session.exec(
         select(CreditoTerminazione).where(
             CreditoTerminazione.id_contratto == contract.id,
-            CreditoTerminazione.stato != "ANNULLATO",
+            CreditoTerminazione.stato != cstate.STATO_CREDITO_ANNULLATO,
             CreditoTerminazione.deleted_at == None,  # noqa: E711
         )
     ).all()
     for cr in open_credits:
-        cr.stato = "ANNULLATO"
+        cr.stato = cstate.STATO_CREDITO_ANNULLATO
         cr.data_chiusura = date.today()
         session.add(cr)
         log_audit(session, "credito_terminazione", cr.id, "UPDATE", trainer.id, {
@@ -575,13 +575,13 @@ def execute_reopen(session: Session, *, contract: Contract, trainer: Trainer) ->
     open_wallets = session.exec(
         select(CreditoCliente).where(
             CreditoCliente.id_contratto_origine == contract.id,
-            CreditoCliente.stato != "ANNULLATO",
+            CreditoCliente.stato != cstate.STATO_CREDITO_ANNULLATO,
             CreditoCliente.deleted_at == None,  # noqa: E711
         )
     ).all()
     for w in open_wallets:
         wallet_erogato_riassorbito += (w.importo_erogato or 0)  # cassa già uscita → rientra nella posizione
-        w.stato = "ANNULLATO"
+        w.stato = cstate.STATO_CREDITO_ANNULLATO
         w.data_chiusura = date.today()
         session.add(w)
         log_audit(session, "credito_cliente", w.id, "UPDATE", trainer.id, {

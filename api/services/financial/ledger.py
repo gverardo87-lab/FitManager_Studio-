@@ -16,16 +16,27 @@ from __future__ import annotations
 from datetime import date
 from typing import Optional
 
+from sqlalchemy import case
 from sqlmodel import Session, select
 
 from api.models.contract import Contract
 from api.models.credito_cliente import CreditoCliente
 from api.models.movement import CashMovement
 from api.models.rettifica_contratto import CAUSALI_RETTIFICA, RettificaContratto
+from api.services.contract_state import STATO_CREDITO_ANNULLATO
 from api.services.cash_categories import (
     CATEGORIA_RIMBORSO_CONTRATTO,
     CONTRACT_CASH_IN,
     CONTRACT_CASH_OUT,
+)
+
+
+# F8 (G9.4-bis.0, ADR-022 Add. II): espressione FIRMATA del mastro (ENTRATA +, USCITA −) — UNICA
+# definizione (era duplicata in movements.py e recurring_expenses.py). Asse cassa-pura: somma per
+# solo `tipo`, nessun netting semantico (quello è del read-model, G9.4-bis.1+).
+signed_importo_case = case(
+    (CashMovement.tipo == "ENTRATA", CashMovement.importo),
+    else_=-CashMovement.importo,
 )
 
 
@@ -175,7 +186,7 @@ def project_columns_from_ledger(session: Session, contract_id: int) -> dict:
         (c.importo_erogato or 0) for c in session.exec(
             select(CreditoCliente).where(
                 CreditoCliente.id_contratto_origine == contract_id,
-                CreditoCliente.stato == "ANNULLATO",
+                CreditoCliente.stato == STATO_CREDITO_ANNULLATO,
                 CreditoCliente.deleted_at == None,  # noqa: E711
             )
         ).all()
