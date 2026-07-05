@@ -126,3 +126,34 @@ def test_ac_rm5_senza_rimborsi_componenti_neutri(client, auth_headers, session):
     stats = client.get("/api/movements/stats?anno=2027&mese=4", headers=auth_headers).json()
     assert stats["totale_entrate"] == 200.0 == stats["entrate_lorde"]
     assert stats["rimborsi_contratti"] == 0.0
+
+
+# ── AC-RM-3 (bis.4): no re-inline — le categorie semantiche vivono SOLO nel SSoT ──
+
+def test_ac_rm3_nessun_literal_categoria_fuori_ssot():
+    """Nessun file di api/ re-inlinea una categoria semantica della cassa come literal quotato
+    (branch, filtri SQL, assegnazioni): l'unico punto di verità è cash_categories.py. Gemello del
+    pattern test_occupazione_ssot (enforcement, non enumerazione — confluisce nel presidio G9.4-b).
+    Le righe di solo-commento/prosa sono esenti (il literal in un docstring non decide nulla)."""
+    from pathlib import Path as P
+    api_dir = P(__file__).resolve().parent.parent / "api"
+    ssot = api_dir / "services" / "cash_categories.py"
+    categorie = ("STORNO_SPESA_FISSA", "RIMBORSO_CONTRATTO", "ACCONTO_CONTRATTO",
+                 "PAGAMENTO_RATA", "INCASSO_CONGUAGLIO_CONTRATTO")
+    violazioni = []
+    for py in api_dir.rglob("*.py"):
+        if py == ssot:
+            continue
+        for i, line in enumerate(py.read_text(encoding="utf-8").splitlines(), start=1):
+            stripped = line.strip()
+            if stripped.startswith("#"):
+                continue
+            for cat in categorie:
+                if f'"{cat}"' in line or f"'{cat}'" in line:
+                    violazioni.append(f"{py.relative_to(api_dir.parent)}:{i}: {stripped[:90]}")
+    assert not violazioni, (
+        "Categoria semantica re-inlineata fuori dal SSoT (usa le costanti di cash_categories):
+"
+        + "
+".join(violazioni)
+    )
