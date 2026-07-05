@@ -264,3 +264,50 @@ ancora sensore → full suite a ogni passo. Behavior-preserving (`residuo()` inv
 - **`id_cliente` NON entra in `rettifiche_contratto`** (DEC-3): l'enumerazione di D-STORNO-LEDGER-SEPARATO è la forma
   esatta — lo storno è un sotto-libro del contratto (nessuna worklist per-cliente), `id_cliente` è derivabile via
   `JOIN` (no verità-parallela proprio dentro l'ADR che le vieta). `trainer_id` resta (tenant-isolation).
+
+## Addendum II (2026-07-05) — G9.4-bis: il read-model della cassa è il gemello di LETTURA della penna
+
+**Contesto.** Trigger: `INC-2026-07-03-falso-allarme-entrate-negative-cassa.md` (il founder non riusciva a
+spiegare dalla propria UI un −140,42 € di entrate nette — matematica esatta, semantica invisibile) +
+censimento code-grounded `AUDIT_CENSIMENTO_ASSI_SEMANTICI_CASSA_2026-07-04.md`. ADR-022 ha chiuso la
+doppia-verità **in scrittura**; il censimento dimostra che la **lettura** ha lo stesso difetto strutturale in
+forma speculare: il "piano dei conti" del sistema (6 classi contabili de-facto) non ha una funzione che lo
+nomini — vive inline, ripetuto e leggermente variato, in ~7 superfici di aggregazione (stats, burn, forecast,
+trend, monthly_revenue, recurring, balance), con **default silenzioso** (categoria ignota classificata per
+esclusione). La penna è fail-loud (`ValueError`), le query di lettura sono fail-silent: il gemello cattivo.
+ADR-019 aveva già previsto questo rischio quando scartò lo storno-in-cassa («andrebbe escluso in **tutti**
+gli aggregati — di nuovo la superficie G7.5»).
+
+**Decisioni founder (2026-07-05):**
+
+1. **D-CLASSIFY-SSOT** — nasce `classify_cash_movement(tipo, categoria, id_contratto, id_spesa_ricorrente)
+   → ClasseContabile` in `cash_categories.py` (**firma scalare**: il modulo resta zero-DB, zero import ORM).
+   Enum **chiuso a 6 classi**: `RICAVO_CONTRATTUALE` · `ALTRO_INCASSO` · `RETTIFICA_COSTO_FISSO` ·
+   `CONTRA_RICAVO` · `COSTO_FISSO` · `COSTO_VARIABILE`. Predicato = **partizione strutturale** (tipo ×
+   presenza FK, esaustiva per costruzione — TASSONOMIA §2) **+ categorie** (A2 contrattuali / A3 rettifica).
+   Le superfici di aggregazione consumano la classificazione (o i predicati che ne derivano), MAI
+   `tipo`/`categoria` grezzi.
+2. **D-LETTURA-FAIL-LOUD** — le celle strutturalmente impossibili (es. USCITA con `id_contratto` e categoria
+   non-OUT) → `ValueError`, gemello del posting. L'asse "categorie spese libere" (A4) resta **aperto
+   by-design**: la classe la dà la struttura, mai la stringa libera.
+3. **D-NESSUN-NETTO-NUDO** — ogni KPI che è un NETTO espone i componenti nel contratto API (modello già in
+   casa: financial-trend G7.5b, lordo + contra-linea + netto). `/movements/stats` espone
+   `entrate_lorde`/`rimborsi_contratti`/`storno_fisse`; la card Entrate mostra il sub-label. La semantica
+   "cassa pura" di `/balance` (nessun netting) si **dichiara** (era corretta ma anonima — il bilinguismo non
+   segnalato saldo↔conto-economico è la trappola percettiva dell'INC).
+4. **D-GEMELLO-ESAUSTIVITÀ** — test semantico che vieta il re-inline (pattern `test_occupazione_ssot.py`) +
+   esaustività categoria→classe: una categoria nuova senza classe dichiarata = suite rossa **il giorno della
+   nascita** (i test G7.5 esistenti sono gemelli di *regressione*, non scattano alla nascita). Confluisce nel
+   presidio di G9.4-b (grep-guard → test semantici).
+5. **D-PARALLELO-A-G9.4** — blocco **G9.4-bis**, spec separata `SPEC_G9.4-BIS_READ_MODEL_CASSA.md`.
+   **Behavior-preserving** (i numeri di oggi sono giusti — cambia *chi* li interpreta, non *cosa* valgono) →
+   parallelizzabile con G9.4 (write-enforcement): file disgiunti, G9.4 resta l'unico gate che cambia
+   comportamento osservabile. Quick-win del censimento **anticipati** come G9.4-bis.0: F3 (storno → costante,
+   anche in scrittura), F4 (asse stati credito/wallet → costanti in `contract_state.py`), F8 (de-dup
+   `signed_importo`).
+
+**Invarianti che NON cambiano:** tutti — asse DENARO byte-identico (oracolo: `test_g75_cash_alignment` +
+golden pre/post migrazione). Questo Addendum estende il perimetro di ADR-022 dalla scrittura alla lettura:
+stesso meta-pattern, stessa cura.
+
+**Stato (2026-07-05): ACCETTATA — implementazione affidata alla sessione-codice (ordine: G9.4-bis.0 quick-win → G9.4 → gate read-model).**

@@ -7,6 +7,10 @@ design `757091b` + a `44d0494` + b `43fa250` + c/d `6a2aaf9`, 2026-07-02, suite 
 G9.2). Prossimi: **G9.4 enforcement** (409+flag, ritiro grep-guard) · G9.5 Hypothesis · G9.6 Money (differito).
 Design di dettaglio: **G9.0 → Appendice A**, **G9.2b → Appendice B** (DEC-1/2/3), **G9.3 → Appendice C**
 (D-C1..D-C7, FSM, direzioni per-caller).
+**Gemello di lettura (2026-07-05):** il blocco **G9.4-bis** (read-model della cassa — ADR-022 **Addendum II**,
+spec separata `SPEC_G9.4-BIS_READ_MODEL_CASSA.md`) corre in **parallelo** a G9.4: behavior-preserving, file
+disgiunti; i suoi test semantici (esaustività categoria→classe, no-re-inline) confluiscono nello stesso
+presidio di G9.4-b.
 **Blocco proposto:** **G9** — elevazione del write-model del dominio contrattuale-economico. Ratifica
 `ADR-022`. Sette gate sequenziali, branch sempre rilasciabile.
 **Mappa di verità:** `docs/adr/ADR-022-financial-command-layer-ledger-load-bearing.md` ·
@@ -273,6 +277,7 @@ allo stringimento deliberato dell'epsilon (gated, post-scan).
 | **G9.2** | Storno/fold come postings + `project_columns_from_ledger` | G9.1 | medio / alto | invariato (valori) |
 | **G9.3** | TransitionExecutor + FSM chiusura + unifica auto-close | G9.1, G9.2 | medio / medio | invariato |
 | **G9.4** | Invarianti → 409+rollback (flag) + ritiro grep-guard → test semantici | G9.0, G9.3 | medio / medio | **nuovi 409 (flag)** |
+| **G9.4-bis** | *(parallelo a G9.4, spec separata)* Read-model cassa: `classify` 6 classi + migrazione superfici + esaustività + bucket `/stats` | censimento 2026-07-04, G9.1 (simmetria) | basso / medio | invariato (valori) |
 | **G9.5** | Hypothesis RuleBasedStateMachine | G9.3 | basso / medio | invariato (test-only) |
 | **G9.6** | *(differito)* Money value-type + fase-storage | G9.3 (gated, non blocca) | basso / alto | invariato fino a epsilon-tighten |
 

@@ -3,6 +3,20 @@
 Questa non e' una fonte di regole nuove.
 Raccoglie solo lezioni concrete da errori gia' emersi, per evitare che la memoria orale torni a guidare il progetto.
 
+## 2026-07-03 - Falso allarme: entrate negative in Cassa percepite come bug del rimborso (P2 - trasparenza)
+
+Problema:
+- card "Entrate" Cassa/luglio = −140,42 € (375 incassi lordi − 515,42 rimborsi da terminazioni di test); filtro "Solo entrate" del Mastro non mostrava nulla di negativo (i rimborsi sono USCITA) → founder in massima allerta ipotizzando bug nelle logiche G7/G8
+- investigazione fino ai contratti sorgente: ZERO bug, settlement esatti al centesimo, ciclo terminate→reopen→ri-terminate conforme ADR-019. Il numero era il contra-ricavo G7.5 applicato correttamente
+- root cause dell'ALLARME (non del calcolo): KPI netto senza componenti esposti (`/stats` non espone lordo/rimborsi) + KPI in lingua "conto economico" vs lista in lingua "cassa" senza ponte + read-model cassa decentralizzato in ~6 interpreti inline + default silenzioso in lettura (categoria ignota classificata per esclusione, mentre la penna G9.1 e' fail-loud)
+
+Lezioni:
+- un falso allarme e' un incident reale: la sua root cause e' sempre debito di trasparenza. Numero giusto ma inspiegabile in-place = difetto di prodotto. Se il progettista va in allarme, il trainer andra' nel panico (cfr. INC-2026-06-08)
+- nessun KPI netto nudo: ogni netto espone i componenti in API e in UI ("Lorde X · Rimborsi −Y")
+- anticipare non e' disciplina, e' struttura: chiudi l'insieme / un solo interprete per asse / totalita' fail-loud / gemello di esaustivita' che vigila in CI. La rincorsa delle logiche (G7.5, ADR-017, ADR-022) ha sempre la stessa anatomia: semantica nata in un punto, interpretata in N punti che nessuna struttura enumera
+- il read-model della cassa e' il gemello mancante della penna (G9.1): serve `classify(movement) → classe` totale e fail-loud in `cash_categories.py`, consumato da tutte le superfici
+- report completo: `docs/incidents/INC-2026-07-03-falso-allarme-entrate-negative-cassa.md`
+
 ## 2026-06-18 - Fingerprint hardware parziale → blocco CRM ricorrente (P1)
 
 Problema:

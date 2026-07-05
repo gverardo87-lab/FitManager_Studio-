@@ -88,7 +88,8 @@ Quando valgono tutte e quattro, la rincorsa la fa la CI, non il founder in produ
 | # | Azione | Stato |
 |---|--------|-------|
 | 1 | Registrare questo INC + voce POSTMORTEMS + cattura learning (LEARNING_PROGRAMMAZIONE §Concetti dal campo) | COMPLETATO (2026-07-04) |
-| 2 | Addendum ADR-022: il read-model della cassa e' il gemello di lettura della penna (governance prima del codice) | TODO |
-| 3 | SPEC_G9: gate read-model cassa — enum classi di lettura, mappa categoria→classe, migrazione delle ~6 superfici, test di esaustivita' come AC | TODO |
-| 4 | `/movements/stats` espone i bucket (`entrate_lorde`, `rimborsi_contratti`) + sub-label UI sulla card Entrate | TODO (dentro il gate, non come cerotto) |
-| 5 | Valutare agente auditor "nascita di una semantica" (rilevazione interpreti impliciti nel diff, gemello semantico di docs-code-drift-auditor / financial-invariant-verifier) | IN DISCUSSIONE |
+| 2 | Addendum ADR-022 (Addendum II): il read-model della cassa e' il gemello di lettura della penna | COMPLETATO (2026-07-05) |
+| 3 | Gate read-model cassa: `SPEC_G9.4-BIS_READ_MODEL_CASSA.md` (blocco G9.4-bis, parallelo a G9.4) — enum 6 classi, migrazione superfici I1-I8, esaustivita' come AC | COMPLETATO (2026-07-05, spec aperta) |
+| 4 | `/movements/stats` espone i bucket (`entrate_lorde`, `rimborsi_contratti`) + sub-label UI sulla card Entrate | TODO (G9.4-bis.3, dentro il gate) |
+| 5 | Agente auditor "nascita di una semantica": charter definito (SPEC G9.4-bis §5, controlli S1-S5, perimetro finanziario v1); definizione in `.claude/agents/` a valle del gate | CHARTER DEFINITO (2026-07-05) |
+| 6 | Quick-win censimento F3 (storno→costante) / F4 (costanti stati credito) / F8 (de-dup signed case) — G9.4-bis.0 | AFFIDATO alla sessione-codice (primo commit, prima di G9.4) |
