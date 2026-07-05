@@ -52,6 +52,9 @@ from api.services.cash_categories import (
     CATEGORIA_ACCONTO_CONTRATTO,
     CATEGORIA_RIMBORSO_CONTRATTO,
     CATEGORIA_STORNO_SPESA_FISSA,
+    CONTRACT_CASH_CATEGORIES,
+    ClasseContabile,
+    classify_cash_movement,
 )
 from api.services.financial.ledger import signed_importo_case
 from api.services.recurring_expense_schedule import (
@@ -291,8 +294,21 @@ def _estimate_monthly_expense(expense: RecurringExpense) -> float:
     return expense.importo
 
 
+def _condizioni_costo_variabile() -> list:
+    """Proiezione SQL di `ClasseContabile.COSTO_VARIABILE` (G9.4-bis.2, ADR-022 Add. II): USCITA
+    libera — niente spesa ricorrente (≠ COSTO_FISSO), niente rimborso contrattuale (≠ CONTRA_RICAVO).
+    UNICA definizione per le 3 query burn (I2 + I4×2): il predicato deriva dal piano dei conti, i siti
+    non lo re-inlineano. coalesce = null-safe (USCITA manuali senza categoria restano nel burn).
+    G7.3 §7: senza l'esclusione del rimborso il burn si gonfia → cash_protection degrada a CRITICO falso."""
+    return [
+        CashMovement.tipo == "USCITA",
+        CashMovement.id_spesa_ricorrente == None,  # noqa: E711
+        func.coalesce(CashMovement.categoria, "") != CATEGORIA_RIMBORSO_CONTRATTO,
+    ]
+
+
 def _compute_variable_burn_rate(session: Session, trainer: Trainer, today: date) -> float:
-    """Media uscite variabili/mese sugli ultimi 3 mesi chiusi."""
+    """Media uscite variabili/mese sugli ultimi 3 mesi chiusi (classe COSTO_VARIABILE)."""
     past_months = _prev_months(today.year, today.month, 3)
     if not past_months:
         return 0.0
@@ -302,13 +318,7 @@ def _compute_variable_burn_rate(session: Session, trainer: Trainer, today: date)
         month_total = session.exec(
             select(func.coalesce(func.sum(CashMovement.importo), 0)).where(
                 CashMovement.trainer_id == trainer.id,
-                CashMovement.tipo == "USCITA",
-                CashMovement.id_spesa_ricorrente == None,
-                # G7.3 §7: un RIMBORSO_CONTRATTO è una USCITA contra-ricavo, NON un costo operativo
-                # variabile. Senza questa esclusione gonfierebbe il burn → _build_cash_protection a valle
-                # potrebbe degradare a CRITICO falso (unica query-cassa con profilo-allarme). coalesce =
-                # null-safe (le USCITA manuali senza categoria restano nel burn).
-                func.coalesce(CashMovement.categoria, "") != CATEGORIA_RIMBORSO_CONTRATTO,
+                *_condizioni_costo_variabile(),
                 extract("year", CashMovement.data_effettiva) == anno,
                 extract("month", CashMovement.data_effettiva) == mese,
                 CashMovement.deleted_at == None,
@@ -1137,42 +1147,27 @@ def get_movement_stats(
         )
     ).all()
 
-    # Single Source of Truth: tutto da CashMovement
-    storno_fisse = sum(
-        m.importo
+    # G9.4-bis.2 (ADR-022 Add. II): ogni movimento è classificato UNA volta dal piano dei conti —
+    # le somme derivano dalle CLASSI, mai da branch su tipo/categoria grezzi. Una categoria nuova
+    # senza classe dichiarata qui NON cade più in un bucket per esclusione: classify è fail-loud.
+    classificati = [
+        (m, classify_cash_movement(m.tipo, m.categoria, m.id_contratto, m.id_spesa_ricorrente))
         for m in movements
-        if m.tipo == "ENTRATA"
-        and m.id_spesa_ricorrente is not None
-        and m.categoria == CATEGORIA_STORNO_SPESA_FISSA
+    ]
+    per_classe: dict[ClasseContabile, float] = defaultdict(float)
+    for m, classe in classificati:
+        per_classe[classe] += m.importo
+
+    storno_fisse = per_classe[ClasseContabile.RETTIFICA_COSTO_FISSO]
+    # G7.5: CONTRA_RICAVO (rimborso contrattuale) riduce gli incassi, MAI un costo operativo.
+    # Single-treatment (IMPL_PLAN §5): sottratto dalle entrate E fuori dalle variabili — mai entrambi.
+    rimborsi_contratti = per_classe[ClasseContabile.CONTRA_RICAVO]
+    entrate_lorde = (
+        per_classe[ClasseContabile.RICAVO_CONTRATTUALE] + per_classe[ClasseContabile.ALTRO_INCASSO]
     )
-    # G7.5: RIMBORSO_CONTRATTO è una USCITA **contra-ricavo** (specchio di STORNO_SPESA_FISSA,
-    # contra-uscita): riduce gli incassi (entrate al netto delle restituzioni), MAI un costo operativo
-    # variabile. Single-treatment (IMPL_PLAN §5): sottratto dalle entrate E escluso dalle uscite
-    # variabili — **mai entrambi** (il margine resta identico, farlo due volte sottrarrebbe due volte).
-    rimborsi_contratti = sum(
-        m.importo for m in movements
-        if m.tipo == "USCITA" and m.categoria == CATEGORIA_RIMBORSO_CONTRATTO
-    )
-    totale_entrate = sum(
-        m.importo
-        for m in movements
-        if m.tipo == "ENTRATA"
-        and not (
-            m.id_spesa_ricorrente is not None
-            and m.categoria == CATEGORIA_STORNO_SPESA_FISSA
-        )
-    ) - rimborsi_contratti
-    totale_uscite_variabili = sum(
-        m.importo for m in movements
-        if m.tipo == "USCITA"
-        and m.id_spesa_ricorrente is None
-        and m.categoria != CATEGORIA_RIMBORSO_CONTRATTO
-    )
-    totale_uscite_fisse_lorde = sum(
-        m.importo for m in movements
-        if m.tipo == "USCITA" and m.id_spesa_ricorrente is not None
-    )
-    totale_uscite_fisse = round(totale_uscite_fisse_lorde - storno_fisse, 2)
+    totale_entrate = entrate_lorde - rimborsi_contratti
+    totale_uscite_variabili = per_classe[ClasseContabile.COSTO_VARIABILE]
+    totale_uscite_fisse = round(per_classe[ClasseContabile.COSTO_FISSO] - storno_fisse, 2)
 
     margine_netto = totale_entrate - totale_uscite_variabili - totale_uscite_fisse
 
@@ -1186,23 +1181,15 @@ def get_movement_stats(
     entrate_per_giorno: dict[int, float] = defaultdict(float)
     uscite_per_giorno: dict[int, float] = defaultdict(float)
 
-    for m in movements:
+    for m, classe in classificati:
         day = m.data_effettiva.day
-        is_storno_fissa = (
-            m.tipo == "ENTRATA"
-            and m.id_spesa_ricorrente is not None
-            and m.categoria == CATEGORIA_STORNO_SPESA_FISSA
-        )
-        is_rimborso_contratto = (
-            m.tipo == "USCITA" and m.categoria == CATEGORIA_RIMBORSO_CONTRATTO
-        )
-        if is_storno_fissa:
+        if classe is ClasseContabile.RETTIFICA_COSTO_FISSO:
             # Lo storno riduce le uscite del giorno, non e' entrata operativa.
             uscite_per_giorno[day] -= m.importo
-        elif is_rimborso_contratto:
+        elif classe is ClasseContabile.CONTRA_RICAVO:
             # G7.5: contra-ricavo — riduce le entrate del giorno, non è uscita operativa (specchio storno).
             entrate_per_giorno[day] -= m.importo
-        elif m.tipo == "ENTRATA":
+        elif classe in (ClasseContabile.RICAVO_CONTRATTUALE, ClasseContabile.ALTRO_INCASSO):
             entrate_per_giorno[day] += m.importo
         else:
             uscite_per_giorno[day] += m.importo
@@ -1253,7 +1240,18 @@ def create_manual_movement(
     Ledger Integrity: lo schema MovementManualCreate (extra: forbid)
     blocca l'inserimento di id_contratto, id_rata, id_cliente e id_spesa_ricorrente.
     Solo il sistema puo' creare movimenti legati a contratti o spese ricorrenti.
+    G9.4-bis.2: stesso principio per le CATEGORIE riservate — un movimento manuale con categoria
+    contrattuale o di rettifica creerebbe una cella semanticamente ambigua (struttura libera, stringa
+    riservata: il caso che faceva divergere trend e stats). 422, si usa il flusso dedicato.
     """
+    if data.categoria in CONTRACT_CASH_CATEGORIES or data.categoria == CATEGORIA_STORNO_SPESA_FISSA:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"La categoria '{data.categoria}' è riservata ai flussi di sistema "
+                f"(contratti/spese ricorrenti): usa il flusso dedicato, non un movimento manuale."
+            ),
+        )
     movement = CashMovement(
         trainer_id=trainer.id,
         data_effettiva=data.data_effettiva,
@@ -1517,10 +1515,7 @@ def get_forecast(
         month_var = session.exec(
             select(func.coalesce(func.sum(CashMovement.importo), 0)).where(
                 CashMovement.trainer_id == trainer.id,
-                CashMovement.tipo == "USCITA",
-                CashMovement.id_spesa_ricorrente == None,
-                # G7.5: un RIMBORSO_CONTRATTO è contra-ricavo, NON burn variabile → non gonfia la proiezione.
-                func.coalesce(CashMovement.categoria, "") != CATEGORIA_RIMBORSO_CONTRATTO,
+                *_condizioni_costo_variabile(),  # classe COSTO_VARIABILE (contra-ricavo escluso)
                 extract("year", CashMovement.data_effettiva) == pa,
                 extract("month", CashMovement.data_effettiva) == pm,
                 CashMovement.deleted_at == None,
@@ -1557,8 +1552,9 @@ def get_forecast(
         month_tot = session.exec(
             select(func.coalesce(func.sum(CashMovement.importo), 0)).where(
                 CashMovement.trainer_id == trainer.id,
+                # KPI burn TOTALE uscite (fisse incluse) al netto del contra-ricavo: come prima,
+                # ma l'esclusione del rimborso deriva dal piano dei conti (≠ CONTRA_RICAVO).
                 CashMovement.tipo == "USCITA",
-                # G7.5: escludi il RIMBORSO_CONTRATTO dal burn_rate KPI (contra-ricavo, non costo ricorrente).
                 func.coalesce(CashMovement.categoria, "") != CATEGORIA_RIMBORSO_CONTRATTO,
                 extract("year", CashMovement.data_effettiva) == pa,
                 extract("month", CashMovement.data_effettiva) == pm,
@@ -1670,10 +1666,11 @@ def get_financial_trend(
         key = (d.year, d.month)
         if key not in window_set:
             continue
-        if m.categoria == CATEGORIA_STORNO_SPESA_FISSA:
+        classe = classify_cash_movement(m.tipo, m.categoria, m.id_contratto, m.id_spesa_ricorrente)
+        if classe is ClasseContabile.RETTIFICA_COSTO_FISSO:
             continue  # rettifica di uscita, non un ricavo
         imp = m.importo or 0
-        if m.id_contratto is not None:
+        if classe is ClasseContabile.RICAVO_CONTRATTUALE:
             buckets_contratti[key] += imp
             # Taglio 1 — nuovi vs rinnovi (rinnovo_di): ognuno somma a incassi_contratti
             if rinnovo_map.get(m.id_contratto) is None:

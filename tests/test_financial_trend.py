@@ -20,6 +20,18 @@ def _manual_entrata(client, auth_headers, importo, data_eff, categoria=None):
     return r.json()
 
 
+def _storno_reale(session, trainer_id, importo, data_eff):
+    """Storno VERO (id_spesa_ricorrente≠NULL) via ORM — simula il writer di recurring_expenses.
+    G9.4-bis.2: la categoria STORNO è riservata (write-guard 422 sul manuale) e l'esclusione dal
+    trend avviene per CLASSE (RETTIFICA_COSTO_FISSO = struttura), non più per stringa."""
+    from api.models.movement import CashMovement
+    session.add(CashMovement(
+        trainer_id=trainer_id, tipo="ENTRATA", categoria="STORNO_SPESA_FISSA",
+        importo=importo, data_effettiva=data_eff, id_spesa_ricorrente=999, operatore="TEST",
+    ))
+    session.commit()
+
+
 def _pay_rate_today(client, auth_headers, contract_id, importo):
     today = date.today()
     r = client.post("/api/rates", json={
@@ -39,14 +51,17 @@ def _current_period(data, today):
     return next(p for p in data["periodi"] if p["anno"] == today.year and p["mese"] == today.month)
 
 
-def test_trend_partitions_and_excludes_storno(client, auth_headers, sample_contract):
-    """Mese corrente: rata→incassi_contratti, manuale→altri_incassi, storno escluso."""
+def test_trend_partitions_and_excludes_storno(client, auth_headers, sample_contract, session):
+    """Mese corrente: rata→incassi_contratti, manuale→altri_incassi, storno (CLASSE) escluso."""
     today = date.today()
     cid = sample_contract["id"]
 
     _pay_rate_today(client, auth_headers, cid, 300.0)            # PAGAMENTO_RATA (id_contratto)
     _manual_entrata(client, auth_headers, 50.0, today)           # altri incassi (id_contratto NULL)
-    _manual_entrata(client, auth_headers, 999.0, today, "STORNO_SPESA_FISSA")  # da escludere
+    from api.models.trainer import Trainer as _T
+    from sqlmodel import select as _sel
+    _tid = session.exec(_sel(_T)).first().id
+    _storno_reale(session, _tid, 999.0, today)                   # RETTIFICA_COSTO_FISSO → esclusa
 
     r = client.get("/api/movements/financial-trend?mesi=12", headers=auth_headers)
     assert r.status_code == 200
@@ -163,7 +178,7 @@ def test_monthly_revenue_only_contract_incassi(client, auth_headers, sample_cont
     cid = sample_contract["id"]
     _pay_rate_today(client, auth_headers, cid, 300.0)                 # incasso da contratto (mese corrente)
     _manual_entrata(client, auth_headers, 50.0, today)               # altri incassi → ESCLUSO
-    _manual_entrata(client, auth_headers, 999.0, today, "STORNO_SPESA_FISSA")  # storno → ESCLUSO
+    # (lo storno-manuale mislabeled non esiste più: write-guard 422, vedi test_write_guard sotto)
 
     r = client.get("/api/dashboard/summary", headers=auth_headers)
     assert r.status_code == 200
@@ -183,3 +198,23 @@ def test_trend_multi_tenant(client, auth_headers, sample_contract):
 
     data = client.get("/api/movements/financial-trend?mesi=12", headers=other_headers).json()
     assert data["tot_cash_flow_reale"] == 0.0
+
+
+def test_write_guard_categorie_riservate(client, auth_headers):
+    """G9.4-bis.2 (ADR-022 Add. II): un movimento MANUALE con categoria riservata (contrattuale o
+    storno) è rifiutato 422 — chiude la cella ambigua stringa-riservata/struttura-libera che faceva
+    divergere trend (esclusione per stringa) e stats (conteggio per struttura)."""
+    today = date.today()
+    for categoria, tipo in [
+        ("STORNO_SPESA_FISSA", "ENTRATA"),
+        ("PAGAMENTO_RATA", "ENTRATA"),
+        ("ACCONTO_CONTRATTO", "ENTRATA"),
+        ("INCASSO_CONGUAGLIO_CONTRATTO", "ENTRATA"),
+        ("RIMBORSO_CONTRATTO", "USCITA"),
+    ]:
+        r = client.post("/api/movements", json={
+            "tipo": tipo, "categoria": categoria, "importo": 10.0,
+            "data_effettiva": today.isoformat(),
+        }, headers=auth_headers)
+        assert r.status_code == 422, f"{categoria}: {r.status_code} {r.text}"
+        assert "riservata" in r.json()["detail"]

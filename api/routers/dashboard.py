@@ -74,6 +74,8 @@ def get_dashboard_summary(
     ).one()
 
     # 2. Revenue mese corrente — INCASSI DA CONTRATTI per cassa.
+    # G9.4-bis.2: le due query sono le proiezioni SQL di ClasseContabile.RICAVO_CONTRATTUALE
+    # (ENTRATA ∧ id_contratto≠NULL) e ClasseContabile.CONTRA_RICAVO (USCITA RIMBORSO): revenue NETTO.
     # Ristretto a id_contratto valorizzato (acconti + rate): esclude automaticamente
     # gli storni (STORNO_SPESA_FISSA, id_contratto NULL) e gli incassi fuori contratto
     # (id_contratto NULL). Coerente con TASSONOMIA §1/§2 e con L1 (financial-trend).
