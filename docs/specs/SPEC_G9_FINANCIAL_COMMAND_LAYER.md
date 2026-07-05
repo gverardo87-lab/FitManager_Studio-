@@ -2,7 +2,7 @@
 
 **Tipo:** specifica prescrittiva (cosa-deve-essere-vero; silente sul come dove possibile). Bridge Chat→Code.
 **Data:** 2026-06-30 · **Branch:** `FitManager_Studio`
-**Stato:** 🟢 **G9.0 → G9.3 FATTI E CHIUSI** (G9.2: Stage 1 `1795425`→`d0c01f8` + Stage 2 `8a6902c`; G9.3:
+**Stato:** 🟢 **G9.0 → G9.4 FATTI E CHIUSI** (G9.4: `c3c5702` enforcement I1/I4→409+rollback flag INVARIANT_ENFORCEMENT [raise in dev/CI/test, log in prod] + `fd297e5` grep-guard→test semantici `test_semantic_guards.py`, ritirati da check-all; 2026-07-05; in parallelo G9.4-bis read-model → spec dedicata archiviata). Restano G9.5 + G9.6. Storico: (G9.2: Stage 1 `1795425`→`d0c01f8` + Stage 2 `8a6902c`; G9.3:
 design `757091b` + a `44d0494` + b `43fa250` + c/d `6a2aaf9`, 2026-07-02, suite **777**; verifier PASS su
 G9.2). Prossimi: **G9.4 enforcement** (409+flag, ritiro grep-guard) · G9.5 Hypothesis · G9.6 Money (differito).
 Design di dettaglio: **G9.0 → Appendice A**, **G9.2b → Appendice B** (DEC-1/2/3), **G9.3 → Appendice C**
@@ -202,7 +202,7 @@ condizioni). **AC-G93-4:** la post-condizione `project_columns == colonne` è as
 
 ---
 
-## G9.4 — Promuovere invarianti a gate (409 + rollback) + ritiro grep-guard + test semantici
+## ✅ G9.4 — Promuovere invarianti a gate (409 + rollback) + ritiro grep-guard + test semantici (FATTO 2026-07-05: `c3c5702`+`fd297e5`; AC-G94-1..4 verdi)
 
 - **G9.4-a — enforcement graduale.** Con la **telemetria di G9.0** e la cucitura di G9.3: promuovere
   **I1/I4** a **409 + rollback** dentro la post-condizione dell'executor (I5/I6 in **warn** finché la

@@ -2745,3 +2745,33 @@ reopen → correggi → ri-termina ricalcola sul corretto). Suite full **797 pas
 (G7.7) · storia contabilizzata fenced (ADR-023) · varco unico esplicito e auditato (`reopen`).
 
 ---
+## 2026-07-05 — G9.4 (enforcement + test semantici) + G9.4-bis (read-model cassa): il gemello di lettura
+
+Sequenza affidata dalla governance del founder (`994c63d`: ADR-022 Addendum II + SPEC_G9.4-BIS +
+censimento assi semantici). **9 commit, branch verde a ognuno:**
+
+**G9.4-bis.0** (`85deb12`) quick-win: F3 storno→costante (6 siti, 2 in SCRITTURA — la penna delle
+spese ora esiste) · F4 asse A9 stati credito/wallet → `STATO_CREDITO_*` (~23 siti, 1 raw-SQL
+parametrizzato) · F8 `signed_importo_case` unico in ledger.py.
+
+**G9.4** (`c3c5702`+`fd297e5`): il sensore G9.0 diventa GATE — I1/I4 → **409+rollback** dietro flag
+`INVARIANT_ENFORCEMENT` (raise in dev/CI/test, log in prod: la suite che passa in modalità raise È
+la telemetria-CI-pulita di AC-G94-4, provata a ogni run) · i 4 grep-guard ADR-016/017/018/019
+RITIRATI da check-all, sostituiti da `test_semantic_guards.py` (ADR-019 end-to-end immune alla
+rilocazione — fine dell'era grep, 3 lezioni-guard consolidate).
+
+**G9.4-bis.1-4**: `ClasseContabile` (6 classi) + `classify_cash_movement` fail-loud, convalidata sul
+crm.db reale (218/218, zero celle violate) (`99e5dd9`) · migrazione superfici I1/I2/I4/I5/I6 al piano
+dei conti (`3b788fa`) · trasparenza D-NESSUN-NETTO-NUDO: bucket in /stats, sub-label card Entrate,
+/balance dichiara la cassa-pura — **AC-RM-6: il −140,42 dell'INC è ora spiegabile dalla response da
+sola** (`09d701e`) · gemelli esaustività-alla-nascita + no-re-inline (`cd4046f`+`6e650a1`).
+
+**2 SCOPERTE dalla migrazione:** (1) **il censimento aveva ragione sulle micro-varianti**: trend e
+stats già DIVERGEVANO sulla cella "ENTRATA manuale etichettata STORNO senza id_spesa" (trend escludeva
+per stringa, stats contava per struttura) — unificata per D-CLASSIFY ("la classe la dà la struttura")
++ chiuso il buco in scrittura (write-guard 422 sulle categorie riservate nel movimento manuale);
+(2) **la git-bash di questo ambiente interpreta gli escape negli heredoc anche quotati** — causa-radice
+di tutti i fallimenti heredoc della settimana e di un test scritto corrotto (scoperto POST-commit:
+il pre-commit non esegue pytest) → regola a memoria: contenuti con escape SOLO via Write tool.
+
+---

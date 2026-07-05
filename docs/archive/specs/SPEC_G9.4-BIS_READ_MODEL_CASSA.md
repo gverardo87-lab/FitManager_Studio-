@@ -2,7 +2,7 @@
 
 **Tipo:** specifica prescrittiva (cosa-deve-essere-vero). Bridge Chat→Code.
 **Data:** 2026-07-05 · **Branch:** `FitManager_Studio`
-**Stato:** 🟡 APERTA — governance ratificata (ADR-022 Addendum II); implementazione AFFIDATA alla sessione-codice (G9.4-bis.0 quick-win F3/F4/F8 come primo commit, poi G9.4, poi il gate)
+**Stato:** ✅ **IMPLEMENTATA** (2026-07-05: bis.0 `85deb12` quick-win · bis.1 `99e5dd9` ClasseContabile+classify [218/218 movimenti reali, 0 celle violate] · bis.2 `3b788fa` migrazione superfici + write-guard categorie riservate [scoperta: trend/stats già divergevano sulla cella stringa-riservata/struttura-libera — unificata per D-CLASSIFY] · bis.3 `09d701e` bucket+sub-label+cassa-pura [AC-RM-6: il -140,42 dell'INC è spiegabile dalla response] · bis.4 `cd4046f`+`6e650a1` gemelli esaustività/no-re-inline). G9.4 eseguito in mezzo come da sequenza (`c3c5702` enforcement + `fd297e5` test semantici). Charter semantic-birth-auditor (§5) = da definire a valle, NON incluso.
 **Blocco:** **G9.4-bis** — read-model della cassa (gemello di LETTURA della penna G9.1). **Parallelo a G9.4**
 (write-enforcement, altra sessione): behavior-preserving, file disgiunti.
 **Mappa di verità:** `ADR-022 Addendum II` · `AUDIT_CENSIMENTO_ASSI_SEMANTICI_CASSA_2026-07-04.md` (siti
