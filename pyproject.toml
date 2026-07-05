@@ -41,6 +41,7 @@ dependencies = [
     "alembic",
     "pytest",
     "httpx",
+    "hypothesis",  # G9.5: property-based testing (solo-test, mai importata da api/)
 
     # --- LANGCHAIN ECOSYSTEM (AI Logic — core/) ---
     "langchain==0.2.5",
