@@ -38,9 +38,29 @@ fi
 echo ""
 
 # G9.4-b (ADR-022 D-INVARIANTI-IMPOSTI): i 4 grep-guard testuali ADR-016/017/018/019 sono stati
-# RITIRATI e sostituiti dai TEST SEMANTICI in tests/test_semantic_guards.py (girano in suite/CI a
-# ogni run, immuni alla vacuita'-da-rilocazione — lezione G9.3). Ritiro avvenuto SOLO dopo il verde
-# dei gemelli (SPEC_G9 par. G9.4-b, AC-G94-3).
+# RITIRATI e sostituiti dai TEST SEMANTICI in tests/test_semantic_guards.py (immuni alla
+# vacuita'-da-rilocazione — lezione G9.3). Ritiro avvenuto SOLO dopo il verde dei gemelli
+# (SPEC_G9 par. G9.4-b, AC-G94-3). La fascia sotto li fa sparare ANCORA nel gate obbligatorio
+# (finding F5 del verifier 2026-07-05: senza CI, il ritiro spostava l'enforcement sulla disciplina).
+
+echo "=== Guard semantici ADR-016/017/018/019 (tests/test_semantic_guards.py) ==="
+resolve_python() {
+    if [ -x "venv/Scripts/python.exe" ]; then
+        printf '%s\n' "venv/Scripts/python.exe"
+        return 0
+    fi
+    echo "ERRORE: python della venv non trovato." >&2
+    exit 1
+}
+PY_BIN="$(resolve_python)"
+if "$PY_BIN" -m pytest tests/test_semantic_guards.py -q --no-header; then
+    echo "  OK"
+else
+    echo "  FAIL - un invariante ADR-016/017/018/019 e' stato violato (gemello semantico rosso)."
+    FAIL=1
+fi
+
+echo ""
 
 echo "=== Docs: guard ciclo-di-vita (AGENTS.md par.7, riordino 2026-07-03) ==="
 DOCS_FAIL=0
