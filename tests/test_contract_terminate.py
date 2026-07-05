@@ -473,11 +473,21 @@ def test_unpay_dopo_terminate_rifiutato_409(client, auth_headers, sample_client,
     assert contract.totale_rimborsato <= contract.totale_versato
     assert session.get(Rate, r1["id"]).stato == "SALDATA"
 
-    # path canonico: reopen annulla rimborso+storno → la revoca torna possibile
+    # G9.4 (ADR-022): il reopen NON-distruttivo (ADR-019) PRESERVA la cassa (rimborsato resta 800) →
+    # la cassa preservata fa da FLOOR alle revoche: unpay di 500 porterebbe versato a 500 < 800
+    # (I4: netto negativo, Σrimborso > Σentrata — i libri direbbero "reso 800 di 500 incassati").
+    # Pre-G9.4 il sensore lo LOGGAVA soltanto su questo stesso test (telemetria mai letta) e la
+    # revoca passava; ora il gate la blocca: 409 + rollback. ("La revoca torna possibile" era la
+    # semantica dell'inverso-esatto pre-ADR-019, quando reopen cancellava il rimborso.)
     reopen = client.post(f"/api/contracts/{c['id']}/reopen", headers=auth_headers)
     assert reopen.status_code == 200, reopen.text
     unpay2 = client.post(f"/api/rates/{r1['id']}/unpay", headers=auth_headers)
-    assert unpay2.status_code == 200, unpay2.text
+    assert unpay2.status_code == 409, unpay2.text
+    assert "I4" in unpay2.json()["detail"]
+    session.expire_all()
+    contract = session.get(Contract, c["id"])
+    assert round(contract.totale_versato, 2) == 1000.0            # rollback: zero scrittura
+    assert session.get(Rate, r1["id"]).stato == "SALDATA"
 
 
 # ── M2 (G7.7-R2): rate di un contratto terminato non si modificano (guard chiuso) ──
