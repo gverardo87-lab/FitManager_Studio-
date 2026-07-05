@@ -13,13 +13,20 @@ sensore che DEVE fallire rumorosamente (la suite lo cattura, AC-G90-1), MAI esse
 sensore nato per chiudere i fallimenti silenziosi non può diventarne uno (regola #6 Determinismo;
 `api/CLAUDE.md` Convenzioni). Razionale completo: `SPEC_G9_FINANCIAL_COMMAND_LAYER.md` §A.1-bis.
 
-**'Predisposta per 409'** (osservazione → enforcement): oggi LOGGA soltanto, byte-identica sull'output.
-L'hardening per il disaccoppiamento (osservazione post-commit) e l'escalation a 409+rollback sono G9.3/G9.4.
+**G9.4-a — da sensore a GATE (flag-driven):** le violazioni I1/I4 (chiuso⟹residuo-0, quota≥0)
+diventano **409 + rollback** quando `INVARIANT_ENFORCEMENT=raise` — default in dev/CI/test (`not
+is_compiled()`), `log` in compiled/prod finché la telemetria G9.0 non è provata pulita sul campo
+(AC-G94-2/G94-4). I5/I6 e le ancore ledger restano **warn** (telemetria). Il raise avviene PRIMA del
+`session.commit()` del caller → la transazione non viene mai scritta (rollback per costruzione).
 """
 
 import logging
+import os
 
+from fastapi import HTTPException, status
 from sqlmodel import Session, select
+
+from api.config import is_compiled
 
 from api.models.contract import Contract
 from api.models.credito_cliente import CreditoCliente
@@ -31,13 +38,26 @@ from api.services.financial.ledger import project_columns_from_ledger
 
 logger = logging.getLogger(__name__)
 
+# G9.4-a: invarianti promossi a gate duro (409+rollback). I5/I6 restano warn: la loro ancora forte
+# vive nella /reconciliation e diventerà gate quando la telemetria di prod sarà provata pulita.
+ENFORCE_HARD = frozenset({"I1", "I4"})
 
-def log_invariant_violations(session: Session, contract: Contract, *, motivo: str) -> None:
-    """Osserva (log-only) gli invarianti I1/I4/I5/I6 sul contratto in coda a una transizione `motivo`.
+
+def _enforcement_mode() -> str:
+    """'raise' | 'log'. Override esplicito via env INVARIANT_ENFORCEMENT; default: raise in dev/CI/test,
+    log in compiled (prod) — strumenta-poi-imponi (ADR-022): il gate si accende dove la suite lo prova
+    a ogni run, e resta osservazione dove i dati sono reali finché la telemetria non è verde."""
+    return os.getenv("INVARIANT_ENFORCEMENT") or ("log" if is_compiled() else "raise")
+
+
+def enforce_contract_invariants(session: Session, contract: Contract, *, motivo: str) -> None:
+    """Osserva E IMPONE (G9.4-a) gli invarianti I1/I4/I5/I6 sul contratto in coda a una transizione.
 
     Fornisce a `assert_contract_invariants` la fotografia netta (`crediti_cliente` del contratto, I5),
     l'ancora ledger forte di I5 (Σ USCITA RIMBORSO_CONTRATTO diretto) e le rate attive (I6, INV-RATE).
-    Nessuna scrittura: solo SELECT + log. Va chiamata immediatamente prima di `session.commit()`.
+    Ogni violazione è SEMPRE loggata (telemetria); con `_enforcement_mode() == "raise"` una violazione
+    **I1/I4** solleva `HTTPException 409` PRIMA del commit del caller → la transizione fa rollback
+    (zero scrittura, AC-G94-1). Va chiamata immediatamente prima di `session.commit()`.
     """
     crediti = session.exec(
         select(CreditoCliente).where(CreditoCliente.id_contratto_origine == contract.id)
@@ -53,9 +73,10 @@ def log_invariant_violations(session: Session, contract: Contract, *, motivo: st
     rate_attive = session.exec(
         select(Rate).where(Rate.id_contratto == contract.id, Rate.deleted_at == None)  # noqa: E711
     ).all()
-    for v in cstate.assert_contract_invariants(
+    violazioni = list(cstate.assert_contract_invariants(
         contract, crediti, rimborso_cassa_diretto=rimborso_diretto, rate_attive=rate_attive
-    ):
+    ))
+    for v in violazioni:
         logger.warning(
             "Invariante %s violato dopo '%s' sul contratto %s: %s",
             v.code, motivo, contract.id, v.message,
@@ -82,3 +103,19 @@ def log_invariant_violations(session: Session, contract: Contract, *, motivo: st
             "Ancora ledger-storno violata dopo '%s' sul contratto %s: quota_stornata %.2f ≠ Σ rettifiche %.2f",
             motivo, contract.id, contract.quota_stornata or 0, proj["stornato"],
         )
+
+    # G9.4-a — il GATE: I1/I4 violati + modalità raise → 409 e la transazione muore prima del commit.
+    hard = [v for v in violazioni if v.code in ENFORCE_HARD]
+    if hard and _enforcement_mode() == "raise":
+        codici = ", ".join(sorted({v.code for v in hard}))
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                f"Operazione annullata: violerebbe l'integrità finanziaria del contratto "
+                f"({codici} dopo '{motivo}'). Nessuna modifica salvata."
+            ),
+        )
+
+
+# Alias di compatibilità (G9.0 → G9.4): i call-site e gli spy dei test usano questo nome.
+log_invariant_violations = enforce_contract_invariants

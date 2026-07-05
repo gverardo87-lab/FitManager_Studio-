@@ -126,8 +126,9 @@ def test_sensor_total_e_silenzioso_su_contratto_pulito(client, auth_headers, sam
     assert [r for r in caplog.records if r.name == GATE_LOGGER] == []
 
 
-def test_sensor_logga_violazione_iniettata_senza_sollevare(client, auth_headers, sample_client, session, caplog):
-    """Stato impossibile iniettato (chiuso COMPLETAMENTO con residuo>0) → warning I1, nessuna eccezione."""
+def test_sensor_logga_violazione_iniettata_senza_sollevare(client, auth_headers, sample_client, session, caplog, monkeypatch):
+    """AC-G94-2: con flag a `log`, comportamento identico a G9.0 — warning I1, NESSUNA eccezione."""
+    monkeypatch.setenv("INVARIANT_ENFORCEMENT", "log")
     c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=200.0, crediti=10)
     contract = session.get(Contract, c["id"])
     contract.chiuso = True                       # residuo 800 ≠ 0 su un chiuso COMPLETAMENTO → I1
@@ -137,6 +138,75 @@ def test_sensor_logga_violazione_iniettata_senza_sollevare(client, auth_headers,
     with caplog.at_level(logging.WARNING, logger=GATE_LOGGER):
         log_invariant_violations(session, contract, motivo="test")
     assert "I1" in caplog.text, caplog.text
+
+
+# ── G9.4-a: il sensore diventa GATE — I1/I4 → 409 + rollback (flag raise, default in test) ──
+
+def test_g94a_i1_iniettato_409_e_telemetria(client, auth_headers, sample_client, session, caplog):
+    """AC-G94-1 (I1): default in test = raise → HTTPException 409; la violazione resta comunque loggata."""
+    import pytest
+    from fastapi import HTTPException
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=200.0, crediti=10)
+    contract = session.get(Contract, c["id"])
+    contract.chiuso = True                       # I1: residuo 800 su chiuso
+    contract.motivo_chiusura = "COMPLETAMENTO"
+    session.add(contract)
+    session.commit()
+    with caplog.at_level(logging.WARNING, logger=GATE_LOGGER):
+        with pytest.raises(HTTPException) as exc:
+            log_invariant_violations(session, contract, motivo="test_gate")
+    assert exc.value.status_code == 409
+    assert "I1" in exc.value.detail and "Nessuna modifica salvata" in exc.value.detail
+    assert "I1" in caplog.text                   # la telemetria precede il gate
+
+
+def test_g94a_i4_iniettato_409(client, auth_headers, sample_client, session):
+    """AC-G94-1 (I4): quota_stornata negativa iniettata → 409 in modalità raise."""
+    import pytest
+    from fastapi import HTTPException
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=200.0, crediti=10)
+    contract = session.get(Contract, c["id"])
+    contract.quota_stornata = -50.0              # I4: storno negativo (stato corrotto)
+    session.add(contract)
+    session.commit()
+    with pytest.raises(HTTPException) as exc:
+        log_invariant_violations(session, contract, motivo="test_gate")
+    assert exc.value.status_code == 409
+    assert "I4" in exc.value.detail
+
+
+def test_g94a_rollback_zero_scrittura(client, auth_headers, sample_client, session):
+    """AC-G94-1 (rollback): il gate scatta PRIMA del commit del caller → la transizione non scrive.
+    Simulazione del pattern reale: mutazione pendente + gate → raise → rollback → stato intatto."""
+    import pytest
+    from fastapi import HTTPException
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=200.0, crediti=10)
+    contract = session.get(Contract, c["id"])
+    # Stato corrotto GIÀ committato (drift simulato) che accende I4
+    contract.quota_stornata = -50.0
+    session.add(contract)
+    session.commit()
+    # La "transizione": mutazione pendente + sensore pre-commit (pattern degli executor)
+    contract.note = "mutazione-che-non-deve-sopravvivere"
+    session.add(contract)
+    with pytest.raises(HTTPException):
+        log_invariant_violations(session, contract, motivo="test_gate")
+    session.rollback()                            # ciò che fa il ciclo request di FastAPI
+    session.expire_all()
+    assert session.get(Contract, c["id"]).note != "mutazione-che-non-deve-sopravvivere"
+
+
+def test_g94a_i5_i6_restano_warn(client, auth_headers, sample_client, session, caplog):
+    """I5 (ancora rimborso/versato) resta WARN anche in modalità raise: drift versato iniettato →
+    log, nessun 409 (l'escalation di I5/I6 è gated alla telemetria di prod pulita)."""
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=200.0, crediti=10)
+    contract = session.get(Contract, c["id"])
+    contract.totale_versato = (contract.totale_versato or 0) + 50.0   # drift fuori-penna (I5/ancora)
+    session.add(contract)
+    session.commit()
+    with caplog.at_level(logging.WARNING, logger=GATE_LOGGER):
+        log_invariant_violations(session, contract, motivo="test")    # NON deve sollevare
+    assert "ledger-versato" in caplog.text or "I5" in caplog.text
 
 
 # ── Wiring: il sensore è invocato in ogni transizione denaro (AC-G90-1) ──────
@@ -266,8 +336,10 @@ def test_g92a_sensore_logga_drift_versato_vs_ledger(client, auth_headers, sample
 
 # ── G9.2b Stage 2: il sensore osserva anche l'ancora ledger-STORNO (quota_stornata == Σ rettifiche) ──
 
-def test_g92b_sensore_logga_drift_storno_vs_ledger(client, auth_headers, sample_client, session, caplog):
-    """Storno penna-scritto: quota == Σ rettifiche (nessun log). Drift a mano → warning ledger-storno."""
+def test_g92b_sensore_logga_drift_storno_vs_ledger(client, auth_headers, sample_client, session, caplog, monkeypatch):
+    """Storno penna-scritto: quota == Σ rettifiche (nessun log). Drift a mano → warning ledger-storno.
+    Modalità log: il drift su un TERMINATO accende anche I1 (G9.4 gate) — qui si testa la telemetria."""
+    monkeypatch.setenv('INVARIANT_ENFORCEMENT', 'log')
     c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=200.0, crediti=10)
     # 0 sedute erogate → esito CREDITO_CLIENTE (200): terminazione con rimborso pieno.
     # Storno via terza penna = residuo_pre (800) + rimborso_out (200) = 1000.
