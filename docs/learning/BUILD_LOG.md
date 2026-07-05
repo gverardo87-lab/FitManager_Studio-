@@ -2789,3 +2789,32 @@ sul crm.db di Alessio PRIMA del suo upgrade (fail-loud su stats/trend = blast ra
 telemetria di campo pulita (strumenta-poi-imponi, decisione founder).
 
 ---
+
+## 2026-07-05 — G9.5: la macchina a stati Hypothesis (il gemello generativo dell'harness)
+
+`tests/test_financial_state_machine.py`: dove l'harness enumera 12 path manuali, la macchina esplora
+**sequenze** (30 esempi × ≤12 mosse): 10 rule tentano transizioni via API (rifiuto 4xx del dominio =
+no-op esplorato, 5xx = bug), `@invariant` verifica I1-I6 dopo OGNI mossa riusando `_invariants`
+dell'harness. Canary espliciti (AC-G95-4): Bug-1 eroga→reopen + floor-unpay post-reopen, come replay
+delle stesse rule. Test negativo AC-G95-1: drift I4 iniettato a mano fa scattare l'oracolo (non è vacuo).
+Dipendenza `hypothesis` solo-test (pyproject; mai importata da `api/` → fuori dal bundle per costruzione).
+
+**2 LEZIONI dalla liveness (misurata con sonda usa-e-getta, non presunta):** (1) **`derandomize=True`
+NON è "seed pinnato"** — replaya UNA generazione fissa minimale che non selezionava MAI pay/unpay;
+il determinismo CI corretto è `@seed(SM_SEED)` sulla classe (supporto ufficiale stateful) +
+`database=None` (2 run → esiti byte-identici, provato con diff). (2) **senza cap sui create il bundle
+si diluisce**: 27% delle mosse creava contratti nuovi e reopen/eroga_wallet non venivano MAI esercitati
+(0/43); `precondition(len(tracked) < 3)` ha portato ogni famiglia di rule ad almeno un'accettazione.
+La morale è la stessa dei grep-guard G9.3: un presidio che "gira verde" senza prova di vitalità può
+essere vuoto — la sonda è il gemello di liveness della macchina stessa.
+
+**Calibrazione di processo (founder, 2026-07-05):** per un diff **test-only o docs-only** la full
+suite è sproporzionata (non c'è codice che possa regredire) → fascia mirata + `--collect-only`
+sull'intera suite. La full resta obbligatoria per ogni diff che tocca `api/` sui money-path.
+Eccezione una-tantum qui: G9.5 installa un plugin pytest nuovo (hypothesis) attivo sull'intera
+suite = cambiamento ambientale, validato con una full singola alla nascita della dipendenza.
+**Stessa logica per il verifier:** niente verifier su diff che solo AGGIUNGONO test/docs (V2 "oracoli
+intoccati" è vero per costruzione dal diff); resta obbligatorio se il diff MODIFICA/elimina oracoli
+money esistenti — un test-only può danneggiare l'asse denaro accecandolo (caso `aafba2d`).
+
+---

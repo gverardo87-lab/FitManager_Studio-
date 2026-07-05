@@ -588,6 +588,20 @@ Quando le 4 regole valgono, "aggiungere uno scenario" = aggiungere un membro all
 
 **Domande aperte:** [ ] gate G9 per il read-model della cassa (addendum ADR-022 + SPEC) — [ ] agente auditor "nascita di una semantica" che rilevi nel diff interpreti impliciti non totali (in discussione).
 
+### Property-based testing stateful — l'esplorazione va MISURATA, non presunta (2026-07-05)
+
+**Contesto:** G9.5, macchina a stati Hypothesis sul dominio finanziario (`test_financial_state_machine.py`): le rule tentano transizioni via API, un invariante verifica I1-I6 dopo ogni mossa. Due difetti invisibili scoperti solo strumentando l'esplorazione con una sonda che conta gli esiti per endpoint.
+
+**Livello 1 — Cosa fa.** Un test property-based stateful genera SEQUENZE di operazioni (non input singoli): Hypothesis sceglie a ogni passo una rule tra quelle disponibili e i suoi argomenti dalle strategie. Il test "passa" se nessuna sequenza generata viola l'invariante. Il valore sta tutto in QUALI sequenze vengono davvero esplorate — e questo non si vede dal verde.
+
+**Livello 2 — Perché lo voglio (i due difetti trovati).** (1) `derandomize=True` prometteva "determinismo CI" ma NON è un seed pinnato: replaya una generazione fissa *minimale* (byte-stream semplificato) che in 200 mosse non selezionava MAI `pay_rate`/`unpay_rate`. Il contratto giusto è `@seed(N)` sulla classe (supporto ufficiale stateful) + `database=None` (niente replay di fallimenti dalla cache locale, che differirebbe tra macchine): esplorazione ricca E byte-identica tra run. (2) Il bundle si diluisce: senza cap, il 27% delle mosse creava contratti nuovi e le rule "profonde" (reopen dopo terminate: 0 successi su 43 tentativi; eroga_wallet: mai raggiunta) pescavano quasi sempre contratti nello stato sbagliato. `precondition(len(tracked) < 3)` ha concentrato le mosse su pochi soggetti → ogni famiglia di rule accettata almeno una volta.
+
+**Livello 3 — Perché funziona così sotto (la lezione trasferibile).** Un test generativo ha DUE proprietà indipendenti che vanno provate separatamente: la **correttezza dell'oracolo** (se lo stato è rotto, l'invariante scatta? → test negativo con drift iniettato a mano) e la **vitalità dell'esplorazione** (le mosse interessanti accadono davvero? → sonda che conta gli esiti). Il verde da solo non prova nessuna delle due: un oracolo vacuo + un'esplorazione anemica producono lo stesso verde di un presidio reale. È la stessa lezione dei grep-guard G9.3 (un guard che punta a un file svuotato passa in silenzio), trasposta dal mondo statico al mondo generativo: **ogni presidio nuovo nasce con la prova della propria vitalità**, non solo con la prova del proprio verde.
+
+**Failure mode:** scrivo la macchina, vedo 30 esempi passare in 10 secondi, committo "property-based testing ✅". Mesi dopo una regressione su reopen non viene MAI colta perché reopen non è mai stato esplorato con successo in nessuna run — il presidio era decorativo dal giorno uno, e nessuno l'ha saputo perché nessuno ha mai contato.
+
+**Domande aperte:** [ ] estendere le rule alle penali (`Cancellato_Tardivo`/`No_Show` via API, companion write) e all'incasso receivable generativo (oggi solo canary/suite) — [ ] la sonda di liveness può diventare un contatore permanente (`hypothesis.event()` + `--hypothesis-show-statistics`) invece che usa-e-getta.
+
 ---
 
 ## Stato avanzamento

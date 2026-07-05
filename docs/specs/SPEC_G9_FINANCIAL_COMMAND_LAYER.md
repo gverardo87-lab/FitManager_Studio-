@@ -2,9 +2,17 @@
 
 **Tipo:** specifica prescrittiva (cosa-deve-essere-vero; silente sul come dove possibile). Bridge Chat→Code.
 **Data:** 2026-06-30 · **Branch:** `FitManager_Studio`
-**Stato:** 🟢 **G9.0 → G9.4 FATTI E CHIUSI** (G9.4: `c3c5702` enforcement I1/I4→409+rollback flag INVARIANT_ENFORCEMENT [raise in dev/CI/test, log in prod] + `fd297e5` grep-guard→test semantici `test_semantic_guards.py`, ritirati da check-all; 2026-07-05; in parallelo G9.4-bis read-model → spec dedicata archiviata). Restano G9.5 + G9.6. Storico: (G9.2: Stage 1 `1795425`→`d0c01f8` + Stage 2 `8a6902c`; G9.3:
-design `757091b` + a `44d0494` + b `43fa250` + c/d `6a2aaf9`, 2026-07-02, suite **777**; verifier PASS su
-G9.2). Prossimi: **G9.4 enforcement** (409+flag, ritiro grep-guard) · G9.5 Hypothesis · G9.6 Money (differito).
+**Stato:** 🟢 **G9.0 → G9.5 FATTI E CHIUSI** (G9.5: `tests/test_financial_state_machine.py` — macchina
+Hypothesis, 30 esempi × ≤12 mosse, seed pinnato `@seed(SM_SEED)` + `database=None` [NON `derandomize`:
+misurato con sonda che replaya una generazione minimale che non seleziona mai pay/unpay], invariante
+I1-I6 post-mossa via `_invariants` dell'harness, canary espliciti Bug-1 + floor-unpay, liveness di ogni
+famiglia di rule misurata; 2026-07-05. G9.4: `c3c5702` enforcement I1/I4→409+rollback flag
+INVARIANT_ENFORCEMENT [raise in dev/CI/test, log in prod] + `fd297e5` grep-guard→test semantici
+`test_semantic_guards.py`, ritirati da check-all + `b5ce30e` fascia guard semantici nel gate [F5 verifier];
+in parallelo G9.4-bis read-model → spec dedicata archiviata; verifier 2026-07-05: MONEY AXIS PRESERVED).
+**Resta SOLO G9.6 Money value-type (differito, gated — non blocca la chiusura del blocco).** Storico:
+(G9.2: Stage 1 `1795425`→`d0c01f8` + Stage 2 `8a6902c`; G9.3: design `757091b` + a `44d0494` + b `43fa250`
++ c/d `6a2aaf9`, 2026-07-02, suite **777**; verifier PASS su G9.2).
 Design di dettaglio: **G9.0 → Appendice A**, **G9.2b → Appendice B** (DEC-1/2/3), **G9.3 → Appendice C**
 (D-C1..D-C7, FSM, direzioni per-caller).
 **Gemello di lettura (2026-07-05):** il blocco **G9.4-bis** (read-model della cassa — ADR-022 **Addendum II**,
@@ -226,7 +234,18 @@ telemetria G9.0 mostra **0** violazioni I1/I4 in CI prima di accendere il `raise
 
 ---
 
-## G9.5 — Hypothesis stateful machine (property-based testing)
+## G9.5 — Hypothesis stateful machine (property-based testing) ✅ (2026-07-05)
+
+> **Consuntivo:** `tests/test_financial_state_machine.py`. 10 rule (create/rate/pay/unpay/sedute/
+> incassa-residuo/terminate×7-varianti/reopen/eroga-wallet/incassa-receivable), rifiuti 4xx = no-op
+> esplorati (5xx = bug), `@invariant` = `_invariants` dell'harness su ogni contratto tracciato.
+> AC-G95-1 ✅ (+ test negativo: drift I4 iniettato fa scattare l'oracolo) · AC-G95-2 ✅ via `@seed`
+> pinnato + `database=None` (NON `derandomize=True`: la sonda ha misurato che replaya una generazione
+> minimale che non seleziona mai pay/unpay) · AC-G95-3 ✅ (hypothesis in pyproject, mai importata da
+> `api/`) · AC-G95-4 ✅ (canary Bug-1 eroga→reopen + floor-unpay post-reopen come replay espliciti
+> delle rule). Liveness misurata con sonda usa-e-getta: tutte le famiglie di rule accettate ≥1 volta;
+> cap 3 contratti/istanza (`precondition`) necessario — senza, i create diluiscono il bundle e
+> reopen/eroga non vengono MAI esercitati. Determinismo provato: 2 run → esiti byte-identici.
 
 `RuleBasedStateMachine` (dipendenza **solo-test**, seed pinnato per determinismo CI) che riusa i builder
 dell'harness (`tests/test_financial_invariants_harness.py`) come `rule()` (pay, unpay, terminate, incassa,
@@ -278,7 +297,7 @@ allo stringimento deliberato dell'epsilon (gated, post-scan).
 | **G9.3** | TransitionExecutor + FSM chiusura + unifica auto-close | G9.1, G9.2 | medio / medio | invariato |
 | **G9.4** | Invarianti → 409+rollback (flag) + ritiro grep-guard → test semantici | G9.0, G9.3 | medio / medio | **nuovi 409 (flag)** |
 | **G9.4-bis** | *(parallelo a G9.4, spec separata)* Read-model cassa: `classify` 6 classi + migrazione superfici + esaustività + bucket `/stats` | censimento 2026-07-04, G9.1 (simmetria) | basso / medio | invariato (valori) |
-| **G9.5** | Hypothesis RuleBasedStateMachine | G9.3 | basso / medio | invariato (test-only) |
+| **G9.5** ✅ | Hypothesis RuleBasedStateMachine | G9.3 | basso / medio | invariato (test-only) |
 | **G9.6** | *(differito)* Money value-type + fase-storage | G9.3 (gated, non blocca) | basso / alto | invariato fino a epsilon-tighten |
 
 **Regola d'oro della sequenza:** non si costruisce l'executor (G9.3) prima della penna (G9.1); non si accende
