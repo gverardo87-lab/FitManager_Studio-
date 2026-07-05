@@ -152,8 +152,6 @@ def test_ac_rm3_nessun_literal_categoria_fuori_ssot():
                 if f'"{cat}"' in line or f"'{cat}'" in line:
                     violazioni.append(f"{py.relative_to(api_dir.parent)}:{i}: {stripped[:90]}")
     assert not violazioni, (
-        "Categoria semantica re-inlineata fuori dal SSoT (usa le costanti di cash_categories):
-"
-        + "
-".join(violazioni)
+        "Categoria semantica re-inlineata fuori dal SSoT (usa le costanti di cash_categories):\n"
+        + "\n".join(violazioni)
     )
