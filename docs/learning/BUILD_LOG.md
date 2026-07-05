@@ -2774,4 +2774,18 @@ per stringa, stats contava per struttura) — unificata per D-CLASSIFY ("la clas
 di tutti i fallimenti heredoc della settimana e di un test scritto corrotto (scoperto POST-commit:
 il pre-commit non esegue pytest) → regola a memoria: contenuti con escape SOLO via Write tool.
 
+**Coda: full-suite + verifier (2 commit).** Il full-suite ha catturato l'UNICO test con assunzione
+pre-ADR-019 residua: `test_unpay_dopo_terminate_rifiutato_409` asseriva "dopo reopen la revoca torna
+possibile" (vero con l'inverso-esatto che cancellava il rimborso; falso col reopen non-distruttivo:
+la cassa preservata fa da FLOOR — unpay di 500 con rimborsato 800 = I4 netto −300, che il sensore
+loggava già SU QUEL TEST). Aggiornato a 409+rollback (`aafba2d`) → suite **829/829**. Verifier sul
+blocco `b54ab67..HEAD`: **MONEY AXIS PRESERVED** — 0 regressioni, 4 cambi osservabili tutti sanzionati
+ADR-022 e coperti (gate 409 · write-guard 422 · trend per-classe · floor unpay post-reopen), oracoli
+puri intoccati. Finding F5 (MEDIUM) chiuso subito: il ritiro dei grep spostava l'enforcement sulla
+disciplina (check-all non esegue pytest, CI assente) → fascia `test_semantic_guards.py` (~6s) nel
+gate obbligatorio (`b5ce30e`). Flag operativi per il founder: **OD-1** convalidare `classify` read-only
+sul crm.db di Alessio PRIMA del suo upgrade (fail-loud su stats/trend = blast radius endpoint intero);
+**OD-2** il gate è volutamente `log` in compiled — accensione `INVARIANT_ENFORCEMENT=raise` a
+telemetria di campo pulita (strumenta-poi-imponi, decisione founder).
+
 ---
