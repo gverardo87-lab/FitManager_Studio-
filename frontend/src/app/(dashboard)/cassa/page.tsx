@@ -809,9 +809,18 @@ function KpiCards({
     totale_uscite_variabili: number;
     totale_uscite_fisse: number;
     margine_netto: number;
+    entrate_lorde?: number;
+    rimborsi_contratti?: number;
   };
 }) {
   const margin = resolveMarginColors(stats.margine_netto >= 0);
+  // G9.4-bis.3 (chiude l'INC del falso allarme): con rimborsi nel mese la card Entrate mostra i
+  // componenti del netto — "Lorde X · Rimborsi −Y" — mai più un netto nudo inspiegabile a video.
+  const rimborsi = stats.rimborsi_contratti ?? 0;
+  const entrateSub =
+    rimborsi > 0
+      ? `Lorde ${formatCurrency(stats.entrate_lorde ?? 0)} · Rimborsi −${formatCurrency(rimborsi)}`
+      : "questo mese";
 
   return (
     <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -836,7 +845,7 @@ function KpiCards({
                 className={`text-xl font-extrabold tracking-tighter tabular-nums sm:text-3xl ${vc}`}
               />
             }
-            sub="questo mese"
+            sub={kpi.key === "totale_entrate" ? entrateSub : "questo mese"}
             borderColor={bc}
             gradient={gr}
           />

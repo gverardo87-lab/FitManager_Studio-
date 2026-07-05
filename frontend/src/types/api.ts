@@ -953,6 +953,10 @@ export interface ChartDataPoint {
 
 /** GET /api/movements/stats?anno=X&mese=Y */
 export interface MovementStats {
+  // G9.4-bis.3 (D-NESSUN-NETTO-NUDO): componenti del netto — il -X di entrate è spiegabile dalla card
+  entrate_lorde: number;
+  rimborsi_contratti: number;
+  storno_fisse: number;
   totale_entrate: number;
   totale_uscite_variabili: number;
   totale_uscite_fisse: number;

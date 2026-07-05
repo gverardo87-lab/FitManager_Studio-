@@ -393,7 +393,14 @@ def get_balance(
     trainer: Trainer = Depends(get_current_trainer),
     session: Session = Depends(get_session),
 ):
-    """Saldo di cassa attuale — computed on read."""
+    """Saldo di cassa attuale — computed on read.
+
+    G9.4-bis.3 (F7, ADR-022 Add. II) — SEMANTICA DICHIARATA: questo è l'asse **CASSA PURA** — somma
+    firmata per solo `tipo` (ENTRATA +, USCITA −), NESSUN netting semantico (uno storno è un'entrata
+    di cassa, un rimborso un'uscita di cassa). È la lingua del SALDO; `/stats` parla la lingua del
+    CONTO ECONOMICO (classi, netting). Il bilinguismo non dichiarato tra i due era la trappola
+    percettiva dell'INC-2026-07-03: qui si dichiara, non si cambia.
+    """
     today = date.today()
 
     real_filters = _build_movement_filters(trainer, as_of=today)
@@ -1118,6 +1125,11 @@ class MovementStatsResponse(BaseModel):
     saldo_inizio_mese: float = 0.0
     saldo_fine_mese: float = 0.0
     chart_data: list[ChartDataPoint]
+    # G9.4-bis.3 (D-NESSUN-NETTO-NUDO, ADR-022 Add. II): ogni KPI netto espone i COMPONENTI nel
+    # contratto API — il -140,42 dell'INC-2026-07-03 deve essere spiegabile dalla response da sola.
+    entrate_lorde: float = 0.0          # RICAVO_CONTRATTUALE + ALTRO_INCASSO (prima del contra-ricavo)
+    rimborsi_contratti: float = 0.0     # CONTRA_RICAVO (sottratto da totale_entrate)
+    storno_fisse: float = 0.0           # RETTIFICA_COSTO_FISSO (sottratto dalle uscite fisse)
 
 
 @router.get("/stats", response_model=MovementStatsResponse)
@@ -1221,6 +1233,9 @@ def get_movement_stats(
         saldo_inizio_mese=saldo_inizio_mese,
         saldo_fine_mese=saldo_fine_mese,
         chart_data=chart_data,
+        entrate_lorde=round(entrate_lorde, 2),
+        rimborsi_contratti=round(rimborsi_contratti, 2),
+        storno_fisse=round(storno_fisse, 2),
     )
 
 

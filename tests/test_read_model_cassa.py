@@ -83,3 +83,46 @@ def test_ac_rm1_totalita_partizione():
         )
     assert classify_cash_movement("ENTRATA", "qualunque-testo-libero", None, None) \
         is ClasseContabile.ALTRO_INCASSO
+
+
+# ── AC-RM-5/6 (bis.3): nessun netto nudo — lo scenario dell'INC è spiegabile dalla response ──
+
+def test_ac_rm6_scenario_inc_componenti_esposti(client, auth_headers, session):
+    """Il caso reale dell'INC-2026-07-03 (luglio: 375 lordi, 515.42 rimborsi → entrate nette -140.42):
+    la response da sola spiega il numero. Movimenti seminati via ORM (il write-guard blocca i manuali
+    con categorie riservate; qui simuliamo i writer di sistema)."""
+    from datetime import date
+    from sqlmodel import select
+    from api.models.movement import CashMovement
+    from api.models.trainer import Trainer
+
+    tid = session.exec(select(Trainer)).first().id
+    anno, mese = 2027, 3                              # mese vuoto dedicato al test
+    session.add(CashMovement(trainer_id=tid, tipo="ENTRATA", categoria="Extra",
+                             importo=375.0, data_effettiva=date(anno, mese, 10), operatore="TEST"))
+    session.add(CashMovement(trainer_id=tid, tipo="USCITA", categoria="RIMBORSO_CONTRATTO",
+                             importo=515.42, data_effettiva=date(anno, mese, 12), operatore="TEST"))
+    session.commit()
+
+    r = client.get(f"/api/movements/stats?anno={anno}&mese={mese}", headers=auth_headers)
+    assert r.status_code == 200, r.text
+    stats = r.json()
+    assert stats["totale_entrate"] == -140.42         # il netto (matematica esatta dell'INC)
+    assert stats["entrate_lorde"] == 375.00           # ...ora SPIEGABILE dai componenti
+    assert stats["rimborsi_contratti"] == 515.42
+    assert stats["storno_fisse"] == 0.0
+
+
+def test_ac_rm5_senza_rimborsi_componenti_neutri(client, auth_headers, session):
+    """Con rimborsi = 0 i bucket sono neutri (la UI resta invariata: sub-label solo se rimborsi > 0)."""
+    from datetime import date
+    from sqlmodel import select
+    from api.models.movement import CashMovement
+    from api.models.trainer import Trainer
+    tid = session.exec(select(Trainer)).first().id
+    session.add(CashMovement(trainer_id=tid, tipo="ENTRATA", categoria="Extra",
+                             importo=200.0, data_effettiva=date(2027, 4, 5), operatore="TEST"))
+    session.commit()
+    stats = client.get("/api/movements/stats?anno=2027&mese=4", headers=auth_headers).json()
+    assert stats["totale_entrate"] == 200.0 == stats["entrate_lorde"]
+    assert stats["rimborsi_contratti"] == 0.0
