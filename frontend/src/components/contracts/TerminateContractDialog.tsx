@@ -11,6 +11,8 @@
  * incassare il saldo a suo favore (importo editabile) o rinunciarvi — mai un write-off implicito.
  *
  * Zero calcoli finanziari nel frontend: esito, importi e azioni permesse arrivano dal backend.
+ * CONTAINER (G8.4 F5): TUTTO lo stato e la gating-logic vivono qui; i figli `terminate/*`
+ * (SettlementBreakdown, ClientRefundBranch, TrainerCreditBranch) sono presentazionali controllati.
  */
 
 import { useState } from "react";
@@ -25,25 +27,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Textarea } from "@/components/ui/textarea";
 import { useSettlementPreview, useTerminateContract } from "@/hooks/useContracts";
 import type { ContractTerminate } from "@/types/api";
-import { formatCurrency } from "@/lib/format";
-
-const PAYMENT_METHODS = ["CONTANTI", "POS", "BONIFICO"] as const;
-const METHOD_LABEL: Record<string, string> = { CONTANTI: "Contanti", POS: "POS", BONIFICO: "Bonifico" };
-
-type Azione = "" | "INCASSA_ORA" | "RINUNCIA_ESPRESSA" | "A_CREDITO";
+import { SettlementBreakdown } from "./terminate/SettlementBreakdown";
+import { ClientRefundBranch } from "./terminate/ClientRefundBranch";
+import { TrainerCreditBranch, type AzioneCreditoTrainer } from "./terminate/TrainerCreditBranch";
 
 interface TerminateContractDialogProps {
   contractId: number | null;
@@ -63,7 +52,7 @@ export function TerminateContractDialog({
   const [metodo, setMetodo] = useState("CONTANTI");        // rimborso (ramo cliente)
   const [rimborso, setRimborso] = useState("");            // importo editabile rimborso (ramo cliente, G8.1)
   const [prevPreviewKey, setPrevPreviewKey] = useState<number | null>(null); // sync default rimborso
-  const [azione, setAzione] = useState<Azione>("");        // ramo trainer
+  const [azione, setAzione] = useState<AzioneCreditoTrainer>("");  // ramo trainer
   const [incasso, setIncasso] = useState("");              // importo editabile INCASSA_ORA
   const [metodoPag, setMetodoPag] = useState("CONTANTI");  // metodo incasso (INCASSA_ORA)
   const [nota, setNota] = useState("");                    // motivo (RINUNCIA_ESPRESSA)
@@ -168,172 +157,36 @@ export function TerminateContractDialog({
           </div>
         ) : data ? (
           <div className="space-y-3">
-            {/* Messaggio proposta (framing §0/§4) */}
-            <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200">
-              {data.messaggio}
-            </div>
-
-            {/* Breakdown numerico (sola lettura, dal backend) */}
-            <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
-              <dt className="text-muted-foreground">Sedute erogate</dt>
-              <dd className="text-right tabular-nums">
-                {data.sedute_erogate}
-                {data.sedute_totali != null ? ` / ${data.sedute_totali}` : ""}
-              </dd>
-              <dt className="text-muted-foreground">Servizio reso</dt>
-              <dd className="text-right tabular-nums">{formatCurrency(data.valore_servizio_reso)}</dd>
-              {data.importo_rimborso > 0 ? (
-                <>
-                  <dt className="font-medium text-rose-700 dark:text-rose-300">Credito del cliente</dt>
-                  <dd className="text-right font-medium tabular-nums text-rose-700 dark:text-rose-300">
-                    {formatCurrency(data.importo_rimborso)}
-                  </dd>
-                </>
-              ) : null}
-              {trainerCredit ? (
-                <>
-                  <dt className="font-medium text-emerald-700 dark:text-emerald-300">Saldo a tuo favore</dt>
-                  <dd className="text-right font-medium tabular-nums text-emerald-700 dark:text-emerald-300">
-                    {formatCurrency(creditoTrainer)}
-                  </dd>
-                </>
-              ) : data.quota_da_stornare > 0 ? (
-                <>
-                  <dt className="text-muted-foreground">Residuo azzerato</dt>
-                  <dd className="text-right tabular-nums">{formatCurrency(data.quota_da_stornare)}</dd>
-                </>
-              ) : null}
-            </dl>
-
-            {/* D2: avviso prenotate-escluse — solo se ci sono PT prenotate ma non svolte */}
-            {data.sedute_prenotate > 0 ? (
-              <p className="text-[11px] text-muted-foreground">
-                Le {data.sedute_prenotate} sedute prenotate ma non ancora svolte non riducono il conguaglio:
-                si basa solo sulle sedute già erogate.
-              </p>
-            ) : null}
+            <SettlementBreakdown data={data} />
 
             {/* Ramo CREDITO_CLIENTE: rimborso EDITABILE + metodo (solo se rimborso > 0) — ADR-020 */}
             {isRimborso ? (
-              <div className="space-y-2.5">
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium">Importo da rimborsare</Label>
-                  <Input
-                    type="number"
-                    min={0}
-                    max={creditoCliente}
-                    step="0.01"
-                    value={rimborso}
-                    onChange={(e) => setRimborso(e.target.value)}
-                    aria-label="Importo da rimborsare"
-                  />
-                  <p className="text-[11px] text-muted-foreground">
-                    Massimo {formatCurrency(creditoCliente)}.
-                    {walletResto > 0.009
-                      ? ` Il non rimborsato (${formatCurrency(walletResto)}) resta come credito del cliente, da erogare quando vuoi.`
-                      : ""}
-                  </p>
-                </div>
-                {rimborsoNum > 0.009 ? (
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-medium">Metodo di rimborso</Label>
-                    <Select value={metodo} onValueChange={setMetodo}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {PAYMENT_METHODS.map((m) => (
-                          <SelectItem key={m} value={m}>{METHOD_LABEL[m]}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                ) : null}
-              </div>
+              <ClientRefundBranch
+                creditoCliente={creditoCliente}
+                rimborso={rimborso}
+                onRimborsoChange={setRimborso}
+                rimborsoNum={rimborsoNum}
+                walletResto={walletResto}
+                metodo={metodo}
+                onMetodoChange={setMetodo}
+              />
             ) : null}
 
             {/* Ramo CREDITO_TRAINER: scelta esplicita obbligatoria (ADR-018) */}
             {trainerCredit ? (
-              <div className="space-y-2.5">
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                  <Button
-                    type="button"
-                    variant={azione === "INCASSA_ORA" ? "default" : "outline"}
-                    size="sm"
-                    onClick={pickIncassaOra}
-                  >
-                    Incassa ora e chiudi
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={azione === "A_CREDITO" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setAzione("A_CREDITO")}
-                  >
-                    Metti a credito e chiudi
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={azione === "RINUNCIA_ESPRESSA" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setAzione("RINUNCIA_ESPRESSA")}
-                  >
-                    Rinuncia e chiudi
-                  </Button>
-                </div>
-
-                {azione === "A_CREDITO" ? (
-                  <p className="text-[11px] text-muted-foreground">
-                    Il cliente resta debitore di {formatCurrency(creditoTrainer)}: lo incassi quando paga, dalla
-                    worklist &quot;Crediti da incassare&quot;. Il contratto si chiude subito (residuo a zero).
-                  </p>
-                ) : null}
-
-                {azione === "INCASSA_ORA" ? (
-                  <div className="space-y-2">
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-medium">Importo da incassare</Label>
-                      <Input
-                        type="number"
-                        min={0}
-                        max={creditoTrainer}
-                        step="0.01"
-                        value={incasso}
-                        onChange={(e) => setIncasso(e.target.value)}
-                        aria-label="Importo da incassare"
-                      />
-                      <p className="text-[11px] text-muted-foreground">
-                        Massimo {formatCurrency(creditoTrainer)}. Puoi ridurlo: la differenza viene abbuonata al cliente.
-                      </p>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-medium">Metodo di pagamento</Label>
-                      <Select value={metodoPag} onValueChange={setMetodoPag}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {PAYMENT_METHODS.map((m) => (
-                            <SelectItem key={m} value={m}>{METHOD_LABEL[m]}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                ) : null}
-
-                {azione === "RINUNCIA_ESPRESSA" ? (
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-medium">Motivo della rinuncia (obbligatorio)</Label>
-                    <Textarea
-                      value={nota}
-                      onChange={(e) => setNota(e.target.value)}
-                      placeholder="Es. sconto concordato col cliente in fase di chiusura."
-                      rows={2}
-                    />
-                  </div>
-                ) : null}
-              </div>
+              <TrainerCreditBranch
+                azione={azione}
+                onPickIncassaOra={pickIncassaOra}
+                onPickACredito={() => setAzione("A_CREDITO")}
+                onPickRinuncia={() => setAzione("RINUNCIA_ESPRESSA")}
+                creditoTrainer={creditoTrainer}
+                incasso={incasso}
+                onIncassoChange={setIncasso}
+                metodoPag={metodoPag}
+                onMetodoPagChange={setMetodoPag}
+                nota={nota}
+                onNotaChange={setNota}
+              />
             ) : null}
           </div>
         ) : null}

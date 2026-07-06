@@ -164,12 +164,13 @@ def test_g84_fe_consuma_ssot_netto_e_saldo():
 
     frontend_src = Path(__file__).resolve().parents[1] / "frontend" / "src"
     hero = (frontend_src / "components/contracts/ContractFinancialHero.tsx").read_text(encoding="utf-8")
-    table = (frontend_src / "components/contracts/ContractsTable.tsx").read_text(encoding="utf-8")
+    # La cella Finanze della lista vive in ContractRow.tsx (riga presentazionale, split F5)
+    row = (frontend_src / "components/contracts/ContractRow.tsx").read_text(encoding="utf-8")
     history = (frontend_src / "components/contracts/ContractHistoryTab.tsx").read_text(encoding="utf-8")
     types_api = (frontend_src / "types/api.ts").read_text(encoding="utf-8")
 
     assert "contract.netto_incassato" in hero          # netto-POSIZIONE dal SSoT (F1.a)
-    assert "contract.netto_incassato" in table
+    assert "contract.netto_incassato" in row
     assert "saldo_progressivo" in history              # saldo-LEDGER dal wire (F1.b)
     assert "saldo_progressivo" in types_api            # contratto typescript sincronizzato
     # e il campo esiste davvero sul wire: lo schema Pydantic è l'autorità, non il type FE
