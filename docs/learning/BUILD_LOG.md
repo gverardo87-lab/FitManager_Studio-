@@ -2855,3 +2855,47 @@ semantico FE-no-money-math + F5 split <300). Poi fetta-UX-presentazionale (F2+F6
 (F3.a-f). G8.5 (goodwill): governance da aprire prima della chiusura G8.4.
 
 ---
+
+## 2026-07-06 (stessa giornata) — G8.4 fetta-RIGORE (F1+F5) COMPLETATA
+
+**F1 (`5086045`).** Backend: `ContractMovementItem.saldo_progressivo` calcolato in `get_contract`
+(ENTRATA +, USCITA −, round 2dp per riga, ordine `data_effettiva,id`) — ADR-019 Add. IV. FE: hero e
+riga-lista consumano `contract.netto_incassato` (ricalcoli inline eliminati); lo Storico legge il saldo
+dal wire, footer «Saldo movimenti del contratto» + «Saldo» per riga (D-2). 3 test dedicati incl. la
+divergenza legittima netto-POSIZIONE vs saldo-LEDGER post-reopen con wallet riassorbito (AC-G84-2:
+800 vs 550, delta = esattamente l'erogato riassorbito). **Suite full 836.**
+
+**F1.d — il guard è nato e ha subito lavorato due volte.** Il gemello semantico FE-no-money-math
+(`test_semantic_guards.py`) alla prima esecuzione ha pescato **3 siti `.reduce(…importo)` fuori dal
+censimento della spec** → esaminati uno a uno: tutti legittimi con dottrina propria (2 aggregati-di-vista
+row-derived [rinnovi-incassi KPI worklist, LedgerColumn footer] + 1 Σ-selezione input-local
+[RecurringExpensesTab]) → allowlist esplicita motivata, mai in silenzio. Poi il gemello anti-vacuità
+ha FALLITO quando F5.b ha rilocato il consumo di `netto_incassato` da ContractsTable a ContractRow —
+esattamente il failure-mode per cui esiste (lezione G9.3): ripuntato, vitalità provata sul campo.
+
+**F5 (3 commit, tutti behavior-preserving, build verde a ognuno).** `4f2d07c` F5.a: `[id]/page.tsx`
+511→280 (RenewalChainSection/ContractSessioniTab/ContractDettagliTab estratti) + **EventsTable
+condivisa** profilo↔contratto che chiude anche un drift task #14 (il dettaglio contratto renderizzava
+`e.stato` grezzo → underscore a video sui penali). `ab38c90` F5.b: TerminateContractDialog 357→192
+(figli controllati `terminate/*`: SettlementBreakdown/ClientRefundBranch/TrainerCreditBranch — stato e
+gating SOLO nel container) + ContractsTable 370→166 (riga → ContractRow). `1978572` F5.c (delegato ad
+agente con vincoli, verificato): PaymentPlanTab 897→198 in `payment-plan/*` (6 moduli; `usePayRate`
+resta per-card: hoistarlo condividerebbe `isPending` tra card = cambio comportamento).
+
+**Scoperte del giro:** (1) **F3.f era GIÀ in codice** — il gating richiede la nota su RINUNCIA_ESPRESSA
+(AC-G84-8 già vero); (2) il ri-grounding mattutino sbagliava sugli import inline di `[id]/page.tsx`
+(esistevano ancora, l'audit originale aveva ragione — corretta la nota §0-bis: anche il ri-grounding
+va verificato sul file).
+
+**Gate F5 (AC-G84-6): verifica Playwright LIVE su crm.db reale** (dev 3001/8001, SOLO azioni read-only,
+zero submit): lista contratti (netto SSoT + sub-label «lordo X · −Y» sui contratti con rimborso, badge
+2 assi, segnale rate scadute) · dettaglio 39 (hero netto 240,75 con sub-label; breakdown; rate card con
+storico) · **tab Storico: «Saldo» per riga dal backend (75→176,25→277,50→378,75→240,75 col rimborso
+−138) + footer «Saldo movimenti del contratto»** · dialog Termina su ATTIVO (preview backend, prefill
+rimborso ramo-cliente, chiuso con Annulla). Server spenti a fine verifica.
+
+**⏭️ Prossimo: fetta-UX-presentazionale (F2+F6)** — disclosure con lista D-1 emendata + token-map F6
+(neutralizzare violet/blue/indigo decorativi) — poi **fetta-comportamentale (F3.a/c/d/e)** e apertura
+governance **G8.5** (goodwill) prima della chiusura G8.4.
+
+---

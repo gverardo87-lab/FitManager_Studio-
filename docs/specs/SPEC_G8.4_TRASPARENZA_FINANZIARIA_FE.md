@@ -2,7 +2,7 @@
 
 **Tipo:** specifica prescrittiva (cosa-deve-essere-vero; silente sul come dove possibile). Bridge Chat→Code.
 **Data:** 2026-06-30 · **Branch:** `FitManager_Studio`
-**Stato:** ⏳ **DA IMPLEMENTARE** (G8.4) — **RI-GROUNDATA sul codice vivo 2026-07-06** (§0-bis: coordinate e scope aggiornati post G9.0→G9.5 / G9.4-bis / G7.8-bis; zero codice ancora prodotto). **Decisioni founder ratificate 2026-06-30:** D-3 = rimborso *goodwill* del non-svolto (scorporato in **G8.5**, nuovo money-path con ADR proprio) · sequenza = tutte le fette UX-pure ora (F1/F2/F3/F5/F6), F4 governance-first · collocazione = file dedicato (questo). **Decisioni founder ratificate 2026-07-06** (evidenza: `docs/archive/RICERCA_COMPETITOR_TRASPARENZA_FINANZIARIA_2026-07-06.md`, leggi L1-L6): **D-1 EMENDATA** = lista always-visible §F2 confermata + breakdown «lordo − rimborsi» promosso a **sub-label always-visible** (pattern G9.4-bis.3, legge L2) · **D-2** = colonna **«Saldo»** per riga + footer **«Saldo movimenti del contratto»** (mai "netto" sul ledger, legge L1) → **ADR-019 Addendum IV** (D-LEDGER-SALDO).
+**Stato:** 🟡 **IN CORSO** — **fetta-RIGORE (F1+F5) ✅ COMPLETATA 2026-07-06**: F1 `5086045` (netto SSoT + `saldo_progressivo` + guard semantico FE-no-money-math) · F5.a `4f2d07c` (page 511→280 + EventsTable condivisa) · F5.b `ab38c90` (dialog 357→192, table 370→166) · F5.c `1978572` (PaymentPlanTab 897→198). Suite full **836**, verifica Playwright LIVE su crm.db reale (lista+dettaglio+Storico «Saldo» per riga+dialog Termina, zero submit). **Restano: fetta-UX-presentazionale (F2+F6) → fetta-comportamentale (F3.a/c/d/e — F3.f GIÀ in codice)**. RI-GROUNDATA sul codice vivo 2026-07-06 (§0-bis). **Decisioni founder ratificate 2026-06-30:** D-3 = rimborso *goodwill* del non-svolto (scorporato in **G8.5**, nuovo money-path con ADR proprio) · sequenza = tutte le fette UX-pure ora (F1/F2/F3/F5/F6), F4 governance-first · collocazione = file dedicato (questo). **Decisioni founder ratificate 2026-07-06** (evidenza: `docs/archive/RICERCA_COMPETITOR_TRASPARENZA_FINANZIARIA_2026-07-06.md`, leggi L1-L6): **D-1 EMENDATA** = lista always-visible §F2 confermata + breakdown «lordo − rimborsi» promosso a **sub-label always-visible** (pattern G9.4-bis.3, legge L2) · **D-2** = colonna **«Saldo»** per riga + footer **«Saldo movimenti del contratto»** (mai "netto" sul ledger, legge L1) → **ADR-019 Addendum IV** (D-LEDGER-SALDO).
 **Blocco proposto:** **G8.4** — remediation UX/rigore della *presentazione* finanziaria sul frontend (estende il programma G8 «integrità contabile + trasparenza CRM-grade»). Conseguenza di decisioni già accettate (ADR-016 EROGATO · ADR-017 rinvio-libera-credito · ADR-018 bilateralità · ADR-019 cassa-immutabile/reopen-ricalcola · ADR-020 wallet · ADR-021 INV-RATE); **nessun nuovo ADR**, candidato Addendum ad ADR-019 (relabel ledger) se necessario.
 **Mappa di verità:** `docs/adr/ADR-019-*.md` (D-CASSA-VISIBILE) · `docs/adr/ADR-018-*.md` (D-SCELTA) · `docs/adr/ADR-016-*.md` (EROGATO) · `docs/technical/FINANCIAL_DOMAIN_MODEL.md` · `docs/archive/specs/SPEC_INTEGRITA_CONTABILE_E_WALLET.md` (programma G8) · `frontend/src/lib/contract-status.tsx` (SSoT vocabolario colore/stato) · `api/services/contract_state.py` · `api/routers/contracts.py` · `tools/scripts/check-all.sh`.
 
@@ -49,10 +49,12 @@ Verifica adversariale su codice vivo (2 agenti read-only) + ricerca competitor s
    test collectable — non una riga bash).
 3. **Template interno già shippato:** la card Entrate di `/cassa` (G9.4-bis.3, `cassa/page.tsx:817-823`) mostra
    `Lorde X · Rimborsi −Y` come sub-label — è il pattern che F1/F2 riusano per il netto-POSIZIONE (D-1 emendata).
-4. **F5 perimetro aggiornato:** `ContractsTable.tsx` è a **370 LOC** ed entra nello split; gli import inline in
-   `contratti/[id]/page.tsx` **non esistono più** (righe 16-30 top-of-file — resta solo la violazione LOC, 511);
-   `ContractFinancialHero` è a 263 LOC (conforme). Violazioni LOC attuali: PaymentPlanTab 897 ·
+4. **F5 perimetro aggiornato:** `ContractsTable.tsx` è a **370 LOC** ed entra nello split;
+   `ContractFinancialHero` è a 263 LOC (conforme). Violazioni LOC (pre-F5): PaymentPlanTab 897 ·
    contratti/[id]/page.tsx 511 · ContractsTable 370 · TerminateContractDialog 357.
+   *(Correzione 2026-07-06 sera: il ri-grounding iniziale affermava che gli import inline di
+   `[id]/page.tsx` fossero già spariti — FALSO, erano ancora a riga 299/409-411; l'audit originale
+   aveva ragione. Risolti dallo split F5.a. Lezione: anche il ri-grounding va verificato sul file.)*
 5. **Scope IN (residui già assegnati a G8.4 da INDEX/G7.8-bis):**
    - **display `sedute_penali`** — il backend lo espone già su `ContractSettlementPreview` (G7.8-bis);
      manca il sync in `types/api.ts` e il display nel breakdown del dialog Termina (→ F3.e);
@@ -131,7 +133,7 @@ Il FE ricalcola un netto che il backend espone già; e tratta come "stesso netto
 - **F3.c (advisory backend, opzionale):** se serve un suggerimento computato, `settlement-preview` espone un campo **advisory** `azione_consigliata` (es. `INCASSA_ORA` quando `credito_trainer>0` — l'opzione che tutela il trainer), popolato in `_build_settlement_preview` (`contracts.py:1451-1488`). È advisory: non cambia il gate 422.
 - **F3.d (accessibilità):** i 3 `<Button>` diventano un gruppo a scelta singola accessibile (`role="radiogroup"` + `role="radio"`/`aria-checked`, oppure `aria-pressed` per bottone) con marcatore non-cromatico sul selezionato. *(Conferma W3C APG: radiogroup con stato iniziale tutto-deselezionato è pattern riconosciuto — legge L5.)*
 - **F3.e (display `sedute_penali`, residuo G7.8-bis — aggiunto 2026-07-06):** il breakdown del dialog Termina mostra le sedute penali quando `sedute_penali > 0` (conteggio SEPARATO dalle erogate, mai sommato a video: «N erogate + M penali» — coerente con l'audit conteggi separati di G7.8-bis). Richiede il sync di `sedute_penali` in `types/api.ts` (`ContractSettlementPreview`).
-- **F3.f (nota-abbuono obbligatoria lato FE — aggiunto 2026-07-06, da INDEX/roadmap 2026-07-03):** con `azione = RINUNCIA_ESPRESSA` il submit resta disabilitato finché la nota è vuota (ADR-018 D-IMPORTO: rinuncia = nota obbligatoria). Il backend resta autorità (422): la validazione FE è UX, non gate.
+- **F3.f (nota-abbuono obbligatoria lato FE — aggiunto 2026-07-06, da INDEX/roadmap 2026-07-03): ✅ GIÀ IN CODICE** (scoperto durante F5.b): il gating `trainerSceltaValida` richiede `nota.trim().length > 0` su `RINUNCIA_ESPRESSA` → submit disabilitato senza nota (AC-G84-8 già vero). Il backend resta autorità (422). Resta solo da coprire con test Playwright in fetta-comportamentale.
 
 ### F4 — Rimborso *goodwill* del non-svolto → SCORPORATO in G8.5 **[money-path, governance-first]**
 
