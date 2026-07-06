@@ -39,7 +39,7 @@ export function ContractFinancialHero({ contract }: { contract: ContractWithRate
   const acconto = contract.acconto;
   const versato = contract.totale_versato;
   const rimborsato = contract.totale_rimborsato ?? 0;
-  const netto = Math.round((versato - rimborsato) * 100) / 100;  // issue B: incassato reale (Strada B)
+  const netto = contract.netto_incassato;  // SSoT backend (G8.4 F1.a) — MAI ricalcolato client-side
   const haRimborso = rimborsato > 0.009;
   const residuo = contract.residuo;
   const nettoPct = totale > 0 ? Math.round((netto / totale) * 100) : 0;

@@ -799,6 +799,9 @@ export interface ContractMovementItem {
   metodo: string | null;
   id_rata: number | null;
   note: string | null;
+  // Saldo-LEDGER riga-per-riga servito dal backend (ADR-019 Add. IV, D-LEDGER-SALDO).
+  // In UI si etichetta «Saldo», MAI "netto" — il client non accumula denaro (R-SSOT-FE).
+  saldo_progressivo: number;
 }
 
 /** F6 (G8.1.1): evento curato dello storico stato/attività del contratto (da audit_log). */

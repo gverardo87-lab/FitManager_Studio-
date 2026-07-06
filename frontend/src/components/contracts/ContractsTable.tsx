@@ -178,7 +178,7 @@ export function ContractsTable({
                     {contract.prezzo_totale ? (() => {
                       const prezzo = contract.prezzo_totale!;
                       const rimborsato = contract.totale_rimborsato ?? 0;
-                      const netto = Math.round((contract.totale_versato - rimborsato) * 100) / 100; // issue B: incassato reale
+                      const netto = contract.netto_incassato; // SSoT backend (G8.4 F1.a) — MAI ricalcolato client-side
                       const haRimborso = rimborsato > 0.009;
                       const ratio = prezzo > 0 ? netto / prezzo : 0;
                       return (

@@ -6,8 +6,10 @@
  *
  * Due storici complementari, mai fusi:
  * - F5 — Movimenti di cassa: ledger unificato dei CashMovement del contratto (acconto, rate,
- *   rimborsi USCITA, conguagli ENTRATA) con segno + saldo netto progressivo. Legge `contract.movimenti`
- *   (già nel dettaglio). L'erogazione wallet (id_contratto=None) NON è qui — è cassa a livello cliente.
+ *   rimborsi USCITA, conguagli ENTRATA). Il saldo riga-per-riga (`saldo_progressivo`) arriva dal
+ *   BACKEND (ADR-019 Add. IV, D-LEDGER-SALDO) — il client non accumula mai denaro. Si etichetta
+ *   «Saldo», MAI "netto": diverge legittimamente dal netto-POSIZIONE dopo un reopen con wallet
+ *   riassorbito. L'erogazione wallet (id_contratto=None) NON è qui — è cassa a livello cliente.
  * - F6 — Stato & attività: timeline curata dello stato di vita (creazione, terminazione, riapertura,
  *   saldo, transizioni) da `GET /contracts/{id}/history`.
  */
@@ -73,21 +75,14 @@ export function ContractHistoryTab({ contract }: { contract: ContractWithRates }
 }
 
 // ════════════════════════════════════════════════════════════
-// F5 — Movimenti di cassa (ledger con saldo netto progressivo)
+// F5 — Movimenti di cassa (ledger: saldo riga-per-riga dal wire)
 // ════════════════════════════════════════════════════════════
 
 function CashLedgerCard({ movimenti }: { movimenti: ContractMovementItem[] }) {
-  // Saldo netto progressivo: ENTRATA +, USCITA − (cronologico asc, come da backend).
-  const rows = useMemo(() => {
-    let saldo = 0;
-    return movimenti.map((m) => {
-      const segno = m.tipo === "ENTRATA" ? 1 : -1;
-      saldo = Math.round((saldo + segno * m.importo) * 100) / 100;
-      return { m, saldo };
-    });
-  }, [movimenti]);
-
-  const netto = rows.length > 0 ? rows[rows.length - 1].saldo : 0;
+  // D-LEDGER-SALDO (ADR-019 Add. IV): `saldo_progressivo` è servito dal backend — zero accumulo
+  // client-side (R-SSOT-FE). Il footer è il saldo delle righe MOSTRATE, non il netto-POSIZIONE.
+  const saldoFinale =
+    movimenti.length > 0 ? movimenti[movimenti.length - 1].saldo_progressivo : 0;
 
   return (
     <Card>
@@ -97,18 +92,18 @@ function CashLedgerCard({ movimenti }: { movimenti: ContractMovementItem[] }) {
           Movimenti di cassa
         </CardTitle>
         <div className="text-right">
-          <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Netto incassato</p>
-          <p className="text-base font-bold tabular-nums">{formatCurrency(netto)}</p>
+          <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Saldo movimenti del contratto</p>
+          <p className="text-base font-bold tabular-nums">{formatCurrency(saldoFinale)}</p>
         </div>
       </CardHeader>
       <CardContent>
-        {rows.length === 0 ? (
+        {movimenti.length === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground">
             Nessun movimento di cassa registrato.
           </p>
         ) : (
           <ul className="divide-y">
-            {rows.map(({ m, saldo }) => {
+            {movimenti.map((m) => {
               const isEntrata = m.tipo === "ENTRATA";
               const Sign = isEntrata ? ArrowDownLeft : ArrowUpRight;
               return (
@@ -140,7 +135,7 @@ function CashLedgerCard({ movimenti }: { movimenti: ContractMovementItem[] }) {
                       {formatCurrency(m.importo)}
                     </p>
                     <p className="text-[11px] tabular-nums text-muted-foreground">
-                      saldo {formatCurrency(saldo)}
+                      Saldo {formatCurrency(m.saldo_progressivo)}
                     </p>
                   </div>
                 </li>

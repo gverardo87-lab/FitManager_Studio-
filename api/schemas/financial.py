@@ -489,6 +489,11 @@ class ContractMovementItem(BaseModel):
     metodo: Optional[str] = None
     id_rata: Optional[int] = None   # correla col piano rate (None = movimento a livello contratto)
     note: Optional[str] = None
+    # Saldo-LEDGER riga-per-riga (ADR-019 Add. IV, D-LEDGER-SALDO): running balance del sotto-libro
+    # contratto (ENTRATA +, USCITA −), valido nell'ordine (data_effettiva, id). Diverge legittimamente
+    # dal netto-POSIZIONE `netto_incassato` dopo un reopen con wallet riassorbito (R2-bis). In UI si
+    # etichetta «Saldo», MAI "netto". Calcolato in get_contract — il frontend LEGGE, non accumula.
+    saldo_progressivo: float = 0.0
 
 
 class ContractHistoryEvent(BaseModel):

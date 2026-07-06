@@ -590,7 +590,17 @@ def get_contract(
         )
         .order_by(CashMovement.data_effettiva, CashMovement.id)
     ).all()
-    resp.movimenti = [ContractMovementItem.model_validate(m) for m in movimenti]
+    # D-LEDGER-SALDO (ADR-019 Add. IV / G8.4 F1.b): il saldo progressivo lo serve il backend —
+    # il client non accumula mai denaro (R-SSOT-FE). Convenzione del mastro (ENTRATA +, USCITA −),
+    # round 2dp per riga; valido perché la lista è ordinata (data_effettiva, id) e mai filtrata.
+    items: list[ContractMovementItem] = []
+    saldo = 0.0
+    for m in movimenti:
+        saldo = round(saldo + (m.importo if m.tipo == "ENTRATA" else -m.importo), 2)
+        item = ContractMovementItem.model_validate(m)
+        item.saldo_progressivo = saldo
+        items.append(item)
+    resp.movimenti = items
 
     # Renewal chain: parent + children — ogni nodo porta il PROPRIO lifecycle reale
     # (SPEC_VOCABOLARIO §2.7/G3): un genitore SOSPESO non deve apparire "Chiuso"/"Attivo".

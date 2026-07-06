@@ -110,3 +110,67 @@ def test_adr019_reopen_non_cancella_la_cassa(client, auth_headers, sample_client
     assert uscite_post[0].id == uscite_pre[0].id
     contract = session.get(Contract, c["id"])
     assert round(contract.totale_rimborsato, 2) == round(uscite_post[0].importo, 2)
+
+
+# ── G8.4 F1.d — R-SSOT-FE: il frontend legge il denaro dal wire, MAI lo ricalcola ──────────────
+
+def test_g84_fe_no_money_math():
+    """R-SSOT-FE (SPEC_G8.4 §2 + F1.d): ogni cifra di denaro mostrata dal FE è un campo del backend
+    formattato — mai aritmetica client su versato/rimborsato/movimenti. Scansione dei sorgenti
+    .ts/.tsx; le eccezioni cap-locali (validazioni input nei dialog) entrano SOLO per allowlist
+    esplicita (path, nome-pattern), mai in silenzio."""
+    import re
+    from pathlib import Path
+
+    frontend_src = Path(__file__).resolve().parents[1] / "frontend" / "src"
+    assert frontend_src.is_dir(), frontend_src
+
+    forbidden = (
+        ("netto ricalcolato (versato - rimborsato)", re.compile(r"versato\s*-\s*rimborsato")),
+        ("aritmetica su totale_versato", re.compile(r"totale_versato\s*-")),
+        ("running balance accumulato client-side", re.compile(r"segno\s*\*\s*m\.importo")),
+        ("somma client-side dei movimenti", re.compile(r"\.reduce\([^\n]*importo")),
+    )
+    # Eccezioni LEGITTIME censite (mai in silenzio — ogni entry ha la sua dottrina):
+    # - aggregato di VISTA: Σ delle sole righe mostrate (footer/KPI row-derived, riconcilia col
+    #   visibile — stessa dottrina del saldo-LEDGER, AC-G84-2); il backend non serve quel totale.
+    # - input-local: Σ della selezione utente in un form (stato client, non cifra canonica).
+    allowlist: set[tuple[str, str]] = {
+        ("app/(dashboard)/rinnovi-incassi/page.tsx", "somma client-side dei movimenti"),  # Σ worklist visualizzata (KPI di vista; consumo-SSoT pieno = Giro 2 SPEC_VOCABOLARIO)
+        ("components/movements/LedgerColumn.tsx", "somma client-side dei movimenti"),     # footer di colonna row-derived (riconcilia con le righe filtrate mostrate)
+        ("components/movements/RecurringExpensesTab.tsx", "somma client-side dei movimenti"),  # Σ selezione utente nel form conferma spese (input-local)
+    }
+
+    violations = []
+    for path in sorted(frontend_src.rglob("*.ts")) + sorted(frontend_src.rglob("*.tsx")):
+        rel = path.relative_to(frontend_src).as_posix()
+        text = path.read_text(encoding="utf-8")
+        for name, pattern in forbidden:
+            if pattern.search(text) and (rel, name) not in allowlist:
+                violations.append(f"{rel}: {name}")
+    assert violations == [], (
+        "money-math client-side vietato — il FE legge il SSoT dal wire (SPEC_G8.4 F1):\n"
+        + "\n".join(violations)
+    )
+
+
+def test_g84_fe_consuma_ssot_netto_e_saldo():
+    """Anti-vacuità del gemello sopra (lezione guard G9.3): le superfici DEVONO consumare i campi
+    SSoT — se hero/lista smettono di leggere `netto_incassato` o lo storico smette di leggere
+    `saldo_progressivo` dal wire, il divieto di money-math sarebbe vero-ma-vuoto."""
+    from pathlib import Path
+
+    from api.schemas.financial import ContractMovementItem
+
+    frontend_src = Path(__file__).resolve().parents[1] / "frontend" / "src"
+    hero = (frontend_src / "components/contracts/ContractFinancialHero.tsx").read_text(encoding="utf-8")
+    table = (frontend_src / "components/contracts/ContractsTable.tsx").read_text(encoding="utf-8")
+    history = (frontend_src / "components/contracts/ContractHistoryTab.tsx").read_text(encoding="utf-8")
+    types_api = (frontend_src / "types/api.ts").read_text(encoding="utf-8")
+
+    assert "contract.netto_incassato" in hero          # netto-POSIZIONE dal SSoT (F1.a)
+    assert "contract.netto_incassato" in table
+    assert "saldo_progressivo" in history              # saldo-LEDGER dal wire (F1.b)
+    assert "saldo_progressivo" in types_api            # contratto typescript sincronizzato
+    # e il campo esiste davvero sul wire: lo schema Pydantic è l'autorità, non il type FE
+    assert "saldo_progressivo" in ContractMovementItem.model_fields
