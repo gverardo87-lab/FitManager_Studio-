@@ -1,15 +1,16 @@
 // src/components/clients/profile/SessioniTab.tsx
 "use client";
 
-import { EVENT_STATUS_LABELS, type EventStatus } from "@/types/api";
-import { format } from "date-fns";
-import { it } from "date-fns/locale";
-import { Badge } from "@/components/ui/badge";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
+/**
+ * Tab "Sessioni" del profilo cliente: eventi del cliente.
+ * Container sottile: fetch via useClientEvents, display delegato a EventsTable (condivisa
+ * col dettaglio contratto — SSoT label stati, penali in rose).
+ */
+
 import { Calendar } from "lucide-react";
-import { useClientEvents, type EventHydrated } from "@/hooks/useAgenda";
+
+import { EventsTable } from "@/components/agenda/EventsTable";
+import { useClientEvents } from "@/hooks/useAgenda";
 import { TabSkeleton, EmptyTab } from "./ProfileShared";
 
 export function SessioniTab({ clientId }: { clientId: number }) {
@@ -30,51 +31,5 @@ export function SessioniTab({ clientId }: { clientId: number }) {
     );
   }
 
-  const sorted = [...events].sort(
-    (a, b) => b.data_inizio.getTime() - a.data_inizio.getTime()
-  );
-
-  return (
-    <div className="rounded-lg border bg-white dark:bg-zinc-900 overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Data</TableHead>
-            <TableHead>Titolo</TableHead>
-            <TableHead>Categoria</TableHead>
-            <TableHead>Stato</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {sorted.map((e: EventHydrated) => (
-            <TableRow key={e.id}>
-              <TableCell className="tabular-nums">
-                {format(e.data_inizio, "dd MMM yyyy HH:mm", { locale: it })}
-              </TableCell>
-              <TableCell className="font-medium">{e.titolo ?? "—"}</TableCell>
-              <TableCell>
-                <Badge variant="outline">{e.categoria}</Badge>
-              </TableCell>
-              <TableCell>
-                <Badge
-                  variant="secondary"
-                  className={
-                    e.stato === "Completato"
-                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
-                      : e.stato === "Cancellato"
-                      ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                      : e.stato === "Cancellato_Tardivo" || e.stato === "No_Show"
-                      ? "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-300"
-                      : ""
-                  }
-                >
-                  {EVENT_STATUS_LABELS[e.stato as EventStatus] ?? e.stato}
-                </Badge>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  );
+  return <EventsTable events={events} />;
 }
