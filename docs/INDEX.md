@@ -76,8 +76,8 @@ commit docs del gate (ciclo di vita: `AGENTS.md`).
 
 | File | Stato | Scopo |
 |------|-------|-------|
-| `SPEC_G9_FINANCIAL_COMMAND_LAYER.md` | 🟢 G9.0→G9.4 CHIUSI · **G9.5-G9.6 aperti** | Write-model del dominio finanziario (ADR-022): penna unica ✅, ledger rettifiche ✅, TransitionExecutor+FSM ✅; enforcement ✅ + test semantici ✅ (grep ritirati); restano **G9.5** Hypothesis, **G9.6** Money (differito) |
-| `SPEC_G8.4_TRASPARENZA_FINANZIARIA_FE.md` | ⏳ DA IMPLEMENTARE | Trasparenza finanziaria frontend (fette UX-pure F1/F2/F3/F5/F6 + F4 governance-first; D-3 goodwill scorporato in G8.5). Include: display penali G7.8-bis, validazione nota-abbuono in dialog |
+| `SPEC_G9_FINANCIAL_COMMAND_LAYER.md` | 🟢 G9.0→G9.5 CHIUSI · **resta G9.6 (differito)** | Write-model del dominio finanziario (ADR-022): penna unica ✅, ledger rettifiche ✅, TransitionExecutor+FSM ✅, enforcement ✅ + test semantici ✅ (grep ritirati), Hypothesis stateful ✅ (G9.5, 2026-07-05); resta SOLO **G9.6** Money centesimi (differito, gated) |
+| `SPEC_G8.4_TRASPARENZA_FINANZIARIA_FE.md` | ⏳ DA IMPLEMENTARE — **ri-groundata 2026-07-06, D-1/D-2 ratificate** | Trasparenza finanziaria frontend (fette UX-pure F1/F2/F3/F5/F6 + F4 governance-first; D-3 goodwill scorporato in G8.5). D-2 «Saldo» ledger → **ADR-019 Add. IV**; D-1 emendata (breakdown lordo−rimborsi = sub-label always-visible); ricerca `archive/RICERCA_COMPETITOR_TRASPARENZA_FINANZIARIA_2026-07-06.md`. Include: display penali G7.8-bis (F3.e), validazione nota-abbuono in dialog (F3.f) |
 | `SPEC_VOCABOLARIO_E_CLASSIFICAZIONE_CONTRATTI.md` | ✅ Giro 1 · **⏳ Giro 2 pendente** | Consumo-SSoT stati contratto su tutte le superfici: restano `rinnovi-incassi` + `workspace_engine` off-SSoT + grep-guard |
 | `SPEC_G9.4-BIS_READ_MODEL_CASSA.md` | 🟡 APERTA — quick-win F3/F4/F8 anticipati | Read-model della cassa (ADR-022 Add. II, gemello di lettura della penna): `classify_cash_movement()` 6 classi, migrazione superfici I1-I8, esaustività alla nascita, bucket `/stats` + card Entrate. Parallelo a G9.4, behavior-preserving. Trigger: INC-2026-07-03 + censimento assi |
 

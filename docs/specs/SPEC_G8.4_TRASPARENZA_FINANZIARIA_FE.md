@@ -2,7 +2,7 @@
 
 **Tipo:** specifica prescrittiva (cosa-deve-essere-vero; silente sul come dove possibile). Bridge Chat→Code.
 **Data:** 2026-06-30 · **Branch:** `FitManager_Studio`
-**Stato:** ⏳ **DA IMPLEMENTARE** (G8.4). Governance docs-only. Zero codice prodotto. **Decisioni founder ratificate 2026-06-30:** D-3 = rimborso *goodwill* del non-svolto (scorporato in **G8.5**, nuovo money-path con ADR proprio) · sequenza = tutte le fette UX-pure ora (F1/F2/F3/F5/F6), F4 governance-first · collocazione = file dedicato (questo).
+**Stato:** ⏳ **DA IMPLEMENTARE** (G8.4) — **RI-GROUNDATA sul codice vivo 2026-07-06** (§0-bis: coordinate e scope aggiornati post G9.0→G9.5 / G9.4-bis / G7.8-bis; zero codice ancora prodotto). **Decisioni founder ratificate 2026-06-30:** D-3 = rimborso *goodwill* del non-svolto (scorporato in **G8.5**, nuovo money-path con ADR proprio) · sequenza = tutte le fette UX-pure ora (F1/F2/F3/F5/F6), F4 governance-first · collocazione = file dedicato (questo). **Decisioni founder ratificate 2026-07-06** (evidenza: `docs/archive/RICERCA_COMPETITOR_TRASPARENZA_FINANZIARIA_2026-07-06.md`, leggi L1-L6): **D-1 EMENDATA** = lista always-visible §F2 confermata + breakdown «lordo − rimborsi» promosso a **sub-label always-visible** (pattern G9.4-bis.3, legge L2) · **D-2** = colonna **«Saldo»** per riga + footer **«Saldo movimenti del contratto»** (mai "netto" sul ledger, legge L1) → **ADR-019 Addendum IV** (D-LEDGER-SALDO).
 **Blocco proposto:** **G8.4** — remediation UX/rigore della *presentazione* finanziaria sul frontend (estende il programma G8 «integrità contabile + trasparenza CRM-grade»). Conseguenza di decisioni già accettate (ADR-016 EROGATO · ADR-017 rinvio-libera-credito · ADR-018 bilateralità · ADR-019 cassa-immutabile/reopen-ricalcola · ADR-020 wallet · ADR-021 INV-RATE); **nessun nuovo ADR**, candidato Addendum ad ADR-019 (relabel ledger) se necessario.
 **Mappa di verità:** `docs/adr/ADR-019-*.md` (D-CASSA-VISIBILE) · `docs/adr/ADR-018-*.md` (D-SCELTA) · `docs/adr/ADR-016-*.md` (EROGATO) · `docs/technical/FINANCIAL_DOMAIN_MODEL.md` · `docs/archive/specs/SPEC_INTEGRITA_CONTABILE_E_WALLET.md` (programma G8) · `frontend/src/lib/contract-status.tsx` (SSoT vocabolario colore/stato) · `api/services/contract_state.py` · `api/routers/contracts.py` · `tools/scripts/check-all.sh`.
 
@@ -30,6 +30,39 @@ La logica G7/G8 è grado-enterprise e corretta sull'asse DENARO; il difetto è c
 4. **Workaround manuale esposto come istruzione (TERRA-TERRA).** `ContractFinancialHero.tsx:202-210` istruisce il PT a una corvée a due passi: *«Per rimborsare il non svolto: usa Riapri e poi Termina»*.
 5. **Violazioni LOC + import a metà file (RIGORE).** `PaymentPlanTab.tsx` (897 LOC), `contratti/[id]/page.tsx` (511 LOC, con import inline a riga 299/409/410/411), `TerminateContractDialog.tsx` (357 LOC) superano il comandamento sacro dei 300 LOC. *(Correzione all'audit: in `TerminateContractDialog` gli import sono già tutti top-of-file 16-41; l'import-a-metà-file è in `contratti/[id]/page.tsx`.)*
 6. **Colore semi-semantico (TERRA-TERRA).** L'hero mischia colore-valenza (emerald/amber/red) e colore-decorativo di categoria (violet/blue/indigo su Valore/Acconto/Crediti) → diluisce il semaforo su un pannello finanziario.
+
+---
+
+## 0-bis. Ri-grounding 2026-07-06 (codice vivo post G9 / G9.4-bis / G7.8-bis)
+
+Verifica adversariale su codice vivo (2 agenti read-only) + ricerca competitor su fonti ufficiali
+(`docs/archive/RICERCA_COMPETITOR_TRASPARENZA_FINANZIARIA_2026-07-06.md`). Esiti che EMENDANO questa spec:
+
+1. **F1 confermata, ma perimetro corretto:** i ricalcoli inline vivi sono `ContractFinancialHero.tsx:42-45`,
+   `ContractsTable.tsx:181-183` (netto + ratio derivata) e `ContractHistoryTab.tsx:81-90` (accumulo saldo in
+   `useMemo` + footer «Netto incassato»). **`PaymentPlanTab.tsx` NON viola F1** (legge già i campi SSoT
+   `importo_da_rateizzare`/`somma_rate_pendenti`; l'accusa dell'audit 2026-06-30 era errata — resta solo la
+   violazione LOC). `TerminateContractDialog` è conforme (il `walletResto` a riga ~94 è cap-locale legittimo).
+2. **F1.d cambia forma: test semantico, non grep-guard.** G9.4-b (2026-07-05) ha ritirato i grep-guard ADR a
+   favore di `tests/test_semantic_guards.py` (eseguito da `check-all.sh`); il guard «FE no money-math» nasce
+   direttamente in quella forma (pattern-scan sorgenti FE con allowlist delle eccezioni cap-locali, dentro un
+   test collectable — non una riga bash).
+3. **Template interno già shippato:** la card Entrate di `/cassa` (G9.4-bis.3, `cassa/page.tsx:817-823`) mostra
+   `Lorde X · Rimborsi −Y` come sub-label — è il pattern che F1/F2 riusano per il netto-POSIZIONE (D-1 emendata).
+4. **F5 perimetro aggiornato:** `ContractsTable.tsx` è a **370 LOC** ed entra nello split; gli import inline in
+   `contratti/[id]/page.tsx` **non esistono più** (righe 16-30 top-of-file — resta solo la violazione LOC, 511);
+   `ContractFinancialHero` è a 263 LOC (conforme). Violazioni LOC attuali: PaymentPlanTab 897 ·
+   contratti/[id]/page.tsx 511 · ContractsTable 370 · TerminateContractDialog 357.
+5. **Scope IN (residui già assegnati a G8.4 da INDEX/G7.8-bis):**
+   - **display `sedute_penali`** — il backend lo espone già su `ContractSettlementPreview` (G7.8-bis);
+     manca il sync in `types/api.ts` e il display nel breakdown del dialog Termina (→ F3.e);
+   - **validazione nota-abbuono** — ADR-018 D-IMPORTO: `RINUNCIA_ESPRESSA` = nota obbligatoria; il dialog FE
+     deve bloccare il submit senza nota (il backend resta autorità 422) (→ F3.f).
+6. **Backend confermato pronto:** `netto_incassato` computed_field su tutte le response (`financial.py:152-159`),
+   `residuo` sul wire (`ContractListResponse:462`), movimenti ordinati `data_effettiva, id` con esclusione
+   corretta delle USCITA wallet `id_contratto=None` (la divergenza F1.b regge), `sedute_penali` e
+   `azioni_permesse` sul preview. Manca SOLO `saldo_progressivo` (additivo) — la convenzione di segno da
+   riusare è quella del mastro (`ledger.signed_importo_case`).
 
 ---
 
@@ -71,22 +104,22 @@ Il FE ricalcola un netto che il backend espone già; e tratta come "stesso netto
 **Decisioni:**
 - **F1.a (D-NETTO-PER-SUPERFICIE):** hero, `ContractsTable`, `PaymentPlanTab`, `ContrattiTab` consumano **`contract.netto_incassato`**; si eliminano TUTTI i ricalcoli inline `versato − rimborsato`. Un grep esaustivo `versato.*rimborsato` su `frontend/src` precede l'implementazione (lo scope NON sono solo i 2 file citati nell'audit).
 - **F1.b (D-LEDGER-RIGA):** il footer dello Storico **NON** usa `netto_incassato`. Resta row-derived (riconcilia con le righe mostrate) ma il backend lo serve già-pronto: nuovo campo additivo **`saldo_progressivo: float`** su `ContractMovementItem` (`financial.py:477-490`), calcolato in `get_contract` (`contracts.py:570-579`) con la stessa convenzione di segno (ENTRATA +, USCITA −) e lo stesso ordinamento (`data_effettiva, id`) di oggi. `CashLedgerCard` legge `m.saldo_progressivo` invece di accumulare nel `useMemo`.
-- **F1.c (D-LEDGER-LABEL):** se l'etichetta "Netto incassato" del footer ledger è ambigua rispetto al netto-POSIZIONE dell'hero, **ri-etichettarla** (es. «Saldo movimenti del contratto»). Candidato Addendum ad ADR-019 (chiarisce la differenza dei due netti). *Decisione founder leggera — vedi §Decisioni founder D-2.*
-- **F1.d (grep-guard):** `check-all.sh` vieta `totale_versato.*-.*rimborsato` (e simili) in `frontend/src`, gemellato a un test che asserisce che hero/lista leggono il campo SSoT.
+- **F1.c (D-LEDGER-LABEL) — ✅ RATIFICATA 2026-07-06 (D-2):** colonna/valore **«Saldo»** su ogni riga dello storico (dal campo `saldo_progressivo`) + footer **«Saldo movimenti del contratto»**. L'etichetta «Netto incassato» resta ESCLUSIVA del netto-POSIZIONE. Registrata in **ADR-019 Addendum IV** (D-LEDGER-SALDO), evidenza L1 (QBO/Xero/WellnessLiving/Square/Stripe: il ledger si chiama "Balance"/"Running Balance", mai "net").
+- **F1.d (guard) — forma aggiornata 2026-07-06:** il presidio «FE no money-math» nasce come **test semantico** in `tests/test_semantic_guards.py` (già eseguito da `check-all.sh`), NON come grep bash — allineato al ritiro dei grep-guard di G9.4-b. Il test scandisce i sorgenti FE per pattern di aritmetica su `versato`/`rimborsato`/`movimenti` con allowlist esplicita delle eccezioni cap-locali (R-SSOT-FE), + asserzione gemella che hero/lista leggono il campo SSoT.
 
 ### F2 — Progressive-disclosure SENZA nascondere i segnali **[MED, trasparenza]**
 
-**Decisione (D-DISCLOSURE):** collassabile dietro «Mostra dettaglio» SOLO il dettaglio puramente informativo. **Sempre visibili (mai dietro toggle):**
+**Decisione (D-DISCLOSURE) — ✅ RATIFICATA 2026-07-06 (D-1, EMENDATA dalla ricerca competitor):** collassabile dietro «Mostra dettaglio» SOLO il dettaglio puramente informativo. **Sempre visibili (mai dietro toggle):**
 
 | Sempre visibile (warning/prova) | Collassabile (informativo) |
 |---|---|
 | Rate Scadute > 0 (`hero 150-154`) | Acconto |
 | Amber «N prenotate non erogate» (`hero 203-210`) | Da Rateizzare (se piano completo) |
 | Residuo > 0 | Riga «Crediti Sedute» (4 card, `hero 158-200`) |
-| Footer riconciliazione ledger (netto/residuo) | Breakdown «lordo − rimborso» (`hero 107-111`) |
-| | Righe dettaglio del ledger (`history 110-150`) |
+| Footer riconciliazione ledger (netto/residuo) | Righe dettaglio del ledger (`history 110-150`) |
+| **Breakdown «lordo − rimborsi» come sub-label compatta** quando `totale_rimborsato > 0` (pattern card Entrate `/cassa`, G9.4-bis.3) | |
 
-La lista *always-visible* è ratificata dal founder (D-1) prima dell'implementazione. Coordinamento con F4: finché F4 non sostituisce il workaround, l'amber «Riapri e poi Termina» resta always-visible (è l'unico punto che oggi indirizza l'azione correttiva).
+**Emendamento D-1 (2026-07-06):** il breakdown «lordo − rimborsi» era proposto collassabile — la legge L2 della ricerca (Stripe: net raggruppato per fees/refunds *by default*; Xero/QBO: credit note = riga visibile) e il nostro stesso D-NESSUN-NETTO-NUDO (ADR-022 Add. II) lo promuovono ad **always-visible in forma di sub-label**: mai un netto nudo inspiegabile a video. Coordinamento con F4: finché F4 non sostituisce il workaround, l'amber «Riapri e poi Termina» resta always-visible (è l'unico punto che oggi indirizza l'azione correttiva).
 
 ### F3 — Settlement come raccomandazione branch-aware, accessibile **[MED, accessibilità]**
 
@@ -96,7 +129,9 @@ La lista *always-visible* è ratificata dal founder (D-1) prima dell'implementaz
 - **F3.a (D-RACCOMANDAZIONE-VISIVA, ramo TRAINER):** la raccomandazione è **solo visiva** (badge «Consigliato» + enfasi + icona check sul bottone suggerito). `azione` resta `''` e `canSubmit` resta `false` finché l'utente **non clicca davvero**. `aria-pressed` riflette lo stato REALE — nessun bottone `pressed` all'apertura. La pre-selezione attiva è **vietata** sul ramo trainer (sarebbe il default implicito che ADR-018 rifiuta). `RINUNCIA_ESPRESSA` non è MAI il bottone suggerito.
 - **F3.b (D-PREFILL-CLIENTE, ramo CLIENTE/rimborso):** il pre-riempimento `default = credito_cliente` resta ammesso — è già sancito da ADR-020 D-RIMBORSO-EDITABILE e il codice lo fa (`98-102`).
 - **F3.c (advisory backend, opzionale):** se serve un suggerimento computato, `settlement-preview` espone un campo **advisory** `azione_consigliata` (es. `INCASSA_ORA` quando `credito_trainer>0` — l'opzione che tutela il trainer), popolato in `_build_settlement_preview` (`contracts.py:1451-1488`). È advisory: non cambia il gate 422.
-- **F3.d (accessibilità):** i 3 `<Button>` diventano un gruppo a scelta singola accessibile (`role="radiogroup"` + `role="radio"`/`aria-checked`, oppure `aria-pressed` per bottone) con marcatore non-cromatico sul selezionato.
+- **F3.d (accessibilità):** i 3 `<Button>` diventano un gruppo a scelta singola accessibile (`role="radiogroup"` + `role="radio"`/`aria-checked`, oppure `aria-pressed` per bottone) con marcatore non-cromatico sul selezionato. *(Conferma W3C APG: radiogroup con stato iniziale tutto-deselezionato è pattern riconosciuto — legge L5.)*
+- **F3.e (display `sedute_penali`, residuo G7.8-bis — aggiunto 2026-07-06):** il breakdown del dialog Termina mostra le sedute penali quando `sedute_penali > 0` (conteggio SEPARATO dalle erogate, mai sommato a video: «N erogate + M penali» — coerente con l'audit conteggi separati di G7.8-bis). Richiede il sync di `sedute_penali` in `types/api.ts` (`ContractSettlementPreview`).
+- **F3.f (nota-abbuono obbligatoria lato FE — aggiunto 2026-07-06, da INDEX/roadmap 2026-07-03):** con `azione = RINUNCIA_ESPRESSA` il submit resta disabilitato finché la nota è vuota (ADR-018 D-IMPORTO: rinuncia = nota obbligatoria). Il backend resta autorità (422): la validazione FE è UX, non gate.
 
 ### F4 — Rimborso *goodwill* del non-svolto → SCORPORATO in G8.5 **[money-path, governance-first]**
 
@@ -112,10 +147,11 @@ Vietato in ogni caso (anche in G8.5): ridurre il conguaglio con le prenotate (ro
 
 ### F5 — Split presentazionale <300 LOC + import top-of-file **[HIGH, rigore]**
 
-**Decisione (D-SPLIT):**
+**Decisione (D-SPLIT)** *(perimetro aggiornato 2026-07-06, §0-bis punto 4)*:
 - `TerminateContractDialog.tsx` (357→<300): estrarre `SettlementBreakdown` (dl `176-214`), `ClientRefundBranch` (`216-253`), `TrainerCreditBranch` (`255-336`) come **componenti presentazionali controllati** (props in, callback out). **TUTTO lo stato e la gating-logic** (`azione`, `incasso`, `rimborso`, `metodo`, `nota`, i sync in-render `prevOpen`/`prevPreviewKey`, `trainerSceltaValida`/`clienteSceltaValida`/`canSubmit`) **restano nel container**. I figli non possiedono stato di gating.
-- `contratti/[id]/page.tsx` (511): spostare gli import inline (`299, 409, 410, 411`) in testa; estrarre `RenewalChainSection`/`SessioniTab`/`DettagliTab` in moduli per rientrare <300.
+- `contratti/[id]/page.tsx` (511): ~~import inline~~ *(già risolti — top-of-file righe 16-30)*; estrarre `RenewalChainSection`/`SessioniTab`/`DettagliTab` in moduli per rientrare <300.
 - `PaymentPlanTab.tsx` (897): è la violazione più grande; split in sotto-componenti (`RateCard`/`PayRateForm`/`PaymentHistory`/`AddRateForm` sono già citati in `frontend/CLAUDE.md`). *Può essere un proprio commit nella fetta-RIGORE.*
+- `ContractsTable.tsx` (370, **aggiunto 2026-07-06** — la spec originale non lo censiva): split della riga/celle finanziarie in sotto-componente presentazionale per rientrare <300.
 - **Gate:** il test Playwright LIVE del flusso terminate/reopen (gate di G8.1.1) ri-passa dopo lo split.
 
 ### F6 — Disciplina colore allineata al SSoT **[MED, accessibilità]**
@@ -139,12 +175,14 @@ L'hero finanziario usa il colore SOLO per segnalare stato; l'identità di catego
 
 ## 5. Test di accettazione (G8.4)
 
-1. **AC-G84-1 (F1, netto unico):** su un contratto con `totale_rimborsato>0`, il "netto" mostrato da hero, lista contratti e profilo è **identico** e uguale a `contract.netto_incassato`. **Fail:** una qualunque superficie mostra un netto ricalcolato divergente. *(test: `test_contract_netto_single_source` + assenza grep-match in `check-all.sh`.)*
+1. **AC-G84-1 (F1, netto unico):** su un contratto con `totale_rimborsato>0`, il "netto" mostrato da hero, lista contratti e profilo è **identico** e uguale a `contract.netto_incassato`. **Fail:** una qualunque superficie mostra un netto ricalcolato divergente. *(test: guard semantico «FE no money-math» in `tests/test_semantic_guards.py` — forma aggiornata 2026-07-06, §0-bis punto 2.)*
 2. **AC-G84-2 (F1.b, ledger riconcilia con le righe):** dopo un reopen con riassorbimento wallet, il footer del ledger = ultimo `saldo_progressivo` (row-derived) e **può** differire da `netto_incassato`; entrambi coerenti con la propria definizione. **Fail:** il footer del ledger non riconcilia con le righe mostrate. *(test: `test_saldo_progressivo_reconciles_rows`.)*
 3. **AC-G84-3 (no-regressione DENARO):** su qualunque crm.db reale, prima/dopo G8.4, `residuo()`, `netto_incassato()`, conteggi e `Σ movimenti` sono **byte-identici**; zero `CashMovement` creati/modificati. **Fail:** una qualunque cifra DENARO cambia. *(test: snapshot finanziario + `assert_contract_invariants` invariati.)*
 4. **AC-G84-4 (F3, gate bilaterale intatto):** all'apertura del dialog Termina su un ramo `credito_trainer>0`, `canSubmit=false` e nessun bottone è `aria-pressed`; il submit resta impossibile finché l'utente non sceglie. **Fail:** una pre-selezione rende `canSubmit=true` senza click. *(test: Playwright `terminate_trainer_credit_requires_explicit_choice`.)*
 5. **AC-G84-5 (F2, segnali sempre visibili):** con Rate Scadute>0 o prenotate-non-erogate>0 o Residuo>0, il segnale è renderizzato **senza** interazione di disclosure. **Fail:** un segnale critico/warning è dietro «Mostra dettaglio». *(test: render `hero_critical_signals_always_visible`.)*
 6. **AC-G84-6 (F5, LOC + Playwright):** i file toccati sono <300 LOC (logica); il flusso terminate/reopen Playwright LIVE ri-passa. **Fail:** un file logica resta >300 o il flusso regredisce.
+7. **AC-G84-7 (F3.e, penali visibili — aggiunto 2026-07-06):** su un settlement-preview con `sedute_penali > 0`, il breakdown del dialog Termina mostra le penali come conteggio SEPARATO dalle erogate. **Fail:** penali invisibili o sommate alle erogate a video.
+8. **AC-G84-8 (F3.f, nota-abbuono — aggiunto 2026-07-06):** con `azione = RINUNCIA_ESPRESSA` e nota vuota, il submit è disabilitato; compilata la nota, si abilita. **Fail:** submit possibile senza nota (anche se il backend poi rifiuta 422).
 
 ---
 

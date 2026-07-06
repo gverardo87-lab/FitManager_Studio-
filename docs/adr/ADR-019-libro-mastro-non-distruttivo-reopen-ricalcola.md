@@ -273,3 +273,41 @@ backend-only, uno per slice: **A** `b895edb` (companion lifecycle porta `rimbors
 +1 E2E AC-C1 + 1 unit AC-C2/C3). AC in `SPEC §16`. Zero schema-change, FE invariato, ruff verde. **Invarianti
 immutati:** I1/I4/I5, cassa-immutabile, `residuo==0 ⟺ saldato`, asse EROGATO (ADR-016), Strada B. È **chiusura
 di gap residui del principio ADR-019**, non un nuovo blocco.
+
+---
+
+## Addendum 2026-07-06 (IV) — I due netti: netto-POSIZIONE vs saldo-LEDGER (G8.4, D-LEDGER-SALDO)
+
+Chiarimento terminologico-presentazionale richiesto da `SPEC_G8.4_TRASPARENZA_FINANZIARIA_FE.md` (F1.b/F1.c),
+decisioni founder D-1/D-2 ratificate il 2026-07-06 con evidenza di mercato
+(`docs/archive/RICERCA_COMPETITOR_TRASPARENZA_FINANZIARIA_2026-07-06.md`, leggi L1/L2). **Nessuna nuova
+decisione sull'asse DENARO** — è la conseguenza presentazionale di questo ADR (D-CASSA-VISIBILE) e di
+ADR-022 Add. II (D-NESSUN-NETTO-NUDO).
+
+Sulla stessa entità contratto convivono **due numeri "netti" legittimamente diversi**:
+
+- **Netto-POSIZIONE** = `netto_incassato = max(totale_versato − totale_rimborsato, 0)` (SSoT
+  `contract_state.netto_incassato`). È il netto di hero / lista / profilo: fotografa la posizione ORA.
+- **Saldo-LEDGER** = saldo progressivo riga-per-riga su `contract.movimenti`
+  (`Σ ENTRATA[id_contratto] − Σ USCITA[id_contratto]`, ordinamento `data_effettiva, id`). **Diverge
+  legittimamente** dal netto-POSIZIONE di `Σ erogato wallet riassorbito` dopo un reopen (Addendum II, R2-bis):
+  quelle USCITA hanno `id_contratto=None` e NON sono nel sotto-libro del contratto.
+
+**D-LEDGER-SALDO (decisioni):**
+
+1. **Il ledger non si chiama mai "netto".** Convenzione di mercato univoca (QBO/Xero/WellnessLiving/Square/
+   Stripe, legge L1): il saldo riga-per-riga è "Balance"/"Running Balance". In FitManager: colonna/valore
+   **«Saldo»** su ogni riga dello storico + footer **«Saldo movimenti del contratto»**. L'etichetta
+   «Netto incassato» resta ESCLUSIVA del netto-POSIZIONE.
+2. **Il saldo lo serve il backend**, non lo accumula il client: campo additivo
+   `ContractMovementItem.saldo_progressivo` calcolato in `get_contract` con la convenzione di segno del
+   mastro (ENTRATA +, USCITA −; stessa semantica di `ledger.signed_importo_case`) e l'ordinamento esistente.
+   Read-model puro: zero mutazioni, zero schema-change su tabelle.
+3. **Il netto non è mai nudo** (L2 + D-NESSUN-NETTO-NUDO): dove il FE mostra il netto-POSIZIONE con
+   `totale_rimborsato > 0`, lo accompagna la sub-label compatta `Lordo X · Rimborsi −Y`
+   (pattern già shippato sulla card Entrate di `/cassa`, G9.4-bis.3).
+
+**Invarianti immutati:** cassa-immutabile, `residuo()` net-aware byte-identico, Strada B (lordo immutabile),
+`netto_incassato` resta DERIVATO (mai colonna). Implementazione: blocco **G8.4 fetta-RIGORE**.
+
+**Stato implementazione (2026-07-06): ⏳ DA IMPLEMENTARE** (G8.4 fetta-RIGORE, `SPEC_G8.4` F1).

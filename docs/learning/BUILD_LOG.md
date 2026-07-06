@@ -2818,3 +2818,40 @@ intoccati" è vero per costruzione dal diff); resta obbligatorio se il diff MODI
 money esistenti — un test-only può danneggiare l'asse denaro accecandolo (caso `aafba2d`).
 
 ---
+
+## 2026-07-06 — G8.4 ripresa: ri-grounding della spec + ratifica D-1/D-2 (governance docs-only)
+
+Ripresa del filone finanziario su G8.4 (trasparenza FE). Il founder ha fermato le decisioni D-1/D-2 con la
+domanda giusta: la spec è del 2026-06-30, scritta DURANTE G7-G9 — prima di decidere, riverificare il backend
+e guardare i competitor. La verifica gli ha dato ragione su entrambi i fronti.
+
+**Ri-grounding sul codice vivo (2 agenti read-only):** F1 confermata ma perimetro corretto — i ricalcoli veri
+sono Hero:42-45, ContractsTable:181-183, HistoryTab:81-90; `PaymentPlanTab` NON viola F1 (l'audit originale
+lo accusava a torto: legge già i campi SSoT); gli import inline in `[id]/page.tsx` non esistono più;
+`ContractsTable` (370 LOC) entra in F5. Il backend è pronto: manca SOLO `saldo_progressivo` (additivo);
+`sedute_penali` è già sul preview (G7.8-bis) ma non sincronizzato in `types/api.ts`. F1.d cambia forma:
+test semantico in `test_semantic_guards.py`, non grep (allineato al ritiro G9.4-b).
+
+**Ricerca competitor (11 vendor, fonti ufficiali, citazioni):**
+`docs/archive/RICERCA_COMPETITOR_TRASPARENZA_FINANZIARIA_2026-07-06.md` — 6 leggi convergenti L1-L6.
+Le due che decidono: **L1** il ledger si chiama "Balance"/"Running Balance" (QBO/Xero/WellnessLiving/Square/
+Stripe), mai "netto" → D-2 confermata; **L2** il netto non è mai nudo (Stripe raggruppa per refunds BY
+DEFAULT; Xero/QBO credit note = riga visibile) → **D-1 EMENDATA**: il breakdown «lordo − rimborsi» esce dai
+collassabili e diventa sub-label always-visible (pattern G9.4-bis.3 già shippato in cassa).
+
+**Ratifiche founder (2026-07-06):** D-2 = colonna «Saldo» per riga + footer «Saldo movimenti del contratto»
+→ **ADR-019 Addendum IV** (D-LEDGER-SALDO: i due netti, netto-POSIZIONE vs saldo-LEDGER). D-1 = lista §F2
+con emendamento L2. Spec aggiornata (§0-bis ri-grounding, F1.c/F1.d/F2/F3.e-f/F5, AC-G84-7/8): entrano
+formalmente display `sedute_penali` (F3.e) e nota-abbuono obbligatoria FE (F3.f) — i residui già assegnati
+a G8.4 da INDEX. Allineati INDEX (anche drift G9.5 chiuso) e adr/README.
+
+**Lezione di metodo:** una spec scritta durante un ciclo lungo di implementazione va ri-groundata PRIMA di
+eseguirla — qui il ri-grounding ha tolto un file dal perimetro F1 (falsa accusa), aggiunto un file a F5
+(vero scoperto), cambiato la forma del guard (grep→test semantico) e ribaltato una decisione UX (L2).
+Il costo è un giro di agenti read-only; l'alternativa era implementare contro coordinate morte.
+
+**⏭️ Prossimo: fetta-RIGORE** (F1 consumo `netto_incassato` + `saldo_progressivo` server-side + guard
+semantico FE-no-money-math + F5 split <300). Poi fetta-UX-presentazionale (F2+F6), fetta-comportamentale
+(F3.a-f). G8.5 (goodwill): governance da aprire prima della chiusura G8.4.
+
+---
