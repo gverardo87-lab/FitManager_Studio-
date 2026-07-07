@@ -2959,3 +2959,34 @@ destinazione cassa/wallet · base importo · categoria dedicata vs riuso · inve
 Il workaround amber «Riapri e poi Termina» resta per design finché G8.5 non shippa.
 
 ---
+
+## 2026-07-07 (sera) — Audit eventi orfani + ADR-024 «Semantica per-classe» + apertura G9.7
+
+**Trigger founder (caso reale, contratto 39):** 2 sedute Completato create dall'agenda a contratto
+CHIUSO → nate con `id_contratto=NULL` in totale silenzio (auto-assign filtra i chiusi, 201 muto);
+il reopen riconcilia rate/cassa/receivable/wallet ma NON gli eventi → orfane in limbo PERMANENTE
+(il re-parenting è vietato dal fence G7.8-ter: **deadlock da due protezioni giuste**, il finding
+strutturale della giornata). E a video l'occupazione non torna: 5+2 penali = 7/12 → residui 5, ma
+l'hero mostra solo «0 · 5 · 5» — 2 crediti spariti (i campi `sedute_penali`/`sedute_rinviate`
+erano GIÀ sul wire, mai renderizzati).
+
+**Audit READ-ONLY depositato** (`operations/AUDIT_CREDITI_EVENTI_ORFANI_2026-07-07.md`, `04b7e7f`):
+forensics sqlite mode=ro sul crm.db reale + 2 censimenti agente → **13 finding** (B1-B8 scrittura,
+D1-D5 display), founder ne aveva stimati «minimo 10». Le 2 orfane (eventi 640/641) sono le UNICHE
+del DB: fenomeno nuovo, contenuto. Tra i finding anche D4: `DeleteContractDialog` RICALCOLA
+`crediti_residui` inline — la violazione R-SSOT-FE sull'asse che il guard non copre.
+
+**Riflessione di metodo (ratificata dal founder):** nessun finding è una classe nuova — fail-silent
+in scrittura (3ª occorrenza), derivato nudo (2ª), transizione che non enumera i satelliti, SSoT
+violato fuori perimetro guard. Le leggi esistono ma applicate PER-ASSE (cassa), non PER-CLASSE.
+«Chi non anticipa insegue» → **ADR-024 accepted** (D-LEGGI-PER-CLASSE / D-MAI-SILENZIO-IN-SCRITTURA /
+D-DERIVATO-MAI-NUDO / D-PERIMETRO-TRANSIZIONI / D-RECUPERO-ESPLICITO / D-BIRTH-AUDITOR /
+D-GENERATIVO-PER-ASSE) + **SPEC_G9.7** (gate 0-5: matrice assi×regole → mai-silenzio write-path →
+recupero esplicito orfani [incl. 640/641 via endpoint, MAI a mano nel DB] → occupazione mai nuda →
+guard di classe + perimetro transizioni → birth-auditor + Hypothesis estesa con I-EVENTI).
+I 13 finding = gli AC del blocco, non 13 rincorse.
+
+**⏭️ Prossimo: G9.7.0 (matrice) → G9.7.1-2 (i bug del founder) → G9.7.3 → G9.7.4-5.**
+G8.5 (goodwill) resta in coda dopo G9.7.
+
+---
