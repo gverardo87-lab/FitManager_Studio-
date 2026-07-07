@@ -14,7 +14,7 @@
  *   saldo, transizioni) da `GET /contracts/{id}/history`.
  */
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Sparkles,
   Lock,
@@ -78,11 +78,19 @@ export function ContractHistoryTab({ contract }: { contract: ContractWithRates }
 // F5 — Movimenti di cassa (ledger: saldo riga-per-riga dal wire)
 // ════════════════════════════════════════════════════════════
 
+// F2 (D-DISCLOSURE): le righe di dettaglio del ledger sono collassabili — di default la coda
+// più recente; il footer (prova-a-vista) resta SEMPRE. Il saldo per riga è un running balance,
+// quindi la prima riga visibile include già la storia nascosta (pattern QBO).
+const LEDGER_TAIL = 6;
+
 function CashLedgerCard({ movimenti }: { movimenti: ContractMovementItem[] }) {
+  const [showAll, setShowAll] = useState(false);
   // D-LEDGER-SALDO (ADR-019 Add. IV): `saldo_progressivo` è servito dal backend — zero accumulo
   // client-side (R-SSOT-FE). Il footer è il saldo delle righe MOSTRATE, non il netto-POSIZIONE.
   const saldoFinale =
     movimenti.length > 0 ? movimenti[movimenti.length - 1].saldo_progressivo : 0;
+  const truncated = movimenti.length > LEDGER_TAIL && !showAll;
+  const rows = truncated ? movimenti.slice(-LEDGER_TAIL) : movimenti;
 
   return (
     <Card>
@@ -102,8 +110,21 @@ function CashLedgerCard({ movimenti }: { movimenti: ContractMovementItem[] }) {
             Nessun movimento di cassa registrato.
           </p>
         ) : (
+          <>
+          {movimenti.length > LEDGER_TAIL ? (
+            <button
+              type="button"
+              className="mb-1 w-full rounded-md py-1 text-center text-[11px] text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+              onClick={() => setShowAll((prev) => !prev)}
+              aria-expanded={showAll}
+            >
+              {showAll
+                ? `Mostra solo gli ultimi ${LEDGER_TAIL}`
+                : `Mostra tutti i ${movimenti.length} movimenti`}
+            </button>
+          ) : null}
           <ul className="divide-y">
-            {movimenti.map((m) => {
+            {rows.map((m) => {
               const isEntrata = m.tipo === "ENTRATA";
               const Sign = isEntrata ? ArrowDownLeft : ArrowUpRight;
               return (
@@ -142,6 +163,7 @@ function CashLedgerCard({ movimenti }: { movimenti: ContractMovementItem[] }) {
               );
             })}
           </ul>
+          </>
         )}
       </CardContent>
     </Card>

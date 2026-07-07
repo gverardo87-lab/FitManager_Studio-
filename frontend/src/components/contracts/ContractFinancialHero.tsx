@@ -2,16 +2,22 @@
 "use client";
 
 /**
- * Hero Section finanziaria per contratto — 6-10 KPI cards.
+ * Hero finanziaria del contratto — posizione sempre visibile, profondità dietro disclosure.
  *
- * Layout 3 righe:
- * 1. Valore Contratto | Acconto | Da Rateizzare
- * 2. Versato (con progress) | Rate Pagate | Residuo
- * 3. Crediti Sedute (4 card, solo se crediti_totali > 0)
+ * F2 / D-DISCLOSURE (ratifica founder 2026-07-06, SPEC_G8.4 §F2 — lista VINCOLANTE):
+ * - SEMPRE visibili (mai dietro toggle): Valore · Incassato netto con sub-label «lordo X · −Y»
+ *   quando c'è rimborso (D-1 emendata, mai un netto nudo) · Rate Pagate · Residuo (+ conteggio
+ *   rate scadute) · Da Rateizzare quando il piano NON è coperto (warning) · banner amber
+ *   prenotate-non-erogate (unico segnale dell'azione recuperabile finché G8.5 non shippa).
+ * - Collassabili dietro «Mostra dettaglio»: Acconto · Da Rateizzare se piano completo (informativa) ·
+ *   riga Crediti Sedute (4 card).
  *
- * Estratto da ContractDetailSheet per riuso nella pagina /contratti/[id].
+ * F6 / D-COLORE: il colore è SOLO valenza (emerald=positivo, amber=attenzione, red=critico);
+ * i tint decorativi di categoria (violet/blue/indigo) sono neutralizzati a zinc — l'identità
+ * della card la dà la label, non il colore.
  */
 
+import { useState } from "react";
 import {
   Wallet,
   TrendingUp,
@@ -20,21 +26,30 @@ import {
   HandCoins,
   AlertTriangle,
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
   Dumbbell,
   Clock,
   Target,
   CalendarCheck,
 } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { formatCurrency } from "@/lib/format";
 import type { ContractWithRates } from "@/types/api";
+
+// F6: token neutri per le card senza valenza (identità = label, mai colore)
+const NEUTRAL_ICON = "text-zinc-600 dark:text-zinc-400";
+const NEUTRAL_ICON_BG = "bg-zinc-100 dark:bg-zinc-800";
 
 // ════════════════════════════════════════════════════════════
 // Main Component
 // ════════════════════════════════════════════════════════════
 
 export function ContractFinancialHero({ contract }: { contract: ContractWithRates }) {
+  const [showDetail, setShowDetail] = useState(false);
+
   const totale = contract.prezzo_totale ?? 0;
   const acconto = contract.acconto;
   const versato = contract.totale_versato;
@@ -53,45 +68,50 @@ export function ContractFinancialHero({ contract }: { contract: ContractWithRate
   const completate = contract.sedute_completate;
   const creditiResidui = contract.crediti_residui;
 
+  // Da Rateizzare è un WARNING quando il piano non copre il residuo → always-visible;
+  // a piano completo è pura conferma informativa → dietro disclosure.
+  const showDaRateizzare = !pianoCoperto || showDetail;
+
   return (
     <div data-guide="contratto-hero-finanziario" className="rounded-xl border bg-gradient-to-br from-zinc-50 to-zinc-100/50 p-5 dark:from-zinc-900 dark:to-zinc-800/50">
       <div className="space-y-3">
-        {/* ── Riga 1: Valore | Acconto | Da Rateizzare ── */}
+        {/* ── Card denaro: griglia unica che fluisce (collassata: Valore·Netto·Rate·Residuo) ── */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <KpiCard
-            icon={<Wallet className="h-4 w-4 text-violet-600 dark:text-violet-400" />}
-            iconBg="bg-violet-100 dark:bg-violet-900/30"
+            icon={<Wallet className={`h-4 w-4 ${NEUTRAL_ICON}`} />}
+            iconBg={NEUTRAL_ICON_BG}
             label="Valore Contratto"
             value={formatCurrency(totale)}
           />
-          <KpiCard
-            icon={<HandCoins className="h-4 w-4 text-blue-600 dark:text-blue-400" />}
-            iconBg="bg-blue-100 dark:bg-blue-900/30"
-            label="Acconto"
-            value={acconto > 0 ? formatCurrency(acconto) : "—"}
-            valueClass={acconto > 0 ? "text-blue-700 dark:text-blue-400" : "text-muted-foreground"}
-          />
-          <KpiCard
-            icon={pianoCoperto
-              ? <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-              : <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-            }
-            iconBg={pianoCoperto
-              ? "bg-emerald-100 dark:bg-emerald-900/30"
-              : "bg-amber-100 dark:bg-amber-900/30"
-            }
-            label="Da Rateizzare"
-            value={pianoCoperto ? "Piano completo" : formatCurrency(daRateizzare)}
-            valueClass={pianoCoperto
-              ? "text-emerald-700 dark:text-emerald-400 text-sm"
-              : "text-amber-700 dark:text-amber-400"
-            }
-          />
-        </div>
+          {showDetail ? (
+            <KpiCard
+              icon={<HandCoins className={`h-4 w-4 ${NEUTRAL_ICON}`} />}
+              iconBg={NEUTRAL_ICON_BG}
+              label="Acconto"
+              value={acconto > 0 ? formatCurrency(acconto) : "—"}
+              valueClass={acconto > 0 ? undefined : "text-muted-foreground"}
+            />
+          ) : null}
+          {showDaRateizzare ? (
+            <KpiCard
+              icon={pianoCoperto
+                ? <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                : <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+              }
+              iconBg={pianoCoperto
+                ? "bg-emerald-100 dark:bg-emerald-900/30"
+                : "bg-amber-100 dark:bg-amber-900/30"
+              }
+              label="Da Rateizzare"
+              value={pianoCoperto ? "Piano completo" : formatCurrency(daRateizzare)}
+              valueClass={pianoCoperto
+                ? "text-emerald-700 dark:text-emerald-400 text-sm"
+                : "text-amber-700 dark:text-amber-400"
+              }
+            />
+          ) : null}
 
-        {/* ── Riga 2: Versato (con progress) | Rate Pagate | Residuo ── */}
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          {/* Versato — card piu' alta con progress bar */}
+          {/* Incassato netto — card più alta con progress; mai un netto nudo (D-1/L2) */}
           <div className="flex flex-col gap-2 rounded-lg border bg-white p-3 shadow-sm dark:bg-zinc-900">
             <div className="flex items-start gap-2.5">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900/30">
@@ -120,8 +140,8 @@ export function ContractFinancialHero({ contract }: { contract: ContractWithRate
           </div>
 
           <KpiCard
-            icon={<Receipt className="h-4 w-4 text-blue-600 dark:text-blue-400" />}
-            iconBg="bg-blue-100 dark:bg-blue-900/30"
+            icon={<Receipt className={`h-4 w-4 ${NEUTRAL_ICON}`} />}
+            iconBg={NEUTRAL_ICON_BG}
             label="Rate Pagate"
             value={rateTotali > 0 ? `${ratePagate} / ${rateTotali}` : "—"}
             valueClass={ratePagate === rateTotali && rateTotali > 0
@@ -155,21 +175,20 @@ export function ContractFinancialHero({ contract }: { contract: ContractWithRate
           />
         </div>
 
-        {/* ── Riga 3: Crediti Sedute (solo se il contratto ha crediti) ── */}
-        {creditiTotali > 0 && (
+        {/* ── Crediti Sedute (dettaglio, dietro disclosure) ── */}
+        {showDetail && creditiTotali > 0 ? (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <KpiCard
-              icon={<Dumbbell className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />}
-              iconBg="bg-indigo-100 dark:bg-indigo-900/30"
+              icon={<Dumbbell className={`h-4 w-4 ${NEUTRAL_ICON}`} />}
+              iconBg={NEUTRAL_ICON_BG}
               label="Crediti Totali"
               value={`${creditiTotali}`}
             />
             <KpiCard
-              icon={<Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />}
-              iconBg="bg-blue-100 dark:bg-blue-900/30"
+              icon={<Clock className={`h-4 w-4 ${NEUTRAL_ICON}`} />}
+              iconBg={NEUTRAL_ICON_BG}
               label="Programmate"
               value={`${programmate}`}
-              valueClass={programmate > 0 ? "text-blue-700 dark:text-blue-400" : undefined}
             />
             <KpiCard
               icon={<CalendarCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />}
@@ -197,9 +216,9 @@ export function ContractFinancialHero({ contract }: { contract: ContractWithRate
               subtitle={creditiResidui === 0 ? "Crediti esauriti" : undefined}
             />
           </div>
-        )}
+        ) : null}
 
-        {/* ── Riconciliazione recesso (R5/L1 + M4): il rimborso si basa sulle sole Completate ── */}
+        {/* ── Riconciliazione recesso (R5/L1 + M4): SEGNALE, mai dietro toggle (F2/F4) ── */}
         {creditiTotali > 0 && contract.sedute_non_erogate_chiusura > 0 ? (
           <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 dark:border-amber-900/40 dark:bg-amber-900/20">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden="true" />
@@ -214,6 +233,28 @@ export function ContractFinancialHero({ contract }: { contract: ContractWithRate
             le prenotate non riducono il rimborso.
           </p>
         ) : null}
+
+        {/* ── Toggle disclosure (F2): rivela SOLO dettaglio informativo, mai segnali ── */}
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-7 w-full text-xs text-muted-foreground"
+          onClick={() => setShowDetail((prev) => !prev)}
+          aria-expanded={showDetail}
+        >
+          {showDetail ? (
+            <>
+              <ChevronUp className="mr-1 h-3.5 w-3.5" aria-hidden="true" />
+              Nascondi dettaglio
+            </>
+          ) : (
+            <>
+              <ChevronDown className="mr-1 h-3.5 w-3.5" aria-hidden="true" />
+              Mostra dettaglio
+            </>
+          )}
+        </Button>
       </div>
     </div>
   );
