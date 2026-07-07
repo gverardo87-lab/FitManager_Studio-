@@ -1425,12 +1425,16 @@ def _build_settlement_preview(contract: Contract, settlement, sedute_prenotate: 
     trainer_credit = settlement.esito == SettlementEsito.CREDITO_TRAINER
     storno = settlement.residuo_pre > 0.009
     azioni_permesse: list[str] = []
+    azione_consigliata: str | None = None
     if cliente:
         msg = f"Conguaglio calcolato (pro-rata sedute): risulta un rimborso di €{settlement.credito_cliente:.2f} a favore del cliente."
         if storno:
             msg += f" Il residuo di €{settlement.residuo_pre:.2f} per le sedute non erogate viene azzerato."
     elif trainer_credit:
         azioni_permesse = sorted(VALID_AZIONI_CREDITO_TRAINER)
+        # F3.c (G8.4): advisory — l'opzione che tutela il trainer. MAI la rinuncia. Non cambia
+        # il gate 422 (la scelta resta esplicita, ADR-018 D-SCELTA).
+        azione_consigliata = "INCASSA_ORA"
         msg = (
             f"Conguaglio calcolato (pro-rata sedute): il cliente ha ricevuto più servizio di quanto versato. "
             f"Saldo a tuo favore €{settlement.credito_trainer:.2f}: scegli se incassarlo ora (importo "
@@ -1455,6 +1459,7 @@ def _build_settlement_preview(contract: Contract, settlement, sedute_prenotate: 
         sedute_penali=sedute_penali,
         metodo_rimborso_richiesto=cliente,
         azioni_permesse=azioni_permesse,
+        azione_consigliata=azione_consigliata,
         messaggio=msg,
     )
 

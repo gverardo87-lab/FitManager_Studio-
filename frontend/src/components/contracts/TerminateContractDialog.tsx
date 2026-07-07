@@ -176,6 +176,7 @@ export function TerminateContractDialog({
             {trainerCredit ? (
               <TrainerCreditBranch
                 azione={azione}
+                azioneConsigliata={data.azione_consigliata ?? null}
                 onPickIncassaOra={pickIncassaOra}
                 onPickACredito={() => setAzione("A_CREDITO")}
                 onPickRinuncia={() => setAzione("RINUNCIA_ESPRESSA")}

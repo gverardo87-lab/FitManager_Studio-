@@ -270,6 +270,7 @@ def test_settlement_preview_no_writes(client, auth_headers, sample_client, sessi
     assert round(body["importo_rimborso"], 2) == 300.0
     assert body["metodo_rimborso_richiesto"] is True
     assert body["azioni_permesse"] == []   # ramo cliente: nessuna scelta trainer
+    assert body["azione_consigliata"] is None  # F3.c: advisory SOLO sul ramo trainer
     assert "verifica" in body["messaggio"].lower()            # framing di proposta (§0/§4)
 
     # Nessuna scrittura: stato contratto invariato + nessun nuovo movimento
@@ -605,6 +606,20 @@ def test_terminate_credito_trainer_senza_scelta_422(client, auth_headers, sample
     contract = session.get(Contract, c["id"])
     assert contract.chiuso is False
     assert round(contract.quota_stornata, 2) == 0.0
+
+
+def test_settlement_preview_azione_consigliata_trainer(client, auth_headers, sample_client, session):
+    """F3.c (G8.4): sul ramo CREDITO_TRAINER il preview espone l'advisory `azione_consigliata` =
+    INCASSA_ORA (l'opzione che tutela il trainer) — MAI la rinuncia, MAI un gate: il terminate
+    senza scelta resta 422 (ADR-018 D-SCELTA, coperto dal test sopra)."""
+    c = _contract_credito_trainer(client, auth_headers, sample_client, session)
+    r = client.get(f"/api/contracts/{c['id']}/settlement-preview", headers=auth_headers)
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["esito"] == "CREDITO_TRAINER"
+    assert body["azione_consigliata"] == "INCASSA_ORA"
+    assert body["azione_consigliata"] in body["azioni_permesse"]
+    assert body["azione_consigliata"] != "RINUNCIA_ESPRESSA"
 
 
 def test_terminate_incassa_ora_pieno(client, auth_headers, sample_client, session):

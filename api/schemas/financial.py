@@ -252,6 +252,10 @@ class ContractSettlementPreview(BaseModel):
     sedute_penali: int = 0                # G7.8-bis: Cancellato_Tardivo+No_Show — ENTRANO nel contabilizzato (penale)
     metodo_rimborso_richiesto: bool       # True se esito CREDITO_CLIENTE → il form deve chiedere il metodo rimborso
     azioni_permesse: List[str] = []       # ramo CREDITO_TRAINER: scelte offerte (INCASSA_ORA, RINUNCIA_ESPRESSA, A_CREDITO)
+    # G8.4 F3.c — ADVISORY (mai gate): l'azione che il software SUGGERISCE sul ramo CREDITO_TRAINER
+    # (quella che tutela il trainer). Il FE la rende come badge «Consigliato» SOLO visivo — la
+    # scelta resta esplicita (ADR-018 D-SCELTA, 422 senza). MAI RINUNCIA_ESPRESSA come consigliata.
+    azione_consigliata: Optional[str] = None
     policy_mode: str = "pro_sedute"       # metodo di valorizzazione (default dichiarato, §0)
     messaggio: str                        # framing di proposta (§0/§4)
 

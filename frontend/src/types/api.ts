@@ -672,8 +672,10 @@ export interface ContractSettlementPreview {
   sedute_erogate: number;
   sedute_totali: number | null;
   sedute_prenotate: number; // D2: PT prenotate-non-svolte — solo display (non entra nel conguaglio)
+  sedute_penali: number; // G7.8-bis: Cancellato_Tardivo+No_Show — ENTRANO nel contabilizzato (F3.e: display separato, mai sommate alle erogate)
   metodo_rimborso_richiesto: boolean;
   azioni_permesse: string[]; // ramo CREDITO_TRAINER: INCASSA_ORA, RINUNCIA_ESPRESSA (A_CREDITO da G7.10)
+  azione_consigliata: string | null; // F3.c (G8.4): advisory ramo trainer — badge «Consigliato» SOLO visivo, mai pre-selezione
   policy_mode: string;
   messaggio: string;
 }

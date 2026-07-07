@@ -27,6 +27,16 @@ export function SettlementBreakdown({ data }: { data: ContractSettlementPreview 
           {data.sedute_erogate}
           {data.sedute_totali != null ? ` / ${data.sedute_totali}` : ""}
         </dd>
+        {/* F3.e (G7.8-bis): penali contabilizzate nel conguaglio — conteggio SEPARATO, mai
+            sommato alle erogate a video (audit conteggi separati vere/penali) */}
+        {data.sedute_penali > 0 ? (
+          <>
+            <dt className="text-amber-700 dark:text-amber-300">Sedute penali (contabilizzate)</dt>
+            <dd className="text-right tabular-nums text-amber-700 dark:text-amber-300">
+              {data.sedute_penali}
+            </dd>
+          </>
+        ) : null}
         <dt className="text-muted-foreground">Servizio reso</dt>
         <dd className="text-right tabular-nums">{formatCurrency(data.valore_servizio_reso)}</dd>
         {data.importo_rimborso > 0 ? (
