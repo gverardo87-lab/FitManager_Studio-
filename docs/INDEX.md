@@ -27,6 +27,7 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 
 | File | Scopo |
 |------|-------|
+| `CATALOGO_SCENARI_PT.md` | **Fondamento product ADR-025 (vivo):** 96 scenari quotidiani reali del PT/chinesiologo (6 lenti + critic), copertura mappata sul modello attuale (15% piena · 51% parziale · 34% assente), 23 domande aperte per l'ADR. Base di conoscenza del futuro agente `pt-reality-auditor`. Gemello: `archive/RICERCA_COMPETITOR_WALLET_SEDUTE_SINGOLE_2026-07-07.md` (leggi W1-W11) |
 | `POST_LAUNCH_ROADMAP_90D.md` | Roadmap 90 giorni: PWA, mobile, Box, science nudges, GTM |
 | `POST_LAUNCH_ISSUES.md` | Issue aperte post-lancio |
 | `FITSCAN_ARCHITECTURE.md` | Spec tecnica FitScan: DB schema, Biomechanical Engine, Pose Provider |
