@@ -2928,3 +2928,34 @@ advisory `azione_consigliata` (opzionale) + radiogroup a11y + display `sedute_pe
 types/api.ts) — poi apertura governance **G8.5** prima della chiusura G8.4.
 
 ---
+
+## 2026-07-07 (stessa giornata) — G8.4 fetta-comportamentale (F3) COMPLETATA (`58c01ea`)
+
+**F3.c (backend, additivo):** `ContractSettlementPreview.azione_consigliata` — advisory sul ramo
+CREDITO_TRAINER (= `INCASSA_ORA`, l'opzione che tutela il trainer; MAI la rinuncia; il gate 422
+D-SCELTA resta intatto). Il FE legge il suggerimento dal wire invece di hardcodarlo (SSoT anche
+per la raccomandazione). +2 test backend, **suite full 839**.
+
+**F3.a/F3.d (FE):** badge «Consigliato» + ring emerald sul bottone suggerito, SOLO visivo — zero
+pre-selezione (`azione=''`, `canSubmit=false` finché non si clicca). Gruppo scelta accessibile:
+`role=group` + `aria-pressed` = stato REALE; il selezionato ha il marcatore non-cromatico (Check).
+**Decisione di dettaglio:** il check segna la SELEZIONE, non il suggerimento — la spec F3.a citava
+"icona check sul bottone suggerito", ma un check su un bottone non scelto sembrerebbe una scelta
+già fatta (anti-pattern a11y); il suggerito si distingue con badge+ring, il selezionato con
+variant filled+check. Annotato nell'header del componente.
+
+**F3.e:** `sedute_penali` sincronizzato in `types/api.ts` (era il gap type-sync del ri-grounding)
+e mostrato nel breakdown come riga SEPARATA amber «Sedute penali (contabilizzate)» — mai sommate
+alle erogate a video (coerente con l'audit conteggi separati di G7.8-bis).
+
+**Test AC-G84-4/7/8:** 6 vitest nuovi (`terminate-dialog-choice.test.tsx`) col dialog INTERO a
+hook mockati (`vi.mock` di useContracts): nessun `aria-pressed` all'apertura + submit disabled ·
+badge sul suggerito e mai sulla rinuncia · la scelta reale abilita · rinuncia senza nota resta
+bloccata (F3.f) · penali visibili/assenti. Vitest **91/91**, build verde.
+
+**🏁 G8.4: TUTTE LE FETTE CHIUSE (F1+F5 · F2+F6 · F3).** Per la DoD §8 resta SOLO il punto (5):
+**apertura governance G8.5** (ADR goodwill proposed + spec, decisioni founder i-iv da chiudere:
+destinazione cassa/wallet · base importo · categoria dedicata vs riuso · inversione al reopen).
+Il workaround amber «Riapri e poi Termina» resta per design finché G8.5 non shippa.
+
+---
