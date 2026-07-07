@@ -56,6 +56,7 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 
 | File | Scopo |
 |------|-------|
+| `MATRICE_ASSI_SEMANTICI.md` | **Matrice assi×regole (ADR-024, vivo):** ogni asse di stato × le 4 regole del metodo + derivati-a-video + composizione protezioni. Un asse senza riga = non governato. Nata G9.7.0 (2026-07-07); a G9.7 chiuso deve essere tutta ✅ o rischio dichiarato |
 | `SECURITY_MODEL.md` | **Reference unico sicurezza (vivo):** threat model + tassonomia attaccanti L0-L4, 6 livelli protezione (L1-L6 + L3b), network hardening, roadmap (cifratura crm.db = gate Tier-1 attivo G1). Gli audit storici e la strategia anti-RE sono in `docs/archive/` |
 | `LICENSE_ACTIVATION.md` | Attivazione licenza, hardware binding, CLI admin |
 | `TUNNEL_ARCHITECTURE.md` | **Sottosistema tunnel (riferimento unico):** design (problema, P1-P10, P2 data-blind), build (migrazione Tailscale→FRP, 4 fasi, gap analysis), operations (setup VPS edge, costi, DR). Consolida i 4 doc storici. |
