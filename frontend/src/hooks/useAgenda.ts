@@ -112,13 +112,23 @@ export function useCreateEvent() {
       const { data } = await apiClient.post<Event>("/events", payload);
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["events"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       queryClient.invalidateQueries({ queryKey: ["clients"] });
       queryClient.invalidateQueries({ queryKey: ["contracts"] });
       queryClient.invalidateQueries({ queryKey: ["contract"] });
-      toast.success("Evento creato");
+      // G9.7.1/B5 (ADR-024 D-MAI-SILENZIO-IN-SCRITTURA): un PT con cliente nato SENZA aggancio
+      // (auto-assegnazione fallita: nessun contratto attivo agganciabile) non è un successo muto —
+      // il 201 porta id_contratto=null e va DETTO, mai il toast di successo generico.
+      if (data.categoria === "PT" && data.id_cliente != null && data.id_contratto == null) {
+        toast.warning(
+          "Seduta creata SENZA contratto: non scala crediti. Potrai assegnarla a un contratto attivo.",
+          { duration: 8000 },
+        );
+      } else {
+        toast.success("Evento creato");
+      }
     },
     onError: (error) => {
       if (axios.isAxiosError(error) && error.response?.status === 409) {

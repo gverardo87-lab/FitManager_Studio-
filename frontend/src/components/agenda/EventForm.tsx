@@ -155,6 +155,15 @@ export function EventForm({
     isClientRequired &&
     selectedClient &&
     selectedClient.crediti_residui <= 0;
+  // G9.7.1/B4 (ADR-024 D-MAI-SILENZIO-IN-SCRITTURA): senza contratti ATTIVI l'auto-assegnazione
+  // fallirà e la seduta nascerà SENZA contratto (non scala crediti) — era il caso fail-silent
+  // dell'audit 2026-07-07 (crediti_residui>0 da contratto CHIUSO → nessun warning). Il submit
+  // resta permesso (escape hatch legittimo) ma CONSAPEVOLE.
+  const showNoContractWarning =
+    isClientRequired &&
+    !!selectedClient &&
+    !showCreditWarning &&
+    selectedClient.contratti_attivi === 0;
 
   const handleFormSubmit = (values: EventFormValues) => {
     const start = combineDateAndTime(values.data_inizio_date, values.ora_inizio);
@@ -278,6 +287,17 @@ export function EventForm({
               <AlertDescription>
                 Crediti esauriti. Per programmare una sessione PT, il cliente deve
                 avere un contratto attivo con crediti disponibili.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Soft warning (G9.7.1/B4): la seduta nascerà senza contratto — mai in silenzio */}
+          {showNoContractWarning && (
+            <Alert>
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                Questo cliente non ha contratti attivi: la seduta verrà creata{" "}
+                <strong>senza contratto</strong> e non scalerà crediti.
               </AlertDescription>
             </Alert>
           )}
