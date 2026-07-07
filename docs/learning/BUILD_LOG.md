@@ -2899,3 +2899,32 @@ rimborso ramo-cliente, chiuso con Annulla). Server spenti a fine verifica.
 governance **G8.5** (goodwill) prima della chiusura G8.4.
 
 ---
+
+## 2026-07-07 — G8.4 fetta-UX-presentazionale (F2+F6) COMPLETATA (`0b80bc8`)
+
+**F2 (D-DISCLOSURE, lista D-1 ratificata):** hero con toggle «Mostra dettaglio» — dietro il toggle
+SOLO gli informativi (Acconto · Da Rateizzare quando il piano è coperto · riga Crediti Sedute);
+sempre visibili i segnali (Residuo + conteggio scadute · banner amber prenotate-non-erogate ·
+Da Rateizzare quando il piano NON copre · sub-label «lordo X · −Y» sul netto, D-1 emendata).
+Scelta di layout: griglia UNICA che fluisce (collassata = Valore·Netto·Rate·Residuo, 4 card;
+espansa = identica al layout storico 2×3 + riga crediti) — niente row vuote né salti di card.
+Storico: righe ledger collassabili alla **coda dei 6 più recenti** (il running balance della prima
+riga visibile include già la storia nascosta — pattern QBO "balance valido solo cronologico");
+footer prova-a-vista SEMPRE.
+
+**F6 (D-COLORE):** neutralizzati a zinc i 5 tint decorativi (Valore violet · Acconto/Rate
+Pagate/Programmate blue · Crediti Totali indigo); restano SOLO i colori-valenza
+(emerald/amber/red + emerald su Completate = erogato).
+
+**AC-G84-5 = 3 render-test vitest** (`__tests__/contracts/financial-hero-disclosure.test.tsx`,
+primo render-test testing-library del repo): segnali presenti senza interazione · dettaglio
+nascosto/rivelato dal toggle · Da Rateizzare always-visible a piano scoperto. Vitest **85/85**,
+next build verde, guard semantici 6/6, verifica visiva LIVE su crm.db reale (contratto 39, dark).
+Nota operativa: il dev server ucciso brusco lascia il lock `frontend/.next/dev/lock` → rimuoverlo
+prima del restart.
+
+**⏭️ Prossimo: fetta-comportamentale (F3.a/c/d/e)** — raccomandazione solo-visiva ramo trainer +
+advisory `azione_consigliata` (opzionale) + radiogroup a11y + display `sedute_penali` (sync
+types/api.ts) — poi apertura governance **G8.5** prima della chiusura G8.4.
+
+---
