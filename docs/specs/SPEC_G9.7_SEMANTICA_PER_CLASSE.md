@@ -49,6 +49,9 @@ protezioni verificata». Celle: ✅/⚠️/✗ con puntatore al presidio o al ga
   propone il recupero, NON riaggancia da solo (D-PROPONE).
 - **Recupero dato reale:** eventi 640/641 → assegna al contratto 39 via endpoint (runbook 3 righe
   in coda alla spec a implementazione fatta; MAI a mano nel DB).
+- **Interlock ADR-025 (blocco P):** l'assegnazione al contratto resta QUI; la via alternativa
+  «diventa prestazione singola» nasce in `SPEC_P_PRESTAZIONI_SINGOLE_E_PORTAFOGLIO.md` (P2); il
+  recupero 640/641 = scelta esplicita founder tra le due vie, runbook condiviso (P6).
 - **AC-G97-2:** orfano assegnato via endpoint → occupa il credito; endpoint rifiuta contratto
   chiuso (400) e cliente diverso (404). **AC-G97-2b:** reopen su contratto con orfani nel periodo
   → response/preview li nomina. Fail: limbo senza uscita o riaggancio silenzioso.

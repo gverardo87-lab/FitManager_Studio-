@@ -2990,3 +2990,48 @@ I 13 finding = gli AC del blocco, non 13 rincorse.
 G8.5 (goodwill) resta in coda dopo G9.7.
 
 ---
+
+## 2026-07-07 (notte) → 2026-07-08 — G9.7.0-1 · filone ADR-025 (fondamenta → ratifica → apertura blocco P)
+
+**G9.7.0 FATTO** (`dbac53f`, docs-only): nasce `docs/technical/MATRICE_ASSI_SEMANTICI.md` — 7 assi
+di stato × 4 regole del metodo + derivati-a-video + composizione protezioni (SSoT evergreen,
+ADR-024 D-LEGGI-PER-CLASSE). **G9.7.1 codice FATTO** (`6cdbfb9`): mai-silenzio sul write-path
+eventi — B4 pre-warning in `EventForm` su `contratti_attivi === 0` («la seduta nascerà SENZA
+contratto») + B5 toast dedicato sul 201 con `id_contratto == null`. In coda al gate: vitest
+AC-G97-1 + verifica LIVE.
+
+**Seconda cattura founder (2026-07-07 sera):** «(2 crediti)» nel dropdown da contratto CHIUSO
+accanto al warning «nessun contratto attivo» = PANICO — il pre-warning B4 passava proprio perché
+`crediti_residui` client-level è l'unico campo enrichment che NON filtra `chiuso`
+(`clients.py:304-332`, deliberato ma non dichiarato al consumo). **Audit FE depositato**
+(`211c481`, `operations/AUDIT_FE_SEGNALI_E_SELETTORI_2026-07-07.md`): P1-P5 dropdown, I1-I7
+incoerenze segnali, B4/B5 wallet+receivable invisibili nel profilo; gap wire =
+`crediti_residui_attivi`. Legge nuova ratificata: **segnale ⇒ azione** (un warning senza scelta
+non dà controllo: dà ansia).
+
+**Fondamenta ADR-025 depositate** (`9ee325f`, workflow ultracode 14 agenti / ~1.5M token):
+`archive/RICERCA_COMPETITOR_WALLET_SEDUTE_SINGOLE_2026-07-07.md` (11 vendor, leggi W1-W11 — chiave
+W9: NESSUN vendor ha il prezzo suggerito dallo storico = unicità FitManager) +
+`product/CATALOGO_SCENARI_PT.md` (96 scenari a 6 lenti + critic; copertura 15% piena / 51%
+parziale / 34% assente; 14/26 scenari SETTIMANALI scoperti; 23 domande Q1-Q23).
+
+**ADR-025 ACCEPTED** (`332ebd2`, 2026-07-08): decisioni percorse UNA A UNA col founder —
+D-CLASSE-PRESTAZIONE · D-INSOLUTO-DERIVATO · D-WALLET-SEPARATO-COMPENSA · D-PARZIALE-AMMESSO ·
+D-UNPAY-FLOOR · D-PAGATORE-LEGGERO · D-REGISTRO-OPERATIVO · D-PREZZO-LIBERO-CONSIGLIATO ·
+D-PORTAFOGLIO · D-SCELTA-ALLA-CREAZIONE · D-SEGNALE-AZIONE (legge trasversale). Q6-Q23
+dispatchate (in-spec vs differite con casa dichiarata).
+
+**Apertura blocco «P»** (questo commit): `docs/specs/SPEC_P_PRESTAZIONI_SINGOLE_E_PORTAFOGLIO.md`
+— gate P0..P6 dentro la macchina G9 + checklist di nascita ADR-024. P0 fondazione docs+ratifica
+(riga matrice, P-D1..P-D6) → P1 schema+7ª `ClasseContabile`+penna+invarianti IP1-IP4 → P2
+write-path (nascita atomica, incasso parziale, unpay-floor, suggeritore Q6) → P3 compensazione
+wallet a due gambe + condono → P4 read-model Portafoglio + `crediti_residui_attivi` → P5 FE
+(scelta a 3 vie al posto del warning-ansia, pannello Portafoglio, dropdown onesto) → P6 presidio
++ runbook 640/641 (interlock G9.7.2). Igiene INDEX: rimossa la riga stale di `SPEC_G9.4-BIS`
+(archiviata alla chiusura G9, era ancora listata tra le aperte).
+
+**⏭️ Prossimo: ratifica P-D1..P-D6 (gate P0) col founder → P1. In parallelo resta la coda G9.7**
+(vitest AC-G97-1 + LIVE per chiudere G9.7.1; G9.7.2 si allinea ad ADR-025: assegna-contratto O
+promuovi-a-singola, scelta esplicita).
+
+---
