@@ -25,11 +25,15 @@ insegna: le protezioni si esaminano anche COMBINATE).
 | **Stati crediti/wallet (APERTO/SALDATO/ANNULLATO)** | ✅ costanti `STATO_CREDITO_*` (G9.4-bis.0) | ✅ `residuo_credito` SSoT | ⚠️ | ✗ **flag LOW noto: nessun gemello anti-re-inline** (G9.7.4) | ⚠️ worklist ok, breakdown minimale | ⚠️ |
 | **Stati rate (PENDENTE/PARZIALE/SALDATA)** | ✅ | ✅ `recompute_stato_pagamento` (G9.1c, 4 copie→1) | ✅ INV-RATE I6 | ✅ harness + Hypothesis | ✅ badge rate + riconciliazione | ✅ (ADR-021) |
 | **Crediti residui (derivato FE)** | n/a | ⚠️ **D4: `DeleteContractDialog` ricalcola inline** (G9.7.3/4) | n/a | ✗ guard FE copre solo denaro (G9.7.4) | ✗ vedi occupazione | n/a |
+| **Prestazione singola & insoluto (nasce col blocco P, ADR-025)** | ✗ `STATI_CONTABILIZZANTI_PRESTAZIONE = {Completato}` (P-D1) + 7ª `ClasseContabile` + `PRESTAZIONE_CASH_IN` — **niente colonna stato: derivato-only per decisione** (P1) | ✗ modulo puro derivati `da_incassare`/`insoluto` (IP3) + suggeritore Q6 spiegabile (P1/P2) | ✗ penna `post_prestazione_inflow` fail-loud + IP1-IP4 in invariant gate (P1) | ✗ gemelli semantici 7 classi + Hypothesis rule asse prestazione (P1/P2/P6) | ✗ due viste W7 (per-prestazione + Portafoglio) + worklist insoluti, mai nudo (P4/P5) | ✅ **birth-review P0 FATTA 2026-07-08**: CP-1..CP-4 foldati in spec (delete_client RESTRICT · guard assegna-contratto · soppressione auto-assign · cascade delete-evento); CP-5/CP-6 verificate OK (reopen×compensazione via R2-bis; Rinviato-prepagata ha uscite) |
 
-**Legenda gap aperti (tutti → gate G9.7):** ✗ = AC del blocco (B/D dall'audit 2026-07-07) ·
-⚠️ = presidio parziale, verifica nel gate indicato. A blocco G9.7 chiuso questa matrice deve
-essere tutta ✅/n/a oppure dichiarare il rischio residuo accettato.
+**Legenda gap aperti (→ gate G9.7 o blocco P):** ✗ = AC del blocco indicato (B/D dall'audit
+2026-07-07; P1..P6 da `SPEC_P_PRESTAZIONI_SINGOLE_E_PORTAFOGLIO.md`) · ⚠️ = presidio parziale,
+verifica nel gate indicato. A blocco chiuso le sue celle devono essere ✅/n/a oppure dichiarare il
+rischio residuo accettato.
 
 **Storia:** le righe cassa/denaro sono ✅ perché OGNI cella è costata un incidente o un audit
 (INC-2026-06-08, INC-2026-07-03, G7-G9). ADR-024 esiste per pagare le celle degli altri assi
-PRIMA dell'incidente. Ultimo aggiornamento: 2026-07-07 (G9.7.0).
+PRIMA dell'incidente. La riga «prestazione singola» è la PRIMA nata col protocollo completo
+(riga in matrice + birth-review PRIMA del codice, ADR-024 D-BIRTH-AUDITOR).
+Ultimo aggiornamento: 2026-07-08 (P0 blocco P).

@@ -1,8 +1,8 @@
 # SPEC_P_PRESTAZIONI_SINGOLE_E_PORTAFOGLIO
 
 **Tipo:** specifica prescrittiva. **Data:** 2026-07-08 · **Branch:** `FitManager_Studio`
-**Stato:** 🟡 **APERTA — P-D1..P-D6 RATIFICATE** (founder, 2026-07-08, una a una; P-D6 rivista in
-ratifica: Q9 differita intera). Resta di P0: riga matrice + birth-review → poi P1.
+**Stato:** 🟡 **APERTA — P0 CHIUSO** (2026-07-08: P-D1..P-D6 ratificate una a una, P-D6 rivista;
+riga matrice depositata; birth-review FATTA — CP-1..CP-4 foldati nei gate). **Prossimo: P1.**
 **Governance:** ADR-025 (D-CLASSE-PRESTAZIONE, D-INSOLUTO-DERIVATO, D-WALLET-SEPARATO-COMPENSA,
 D-PARZIALE-AMMESSO, D-UNPAY-FLOOR, D-PAGATORE-LEGGERO, D-REGISTRO-OPERATIVO,
 D-PREZZO-LIBERO-CONSIGLIATO, D-PORTAFOGLIO, D-SCELTA-ALLA-CREAZIONE, D-SEGNALE-AZIONE) dentro la
@@ -25,9 +25,12 @@ in worklist; (3) il wallet **non va mai negativo** e la compensazione è un atto
 DENARO contrattuale esistente è **byte-identico** (blocco interamente additivo).
 
 **Interlock G9.7 (coda aperta):** l'endpoint `assegna-contratto` resta in G9.7.2; il blocco P
-aggiunge la via alternativa «diventa prestazione singola» (P2). Il recupero degli eventi reali
-640/641 = **scelta esplicita founder tra le due vie**, runbook condiviso in P6 — MAI a mano nel DB.
-Il «dropdown onesto» (P1-P5 audit) si chiude in P4 (wire) + P5 (FE).
+aggiunge la via alternativa «diventa prestazione singola» (P2). **Guard incrociato (CP-2):
+`assegna-contratto` rifiuta eventi CON prestazione, `POST /events/{id}/prestazione-singola`
+rifiuta eventi CON contratto — le due vie sono mutuamente esclusive, mai doppio fatto economico.**
+Il recupero degli eventi reali 640/641 = **scelta esplicita founder tra le due vie**, runbook
+condiviso in P6 — MAI a mano nel DB. Il «dropdown onesto» (P1-P5 audit) si chiude in P4 (wire) +
+P5 (FE).
 
 ---
 
@@ -68,16 +71,29 @@ Il «dropdown onesto» (P1-P5 audit) si chiude in P4 (wire) + P5 (FE).
 
 ## Sequenza dei gate (vincolante)
 
-### P0 — Nascita della classe (docs-only + ratifica)
-- Riga nuova in `docs/technical/MATRICE_ASSI_SEMANTICI.md`: asse **«prestazione singola &
-  insoluto»** — 4 regole + derivati-a-video + composizione protezioni; celle ✗ con puntatore al
-  gate P1..P6 che le chiude. Un asse senza riga = asse non governato (ADR-024 D1).
-- ✅ **Ratifica founder P-D1..P-D6 FATTA** (2026-07-08, una a una in sessione; P-D6 rivista —
-  la sezione P-D è la legge del blocco).
-- Review di nascita (D-BIRTH-AUDITOR, charter SPEC_G9.4-BIS §5 — anche se l'agente si attiva in
-  G9.7.5, la lente si applica QUI): 4 regole + composizione con le protezioni esistenti
-  (il deadlock B1×no-re-parenting è il precedente da non ripetere sull'asse nuovo).
-- **Gate:** matrice aggiornata, INDEX allineato, P-D ratificate.
+### P0 — Nascita della classe (docs-only + ratifica) — ✅ CHIUSO 2026-07-08
+- ✅ **Ratifica founder P-D1..P-D6** (una a una in sessione; P-D6 rivista — la sezione P-D è la
+  legge del blocco).
+- ✅ **Riga in matrice** (`docs/technical/MATRICE_ASSI_SEMANTICI.md`): asse «prestazione singola &
+  insoluto», celle ✗ coi puntatori ai gate P1..P6. Prima riga nata col protocollo completo
+  (matrice + review PRIMA del codice).
+- ✅ **Birth-review** (D-BIRTH-AUDITOR, charter SPEC_G9.4-BIS §5, lente applicata inline). Esito:
+  - **S1-S5 charter:** insiemi chiusi previsti come SSoT (P-D1 → `STATI_CONTABILIZZANTI_PRESTAZIONE`;
+    **la prestazione NON ha colonna `stato`: derivato-only per decisione**, chi volesse aggiungerla
+    deve passare da qui) · interprete unico pianificato (modulo puro, IP3) · totalità sul diff = il
+    censimento call-site di P1 · niente netto nudo (W7 due viste) · rito di nascita rispettato
+    (ADR-025 + spec + BUILD_LOG).
+  - **CP composizione protezioni — 4 finding foldati nei gate:** **CP-1** `delete_client` RESTRICT
+    va esteso alle prestazioni con posizione aperta (→ P2) · **CP-2** `assegna-contratto` (G9.7.2)
+    deve rifiutare eventi CON prestazione — doppio fatto economico (→ interlock) · **CP-3** il
+    blocco prestazione sopprime l'auto-assign; singola su cliente CON contratto attivo = legittima
+    (→ P2) · **CP-4** delete evento con prestazione senza denaro = cascade soft-delete dichiarato
+    (→ P2).
+  - **CP verificate OK (nessun cambio):** **CP-5** reopen del contratto origine-wallet con
+    compensazioni a valle → R2-bis riassorbe l'erogato, gambe di cassa restano (ADR-019), zero
+    double-count (contra-ricavo lato contratto ↔ ricavo lato prestazione) · **CP-6**
+    Rinviato/Cancellato su prepagata → vie d'uscita esistenti (transizioni evento libere per
+    riprogrammare, o unpay per rimborsare), nessun deadlock.
 
 ### P1 — Schema + classe contabile + penna (backend puro, zero superfici)
 - **Tabella `prestazioni_singole`** (pattern gemello `crediti_terminazione`/`crediti_cliente`):
@@ -118,7 +134,9 @@ Il «dropdown onesto» (P1-P5 audit) si chiude in P4 (wire) + P5 (FE).
   `prestazione_singola {importo, motivo_prezzo_zero?, incasso_immediato?{importo, metodo,
   pagatore?}}` — UN commit crea Event (PT, `id_contratto=NULL`) + PrestazioneSingola (+ eventuale
   incasso via penna). **Vietato** il blocco su evento con `id_contratto` (400: o contratto o
-  singola, mai entrambi). Audit CREATE dedicato.
+  singola, mai entrambi). **Il blocco prestazione SOPPRIME l'auto-assign del contratto (CP-3): la
+  scelta esplicita vince** — la singola su cliente CON contratto attivo è legittima (seduta fuori
+  pacchetto, non scala crediti). Audit CREATE dedicato.
 - **`POST /events/{id}/prestazione-singola`:** promuove un PT orfano esistente (bouncer 404, solo
   PT `id_contratto==NULL` senza prestazione) — la via alternativa di G9.7.2.
 - **`POST /prestazioni/{id}/incassa`** (schema RatePayment-like + `pagatore?`): parziale ammesso
@@ -133,8 +151,14 @@ Il «dropdown onesto» (P1-P5 audit) si chiude in P4 (wire) + P5 (FE).
   perché…»). MAI un gate: prezzo libero (D-PREZZO-LIBERO-CONSIGLIATO, W9 = unicità). Il prezzo-zero
   è escluso da (2) per costruzione (Q7).
 - **Ciclo evento:** Rinviato/Cancellato → nessun fatto economico nuovo; se prepagata, la
-  prestazione resta col suo incassato e `da_incassare` si ricalcola. **Delete evento → RESTRICT
-  (409)** se prestazione con incassi/condoni (pattern delete-contratto): mai orfanare denaro.
+  prestazione resta col suo incassato e le vie d'uscita sono dichiarate (CP-6): riprogrammare
+  (transizioni evento libere) o rimborsare (unpay). **Delete evento → RESTRICT (409)** se
+  prestazione con incassi/condoni (pattern delete-contratto): mai orfanare denaro; **senza denaro
+  → cascade soft-delete della prestazione nella STESSA transazione (CP-4)** — satellite enumerato,
+  D-PERIMETRO-TRANSIZIONI.
+- **`delete_client` RESTRICT esteso (CP-1):** il RESTRICT su posizione aperta (oggi contratti
+  attivi + wallet/receivable APERTI) copre anche le prestazioni con `da_incassare > 0` — mai
+  cancellare un cliente orfanando un insoluto vivo. Gemello nell'harness.
 - **Feature flag `PRESTAZIONI_SINGOLE_ENABLED`** (default ON; OFF → 403 sulla creazione, pattern
   `PUBLIC_PORTAL_ENABLED`) — rollback ADR-025.
 - **Hypothesis:** rule nuove (crea singola · incassa parziale · completa · rinvia · unpay ·

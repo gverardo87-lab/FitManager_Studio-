@@ -3074,3 +3074,35 @@ per volta):
 **⏭️ Resta di P0: riga matrice + birth-review (4 regole × composizione protezioni). Poi P1.**
 
 ---
+
+## 2026-07-08 — Blocco P: P0 CHIUSO (riga matrice + birth-review)
+
+**Riga in matrice** (`MATRICE_ASSI_SEMANTICI.md`): asse «prestazione singola & insoluto» — celle
+R1-R4/DV ✗ coi puntatori ai gate P1..P6 che le chiudono; annotato che la prestazione **non ha
+colonna `stato`** (derivato-only per decisione, S1). È la **prima riga nata col protocollo
+completo** ADR-024: matrice + review PRIMA del codice — finora ogni cella ✅ era costata un
+incidente.
+
+**Birth-review** (charter S1-S5 di SPEC_G9.4-BIS §5 + lente CP, applicata inline — l'agente
+`.claude/agents/` nasce in G9.7.5): S1-S5 conformi by-design. La lente **composizione protezioni**
+ha trovato **4 finding reali**, foldati nei gate prima che diventassero codice:
+- **CP-1** `delete_client` RESTRICT non copriva le prestazioni con posizione aperta (cliente
+  cancellabile con insoluto vivo) → esteso in P2, gemello nell'harness.
+- **CP-2** `assegna-contratto` (G9.7.2) × promozione-a-singola (P2): senza guard incrociato, un
+  orfano poteva avere ENTRAMBI i fatti economici → vie mutuamente esclusive, guard nei due
+  endpoint (annotato in entrambe le spec).
+- **CP-3** blocco prestazione in `EventCreate` × auto-assign: la scelta esplicita SOPPRIME
+  l'auto-assign; singola su cliente CON contratto attivo = legittima (seduta fuori pacchetto).
+- **CP-4** delete evento con prestazione senza denaro → cascade soft-delete dichiarato
+  (D-PERIMETRO-TRANSIZIONI); con denaro → RESTRICT (già in spec).
+E **2 composizioni verificate OK** (nessun cambio): CP-5 reopen×compensazione (R2-bis riassorbe,
+zero double-count) · CP-6 Rinviato-prepagata (uscite esistenti: riprogramma o unpay).
+
+La review di nascita ha pagato SUBITO: CP-1/CP-2 erano esattamente la classe «deadlock da
+protezioni giuste» (B1×no-re-parenting) che ADR-024 è nato per anticipare.
+
+**⏭️ Prossimo: P1 (schema `prestazioni_singole` + FK/pagatore su CashMovement + 7ª
+`ClasseContabile` + penna + IP1-IP4 + gemelli + Alembic). In parallelo coda G9.7.1 (vitest
+AC-G97-1 + LIVE).**
+
+---
