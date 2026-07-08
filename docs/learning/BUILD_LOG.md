@@ -3035,3 +3035,42 @@ wallet a due gambe + condono → P4 read-model Portafoglio + `crediti_residui_at
 promuovi-a-singola, scelta esplicita).
 
 ---
+
+## 2026-07-08 — Blocco P: P-D1..P-D6 ratificate una a una (gate P0, prima metà)
+
+Metodo ADR-025 (contesto → raccomandazione → conseguenze → alternativa scartata, una decisione
+per volta):
+
+- **P-D1 ✅** stati contabilizzanti singola = **{Completato}**: penali su singola = zero fatto
+  economico fino alla call tributarista (Q8 gated — addebito senza accordo sottoscritto = terreno
+  art. 33), con segnale UI dichiarato (D-MAI-SILENZIO). Prepagata + no-show: incasso resta,
+  azione suggerita (rimborsa/riprogramma), MAI automatica.
+- **P-D2 ✅** compensazione wallet→singola = **due gambe di cassa pareggiate** in una transazione
+  (gamba OUT = erogazione wallet già esistente, gamba IN = incasso prestazione via penna, metodo
+  `COMPENSAZIONE_WALLET`): àncore Σ vere per costruzione, saldo invariato, reopen gratis (R2-bis),
+  atto visibile nel mastro. Scartato il registro interno senza cassa (àncore rotte, atto invisibile).
+- **P-D3 ✅** **condono sempre ammesso** (atto nuovo datato oggi: `importo_condonato`, motivo
+  obbligatorio, audit; cassa ed evento intoccabili) — il fence resta sugli eventi. Ogni insoluto ha
+  per sempre 3 uscite: incassa/compensa/condona. **Definitivo** nel blocco P (niente annullo-condono).
+- **P-D4 ✅** (approfondita insieme su richiesta founder) l'escape hatch **«senza fatto economico»
+  RESTA**: ultima posizione, label onesta, nag worklist B6. Caso forte = «seduta prima del
+  contratto» (senza via 3, l'aggancio G9.7.2 si romperebbe: servirebbe smontare una prestazione
+  finta). Il pericolo non era mai l'esistenza della via — era il silenzio, già ucciso da ADR-024.
+  Scartati sia il motivo-obbligatorio (attrito-teatro) sia l'ontologia chiusa (semantica finta).
+- **P-D5 ✅** naming `prestazioni_singole` / `prestazioni.py` / `id_prestazione` /
+  `RICAVO_PRESTAZIONE_SINGOLA`: «prestazione» separa l'asse economico da «seduta» (=scheduling,
+  già occupato da `sedute_*`), è il termine del registro operativo, forward-compatible su servizi
+  non-allenamento.
+- **P-D6 ✅ RIVISTA IN RATIFICA — Q9 differita INTERA a G8.2+G8.5.** Preparando la ratifica è
+  emerso il difetto della bozza «metà veicolo»: la sola gamba `CONVERSIONE_PRESTAZIONE` si
+  biforcava in (A) insoluto-su-erogata (il derivato P-D1 punirebbe lo spostamento dell'incasso da
+  una prestazione EROGATA) o (B) wallet nato senza cassa = anticipo non governato di G8.5 — e in
+  entrambi il valore parcheggiato non aveva destinazione (gamba wallet→contratto = G8.2 in
+  panchina). Il blocco P non costruisce nessuna conversione; direzione wallet resta ratificata;
+  interim = sconto ESPLICITO sul prezzo contratto. Spec emendata (via `CONVERSIONE_PRESTAZIONE`
+  rimossa da P3, Q9 → fuori scope con casa). *La ratifica ha fatto il suo mestiere: difetto trovato
+  prima del codice.*
+
+**⏭️ Resta di P0: riga matrice + birth-review (4 regole × composizione protezioni). Poi P1.**
+
+---

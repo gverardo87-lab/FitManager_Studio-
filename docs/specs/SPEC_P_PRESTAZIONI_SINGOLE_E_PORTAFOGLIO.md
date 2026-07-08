@@ -1,7 +1,8 @@
 # SPEC_P_PRESTAZIONI_SINGOLE_E_PORTAFOGLIO
 
 **Tipo:** specifica prescrittiva. **Data:** 2026-07-08 · **Branch:** `FitManager_Studio`
-**Stato:** 🟡 **APERTA — DA IMPLEMENTARE** (ADR-025 accepted 2026-07-08; P-D1..P-D6 da ratificare in P0).
+**Stato:** 🟡 **APERTA — P-D1..P-D6 RATIFICATE** (founder, 2026-07-08, una a una; P-D6 rivista in
+ratifica: Q9 differita intera). Resta di P0: riga matrice + birth-review → poi P1.
 **Governance:** ADR-025 (D-CLASSE-PRESTAZIONE, D-INSOLUTO-DERIVATO, D-WALLET-SEPARATO-COMPENSA,
 D-PARZIALE-AMMESSO, D-UNPAY-FLOOR, D-PAGATORE-LEGGERO, D-REGISTRO-OPERATIVO,
 D-PREZZO-LIBERO-CONSIGLIATO, D-PORTAFOGLIO, D-SCELTA-ALLA-CREAZIONE, D-SEGNALE-AZIONE) dentro la
@@ -30,7 +31,7 @@ Il «dropdown onesto» (P1-P5 audit) si chiude in P4 (wire) + P5 (FE).
 
 ---
 
-## Decisioni di spec (P-D, discendenti tecniche ADR-025 — ratifica in P0)
+## Decisioni di spec (P-D, discendenti tecniche ADR-025 — RATIFICATE 2026-07-08)
 
 - **P-D1 — Stati contabilizzanti della singola = `{Completato}`.** L'insoluto nasce SOLO al
   Completato (D-INSOLUTO-DERIVATO). Penali su singola (No_Show/Cancellato_Tardivo) = **Q8 gated
@@ -45,15 +46,25 @@ Il «dropdown onesto» (P1-P5 audit) si chiude in P4 (wire) + P5 (FE).
 - **P-D3 — Fence temporale (ADR-023):** gli eventi sono già coperti dal fence; il **condono è
   sempre ammesso** (con audit) — è l'atto che chiude, non riscrive il passato (pattern
   `quota_stornata`, mai delete di cassa).
-- **P-D4 — L'escape hatch «senza fatto economico» resta**, con label onesta e in ultima posizione
-  (colloqui/omaggi fuori Q7): eliminarlo forzerebbe semantica finta. La scelta a 3 vie sostituisce
-  il warning B4 (D-SCELTA-ALLA-CREAZIONE).
+- **P-D4 — L'escape hatch «senza fatto economico» resta**, con label onesta e in ultima posizione:
+  eliminarlo forzerebbe semantica finta (prezzi/motivi inventati che inquinano suggeritore e KPI) e
+  romperebbe il flusso reale «prenota ora, firma domani, aggancia» (la via 3 è la sala d'attesa
+  legittima del futuro contratto). Contenimento: ordine + toast B5 + **nag della worklist B6**
+  (l'orfano è contato finché non risolto — limbo visibile con via d'uscita, mai tomba silenziosa).
+  La scelta a 3 vie sostituisce il warning B4 (D-SCELTA-ALLA-CREAZIONE). Niente motivo obbligatorio
+  sulla via 3 (attrito-teatro).
 - **P-D5 — Naming:** tabella `prestazioni_singole` · modello `api/models/prestazione_singola.py` ·
   router `api/routers/prestazioni.py` (prefix `/prestazioni`) · FK `CashMovement.id_prestazione`.
-- **P-D6 — Q9 a metà veicolo, dichiarato:** conversione singole→pacchetto passa dal wallet (unico
-  veicolo, ratificato). La gamba «incasso singola → wallet» (causale nuova `CONVERSIONE_PRESTAZIONE`)
-  è in P3; la gamba «wallet paga il contratto» È G8.2 (in panchina, D2 aperta) — finché non shippa,
-  la conversione si ferma al wallet. Niente sconti impliciti.
+- **P-D6 — Q9 differita INTERA, con casa dichiarata (RIVISTA in ratifica).** La bozza «metà
+  veicolo» (sola gamba `CONVERSIONE_PRESTAZIONE` in P3) si biforcava in due modelli entrambi
+  difettosi: (A) spostare l'incasso rende insoluta una prestazione EROGATA (il derivato P-D1 la
+  punirebbe, servirebbe un condono-toppa) · (B) wallet nato senza cassa = anticipo non governato
+  di G8.5 goodwill — e in entrambi il valore parcheggiato non ha destinazione finché G8.2 non
+  shippa. **Decisione:** il blocco P non costruisce NESSUNA meccanica di conversione. La direzione
+  resta ratificata (ADR-025: veicolo=wallet, mai sconti impliciti automatici); la meccanica nasce
+  con le sue due gambe — **G8.2** (spesa wallet→contratto) + **G8.5** (nascita wallet senza cassa)
+  — di cui Q9 diventa il caso d'uso unificante. Interim onesto: sconto ESPLICITO sul prezzo del
+  contratto (il prezzo è libero), mai una riga di mastro che mente.
 
 ## Sequenza dei gate (vincolante)
 
@@ -61,7 +72,8 @@ Il «dropdown onesto» (P1-P5 audit) si chiude in P4 (wire) + P5 (FE).
 - Riga nuova in `docs/technical/MATRICE_ASSI_SEMANTICI.md`: asse **«prestazione singola &
   insoluto»** — 4 regole + derivati-a-video + composizione protezioni; celle ✗ con puntatore al
   gate P1..P6 che le chiude. Un asse senza riga = asse non governato (ADR-024 D1).
-- Ratifica founder P-D1..P-D6 (questa sezione diventa la legge del blocco).
+- ✅ **Ratifica founder P-D1..P-D6 FATTA** (2026-07-08, una a una in sessione; P-D6 rivista —
+  la sezione P-D è la legge del blocco).
 - Review di nascita (D-BIRTH-AUDITOR, charter SPEC_G9.4-BIS §5 — anche se l'agente si attiva in
   G9.7.5, la lente si applica QUI): 4 regole + composizione con le protezioni esistenti
   (il deadlock B1×no-re-parenting è il precedente da non ripetere sull'asse nuovo).
@@ -140,9 +152,8 @@ Il «dropdown onesto» (P1-P5 audit) si chiude in P4 (wire) + P5 (FE).
   già speso a valle → **409 esplicito con l'azione** (D-UNPAY-FLOOR). Vietato l'insoluto sintetico.
 - **Condono (Q10):** `POST /prestazioni/{id}/condona {importo, motivo}` — rettifica dedicata:
   `importo_condonato +=` (cap `≤ da_incassare`), audit dedicato, MAI delete di cassa (ADR-019).
-  Il write-off è un atto, mai un'omissione (W8).
-- **Conversione (Q9, P-D6):** atto esplicito «converti incasso singola → wallet» (causale wallet
-  nuova `CONVERSIONE_PRESTAZIONE`); la gamba wallet→contratto resta G8.2 (panchina).
+  Il write-off è un atto, mai un'omissione (W8). **Definitivo** nel blocco P (niente
+  annullo-condono, P-D3): a differenza dell'incasso non ha cassa da ripristinare.
 - **AC-P3:** compensazione → saldo cassa invariato, wallet e insoluto scendono insieme; condono
   estingue senza toccare il mastro; unpay post-spesa-a-valle → 409 con azione.
 
@@ -196,8 +207,9 @@ Portafoglio è CRM-only — sul portale pubblico MAI saldi €/wallet/insoluti; 
 restano l'unica estensione ammissibile futura, fuori blocco P** · Q15 GDPR conservazione (Tier-3)
 · Q16 riclassificazione retroattiva (OD-1 invariato) · Q19 upsell nudge (le singole nascono
 interrogabili come serie: basta l'indice per-cliente) · Q21 abbonamento flat (ADR dedicato futuro)
-· Payer entity (D-PAGATORE-LEGGERO basta) · gamba wallet→contratto (G8.2, panchina) · G8.5
-goodwill (in coda) · vocabolario UI mai fiscale (mai «fattura» — D-REGISTRO-OPERATIVO).
+· Payer entity (D-PAGATORE-LEGGERO basta) · **Q9 conversione singole→pacchetto INTERA → casa
+G8.2+G8.5** (P-D6: direzione wallet ratificata, interim = sconto esplicito sul prezzo contratto)
+· G8.5 goodwill (in coda) · vocabolario UI mai fiscale (mai «fattura» — D-REGISTRO-OPERATIVO).
 
 ## Definizione di fatto
 (1) classe nata col protocollo ADR-024 (riga matrice, gemelli, Hypothesis, birth-review); (2) la
