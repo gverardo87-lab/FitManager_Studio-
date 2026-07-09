@@ -3191,6 +3191,51 @@ già sul wire) → G9.7.4-5 → poi P1.**
 
 ---
 
+## 2026-07-09 (sera) — G9.7.3 fetta D1-D4 (`e533f9d`) + prova prod-ports + 3 lezioni ambiente
+
+**G9.7.3 fetta 1 (D1-D4) PUSHATA e verificata LIVE sul caso reale:**
+- **D1 (hero dettaglio):** riga crediti a **6 card** (Totali · Programmate · Completate ·
+  **Penali** «Occupano il credito» amber · **Rinviate** «Non occupano» · Residui) dietro la
+  disclosure F2, **+ banner-SEGNALE always-visible** quando `penali > 0` con l'equazione
+  dell'occupazione: `totali = programmate + svolte + penali + residui` (± rinviate informativo).
+  Conciliazione dei due vincoli ratificati: la RIGA resta collassabile (lista F2), il SEGNALE
+  no (D-DERIVATO-MAI-NUDO).
+- **D2/D3 (liste):** sub-label «N svolte · M penali» (amber) su ContractRow (tabella contratti,
+  entrambe le viste responsive) + ContrattiTab del profilo cliente.
+- **D4:** `DeleteContractDialog` legge `crediti_residui` dal wire — chiusa la violazione
+  R-SSOT-FE dell'audit (ricalcolo inline `totali − usati`).
+- **Wire additivo:** `ContractListResponse.sedute_penali` + `crediti_residui`; le DUE query di
+  conteggio del batch lista fuse in **UNA** `group by (id_contratto, stato)` con derivazione
+  dal SSoT `STATI_OCCUPAZIONE_CREDITO` (un solo interprete, mai due query divergibili).
+  Type-sync FE: `sedute_penali` sul dettaglio era STALE (il backend lo esponeva da G7.8-bis,
+  il tipo FE no — la conferma dell'audit «già sul wire, mai renderizzati»).
+- **Gemelli:** `test_g973_lista_espone_penali_e_residui` (lista == dettaglio, stessi numeri) +
+  vitest `hero-occupazione-spiegata` sul caso founder 12·5·2 (banner con equazione; zero
+  penali → zero banner; rinviate informativo). Fascia 19 pytest + **101 vitest** + build verdi.
+- **LIVE contratto 39 REALE:** banner «**2 crediti occupati da penali**: 12 totali = 0
+  programmate + 7 svolte + 2 penali + 3 residui» + card a 6. I 2 crediti "spariti" del caso
+  founder ora si spiegano dalla vista. (NB: il 39 nel frattempo è stato lavorato dal founder
+  nella sua prova — 7 completate, valore €480, rimborso €138,75.)
+
+**Prova founder su porte prod (3000/8000) ANDATA BENE.** Durante la prova, 3 inciampi ambiente
+— stessa lezione in 3 facce: **due processi dalla stessa working dir condividono le risorse**:
+1. *Log rotation* (`data/logs/fitmanager.log`): doppio backend → `PermissionError WinError 32`
+   a ogni rollover (Windows non rinomina file aperti da altri) → spam infinito su stderr, app
+   comunque sana. + doppio frpc stesso instance_id (il VPS rifiuta il duplicato, babysitter ok).
+2. *Lock `next dev`* (`.next/dev/lock`): il lock è per-CARTELLA, non per-porta — una sola
+   istanza dev per working dir.
+3. *Build vs dev* (`.next`): il `next build` del pre-commit ha ucciso il `next dev` in corsa
+   (riscrive la build dir sotto i piedi del server) — morte silenziosa, zero errori nel log.
+Candidati hardening (non fatti): log per-porta in source mode · guard di singola istanza.
+
+**⏭️ RIPRESA DOMANI: G9.7.3 fetta D5** (breakdown penali minimo su sheet/rinnovi: campo sul
+wire di `SuspendedContractItem`+`ExpiringContractItem` + sub-label sulle card) **+ suite FULL
++ fold-back docs per chiudere il gate → G9.7.4 (guard classe crediti + perimetro transizioni)
+→ G9.7.5 (birth-auditor + Hypothesis I-EVENTI) → POI P1 blocco P.** Runbook orfani
+(640/641/643 Giacomo + 647/649 test) sempre pendente, trainer-driven, in coda a SPEC_G9.7.
+
+---
+
 ## 2026-07-08 — Blocco P: P0 CHIUSO (riga matrice + birth-review)
 
 **Riga in matrice** (`MATRICE_ASSI_SEMANTICI.md`): asse «prestazione singola & insoluto» — celle
