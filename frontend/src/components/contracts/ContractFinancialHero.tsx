@@ -67,6 +67,10 @@ export function ContractFinancialHero({ contract }: { contract: ContractWithRate
   const programmate = contract.sedute_programmate;
   const completate = contract.sedute_completate;
   const creditiResidui = contract.crediti_residui;
+  // G9.7.3/D1 (D-DERIVATO-MAI-NUDO): penali e rinviate dal wire — l'occupazione deve SPIEGARSI
+  // a video (totali = programmate + svolte + penali + residui; le rinviate non occupano).
+  const penali = contract.sedute_penali;
+  const rinviate = contract.sedute_rinviate;
 
   // Da Rateizzare è un WARNING quando il piano non copre il residuo → always-visible;
   // a piano completo è pura conferma informativa → dietro disclosure.
@@ -175,9 +179,9 @@ export function ContractFinancialHero({ contract }: { contract: ContractWithRate
           />
         </div>
 
-        {/* ── Crediti Sedute (dettaglio, dietro disclosure) ── */}
+        {/* ── Crediti Sedute (dettaglio, dietro disclosure) — G9.7.3/D1: occupazione COMPLETA ── */}
         {showDetail && creditiTotali > 0 ? (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             <KpiCard
               icon={<Dumbbell className={`h-4 w-4 ${NEUTRAL_ICON}`} />}
               iconBg={NEUTRAL_ICON_BG}
@@ -198,6 +202,27 @@ export function ContractFinancialHero({ contract }: { contract: ContractWithRate
               valueClass={completate > 0 ? "text-emerald-700 dark:text-emerald-400" : undefined}
             />
             <KpiCard
+              icon={<AlertTriangle className={`h-4 w-4 ${
+                penali > 0
+                  ? "text-amber-600 dark:text-amber-400"
+                  : NEUTRAL_ICON
+              }`} />}
+              iconBg={penali > 0 ? "bg-amber-100 dark:bg-amber-900/30" : NEUTRAL_ICON_BG}
+              label="Penali"
+              value={`${penali}`}
+              valueClass={penali > 0 ? "text-amber-700 dark:text-amber-400" : "text-muted-foreground"}
+              subtitle={penali > 0 ? "Occupano il credito" : undefined}
+              subtitleClass="text-amber-600 dark:text-amber-400"
+            />
+            <KpiCard
+              icon={<Clock className={`h-4 w-4 ${NEUTRAL_ICON}`} />}
+              iconBg={NEUTRAL_ICON_BG}
+              label="Rinviate"
+              value={`${rinviate}`}
+              valueClass="text-muted-foreground"
+              subtitle={rinviate > 0 ? "Non occupano" : undefined}
+            />
+            <KpiCard
               icon={<Target className={`h-4 w-4 ${
                 creditiResidui > 0
                   ? "text-amber-600 dark:text-amber-400"
@@ -215,6 +240,19 @@ export function ContractFinancialHero({ contract }: { contract: ContractWithRate
               }
               subtitle={creditiResidui === 0 ? "Crediti esauriti" : undefined}
             />
+          </div>
+        ) : null}
+
+        {/* ── G9.7.3/D1: le penali sono un SEGNALE, mai dietro toggle — l'occupazione si spiega ── */}
+        {creditiTotali > 0 && penali > 0 ? (
+          <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 dark:border-amber-900/40 dark:bg-amber-900/20">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" role="img" aria-label="Crediti occupati da penali" />
+            <p className="text-xs tabular-nums text-amber-800 dark:text-amber-300">
+              <strong>{penali} {penali === 1 ? "credito occupato da penale" : "crediti occupati da penali"}</strong>{" "}
+              (cancellazione tardiva / no-show): {creditiTotali} totali = {programmate} programmate
+              + {completate} svolte + {penali} penali + {creditiResidui} residui
+              {rinviate > 0 ? ` · ${rinviate} rinviate (non occupano)` : ""}.
+            </p>
           </div>
         ) : null}
 

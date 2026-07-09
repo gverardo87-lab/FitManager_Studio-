@@ -75,7 +75,11 @@ export function ContractRow({
               {contract.crediti_usati}/{contract.crediti_totali ?? 0} crediti
             </p>
             <p className="text-[10px] text-muted-foreground">
+              {/* G9.7.3/D2: usati − svolte = penali, spiegato nella STESSA vista */}
               {contract.sedute_completate} svolte
+              {contract.sedute_penali > 0 ? (
+                <span className="text-amber-600 dark:text-amber-400"> · {contract.sedute_penali} penali</span>
+              ) : null}
             </p>
             {contract.sedute_non_erogate_chiusura > 0 ? (
               <p className="text-[10px] text-amber-600 dark:text-amber-400">
@@ -101,9 +105,14 @@ export function ContractRow({
         <span className="font-mono text-sm">
           {contract.crediti_usati}/{contract.crediti_totali ?? 0}
         </span>
-        {/* L1: erogato (servizio reso) affiancato all'occupazione */}
+        {/* L1: erogato affiancato all'occupazione · G9.7.3/D2: penali spiegate nella stessa vista */}
         {(contract.crediti_totali ?? 0) > 0 ? (
-          <p className="text-[10px] text-muted-foreground">{contract.sedute_completate} svolte</p>
+          <p className="text-[10px] text-muted-foreground">
+            {contract.sedute_completate} svolte
+            {contract.sedute_penali > 0 ? (
+              <span className="text-amber-600 dark:text-amber-400"> · {contract.sedute_penali} penali</span>
+            ) : null}
+          </p>
         ) : null}
         {/* M4: COMPLETAMENTO chiuso su sole prenotate → rimborso recuperabile */}
         {contract.sedute_non_erogate_chiusura > 0 ? (

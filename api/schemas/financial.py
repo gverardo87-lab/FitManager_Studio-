@@ -486,6 +486,9 @@ class ContractListResponse(ContractResponse):
     # ── Trasparenza erogato↔occupazione (R4: L1 + M4) — il frontend LEGGE, non ricalcola ──
     sedute_completate: int = 0            # erogato (servizio reso) da affiancare ai residui (L1)
     sedute_non_erogate_chiusura: int = 0  # M4: prenotate-non-erogate alla chiusura (solo chiuso COMPLETAMENTO)
+    # ── G9.7.3 (D2/D3/D4, ADR-024 D-DERIVATO-MAI-NUDO): occupazione spiegabile anche in lista ──
+    sedute_penali: int = 0                # Cancellato_Tardivo+No_Show: occupano il credito, non sono svolte
+    crediti_residui: int = 0              # crediti_totali − occupati (stessa formula del dettaglio) — D4: i dialog LEGGONO, mai ricalcolo inline
 
 
 class RenewalChainItem(BaseModel):

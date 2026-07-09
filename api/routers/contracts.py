@@ -434,32 +434,30 @@ def list_contracts(
     ).all()
     client_map = {c.id: c for c in clients}
 
-    # ── Batch fetch: crediti usati per contratto (1 query, zero N+1) ──
-    credit_rows = session.exec(
-        select(Event.id_contratto, func.count(Event.id))
+    # ── Batch fetch: conteggi PT per (contratto, stato) — 1 query, zero N+1 (G9.7.3) ──
+    # Da qui derivano TUTTE le mappe (usati/completate/penali) via SSoT STATI_OCCUPAZIONE_CREDITO:
+    # una sola fonte, mai due query che possono divergere (era: occupazione + Completato separate).
+    stato_rows = session.exec(
+        select(Event.id_contratto, Event.stato, func.count(Event.id))
         .where(
             Event.id_contratto.in_(contract_ids),
             Event.categoria == "PT",
-            # G7.8: Rinviato libera il credito (ADR-017)
-            Event.stato.in_(cstate.STATI_OCCUPAZIONE_CREDITO),
             Event.deleted_at == None,
         )
-        .group_by(Event.id_contratto)
+        .group_by(Event.id_contratto, Event.stato)
     ).all()
-    credits_used_map: dict[int, int] = {row[0]: int(row[1]) for row in credit_rows}
-
-    # ── Batch fetch: sedute EROGATE (Completato) per contratto — R4/L1 (erogato accanto ai residui) ──
-    completate_rows = session.exec(
-        select(Event.id_contratto, func.count(Event.id))
-        .where(
-            Event.id_contratto.in_(contract_ids),
-            Event.categoria == "PT",
-            Event.stato == "Completato",
-            Event.deleted_at == None,
-        )
-        .group_by(Event.id_contratto)
-    ).all()
-    completate_map: dict[int, int] = {row[0]: int(row[1]) for row in completate_rows}
+    credits_used_map: dict[int, int] = {}
+    completate_map: dict[int, int] = {}
+    penali_map: dict[int, int] = {}
+    _STATI_PENALE = cstate.STATI_OCCUPAZIONE_CREDITO - {"Programmato", "Completato"}
+    for cid, stato_ev, n in stato_rows:
+        n = int(n)
+        if stato_ev in cstate.STATI_OCCUPAZIONE_CREDITO:  # G7.8: Rinviato libera (ADR-017)
+            credits_used_map[cid] = credits_used_map.get(cid, 0) + n
+        if stato_ev == "Completato":
+            completate_map[cid] = completate_map.get(cid, 0) + n
+        if stato_ev in _STATI_PENALE:
+            penali_map[cid] = penali_map.get(cid, 0) + n
 
     # ── Build enriched responses ──
     results = []
@@ -494,6 +492,10 @@ def list_contracts(
             sedute_non_erogate_chiusura=cstate.sedute_non_erogate_alla_chiusura(
                 contract, completate_map.get(contract.id, 0)
             ),  # M4: prenotate-non-erogate alla chiusura (solo COMPLETAMENTO)
+            # G9.7.3 (D2/D3/D4): occupazione spiegabile in lista — penali separate dalle svolte,
+            # residui dal wire (stessa formula del dettaglio, mai ricalcolo FE)
+            sedute_penali=penali_map.get(contract.id, 0),
+            crediti_residui=max(0, (contract.crediti_totali or 0) - crediti_usati),
         ))
 
     return {

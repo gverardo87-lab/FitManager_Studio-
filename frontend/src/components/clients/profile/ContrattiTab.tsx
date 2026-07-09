@@ -82,9 +82,14 @@ export function ContrattiTab({ clientId }: { clientId: number }) {
                 </TableCell>
                 <TableCell className="text-center">
                   <span className="font-mono text-sm">{c.crediti_usati}/{c.crediti_totali ?? 0}</span>
-                  {/* L1: erogato (servizio reso) affiancato all'occupazione — niente ricalcolo */}
+                  {/* L1: erogato affiancato all'occupazione · G9.7.3/D3: penali spiegate */}
                   {(c.crediti_totali ?? 0) > 0 ? (
-                    <p className="text-[10px] text-muted-foreground">{c.sedute_completate} svolte</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {c.sedute_completate} svolte
+                      {c.sedute_penali > 0 ? (
+                        <span className="text-amber-600 dark:text-amber-400"> · {c.sedute_penali} penali</span>
+                      ) : null}
+                    </p>
                   ) : null}
                   {/* M4: COMPLETAMENTO chiuso su sedute solo prenotate → rimborso recuperabile */}
                   {c.sedute_non_erogate_chiusura > 0 ? (

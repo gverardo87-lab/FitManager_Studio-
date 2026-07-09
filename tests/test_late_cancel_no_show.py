@@ -60,6 +60,28 @@ def test_t1_penali_occupano_credito(client, auth_headers, sample_client, session
     assert detail["sedute_rinviate"] == 1
 
 
+def test_g973_lista_espone_penali_e_residui(client, auth_headers, sample_client, session):
+    """G9.7.3 (D2/D3/D4): la LISTA contratti porta sedute_penali e crediti_residui sul wire —
+    il sub-label «N svolte · M penali» e il DeleteContractDialog LEGGONO, mai ricalcolo inline.
+    Stessi numeri del dettaglio (un solo interprete)."""
+    c = _contract(client, auth_headers, sample_client["id"])
+    for i, stato in enumerate(["Completato", "Programmato", "Cancellato_Tardivo", "No_Show", "Rinviato"]):
+        r = _event(client, auth_headers, sample_client["id"], c["id"], stato, day=12 + i, hour=9)
+        assert r.status_code in (200, 201), f"{stato}: {r.text}"
+
+    row = next(x for x in client.get("/api/contracts", headers=auth_headers).json()["items"]
+               if x["id"] == c["id"])
+    assert row["crediti_usati"] == 4
+    assert row["crediti_residui"] == 6               # D4: sul wire, come nel dettaglio
+    assert row["sedute_completate"] == 1
+    assert row["sedute_penali"] == 2                 # D2/D3: penali separate dalle svolte
+
+    detail = client.get(f"/api/contracts/{c['id']}", headers=auth_headers).json()
+    assert (row["crediti_residui"], row["sedute_penali"]) == (
+        detail["crediti_residui"], detail["sedute_penali"]
+    )                                                # lista e dettaglio: un solo interprete
+
+
 # ── T2 — asse scientifico/erogato intatto ───────────────────────────────────
 
 def test_t2_erogate_vere_ignorano_penali(client, auth_headers, sample_client, session):

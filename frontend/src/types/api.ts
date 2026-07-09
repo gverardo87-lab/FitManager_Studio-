@@ -808,6 +808,9 @@ export interface ContractListItem extends Contract {
   // Trasparenza erogato↔occupazione (R4) — il frontend LEGGE, non ricalcola
   sedute_completate: number; // erogato (servizio reso) da affiancare ai residui (L1)
   sedute_non_erogate_chiusura: number; // M4: prenotate-non-erogate alla chiusura (solo chiuso COMPLETAMENTO)
+  // G9.7.3 (D2/D3/D4, D-DERIVATO-MAI-NUDO): occupazione spiegabile anche in lista
+  sedute_penali: number; // Cancellato_Tardivo+No_Show: occupano il credito, non sono svolte
+  crediti_residui: number; // dal wire (stessa formula del dettaglio) — D4: mai ricalcolo inline
 }
 
 /** Minimal contract info for renewal chain display */
@@ -874,6 +877,7 @@ export interface ContractWithRates extends Contract {
   sedute_programmate: number;
   sedute_completate: number;
   sedute_rinviate: number;
+  sedute_penali: number; // G7.8-bis: occupano il credito, non sono svolte (G9.7.3/D1: SEGNALE, mai nascoste)
   crediti_residui: number;
   sedute_non_erogate_chiusura: number; // M4: prenotate-non-erogate alla chiusura (solo chiuso COMPLETAMENTO)
   // Renewal chain
