@@ -104,6 +104,19 @@ export function useContractEvents(idContratto: number | null) {
 
 // ── Mutation: crea evento ──
 
+/**
+ * G9.7.1/B5 — predicato del «mai 201 muto» (AC-G97-1): un PT con cliente nato SENZA aggancio
+ * (auto-assegnazione fallita o scelta esplicita) non è mai un successo generico. Puro ed
+ * esportato: il vitest gemello lo presidia; P5 (ADR-025) lo riuserà per la conferma di scelta.
+ */
+export function isPtOrfanoCreato(e: {
+  categoria: string;
+  id_cliente?: number | null;
+  id_contratto?: number | null;
+}): boolean {
+  return e.categoria === "PT" && e.id_cliente != null && e.id_contratto == null;
+}
+
 export function useCreateEvent() {
   const queryClient = useQueryClient();
 
@@ -121,7 +134,7 @@ export function useCreateEvent() {
       // G9.7.1/B5 (ADR-024 D-MAI-SILENZIO-IN-SCRITTURA): un PT con cliente nato SENZA aggancio
       // (auto-assegnazione fallita: nessun contratto attivo agganciabile) non è un successo muto —
       // il 201 porta id_contratto=null e va DETTO, mai il toast di successo generico.
-      if (data.categoria === "PT" && data.id_cliente != null && data.id_contratto == null) {
+      if (isPtOrfanoCreato(data)) {
         toast.warning(
           "Seduta creata SENZA contratto: non scala crediti. Potrai assegnarla a un contratto attivo.",
           { duration: 8000 },

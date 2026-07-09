@@ -8,7 +8,9 @@
  * - Categoria PT: cliente OBBLIGATORIO, mostra crediti residui
  * - Categoria COLLOQUIO: cliente opzionale
  * - SALA, CORSO: nessun cliente
- * - Safety Rail: warning se il cliente ha crediti <= 0
+ * - G9.7.1-bis: warning SOFT (mai blocco) quando la seduta nascerà senza contratto —
+ *   l'escape hatch è legittimo e consapevole (P-D4/ADR-025); la legge dura resta nel
+ *   backend (credit-guard 400 sul contratto esplicito esaurito).
  */
 
 import { useEffect } from "react";
@@ -151,19 +153,21 @@ export function EventForm({
 
   // Crediti del cliente selezionato
   const selectedClient = clientsData?.items.find((c) => c.id === idCliente);
-  const showCreditWarning =
-    isClientRequired &&
-    selectedClient &&
-    selectedClient.crediti_residui <= 0;
-  // G9.7.1/B4 (ADR-024 D-MAI-SILENZIO-IN-SCRITTURA): senza contratti ATTIVI l'auto-assegnazione
-  // fallirà e la seduta nascerà SENZA contratto (non scala crediti) — era il caso fail-silent
-  // dell'audit 2026-07-07 (crediti_residui>0 da contratto CHIUSO → nessun warning). Il submit
-  // resta permesso (escape hatch legittimo) ma CONSAPEVOLE.
+  // G9.7.1/B4 + G9.7.1-bis (ADR-024 D-MAI-SILENZIO-IN-SCRITTURA, decisione founder 2026-07-09):
+  // UN solo asse, UN solo comportamento — warning soft, submit SEMPRE permesso. Il vecchio
+  // hard-block «Crediti esauriti» (submit disabilitato su crediti_residui<=0) affermava una
+  // regola che il backend non impone e rendeva il B4 irraggiungibile per i clienti senza
+  // contratti (il caso «seduta prima del contratto» ratificato in P-D4). P5 (blocco P)
+  // sostituirà questi warning con la scelta esplicita a 3 vie.
   const showNoContractWarning =
     isClientRequired &&
     !!selectedClient &&
-    !showCreditWarning &&
     selectedClient.contratti_attivi === 0;
+  const showExhaustedWarning =
+    isClientRequired &&
+    !!selectedClient &&
+    selectedClient.contratti_attivi > 0 &&
+    selectedClient.crediti_residui <= 0;
 
   const handleFormSubmit = (values: EventFormValues) => {
     const start = combineDateAndTime(values.data_inizio_date, values.ora_inizio);
@@ -280,13 +284,13 @@ export function EventForm({
             </p>
           )}
 
-          {/* Hard block: crediti esauriti — submit disabilitato */}
-          {showCreditWarning && (
-            <Alert variant="destructive">
+          {/* Soft warning (G9.7.1-bis): crediti esauriti sui contratti attivi — mai blocco */}
+          {showExhaustedWarning && (
+            <Alert>
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                Crediti esauriti. Per programmare una sessione PT, il cliente deve
-                avere un contratto attivo con crediti disponibili.
+                Crediti esauriti sui contratti attivi: la seduta verrà creata{" "}
+                <strong>senza contratto</strong> e non scalerà crediti.
               </AlertDescription>
             </Alert>
           )}
@@ -395,7 +399,7 @@ export function EventForm({
             Elimina
           </Button>
         )}
-        <Button type="submit" className="flex-1" disabled={isPending || showCreditWarning}>
+        <Button type="submit" className="flex-1" disabled={isPending}>
           {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {isEdit ? "Salva Modifiche" : "Crea Evento"}
         </Button>

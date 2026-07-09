@@ -1,7 +1,8 @@
 # SPEC_G9.7_SEMANTICA_PER_CLASSE
 
 **Tipo:** specifica prescrittiva. **Data:** 2026-07-07 · **Branch:** `FitManager_Studio`
-**Stato:** 🟡 **APERTA — DA IMPLEMENTARE** (ratifica founder 2026-07-07). Governance: `ADR-024`
+**Stato:** 🟡 **APERTA — G9.7.0 ✅ · G9.7.1 ✅ CHIUSO 2026-07-09 (incl. G9.7.1-bis)** · restano
+G9.7.2-5. Governance: `ADR-024`
 (accepted). Audit fondante: `docs/operations/AUDIT_CREDITI_EVENTI_ORFANI_2026-07-07.md` (13 finding
 B1-B8/D1-D5) + `AUDIT_CENSIMENTO_ASSI_SEMANTICI_CASSA_2026-07-04.md` (assi A1-A10).
 **Mappa di verità:** ADR-024 · ADR-022+Add.II · ADR-017 Add.I · ADR-019 (D-PROPONE) · ADR-023 ·
@@ -35,6 +36,18 @@ protezioni verificata». Celle: ✅/⚠️/✗ con puntatore al presidio o al ga
   warning dedicato (mai il success generico). La response backend già porta `id_contratto`.
 - **AC-G97-1:** creare un PT per cliente con soli contratti chiusi produce warning PRIMA e toast
   dedicato DOPO. Fail: un 201 muto. *(vitest su EventForm + verifica LIVE)*
+- **✅ CHIUSO 2026-07-09 con G9.7.1-bis** (verifica LIVE meticolosa → 3 gravissimi, 2 decisioni
+  founder): (a) **TUTTI i toast erano muti** — doppia istanza sonner dal `dynamic()` in
+  `providers.tsx`: il B5 non era MAI apparso → fix import statico (`abb0224`), riverificato LIVE
+  su entrambi i rami; (b) le **ORFANE contate come «usate»** in `_calc_credits_batch`
+  (`clients.py`) → dropdown a 0 → hard-block → cliente intrappolato → fix filtro
+  `id_contratto != None` + gemello `test_g971bis_orfana_non_decrementa_crediti_cliente`;
+  (c) l'**hard-block «Crediti esauriti» contraddiceva l'escape hatch** (B4 irraggiungibile per i
+  clienti senza contratti, il caso P-D4) → declassato a warning soft calibrato, submit sempre
+  permesso — la legge dura resta il credit-guard backend. AC-G97-1 presidiato da vitest
+  (`event-form-warnings.test.tsx`: B4 su 3 classi di cliente + predicato `isPtOrfanoCreato`
+  esportato = invariante «mai 201 muto», sopravvive a P5). P5/ADR-025 sostituirà i warning con la
+  scelta a 3 vie; P4 renderà onesto il numero (`crediti_residui_attivi`).
 
 ### G9.7.2 — Recupero esplicito degli orfani (B2, B3, B6 + D-RECUPERO-ESPLICITO)
 - **Endpoint** `POST /events/{id}/assegna-contratto` — bouncer 404, SOLO eventi PT con

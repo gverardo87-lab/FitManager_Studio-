@@ -293,8 +293,11 @@ def _calc_credits_batch(
 
     - crediti_acquistati: SUM(crediti_totali) da TUTTI i contratti non eliminati
       (chiuso NON filtrato — chiuso blocca nuove operazioni, non invalida crediti)
-    - sedute_PT_usate: COUNT(eventi) con categoria='PT' e stato IN ('Programmato','Completato')
-      (G7.8/ADR-017: Rinviato libera il credito → non occupa)
+    - sedute_PT_usate: COUNT(eventi) con categoria='PT', stato IN STATI_OCCUPAZIONE_CREDITO
+      E id_contratto NON NULL (G7.8/ADR-017: Rinviato libera il credito → non occupa;
+      G9.7.1-bis: le sedute ORFANE non consumano crediti acquistati — contarle qui
+      contraddiceva l'interprete contract-level `crediti_usati` e il warning B4
+      «non scala crediti», fino alla trappola orfana→0 crediti→hard-block)
     """
     if not client_ids:
         return {}
@@ -320,6 +323,8 @@ def _calc_credits_batch(
             Event.categoria == "PT",
             # G7.8: Rinviato libera il credito (ADR-017)
             Event.stato.in_(STATI_OCCUPAZIONE_CREDITO),
+            # G9.7.1-bis: le orfane (senza contratto) non consumano crediti acquistati
+            Event.id_contratto != None,  # noqa: E711
             Event.trainer_id == trainer_id,
             Event.deleted_at == None,
         )

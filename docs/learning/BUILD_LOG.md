@@ -3117,6 +3117,36 @@ console `DialogContent` senza `aria-describedby` (a11y, non bloccante).
 
 ---
 
+## 2026-07-09 — G9.7.1-bis: decisioni #2/#3 + fix + gate G9.7.1 CHIUSO
+
+**Decisioni founder (una alla volta, metodo ADR-025):** #2 orfane-decrementano-crediti → **fix
+interim chirurgico** (non anticipa P4, che resta intero per i contratti chiusi nel numero) ·
+#3 hard-block «Crediti esauriti» → **declassato a warning soft** (un solo asse, submit sempre
+permesso; il blocco affermava una regola che il backend non impone e rendeva impossibile da UI il
+flusso «seduta prima del contratto» appena ratificato in P-D4; P5 lo sostituirà con la scelta a
+3 vie).
+
+**Implementazione:**
+- `clients.py` `_calc_credits_batch`: filtro `Event.id_contratto != None` sulla query «usate» —
+  le orfane non consumano crediti acquistati (interpreti client-level e contract-level riallineati).
+  Gemello: `test_g971bis_orfana_non_decrementa_crediti_cliente` (in `test_rinvio_libera_credito.py`,
+  la casa dei conteggi-occupazione).
+- `EventForm.tsx`: hard-block rimosso; due warning soft calibrati (`contratti_attivi === 0` → B4;
+  attivi > 0 ∧ crediti ≤ 0 → «crediti esauriti sui contratti attivi») + submit `disabled={isPending}`
+  soltanto.
+- `useAgenda.ts`: predicato B5 estratto puro ed esportato (`isPtOrfanoCreato`) — l'invariante
+  «mai 201 muto» ha un nome testabile che sopravvive a P5.
+- Vitest nuovo `event-form-warnings.test.tsx` (7 test): B4 raggiungibile su TUTTE e tre le classi
+  di cliente (caso founder · nuovo senza contratti · attivo esaurito) + submit mai bloccato +
+  truth-table del predicato. **AC-G97-1 presidiato.**
+
+**Verifiche:** pytest full **840 passed** (839+1) · vitest **98 passed** (91+7) · next build verde ·
+LIVE read-only: cliente reale 0-crediti → warning soft + submit ABILITATO (prima: blocco duro).
+
+**🏁 GATE G9.7.1 CHIUSO** (B4+B5 vivi e presidiati, vitest+LIVE fatti). Restano G9.7.2-5.
+
+---
+
 ## 2026-07-08 — Blocco P: P0 CHIUSO (riga matrice + birth-review)
 
 **Riga in matrice** (`MATRICE_ASSI_SEMANTICI.md`): asse «prestazione singola & insoluto» — celle

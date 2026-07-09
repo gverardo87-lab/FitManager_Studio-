@@ -104,6 +104,29 @@ def test_ac2_lista_clienti_esclude_rinviato(client, auth_headers, sample_client,
     assert row["crediti_residui"] == 8        # 10 − 2 (le 4 rinviate tornano al pool)
 
 
+def test_g971bis_orfana_non_decrementa_crediti_cliente(client, auth_headers, sample_client, session):
+    """G9.7.1-bis: la seduta ORFANA (id_contratto=NULL) NON consuma crediti acquistati.
+
+    Regressione della trappola vista LIVE 2026-07-09: 2 orfane su cliente con 2 crediti da
+    contratto CHIUSO → dropdown «(0 crediti)» → hard-block «Crediti esauriti» → cliente
+    intrappolato. Il B4 promette «non scala crediti»: il numero client-level deve dire il vero
+    (interprete allineato a `crediti_usati` contract-level, che le orfane non toccano)."""
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=1000.0, acconto=0.0, crediti=2)
+    t = _trainer(session)
+    # 2 orfane in stati di occupazione (Programmato + Completato) + 1 agganciata
+    _events(session, t.id, sample_client["id"], None, 1, "Programmato", hour0=8)
+    _events(session, t.id, sample_client["id"], None, 1, "Completato", hour0=9)
+    _events(session, t.id, sample_client["id"], c["id"], 1, "Programmato", hour0=10)
+
+    row = next(x for x in client.get("/api/clients", headers=auth_headers).json()["items"]
+               if x["id"] == sample_client["id"])
+    assert row["crediti_residui"] == 1        # 2 − 1 agganciata; le 2 orfane NON contano
+
+    # L'interprete contract-level resta invariato: solo l'agganciata occupa
+    d = client.get(f"/api/contracts/{c['id']}", headers=auth_headers).json()
+    assert d["crediti_usati"] == 1
+
+
 # ── AC-3: D-AUTO-CLOSE su ENTRAMBI i rami (pay_rate + agenda _sync) ──
 
 def test_ac3_autoclose_pay_rate_non_chiude_su_rinviate(client, auth_headers, sample_client, session):
