@@ -16,10 +16,11 @@ import { ThemeProvider } from "next-themes";
 import dynamic from "next/dynamic";
 import { useState, type ReactNode } from "react";
 
-const Toaster = dynamic(
-  () => import("@/components/ui/sonner").then((m) => m.Toaster),
-  { ssr: false },
-);
+// Import STATICO (fix 201-muto G9.7.1): il lazy-load via dynamic() creava una seconda
+// istanza del modulo sonner in dev — toast() scriveva su una copia, il Toaster ascoltava
+// l'altra → NESSUN toast renderizzato in tutta l'app (success, warning, error).
+// Il wrapper è già "use client" e non tocca browser API al mount: ssr:false non serve.
+import { Toaster } from "@/components/ui/sonner";
 
 const ReactQueryDevtools = dynamic(
   () =>

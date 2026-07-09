@@ -3075,6 +3075,48 @@ per volta):
 
 ---
 
+## 2026-07-08/09 — G9.7.1: verifica LIVE meticolosa (Playwright) → 3 gravissimi, 1 fixato
+
+**Mandato founder:** «da ultima verifica c'erano ancora errori gravissimi su 9.7.1 — esegui test
+meticoloso live playwright». Setup: cliente di test TestG97 col caso founder ESATTO ricostruito via
+API (contratto 2 crediti, versato 0 → terminate → CHIUSO con 2 crediti residui) + cliente di test
+senza contratti. Dati propri ([[feedback_test_data]]), cleanup completo a fine sessione (zero residui).
+
+**GRAVISSIMO #1 — TUTTI i toast dell'app erano muti (root cause del «201 muto», AC-G97-1 FAIL).**
+Live: PT orfano creato → calendario aggiornato, sheet chiuso, **regione notifiche VUOTA** — né il
+B5 warning né il success generico; nemmeno il toast d'errore 409 appariva. Diagnosi con esperimento
+DOM (`[data-sonner-toaster]` = 0 subito dopo `toast.error()`): **doppia istanza del modulo sonner**
+— il `dynamic(() => import("@/components/ui/sonner"), {ssr:false})` in `providers.tsx` caricava il
+Toaster in un chunk con la SUA copia di sonner; `toast()` dagli hook scriveva sull'istanza del grafo
+principale, il Toaster ascoltava l'altra. **Fix: import statico** (il wrapper è già "use client",
+ssr:false non serviva). Verificato live su ENTRAMBI i rami: B5 warning a video («Seduta creata SENZA
+contratto…») + error 409 catturato da MutationObserver in-page (i toast da 4s si perdono coi
+round-trip lenti — observer race-free). Vitest 91/91 + next build verdi. NB: muti in dev da data
+imprecisata — nessuna verifica LIVE aveva mai ASSERITO un toast.
+
+**GRAVISSIMO #2 — le orfane decrementano i crediti client-level (trappola composta, NON fixato:
+decisione design).** `_calc_credits_batch` (clients.py:316-327) conta come «usate» TUTTE le PT in
+stati di occupazione **senza filtrare `id_contratto IS NOT NULL`**: la seduta orfana — che per
+promessa del B4 «non scala crediti» (vero a livello contratto) — fa scendere il numero nel dropdown.
+Live: 2 orfane su TestG97 → «(2 crediti)» diventa «(0 crediti)» → scatta l'hard-block «Crediti
+esauriti» → **il cliente resta intrappolato: nessuna nuova PT creabile da UI** (il backend la
+permetterebbe). Verificato simmetrico: delete orfana → crediti risalgono. Il numero mente due volte
+(include i chiusi E sottrae le orfane). Casa del fix: P4 (`crediti_residui_attivi` + semantica
+enrichment onesta) — decidere se serve interim.
+
+**GRAVISSIMO #3 — l'hard-block «Crediti esauriti» contraddice l'escape hatch (NON fixato: è la
+scelta a 3 vie di P5).** `EventForm` disabilita il submit con `crediti_residui <= 0` e afferma una
+regola che il backend NON impone («il cliente deve avere un contratto attivo»). Composizione: il
+cliente SENZA contratti (0 crediti) prende il blocco duro → il soft-warning B4 è irraggiungibile
+per lui; il B4 scatta SOLO nel caso «chiusi con crediti residui». Due politiche contraddittorie
+sullo stesso asse. La soluzione vera è D-SCELTA-ALLA-CREAZIONE (P5); decidere interim vs attesa.
+
+**Verdetto AC-G97-1:** B4 pre-warning ✅ (caso founder) · B5 toast ✅ SOLO dopo il fix toaster ·
+coda gate G9.7.1 ancora aperta: vitest AC-G97-1 + decisioni founder su #2/#3. Minore: warning
+console `DialogContent` senza `aria-describedby` (a11y, non bloccante).
+
+---
+
 ## 2026-07-08 — Blocco P: P0 CHIUSO (riga matrice + birth-review)
 
 **Riga in matrice** (`MATRICE_ASSI_SEMANTICI.md`): asse «prestazione singola & insoluto» — celle
