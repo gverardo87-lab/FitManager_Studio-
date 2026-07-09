@@ -153,6 +153,34 @@ export function useCreateEvent() {
   });
 }
 
+// ── Mutation: assegna contratto a un PT orfano (G9.7.2) ──
+
+export function useAssegnaContratto() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ eventId, idContratto }: { eventId: number; idContratto: number }) => {
+      const { data } = await apiClient.post<Event>(
+        `/events/${eventId}/assegna-contratto`,
+        { id_contratto: idContratto },
+      );
+      return data;
+    },
+    onSuccess: () => {
+      // Stesse invalidazioni di create/update: l'occupazione crediti cambia ovunque
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
+      queryClient.invalidateQueries({ queryKey: ["contracts"] });
+      queryClient.invalidateQueries({ queryKey: ["contract"] });
+      toast.success("Seduta assegnata al contratto: ora scala un credito");
+    },
+    onError: (error) => {
+      toast.error(extractErrorMessage(error, "Errore nell'assegnazione al contratto"));
+    },
+  });
+}
+
 // ── Mutation: aggiorna evento ──
 
 export function useUpdateEvent() {

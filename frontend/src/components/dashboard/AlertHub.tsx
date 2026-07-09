@@ -22,6 +22,7 @@ import {
   Ghost,
   PauseCircle,
   Ruler,
+  Unlink,
   UserX,
   ArrowRight,
 } from "lucide-react";
@@ -35,6 +36,7 @@ import { MAX_VISIBLE_ALERTS } from "@/lib/dashboard-helpers";
 
 const ALERT_ICON: Record<string, typeof Ghost> = {
   ghost_events: Ghost,
+  orphan_events: Unlink,
   orphan_contracts: CalendarClock,
   clients_to_recover: HeartHandshake,
   suspended_contracts: PauseCircle,

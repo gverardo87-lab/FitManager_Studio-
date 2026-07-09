@@ -33,6 +33,7 @@ import { ConnectivityOnboardingCard } from "@/components/dashboard/ConnectivityO
 import { WeeklyPulse } from "@/components/dashboard/WeeklyPulse";
 import { TodoCard } from "@/components/dashboard/TodoCard";
 import { GhostEventsSheet } from "@/components/dashboard/GhostEventsSheet";
+import { OrphanEventsSheet } from "@/components/dashboard/OrphanEventsSheet";
 import { ExpiringContractsSheet } from "@/components/dashboard/ExpiringContractsSheet";
 import { ContractsToPlanSheet } from "@/components/dashboard/ContractsToPlanSheet";
 import { InactiveClientsSheet } from "@/components/dashboard/InactiveClientsSheet";
@@ -111,6 +112,7 @@ export default function DashboardPage() {
 
   // Sheet state for inline alert resolution
   const [ghostSheetOpen, setGhostSheetOpen] = useState(false);
+  const [orphanEventsSheetOpen, setOrphanEventsSheetOpen] = useState(false);
   const [expiringSheetOpen, setExpiringSheetOpen] = useState(false);
   const [contractsToPlanSheetOpen, setContractsToPlanSheetOpen] = useState(false);
   const [inactiveSheetOpen, setInactiveSheetOpen] = useState(false);
@@ -118,6 +120,7 @@ export default function DashboardPage() {
 
   const alertActions: Record<string, () => void> = {
     ghost_events: () => setGhostSheetOpen(true),
+    orphan_events: () => setOrphanEventsSheetOpen(true),
     orphan_contracts: () => setContractsToPlanSheetOpen(true),
     expiring_contracts: () => setExpiringSheetOpen(true),
     inactive_clients: () => setInactiveSheetOpen(true),
@@ -231,6 +234,7 @@ export default function DashboardPage() {
 
       {/* ── Sheet risoluzione inline ── */}
       <GhostEventsSheet open={ghostSheetOpen} onOpenChange={setGhostSheetOpen} />
+      <OrphanEventsSheet open={orphanEventsSheetOpen} onOpenChange={setOrphanEventsSheetOpen} />
       <ExpiringContractsSheet open={expiringSheetOpen} onOpenChange={setExpiringSheetOpen} />
       <ContractsToPlanSheet open={contractsToPlanSheetOpen} onOpenChange={setContractsToPlanSheetOpen} />
       <InactiveClientsSheet open={inactiveSheetOpen} onOpenChange={setInactiveSheetOpen} />

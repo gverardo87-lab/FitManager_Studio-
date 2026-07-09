@@ -98,6 +98,16 @@ class EventCreate(BaseModel):
         return self
 
 
+class EventAssignContract(BaseModel):
+    """
+    G9.7.2 (ADR-024 D-RECUPERO-ESPLICITO): input dell'UNICA via di re-parenting per i PT orfani.
+    L'`EventUpdate` generico resta chiuso su `id_contratto` (fence ADR-023 intatto).
+    """
+    model_config = {"extra": "forbid"}
+
+    id_contratto: int = Field(gt=0)
+
+
 class EventUpdate(BaseModel):
     """
     Schema per update evento via API (partial update).
@@ -516,6 +526,100 @@ def create_event(
     names = _load_client_names_batch(session, {event.id_cliente} if event.id_cliente else set())
     nome, cognome, telefono = names.get(event.id_cliente, (None, None, None)) if event.id_cliente else (None, None, None)
 
+    return _to_response(event, nome, cognome, telefono)
+
+
+# --- POST: Assegna contratto a un PT orfano (G9.7.2) ---
+
+@router.post("/{event_id}/assegna-contratto", response_model=EventResponse)
+def assegna_contratto(
+    event_id: int,
+    data: EventAssignContract,
+    trainer: Trainer = Depends(get_current_trainer),
+    session: Session = Depends(get_session),
+):
+    """
+    G9.7.2 (ADR-024 D-RECUPERO-ESPLICITO) — recupero esplicito del PT orfano: l'UNICA via di
+    re-parenting (l'`EventUpdate` generico resta chiuso su `id_contratto`, fence ADR-023 intatto).
+
+    Guard chain: bouncer evento 404 → solo PT (400) → solo orfani (400: mai ri-agganciare) →
+    contratto: ownership+stesso cliente (404, mai rivelare) → aperto (400) → credit-guard (400,
+    solo se lo stato dell'evento OCCUPA credito). Audit UPDATE + auto-close canonico via
+    `_sync_contract_chiuso` (i crediti usati salgono) in UN solo commit.
+
+    Guard CP-2 (ADR-025/blocco P, birth-review P0): quando nascerà `prestazioni_singole` (P1),
+    QUI entrerà il rifiuto degli eventi CON prestazione singola — le due vie di recupero
+    (assegna / promuovi) sono mutuamente esclusive, mai doppio fatto economico.
+    """
+    event = session.exec(
+        select(Event).where(Event.id == event_id, Event.trainer_id == trainer.id, Event.deleted_at == None)
+    ).first()
+    if not event:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Evento non trovato")
+
+    if event.categoria != "PT":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Solo le sedute PT possono essere assegnate a un contratto",
+        )
+    if event.id_contratto is not None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="L'evento è già agganciato a un contratto (il re-parenting non è permesso)",
+        )
+    if not event.id_cliente:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="L'evento non ha un cliente: assegna prima il cliente ricreando la seduta",
+        )
+
+    contract = session.exec(
+        select(Contract).where(
+            Contract.id == data.id_contratto,
+            Contract.trainer_id == trainer.id,
+            Contract.deleted_at == None,
+        )
+    ).first()
+    # Cliente diverso → 404 come il non-trovato (mai rivelare l'esistenza di contratti altrui)
+    if not contract or contract.id_cliente != event.id_cliente:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Contratto non trovato")
+    if contract.chiuso:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Impossibile assegnare eventi a un contratto chiuso",
+        )
+
+    # Credit-guard (come create_event): SOLO se lo stato dell'evento occupa credito — assegnare
+    # un Rinviato/Cancellato non consuma nulla (ADR-017).
+    if event.stato in STATI_OCCUPAZIONE_CREDITO and contract.crediti_totali and contract.crediti_totali > 0:
+        crediti_usati = session.exec(
+            select(func.count(Event.id)).where(
+                Event.id_contratto == contract.id,
+                Event.categoria == "PT",
+                Event.stato.in_(STATI_OCCUPAZIONE_CREDITO),
+                Event.deleted_at == None,
+            )
+        ).one()
+        if crediti_usati >= contract.crediti_totali:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Crediti esauriti per questo contratto",
+            )
+
+    event.id_contratto = contract.id
+    session.add(event)
+    log_audit(
+        session, "event", event.id, "UPDATE", trainer.id,
+        changes={"id_contratto": {"old": None, "new": contract.id}, "azione": "assegna_contratto_orfano"},
+    )
+    # I crediti usati salgono → il contratto può auto-chiudersi (regola #4: MAI toccare
+    # crediti_usati senza _sync_contract_chiuso)
+    _sync_contract_chiuso(session, contract.id)
+    session.commit()
+    session.refresh(event)
+
+    names = _load_client_names_batch(session, {event.id_cliente})
+    nome, cognome, telefono = names.get(event.id_cliente, (None, None, None))
     return _to_response(event, nome, cognome, telefono)
 
 

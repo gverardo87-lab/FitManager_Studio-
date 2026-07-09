@@ -298,6 +298,96 @@ def get_ghost_events(
     return {"items": items, "total": len(items)}
 
 
+def _orphan_pt_candidates(session: Session, trainer_id: int) -> list[Event]:
+    """G9.7.2/B6: PT orfani in stati di OCCUPAZIONE (Programmato/Completato/penali) — visibili,
+    mai limbo. Helper condiviso da worklist e alert → count == len(items) garantito.
+    Rinviato/Cancellato esclusi: un orfano che non occuperebbe credito non è un caso da risolvere."""
+    return list(session.exec(
+        select(Event)
+        .where(
+            Event.trainer_id == trainer_id,
+            Event.categoria == "PT",
+            Event.id_contratto == None,
+            Event.id_cliente != None,
+            Event.stato.in_(cstate.STATI_OCCUPAZIONE_CREDITO),
+            Event.deleted_at == None,
+        )
+        .order_by(Event.data_inizio.asc())
+    ).all())
+
+
+@router.get("/orphan-events")
+def get_orphan_events(
+    trainer: Trainer = Depends(get_current_trainer),
+    session: Session = Depends(get_session),
+):
+    """
+    G9.7.2/B6 — worklist dei PT senza contratto (orfani) in stati di occupazione.
+
+    Ogni riga porta l'AZIONE (D-SEGNALE-AZIONE): i contratti APERTI del cliente con crediti
+    residui, così il FE offre «Assegna» inline via `POST /events/{id}/assegna-contratto`.
+    Ordinamento: più vecchi prima.
+    """
+    orphans = _orphan_pt_candidates(session, trainer.id)
+
+    client_ids = {e.id_cliente for e in orphans if e.id_cliente}
+    clients_map: dict[int, Client] = {}
+    contracts_by_client: dict[int, list[Contract]] = {}
+    usage_map: dict[int, int] = {}
+    if client_ids:
+        clients_map = {
+            c.id: c for c in session.exec(select(Client).where(Client.id.in_(client_ids))).all()
+        }
+        open_contracts = session.exec(
+            select(Contract).where(
+                Contract.id_cliente.in_(client_ids),
+                Contract.trainer_id == trainer.id,
+                Contract.chiuso == False,
+                Contract.deleted_at == None,
+            )
+        ).all()
+        for c in open_contracts:
+            contracts_by_client.setdefault(c.id_cliente, []).append(c)
+        contract_ids = [c.id for c in open_contracts]
+        if contract_ids:
+            usage_rows = session.exec(
+                select(Event.id_contratto, func.count(Event.id))
+                .where(
+                    Event.id_contratto.in_(contract_ids),
+                    Event.categoria == "PT",
+                    Event.stato.in_(cstate.STATI_OCCUPAZIONE_CREDITO),
+                    Event.deleted_at == None,
+                )
+                .group_by(Event.id_contratto)
+            ).all()
+            usage_map = {row[0]: int(row[1]) for row in usage_rows}
+
+    items = []
+    for e in orphans:
+        cl = clients_map.get(e.id_cliente) if e.id_cliente else None
+        contratti = [
+            {
+                "id": c.id,
+                "tipo_pacchetto": c.tipo_pacchetto,
+                "crediti_residui": (c.crediti_totali or 0) - usage_map.get(c.id, 0),
+            }
+            for c in contracts_by_client.get(e.id_cliente, [])
+        ]
+        items.append({
+            "id": e.id,
+            "data_inizio": e.data_inizio.isoformat() if isinstance(e.data_inizio, datetime) else str(e.data_inizio),
+            "data_fine": e.data_fine.isoformat() if isinstance(e.data_fine, datetime) else str(e.data_fine),
+            "titolo": e.titolo,
+            "stato": e.stato,
+            "id_cliente": e.id_cliente,
+            "cliente_nome": cl.nome if cl else None,
+            "cliente_cognome": cl.cognome if cl else None,
+            "contratti_aperti": contratti,
+        })
+
+    return {"items": items, "total": len(items)}
+
+
 @router.get("/overdue-rates")
 def get_overdue_rates(
     trainer: Trainer = Depends(get_current_trainer),
@@ -1051,6 +1141,20 @@ def get_dashboard_alerts(
             detail="Aggiorna lo stato: completate o cancellate?",
             count=ghost_count,
             link="/agenda",
+        ))
+
+    # ── 1-bis. Sedute PT senza contratto (orfani in stati di occupazione) — G9.7.2/B6 ──
+    # Stesso helper della worklist /dashboard/orphan-events → count == len(items).
+    # Mai limbo invisibile (ADR-024 D-RECUPERO-ESPLICITO): il CTA apre lo sheet con «Assegna» inline.
+    orphan_events_count = len(_orphan_pt_candidates(session, trainer.id))
+    if orphan_events_count > 0:
+        items.append(AlertItem(
+            severity="warning",
+            category="orphan_events",
+            title=f"{orphan_events_count} {'seduta senza contratto' if orphan_events_count == 1 else 'sedute senza contratto'}",
+            detail="Non scalano crediti: assegnale a un contratto del cliente",
+            count=orphan_events_count,
+            link=None,
         ))
 
     # ── 2. Contratti da pianificare (ATTIVI, residuo positivo, zero rate) ──

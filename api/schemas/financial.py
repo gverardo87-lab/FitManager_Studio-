@@ -306,6 +306,17 @@ class CreditoClienteResponse(BaseModel):
         return cstate.residuo_credito(self.importo, self.importo_erogato)
 
 
+class OrfanoPeriodoChiusura(BaseModel):
+    """PT orfano del cliente creato nel periodo di chiusura del contratto (G9.7.2/B2-B3).
+
+    Il reopen PROPONE il recupero (D-PROPONE, ADR-019): la riassegnazione resta un atto
+    esplicito via `POST /events/{id}/assegna-contratto` — mai riaggancio silenzioso."""
+    id: int
+    titolo: Optional[str] = None
+    data_inizio: str
+    stato: str
+
+
 class ReopenPreview(BaseModel):
     """Impatto pieno di una riapertura, calcolato PRIMA della conferma (G8.1/ADR-019, dry-run).
 
@@ -324,7 +335,15 @@ class ReopenPreview(BaseModel):
     wallet_erogato_riassorbito: float = 0.0  # D1 forma-d: erogato wallet che RIENTRA nel residuo (mai silenzioso)
     ha_rinnovo_vivo: bool = False          # S5: esiste un contratto figlio (rinnovo_di) ancora aperto
     id_rinnovo_vivo: Optional[int] = None  # id del rinnovo vivo, se presente
+    orfani_periodo_chiusura: List[OrfanoPeriodoChiusura] = []  # G9.7.2/B2: PT orfani nati a contratto chiuso (proposta)
     messaggio: str                         # riepilogo leggibile (la cassa resta, il residuo si ricalcola)
+
+
+class ContractReopenResponse(ContractResponse):
+    """Response del POST /reopen (G9.7.2/B3): il contratto riaperto + la PROPOSTA di recupero degli
+    orfani nati nel periodo di chiusura. Campo additivo: i consumer di ContractResponse restano
+    compatibili; il riaggancio resta un atto esplicito (D-PROPONE)."""
+    orfani_periodo_chiusura: List[OrfanoPeriodoChiusura] = []
 
 
 # ════════════════════════════════════════════════════════════

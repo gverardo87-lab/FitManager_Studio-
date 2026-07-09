@@ -17,6 +17,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { EventForm, type EventSubmitPayload } from "./EventForm";
+import { AssegnaContrattoBanner } from "./AssegnaContrattoBanner";
 import { useCreateEvent, useUpdateEvent } from "@/hooks/useAgenda";
 import type { CalendarEvent } from "./calendar-setup";
 
@@ -93,6 +94,16 @@ export function EventSheet({
             {isEdit ? "Modifica Evento" : "Nuovo Evento"}
           </SheetTitle>
         </SheetHeader>
+        {/* G9.7.2/B6: il PT orfano è visibile e recuperabile QUI (etichetta + Assegna inline) */}
+        {isEdit && event.categoria === "PT" && event.id_cliente != null && event.id_contratto == null ? (
+          <div className="mt-4">
+            <AssegnaContrattoBanner
+              eventId={event.id}
+              idCliente={event.id_cliente}
+              onAssigned={() => onOpenChange(false)}
+            />
+          </div>
+        ) : null}
         <div className="mt-6">
           <EventForm
             key={event?.id ?? "new"}

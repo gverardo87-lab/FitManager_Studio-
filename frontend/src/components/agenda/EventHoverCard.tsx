@@ -16,7 +16,7 @@ import { useState, useRef, useCallback, useEffect, type ReactNode } from "react"
 import { createPortal } from "react-dom";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
-import { CheckCircle2, RotateCcw, X, Clock, User, UserX } from "lucide-react";
+import { AlertTriangle, CheckCircle2, RotateCcw, X, Clock, User, UserX } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -167,6 +167,14 @@ export function EventHoverCard({ event, onQuickAction, children }: EventHoverCar
                 <WhatsAppButton phone={event.cliente_telefono} variant="icon" className="h-5 w-5" />
               </div>
             )}
+
+            {/* G9.7.2/B6: orfano visibile — mai limbo invisibile (l'azione «Assegna» è nel dettaglio) */}
+            {event.categoria === "PT" && event.id_cliente != null && event.id_contratto == null ? (
+              <div className="mt-1 flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400">
+                <AlertTriangle className="h-3 w-3" role="img" aria-label="Seduta senza contratto" />
+                <span>Senza contratto — non scala crediti</span>
+              </div>
+            ) : null}
 
             {/* Orario */}
             <div className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">

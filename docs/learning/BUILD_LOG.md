@@ -3147,6 +3147,50 @@ LIVE read-only: cliente reale 0-crediti → warning soft + submit ABILITATO (pri
 
 ---
 
+## 2026-07-09 — G9.7.2 CHIUSO: recupero esplicito degli orfani (B2/B3/B6 + D-RECUPERO-ESPLICITO)
+
+**Sequenza decisa col founder («cosa è più corretto come logica di sviluppo?»):** chiudere G9.7
+per intero PRIMA di aprire P1 — direzione delle dipendenze (G9.7.2 costruisce la superficie
+orfani su cui P2 aggiungerà la seconda azione; G9.7.4-5 = guard e birth-auditor che devono
+esistere PRIMA della nascita più grande), WIP-limit (la coda parallela è dove i gravissimi si
+sono annidati), e il dato reale esce dal limbo subito.
+
+**Backend:** `POST /events/{id}/assegna-contratto` (`agenda.py`) — UNICA via di re-parenting
+(EventUpdate resta chiuso, fence ADR-023 intatto): bouncer 404 → solo PT → solo orfani →
+contratto stesso-cliente (404, mai rivelare) + aperto (400) + **credit-guard condizionato
+all'occupazione** (un Rinviato è assegnabile anche a contratto pieno, ADR-017) → audit UPDATE →
+auto-close via `_sync_contract_chiuso` → UN commit. Guard CP-2 forward-dichiarato per P1.
+**Reopen PROPONE (B2/B3):** `_orfani_periodo_chiusura` (`data_creazione ≥ data_chiusura`) in
+`reopen-preview` (campo + messaggio) e nella response di `POST /reopen`
+(`ContractReopenResponse`, snapshot PRE-reopen perché la riapertura azzera `data_chiusura`) —
+propone, MAI riaggancia (D-PROPONE). **Worklist B6:** `GET /dashboard/orphan-events`
+(`_orphan_pt_candidates`, SOLO stati di occupazione: un orfano Rinviato non è un caso) + alert
+`orphan_events` (stesso helper → count==items); ogni riga porta i contratti APERTI del cliente
+con crediti residui = l'azione inline (D-SEGNALE-AZIONE).
+
+**Frontend:** badge hover «Senza contratto — non scala crediti» (EventHoverCard) ·
+`AssegnaContrattoBanner` nel dettaglio evento (select contratti aperti + Assegna; riusa
+`useClientContracts`) · `OrphanEventsSheet` (pattern GhostEventsSheet, Assegna inline per riga)
++ alert wiring (categoria nuova nella union AlertItem, icona Unlink, action+sheet in page.tsx) ·
+`useAssegnaContratto` (invalidazioni = create/update evento + toast dedicato).
+
+**Gemello formatter-pitfall rivissuto:** il PostToolUse ha strippato gli import aggiunti in un
+Edit separato dall'uso → ri-aggiunti a usi esistenti ([[feedback_formatter_strips_imports]]).
+
+**Test: +10** (`test_assegna_contratto_orfano.py`): guard chain completa · Rinviato esente ·
+composizione auto-close (ultimo credito su SALDATO → chiuso) · 2b preview+response nominano e
+NON riagganciano · worklist+alert coerenti. **LIVE E2E:** orfano creato da UI → alert → sheet →
+assegna → occupa → alert decrementa. **La worklist ha subito rivelato dato reale:** 6 orfani,
+non 2 — oltre a 640/641 c'erano **643** (terza seduta di Giacomo nata dopo l'audit) e 647/649
+(eventi `test` del founder). Runbook di recupero depositato in coda alla spec (esecuzione
+trainer-driven: 647/649 da eliminare; 640/641/643 = scelta founder reopen-39+assegna O attesa
+P2 promuovi-a-singola).
+
+**⏭️ Prossimo: G9.7.3 (derivato-occupazione mai nudo: hero crediti + sub-label — i campi sono
+già sul wire) → G9.7.4-5 → poi P1.**
+
+---
+
 ## 2026-07-08 — Blocco P: P0 CHIUSO (riga matrice + birth-review)
 
 **Riga in matrice** (`MATRICE_ASSI_SEMANTICI.md`): asse «prestazione singola & insoluto» — celle

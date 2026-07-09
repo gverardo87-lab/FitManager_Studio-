@@ -20,6 +20,7 @@ import type {
   ClientProjectionResponse,
   Event,
   ListResponse,
+  OrphanEventItem,
   OverdueRateItem,
   ExpiringContractItem,
   ContractToPlanItem,
@@ -122,6 +123,20 @@ export function useGhostEvents(enabled = true) {
     queryFn: async () => {
       const { data } = await apiClient.get<ListResponse<Event>>(
         "/dashboard/ghost-events"
+      );
+      return data;
+    },
+    enabled,
+  });
+}
+
+/** G9.7.2/B6 — PT senza contratto in stati di occupazione: worklist con azione inline. */
+export function useOrphanEvents(enabled = true) {
+  return useQuery<ListResponse<OrphanEventItem>>({
+    queryKey: ["dashboard", "orphan-events"],
+    queryFn: async () => {
+      const { data } = await apiClient.get<ListResponse<OrphanEventItem>>(
+        "/dashboard/orphan-events"
       );
       return data;
     },

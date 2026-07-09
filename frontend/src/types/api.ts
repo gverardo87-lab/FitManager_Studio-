@@ -692,7 +692,37 @@ export interface ReopenPreview {
   wallet_erogato_riassorbito: number; // D1 forma-d: erogato wallet che RIENTRA nel residuo (mai silenzioso)
   ha_rinnovo_vivo: boolean; // S5: esiste un rinnovo figlio ancora aperto
   id_rinnovo_vivo: number | null;
+  orfani_periodo_chiusura: OrfanoPeriodoChiusura[]; // G9.7.2/B2: PT orfani nati a contratto chiuso (proposta)
   messaggio: string;
+}
+
+/** G9.7.2/B2-B3 — PT orfano del cliente nato nel periodo di chiusura: il reopen lo PROPONE
+ * al recupero (D-PROPONE), il riaggancio resta un atto esplicito (assegna-contratto). */
+export interface OrfanoPeriodoChiusura {
+  id: number;
+  titolo: string | null;
+  data_inizio: string;
+  stato: string;
+}
+
+/** G9.7.2/B6 — riga della worklist /dashboard/orphan-events: ogni segnale porta l'azione
+ * (i contratti APERTI del cliente per l'«Assegna» inline). */
+export interface OrphanEventItem {
+  id: number;
+  data_inizio: string;
+  data_fine: string;
+  titolo: string | null;
+  stato: string;
+  id_cliente: number | null;
+  cliente_nome: string | null;
+  cliente_cognome: string | null;
+  contratti_aperti: OrphanEventContract[];
+}
+
+export interface OrphanEventContract {
+  id: number;
+  tipo_pacchetto: string | null;
+  crediti_residui: number;
 }
 
 /** Wallet del cliente (G8.1, ADR-020) — credito a favore del cliente FUORI da residuo(). */
@@ -1256,7 +1286,7 @@ export interface BirthdayClientItem {
 /** Singolo alert con severity, categoria e contesto navigabile */
 export interface AlertItem {
   severity: "critical" | "warning" | "info";
-  category: "ghost_events" | "orphan_contracts" | "clients_to_recover" | "suspended_contracts" | "expiring_contracts" | "overdue_rates" | "inactive_clients" | "stale_schede" | "stale_measurements" | "birthdays";
+  category: "ghost_events" | "orphan_events" | "orphan_contracts" | "clients_to_recover" | "suspended_contracts" | "expiring_contracts" | "overdue_rates" | "inactive_clients" | "stale_schede" | "stale_measurements" | "birthdays";
   title: string;
   detail: string;
   count: number;

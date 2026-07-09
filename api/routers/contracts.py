@@ -40,6 +40,8 @@ from api.schemas.financial import (
     ContractMovementItem,
     ContractHistoryEvent,
     ReopenPreview,
+    ContractReopenResponse,
+    OrfanoPeriodoChiusura,
     CreditoTerminazioneResponse,
     VALID_AZIONI_CREDITO_TRAINER,
     RateResponse,
@@ -1506,7 +1508,35 @@ def terminate_contract(
     return _to_response(contract)
 
 
-@router.post("/{contract_id}/reopen", response_model=ContractResponse)
+def _orfani_periodo_chiusura(session: Session, contract: Contract) -> list[OrfanoPeriodoChiusura]:
+    """G9.7.2/B2-B3: PT orfani del cliente creati nel periodo di chiusura (`data_creazione ≥
+    data_chiusura`). Il reopen li PROPONE al recupero (D-PROPONE) — mai riaggancio automatico:
+    la via esplicita è `POST /events/{id}/assegna-contratto`."""
+    if not contract.data_chiusura or not contract.id_cliente:
+        return []
+    soglia = datetime.combine(contract.data_chiusura, datetime.min.time())
+    events = session.exec(
+        select(Event).where(
+            Event.trainer_id == contract.trainer_id,
+            Event.id_cliente == contract.id_cliente,
+            Event.categoria == "PT",
+            Event.id_contratto == None,
+            Event.deleted_at == None,
+            Event.data_creazione >= soglia,
+        ).order_by(Event.data_inizio.asc())
+    ).all()
+    return [
+        OrfanoPeriodoChiusura(
+            id=e.id,
+            titolo=e.titolo,
+            data_inizio=e.data_inizio.isoformat() if isinstance(e.data_inizio, datetime) else str(e.data_inizio),
+            stato=e.stato,
+        )
+        for e in events
+    ]
+
+
+@router.post("/{contract_id}/reopen", response_model=ContractReopenResponse)
 def reopen_contract(
     contract_id: int,
     trainer: Trainer = Depends(get_current_trainer),
@@ -1517,11 +1547,19 @@ def reopen_contract(
     `transitions.execute_reopen` (ricalcola-e-instrada NON-distruttivo: cassa immutabile, storno
     revertito via terza penna, receivable/wallet annullati, fold R2-bis, rate ripristinate+riconciliate,
     audit, sensore, commit atomico). Qui restano SOLO bouncer + delega + serialize (AC-G93-1).
+
+    G9.7.2/B3: la response PROPONE gli eventuali PT orfani nati nel periodo di chiusura
+    (snapshot PRIMA del reopen: la riapertura azzera `data_chiusura`) — mai riaggancio automatico.
     """
     # A) Bouncer ownership (404 mai 403) — routing concern, resta nel router (D-C2)
     contract = _bouncer_contract_owned(session, contract_id, trainer.id)
+    orfani = _orfani_periodo_chiusura(session, contract)  # snapshot pre-reopen (B3)
     contract = execute_reopen(session, contract=contract, trainer=trainer)
-    return _to_response(contract)
+    base = _to_response(contract)
+    return ContractReopenResponse(
+        **base.model_dump(),
+        orfani_periodo_chiusura=orfani,
+    )
 
 
 @router.get("/{contract_id}/reopen-preview", response_model=ReopenPreview)
@@ -1609,6 +1647,10 @@ def reopen_preview(
             f"il cliente risulta aver già riavuto €{wallet_erogato_riassorbito:.2f} dal wallet, "
             f"che torna dovuto sul contratto riaperto"
         )
+    # G9.7.2/B2: PT orfani del cliente nati nel periodo di chiusura — il preview li PROPONE
+    # al recupero (D-PROPONE), il riaggancio resta un atto esplicito post-riapertura.
+    orfani = _orfani_periodo_chiusura(session, contract)
+
     dettaglio = "; ".join(parti) if parti else "nessuna cassa da preservare"
     messaggio = (
         f"Riaprendo, la cassa registrata NON viene cancellata: {dettaglio}. "
@@ -1618,6 +1660,13 @@ def reopen_preview(
         messaggio += (
             f" ATTENZIONE: esiste un rinnovo ancora attivo (contratto #{rinnovo_vivo.id}); "
             f"verifica se va gestito prima di procedere."
+        )
+    if orfani:
+        n = len(orfani)
+        messaggio += (
+            f" Nel periodo di chiusura {'è nata' if n == 1 else 'sono nate'} {n} "
+            f"{'seduta PT senza contratto' if n == 1 else 'sedute PT senza contratto'}: "
+            f"dopo la riapertura potrai assegnarle dal dettaglio evento."
         )
 
     return ReopenPreview(
@@ -1630,6 +1679,7 @@ def reopen_preview(
         wallet_erogato_riassorbito=wallet_erogato_riassorbito,
         ha_rinnovo_vivo=rinnovo_vivo is not None,
         id_rinnovo_vivo=rinnovo_vivo.id if rinnovo_vivo is not None else None,
+        orfani_periodo_chiusura=orfani,
         messaggio=messaggio,
     )
 

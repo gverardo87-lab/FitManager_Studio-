@@ -1,8 +1,8 @@
 # SPEC_G9.7_SEMANTICA_PER_CLASSE
 
 **Tipo:** specifica prescrittiva. **Data:** 2026-07-07 · **Branch:** `FitManager_Studio`
-**Stato:** 🟡 **APERTA — G9.7.0 ✅ · G9.7.1 ✅ CHIUSO 2026-07-09 (incl. G9.7.1-bis)** · restano
-G9.7.2-5. Governance: `ADR-024`
+**Stato:** 🟡 **APERTA — G9.7.0 ✅ · G9.7.1 ✅ (incl. -bis) · G9.7.2 ✅ CHIUSO 2026-07-09**
+(runbook §Runbook in coda, esecuzione trainer-driven) · restano G9.7.3-5. Governance: `ADR-024`
 (accepted). Audit fondante: `docs/operations/AUDIT_CREDITI_EVENTI_ORFANI_2026-07-07.md` (13 finding
 B1-B8/D1-D5) + `AUDIT_CENSIMENTO_ASSI_SEMANTICI_CASSA_2026-07-04.md` (assi A1-A10).
 **Mappa di verità:** ADR-024 · ADR-022+Add.II · ADR-017 Add.I · ADR-019 (D-PROPONE) · ADR-023 ·
@@ -70,6 +70,18 @@ protezioni verificata». Celle: ✅/⚠️/✗ con puntatore al presidio o al ga
 - **AC-G97-2:** orfano assegnato via endpoint → occupa il credito; endpoint rifiuta contratto
   chiuso (400) e cliente diverso (404). **AC-G97-2b:** reopen su contratto con orfani nel periodo
   → response/preview li nomina. Fail: limbo senza uscita o riaggancio silenzioso.
+- **✅ CHIUSO 2026-07-09.** Endpoint `assegna-contratto` (agenda.py: guard chain 404/400 +
+  credit-guard condizionato all'occupazione + auto-close via `_sync`, audit UPDATE, UN commit;
+  guard CP-2 forward-dichiarato per P1) · reopen-preview e `POST /reopen`
+  (`ContractReopenResponse`) NOMINANO gli orfani del periodo (`_orfani_periodo_chiusura`,
+  snapshot pre-reopen) · worklist `GET /dashboard/orphan-events` col pattern `_*_candidates`
+  (solo stati di occupazione; ogni riga porta i contratti APERTI del cliente = azione inline) +
+  alert `orphan_events` · FE: badge hover «senza contratto», `AssegnaContrattoBanner` in
+  EventSheet, `OrphanEventsSheet` con Assegna inline. **10 test** integrazione
+  (`test_assegna_contratto_orfano.py`: guard chain, Rinviato esente da credit-guard,
+  composizione auto-close, 2b preview+response, worklist+alert coerenti). **LIVE E2E:** orfano
+  creato da UI → alert (che ha rivelato 3 orfani reali in più: 643 + 647/649) → sheet →
+  assegna inline → occupa (crediti_usati+1) → alert decrementa.
 
 ### G9.7.3 — Derivato-occupazione mai nudo (D1-D5 + D-DERIVATO-MAI-NUDO)
 - **D1 (hero):** riga crediti con card/valori Penali e Rinviate (dati GIÀ sul wire) — le penali
@@ -120,3 +132,20 @@ estesa con liveness provata; (7) suite verde, asse DENARO invariato, check-all v
 **Quality gate per ogni gate di codice:** pytest (full su diff api/ money-adjacent; fascia su
 FE/test-only) + vitest + next build + check-all; commit specifici `feat: G9.7.N — …`; fold-back
 docs a chiusura gate (metodo §7).
+
+---
+
+## Runbook recupero orfani reali (G9.7.2 — esecuzione trainer-driven, MAI a mano nel DB)
+
+Stato al 2026-07-09 (worklist live): **5 orfani** — 640/641/**643** (Giacomo Verardo, il 643 è
+nato DOPO l'audit; il suo contratto 39 è CHIUSO → oggi «nessun contratto aperto») + **647/649**
+(eventi `test` del founder su Sara Di Grumo e Dalila Floris).
+
+1. **647/649 (test):** eliminarli dall'agenda (erano prove del founder) — o assegnarli se erano
+   sedute vere.
+2. **640/641/643 (Giacomo):** scelta esplicita founder per ciascuno (ADR-025):
+   *(a)* riapri il contratto 39 (`reopen-preview` ora li NOMINA) → assegna dal
+   dettaglio evento o dalla worklist → gestisci il contratto (ri-termina/completa); oppure
+   *(b)* attendi P2 (blocco P) e promuovili a **prestazioni singole**.
+3. Verifica: alert `orphan_events` a zero (o al solo residuo scelto), crediti del contratto
+   coerenti a video.
