@@ -452,7 +452,8 @@ def get_expiring_contracts(
 
     Restituisce dati completi per risoluzione inline dalla Dashboard
     (Sheet con progress bar crediti e countdown). Include credit engine
-    computed-on-read: crediti_usati da COUNT eventi PT in STATI_OCCUPAZIONE_CREDITO (SSoT).
+    computed-on-read: crediti_usati + breakdown (completate/penali) da
+    `_occupazione_breakdown_map` (SSoT STATI_OCCUPAZIONE_CREDITO, G9.7.3/D5).
 
     Ordinamento: scadenza piu' vicina prima.
     """
@@ -487,25 +488,9 @@ def get_expiring_contracts(
     if not contracts:
         return {"items": [], "total": 0}
 
-    # Step 2: batch fetch crediti usati (anti-N+1)
+    # Step 2: batch fetch breakdown occupazione (anti-N+1, un solo interprete — G9.7.3/D5)
     contract_ids = [c.id for c, _ in contracts]
-    credit_rows = session.execute(
-        text("""
-        SELECT e.id_contratto, COUNT(*) as usati
-        FROM agenda e
-        WHERE e.id_contratto IN :contract_ids
-          AND e.categoria = 'PT'
-          -- G7.8: Rinviato libera il credito (ADR-017)
-          AND e.stato IN :stati_occupazione
-          AND e.deleted_at IS NULL
-        GROUP BY e.id_contratto
-    """).bindparams(bindparam("contract_ids", expanding=True),
-                    bindparam("stati_occupazione", expanding=True)),
-        {"contract_ids": contract_ids,
-         "stati_occupazione": tuple(sorted(cstate.STATI_OCCUPAZIONE_CREDITO))},
-    ).fetchall()
-
-    credits_map = {row[0]: row[1] for row in credit_rows}
+    breakdown_map = _occupazione_breakdown_map(session, contract_ids)
 
     items = []
     for contract, client in contracts:
@@ -513,7 +498,8 @@ def get_expiring_contracts(
         if contract.id in renewed_parent_ids:
             continue
 
-        usati = credits_map.get(contract.id, 0)
+        b = breakdown_map.get(contract.id, {"usati": 0, "completate": 0, "penali": 0})
+        usati = b["usati"]
         totali = contract.crediti_totali or 0
         residui = max(totali - usati, 0)
 
@@ -540,6 +526,9 @@ def get_expiring_contracts(
             "crediti_totali": totali,
             "crediti_usati": usati,
             "crediti_residui": residui,
+            # G9.7.3/D5 (D-DERIVATO-MAI-NUDO): il conteggio si spiega dalla stessa vista
+            "sedute_completate": b["completate"],
+            "sedute_penali": b["penali"],
             "prezzo_totale": contract.prezzo_totale,
             "client_id": client.id,
             "client_nome": client.nome,
@@ -649,22 +638,46 @@ def _coerce_date(d):
     return date.fromisoformat(d) if isinstance(d, str) else d
 
 
-def _crediti_usati_map(session: Session, contract_ids: list[int]) -> dict[int, int]:
-    """Batch crediti usati (eventi PT non cancellati) per i contratti dati. Anti-N+1."""
+def _occupazione_breakdown_map(
+    session: Session, contract_ids: list[int]
+) -> dict[int, dict[str, int]]:
+    """Breakdown occupazione per contratto — UNA query group-by (id_contratto, stato),
+    derivazione dal SSoT (G9.7.3/D5, stesso interprete della lista contratti): usati,
+    completate e penali nascono dalle stesse righe, mai due query divergibili. Anti-N+1.
+
+    Ritorna: {id_contratto: {"usati": n, "completate": n, "penali": n}}.
+    """
     if not contract_ids:
         return {}
     rows = session.exec(
-        select(Event.id_contratto, func.count(Event.id))
+        select(Event.id_contratto, Event.stato, func.count(Event.id))
         .where(
             Event.id_contratto.in_(contract_ids),
             Event.categoria == "PT",
-            # G7.8: Rinviato libera il credito (ADR-017)
-            Event.stato.in_(cstate.STATI_OCCUPAZIONE_CREDITO),
             Event.deleted_at == None,
         )
-        .group_by(Event.id_contratto)
+        .group_by(Event.id_contratto, Event.stato)
     ).all()
-    return {row[0]: int(row[1]) for row in rows}
+    out: dict[int, dict[str, int]] = {}
+    for cid, stato_ev, n in rows:
+        b = out.setdefault(cid, {"usati": 0, "completate": 0, "penali": 0})
+        n = int(n)
+        if stato_ev in cstate.STATI_OCCUPAZIONE_CREDITO:  # G7.8: Rinviato libera (ADR-017)
+            b["usati"] += n
+        if stato_ev == "Completato":
+            b["completate"] += n
+        if stato_ev in cstate.STATI_PENALE:
+            b["penali"] += n
+    return out
+
+
+def _crediti_usati_map(session: Session, contract_ids: list[int]) -> dict[int, int]:
+    """Batch crediti usati (eventi PT in occupazione) per i contratti dati.
+    Delega al breakdown (un solo interprete dell'asse occupazione)."""
+    return {
+        cid: b["usati"]
+        for cid, b in _occupazione_breakdown_map(session, contract_ids).items()
+    }
 
 
 def _contract_recency_key(c) -> date:
@@ -740,7 +753,8 @@ def _suspended_contracts_candidates(session: Session, trainer_id: int, today: da
     Ordine: aging **INVERTITO** (più vecchio = più urgente). Il SOSPESO non decade: è
     un'obbligazione, l'urgenza cresce nel tempo (§4.1, decadimento asimmetrico).
 
-    Ritorna: list[(Contract, Client, crediti_usati: int)].
+    Ritorna: list[(Contract, Client, breakdown: dict)] — breakdown = usati/completate/penali
+    dal SSoT (G9.7.3/D5), la classificazione usa breakdown["usati"].
     """
     rows = session.exec(
         select(Contract, Client)
@@ -755,13 +769,13 @@ def _suspended_contracts_candidates(session: Session, trainer_id: int, today: da
     if not rows:
         return []
 
-    credits_map = _crediti_usati_map(session, [c.id for c, _ in rows])
+    breakdown_map = _occupazione_breakdown_map(session, [c.id for c, _ in rows])
 
     out = []
     for contract, client in rows:
-        crediti_usati = credits_map.get(contract.id, 0)
-        if cstate.contract_lifecycle(contract, crediti_usati, today) == cstate.Lifecycle.SOSPESO:
-            out.append((contract, client, crediti_usati))
+        b = breakdown_map.get(contract.id, {"usati": 0, "completate": 0, "penali": 0})
+        if cstate.contract_lifecycle(contract, b["usati"], today) == cstate.Lifecycle.SOSPESO:
+            out.append((contract, client, b))
     out.sort(key=lambda t: (today - _coerce_date(t[0].data_scadenza)).days, reverse=True)
     return out
 
@@ -836,10 +850,11 @@ def get_suspended_contracts(
     """
     today = date.today()
     items = []
-    for contract, client, crediti_usati in _suspended_contracts_candidates(session, trainer.id, today):
+    for contract, client, breakdown in _suspended_contracts_candidates(session, trainer.id, today):
         scad = _coerce_date(contract.data_scadenza)
         inizio = _coerce_date(contract.data_inizio)
         giorni_ritardo = (today - scad).days if isinstance(scad, date) else 0
+        crediti_usati = breakdown["usati"]
         items.append({
             "contract_id": contract.id,
             "tipo_pacchetto": contract.tipo_pacchetto,
@@ -850,6 +865,9 @@ def get_suspended_contracts(
             "crediti_totali": contract.crediti_totali or 0,
             "crediti_usati": crediti_usati,
             "crediti_residui": cstate.crediti_residui(contract, crediti_usati),  # sedute da recuperare
+            # G9.7.3/D5 (D-DERIVATO-MAI-NUDO): le "sedute da recuperare" si spiegano dalla vista
+            "sedute_completate": breakdown["completate"],
+            "sedute_penali": breakdown["penali"],
             "residuo": cstate.residuo(contract),  # denaro eventualmente ancora dovuto (asse distinto)
             "client_id": client.id,
             "client_nome": client.nome,

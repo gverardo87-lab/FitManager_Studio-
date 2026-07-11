@@ -166,10 +166,18 @@ function RenewalCard({
               {daysLabel}
             </Badge>
           </div>
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
             <span>{item.tipo_pacchetto}</span>
             <span className="text-muted-foreground/40">·</span>
             <span>{item.crediti_residui}/{item.crediti_totali} crediti</span>
+            {/* G9.7.3/D5: usati − svolte = penali, spiegato nella STESSA vista */}
+            <span className="text-muted-foreground/40">·</span>
+            <span>
+              {item.sedute_completate} svolte
+              {item.sedute_penali > 0 ? (
+                <span className="text-amber-600 dark:text-amber-400"> · {item.sedute_penali} penali</span>
+              ) : null}
+            </span>
             {item.prezzo_totale ? (
               <>
                 <span className="text-muted-foreground/40">·</span>
@@ -461,6 +469,14 @@ function SuspendedCard({ item }: { item: SuspendedContractItem }) {
             <span className="text-muted-foreground/40">·</span>
             <span className="font-medium text-violet-700 dark:text-violet-300">
               {item.crediti_residui} {item.crediti_residui === 1 ? "seduta" : "sedute"} da recuperare
+            </span>
+            {/* G9.7.3/D5: usati − svolte = penali, spiegato nella STESSA vista */}
+            <span className="text-muted-foreground/40">·</span>
+            <span>
+              {item.sedute_completate} svolte
+              {item.sedute_penali > 0 ? (
+                <span className="text-amber-600 dark:text-amber-400"> · {item.sedute_penali} penali</span>
+              ) : null}
             </span>
             {item.residuo > 0 ? (
               <>

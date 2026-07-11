@@ -182,3 +182,61 @@ def test_stati_penale_validi_e_stato_inventato_rifiutato(client, auth_headers, s
     assert ok.status_code in (200, 201), ok.text
     bad = _event(client, auth_headers, sample_client["id"], c["id"], "Fantasma", day=6, hour=9)
     assert bad.status_code == 422
+
+
+# ── G9.7.3/D5 — le worklist dashboard espongono il breakdown occupazione ─────
+
+def test_g973_d5_suspended_contracts_espone_breakdown(client, auth_headers, sample_client):
+    """G9.7.3/D5: la worklist SOSPESI porta sedute_completate + sedute_penali sul wire —
+    il sub-label «N svolte · M penali» LEGGE, mai ricalcolo inline. Stessi numeri del
+    dettaglio contratto (un solo interprete: _occupazione_breakdown_map)."""
+    r = client.post("/api/contracts", json={
+        "id_cliente": sample_client["id"], "tipo_pacchetto": "Pkg", "crediti_totali": 10,
+        "prezzo_totale": 1000.0, "data_inizio": (TODAY - timedelta(days=120)).isoformat(),
+        "data_scadenza": (TODAY - timedelta(days=30)).isoformat(), "acconto": 0.0,
+    }, headers=auth_headers)
+    assert r.status_code == 201, r.text
+    c = r.json()
+    for i, stato in enumerate(["Completato", "Completato", "Cancellato_Tardivo", "No_Show", "Rinviato"]):
+        er = _event(client, auth_headers, sample_client["id"], c["id"], stato, day=5 + i, hour=9)
+        assert er.status_code in (200, 201), f"{stato}: {er.text}"
+
+    data = client.get("/api/dashboard/suspended-contracts", headers=auth_headers).json()
+    item = next(x for x in data["items"] if x["contract_id"] == c["id"])
+    assert item["crediti_usati"] == 4                # 2 svolte + 2 penali; Rinviato libera
+    assert item["crediti_residui"] == 6
+    assert item["sedute_completate"] == 2
+    assert item["sedute_penali"] == 2
+
+    detail = client.get(f"/api/contracts/{c['id']}", headers=auth_headers).json()
+    assert (item["crediti_usati"], item["sedute_completate"], item["sedute_penali"]) == (
+        detail["crediti_usati"], detail["sedute_completate"], detail["sedute_penali"]
+    )                                                # worklist e dettaglio: un solo interprete
+
+
+def test_g973_d5_expiring_contracts_espone_breakdown(client, auth_headers, sample_client):
+    """G9.7.3/D5: la worklist IN SCADENZA porta sedute_completate + sedute_penali sul wire,
+    coerenti col dettaglio (un solo interprete)."""
+    r = client.post("/api/contracts", json={
+        "id_cliente": sample_client["id"], "tipo_pacchetto": "Pkg", "crediti_totali": 10,
+        "prezzo_totale": 1000.0, "data_inizio": TODAY.isoformat(),
+        "data_scadenza": (TODAY + timedelta(days=10)).isoformat(), "acconto": 0.0,
+    }, headers=auth_headers)
+    assert r.status_code == 201, r.text
+    c = r.json()
+    for i, stato in enumerate(["Completato", "Programmato", "Cancellato_Tardivo", "Rinviato"]):
+        er = _event(client, auth_headers, sample_client["id"], c["id"], stato, day=5 + i, hour=9)
+        assert er.status_code in (200, 201), f"{stato}: {er.text}"
+
+    data = client.get("/api/dashboard/expiring-contracts", headers=auth_headers).json()
+    item = next(x for x in data["items"] if x["contract_id"] == c["id"])
+    assert item["crediti_usati"] == 3                # Completato + Programmato + penale
+    assert item["crediti_residui"] == 7
+    assert item["sedute_completate"] == 1
+    assert item["sedute_penali"] == 1
+
+    detail = client.get(f"/api/contracts/{c['id']}", headers=auth_headers).json()
+    assert (item["crediti_usati"], item["sedute_completate"], item["sedute_penali"]) == (
+        detail["crediti_usati"], detail["sedute_completate"], detail["sedute_penali"]
+    )
+

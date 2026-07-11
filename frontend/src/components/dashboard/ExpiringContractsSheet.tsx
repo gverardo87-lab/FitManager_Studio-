@@ -176,6 +176,13 @@ export function ExpiringContractsSheet({ open, onOpenChange }: ExpiringContracts
                           style={{ width: `${pct}%` }}
                         />
                       </div>
+                      {/* G9.7.3/D5: usati − svolte = penali, spiegato nella STESSA vista */}
+                      <p className="mt-1 text-[10px] text-muted-foreground">
+                        {item.sedute_completate} svolte
+                        {item.sedute_penali > 0 ? (
+                          <span className="text-amber-600 dark:text-amber-400"> · {item.sedute_penali} penali</span>
+                        ) : null}
+                      </p>
                     </div>
 
                     {/* Crediti residui (evidenziato) */}

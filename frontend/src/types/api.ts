@@ -1221,6 +1221,9 @@ export interface ExpiringContractItem {
   crediti_totali: number;
   crediti_usati: number;
   crediti_residui: number;
+  // G9.7.3/D5: breakdown occupazione — il conteggio si spiega dalla stessa vista
+  sedute_completate: number;
+  sedute_penali: number;
   prezzo_totale: number | null;
   client_id: number;
   client_nome: string;
@@ -1256,6 +1259,9 @@ export interface SuspendedContractItem {
   crediti_totali: number;
   crediti_usati: number;
   crediti_residui: number;        // sedute da recuperare (asse crediti)
+  // G9.7.3/D5: breakdown occupazione — le "da recuperare" si spiegano dalla stessa vista
+  sedute_completate: number;
+  sedute_penali: number;
   residuo: number;                // denaro eventualmente ancora dovuto (asse denaro, distinto)
   client_id: number;
   client_nome: string;
