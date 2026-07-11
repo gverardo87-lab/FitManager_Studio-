@@ -3267,3 +3267,38 @@ protezioni giuste» (B1×no-re-parenting) che ADR-024 è nato per anticipare.
 AC-G97-1 + LIVE).**
 
 ---
+
+## 2026-07-11 — G9.7.3 fetta D5 + GATE CHIUSO (occupazione spiegabile su OGNI superficie)
+
+**Fetta D5 — breakdown penali su worklist dashboard e sheet (l'ultima superficie col conteggio nudo):**
+- **Backend (`dashboard.py`):** nuovo helper `_occupazione_breakdown_map` = UNICO interprete batch
+  dell'asse occupazione per le worklist — UNA query `group by (id_contratto, stato)` con derivazione
+  dal SSoT (`STATI_OCCUPAZIONE_CREDITO` per usati, `Completato` per svolte, `STATI_PENALE` per
+  penali — la costante SSoT, non la sottrazione usata in `contracts.py`). `_crediti_usati_map`
+  DELEGA (un solo interprete, `_lapsed_client_candidates` invariato); la **raw-SQL COUNT
+  dell'expiring RITIRATA** (era il sito migrato di G7.8-bis Step 0 — ora anche fuso).
+  `_suspended_contracts_candidates` ritorna il breakdown; `suspended-contracts` +
+  `expiring-contracts` espongono `sedute_completate` + `sedute_penali` (additivo).
+- **FE:** type-sync `ExpiringContractItem`+`SuspendedContractItem`; sub-label pattern D2
+  «N svolte · M penali» (penali amber solo se >0 — segnale, non rumore) su RenewalCard +
+  SuspendedCard (`rinnovi-incassi/page.tsx`) e sotto la progress bar di `ExpiringContractsSheet`.
+- **Gemelli:** 2 pytest (`test_g973_d5_*` in `test_late_cancel_no_show.py`: worklist == dettaglio
+  sul mix Completato/penali/Rinviato — un solo interprete) + 2 vitest
+  (`expiring-sheet-breakdown.test.tsx`, hook mockati + QueryClientProvider per il WhatsAppButton).
+
+**Verifica:** suite full **853 pytest** (+2) · **103 vitest** (era 101, +2) · ruff ·
+`check-all.sh` verde · **LIVE read-only** su dev 3001/8001 (backend riavviato per servire D5 —
+lezione Audit-2 ①: uvicorn senza reload serviva codice stale): il caso founder A VIDEO — card
+rinnovo contratto 39 «12 PT · 3/12 crediti · **7 svolte · 2 penali** · 480 €», sospesi
+«5 da recuperare · 5 svolte», card senza penali = solo «N svolte». Zero submit.
+
+**Fold-back (gate chiuso, metodo §7):** SPEC_G9.7 → G9.7.3 ✅ CHIUSO (restano G9.7.4-5) ·
+MATRICE_ASSI_SEMANTICI: cella **DV occupazione-credito → ✅** + R2/DV crediti-residui → ✅
+(D4 già fatto in D1-D4, cella era stale) · questo log.
+
+**⏭️ RIPRESA: G9.7.4** (guard classe crediti FE anti-re-inline con allowlist + test perimetro
+transizioni `PERIMETRO_TRANSIZIONE` su execute_terminate/reopen) **→ G9.7.5** (agente
+`semantic-birth-auditor` da charter SPEC_G9.4-BIS §5 + Hypothesis I-EVENTI) **→ POI P1 blocco P.**
+Runbook orfani 640/641/643 + 647/649 sempre pendente (trainer-driven, in coda a SPEC_G9.7).
+
+---

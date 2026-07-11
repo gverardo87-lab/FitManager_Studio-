@@ -1,8 +1,9 @@
 # SPEC_G9.7_SEMANTICA_PER_CLASSE
 
 **Tipo:** specifica prescrittiva. **Data:** 2026-07-07 · **Branch:** `FitManager_Studio`
-**Stato:** 🟡 **APERTA — G9.7.0 ✅ · G9.7.1 ✅ (incl. -bis) · G9.7.2 ✅ CHIUSO 2026-07-09**
-(runbook §Runbook in coda, esecuzione trainer-driven) · restano G9.7.3-5. Governance: `ADR-024`
+**Stato:** 🟡 **APERTA — G9.7.0 ✅ · G9.7.1 ✅ (incl. -bis) · G9.7.2 ✅ CHIUSO 2026-07-09 ·
+G9.7.3 ✅ CHIUSO 2026-07-11** (runbook §Runbook in coda, esecuzione trainer-driven) · restano
+G9.7.4-5. Governance: `ADR-024`
 (accepted). Audit fondante: `docs/operations/AUDIT_CREDITI_EVENTI_ORFANI_2026-07-07.md` (13 finding
 B1-B8/D1-D5) + `AUDIT_CENSIMENTO_ASSI_SEMANTICI_CASSA_2026-07-04.md` (assi A1-A10).
 **Mappa di verità:** ADR-024 · ADR-022+Add.II · ADR-017 Add.I · ADR-019 (D-PROPONE) · ADR-023 ·
@@ -93,6 +94,19 @@ protezioni verificata». Celle: ✅/⚠️/✗ con puntatore al presidio o al ga
 - **D5:** sheet/rinnovi — breakdown minimo dove il conteggio è mostrato.
 - **AC-G97-3:** sul caso reale (12 totali · 5 svolte · 2 penali) ogni superficie che mostra i
   residui li rende spiegabili dalla vista. Fail: un credito «sparito» a video.
+- **✅ CHIUSO 2026-07-11.** Fetta D1-D4 (`e533f9d`, 2026-07-09): hero a 6 card + banner-SEGNALE
+  always-visible con l'equazione (totali = programmate + svolte + penali + residui), sub-label
+  «N svolte · M penali» su ContractRow+ContrattiTab, DeleteContractDialog dal wire, wire additivo
+  lista (`sedute_penali`+`crediti_residui`, batch fuso in UNA query group-by dal SSoT). Fetta D5
+  (2026-07-11): `_occupazione_breakdown_map` in `dashboard.py` = UNICO interprete batch
+  (group-by `(id_contratto, stato)`, derivazione `STATI_OCCUPAZIONE_CREDITO`/`STATI_PENALE`;
+  `_crediti_usati_map` delega; la raw-SQL COUNT dell'expiring RITIRATA); `suspended-contracts` +
+  `expiring-contracts` espongono `sedute_completate`+`sedute_penali`; sub-label sulle card
+  rinnovi/sospesi (`rinnovi-incassi/page.tsx`) e su `ExpiringContractsSheet`. Gemelli: 2 pytest
+  D5 (worklist == dettaglio, un solo interprete — `test_late_cancel_no_show.py`) + 2 vitest sheet
+  (svolte+penali dal wire · zero penali = zero rumore). LIVE (read-only, dev 3001/8001): caso
+  founder a video — card contratto 39 «12 PT · 3/12 crediti · 7 svolte · 2 penali»; card senza
+  penali mostrano solo «N svolte». Matrice: celle DV occupazione-credito + R2/DV crediti-residui → ✅.
 
 ### G9.7.4 — Guard di classe (D4 + D-LEGGI-PER-CLASSE)
 - Il gemello FE «no-recalc» (`test_semantic_guards.py`) si estende dall'asse denaro all'asse
