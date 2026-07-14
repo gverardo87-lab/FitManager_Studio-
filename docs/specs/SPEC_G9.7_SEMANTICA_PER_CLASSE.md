@@ -2,8 +2,8 @@
 
 **Tipo:** specifica prescrittiva. **Data:** 2026-07-07 · **Branch:** `FitManager_Studio`
 **Stato:** 🟡 **APERTA — G9.7.0 ✅ · G9.7.1 ✅ (incl. -bis) · G9.7.2 ✅ CHIUSO 2026-07-09 ·
-G9.7.3 ✅ CHIUSO 2026-07-11** (runbook §Runbook in coda, esecuzione trainer-driven) · restano
-G9.7.4-5. Governance: `ADR-024`
+G9.7.3 ✅ CHIUSO 2026-07-11 · G9.7.4 ✅ CHIUSO 2026-07-14** (runbook §Runbook in coda, esecuzione
+trainer-driven) · resta G9.7.5. Governance: `ADR-024`
 (accepted). Audit fondante: `docs/operations/AUDIT_CREDITI_EVENTI_ORFANI_2026-07-07.md` (13 finding
 B1-B8/D1-D5) + `AUDIT_CENSIMENTO_ASSI_SEMANTICI_CASSA_2026-07-04.md` (assi A1-A10).
 **Mappa di verità:** ADR-024 · ADR-022+Add.II · ADR-017 Add.I · ADR-019 (D-PROPONE) · ADR-023 ·
@@ -119,6 +119,28 @@ protezioni verificata». Celle: ✅/⚠️/✗ con puntatore al presidio o al ga
   referenzia il contratto) non elencata. Gemello di esaustività della classe «5 produttori».
 - **AC-G97-4:** aggiungere una tabella satellite finta al perimetro del test → rosso finché non
   dichiarata. Fail: guard vacuo.
+- **✅ CHIUSO 2026-07-14.** Cinque gemelli in `test_semantic_guards.py`:
+  *(a)* `test_g974_fe_no_credit_math` — vietati `totali−usati`, `totali−residui` e i conteggi di
+  stati evento client-side; allowlist motivata SOLO per gli aggregati-di-vista (dashboard-helpers,
+  RangeStatsBar agenda — stessa dottrina Σ-di-vista del money-guard). **Provato ROSSO sul codice
+  pre-fix**: 2 siti reali fixati (progress bar RenewalCard `totali−residui` → `crediti_usati` dal
+  wire; dropdown AssegnaContrattoBanner `totali−usati` → `crediti_residui` dal wire).
+  *(b)* anti-vacuità consumo wire: hero/ContractRow/DeleteContractDialog/banner/rinnovi LEGGONO i
+  campi occupazione; autorità = `ContractListResponse.model_fields`.
+  *(c)* `test_g974_stati_credito_no_reinline` — chiude il flag LOW G9.4-bis della matrice:
+  classificazioni wallet/receivable solo via `STATO_CREDITO_*` (SALDATO escluso dalla rete:
+  collide con l'asse `stato_pagamento`).
+  *(d)* **`PERIMETRO_TRANSIZIONE`** in `transitions.py`: 7 satellite dichiarate con dottrina
+  terminate/reopen (rate M1/reconcile · cassa IMMUTABILE R1 · rettifiche storno/reversal ·
+  receivable →ANNULLATO · wallet →ANNULLATO+fold · agenda SOLO-lettura · self `rinnovo_di` mai
+  mutato) + `test_g974_perimetro_transizioni_esaustivo` = set-equality bidirezionale col metadata
+  ORM (satellite nuova non dichiarata O voce fantasma = rosso; la rete per-nome
+  `id_contratto`/`id_contratto_origine` copre il cross-DB senza FK, pitfall #15).
+  *(e)* AC-G97-4: `test_g974_perimetro_becca_satellite_nuova` prova la scoperta su tabella FINTA
+  `prestazioni_finte` in MetaData separato (zero inquinamento) — la futura `prestazioni_singole`
+  (P1) NON può nascere senza dichiarare il suo destino nelle transizioni (CP-4 by-construction).
+  Suite full **858** pytest (+5) · **103** vitest · check-all verde. Asse DENARO invariato
+  (costante+test, zero logica toccata).
 
 ### G9.7.5 — Anticipo (D-BIRTH-AUDITOR + D-GENERATIVO-PER-ASSE)
 - Agente `.claude/agents/semantic-birth-auditor.md` dal charter SPEC_G9.4-BIS §5, esteso con la

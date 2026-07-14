@@ -3302,3 +3302,52 @@ transizioni `PERIMETRO_TRANSIZIONE` su execute_terminate/reopen) **→ G9.7.5** 
 Runbook orfani 640/641/643 + 647/649 sempre pendente (trainer-driven, in coda a SPEC_G9.7).
 
 ---
+## 2026-07-14 — G9.7.4 GATE CHIUSO (guard di classe crediti + perimetro transizioni dichiarato)
+
+**Cinque gemelli nuovi in `test_semantic_guards.py`** (la casa dei guard semantici, ADR-022
+D-INVARIANTI-IMPOSTI) — il no-recalc si estende dall'asse denaro all'asse crediti, e le
+transizioni dichiarano il destino di OGNI entità satellite:
+
+- **`test_g974_fe_no_credit_math`** — vietati nel FE: `totali−usati` (residui ricalcolati),
+  `totali−residui` (usati ricalcolati), conteggi di stati evento client-side spacciati per
+  occupazione. Allowlist motivata SOLO per gli **aggregati-di-vista** (dashboard-helpers KPI del
+  giorno, RangeStatsBar agenda — stessa dottrina Σ-di-vista del money-guard G8.4).
+  **Provato ROSSO sul codice pre-fix** (stash → red → pop): ha beccato esattamente i 2 siti reali,
+  poi fixati — progress bar `RenewalCard` (`totali−residui` → `crediti_usati` dal wire) e dropdown
+  `AssegnaContrattoBanner` (`totali−usati` → `crediti_residui` dal wire, il campo D4 c'era già).
+- **`test_g974_fe_consuma_occupazione_dal_wire`** — anti-vacuità (lezione guard G9.3):
+  hero/ContractRow/DeleteContractDialog/banner/rinnovi DEVONO leggere i campi wire; autorità
+  `ContractListResponse.model_fields` (mai il type FE).
+- **`test_g974_stati_credito_no_reinline`** — chiude il **flag LOW G9.4-bis** della matrice:
+  classificazioni wallet/receivable solo via `STATO_CREDITO_*`; `SALDATO` fuori dalla rete
+  (collide con l'asse `stato_pagamento` — assi diversi, reti diverse); verificato prima sul
+  codice: zero literal classificanti, i restanti sono SSoT/default-modello/stringhe audit.
+- **`PERIMETRO_TRANSIZIONE`** (`transitions.py`) — **7 satellite dichiarate con dottrina**
+  terminate/reopen: rate (M1/reconcile) · movimenti_cassa (IMMUTABILE R1) · rettifiche
+  (storno/reversal) · crediti_terminazione (→ANNULLATO) · crediti_cliente (→ANNULLATO+fold
+  R2-bis) · agenda (SOLO lettura; reopen NOMINA) · contratti self (`rinnovo_di` mai mutato, R8).
+  Gemello `test_g974_perimetro_transizioni_esaustivo` = **set-equality bidirezionale** col
+  metadata ORM: satellite nuova non dichiarata O voce fantasma = rosso. La scoperta ha DUE reti:
+  FK dichiarata + colonna per nome (`id_contratto`/`id_contratto_origine`) — la seconda copre il
+  pattern cross-DB senza FK (pitfall #15).
+- **`test_g974_perimetro_becca_satellite_nuova`** (AC-G97-4) — la funzione di scoperta è PURA e
+  provata con una tabella FINTA `prestazioni_finte(id_contratto)` in MetaData separato (zero
+  inquinamento del registry): scoperta senza FK ✓, non nel perimetro ✓ → il gemello andrebbe
+  rosso. **La futura `prestazioni_singole` (P1) non può nascere senza dichiarare il suo destino
+  nelle transizioni** — CP-4 della birth-review P0 diventa by-construction.
+
+**Verifica:** suite full **858 pytest** (+5, 12:11 min) · **103 vitest** · ruff · check-all
+verde. Zero submit/LIVE necessari (fix FE display-equivalenti, gate presidiato dai gemelli;
+server dev spenti → il `next build` del gate non ha ucciso nulla, lezione 2026-07-09 ③).
+**Asse DENARO invariato** (in `transitions.py` è entrata una COSTANTE dichiarativa, zero logica).
+
+**Fold-back:** SPEC_G9.7 → G9.7.4 ✅ CHIUSO (resta G9.7.5) · MATRICE: 4 celle → ✅ (CP
+stati-evento con canary G9.7.5 annotato · CP lifecycle-contratto · R4 stati-crediti/wallet ·
+R4 crediti-residui-FE) · questo log.
+
+**⏭️ RIPRESA: G9.7.5** (agente `.claude/agents/semantic-birth-auditor.md` da charter
+SPEC_G9.4-BIS §5 + lente CP; Hypothesis rule asse occupazione in `test_financial_state_machine.py`
++ invariante **I-EVENTI**; canary «crea-su-chiuso poi riapri») **→ POI P1 blocco P.**
+Runbook orfani 640/641/643 + 647/649 sempre pendente (trainer-driven, in coda a SPEC_G9.7).
+
+---
