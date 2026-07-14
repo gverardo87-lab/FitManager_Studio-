@@ -64,6 +64,48 @@ from api.services.financial.ledger import post_adjustment, post_inflow, post_out
 
 AUTO_REOPEN_ALLOWLIST = frozenset({"COMPLETAMENTO"})
 
+# ════════════════════════════════════════════════════════════
+# D-PERIMETRO-TRANSIZIONI (G9.7.4, ADR-024) — perimetro DICHIARATO delle entità satellite
+# ════════════════════════════════════════════════════════════
+#
+# Ogni tabella che referenzia `contratti` (FK dichiarata o colonna cross-ref) è una entità satellite
+# delle transizioni: terminate/reopen devono DICHIARARE cosa ne fanno — anche quando la risposta è
+# "niente" (l'omissione silenziosa è la classe d'errore dei «5 produttori mancati»). Il gemello di
+# esaustività (`test_semantic_guards.py::test_g974_perimetro_transizioni_esaustivo`) scopre le
+# satellite dal metadata ORM e fallisce se qui manca una voce (o se una voce è fantasma): una tabella
+# nuova con FK verso il contratto NON può nascere senza decidere il suo destino nelle transizioni
+# (es. CP-4 birth-review P0: la futura `prestazioni_singole` dovrà entrare qui, non in silenzio).
+PERIMETRO_TRANSIZIONE: dict[str, str] = {
+    "rate_programmate": (
+        "terminate F: soft-delete SOLO non-saldate (marker M1, mai le SALDATE — B-3); "
+        "reopen R5/R5-bis: ripristino inverso-esatto + reconcile_rate_plan (ADR-021)"
+    ),
+    "movimenti_cassa": (
+        "terminate D: gamba d'azione via penne (post_inflow/post_outflow); "
+        "reopen R1: IMMUTABILE — la cassa mossa non si tocca mai (ADR-019, fatti datati)"
+    ),
+    "rettifiche_contratto": (
+        "terminate E: storno via terza penna (post_adjustment); "
+        "reopen R2: reversal −quota — ledger append-only, quota == Σ righe"
+    ),
+    "crediti_terminazione": (
+        "terminate D/A_CREDITO: nasce il receivable (G7.10, fuori da residuo()); "
+        "reopen R3: → ANNULLATO (gli incassi parziali restano, R1)"
+    ),
+    "crediti_cliente": (
+        "terminate D/CREDITO_CLIENTE: nasce il wallet del non-rimborsato (ADR-020); "
+        "reopen R4+R2-bis: → ANNULLATO + fold dell'erogato in totale_rimborsato (D1 forma-d)"
+    ),
+    "agenda": (
+        "SOLO lettura in entrambe: count_sedute_* per il conguaglio (terminate C), occupazione per "
+        "sync_contract_chiuso — mai mutati; i PT orfani del periodo li NOMINA reopen (G9.7.2, D-PROPONE)"
+    ),
+    "contratti": (
+        "self-ref (rinnovo_di): la catena rinnovi non è MAI mutata dalle transizioni; "
+        "il rinnovo vivo lo segnala reopen-preview (R8), mai un re-parenting implicito"
+    ),
+}
+
 
 def puo_auto_riaprire(contract: Contract) -> bool:
     """Reopen-allowlist G7.2 (FDM §9.5.6): l'auto-riapertura (credit/payment-driven) scatta SOLO per le

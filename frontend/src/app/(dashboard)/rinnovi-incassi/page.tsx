@@ -144,8 +144,9 @@ function RenewalCard({
     : item.giorni_rimasti === 1
       ? "Scade domani"
       : `Scade tra ${item.giorni_rimasti}g`;
+  // G9.7.4 (D-LEGGI-PER-CLASSE): occupazione dal wire, mai derivata (totali − residui)
   const creditProgress = item.crediti_totali > 0
-    ? ((item.crediti_totali - item.crediti_residui) / item.crediti_totali) * 100
+    ? (item.crediti_usati / item.crediti_totali) * 100
     : 0;
 
   return (

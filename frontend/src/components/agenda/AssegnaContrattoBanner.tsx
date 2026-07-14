@@ -64,7 +64,7 @@ export function AssegnaContrattoBanner({ eventId, idCliente, onAssigned }: Asseg
                 {aperti.map((c) => (
                   <SelectItem key={c.id} value={c.id.toString()}>
                     {c.tipo_pacchetto ?? `Contratto #${c.id}`} ·{" "}
-                    {(c.crediti_totali ?? 0) - c.crediti_usati} crediti residui
+                    {c.crediti_residui} crediti residui
                   </SelectItem>
                 ))}
               </SelectContent>

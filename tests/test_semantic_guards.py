@@ -175,3 +175,166 @@ def test_g84_fe_consuma_ssot_netto_e_saldo():
     assert "saldo_progressivo" in types_api            # contratto typescript sincronizzato
     # e il campo esiste davvero sul wire: lo schema Pydantic è l'autorità, non il type FE
     assert "saldo_progressivo" in ContractMovementItem.model_fields
+
+
+# ── G9.7.4 — D-LEGGI-PER-CLASSE: il guard no-recalc si estende dall'asse denaro all'asse crediti ──
+
+def test_g974_fe_no_credit_math():
+    """Il gemello-crediti di `test_g84_fe_no_money_math` (SPEC_G9.7 §G9.7.4): ogni derivato
+    dell'asse occupazione mostrato dal FE è un campo del backend — mai `totali − usati`,
+    mai `totali − residui`, mai conteggi di stati evento spacciati per occupazione contratto.
+    Le eccezioni entrano SOLO per allowlist esplicita motivata, mai in silenzio."""
+    import re
+    from pathlib import Path
+
+    frontend_src = Path(__file__).resolve().parents[1] / "frontend" / "src"
+    assert frontend_src.is_dir(), frontend_src
+
+    forbidden = (
+        ("residui ricalcolati inline (totali − usati)",
+         re.compile(r"crediti_totali[^\n]{0,24}-\s*(?:\w+\.)?crediti_usati")),
+        ("usati ricalcolati inline (totali − residui)",
+         re.compile(r"crediti_totali\s*-\s*(?:\w+\.)?crediti_residui")),
+        ("occupazione contata da stati evento client-side",
+         re.compile(r"\.filter\([^\n]*\.stato\s*===?\s*\"(?:Programmato|Completato|Cancellato_Tardivo|No_Show)\"[^\n]*\)\s*\.length")),
+    )
+    # Eccezioni LEGITTIME censite (stessa dottrina del money-guard: aggregato di VISTA = conteggio
+    # delle sole righe visibili, riconcilia col visibile; NON è l'occupazione di un contratto):
+    allowlist: set[tuple[str, str]] = {
+        ("lib/dashboard-helpers.ts", "occupazione contata da stati evento client-side"),          # KPI del giorno sul buffer visibile
+        ("app/(dashboard)/agenda/page.tsx", "occupazione contata da stati evento client-side"),   # RangeStatsBar: KPI del range visibile
+    }
+
+    violations = []
+    for path in sorted(frontend_src.rglob("*.ts")) + sorted(frontend_src.rglob("*.tsx")):
+        rel = path.relative_to(frontend_src).as_posix()
+        text = path.read_text(encoding="utf-8")
+        for name, pattern in forbidden:
+            if pattern.search(text) and (rel, name) not in allowlist:
+                violations.append(f"{rel}: {name}")
+    assert violations == [], (
+        "credit-math client-side vietato — il FE legge l'occupazione dal wire (SPEC_G9.7 G9.7.4):\n"
+        + "\n".join(violations)
+    )
+
+
+def test_g974_fe_consuma_occupazione_dal_wire():
+    """Anti-vacuità del gemello sopra (lezione guard G9.3): le superfici DEVONO consumare i campi
+    wire dell'asse occupazione — se hero/liste/banner smettono di leggere `crediti_residui`/
+    `sedute_penali`/`crediti_usati`, il divieto di credit-math sarebbe vero-ma-vuoto."""
+    from pathlib import Path
+
+    from api.schemas.financial import ContractListResponse
+
+    frontend_src = Path(__file__).resolve().parents[1] / "frontend" / "src"
+    hero = (frontend_src / "components/contracts/ContractFinancialHero.tsx").read_text(encoding="utf-8")
+    row = (frontend_src / "components/contracts/ContractRow.tsx").read_text(encoding="utf-8")
+    delete_dialog = (frontend_src / "components/contracts/DeleteContractDialog.tsx").read_text(encoding="utf-8")
+    assegna_banner = (frontend_src / "components/agenda/AssegnaContrattoBanner.tsx").read_text(encoding="utf-8")
+    rinnovi = (frontend_src / "app/(dashboard)/rinnovi-incassi/page.tsx").read_text(encoding="utf-8")
+
+    assert "contract.crediti_residui" in hero          # D1: residui dal SSoT, mai derivati
+    assert "sedute_penali" in hero                     # D1: penali = segnale, dal wire
+    assert "sedute_penali" in row                      # D2: sub-label «N svolte · M penali»
+    assert "contract.crediti_residui" in delete_dialog  # D4: delete-guard legge il wire
+    assert "crediti_residui" in assegna_banner         # G9.7.4: dropdown orfani dal wire
+    assert "crediti_usati" in rinnovi                  # G9.7.4: progress bar dal wire
+    # e i campi esistono davvero sul wire: lo schema Pydantic è l'autorità, non il type FE
+    for campo in ("crediti_residui", "sedute_penali", "sedute_completate"):
+        assert campo in ContractListResponse.model_fields, campo
+
+
+def test_g974_stati_credito_no_reinline():
+    """Asse stati crediti/wallet (matrice, flag LOW G9.4-bis chiuso qui): le CLASSIFICAZIONI su
+    `CreditoCliente`/`CreditoTerminazione.stato` passano dalle costanti SSoT `STATO_CREDITO_*` —
+    mai literal re-inlined nei confronti. `SALDATO` è escluso dalla rete (collide con l'asse
+    `stato_pagamento`, che è un altro asse); ogni classificazione wallet realistica tocca
+    APERTO (worklist) o ANNULLATO (reopen). Default del modello e stringhe display/audit non
+    classificano → fuori dal pattern per costruzione (nessun `==`/`!=`/`in_`)."""
+    import re
+    from pathlib import Path
+
+    from api.services import contract_state as cstate
+
+    api_src = Path(__file__).resolve().parents[1] / "api"
+    assert api_src.is_dir(), api_src
+
+    forbidden = re.compile(
+        r"stato\s*(?:==|!=)\s*\"(?:APERTO|ANNULLATO)\""     # confronto diretto con literal
+        r"|\.in_\([^\n]*\"(?:APERTO|ANNULLATO)\""            # membership SQL con literal
+        r"|stato\s+in\s*[\({\[][^\n]*\"(?:APERTO|ANNULLATO)\""  # membership python con literal
+    )
+    violations = [
+        f"{path.relative_to(api_src).as_posix()}: {m.group(0)!r}"
+        for path in sorted(api_src.rglob("*.py"))
+        for m in [forbidden.search(path.read_text(encoding="utf-8"))]
+        if m
+    ]
+    assert violations == [], (
+        "classificazione stati credito re-inlined — usare cstate.STATO_CREDITO_* (SSoT):\n"
+        + "\n".join(violations)
+    )
+    # Anti-vacuità: il SSoT esiste coi valori attesi E le transizioni lo CONSUMANO davvero
+    assert cstate.STATO_CREDITO_APERTO == "APERTO"
+    assert cstate.STATO_CREDITO_ANNULLATO == "ANNULLATO"
+    from api.services.financial import transitions
+    assert "STATO_CREDITO_ANNULLATO" in inspect.getsource(transitions)
+
+
+# ── G9.7.4 — D-PERIMETRO-TRANSIZIONI: le transizioni dichiarano il destino di OGNI satellite ────
+
+def _tabelle_satellite_contratto(tables):
+    """Pura (testabile con tabelle finte): scopre le tabelle che referenziano `contratti` — via FK
+    dichiarata O colonna cross-ref per nome. La rete per-nome copre il pattern cross-DB senza FK
+    (pitfall #15: una satellite può nascere senza `foreign_key=` e sfuggire alla rete FK)."""
+    found = set()
+    for table in tables:
+        for col in table.columns:
+            fk_verso_contratto = any(fk.column.table.name == "contratti" for fk in col.foreign_keys)
+            if fk_verso_contratto or col.name in ("id_contratto", "id_contratto_origine"):
+                found.add(table.name)
+                break
+    return found
+
+
+def test_g974_perimetro_transizioni_esaustivo():
+    """SPEC_G9.7 §G9.7.4 (gemello di esaustività della classe «5 produttori»): l'insieme delle
+    satellite scoperte dal metadata ORM == l'insieme dichiarato in PERIMETRO_TRANSIZIONE.
+    Una tabella nuova che referenzia il contratto → rosso finché terminate/reopen non ne
+    dichiarano il destino; una voce fantasma (tabella rimossa/rinominata) → rosso uguale."""
+    import api.models  # noqa: F401 — registra tutti i modelli business nel metadata
+    from sqlmodel import SQLModel
+
+    from api.services.financial.transitions import PERIMETRO_TRANSIZIONE
+
+    satellites = _tabelle_satellite_contratto(SQLModel.metadata.tables.values())
+    non_dichiarate = satellites - set(PERIMETRO_TRANSIZIONE)
+    fantasma = set(PERIMETRO_TRANSIZIONE) - satellites
+    assert non_dichiarate == set(), (
+        "entità satellite del contratto SENZA destino dichiarato nelle transizioni "
+        f"(aggiungile a PERIMETRO_TRANSIZIONE con la dottrina terminate/reopen): {sorted(non_dichiarate)}"
+    )
+    assert fantasma == set(), f"voci fantasma nel perimetro (tabella inesistente): {sorted(fantasma)}"
+    # mai un perimetro-segnaposto: ogni voce porta la sua dottrina, non una stringa vuota
+    for nome, dottrina in PERIMETRO_TRANSIZIONE.items():
+        assert len(dottrina.strip()) >= 20, f"perimetro senza dottrina: {nome}"
+
+
+def test_g974_perimetro_becca_satellite_nuova():
+    """AC-G97-4 (anti-vacuità del gemello sopra): una tabella satellite FINTA con `id_contratto`
+    viene scoperta dalla rete per-nome anche SENZA FK dichiarata (pitfall #15) e non essendo nel
+    perimetro manderebbe rosso il gemello. Provato sulla funzione pura con un MetaData separato
+    (zero inquinamento del registry reale)."""
+    from sqlalchemy import Column, Integer, MetaData, Table
+
+    from api.services.financial.transitions import PERIMETRO_TRANSIZIONE
+
+    md = MetaData()
+    finta = Table(
+        "prestazioni_finte", md,
+        Column("id", Integer, primary_key=True),
+        Column("id_contratto", Integer),  # cross-ref per nome, NESSUNA FK (il caso pitfall #15)
+    )
+    trovate = _tabelle_satellite_contratto([finta])
+    assert "prestazioni_finte" in trovate              # la rete per-nome la becca
+    assert "prestazioni_finte" not in PERIMETRO_TRANSIZIONE  # → il gemello andrebbe rosso
