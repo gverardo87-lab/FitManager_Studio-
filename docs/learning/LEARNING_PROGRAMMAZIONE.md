@@ -586,7 +586,7 @@ Quando le 4 regole valgono, "aggiungere uno scenario" = aggiungere un membro all
 
 **Failure mode:** se introduco una categoria/stato nuovo e verifico solo "il flusso che lo crea funziona", gli interpreti non aggiornati lo classificano in silenzio col default sbagliato → il sintomo emerge settimane dopo come "numero strano" in una superficie lontana, e lo scopre un utente (o il founder in panico) invece di un test rosso il giorno della nascita.
 
-**Domande aperte:** [ ] gate G9 per il read-model della cassa (addendum ADR-022 + SPEC) — [ ] agente auditor "nascita di una semantica" che rilevi nel diff interpreti impliciti non totali (in discussione).
+**Domande aperte:** [x] gate G9 per il read-model della cassa → FATTO (G9.4-bis, ADR-022 Add.II) — [x] agente auditor "nascita di una semantica" → FATTO (`semantic-birth-auditor` in `.claude/agents/`, G9.7.5: charter S1-S5 + lente CP composizione-protezioni).
 
 ### Property-based testing stateful — l'esplorazione va MISURATA, non presunta (2026-07-05)
 
@@ -600,7 +600,23 @@ Quando le 4 regole valgono, "aggiungere uno scenario" = aggiungere un membro all
 
 **Failure mode:** scrivo la macchina, vedo 30 esempi passare in 10 secondi, committo "property-based testing ✅". Mesi dopo una regressione su reopen non viene MAI colta perché reopen non è mai stato esplorato con successo in nessuna run — il presidio era decorativo dal giorno uno, e nessuno l'ha saputo perché nessuno ha mai contato.
 
-**Domande aperte:** [ ] estendere le rule alle penali (`Cancellato_Tardivo`/`No_Show` via API, companion write) e all'incasso receivable generativo (oggi solo canary/suite) — [ ] la sonda di liveness può diventare un contatore permanente (`hypothesis.event()` + `--hypothesis-show-statistics`) invece che usa-e-getta.
+**Domande aperte:** [x] estendere le rule alle penali → FATTO (G9.7.5: `cambia_stato_seduta` via PUT, tutti i 6 stati) — [x] sonda permanente → FATTO (G9.7.5: `RULE_FIRINGS` Counter di modulo, azzerato+asserito NEL test principale: nessuna rule a zero sotto il seed).
+
+**Follow-up 2026-07-16 (G9.7.5, asse occupazione: due lezioni nuove dalla sonda).**
+(1) **Quando un builder attraversa il boundary API, l'isolamento per-istanza non basta più.** La
+macchina gira N esempi nello stesso DB; l'orologio per-istanza (`self._hour`) andava bene per gli
+INSERT diretti (nessun check), ma le create via API passano da `_check_overlap` → dall'esempio 2
+in poi ogni slot era già occupato dai residui degli esempi precedenti = 409 perenne, liveness
+morta. Fix: orologio monotono a livello di MODULO (`_CLOCK = count(1)`). Classe generale: le
+risorse CONTESE dal dominio (slot temporali, nomi unici, contatori) si allocano a livello di RUN,
+non di istanza — l'isolamento logico della macchina non isola i vincoli globali del dominio.
+(2) **La liveness va misurata per-OUTCOME, non solo per-invocazione.** `crea_pt_auto` sparava 45
+volte ma `_orfano_nato`=0: l'auto-FIFO trovava SEMPRE un contratto aperto residuo cross-esempio
+che adottava l'evento — il ramo interessante (la nascita B1) era irraggiungibile nel generativo
+pur con la rule vivissima. Fix: builder `nasce_orfano` che inietta lo stato raggiungibile
+(provato dal canary API) direttamente nel bundle. Una rule può essere "esercitata" al 100% e non
+raggiungere MAI il ramo per cui esiste: contare le invocazioni prova che la generazione la
+seleziona, contare gli ESITI prova che l'esplorazione arriva dove serve.
 
 ---
 
