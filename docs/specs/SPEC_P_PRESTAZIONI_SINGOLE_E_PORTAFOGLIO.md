@@ -126,6 +126,14 @@ P5 (FE).
   motivo_prezzo_zero` (Q7). Wiring in `invariant_gate` (stesso regime log/raise di I5/I6).
 - **Gemelli semantici** in `test_semantic_guards.py`: categoria in `PRESTAZIONE_CASH_IN` e MAI in
   `CONTRACT_CASH_IN`; `classify` totale sulle 7 classi (partizione per costruzione).
+- **Gemello di totalità READ-MODEL (da AUDIT_PRE_RELEASE_2026-07-16, M3-sem):** il presidio delle
+  7 classi copre ANCHE gli interpreti di lettura, non solo `classify` — oggi `get_movement_stats`
+  ha `entrate_lorde` a whitelist di 2 classi + un `else` che somma **alle uscite del grafico**, e
+  `get_financial_trend` ha l'`else` bucket-altri: una classe nuova compilerebbe verde finendo
+  classificata male. Shape: pin di cardinalità `set(ClasseContabile) == {…7…}` con messaggio che
+  ELENCA gli interpreti da aggiornare, oppure bucketing su mapping totale
+  `dict[ClasseContabile, bucket]` ad accesso diretto (KeyError = fail-loud). La 7ª classe non
+  nasce finché stats/trend non la gestiscono esplicitamente.
 - **AC-P1:** suite verde; classificazione di ogni movimento ESISTENTE invariata (zero movimenti con
   `id_prestazione` → asse DENARO byte-identico); `financial-invariant-verifier` PASS.
 

@@ -3404,3 +3404,34 @@ RICAVO_PRESTAZIONE_SINGOLA` + penna `post_prestazione_inflow` + IP1-IP4; il peri
 **Runbook orfani 640/641/643 + 647/649 sempre pendente (trainer-driven, §Runbook SPEC_G9.7).**
 
 ---
+## 2026-07-16 (sera) — Pre-release candidata v1.0.14: triade auditor sul batch + piano R1 (checkpoint, docs-only)
+
+**Decisione founder ratificata:** rilasciare al confine di blocco (G9.7 chiuso) PRIMA di P1 —
+batch 206 commit già grande, valore non consegnato (Chiara su v1.0.10), OD-2 affamato di
+telemetria. Runbook a 6 step; **step 1 eseguito** = triade auditor read-only in parallelo sul
+delta `9ab426e..b888a0a`, con il `semantic-birth-auditor` alla PRIMA corsa (proposta founder:
+collaudo pre-P1). Evidenza consolidata in `operations/AUDIT_PRE_RELEASE_2026-07-16.md` (SSoT).
+
+**Verdetti:** money **PRESERVED** (394 oracle verdi, V1-V5 puliti, 1 LOW: `posizione_netta_contratto`
+oracolo morto) · drift 8 finding TUTTI docs-layer (2 HIGH: INDEX dà G9.7 «da implementare» e ferma
+gli ADR a 022; 1 falso positivo confutato in triage — il «29 tabelle» di CLAUDE.md è GIUSTO,
+l'aritmetica dell'agente no) · semantic **AT RISK** 0 HIGH / 4 MEDIUM — il finding che conta:
+**M1 `CONSUNZIONE` buca il guard H1 di `unpay_rate`** (predicato-famiglia non totale: niente
+storno, niente rimborso, prefisso TERMINAZIONE_ non matcha → revoca su CHIUSO passa; in dev/CI il
+gate maschera con 409 generico, **in prod log-only committa**). Più M2/M4 = re-inline
+(`sedute_penali` literal nel dettaglio; `crediti_residui` inline senza clamp nella worklist
+orfani) **nel codice scritto da me in G9.7.2/3** — l'enforcement ha beccato il suo autore.
+
+**Fetta R1 definita (ratificanda, pre-bump):** R1.1 predicato SSoT `is_chiusura_da_terminazione`
+in transitions.py consumato da guard unpay E predicato I1 + gemello provato ROSSO · R1.2 Σ su
+STATI_PENALE · R1.3 worklist orfani delega SSoT+clamp · R1.4 costante CAUSALE_BACKFILL_LEGACY ·
+R1.5 F1 pin-vs-delete [decisione founder] — poi R1-docs (INDEX 2 HIGH, conteggi 860/103/372,
+annotazioni L1/L3/L4/L6-sem). Nessun nuovo ADR (tutto dentro dottrina ratificata). Deferral:
+M3-sem → **nota depositata in SPEC_P §P1** (il gemello 7-classi copre ANCHE stats/trend, non solo
+classify) · INC-2026-03-29 senza postmortem = policy founder in coda · L2/L7-sem → core/P5.
+
+**Metodo:** governance docs-only PRIMA (questo commit: audit + INDEX + SPEC_P + log), codice DOPO
+il GO. **⏭️ ATTESA GO founder su R1 → poi step 2 runbook (OD-1 sui backup di Alessio E Chiara,
+salto doppio v1.0.10→v1.0.14) → bump → pipeline ADR-004 → consegna → main align (modello B).**
+
+---
