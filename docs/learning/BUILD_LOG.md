@@ -3351,3 +3351,56 @@ SPEC_G9.4-BIS §5 + lente CP; Hypothesis rule asse occupazione in `test_financia
 Runbook orfani 640/641/643 + 647/649 sempre pendente (trainer-driven, in coda a SPEC_G9.7).
 
 ---
+## 2026-07-16 — G9.7.5 GATE CHIUSO (birth-auditor + Hypothesis I-EVENTI + canary composizione) → G9.7 tutti i gate chiusi
+
+**Tre consegne** (diff solo-test + agente: asse DENARO invariato per costruzione):
+
+- **Agente `semantic-birth-auditor`** (`.claude/agents/`, terzo della famiglia read-only dopo
+  docs-drift e invariant-verifier): charter S1-S5 da SPEC_G9.4-BIS §5 (censimento assi ·
+  interpreti impliciti · totalità sul diff · netto nudo · rito di nascita) + la lente **CP
+  «composizione protezioni»** di SPEC_G9.7 — per ogni guard nuovo/toccato enumera gli stati che
+  può PRODURRE o INTRAPPOLARE e pretende l'uscita esplicita (il deadlock B1×no-re-parenting è il
+  caso canonico: due protezioni giuste, zero uscite). Tassonomia findings: ASSE-APERTO /
+  INTERPRETE-IMPLICITO / TOTALITÀ-VIOLATA / NETTO-NUDO / NASCITA-SENZA-RITO / CP-DEADLOCK.
+  Read-only meccanico, findings→STRUTTURA, metrica = findings in calo. Prima corsa reale: P1.
+
+- **Macchina Hypothesis estesa all'asse OCCUPAZIONE** (`test_financial_state_machine.py`):
+  5 rule — `crea_pt_auto` (auto-FIFO: la nascita B1 quando i contratti sono chiusi/pieni),
+  `crea_pt_su_contratto` (bouncer chiuso/credit-guard esplorati), `nasce_orfano` (builder
+  diretto), `cambia_stato_seduta` (PUT api, penali G7.8-bis comprese, fence ADR-023 esplorato),
+  `assegna_orfano` (G9.7.2) — + invariante **I-EVENTI** dopo OGNI mossa: PT in occupazione ⇒
+  contratto VALIDO (esiste, non eliminato, stesso cliente) OPPURE segnalato dalla worklist
+  `/dashboard/orphan-events` — mai occupazione fantasma, mai orfano invisibile.
+
+- **AC-G97-5 liveness + canary.** Sonda `RULE_FIRINGS` (Counter modulo) azzerata e ASSERITA nel
+  test principale: nessuna delle 15 rule a zero sotto `SM_SEED` (distribuzione misurata 2026-07-16:
+  create 37 · reopen 51 · cambia_stato 58 · nasce_orfano 68 · assegna 16 · pay 3 · unpay 4 …).
+  `test_i_eventi_non_vacuo` prova l'oracolo su ENTRAMBI i rami (monkeypatch worklist→INVISIBILE;
+  id_contratto inesistente→FANTASMA). `test_canary_crea_su_chiuso_poi_riapri` = replay esplicito
+  B1→segnale→B2 propone (reopen NOMINA, non riaggancia)→assegna esplicita→occupa (crediti 2→3)
+  →segnale spento. Suite **860** pytest (+2) · fascia adiacente 38 · check-all verde.
+
+**2 scoperte dalla sonda (non dal design):**
+1. **Orologio per-istanza = liveness morta dall'esempio 2**: la macchina gira N esempi nello
+   stesso DB; il vecchio `self._hour` ripartiva da 0 a ogni istanza → le create via API (che, a
+   differenza degli insert diretti, PASSANO da `_check_overlap`) sarebbero morte di 409 overlap
+   sugli slot degli esempi precedenti. Fix: `_CLOCK` monotono a livello MODULO. Classe generale:
+   quando un builder passa dal boundary API, l'isolamento per-istanza non basta più — le risorse
+   contese (slot temporali) vanno allocate a livello di RUN.
+2. **La nascita spontanea dell'orfano è quasi-irraggiungibile nel generativo**: `_orfano_nato`=0
+   sotto il seed — i contratti aperti residui degli esempi precedenti ADOTTANO sempre l'evento
+   (FIFO cross-esempio). Senza il builder `nasce_orfano` l'esplorazione non avrebbe MAI esercitato
+   assegna-con-successo né il ramo orfano di I-EVENTI: la liveness va MISURATA per-outcome, non
+   solo per-invocazione (una rule che spara 45 volte può non raggiungere mai il ramo interessante).
+
+**Fold-back:** SPEC_G9.7 → G9.7.5 ✅ + header 🟢 tutti-i-gate-chiusi (spec aperta SOLO per il
+§Runbook trainer-driven) + Stato DoD 6/7 · MATRICE: riga «aggancio eventi×contratto» R3/R4/DV/CP
+→ ✅ con evidenze, R1/R2 = rischio residuo ACCETTATO con puntatore P5; canary stati-evento FATTO;
+regola manutenzione ora punta all'agente attivo · questo log.
+
+**⏭️ RIPRESA: P1 (blocco P, SPEC_P)** — schema `prestazioni_singole` + 7ª `ClasseContabile.
+RICAVO_PRESTAZIONE_SINGOLA` + penna `post_prestazione_inflow` + IP1-IP4; il perimetro-transizioni
+(AC-G97-4) e la riga-matrice P la aspettano al varco; birth-run dell'auditor sulla nascita.
+**Runbook orfani 640/641/643 + 647/649 sempre pendente (trainer-driven, §Runbook SPEC_G9.7).**
+
+---

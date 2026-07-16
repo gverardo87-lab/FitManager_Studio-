@@ -1,9 +1,9 @@
 # SPEC_G9.7_SEMANTICA_PER_CLASSE
 
 **Tipo:** specifica prescrittiva. **Data:** 2026-07-07 · **Branch:** `FitManager_Studio`
-**Stato:** 🟡 **APERTA — G9.7.0 ✅ · G9.7.1 ✅ (incl. -bis) · G9.7.2 ✅ CHIUSO 2026-07-09 ·
-G9.7.3 ✅ CHIUSO 2026-07-11 · G9.7.4 ✅ CHIUSO 2026-07-14** (runbook §Runbook in coda, esecuzione
-trainer-driven) · resta G9.7.5. Governance: `ADR-024`
+**Stato:** 🟢 **TUTTI I GATE CHIUSI — G9.7.0 ✅ · G9.7.1 ✅ (incl. -bis) · G9.7.2 ✅ 2026-07-09 ·
+G9.7.3 ✅ 2026-07-11 · G9.7.4 ✅ 2026-07-14 · G9.7.5 ✅ 2026-07-16.** La spec resta aperta SOLO
+per il §Runbook in coda (recupero orfani reali, esecuzione trainer-driven). Governance: `ADR-024`
 (accepted). Audit fondante: `docs/operations/AUDIT_CREDITI_EVENTI_ORFANI_2026-07-07.md` (13 finding
 B1-B8/D1-D5) + `AUDIT_CENSIMENTO_ASSI_SEMANTICI_CASSA_2026-07-04.md` (assi A1-A10).
 **Mappa di verità:** ADR-024 · ADR-022+Add.II · ADR-017 Add.I · ADR-019 (D-PROPONE) · ADR-023 ·
@@ -151,6 +151,27 @@ protezioni verificata». Celle: ✅/⚠️/✗ con puntatore al presidio o al ga
   orfano (mai occupazione fantasma, mai orfano invisibile).
 - **AC-G97-5:** liveness provata (le rule nuove vengono esercitate — sonda come G9.5); il canary
   «crea-su-chiuso poi riapri» riproduce B1/B2 e verifica il comportamento nuovo.
+- **✅ CHIUSO 2026-07-16.**
+  *(a)* **Agente** `.claude/agents/semantic-birth-auditor.md` — terzo membro della famiglia
+  auditor read-only (charter S1-S5 da SPEC_G9.4-BIS §5 + lente **CP composizione-protezioni**:
+  per ogni guard nuovo/toccato enumera stati prodotti/intrappolati e pretende l'uscita esplicita;
+  tassonomia ASSE-APERTO / INTERPRETE-IMPLICITO / TOTALITÀ-VIOLATA / NETTO-NUDO /
+  NASCITA-SENZA-RITO / CP-DEADLOCK). Read-only meccanico (no Write/Edit), findings→STRUTTURA,
+  metrica = findings in calo. Prima corsa reale prevista: nascita `prestazioni_singole` (P1).
+  *(b)* **Macchina Hypothesis estesa all'asse occupazione** (`test_financial_state_machine.py`):
+  5 rule nuove — `crea_pt_auto` (la nascita B1 via auto-FIFO), `crea_pt_su_contratto` (chiuso→400
+  esplorato), `nasce_orfano` (builder: dà orfani all'esplorazione — la nascita spontanea è rara,
+  i contratti residui cross-esempio adottano sempre), `cambia_stato_seduta` (PUT via API, penali
+  comprese, fence 409 esplorato), `assegna_orfano` — + invariante **I-EVENTI** dopo OGNI mossa
+  (contratto valido O segnalato in worklist: mai occupazione fantasma, mai orfano invisibile).
+  *(c)* **AC-G97-5 liveness**: sonda `RULE_FIRINGS` azzerata+asserita NEL test principale
+  (nessuna delle 15 rule a zero sotto `SM_SEED`; orologio `_CLOCK` condiviso a livello modulo —
+  un orologio per-istanza avrebbe ucciso le create API col 409 overlap cross-esempio).
+  `test_i_eventi_non_vacuo` prova l'oracolo su ENTRAMBI i rami (worklist svuotata via monkeypatch
+  → INVISIBILE; `id_contratto` inesistente → FANTASMA). Canary
+  `test_canary_crea_su_chiuso_poi_riapri` = replay esplicito della composizione B1→segnale→B2
+  propone→assegna→occupa+segnale spento. Suite **860** pytest (+2) · fascia adiacente 38 verdi ·
+  check-all verde · asse DENARO invariato (diff solo-test + agente).
 
 ---
 
@@ -164,6 +185,9 @@ apertura pendente per DoD G8.4) · B7/B8 (auto-protezioni: documentate in matric
 recuperabili via endpoint auditato + 640/641 recuperati; (4) occupazione spiegabile su ogni
 superficie; (5) guard crediti + perimetro transizioni nel gate; (6) auditor attivo + Hypothesis
 estesa con liveness provata; (7) suite verde, asse DENARO invariato, check-all verde.
+
+**Stato DoD (2026-07-16):** (1)(2)(4)(5)(6)(7) ✅ · (3) endpoint+visibilità ✅, recupero orfani
+reali PENDENTE → §Runbook (trainer-driven, unica voce che tiene aperta la spec).
 
 **Quality gate per ogni gate di codice:** pytest (full su diff api/ money-adjacent; fascia su
 FE/test-only) + vitest + next build + check-all; commit specifici `feat: G9.7.N — …`; fold-back
