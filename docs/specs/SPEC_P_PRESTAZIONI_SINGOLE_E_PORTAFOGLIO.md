@@ -2,7 +2,10 @@
 
 **Tipo:** specifica prescrittiva. **Data:** 2026-07-08 · **Branch:** `FitManager_Studio`
 **Stato:** 🟡 **APERTA — P0 CHIUSO** (2026-07-08: P-D1..P-D6 ratificate una a una, P-D6 rivista;
-riga matrice depositata; birth-review FATTA — CP-1..CP-4 foldati nei gate). **Prossimo: P1.**
+riga matrice depositata; birth-review FATTA — CP-1..CP-4 foldati nei gate). **Coda #2
+(sequenza founder 2026-07-19): P1 apre DOPO la release v1.0.14** — runbook in
+`operations/AUDIT_PRE_RELEASE_2026-07-16.md` §7 (GO R1 → OD-1 → bump → pipeline ADR-004 →
+consegna Chiara+Alessio). A valle del blocco P: blocco G-MAC (`SPEC_G-MAC_CONSEGNA_MACOS.md`).
 **Governance:** ADR-025 (D-CLASSE-PRESTAZIONE, D-INSOLUTO-DERIVATO, D-WALLET-SEPARATO-COMPENSA,
 D-PARZIALE-AMMESSO, D-UNPAY-FLOOR, D-PAGATORE-LEGGERO, D-REGISTRO-OPERATIVO,
 D-PREZZO-LIBERO-CONSIGLIATO, D-PORTAFOGLIO, D-SCELTA-ALLA-CREAZIONE, D-SEGNALE-AZIONE) dentro la

@@ -3435,3 +3435,53 @@ il GO. **⏭️ ATTESA GO founder su R1 → poi step 2 runbook (OD-1 sui backup 
 salto doppio v1.0.10→v1.0.14) → bump → pipeline ADR-004 → consegna → main align (modello B).**
 
 ---
+## 2026-07-17 — Nuovo fronte macOS (pilota Daniele, MacBook Air M1): audit + G-MAC.0 fingerprint FATTO
+
+**Trigger founder:** Daniele (PT pilota, primo cliente reale) ha un MacBook Air M1 2020 (ARM64,
+8GB, macOS Tahoe 26.5 — foto specifiche). Bozza strategia da chat esterna (fingerprint
+cross-platform) usata come riferimento NON vincolante; grounding sul codice reale.
+
+- **Audit accoppiamenti Windows** (workflow 6 agenti: tunnel, build/installer, sweep OS, deps + 2
+  ricerche web con fonti): sintesi nelle «verità fondanti» di `specs/SPEC_G-MAC_CONSEGNA_MACOS.md`
+  §1. Chiave: runtime `api/` quasi tutto portabile (1 solo BLOCKER: `tunnel_config.py:35` hardcoda
+  `frpc.exe` → tunnel muto su mac); la montagna è la distribuzione (launcher.bat, Inno, node.exe,
+  Nuitka `--msvc`); Nuitka NON cross-compila (build su GH Actions `macos-15` ARM64); bundle Next
+  standalone platform-specific (sharp win32 dentro); Gatekeeper Tahoe = rischio consegna n.1
+  (right-click bypass RIMOSSO; canale scp/zip-USB non applica quarantena; MAI AirDrop/browser);
+  layout FLAT → `config.py` invariato; frpc darwin_arm64 v0.61.1 ufficiale ESISTE.
+- **G-MAC.0 (fingerprint cross-platform) IMPLEMENTATO:** `_fingerprint_windows()` estratta (puro
+  spostamento) + `_fingerprint_macos()` (SINGOLA invocazione `ioreg -rd1 -c IOPlatformExpertDevice`,
+  hash `sha256("IOPlatformUUID|IOPlatformSerialNumber")` ordine fissato, disciplina tutto-o-niente
+  INC-2026-06-18: retry sui vuoti, no-retry sui timeout, mai hash parziale, mai cache di
+  unavailable) + dispatch `platform.system()`. **T1 PASS: oracolo hash pre/post refactor identico
+  (`695ad621…4315`)** → licenze Windows esistenti intatte. Suite **867** (+7: hash+ordine, singola
+  invocazione §4.1, tutto-o-niente, retry, timeout, self-heal, dispatch); fixture forza il ramo
+  Windows → suite valida anche su host darwin. Il gate CHIUDE solo con T2 su hardware macOS reale.
+- **Depositati:** `specs/SPEC_G-MAC_CONSEGNA_MACOS.md` (gate G-MAC.0..5, decisioni D-MAC-1..5,
+  timeline 14gg) · `adr/ADR-026-distribuzione-macos.md` (**proposed**, D1-D6) ·
+  `specs/SPEC_FINGERPRINT_CROSSPLATFORM.md` (spec di dettaglio dalla bozza founder, §4 blindata 25/06).
+
+---
+## 2026-07-19 — Sequenza rami ratificata dal founder: v1.0.14 → blocco P → blocco G-MAC (docs-only)
+
+**Decisione founder:** il fronte macOS parte DOPO il completamento del filone
+contratti/finanziario; PRIMA di tutto la release v1.0.14 da consegnare a Chiara (v1.0.10, bug
+fingerprint) e Alessio (v1.0.13). La coda di lavoro (posizione=stato, leggibile da `docs/specs/`):
+
+1. **Release v1.0.14** — runbook `operations/AUDIT_PRE_RELEASE_2026-07-16.md` §7: GO su R1
+   (aperta la decisione R1.5 pin-vs-delete `posizione_netta_contratto`) → R1-code + R1-docs →
+   OD-1 (convalida `classify` read-only sui backup di Alessio E Chiara) → bump → pipeline
+   ADR-004 → consegna + verifica campo → `main` align (modello B). Runbook orfani
+   640/641/643+647/649 resta trainer-driven, non release-blocking.
+2. **Blocco P** (`SPEC_P`, coda #2) — P1..P6, chiude il filone finanziario. La nota M3-sem
+   (gemelli 7-classi ANCHE su stats/trend) lo aspetta in §P1.
+3. **Blocco G-MAC** (`SPEC_G-MAC`, coda #3) — G-MAC.0 già FATTO e sigillato; ratifica ADR-026
+   D1-D6 all'apertura. **Unica azione anticipabile: enrollment Apple Developer** (coda in tempo
+   di calendario, non di sviluppo — azione founder fuori-codice).
+
+Stato-line aggiornate su SPEC_P (#2), SPEC_G-MAC (⏸️ #3, timeline relativa all'apertura),
+SPEC_FINGERPRINT (codice sigillato), ADR-026 (ratifica calendarizzata). Il codice G-MAC.0
+(verde, Windows-invariante provato) viene committato ORA per lasciare il working tree pulito
+al preflight della release (ADR-004 esige git clean): sigillare ≠ aprire il fronte.
+
+---
