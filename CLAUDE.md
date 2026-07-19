@@ -3,6 +3,11 @@
 CRM locale Windows per chinesiologi, personal trainer e professionisti fitness a P.IVA.
 Dati sul PC del professionista, zero cloud obbligatorio, privacy-first.
 
+> **Contratto operativo comune:** `AGENTS.md` e' la fonte autorevole per delivery loop, guardrail,
+> quality gate e lifecycle documentale. Il workflow condiviso Claude Code + Codex e'
+> `docs/operations/AI_ASSISTED_DEVELOPMENT_WORKFLOW.md`. Questo file resta l'entry point e il
+> contesto specifico di Claude Code; i link sono additivi e non rimuovono il comportamento esistente.
+
 ## Stack
 
 ```

@@ -3485,3 +3485,78 @@ SPEC_FINGERPRINT (codice sigillato), ADR-026 (ratifica calendarizzata). Il codic
 al preflight della release (ADR-004 esige git clean): sigillare ≠ aprire il fronte.
 
 ---
+## 2026-07-19 — Collaborazione Claude Code + Codex: gate A0 depositato (docs-only)
+
+**Trigger founder:** iniziare lo sviluppo congiunto in piccoli step, preservando integralmente il
+funzionamento già costruito con Claude Code e mantenendo massimo ordine nelle settimane pre-lancio.
+
+Depositata `specs/SPEC_COLLABORAZIONE_CLAUDE_CODEX.md`: architettura agent-neutral con `AGENTS.md`
+come nucleo operativo unico, `CLAUDE.md` preservato come entry point/adapter Claude, nessun
+`CODEX.md`, eventuale `.codex/` solo per necessità runtime dimostrata. Scelta una migrazione
+**strangler**: A0 contratto → A1 runbook condiviso + Contract Smoke → solo dopo, e in gate separati,
+riduzione duplicazioni, hook portabili, auditor condivisi e learning agent-neutral.
+
+**Evidenza baseline:** branch `FitManager_Studio` @ `b7423b2`, tree pulito pre-A0; `AGENTS.md`
+9.588 byte, `CLAUDE.md` 34.452 byte, tre auditor read-only in `.claude/agents/`, `.codex/` assente.
+A0 modifica solo SPEC + INDEX + append BUILD_LOG: **zero codice, zero config, zero cambi operativi a
+Claude Code**, nessuna alterazione della coda v1.0.14 → P → G-MAC.
+
+**⏭️ ATTESA RATIFICA founder ACX-D1..D6.** Poi A1, ancora docs-only: runbook comune, link
+non distruttivi dai bootstrap e smoke read-only su sessioni nuove Claude/Codex.
+
+---
+## 2026-07-19 — ACX-D1..D6 ratificate: gate A0 CHIUSO (docs-only)
+
+**Decisione founder:** ratificate integralmente ACX-D1..D6 della
+`specs/SPEC_COLLABORAZIONE_CLAUDE_CODEX.md`. Diventano vincolanti: `AGENTS.md` è il nucleo unico,
+nessun `CODEX.md`, migrazione strangler senza riduzione immediata di `CLAUDE.md`, A1 prima del nuovo
+codice congiunto, auditor condivisi solo dopo prova di parità, `.codex/` solo per bisogno dimostrato,
+learning promosso a regola esclusivamente dopo review umana.
+
+**Esito:** A0 CHIUSO; SPEC e INDEX allineati. Nessuna modifica a codice, configurazioni,
+`AGENTS.md`, `CLAUDE.md` o `.claude/`; sequenza v1.0.14 → P → G-MAC invariata.
+
+**⏭️ PROSSIMO MICROSTEP AUTORIZZABILE: A1 docs-only** — runbook condiviso, link non distruttivi
+nei bootstrap e Contract Smoke Claude/Codex. Nessun codice applicativo.
+
+---
+## 2026-07-19 — A1 CHIUSO: runbook agent-neutral + Contract Smoke Claude/Codex PASS
+
+**GO founder:** eseguito gate A1 della `specs/SPEC_COLLABORAZIONE_CLAUDE_CODEX.md`. Creato
+`operations/AI_ASSISTED_DEVELOPMENT_WORKFLOW.md`; aggiunti link additivi in root `AGENTS.md` e
+`CLAUDE.md` senza rimuovere contenuto. Nessuna modifica a file di layer, `.claude/`, `.codex/`,
+codice applicativo o configurazioni runtime.
+
+**Contract Smoke reale:** Claude Code `2.1.170` in plan mode con soli Read/Glob/Grep → **PASS**;
+Codex CLI `0.144.5` con sandbox read-only ed esecuzione ephemeral → **PASS**. Parità provata su tutti
+i cinque assi: ordine fonti · branch `FitManager_Studio`/no feature branch non coordinate · A1 meta
+distinto dalla coda v1.0.14 → P → G-MAC · gate docs/process · lifecycle ADR/SPEC/technical/
+AUDIT-ROADMAP/BUILD_LOG/archive. Nessuna fonte storica usata come autorità.
+
+**Hardening del test:** il primo prompt non bounded ha causato una ricerca Codex workspace-wide
+patologica; sostituito con allowlist delle cinque fonti vive e divieto esplicito di search globale.
+Il rerun bounded di ENTRAMBI gli agenti è quello valido e ripetibile depositato nel runbook.
+
+**Finding non bloccanti, non corretti fuori scope:** numerazione `§7` duplicata in `AGENTS.md`;
+Codex CLI non carica `.agents/skills/find-skills/SKILL.md` perché una riga vuota precede il
+frontmatter YAML. Nessuno dei due finding altera il Contract Smoke o il comportamento Claude Code.
+
+**Esito:** A0+A1 CHIUSI; condizione per nuovo codice congiunto soddisfatta. Commit/push non eseguiti.
+**⏭️ Coda autorevole:** v1.0.14 (R1) → blocco P → blocco G-MAC. A2-A6 non autorizzati e separati
+dalla release.
+
+---
+## 2026-07-19 — GO COMMIT A0+A1: sigillo docs atomico
+
+**Decisione founder:** autorizzato il commit unitario dei gate A0+A1, senza push. Allowlist chiusa a
+sei file: root `AGENTS.md` + root `CLAUDE.md` + SPEC collaborazione + runbook agent-neutral + INDEX
++ append BUILD_LOG. Nessun codice, file di layer, `.claude/` o `.codex/` incluso.
+
+**Gate pre-commit:** Contract Smoke bounded Claude/Codex entrambi PASS · cross-doc/lifecycle/link
+review PASS · scope allowlist PASS · `git diff --check` PASS · `ruff check api/` PASS. Il pre-commit
+hook resta autorevole e viene eseguito dal commit.
+
+**Commit:** `docs: ratifica workflow condiviso Claude Code e Codex`. **Push:** non autorizzato e non
+eseguito. La coda successiva resta v1.0.14 (R1) → P → G-MAC; A2-A6 chiusi.
+
+---

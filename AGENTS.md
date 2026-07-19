@@ -20,6 +20,10 @@ Le spec completate sono archiviate in `docs/archive/specs/` come riferimento sto
 Il root `CLAUDE.md` e' l'entry point letto automaticamente da Claude Code.
 Per regole operative dettagliate, riferirsi a questo file e ai layer-specifici.
 
+Il runbook agent-neutral per lavorare con Claude Code e Codex e'
+`docs/operations/AI_ASSISTED_DEVELOPMENT_WORKFLOW.md`: deriva da `AGENTS.md` e non ne modifica la
+precedenza. I bootstrap specifici puntano al nucleo comune senza duplicarlo.
+
 ## 2) Delivery Loop
 
 Per ogni task:
