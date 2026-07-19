@@ -10,8 +10,8 @@
 - [x] `bash tools/build/build-release.sh` - preflight + build + verify + seal + tag (ADR-004)
 - [x] Audit pre-consegna completato (`docs/archive/PRE_DELIVERY_AUDIT_2026_04_17.md`)
 - [x] ESLint: 0 errori, 5 warning residui (non-actionable `react-hooks/incompatible-library`)
-- [x] `pytest tests/ -v` - 361 test verdi, 0 falliti
-- [x] Frontend vitest: 69 test data protection verdi
+- [x] `pytest tests/ -v` - suite completa verde, 0 falliti (conteggio dall'output del runner)
+- [x] Frontend vitest: suite completa data protection verde (conteggio dall'output del runner)
 - [x] E2E business rehearsal: 36/36 PASS (client, contract, rate, pay/unpay, ledger, agenda, credits, backup, restore)
 - [x] E2E distribution rehearsal: 62/62 PASS (artifacts, license, enforcement, network, backup, portal, config)
 

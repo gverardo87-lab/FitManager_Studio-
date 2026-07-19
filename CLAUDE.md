@@ -11,9 +11,9 @@ Dati sul PC del professionista, zero cloud obbligatorio, privacy-first.
 ## Stack
 
 ```
-Python 3.12 + FastAPI + SQLModel + SQLite (WAL)     → api/     (178 file)
-Next.js 16 + React 19 + TypeScript 5 + shadcn/ui    → frontend/ (350 file)
-Langchain + Ollama (moduli AI dormenti)              → core/    (15 file)
+Python 3.12 + FastAPI + SQLModel + SQLite (WAL)     → api/
+Next.js 16 + React 19 + TypeScript 5 + shadcn/ui    → frontend/
+Langchain + Ollama (moduli AI dormenti)              → core/
 ```
 
 Distribuzione: Nuitka (Python→C→nativo) + Next.js standalone + Inno Setup (Windows installer).
@@ -64,8 +64,8 @@ SSoT numeri e proiezioni: `docs/business/BUSINESS_PLAN.md` (v4.3). Strategia ope
 cd frontend && npm run dev                                         # frontend dev (porta 3001)
 
 # --- Test ---
-./venv/Scripts/python -m pytest tests/ -v                          # ~790 test backend (SSoT: la suite stessa)
-cd frontend && npm test                                            # 69 vitest (data protection)
+./venv/Scripts/python -m pytest tests/ -v                          # suite backend completa (SSoT: output pytest)
+cd frontend && npm test                                            # suite Vitest completa (SSoT: output runner)
 
 # --- Quality gate (obbligatorio prima di commit) ---
 bash tools/scripts/check-all.sh                                    # ruff check api/ + next build

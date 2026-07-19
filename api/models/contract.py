@@ -71,7 +71,8 @@ class Contract(SQLModel, table=True):
     # scrittura runtime via ledger.post_adjustment + backfill boot idempotente per il legacy pre-penna.
     quota_stornata: float = Field(default=0)
     data_chiusura: Optional[date] = None          # quando la chiusura ha effetto (qualsiasi via a CHIUSO)
-    # esito economico, enum chiuso a 4: COMPLETAMENTO|CONSUNZIONE|TERMINAZIONE_RIMBORSO|TERMINAZIONE_DECADENZA.
+    # Esito economico, enum chiuso a 5: COMPLETAMENTO | CONSUNZIONE | TERMINAZIONE_RIMBORSO |
+    # TERMINAZIONE_SALDO_TRAINER | TERMINAZIONE_DECADENZA (SSoT: MotivoChiusura).
     # NULL = legacy (chiusi pre-G7) = COMPLETAMENTO implicito in classificazione, mai riaperto auto.
     motivo_chiusura: Optional[str] = Field(default=None, index=True)
 

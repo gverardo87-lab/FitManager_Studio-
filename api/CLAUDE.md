@@ -442,7 +442,7 @@ Incidente completo: `docs/incidents/INC-2026-03-28-safety-engine-blind-spot.md`
 
 Due famiglie di test:
 
-**pytest** (`tests/`, 361 test):
+**pytest** (`tests/`; conteggio autorevole: output della suite):
 - DB SQLite in-memory, isolamento totale (StaticPool)
 - `test_pay_rate.py` (12): pagamento atomico, overpayment, deep IDOR, storico pagamenti parziali
 - `test_unpay_rate.py` (4): revoca pagamento, decrements, soft delete movement

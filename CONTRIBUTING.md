@@ -27,8 +27,8 @@ cd ..
 
 # 3. Verifica
 bash tools/scripts/check-all.sh          # quality gate
-./venv/Scripts/python -m pytest tests/ -v # 361+ test
-cd frontend && npm test                   # 69 vitest
+./venv/Scripts/python -m pytest tests/ -v # suite backend completa
+cd frontend && npm test                   # suite Vitest completa
 ```
 
 ## Struttura progetto

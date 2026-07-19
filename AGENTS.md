@@ -167,7 +167,7 @@ Mai dichiarare "done" senza evidenza di verifica.
 
 ### Pre-release (build-release.sh PREFLIGHT)
 
-1. `pytest tests/ -v` — tutti i 361+ test devono passare
+1. `pytest tests/ -v` — l'intera suite raccolta dal runner deve passare
 2. `ruff check api/` — zero warning
 3. `next build` — zero errori TypeScript
 4. Version sync — `api/__init__.py` == `frontend/package.json`

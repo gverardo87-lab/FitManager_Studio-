@@ -557,10 +557,11 @@ def get_contract(
                 receipt_map.setdefault(mov.id_rata, []).append(mov)
 
     # Credit breakdown: PT events GROUP BY stato (1 query)
-    # [G7.8 DISPLAY-EXEMPT §3.2] Questo GROUP BY conta ANCHE i Rinviato → alimenta `sedute_rinviate`
+    # [G7.8 DISPLAY-EXEMPT — ADR-017 Addendum I, D-DENYLIST-INTATTE] Questo GROUP BY conta
+    #   ANCHE i Rinviato → alimenta `sedute_rinviate`
     #   (display). Resta `!= "Cancellato"` di proposito: NON migrarlo a IN('Programmato','Completato'),
     #   manderebbe `sedute_rinviate` a zero in silenzio. La SOMMA crediti_usati (dal SSoT) esclude i
-    #   Rinviato; qui NO. Presidiato dal grep-guard ADR-017 in check-all.sh.
+    #   Rinviato; qui NO. Presidio vivo: `test_adr017_rinviato_fuori_occupazione_ma_nel_breakdown`.
     credit_breakdown: dict[str, int] = {}
     credit_rows = session.exec(
         select(Event.stato, func.count(Event.id))

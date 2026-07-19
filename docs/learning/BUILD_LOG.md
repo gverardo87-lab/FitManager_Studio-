@@ -3560,3 +3560,28 @@ hook resta autorevole e viene eseguito dal commit.
 eseguito. La coda successiva resta v1.0.14 (R1) → P → G-MAC; A2-A6 chiusi.
 
 ---
+## 2026-07-19 — R1 pre-release chiusa: drift semantici corretti, asse denaro preservato
+
+**Trigger:** triade auditor del pre-release v1.0.14 (`operations/AUDIT_PRE_RELEASE_2026-07-16.md`)
+e GO founder in microstep R1.1→R1.5. Decisione aperta F1 risolta: **PIN** della fotografia netta
+per contratto, senza promuoverla a caller runtime.
+
+**R1-code:** commit `41d62e8` (`fix: chiudi i drift semantici R1 pre-release`), 14 file,
++208/−23. Chiuso il buco prod-only `CONSUNZIONE` nell'unpay con classificatore totale condiviso;
+penali contratto e worklist orfani riallineate ai rispettivi SSoT; causale backfill legacy
+parametrizzata dalla costante; `posizione_netta_contratto` protetta da unit-oracle puro.
+
+**Gate:** full suite **873 passed / 0 fail**; Ruff backend verde; `check-all.sh` exit 0 con 11 guard
+semantici ADR-016/017/018/019, guard lifecycle docs e Next production build; verifier finanziario
+V1–V5: **MONEY AXIS PRESERVED**, zero money-regression, coverage-gap o invariante non presidiata.
+I 31 warning sono debito preesistente (Hypothesis `norecursedirs`, deprecazione HTTP 422).
+
+**Fold-back R1-docs:** INDEX G9.7/ADR→025; conteggi volatili sostituiti con soft-SSoT ai runner;
+breadcrumb SPEC vocabolario; enum `MotivoChiusura` a 5; puntatore DISPLAY-EXEMPT al record vero
+ADR-017 Add. I D-DENYLIST-INTATTE e al gemello semantico vivo; matrice wallet con casa P4/P5;
+audit pre-release consuntivato. Nessun nuovo ADR: R1 rende totali regole già ratificate.
+
+**⏭️ Prossimo gate:** OD-1 read-only (`classify` sui backup reali Alessio + Chiara), poi bump
+v1.0.14 → pipeline ADR-004 → consegna/verifica campo → allineamento `main`.
+
+---

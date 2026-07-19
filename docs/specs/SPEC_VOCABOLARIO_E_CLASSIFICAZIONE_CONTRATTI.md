@@ -4,7 +4,7 @@
 **Stato:** Vincolante sui criteri di accettazione — **silente sull'implementazione** (Claude Code è l'architetto nel codebase). ✅ **Giro 1 IMPLEMENTATO** (`91cbc39`): `is_insolvente` SSoT, lista/dettaglio `/contratti` derivano lo stato dal SSoT, modulo `lib/contract-status.tsx`, delega residuo. **⏳ Giro 2 PENDENTE:** `rinnovi-incassi` + `workspace_engine` off-SSoT + grep-guard.
 **Owner:** Giacomo Verardo (AVGV Technologies)
 **Destinatario:** Claude Code
-**Collocazione:** `docs/technical/`
+**Collocazione:** `docs/specs/` (lavoro aperto; a chiusura → `docs/archive/specs/`)
 **Data:** 2026-06-22
 **Modello di dominio (SSoT):** `FINANCIAL_DOMAIN_MODEL.md` v1.3 (§2 assi, §3 stati di vita, §5 sotto-stato denaro, §10 regola d'oro) + `api/services/contract_state.py`
 **Applica il principio di:** `TASSONOMIA_FINANZIARIA.md` §5 («lo stesso concetto usi la stessa etichetta in ogni superficie») ai label di **stato di vita** e **sotto-stato denaro**. *Non* chiude la tabella naming dell'asse cassa di §5 (incassi netti / rimborsi / venduto / …), che resta debito aperto di quel documento.

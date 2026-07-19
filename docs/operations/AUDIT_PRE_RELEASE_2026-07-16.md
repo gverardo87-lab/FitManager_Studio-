@@ -1,5 +1,10 @@
 # AUDIT PRE-RELEASE 2026-07-16 — Triade auditor sul batch v1.0.13 → HEAD (candidata v1.0.14)
 
+> **ESITO R1 (2026-07-19): CHIUSA.** R1-code sigillato in `41d62e8`; full suite **873 passed**,
+> `check-all.sh` verde, financial-invariant-verifier mirato **MONEY AXIS PRESERVED**, zero coverage
+> gap. Il fold-back R1-docs risolve H1/H2, M1/M2/M4, L2 e L1/L3/L4/L6-sem senza nuova policy
+> o nuovo ADR. Prossimo gate del runbook: **OD-1** read-only sui backup Alessio + Chiara.
+
 **Tipo:** audit read-only, evidenza del release gate (step 1 del runbook ratificato dal founder).
 **Data:** 2026-07-16 · **Branch:** `FitManager_Studio` · **Base:** `9ab426e` (v1.0.13, 2026-06-18)
 → **Target:** `b888a0a`. **Batch:** 206 commit = l'intero filone finanziario G6→G9.7 (terminazione
@@ -175,3 +180,34 @@ sui backup di Alessio E Chiara — salto doppio v1.0.10→v1.0.14) → bump vers
   sulla loro stessa evidenza prima di correggere un doc.**
 - Verdetto «AT RISK» con 0 HIGH = severo per costruzione (*when in doubt, report*): corretto — il
   gate umano resta il triage, l'agente non deve assolvere.
+
+## 9. Consuntivo R1 (2026-07-19)
+
+**Decisione founder:** R1.5 = PIN. `posizione_netta_contratto` resta in panchina ma ha ora un
+unit-oracle collezionabile su filtro contratto, esclusione wallet `ANNULLATO`, fotografia completa
+e arrotondamento monetario.
+
+**R1-code — commit `41d62e8` (`fix: chiudi i drift semantici R1 pre-release`):**
+
+- R1.1: classificazione totale `is_chiusura_da_terminazione` accanto a `MotivoChiusura` in
+  `contract_settlement.py` (collocazione dependency-safe, evita il ciclo con `transitions.py`),
+  consumata dal guard `unpay_rate` e da I1; `CONSUNZIONE` rifiuta l'unpay con 409 curato;
+- R1.2: lista e dettaglio contratti consumano direttamente `cstate.STATI_PENALE`;
+- R1.3: worklist orfani delega a `_crediti_usati_map` + `cstate.crediti_residui` con clamp;
+- R1.4: backfill legacy usa `CAUSALE_BACKFILL_LEGACY` come bind SSoT; docstring modello onesta;
+- R1.5: PIN di `posizione_netta_contratto` senza caller o modifica runtime.
+
+**Evidenza:** 14 file, +208/−23; full suite **873 passed / 31 warning preesistenti / 0 fail**;
+Ruff `api/` verde; `check-all.sh` exit 0 (11 guard semantici + lifecycle docs + Next production
+build); verifier V1–V5 con I1/I4/I5/I6 e ancore ledger verdi. Classificazioni finali:
+MONEY-REGRESSION 0 · COVERAGE-GAP 0 · INVARIANT-UNGUARDED 0.
+
+**R1-docs — fold-back:** INDEX riallineato allo stato reale di G9.7 e agli ADR fino a 025;
+conteggi volatili rimossi dai bootstrap in favore dell'output dei runner; breadcrumb della SPEC
+vocabolario corretto; commenti `MotivoChiusura`/DISPLAY-EXEMPT aggiornati ai presidi vivi;
+matrice wallet con casa P4/P5 esplicita; BUILD_LOG append-only aggiornato. I deferral di §6
+restano invariati e non bloccano la release.
+
+**Stato gate:** R1 chiusa. Il presente audit resta nel contesto operativo fino alla conclusione
+di OD-1 e della release v1.0.14; a chiusura release passa in `docs/archive/` con l'evidenza JUnit
+già depositata in `docs/archive/audit-pre-release-2026-07-16/`.
