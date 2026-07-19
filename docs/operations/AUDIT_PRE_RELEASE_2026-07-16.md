@@ -1,9 +1,12 @@
 # AUDIT PRE-RELEASE 2026-07-16 — Triade auditor sul batch v1.0.13 → HEAD (candidata v1.0.14)
 
-> **ESITO R1 (2026-07-19): CHIUSA.** R1-code sigillato in `41d62e8`; full suite **873 passed**,
+> **ESITO R1 + OD-1 (2026-07-19): CHIUSI.** R1-code sigillato in `41d62e8`; full suite **873 passed**,
 > `check-all.sh` verde, financial-invariant-verifier mirato **MONEY AXIS PRESERVED**, zero coverage
 > gap. Il fold-back R1-docs risolve H1/H2, M1/M2/M4, L2 e L1/L3/L4/L6-sem senza nuova policy
-> o nuovo ADR. Prossimo gate del runbook: **OD-1** read-only sui backup Alessio + Chiara.
+> o nuovo ADR. **OD-1 PASS** sulla popolazione reale conosciuta: backup Chiara verde; Alessio
+> **N/A** per attestazione founder (installazione consegnata ma non usata in esercizio; nessun
+> database data-bearing noto).
+> Prossimo gate del runbook: bump `v1.0.14` e pipeline ADR-004.
 
 **Tipo:** audit read-only, evidenza del release gate (step 1 del runbook ratificato dal founder).
 **Data:** 2026-07-16 · **Branch:** `FitManager_Studio` · **Base:** `9ab426e` (v1.0.13, 2026-06-18)
@@ -165,10 +168,10 @@ L6-sem (celle wallet: casa P4/P5 dichiarata).
 
 ## 7. Gate di release — conclusione
 **Taglio SBLOCCATO a valle di R1.** Denaro preservato con evidenza meccanica; drift solo
-documentale; l'unico buco comportamentale (M1-sem) è prod-only su path stretto, con fix che rende
-totale una legge già scritta. Dopo R1: **step 2 runbook = OD-1** (convalida `classify` read-only
-sui backup di Alessio E Chiara — salto doppio v1.0.10→v1.0.14) → bump versione → pipeline ADR-004
-→ consegna e verifica sul campo → **allineamento `main` col trigger giusto del modello B**.
+documentale; l'unico buco comportamentale (M1-sem) era prod-only su path stretto e R1 ha reso
+totale una legge già scritta. **OD-1 è chiuso** sulla popolazione reale conosciuta (§10): Chiara
+PASS, Alessio N/A. Sequenza residua: bump versione → pipeline ADR-004 → consegna e verifica sul
+campo → **allineamento `main` col trigger giusto del modello B**.
 
 ## 8. Calibrazione prima corsa `semantic-birth-auditor`
 - **Segnale:** 1 buco comportamentale reale (M1, invisibile a 860 test perché mascherato dal gate
@@ -209,5 +212,25 @@ matrice wallet con casa P4/P5 esplicita; BUILD_LOG append-only aggiornato. I def
 restano invariati e non bloccano la release.
 
 **Stato gate:** R1 chiusa. Il presente audit resta nel contesto operativo fino alla conclusione
-di OD-1 e della release v1.0.14; a chiusura release passa in `docs/archive/` con l'evidenza JUnit
-già depositata in `docs/archive/audit-pre-release-2026-07-16/`.
+della release v1.0.14; a chiusura release passa in `docs/archive/` con l'evidenza JUnit già
+depositata in `docs/archive/audit-pre-release-2026-07-16/`.
+
+## 10. Consuntivo OD-1 (2026-07-19)
+
+**Perimetro ratificato dal founder:** il gate segue la popolazione dei database reali da
+aggiornare, non una lista nominale. Chiara è l'unica utilizzatrice nota con un database storico;
+ad Alessio è stata consegnata un'installazione per promozione/collaudo, ma non la usa in esercizio
+e non risulta avere un database data-bearing. Il suo caso è quindi **N/A**, non PASS e non
+release-blocking. Se emergesse in seguito un suo database reale, lo stesso audit diventerebbe
+obbligatorio prima dell'upgrade.
+
+**Evidenza Chiara — PASS:** `backup_20260608_175757.sqlite`, aperto esclusivamente con
+`mode=ro + immutable + query_only`. `PRAGMA quick_check=ok`, `integrity_check=ok`,
+`foreign_key_check=0`; tabella `movimenti_cassa` e tutte le colonne richieste presenti. Il
+`classify_cash_movement` corrente ha classificato **205/205 righe** senza eccezioni (**201 attive +
+4 soft-deleted**). `sqlite_total_changes=0`; dimensione e timestamp invariati; SHA-256 pre/post
+identico: `4D761A045A2D41850A0243A2980052000998174C0CE3CEF0B52B42060BBAEA7A`.
+
+**Verdetto:** OD-1 **CHIUSO** sulla popolazione reale conosciuta. Nessun nuovo ADR: è una
+qualificazione dell'evidenza operativa, non una regola di dominio. Restano distinti e ancora aperti
+il restore del backup Chiara sulla release candidate e gli altri controlli della pipeline ADR-004.

@@ -712,7 +712,7 @@ Le domande che l'ADR deve rispondere PRIMA che una riga di codice venga scritta.
 
 15. **Q15 — GDPR vs contabilità.** Cancellazione di un cliente con insoluto aperto o storia finanziaria — cosa si anonimizza, cosa si conserva 10 anni, cosa si blocca? L'insoluto crea un legittimo interesse a conservare l'anagrafica? Serve una risposta PRIMA che l'entità insoluto esista.
 
-16. **Q16 — Migrazione e retroattività.** Gli squilibri già esistenti (S52: consumato più di quanto pagato dentro contratti) vengono riclassificati come insoluti retroattivi al boot, o il concetto vale solo in avanti? Cosa fa schema_sync sui DB deployati di Alessio e Chiara — e il classify OD-1 pre-upgrade copre anche questo?
+16. **Q16 — Migrazione e retroattività.** Gli squilibri già esistenti (S52: consumato più di quanto pagato dentro contratti) vengono riclassificati come insoluti retroattivi al boot, o il concetto vale solo in avanti? Cosa fa schema_sync sul DB reale deployato di Chiara e su una fresh install — e il classify OD-1 pre-upgrade copre anche questo? Alessio è N/A: l'installazione consegnata non è usata in esercizio e non ha un database data-bearing noto (attestazione founder 2026-07-19).
 
 17. **Q17 — Confine fiscale del CRM.** Qual è il confine fiscale del CRM: la singola genera un documento (numerazione, bollo) o il CRM è dichiaratamente registro operativo e delega TUTTO al commercialista (S15/S16)? La non-decisione qui produce o un fatturatore abusivo o buchi di riconciliazione — va scritta nell'ADR in ogni caso.
 

@@ -3585,3 +3585,25 @@ audit pre-release consuntivato. Nessun nuovo ADR: R1 rende totali regole già ra
 v1.0.14 → pipeline ADR-004 → consegna/verifica campo → allineamento `main`.
 
 ---
+
+## 2026-07-19 — OD-1 chiuso sulla popolazione reale: Chiara PASS, Alessio N/A
+
+**Decisione founder:** il gate operativo segue i database reali da aggiornare, non una lista
+nominale. Chiara è l'unica utilizzatrice nota con dati storici. Ad Alessio è stata consegnata
+un'installazione per promozione/collaudo, ma non è usata in esercizio e non ha un database
+data-bearing noto: **N/A**, non PASS e non release-blocking. Se emergesse in seguito un suo database
+reale, lo stesso audit sarebbe obbligatorio prima dell'upgrade.
+
+**Evidenza Chiara:** `backup_20260608_175757.sqlite` aperto `ro + immutable + query_only`;
+`quick_check=ok`, `integrity_check=ok`, `foreign_key_check=0`. Il classificatore corrente ha
+accettato **205/205 movimenti** senza eccezioni (**201 attivi + 4 soft-deleted**); nessuna colonna
+richiesta mancante. `sqlite_total_changes=0`; hash pre/post identico
+`4D761A045A2D41850A0243A2980052000998174C0CE3CEF0B52B42060BBAEA7A`, con dimensione e timestamp
+invariati. Nessun dato personale esposto nell'output.
+
+**Verdetto:** OD-1 **CHIUSO**. Nessun ADR: perimetro/evidenza operativa, non regola di dominio. Il
+restore del backup Chiara sulla release candidate resta separato e aperto nella release checklist.
+**⏭️ Prossimo gate:** bump `v1.0.14` → pipeline ADR-004 → consegna/verifica campo → allineamento
+`main`.
+
+---
