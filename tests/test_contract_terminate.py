@@ -440,6 +440,64 @@ def test_settlement_preview_sedute_prenotate(client, auth_headers, sample_client
 
 # ── H1 (G7.7-R1): unpay su contratto terminato (E2E) → 409, tetto preservato, reopen riabilita ──
 
+def test_unpay_dopo_consunzione_rifiutato_dal_guard_curato(
+    client, auth_headers, sample_client, session, monkeypatch,
+):
+    """R1.1: CONSUNZIONE appartiene alla famiglia delle terminazioni anche con storno/rimborso zero.
+
+    Il gate invarianti e' forzato in modalita' compiled/prod (log-only): il 409 deve quindi provenire
+    dal guard H1 PRIMA della mutazione, col messaggio operativo che indirizza al reopen. Rata, contratto
+    e movimento di cassa devono restare intatti.
+    """
+    monkeypatch.setenv("INVARIANT_ENFORCEMENT", "log")
+    c = _contract(client, auth_headers, sample_client["id"], prezzo=500.0, acconto=0.0, crediti=5)
+    t = _trainer(session)
+    rate = _rate(client, auth_headers, c["id"], 500.0)
+    pay = client.post(
+        f"/api/rates/{rate['id']}/pay",
+        json={"importo": 500.0, "metodo": "CONTANTI"},
+        headers=auth_headers,
+    )
+    assert pay.status_code == 200, pay.text
+
+    # ORM diretto: rende il servizio interamente contabilizzato senza invocare il trigger agenda.
+    # Il contratto resta aperto fino al terminate reale: reso 500 == versato 500, residuo_pre == 0.
+    _complete_pt(session, t.id, sample_client["id"], c["id"], 5)
+    terminate = client.post(f"/api/contracts/{c['id']}/terminate", json={}, headers=auth_headers)
+    assert terminate.status_code == 200, terminate.text
+
+    session.expire_all()
+    contract = session.get(Contract, c["id"])
+    assert contract.chiuso is True
+    assert contract.motivo_chiusura == "CONSUNZIONE"
+    assert round(contract.quota_stornata, 2) == 0.0
+    assert round(contract.totale_rimborsato, 2) == 0.0
+    movement_ids = {
+        m.id for m in session.exec(select(CashMovement).where(
+            CashMovement.id_rata == rate["id"], CashMovement.deleted_at == None,
+        )).all()
+    }
+    assert movement_ids
+
+    unpay = client.post(f"/api/rates/{rate['id']}/unpay", headers=auth_headers)
+    assert unpay.status_code == 409, unpay.text
+    assert unpay.json()["detail"] == (
+        "Contratto terminato: riapri il contratto prima di revocare un pagamento."
+    )
+
+    session.expire_all()
+    contract = session.get(Contract, c["id"])
+    assert round(contract.totale_versato, 2) == 500.0
+    paid_rate = session.get(Rate, rate["id"])
+    assert paid_rate.stato == "SALDATA"
+    assert round(paid_rate.importo_saldato, 2) == 500.0
+    assert {
+        m.id for m in session.exec(select(CashMovement).where(
+            CashMovement.id_rata == rate["id"], CashMovement.deleted_at == None,
+        )).all()
+    } == movement_ids
+
+
 def test_unpay_dopo_terminate_rifiutato_409(client, auth_headers, sample_client, session):
     """H1 (ADR-016/ADR-017) — E2E con terminate REALE. Dopo una terminazione con RIMBORSO, una rata
     SALDATA superstite NON è revocabile (409). È il test che avrebbe colto il money-bug: senza guard,

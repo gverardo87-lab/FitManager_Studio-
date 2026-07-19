@@ -208,6 +208,44 @@ def test_reopen_preview_e_response_nominano_orfani(client, auth_headers, sample_
 
 # ── B6: worklist + alert coerenti ──
 
+def test_orphan_worklist_delega_ssot_e_clampa_sovraoccupato(
+    client, auth_headers, sample_client, session, monkeypatch,
+):
+    """R1.3: dati legacy sovra-occupati non producono residui negativi nella worklist azionabile.
+
+    Il conteggio passa dal batch helper canonico e il residuo da `cstate.crediti_residui`: la worklist
+    non mantiene un secondo interprete dell'asse occupazione e resta coerente con gli altri read-model.
+    """
+    from api.routers import dashboard as dashboard_router
+
+    c = _contract(client, auth_headers, sample_client["id"], crediti=1)
+    t = _trainer(session)
+    for hour in (8, 10):
+        session.add(Event(
+            trainer_id=t.id, id_cliente=sample_client["id"], id_contratto=c["id"],
+            categoria="PT", stato="Completato", titolo="Occupazione legacy",
+            data_inizio=datetime(2026, 1, 3, hour), data_fine=datetime(2026, 1, 3, hour + 1),
+        ))
+    session.commit()
+    orphan_id = _orphan(session, t.id, sample_client["id"], hour0=12)
+
+    original = dashboard_router._crediti_usati_map
+    calls: list[tuple[int, ...]] = []
+
+    def _spy_crediti_usati_map(db_session, contract_ids):
+        calls.append(tuple(contract_ids))
+        return original(db_session, contract_ids)
+
+    monkeypatch.setattr(dashboard_router, "_crediti_usati_map", _spy_crediti_usati_map)
+
+    response = client.get("/api/dashboard/orphan-events", headers=auth_headers)
+    assert response.status_code == 200, response.text
+    orphan_row = next(item for item in response.json()["items"] if item["id"] == orphan_id)
+    contract_row = next(item for item in orphan_row["contratti_aperti"] if item["id"] == c["id"])
+    assert contract_row["crediti_residui"] == 0       # 1 totale - 2 usati, clamp SSoT
+    assert len(calls) == 1 and c["id"] in calls[0]    # una delega batch, nessun interprete locale
+
+
 def test_orphan_events_worklist_e_alert(client, auth_headers, sample_client, session):
     c = _contract(client, auth_headers, sample_client["id"], crediti=10)
     t = _trainer(session)

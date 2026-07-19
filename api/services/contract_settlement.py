@@ -28,6 +28,24 @@ class MotivoChiusura(str, Enum):
     TERMINAZIONE_DECADENZA = "TERMINAZIONE_DECADENZA"        # LEGACY/storico: non più emesso da terminate su contratti vivi
 
 
+_MOTIVI_CHIUSURA_DA_TERMINAZIONE = frozenset({
+    MotivoChiusura.CONSUNZIONE.value,
+    MotivoChiusura.TERMINAZIONE_RIMBORSO.value,
+    MotivoChiusura.TERMINAZIONE_SALDO_TRAINER.value,
+    MotivoChiusura.TERMINAZIONE_DECADENZA.value,
+})
+
+
+def is_chiusura_da_terminazione(motivo: str | MotivoChiusura | None) -> bool:
+    """Classifica la famiglia prodotta da `terminate`, inclusa CONSUNZIONE senza prefisso.
+
+    Vive accanto all'enum per essere consumabile dai layer superiori (`contract_state`, router)
+    senza creare il ciclo `transitions -> contract_state -> transitions`.
+    """
+    value = motivo.value if isinstance(motivo, MotivoChiusura) else motivo
+    return value in _MOTIVI_CHIUSURA_DA_TERMINAZIONE
+
+
 class SettlementEsito(str, Enum):
     """Fatto economico puro (ADR-018), balance-based — non un'azione (l'azione la sceglie il caller)."""
     CREDITO_CLIENTE = "CREDITO_CLIENTE"  # versato > reso: il trainer deve restituire (rimborso)

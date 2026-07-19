@@ -25,6 +25,7 @@ from sqlmodel import SQLModel
 
 from api import __version__  # noqa: F811
 from api.database import CATALOG_TABLE_NAMES, NUTRITION_TABLE_NAMES
+from api.models.rettifica_contratto import CAUSALE_BACKFILL_LEGACY
 
 logger = logging.getLogger("fitmanager.schema_sync")
 
@@ -402,11 +403,20 @@ def _backfill_quota_stornata_rettifiche(db_engine: Engine) -> list[str]:
                 """
                 INSERT INTO rettifiche_contratto
                     (trainer_id, id_contratto, importo, causale, data_effettiva, note)
-                VALUES (:tid, :cid, :importo, 'BACKFILL_LEGACY', :data_eff,
+                VALUES (:tid, :cid, :importo, :causale, :data_eff,
                         'Backfill quota_stornata legacy pre-G9.2b (ADR-022 Addendum I)')
                 """
-            ), {"tid": tid, "cid": cid, "importo": quota, "data_eff": data_eff})
-            msg = f"rettifiche_contratto — backfill BACKFILL_LEGACY contratto {cid} (+{quota})"
+            ), {
+                "tid": tid,
+                "cid": cid,
+                "importo": quota,
+                "causale": CAUSALE_BACKFILL_LEGACY,
+                "data_eff": data_eff,
+            })
+            msg = (
+                f"rettifiche_contratto — backfill {CAUSALE_BACKFILL_LEGACY} "
+                f"contratto {cid} (+{quota})"
+            )
             messages.append(msg)
             logger.info("  schema_sync: %s", msg)
         if messages:

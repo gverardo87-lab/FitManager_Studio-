@@ -107,6 +107,26 @@ def test_motivo_chiusura_enum():
     }
 
 
+def test_classificazione_chiusura_da_terminazione_totale():
+    """R1.1: ogni nuovo MotivoChiusura deve dichiarare esplicitamente la propria famiglia.
+
+    CONSUNZIONE e' una chiusura prodotta da `terminate` anche senza il prefisso
+    ``TERMINAZIONE_``; COMPLETAMENTO resta l'unica chiusura da auto-close.
+    """
+    atteso = {
+        st.MotivoChiusura.COMPLETAMENTO: False,
+        st.MotivoChiusura.CONSUNZIONE: True,
+        st.MotivoChiusura.TERMINAZIONE_RIMBORSO: True,
+        st.MotivoChiusura.TERMINAZIONE_SALDO_TRAINER: True,
+        st.MotivoChiusura.TERMINAZIONE_DECADENZA: True,
+    }
+    assert set(atteso) == set(st.MotivoChiusura)  # totalita': un nuovo enum forza una decisione
+    for motivo, expected in atteso.items():
+        assert st.is_chiusura_da_terminazione(motivo) is expected
+        assert st.is_chiusura_da_terminazione(motivo.value) is expected
+    assert st.is_chiusura_da_terminazione(None) is False
+
+
 # ════════════════════════════════════════════════════════════════════
 # SPEC_G7.1_COPERTURA_SETTLEMENT — presidio dei confini di esito + clamp.
 #

@@ -16,6 +16,8 @@ from datetime import date
 from enum import Enum
 from typing import Optional, Sequence
 
+from api.services.contract_settlement import MotivoChiusura, is_chiusura_da_terminazione
+
 # ── §4.2 Costanti temporali (dichiarate UNA volta) ──────────────────
 SOGLIA_IN_SCADENZA_GG = 30   # ATTIVO entra in "in scadenza"
 SOGLIA_CHURN_GG = 90         # unica: raffreddamento lapsed = finestra retention = confine churn
@@ -421,7 +423,7 @@ def assert_contract_invariants(
     # I1 — chiuso da settlement/completamento ⇒ residuo() == 0 (residuo_raw non deve essere < 0: over-assorbimento)
     motivo = getattr(contract, "motivo_chiusura", None) or ""
     if getattr(contract, "chiuso", False) and (
-        motivo.startswith("TERMINAZIONE_") or motivo in ("COMPLETAMENTO", "CONSUNZIONE")
+        motivo == MotivoChiusura.COMPLETAMENTO.value or is_chiusura_da_terminazione(motivo)
     ):
         res = residuo(contract)
         if res > 0.01:

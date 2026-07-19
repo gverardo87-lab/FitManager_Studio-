@@ -21,6 +21,7 @@ TODAY = date.today()
 
 API_DIR = Path(__file__).resolve().parent.parent / "api"
 SSOT_FILE = API_DIR / "services" / "contract_state.py"
+CONTRACTS_ROUTER_FILE = API_DIR / "routers" / "contracts.py"
 
 
 def test_ssot_baseline_g78bis():
@@ -56,6 +57,20 @@ def test_nessun_literal_occupazione_fuori_ssot():
         "Predicato occupazione re-inlineato fuori dal SSoT (usa STATI_OCCUPAZIONE_CREDITO):\n"
         + "\n".join(violazioni)
     )
+
+
+def test_read_model_contratti_consuma_stati_penale_ssot():
+    """R1.2: dettaglio e lista leggono STATI_PENALE, senza ricostruirlo da literal o insiemi vicini.
+
+    La parita' runtime sui due stati attuali non basta: un terzo stato-penale deve propagarsi ai due
+    read-model per costruzione, senza richiedere una seconda modifica in contracts.py.
+    """
+    src = CONTRACTS_ROUTER_FILE.read_text(encoding="utf-8")
+    assert src.count("cstate.STATI_PENALE") >= 2, (
+        "dettaglio e lista contratti devono consumare direttamente STATI_PENALE"
+    )
+    assert 'cb.get("Cancellato_Tardivo"' not in src
+    assert "_STATI_PENALE =" not in src
 
 
 def test_expiring_contracts_endpoint_conta_occupazione(client, auth_headers, sample_client, session):

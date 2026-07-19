@@ -40,6 +40,7 @@ from api.schemas.financial import (
 from api.routers._audit import log_audit
 from api.services import contract_state as cstate  # SSoT residuo() (SPEC_REVISIONE_PRE_G7 §A)
 from api.services.cash_categories import CATEGORIA_PAGAMENTO_RATA  # SSoT categorie cassa
+from api.services.contract_settlement import is_chiusura_da_terminazione
 from api.services.financial.invariant_gate import log_invariant_violations  # G9.0a sensore invarianti
 from api.services.financial.ledger import post_inflow
 from api.services.financial.transitions import sync_contract_chiuso  # G9.3d auto-close unificato
@@ -645,7 +646,7 @@ def unpay_rate(
     if contract.chiuso and (
         (contract.quota_stornata or 0) > 0
         or (contract.totale_rimborsato or 0) > 0
-        or (contract.motivo_chiusura or "").startswith("TERMINAZIONE_")
+        or is_chiusura_da_terminazione(contract.motivo_chiusura)
     ):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,

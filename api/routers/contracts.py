@@ -181,7 +181,7 @@ def _to_response_with_rates(
     programmate = cb.get("Programmato", 0)
     completate = cb.get("Completato", 0)
     rinviate = cb.get("Rinviato", 0)  # display only (sedute_rinviate): NON occupa il credito (G7.8)
-    penali = cb.get("Cancellato_Tardivo", 0) + cb.get("No_Show", 0)  # G7.8-bis: occupano (penale)
+    penali = sum(cb.get(stato, 0) for stato in cstate.STATI_PENALE)  # G7.8-bis: occupano (penale)
     crediti_totali = contract.crediti_totali or 0
     # [G7.8/ADR-017 + G7.8-bis] occupazione-credito DERIVATA DAL SSoT (penali incluse; Rinviato libera).
     # Era `programmate + completate` a mano: re-implementazione semantica che il literal-grep non vede —
@@ -449,14 +449,13 @@ def list_contracts(
     credits_used_map: dict[int, int] = {}
     completate_map: dict[int, int] = {}
     penali_map: dict[int, int] = {}
-    _STATI_PENALE = cstate.STATI_OCCUPAZIONE_CREDITO - {"Programmato", "Completato"}
     for cid, stato_ev, n in stato_rows:
         n = int(n)
         if stato_ev in cstate.STATI_OCCUPAZIONE_CREDITO:  # G7.8: Rinviato libera (ADR-017)
             credits_used_map[cid] = credits_used_map.get(cid, 0) + n
         if stato_ev == "Completato":
             completate_map[cid] = completate_map.get(cid, 0) + n
-        if stato_ev in _STATI_PENALE:
+        if stato_ev in cstate.STATI_PENALE:
             penali_map[cid] = penali_map.get(cid, 0) + n
 
     # ── Build enriched responses ──

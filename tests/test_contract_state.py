@@ -171,6 +171,25 @@ def test_residuo_net_aware_include_rimborso_che_resta():
     assert cs.residuo(c3) == 500.0         # max(500−0−0, 0)
 
 
+# ── G8.2: posizione netta per contratto (PIN R1.5) ───────────────────────────
+
+def test_posizione_netta_contratto_pin_oracolo_wallet_vivi():
+    contract = SimpleNamespace(id=7, totale_versato=1000.006, totale_rimborsato=200.004)
+    crediti_cliente = [
+        SimpleNamespace(id_contratto_origine=7, stato=cs.STATO_CREDITO_APERTO, importo_erogato=150.006),
+        SimpleNamespace(id_contratto_origine=7, stato=cs.STATO_CREDITO_ANNULLATO, importo_erogato=999.0),
+        SimpleNamespace(id_contratto_origine=8, stato=cs.STATO_CREDITO_APERTO, importo_erogato=999.0),
+    ]
+
+    assert cs.posizione_netta_contratto(contract, crediti_cliente) == cs.PosizioneContrattoCliente(
+        versato=1000.01,
+        rimborsato_contratto=200.0,
+        wallet_erogato=150.01,
+        restituito_al_cliente=350.01,
+        netto_cliente=650.0,
+    )
+
+
 # ── Stato di vita: 4 quadranti + confini (§3) ──────────────────────
 
 def test_lifecycle_eliminato_precede_tutto():

@@ -11,7 +11,9 @@ filtrare in ogni aggregato). Ledger dedicato, append-only:
     quota_stornata == Σ importo[rettifiche_contratto]     (importo FIRMATO: + storno, − reversal)
 
 La colonna diventa una PROIEZIONE verificabile del Σ, come `totale_versato` lo è di Σ ENTRATA (I5).
-Scrittura SOLO via la terza penna `ledger.post_adjustment` (gemello non-cash di post_inflow/post_outflow).
+Scrittura runtime SOLO via la terza penna `ledger.post_adjustment` (gemello non-cash di
+post_inflow/post_outflow), più il backfill boot idempotente `BACKFILL_LEGACY` per il dato storico
+pre-penna: raw SQL sanzionato che consuma la stessa costante SSoT.
 
 Sotto-libro del CONTRATTO: niente `id_cliente` (DEC-3 — derivabile via JOIN, una colonna ridondante
 sarebbe una verità-parallela dentro l'ADR che le vieta); `trainer_id` resta (frontiera tenant-isolation).

@@ -1,9 +1,12 @@
 """Test schema_sync — verifica che colonne mancanti vengano aggiunte."""
 
 
+import inspect
+
 import pytest
 from sqlalchemy import text
 
+from api.services import schema_sync as schema_sync_service
 from api.services.schema_sync import sync_schema
 
 
@@ -213,6 +216,14 @@ def test_sync_schema_multiple_missing_columns(test_engine):
 
 
 # ── G9.2b (ADR-022 Addendum I): backfill quota_stornata legacy → rettifiche_contratto ──
+
+def test_backfill_causale_consumata_dalla_ssot():
+    """R1.4: il raw SQL boot usa un bind dalla costante, mai una seconda causale literal."""
+    source = inspect.getsource(schema_sync_service._backfill_quota_stornata_rettifiche)
+    assert ":causale" in source
+    assert '"causale": CAUSALE_BACKFILL_LEGACY' in source
+    assert "'BACKFILL_LEGACY'" not in source
+
 
 def _seed_contract_con_quota(engine, *, quota, data_chiusura="2026-05-10"):
     """Contratto legacy con quota_stornata scritta a mano (pre-terza-penna), zero rettifiche."""

@@ -349,18 +349,7 @@ def get_orphan_events(
         for c in open_contracts:
             contracts_by_client.setdefault(c.id_cliente, []).append(c)
         contract_ids = [c.id for c in open_contracts]
-        if contract_ids:
-            usage_rows = session.exec(
-                select(Event.id_contratto, func.count(Event.id))
-                .where(
-                    Event.id_contratto.in_(contract_ids),
-                    Event.categoria == "PT",
-                    Event.stato.in_(cstate.STATI_OCCUPAZIONE_CREDITO),
-                    Event.deleted_at == None,
-                )
-                .group_by(Event.id_contratto)
-            ).all()
-            usage_map = {row[0]: int(row[1]) for row in usage_rows}
+        usage_map = _crediti_usati_map(session, contract_ids)
 
     items = []
     for e in orphans:
@@ -369,7 +358,7 @@ def get_orphan_events(
             {
                 "id": c.id,
                 "tipo_pacchetto": c.tipo_pacchetto,
-                "crediti_residui": (c.crediti_totali or 0) - usage_map.get(c.id, 0),
+                "crediti_residui": cstate.crediti_residui(c, usage_map.get(c.id, 0)),
             }
             for c in contracts_by_client.get(e.id_cliente, [])
         ]
