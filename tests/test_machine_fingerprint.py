@@ -63,9 +63,14 @@ _EXPECTED_FULL = hashlib.sha256(b"CPU123|BOARD456|BIOS789").hexdigest()
 
 @pytest.fixture(autouse=True)
 def _reset(monkeypatch):
-    """Resetta la cache di modulo tra i test e azzera i backoff (test veloci)."""
+    """Resetta la cache di modulo tra i test e azzera i backoff (test veloci).
+
+    Forza il dispatch sul ramo Windows: i test WMI restano validi su qualsiasi
+    host (CI macOS/Linux inclusi). I test del ramo macOS ri-forzano 'Darwin'.
+    """
     mf._cached_fingerprint = None
     monkeypatch.setattr(mf.time, "sleep", lambda *_a, **_k: None)
+    monkeypatch.setattr(mf.platform, "system", lambda: "Windows")
     yield
     mf._cached_fingerprint = None
 
@@ -175,3 +180,98 @@ def test_complete_fingerprint_is_cached(monkeypatch):
         _make_run({"Win32_Processor": ["DIFF"], "Win32_BaseBoard": ["DIFF"], "Win32_BIOS": ["DIFF"]}),
     )
     assert mf.get_machine_fingerprint() == first  # serve la cache, non ricalcola
+
+
+# ── Ramo macOS (G-MAC.0: SPEC_FINGERPRINT_CROSSPLATFORM T2) ────────────────
+
+_IOREG_OK = """+-o MacBookAir10,1  <class IOPlatformExpertDevice, id 0x100000110, registered>
+  {
+      "IOPlatformUUID" = "AAAABBBB-CCCC-DDDD-EEEE-FFFF00001111"
+      "IOPlatformSerialNumber" = "FVFLG2TEST01"
+      "board-id" = <"Mac-747B1AEFF11738BE">
+  }
+"""
+_IOREG_NO_SERIAL = _IOREG_OK.replace('"IOPlatformSerialNumber" = "FVFLG2TEST01"\n', "")
+_EXPECTED_MAC = hashlib.sha256(
+    b"AAAABBBB-CCCC-DDDD-EEEE-FFFF00001111|FVFLG2TEST01"
+).hexdigest()
+
+
+def _make_ioreg_run(outputs: list[str]):
+    """Fake subprocess.run per ioreg: sequenza di output per chiamata.
+    'TIMEOUT' solleva TimeoutExpired. Espone .calls per contare le invocazioni."""
+    def run(cmd, **kwargs):  # noqa: ANN001
+        assert cmd == ["ioreg", "-rd1", "-c", "IOPlatformExpertDevice"]
+        i = run.calls
+        run.calls += 1
+        item = outputs[min(i, len(outputs) - 1)]
+        if item == "TIMEOUT":
+            raise subprocess.TimeoutExpired(cmd, mf._QUERY_TIMEOUT_SEC)
+        return types.SimpleNamespace(stdout=item, returncode=0)
+
+    run.calls = 0
+    return run
+
+
+def test_macos_full_set_hash_and_order(monkeypatch):
+    """Entrambi i campi presenti → sha256('IOPlatformUUID|IOPlatformSerialNumber')."""
+    monkeypatch.setattr(mf.platform, "system", lambda: "Darwin")
+    monkeypatch.setattr(mf.subprocess, "run", _make_ioreg_run([_IOREG_OK]))
+    assert mf.get_machine_fingerprint() == _EXPECTED_MAC
+    assert mf._cached_fingerprint == _EXPECTED_MAC
+
+
+def test_macos_single_invocation(monkeypatch):
+    """Clausola §4.1: i due identificatori vengono da UNA sola chiamata ioreg."""
+    monkeypatch.setattr(mf.platform, "system", lambda: "Darwin")
+    fake = _make_ioreg_run([_IOREG_OK])
+    monkeypatch.setattr(mf.subprocess, "run", fake)
+    mf.get_machine_fingerprint()
+    assert fake.calls == 1
+
+
+def test_macos_partial_returns_unavailable_not_a_hash(monkeypatch):
+    """Tutto-o-niente (INC-2026-06-18): serial mancante → 'unavailable', MAI hash parziale."""
+    monkeypatch.setattr(mf.platform, "system", lambda: "Darwin")
+    monkeypatch.setattr(mf.subprocess, "run", _make_ioreg_run([_IOREG_NO_SERIAL]))
+    fp = mf.get_machine_fingerprint()
+    assert fp == mf.UNAVAILABLE
+    assert mf._cached_fingerprint is None  # NON congelato: la chiamata dopo ritenta
+
+
+def test_macos_transient_then_retry_recovers(monkeypatch):
+    """Set incompleto al 1° tentativo, completo al 2° → il retry recupera."""
+    monkeypatch.setattr(mf.platform, "system", lambda: "Darwin")
+    monkeypatch.setattr(mf.subprocess, "run", _make_ioreg_run([_IOREG_NO_SERIAL, _IOREG_OK]))
+    assert mf.get_machine_fingerprint() == _EXPECTED_MAC
+
+
+def test_macos_timeout_not_retried(monkeypatch):
+    """Timeout → 'unavailable' subito, senza retry (ha gia' atteso il timeout pieno)."""
+    monkeypatch.setattr(mf.platform, "system", lambda: "Darwin")
+    fake = _make_ioreg_run(["TIMEOUT"])
+    monkeypatch.setattr(mf.subprocess, "run", fake)
+    assert mf.get_machine_fingerprint() == mf.UNAVAILABLE
+    assert fake.calls == 1  # nessun secondo tentativo dopo il timeout
+
+
+def test_macos_self_heals_after_unavailable(monkeypatch):
+    """'unavailable' non congelato: alla chiamata dopo, ioreg guarito → hash completo."""
+    monkeypatch.setattr(mf.platform, "system", lambda: "Darwin")
+    monkeypatch.setattr(mf.subprocess, "run", _make_ioreg_run([_IOREG_NO_SERIAL]))
+    assert mf.get_machine_fingerprint() == mf.UNAVAILABLE
+    monkeypatch.setattr(mf.subprocess, "run", _make_ioreg_run([_IOREG_OK]))
+    assert mf.get_machine_fingerprint() == _EXPECTED_MAC
+
+
+# ── Dispatch per piattaforma (G-MAC.0 AC1) ─────────────────────────────────
+
+def test_dispatch_unsupported_platform_is_unavailable(monkeypatch):
+    """Piattaforma né Windows né Darwin → safe-default 'unavailable', zero subprocess."""
+    monkeypatch.setattr(mf.platform, "system", lambda: "Linux")
+
+    def _boom(*_a, **_k):  # nessuna lettura hardware deve partire
+        raise AssertionError("subprocess.run non deve essere invocato su piattaforma non supportata")
+
+    monkeypatch.setattr(mf.subprocess, "run", _boom)
+    assert mf.get_machine_fingerprint() == mf.UNAVAILABLE
