@@ -63,3 +63,33 @@ Da ratificare in ADR-025 insieme al modello seduta-singola.
    money-math FE).
 4. La matrice assi (`MATRICE_ASSI_SEMANTICI.md`) si aggiorna con l'asse «crediti-cliente
    (scalabile vs storico)» — oggi due interpreti.
+
+## 5. Evidenza LIVE 2026-07-20 — la variante «attivo esaurito + chiuso residuale» elude ENTRAMBI i warning
+
+**Setup (prova video founder, dati test):** contratto A ATTIVO 10/10 occupati (8 Completato +
+2 penali, 0 residui) + contratto B CHIUSO con 2 residui. Catena osservata: dropdown EventForm
+«(2 crediti)» (client-level, i 2 sono del CHIUSO) → **nessun warning pre-submit** → auto-assign
+rifiuta correttamente (B1: solo attivi, A è pieno) → PT nasce orfano → toast B5 «creata SENZA
+contratto» in contraddizione col dropdown → panico.
+
+**Perché entrambi i warning sono ciechi (`EventForm.tsx:162-170`):** B4 richiede
+`contratti_attivi === 0` (qui è 1); «Crediti esauriti» richiede `crediti_residui <= 0` ma consuma
+il campo cumulativo (= 2). **Il predicato mescola due perimetri** — la gamba `contratti_attivi`
+filtra i chiusi, la gamba `crediti_residui` no: la congiunzione è incoerente ed esattamente questa
+variante passa nel buco. Aggravanti: (a) la promessa del toast è vuota — `OrphanEventsSheet`
+filtra `crediti_residui > 0` sui soli aperti → zero contratti assegnabili, segnale-senza-azione al
+quadrato; (b) coincidenza numerica maligna: le 2 penali di A e i 2 residui di B sono lo stesso
+numero — il dropdown «conferma» la lettura sbagliata «mi restano 2 sedute».
+
+**Perché i vitest non l'hanno vista:** `event-form-warnings.test.tsx` ha 3 fixture; manca la
+QUARTA — `{contratti_attivi: 1, crediti_residui: 2}` (il numero che il wire produce DAVVERO per un
+attivo-esaurito con chiuso residuale). Il test presidia il predicato com'è scritto, non la
+semantica del campo che consuma.
+
+**Peso:** variante PEGGIORE del caso founder originale (§1: lì B4 scattava, con la contraddizione
+accanto; qui zero segnali fino al post-submit). Conferma il root cause §1 e il gap wire
+`crediti_residui_attivi`: il campo onesto serve al dropdown E a rendere coerente il predicato del
+warning (stesso perimetro su entrambe le gambe). Casa invariata: **P4 (wire) + P5 (scelta a 3 vie
++ quarta fixture)** — precisazione depositata in SPEC_P nello stesso giro. Non release-blocking
+per v1.0.14: nessuna regressione R1 (`41d62e8` tocca la worklist orfani in `dashboard.py`, non
+l'enrichment client-level in `clients.py`, intatto da G9.7.1-bis).

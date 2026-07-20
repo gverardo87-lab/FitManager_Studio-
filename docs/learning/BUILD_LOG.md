@@ -3607,3 +3607,31 @@ restore del backup Chiara sulla release candidate resta separato e aperto nella 
 `main`.
 
 ---
+
+## 2026-07-20 — Verifica R1 indipendente (verde) + prova video: la variante segnali-crediti che elude entrambi i warning
+
+**Verifica R1/R1.5 (lavoro Codex, richiesta founder pre-bump):** ri-verifica indipendente del
+commit `41d62e8` senza fidarsi del consuntivo — full suite **873 passed / 0 fail** riprodotta,
+`check-all.sh` exit 0, workflow 7 agenti (5 verificatori adversariali per fetta +
+financial-invariant-verifier + semantic-birth-auditor): **0 FAIL**, verifier **PASS** (0
+money-regression, i 3 cambi comportamentali tutti SANCTIONED), chiusure M1/M2/M4/L5/L1-sem
+confermate sul codice. L'ipotesi adversariale su R1.3 (drop del filtro PT nella delega a
+`_crediti_usati_map`) è SMENTITA: filtri identici uno-a-uno alla query rimossa. Note LOW emerse
+(igiene futura, non bloccano): fixture PIN R1.5 senza wallet SALDATO; literal `"COMPLETAMENTO"`
+pre-esistenti in `contract_state.py:105`/`transitions.py:65,777`; gemello unpay-post-reopen per
+CONSUNZIONE non pinnato.
+
+**Prova video founder → variante NUOVA del caso audit FE 2026-07-07:** cliente test con attivo
+esaurito (8 Completato + 2 penali = 10/10) + chiuso con 2 residui → dropdown EventForm
+«(2 crediti)» (dal CHIUSO), **nessun warning pre-submit** (B4 vede 1 attivo; «esauriti» legge il
+cumulativo = 2), auto-assign rifiuta correttamente (B1), PT nasce orfano, toast B5 in
+contraddizione col dropdown e con promessa vuota (nessun aperto con residui > 0). Root cause
+INVARIATO (`crediti_residui` client-level non filtra i chiusi — deliberato, `clients.py`); il
+difetto puntuale è il predicato dei warning che mescola due perimetri. NON è una regressione R1
+(`41d62e8` tocca la worklist orfani in `dashboard.py`, non l'enrichment). Deposito: audit FE §5
+(evidenza + quarta fixture mancante) + SPEC_P P4/P5 (il campo `crediti_residui_attivi` rende
+coerente anche il predicato; quarta fixture nei vitest P5). Non release-blocking per v1.0.14.
+
+**⏭️ Prossimo gate:** bump `v1.0.14` → pipeline ADR-004 (stessa sessione).
+
+---

@@ -198,6 +198,11 @@ P5 (FE).
   {da_incassare, insoluto, items}, azioni_suggerite}` — ogni blocco porta l'azione che lo risolve.
 - **Fix root-cause audit:** `crediti_residui_attivi` su `ClientResponse` (residui dei SOLI
   contratti attivi); il campo storico `crediti_residui` resta, documentato «cumulativo».
+  **Evidenza LIVE 2026-07-20 (audit FE §5):** la variante «attivo esaurito + chiuso residuale»
+  elude ENTRAMBI i warning EventForm (B4 vede 1 attivo; «esauriti» legge il cumulativo = 2 dal
+  CHIUSO) e il toast B5 promette un'assegnazione che `OrphanEventsSheet` non può offrire (unico
+  aperto a 0 residui). Il campo onesto serve anche a rendere COERENTE il predicato dei warning:
+  entrambe le gambe sullo stesso perimetro.
 - **Due viste di UN derivato (W7):** insoluto per-prestazione (riconciliabile) + aggregato
   per-cliente (Portafoglio) + **worklist globale `GET /dashboard/insoluti`** (aging, gemella
   `crediti-da-incassare`, pattern `_*_candidates()` → count == len(items)).
@@ -221,9 +226,13 @@ P5 (FE).
   implementativa): 4 blocchi, ogni riga con azione (Incassa / Compensa €X / Eroga / worklist).
   Zero ricalcoli FE: consuma SOLO il wire (guard).
 - **Guard FE-no-money-math esteso** all'asse prestazione (allowlist motivata) + vitest sulla
-  scelta a 3 vie.
+  scelta a 3 vie + **QUARTA fixture warning** `{contratti_attivi: 1, crediti_residui: 2 (dal
+  chiuso), crediti_residui_attivi: 0}` — la variante 2026-07-20 che oggi non ha alcun segnale
+  pre-submit (audit FE §5).
 - **AC-P5:** caso founder rigiocato LIVE (Playwright): seduta flash per cliente storico → scelta
   esplicita → prestazione nasce → Portafoglio la mostra con azione. Zero panico, zero 201 muti.
+  Include la variante «attivo esaurito + chiuso residuale»: segnale PRIMA del submit, mai
+  sorpresa post-creazione.
 
 ### P6 — Presidio, recupero, chiusura
 - Matrice: celle asse prestazione → ✅ coi puntatori ai presidi REALI (anti-vacuità).
