@@ -3635,3 +3635,22 @@ coerente anche il predicato; quarta fixture nei vitest P5). Non release-blocking
 **⏭️ Prossimo gate:** bump `v1.0.14` → pipeline ADR-004 (stessa sessione).
 
 ---
+
+## 2026-07-20 — Release v1.0.14 TAGLIATA: pipeline ADR-004 verde 5/5, artifact sigillato
+
+Bump `1.0.14` (`api/__init__.py` + `frontend/package.json`), commit `a5ada32` («release: v1.0.14»).
+Pipeline `build-release.sh` completa: **PREFLIGHT** (pytest **873 passed**, ruff, next build, git
+clean) → **BUILD** Nuitka+standalone+Inno → **VERIFY** smoke 5/5 invarianti su exe reale
+(version_match, db, catalog, enforcement ON, distribution_mode) → **SEAL** → **TAG `v1.0.14`**.
+Safety gates: crm_leak / iss_reference / nutrition_integrity PASS. Contenuti: 522 esercizi,
+880 alimenti, 12 template.
+
+**Artifact:** `dist/FitManager_Setup_1.0.14.exe` (118 MB) · SHA-256
+`55d821d7b112101c914bd0b5485a219cd90afe6af1943108e3ad558ca53d5d35` · manifest `dist/manifest.json`.
+
+**⏭️ Gate residui (runbook):** restore backup reale Chiara sulla RC (item aperto checklist) →
+test installer su macchina diversa → **consegna Chiara** (ferma su v1.0.10 col bug fingerprint;
+verifica post-install: zero `Fingerprint parziale → /licenza` nei log) → verifica sul campo →
+allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a chiusura release.
+
+---
