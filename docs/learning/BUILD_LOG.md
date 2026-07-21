@@ -3654,3 +3654,30 @@ verifica post-install: zero `Fingerprint parziale → /licenza` nei log) → ver
 allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a chiusura release.
 
 ---
+# 2026-07-21 — Audit frontend core foldato in SPEC operativa
+
+- Audit senior read-only su Clienti, Contratti, Agenda, Rinnovi & Incassi e Cassa consolidato in
+  `docs/archive/AUDIT_FRONTEND_CORE_INTUITIVITA_2026-07-21.md`.
+- Lavoro aperto depositato in `docs/specs/SPEC_FRONTEND_CORE_INTUITIVITA.md` con cinque gate:
+  FE-0 integrità/privacy; FE-1 accessibilità; FE-2 modello mentale; FE-3 scalabilità/performance;
+  FE-4 distintività LIVE.
+- Decisione di metodo: nessuna nuova directory `docs/senior/`; audit già archiviato e SPEC nella casa
+  canonica determinata dallo stato. Nessun codice runtime modificato.
+- Scheduling: FE-0 è raccomandato prima di P1 per chiudere rischi percettivi/privacy, ma l'inserimento
+  nella sequenza founder `v1.0.14 → P → G-MAC` richiede GO esplicito prima del codice.
+- Verifica prevista dalla SPEC: error≠empty/not-found, privacy overview, keyboard/money-path, dataset
+  >200, verifier finanziario sui read-model money-adjacent e test LIVE autenticato.
+
+---
+
+## 2026-07-21 — Validazione founder installazione v1.0.14 e restore da v1.0.10
+
+- Il founder ha installato sul proprio PC l'artefatto release `v1.0.14` e ha caricato con successo
+  un backup proveniente dalla versione `v1.0.10`.
+- Esito comunicato: software installato e restore operativo; nessuna anomalia bloccante riportata.
+- L'evidenza chiude il controllo sul campo atteso dopo il taglio della `v1.0.14` e autorizza
+  l'allineamento fast-forward di `main` a `FitManager_Studio`.
+- Il backup resta locale e fuori da Git: nessun dato cliente, clinico o finanziario viene depositato
+  nel repository.
+- Sequenza prodotto concordata: `v1.0.15` = blocco P + FE-0 integrità/privacy + criticità FE-1;
+  ottimizzazioni/redesign estesi fuori scope; G-MAC apre dopo validazione e consegna della `v1.0.15`.
