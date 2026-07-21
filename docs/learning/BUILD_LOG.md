@@ -3721,3 +3721,27 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
   Contratto.
 - Verifiche: 2 canary nuovi + regressione profilo; suite frontend **113/113**; lint pulito; build
   Next.js verde. Nessun write-path o calcolo monetario toccato. Prossimo microstep: Cassa.
+
+---
+
+## 2026-07-21 — FE-0.3: Cassa fail-closed senza falsi zeri
+
+- Il riepilogo Cassa tratta saldo e statistiche come fonti esplicite: hero/contesto compositi
+  nominano la sorgente fallita con retry, mentre KPI/grafico restano visibili se le statistiche sono
+  valide. Il mastro verificato resta operativo come blocco indipendente.
+- Andamento non costruisce più KPI a zero da una risposta assente. Entrate e Uscite falliscono per
+  colonna, mentre un errore anagrafica sospende solo il filtro cliente.
+- Spese fisse non presentano più configurazioni o pending vuoti in caso di errore e bloccano il form
+  finché i dati non sono verificati. Scadenze e Previsioni adottano lo stesso retry esplicito.
+- Il verifier avversariale ha fermato il primo pass: un errore del solo saldo nascondeva anche le
+  statistiche mensili valide. Correzione applicata separando le dipendenze e aggiungendo il canary
+  speculare `saldo KO + statistiche valide` prima della pubblicazione.
+- Verifiche: 5 canary nuovi; suite frontend **118/118**; lint dei 7 file toccati pulito; build Next.js
+  verde (20 pagine). Il lint globale segnala 17 errori preesistenti fuori scope e nessuno nei file
+  FE-0.3; warning Vitest fixture `edge-cases` e deprecazione middleware Next invariati.
+- `financial-invariant-verifier` finale: **PASS**, nessun blocker; indipendenza saldo/statistiche e
+  Entrate/Uscite preservata. `check-all.sh` non avviabile su host senza Bash: Ruff, guard documentale
+  e build riprodotti verdi separatamente; guard pytest semantico non avviabile per launcher Python
+  della venv non più esistente (nessun file backend o semantica ADR toccati dal diff).
+- Asse DENARO: nessuna formula, mutation, invalidazione o transizione modificata; solo query state e
+  render fail-closed. Prossimo microstep: FE-0.4 dipendenze Cliente nei form Contratto/Evento.

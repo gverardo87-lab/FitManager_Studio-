@@ -20,6 +20,7 @@ import { GradientKpiCard } from "@/components/movements/GradientKpiCard";
 import { useAgingReport } from "@/hooks/useRates";
 import { formatCurrency } from "@/lib/format";
 import type { AgingBucket, AgingItem } from "@/types/api";
+import { DataErrorState } from "@/components/ui/data-error-state";
 
 // ── Colori per bucket ──
 
@@ -56,17 +57,18 @@ const UPCOMING_LABELS: Record<string, string> = {
 // ════════════════════════════════════════════════════════════
 
 export function AgingReport() {
-  const { data, isLoading, isError } = useAgingReport();
+  const { data, isLoading, isError, isFetching, refetch } = useAgingReport();
 
   if (isLoading) return <AgingSkeleton />;
 
   if (isError || !data) {
     return (
-      <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
-        <p className="text-destructive">
-          Errore nel caricamento dell&apos;aging report.
-        </p>
-      </div>
+      <DataErrorState
+        title="Scadenze non disponibili"
+        message="Rate scadute e in arrivo non sono verificabili; lo stato non viene considerato in regola."
+        onRetry={() => void refetch()}
+        isRetrying={isFetching}
+      />
     );
   }
 

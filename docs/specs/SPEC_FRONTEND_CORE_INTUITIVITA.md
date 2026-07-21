@@ -1,7 +1,7 @@
 # SPEC — Frontend core intuitivo, affidabile e distintivo
 
-**Stato:** 🟡 IN CORSO — FE-0.1 privacy/worklist + FE-0.2a Cliente + FE-0.2b Contratto completati
-2026-07-21; FE-0.3 Cassa è il prossimo microstep
+**Stato:** 🟡 IN CORSO — FE-0.1 privacy/worklist + FE-0.2a Cliente + FE-0.2b Contratto +
+FE-0.3 Cassa completati 2026-07-21; FE-0.4 dipendenze form è il prossimo microstep
 **Data:** 2026-07-21
 **Branch:** `FitManager_Studio`
 **Tipo:** remediation frontend e read-model additivi; nessuna nuova policy di prodotto
@@ -128,6 +128,27 @@ scheduling; ogni gate conserva impact map, verifiche e GO operativo previsti dal
 - Evidenza: 2 canary nuovi + regressione profilo; suite frontend **113/113**; lint mirato pulito;
   `next build` verde.
 - **Asse DENARO invariato:** ledger solo renderizzato dal wire; zero calcolo, mutation o invalidazione.
+
+### Consuntivo parziale FE-0.3 — 2026-07-21
+
+- **AC-FE0-5 chiuso:** hero e contesto di saldo, che dipendono da due fonti, dichiarano le sorgenti
+  non disponibili con retry; KPI e grafico mensili dipendono solo dalle statistiche e restano
+  visibili se fallisce il solo saldo. Nessun blocco sparisce o inventa zeri; il libro mastro resta
+  indipendente quando la sua query è verificata.
+- Andamento non usa più fallback monetari a zero su errore. Entrate/Uscite espongono errori per
+  colonna; il fallimento del filtro clienti non cancella i movimenti già verificati.
+- Spese fisse distinguono configurazione vuota da query fallita e sospendono il form di modifica
+  finché la lista non è verificata. Anche spese da confermare, scadenze e previsioni hanno retry;
+  il badge pending usa `?`, mai zero implicito, se la fonte fallisce.
+- Evidenza: 5 canary nuovi; suite frontend **118/118**; lint mirato pulito; `next build` verde
+  (TypeScript + 20 pagine). Il lint globale resta rosso per 17 errori preesistenti fuori scope,
+  nessuno nei file FE-0.3.
+- Verifica avversariale: il primo pass ha rilevato che un errore del solo saldo nascondeva anche KPI
+  mensili validi; dipendenze separate e canary speculare aggiunto prima del gate finale. Riesame
+  conclusivo `financial-invariant-verifier`: **PASS**, nessun blocker; soli gap LOW su retry aggregato,
+  loading del filtro clienti split e copertura click dei retry secondari.
+- **Asse DENARO invariato:** sole query read-only e stati render; zero formula, mutation,
+  invalidazione o transizione finanziaria modificata.
 
 ## 4. FE-1 — Operabilità e accessibilità core
 

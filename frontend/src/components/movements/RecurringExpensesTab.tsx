@@ -89,6 +89,7 @@ import type {
 } from "@/types/api";
 import { EXPENSE_CATEGORIES, EXPENSE_FREQUENCIES } from "@/types/api";
 import { formatCurrency } from "@/lib/format";
+import { DataErrorState } from "@/components/ui/data-error-state";
 
 // ── Costanti ──
 
@@ -172,14 +173,14 @@ interface RecurringExpensesTabProps {
 // ── Main ──
 
 export function RecurringExpensesTab({ anno, mese }: RecurringExpensesTabProps) {
-  const { data, isLoading } = useRecurringExpenses();
+  const { data, isLoading, isError, isFetching, refetch } = useRecurringExpenses();
   const expenses = data?.items ?? [];
 
   return (
     <div className="space-y-6">
       <PendingExpensesBanner anno={anno} mese={mese} />
 
-      <AddExpenseForm />
+      {!isError && data && <AddExpenseForm />}
 
       {isLoading && (
         <div className="space-y-2">
@@ -189,7 +190,16 @@ export function RecurringExpensesTab({ anno, mese }: RecurringExpensesTabProps) 
         </div>
       )}
 
-      {!isLoading && expenses.length === 0 && (
+      {(isError || (!isLoading && !data)) && (
+        <DataErrorState
+          title="Spese fisse non disponibili"
+          message="La configurazione non viene mostrata come vuota e le modifiche restano sospese finché i dati non sono verificati."
+          onRetry={() => void refetch()}
+          isRetrying={isFetching}
+        />
+      )}
+
+      {!isLoading && !isError && data && expenses.length === 0 && (
         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-16">
           <CalendarClock className="mb-3 h-10 w-10 text-muted-foreground/40" />
           <p className="text-sm font-medium text-muted-foreground">
@@ -229,7 +239,7 @@ export function RecurringExpensesTab({ anno, mese }: RecurringExpensesTabProps) 
 // ════════════════════════════════════════════════════════════
 
 function PendingExpensesBanner({ anno, mese }: { anno: number; mese: number }) {
-  const { data, isLoading } = usePendingExpenses(anno, mese);
+  const { data, isLoading, isError, isFetching, refetch } = usePendingExpenses(anno, mese);
   const confirmMutation = useConfirmExpenses();
   const previewMutation = usePreviewConfirmExpenses();
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -262,7 +272,20 @@ function PendingExpensesBanner({ anno, mese }: { anno: number; mese: number }) {
     setSelected(new Set(dueItems.map(selKey)));
   }, [items]);
 
-  if (isLoading || items.length === 0) return null;
+  if (isLoading) return null;
+
+  if (isError || !data) {
+    return (
+      <DataErrorState
+        title="Spese da confermare non disponibili"
+        message="Non è possibile verificare se esistono spese in attesa per il periodo selezionato."
+        onRetry={() => void refetch()}
+        isRetrying={isFetching}
+      />
+    );
+  }
+
+  if (items.length === 0) return null;
 
   const allSelected = selected.size === items.length;
   const dueSelected =

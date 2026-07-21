@@ -46,7 +46,6 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -78,6 +77,7 @@ import { useMovements, useMovementStats, usePendingExpenses, useCashBalance } fr
 import type { CashMovement, CashProtection } from "@/types/api";
 import { formatCurrency } from "@/lib/format";
 import { AnimatedNumber } from "@/components/ui/animated-number";
+import { DataErrorState } from "@/components/ui/data-error-state";
 
 // ── Costanti ──
 
@@ -227,11 +227,33 @@ export default function CassaPage() {
       data_da: ledgerDataDa || undefined,
       data_a: ledgerDataA || undefined,
     });
-  const { data: stats, isLoading: statsLoading } =
-    useMovementStats(anno, mese);
-  const { data: pendingData } = usePendingExpenses(anno, mese);
-  const { data: balance, isLoading: balanceLoading } = useCashBalance();
-  const pendingCount = pendingData?.items.length ?? 0;
+  const {
+    data: stats,
+    isLoading: statsLoading,
+    isError: statsError,
+    isFetching: statsFetching,
+    refetch: refetchStats,
+  } = useMovementStats(anno, mese);
+  const { data: pendingData, isError: pendingError } =
+    usePendingExpenses(anno, mese);
+  const {
+    data: balance,
+    isLoading: balanceLoading,
+    isError: balanceError,
+    isFetching: balanceFetching,
+    refetch: refetchBalance,
+  } = useCashBalance();
+  const pendingCount = pendingData?.items.length;
+  const overviewLoading = balanceLoading || statsLoading;
+  const overviewError =
+    balanceError ||
+    statsError ||
+    (!overviewLoading && (!balance || !stats));
+  const statsUnavailable = statsError || (!statsLoading && !stats);
+  const overviewErrorSources = [
+    balanceError || (!balanceLoading && !balance) ? "saldo" : null,
+    statsError || (!statsLoading && !stats) ? "statistiche del periodo" : null,
+  ].filter(Boolean).join(" e ");
   const handleFocusConsumed = useCallback(() => {
     setFocusedMovementId(null);
   }, []);
@@ -379,10 +401,20 @@ export default function CassaPage() {
 
       {/* ── Saldo Hero (dominant, inverted) ── */}
       <div className={revealClass(50)} style={revealStyle(50)}>
-        {(balanceLoading || statsLoading) && (
+        {overviewLoading && !overviewError && (
           <Skeleton className="h-44 w-full rounded-2xl" />
         )}
-        {balance && stats && (
+        {overviewError && (
+          <DataErrorState
+            title="Riepilogo di cassa non disponibile"
+            message={`Non è possibile verificare ${overviewErrorSources || "saldo e statistiche"}. I valori non vengono mostrati come zero. Gli altri blocchi verificati restano disponibili.`}
+            onRetry={() => {
+              void Promise.all([refetchBalance(), refetchStats()]);
+            }}
+            isRetrying={balanceFetching || statsFetching}
+          />
+        )}
+        {!overviewError && balance && stats && (
           <SaldoHeroCard
             saldoAttuale={balance.saldo_attuale}
             margineMese={stats.margine_netto}
@@ -392,7 +424,7 @@ export default function CassaPage() {
       </div>
 
       {/* ── Context Strip (secondary reference data) ── */}
-      {balance && stats && (
+      {!overviewError && balance && stats && (
         <div className={revealClass(80)} style={revealStyle(80)}>
           <BalanceContextStrip
             saldoInizioMese={stats.saldo_inizio_mese}
@@ -406,12 +438,20 @@ export default function CassaPage() {
 
       {/* ── KPI Mese ── */}
       <div className={revealClass(100)} style={revealStyle(100)}>
-        {statsLoading && <KpiSkeleton />}
-        {stats && <KpiCards stats={stats} />}
+        {statsLoading && !statsUnavailable && <KpiSkeleton />}
+        {statsUnavailable && (
+          <DataErrorState
+            title="Statistiche del periodo non disponibili"
+            message="Entrate, uscite e margine non vengono mostrati come zero finché la fonte non è verificata."
+            onRetry={() => void refetchStats()}
+            isRetrying={statsFetching}
+          />
+        )}
+        {!statsUnavailable && stats && <KpiCards stats={stats} />}
       </div>
 
       {/* ── Grafico Entrate vs Uscite + Saldo ── */}
-      {stats && stats.chart_data.length > 0 && (
+      {!statsUnavailable && stats && stats.chart_data.length > 0 && (
         <div className={revealClass(150)} style={revealStyle(150)}>
           <DailyChart data={stats.chart_data} meseLabel={meseLabel} />
         </div>
@@ -427,11 +467,20 @@ export default function CassaPage() {
           <TabsTrigger value="recurring" className="flex-1 gap-1 px-2 sm:gap-1.5 sm:px-3">
             <CalendarClock className="h-3.5 w-3.5 shrink-0" />
             <span className="text-[11px] sm:text-sm"><span className="sm:hidden">Fisse</span><span className="hidden sm:inline">Spese Fisse</span></span>
-            {pendingCount > 0 && (
+            {pendingError ? (
+              <Badge
+                variant="outline"
+                className="ml-0.5 h-5 px-1.5 text-[10px] text-amber-700 sm:ml-1 dark:text-amber-300"
+                aria-label="Numero di spese in attesa non verificabile"
+                title="Spese in attesa non verificabili"
+              >
+                ?
+              </Badge>
+            ) : pendingCount !== undefined && pendingCount > 0 ? (
               <Badge variant="destructive" className="ml-0.5 h-5 min-w-5 px-1.5 text-[10px] sm:ml-1">
                 {pendingCount}
               </Badge>
-            )}
+            ) : null}
           </TabsTrigger>
           <TabsTrigger value="split" className="flex-1 gap-1 px-2 sm:gap-1.5 sm:px-3">
             <ArrowLeftRight className="h-3.5 w-3.5 shrink-0" />

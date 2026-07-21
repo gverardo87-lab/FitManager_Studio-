@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/chart";
 import { useFinancialTrend } from "@/hooks/useMovements";
 import { formatCurrency } from "@/lib/format";
+import { DataErrorState } from "@/components/ui/data-error-state";
 
 const TREND_MONTHS = 12;
 
@@ -52,7 +53,7 @@ function KpiValue({ amount, color }: { amount: number; color: string }) {
 }
 
 export function AndamentoTab() {
-  const { data, isLoading } = useFinancialTrend(TREND_MONTHS);
+  const { data, isLoading, isError, isFetching, refetch } = useFinancialTrend(TREND_MONTHS);
   const [compMode, setCompMode] = useState<CompMode>("origine");
 
   if (isLoading) {
@@ -66,8 +67,19 @@ export function AndamentoTab() {
     );
   }
 
-  const periodi = data?.periodi ?? [];
-  const hasData = (data?.tot_cash_flow_reale ?? 0) > 0 || (data?.tot_venduto ?? 0) > 0;
+  if (isError || !data) {
+    return (
+      <DataErrorState
+        title="Andamento finanziario non disponibile"
+        message="I totali non vengono mostrati come zero perché la serie storica non è stata verificata."
+        onRetry={() => void refetch()}
+        isRetrying={isFetching}
+      />
+    );
+  }
+
+  const periodi = data.periodi;
+  const hasData = data.tot_cash_flow_reale > 0 || data.tot_venduto > 0;
 
   return (
     <div className="space-y-6">
@@ -77,7 +89,7 @@ export function AndamentoTab() {
           icon={<Wallet className="h-5 w-5 text-teal-600 dark:text-teal-400" />}
           iconBg="bg-teal-100 dark:bg-teal-900/30"
           label="Cash flow reale"
-          value={<KpiValue amount={data?.tot_cash_flow_reale ?? 0} color="text-teal-700 dark:text-teal-400" />}
+          value={<KpiValue amount={data.tot_cash_flow_reale} color="text-teal-700 dark:text-teal-400" />}
           sub={`ultimi ${TREND_MONTHS} mesi`}
           borderColor="border-l-teal-500"
           gradient="from-teal-50/80 to-white dark:from-teal-950/40 dark:to-zinc-900"
@@ -86,7 +98,7 @@ export function AndamentoTab() {
           icon={<FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />}
           iconBg="bg-blue-100 dark:bg-blue-900/30"
           label="Incassi da contratti"
-          value={<KpiValue amount={data?.tot_incassi_contratti ?? 0} color="text-blue-700 dark:text-blue-400" />}
+          value={<KpiValue amount={data.tot_incassi_contratti} color="text-blue-700 dark:text-blue-400" />}
           sub="acconti + rate"
           borderColor="border-l-blue-500"
           gradient="from-blue-50/80 to-white dark:from-blue-950/40 dark:to-zinc-900"
@@ -95,7 +107,7 @@ export function AndamentoTab() {
           icon={<Coins className="h-5 w-5 text-amber-600 dark:text-amber-400" />}
           iconBg="bg-amber-100 dark:bg-amber-900/30"
           label="Altri incassi"
-          value={<KpiValue amount={data?.tot_altri_incassi ?? 0} color="text-amber-700 dark:text-amber-400" />}
+          value={<KpiValue amount={data.tot_altri_incassi} color="text-amber-700 dark:text-amber-400" />}
           sub="fuori contratto"
           borderColor="border-l-amber-400"
           gradient="from-amber-50/80 to-white dark:from-amber-950/40 dark:to-zinc-900"
@@ -104,7 +116,7 @@ export function AndamentoTab() {
           icon={<Tag className="h-5 w-5 text-violet-600 dark:text-violet-400" />}
           iconBg="bg-violet-100 dark:bg-violet-900/30"
           label="Venduto"
-          value={<KpiValue amount={data?.tot_venduto ?? 0} color="text-violet-700 dark:text-violet-400" />}
+          value={<KpiValue amount={data.tot_venduto} color="text-violet-700 dark:text-violet-400" />}
           sub="per competenza"
           borderColor="border-l-violet-500"
           gradient="from-violet-50/80 to-white dark:from-violet-950/40 dark:to-zinc-900"
@@ -120,7 +132,7 @@ export function AndamentoTab() {
           </div>
           <p className="mb-3 text-[11px] text-muted-foreground">
             Barre = incassato (cassa); linea viola = venduto (competenza). Lo scarto è il venduto non ancora incassato.
-            {(data?.tot_rimborsi_contratti ?? 0) > 0
+            {data.tot_rimborsi_contratti > 0
               ? " Linea rossa tratteggiata = rimborsi da terminazione (contra-ricavo, già netti nel cash flow)."
               : ""}
           </p>
@@ -148,7 +160,7 @@ export function AndamentoTab() {
                 activeDot={{ r: 4 }}
               />
               {/* G7.5b: contra-linea rimborsi — solo se esistono (evita la linea piatta a zero) */}
-              {(data?.tot_rimborsi_contratti ?? 0) > 0 ? (
+              {data.tot_rimborsi_contratti > 0 ? (
                 <Line
                   dataKey="rimborsi_contratti"
                   type="monotone"

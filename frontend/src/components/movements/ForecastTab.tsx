@@ -46,6 +46,7 @@ import {
 } from "@/components/ui/chart";
 import { useForecast } from "@/hooks/useMovements";
 import { formatCurrency } from "@/lib/format";
+import { DataErrorState } from "@/components/ui/data-error-state";
 import type { ForecastMonthData, ForecastTimelineItem } from "@/types/api";
 
 // ── Chart configs ──
@@ -77,17 +78,18 @@ const runwayConfig: ChartConfig = {
 // ════════════════════════════════════════════════════════════
 
 export function ForecastTab() {
-  const { data, isLoading, isError } = useForecast(3);
+  const { data, isLoading, isError, isFetching, refetch } = useForecast(3);
 
   if (isLoading) return <ForecastSkeleton />;
 
   if (isError || !data) {
     return (
-      <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
-        <p className="text-destructive">
-          Errore nel caricamento delle previsioni.
-        </p>
-      </div>
+      <DataErrorState
+        title="Previsioni non disponibili"
+        message="Saldo proiettato e incassi attesi non sono verificabili in questo momento."
+        onRetry={() => void refetch()}
+        isRetrying={isFetching}
+      />
     );
   }
 

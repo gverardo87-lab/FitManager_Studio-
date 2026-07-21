@@ -21,6 +21,7 @@ import { AdvancedFilters, type FiltersState } from "./AdvancedFilters";
 import { LedgerColumn } from "./LedgerColumn";
 import { useMovements } from "@/hooks/useMovements";
 import { useClients } from "@/hooks/useClients";
+import { DataErrorState } from "@/components/ui/data-error-state";
 
 // ── Helpers ──
 
@@ -63,15 +64,26 @@ export function SplitLedgerView() {
   const {
     data: entrateData,
     isLoading: entrateLoading,
+    isError: entrateError,
+    isFetching: entrateFetching,
+    refetch: refetchEntrate,
   } = useMovements({ ...sharedParams, tipo: "ENTRATA" });
 
   const {
     data: usciteData,
     isLoading: usciteLoading,
+    isError: usciteError,
+    isFetching: usciteFetching,
+    refetch: refetchUscite,
   } = useMovements({ ...sharedParams, tipo: "USCITA" });
 
   // Clienti per il dropdown filtro
-  const { data: clientiData } = useClients();
+  const {
+    data: clientiData,
+    isError: clientiError,
+    isFetching: clientiFetching,
+    refetch: refetchClienti,
+  } = useClients();
   const clienti = useMemo(
     () =>
       (clientiData?.items ?? []).map((c) => ({
@@ -111,17 +123,33 @@ export function SplitLedgerView() {
   return (
     <div className="space-y-5">
       {/* ── Barra filtri ── */}
-      <AdvancedFilters
-        filters={filters}
-        onFilterChange={setFilters}
-        clienti={clienti}
-        categorie={categorie}
-      />
+      {clientiError ? (
+        <DataErrorState
+          title="Filtro clienti non disponibile"
+          message="I movimenti verificati restano visibili, ma il filtro cliente è sospeso per evitare una lista incompleta."
+          onRetry={() => void refetchClienti()}
+          isRetrying={clientiFetching}
+        />
+      ) : (
+        <AdvancedFilters
+          filters={filters}
+          onFilterChange={setFilters}
+          clienti={clienti}
+          categorie={categorie}
+        />
+      )}
 
       {/* ── Due colonne ── */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {/* Colonna Entrate */}
-        {entrateLoading ? (
+        {entrateError || (!entrateLoading && !entrateData) ? (
+          <DataErrorState
+            title="Entrate non disponibili"
+            message="La colonna non è vuota: i movimenti in entrata non sono stati verificati."
+            onRetry={() => void refetchEntrate()}
+            isRetrying={entrateFetching}
+          />
+        ) : entrateLoading ? (
           <ColumnSkeleton />
         ) : (
           <LedgerColumn
@@ -132,7 +160,14 @@ export function SplitLedgerView() {
         )}
 
         {/* Colonna Uscite */}
-        {usciteLoading ? (
+        {usciteError || (!usciteLoading && !usciteData) ? (
+          <DataErrorState
+            title="Uscite non disponibili"
+            message="La colonna non è vuota: i movimenti in uscita non sono stati verificati."
+            onRetry={() => void refetchUscite()}
+            isRetrying={usciteFetching}
+          />
+        ) : usciteLoading ? (
           <ColumnSkeleton />
         ) : (
           <LedgerColumn
