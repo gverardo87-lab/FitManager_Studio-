@@ -32,13 +32,14 @@ import { SessioniTab } from "@/components/clients/profile/SessioniTab";
 import { MovimentiTab } from "@/components/clients/profile/MovimentiTab";
 import { SchedeTab } from "@/components/clients/profile/SchedeTab";
 import { AllenamentoTab } from "@/components/clients/profile/AllenamentoTab";
-import { ProfileSkeleton, NotFoundState } from "@/components/clients/profile/ProfileShared";
+import { DataErrorState, ProfileSkeleton, NotFoundState } from "@/components/clients/profile/ProfileShared";
 
 import { useClient } from "@/hooks/useClients";
 import { useClientContracts } from "@/hooks/useContracts";
 import { useClientEvents } from "@/hooks/useAgenda";
 import { useClientReadiness, computeOnboardingSteps } from "@/hooks/useClientReadiness";
 import { useClientAvatar } from "@/hooks/useWorkspace";
+import { isNotFoundError } from "@/lib/query-error";
 import { resolveBackNavigation } from "@/lib/url-state";
 
 // ════════════════════════════════════════════════════════════
@@ -52,12 +53,18 @@ export default function ClientProfilePage({
 }) {
   const { id } = use(params);
   const clientId = parseInt(id, 10);
+  const validClientId = Number.isInteger(clientId) && clientId > 0 ? clientId : null;
 
-  const { data: client, isLoading } = useClient(clientId);
-  const { data: avatar, isLoading: avatarLoading } = useClientAvatar(clientId);
-  const { readiness } = useClientReadiness(clientId);
-  const { data: contractsData } = useClientContracts(clientId);
-  const { data: eventsData } = useClientEvents(clientId);
+  const clientQuery = useClient(validClientId);
+  const avatarQuery = useClientAvatar(clientId, validClientId !== null);
+  const readinessQuery = useClientReadiness(validClientId ?? 0);
+  const contractsQuery = useClientContracts(validClientId);
+  const eventsQuery = useClientEvents(validClientId);
+  const { data: client, isLoading } = clientQuery;
+  const { data: avatar, isLoading: avatarLoading } = avatarQuery;
+  const { readiness } = readinessQuery;
+  const contractsData = contractsQuery.data;
+  const eventsData = eventsQuery.data;
   const [sheetOpen, setSheetOpen] = useState(false);
   const [contractSheetOpen, setContractSheetOpen] = useState(false);
   const [templateSelectorOpen, setTemplateSelectorOpen] = useState(false);
@@ -77,6 +84,25 @@ export default function ClientProfilePage({
   const backLabel = returnTo?.startsWith("/rinnovi-incassi")
     ? "Torna a Rinnovi & Incassi"
     : backNav.label;
+  const partialSources = [
+    contractsQuery.isError ? "contratti" : null,
+    eventsQuery.isError ? "sessioni" : null,
+    readinessQuery.isError ? "riepilogo clinico" : null,
+  ].filter((source): source is string => source !== null);
+  const hasPartialData = partialSources.length > 0;
+  const isPartialRetrying = contractsQuery.isFetching || eventsQuery.isFetching || readinessQuery.isFetching;
+
+  const retryProfile = () => {
+    void clientQuery.refetch();
+  };
+
+  const retryPartialData = () => {
+    void Promise.all([
+      contractsQuery.refetch(),
+      eventsQuery.refetch(),
+      readinessQuery.refetch(),
+    ]);
+  };
 
   const handleTabChange = useCallback((value: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -125,8 +151,29 @@ export default function ClientProfilePage({
     schede: readiness?.has_workout_plan ?? false,
   }), [contractsData, eventsData, readiness]);
 
+  if (validClientId === null) return <NotFoundState />;
   if (isLoading) return <ProfileSkeleton />;
-  if (!client) return <NotFoundState />;
+  if (clientQuery.isError) {
+    if (isNotFoundError(clientQuery.error)) return <NotFoundState />;
+    return (
+      <DataErrorState
+        title="Impossibile aprire il profilo cliente"
+        message="Il cliente non è stato verificato. Controlla la connessione e riprova."
+        onRetry={retryProfile}
+        isRetrying={clientQuery.isFetching}
+      />
+    );
+  }
+  if (!client) {
+    return (
+      <DataErrorState
+        title="Profilo cliente non disponibile"
+        message="La richiesta è terminata senza dati verificabili. Riprova il caricamento."
+        onRetry={retryProfile}
+        isRetrying={clientQuery.isFetching}
+      />
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -142,10 +189,21 @@ export default function ClientProfilePage({
         />
       </div>
 
+      {hasPartialData ? (
+        <DataErrorState
+          title="Profilo disponibile con dati parziali"
+          message={`Non è stato possibile verificare: ${partialSources.join(", ")}. Gli indicatori dipendenti restano nascosti.`}
+          onRetry={retryPartialData}
+          isRetrying={isPartialRetrying}
+        />
+      ) : null}
+
       {/* Onboarding Checklist — hero CTA + stepper (solo se profilo incompleto) */}
-      <div data-guide="client-onboarding-checklist">
-        <OnboardingChecklist steps={onboardingSteps} />
-      </div>
+      {!hasPartialData ? (
+        <div data-guide="client-onboarding-checklist">
+          <OnboardingChecklist steps={onboardingSteps} />
+        </div>
+      ) : null}
 
       {/* Tabs con completion dots — sticky per visibilita' permanente */}
       <Tabs value={activeTab} onValueChange={handleTabChange}>
@@ -157,12 +215,12 @@ export default function ClientProfilePage({
           <TabsTrigger value="contratti">
             <FileText className="mr-2 h-4 w-4" />
             Contratti
-            {tabComplete.contratti && <CompletionDot />}
+            {!contractsQuery.isError && tabComplete.contratti ? <CompletionDot /> : null}
           </TabsTrigger>
           <TabsTrigger value="sessioni">
             <Calendar className="mr-2 h-4 w-4" />
             Sessioni
-            {tabComplete.sessioni && <CompletionDot />}
+            {!eventsQuery.isError && tabComplete.sessioni ? <CompletionDot /> : null}
           </TabsTrigger>
           <TabsTrigger value="movimenti">
             <Wallet className="mr-2 h-4 w-4" />
@@ -171,7 +229,7 @@ export default function ClientProfilePage({
           <TabsTrigger value="schede">
             <ClipboardList className="mr-2 h-4 w-4" />
             Schede
-            {tabComplete.schede && <CompletionDot />}
+            {!readinessQuery.isError && tabComplete.schede ? <CompletionDot /> : null}
           </TabsTrigger>
           <TabsTrigger value="allenamento">
             <TrendingUp className="mr-2 h-4 w-4" />
@@ -180,15 +238,24 @@ export default function ClientProfilePage({
         </TabsList>
 
         <TabsContent value="panoramica" className="mt-4">
-          <PanoramicaTab
-            client={client}
-            clientId={clientId}
-            readiness={readiness}
-            hasContracts={(contractsData?.items?.length ?? 0) > 0}
-            hasContractWithRates={(contractsData?.items ?? []).some((c) => !c.chiuso && c.rate_totali > 0)}
-            hasEvents={(eventsData?.items?.length ?? 0) > 0}
-            onTabChange={handleTabChange}
-          />
+          {hasPartialData ? (
+            <DataErrorState
+              title="Panoramica operativa non verificata"
+              message="Riprova i dati del profilo prima di usare il percorso consigliato."
+              onRetry={retryPartialData}
+              isRetrying={isPartialRetrying}
+            />
+          ) : (
+            <PanoramicaTab
+              client={client}
+              clientId={clientId}
+              readiness={readiness}
+              hasContracts={(contractsData?.items?.length ?? 0) > 0}
+              hasContractWithRates={(contractsData?.items ?? []).some((c) => !c.chiuso && c.rate_totali > 0)}
+              hasEvents={(eventsData?.items?.length ?? 0) > 0}
+              onTabChange={handleTabChange}
+            />
+          )}
         </TabsContent>
         <TabsContent value="contratti" className="mt-4">
           <ContrattiTab clientId={clientId} />

@@ -118,12 +118,19 @@ export function computeOnboardingSteps(
 
 /** Hook: readiness di un singolo cliente dalla cache condivisa. */
 export function useClientReadiness(clientId: number) {
-  const { data, isLoading } = useClinicalReadiness();
+  const query = useClinicalReadiness();
+  const { data, isLoading } = query;
 
   const readiness = useMemo(() => {
     if (!data?.items) return null;
     return data.items.find((i) => i.client_id === clientId) ?? null;
   }, [data, clientId]);
 
-  return { readiness, isLoading };
+  return {
+    readiness,
+    isLoading,
+    isError: query.isError,
+    isFetching: query.isFetching,
+    refetch: query.refetch,
+  };
 }

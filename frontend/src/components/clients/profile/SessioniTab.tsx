@@ -11,12 +11,22 @@ import { Calendar } from "lucide-react";
 
 import { EventsTable } from "@/components/agenda/EventsTable";
 import { useClientEvents } from "@/hooks/useAgenda";
-import { TabSkeleton, EmptyTab } from "./ProfileShared";
+import { DataErrorState, TabSkeleton, EmptyTab } from "./ProfileShared";
 
 export function SessioniTab({ clientId }: { clientId: number }) {
-  const { data, isLoading } = useClientEvents(clientId);
+  const { data, isLoading, isError, isFetching, refetch } = useClientEvents(clientId);
 
   if (isLoading) return <TabSkeleton />;
+  if (isError) {
+    return (
+      <DataErrorState
+        title="Sessioni non disponibili"
+        message="Non è possibile verificare le sessioni del cliente."
+        onRetry={() => void refetch()}
+        isRetrying={isFetching}
+      />
+    );
+  }
 
   const events = data?.items ?? [];
 

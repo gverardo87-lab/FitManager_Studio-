@@ -3695,3 +3695,16 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
   invalidazione è cambiato.
 - Verifiche: 4 canary nuovi verdi; suite frontend **107/107**; lint mirato pulito; `next build` verde
   (TypeScript + 20 pagine). FE-0 prosegue con error/not-found e stati parziali sulle restanti superfici.
+
+---
+
+## 2026-07-21 — FE-0.2a: profilo Cliente error≠empty/not-found
+
+- Il profilo usa «Cliente non trovato» solo per ID invalido/HTTP 404; rete, 5xx e risposta senza dato
+  hanno errore esplicito e retry.
+- Fallimenti di contratti, sessioni o readiness rendono il profilo «parziale» e sospendono checklist,
+  path consigliato e completion dot dipendenti: nessun falso «manca» costruito da dati non verificati.
+- Tab Contratti, Sessioni e Movimenti distinguono loading/error/empty/ready; il wallet cliente non si
+  auto-nasconde più in errore.
+- Verifiche: 4 canary nuovi; suite frontend **111/111**; lint mirato pulito; `next build` verde.
+  Prossimo microstep: dettaglio Contratto e blocchi finanziari Cassa.

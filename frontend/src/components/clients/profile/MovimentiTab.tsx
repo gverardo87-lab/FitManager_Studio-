@@ -10,13 +10,23 @@ import {
 import { Wallet } from "lucide-react";
 import { useMovements } from "@/hooks/useMovements";
 import { formatCurrency } from "@/lib/format";
-import { TabSkeleton, EmptyTab } from "./ProfileShared";
+import { DataErrorState, TabSkeleton, EmptyTab } from "./ProfileShared";
 import type { CashMovement } from "@/types/api";
 
 export function MovimentiTab({ clientId }: { clientId: number }) {
-  const { data, isLoading } = useMovements({ id_cliente: clientId });
+  const { data, isLoading, isError, isFetching, refetch } = useMovements({ id_cliente: clientId });
 
   if (isLoading) return <TabSkeleton />;
+  if (isError) {
+    return (
+      <DataErrorState
+        title="Movimenti non disponibili"
+        message="Non è possibile verificare i movimenti del cliente. Nessun importo viene mostrato come zero."
+        onRetry={() => void refetch()}
+        isRetrying={isFetching}
+      />
+    );
+  }
 
   const movements = data?.items ?? [];
 

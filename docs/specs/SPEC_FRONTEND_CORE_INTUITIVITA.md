@@ -1,7 +1,7 @@
 # SPEC — Frontend core intuitivo, affidabile e distintivo
 
-**Stato:** 🟡 IN CORSO — FE-0.1 privacy Clienti + verità Rinnovi & Incassi completato 2026-07-21;
-FE-0.2 error/not-found sulle restanti superfici è il prossimo microstep
+**Stato:** 🟡 IN CORSO — FE-0.1 privacy/worklist + FE-0.2a profilo Cliente completati 2026-07-21;
+FE-0.2b dettaglio Contratto/Cassa è il prossimo microstep
 **Data:** 2026-07-21
 **Branch:** `FitManager_Studio`
 **Tipo:** remediation frontend e read-model additivi; nessuna nuova policy di prodotto
@@ -103,6 +103,18 @@ scheduling; ogni gate conserva impact map, verifiche e GO operativo previsti dal
   pagine). Warning preesistenti non bloccanti: fixture `edge-cases.test.ts` su assegnazione a const;
   convenzione Next middleware deprecata.
 - **Asse DENARO invariato:** nessuna formula, mutation, invalidazione o transizione modificata.
+
+### Consuntivo parziale FE-0.2a — 2026-07-21
+
+- **AC-FE0-3 Cliente chiuso:** «Cliente non trovato» è riservato a ID invalido/HTTP 404; rete, 5xx
+  o risposta senza dato producono errore con retry. Il dettaglio Contratto resta in FE-0.2b.
+- **AC-FE0-4 chiuso sul profilo Cliente:** Contratti, Sessioni e Movimenti distinguono loading,
+  error, empty e ready; anche il wallet dichiara l'indisponibilità senza sparire.
+- Contratti/sessioni/readiness falliti non alimentano più checklist, path consigliato o completion
+  dot: il profilo anagrafico resta visibile con banner «dati parziali» e retry aggregato.
+- Utility condivisa `isNotFoundError` introdotta per riuso sul dettaglio Contratto.
+- Evidenza: 4 canary nuovi verdi; suite frontend **111/111**; lint mirato pulito; `next build` verde.
+- **Asse DENARO invariato:** sole query read-only e stati render; zero mutation/formula/invalidation.
 
 ## 4. FE-1 — Operabilità e accessibilità core
 

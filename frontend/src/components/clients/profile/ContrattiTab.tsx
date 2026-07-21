@@ -10,13 +10,23 @@ import { AlertTriangle, Coins, FileText } from "lucide-react";
 import { useClientContracts, useClientWalletCredits } from "@/hooks/useContracts";
 import { formatCurrency } from "@/lib/format";
 import { ContractLifecycleBadge, ContractMoneyBadge } from "@/lib/contract-status";
-import { TabSkeleton, EmptyTab } from "./ProfileShared";
+import { DataErrorState, TabSkeleton, EmptyTab } from "./ProfileShared";
 import type { ContractListItem } from "@/types/api";
 
 /** Badge sola-lettura del credito a wallet del cliente (G8.1, ADR-020) — link alla worklist erogazione.
  *  Self-hide se nessun credito aperto. */
 function WalletCreditBadge({ clientId }: { clientId: number }) {
-  const { data } = useClientWalletCredits(clientId);
+  const { data, isError, isFetching, refetch } = useClientWalletCredits(clientId);
+  if (isError) {
+    return (
+      <DataErrorState
+        title="Credito cliente non verificato"
+        message="I contratti sono disponibili, ma il credito wallet non può essere confermato."
+        onRetry={() => void refetch()}
+        isRetrying={isFetching}
+      />
+    );
+  }
   const totale = (data ?? [])
     .filter((c) => c.stato === "APERTO")
     .reduce((sum, c) => sum + c.residuo, 0);
@@ -37,9 +47,19 @@ function WalletCreditBadge({ clientId }: { clientId: number }) {
 
 export function ContrattiTab({ clientId }: { clientId: number }) {
   const router = useRouter();
-  const { data, isLoading } = useClientContracts(clientId);
+  const { data, isLoading, isError, isFetching, refetch } = useClientContracts(clientId);
 
   if (isLoading) return <TabSkeleton />;
+  if (isError) {
+    return (
+      <DataErrorState
+        title="Contratti non disponibili"
+        message="Non è possibile verificare i contratti del cliente."
+        onRetry={() => void refetch()}
+        isRetrying={isFetching}
+      />
+    );
+  }
 
   const contracts = data?.items ?? [];
 
