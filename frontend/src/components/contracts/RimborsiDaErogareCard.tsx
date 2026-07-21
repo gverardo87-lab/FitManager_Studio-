@@ -15,18 +15,19 @@ import { Coins } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useRimborsiDaErogare } from "@/hooks/useContracts";
 import { EroghaRimborsoDialog } from "./EroghaRimborsoDialog";
 import { formatCurrency } from "@/lib/format";
 import type { RimborsoDaErogareItem } from "@/types/api";
 
-export function RimborsiDaErogareCard() {
-  const { data, isLoading } = useRimborsiDaErogare();
+interface RimborsiDaErogareCardProps {
+  items: RimborsoDaErogareItem[];
+}
+
+export function RimborsiDaErogareCard({ items }: RimborsiDaErogareCardProps) {
   const [target, setTarget] = useState<RimborsoDaErogareItem | null>(null);
   const [open, setOpen] = useState(false);
 
-  const items = data?.items ?? [];
-  if (isLoading || items.length === 0) return null; // niente crediti aperti → niente sezione
+  if (items.length === 0) return null; // niente crediti aperti → niente sezione
 
   const openEroga = (item: RimborsoDaErogareItem) => {
     setTarget(item);

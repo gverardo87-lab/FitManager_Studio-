@@ -27,11 +27,12 @@ import {
   TrendingDown,
   UserMinus,
   Wallet,
+  WifiOff,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
@@ -60,7 +61,12 @@ import { CreditiDaIncassareCard } from "@/components/contracts/CreditiDaIncassar
 import { RimborsiDaErogareCard } from "@/components/contracts/RimborsiDaErogareCard";
 import { useOverdueRates, useExpiringContracts, useClientsToRecover, useSuspendedContracts } from "@/hooks/useDashboard";
 import { usePayRate } from "@/hooks/useRates";
-import { useMarkRenewalOutcome, useUpdateContract } from "@/hooks/useContracts";
+import {
+  useCreditiDaIncassare,
+  useMarkRenewalOutcome,
+  useRimborsiDaErogare,
+  useUpdateContract,
+} from "@/hooks/useContracts";
 import { useTrainerName } from "@/hooks/useTrainerName";
 import { usePageReveal } from "@/lib/page-reveal";
 import { formatCurrency, formatShortDate, toISOLocal } from "@/lib/format";
@@ -577,6 +583,8 @@ export default function RinnoviIncassiPage() {
   const expiringQuery = useExpiringContracts();
   const recoverQuery = useClientsToRecover();
   const suspendedQuery = useSuspendedContracts();
+  const creditsQuery = useCreditiDaIncassare();
+  const refundsQuery = useRimborsiDaErogare();
 
   const [renewSheet, setRenewSheet] = useState(false);
   const [renewItem, setRenewItem] = useState<RenewTarget | null>(null);
@@ -587,8 +595,22 @@ export default function RinnoviIncassiPage() {
   const expiringItems = expiringQuery.data?.items ?? [];
   const recoverItems = recoverQuery.data?.items ?? [];
   const suspendedItems = suspendedQuery.data?.items ?? [];
-  const isLoading = overdueQuery.isLoading || expiringQuery.isLoading || recoverQuery.isLoading || suspendedQuery.isLoading;
-  const totalActions = overdueItems.length + expiringItems.length + recoverItems.length + suspendedItems.length;
+  const creditItems = creditsQuery.data?.items ?? [];
+  const refundItems = refundsQuery.data?.items ?? [];
+  const queries = [overdueQuery, expiringQuery, recoverQuery, suspendedQuery, creditsQuery, refundsQuery];
+  const isLoading = queries.some((query) => query.isLoading);
+  const failedSources = [
+    overdueQuery.isError ? "rate in ritardo" : null,
+    expiringQuery.isError ? "contratti da rinnovare" : null,
+    recoverQuery.isError ? "clienti da recuperare" : null,
+    suspendedQuery.isError ? "contratti sospesi" : null,
+    creditsQuery.isError ? "crediti da incassare" : null,
+    refundsQuery.isError ? "rimborsi da erogare" : null,
+  ].filter((source): source is string => source !== null);
+  const hasError = failedSources.length > 0;
+  const isRetrying = queries.some((query) => query.isFetching);
+  const totalActions = overdueItems.length + expiringItems.length + recoverItems.length
+    + suspendedItems.length + creditItems.length + refundItems.length;
 
   const totalOverdueAmount = overdueItems.reduce((sum, i) => sum + i.importo_residuo, 0);
 
@@ -597,7 +619,11 @@ export default function RinnoviIncassiPage() {
     setRenewSheet(true);
   };
 
-  if (isLoading) {
+  const retryAll = () => {
+    void Promise.all(queries.map((query) => query.refetch()));
+  };
+
+  if (isLoading && !hasError) {
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
@@ -607,6 +633,37 @@ export default function RinnoviIncassiPage() {
         </div>
         <Skeleton className="h-48 rounded-xl" />
         <Skeleton className="h-48 rounded-xl" />
+      </div>
+    );
+  }
+
+  if (hasError) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Rinnovi &amp; Incassi</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Verifica operativa non completata</p>
+        </div>
+        <Card className="border-amber-300 bg-amber-50/60 dark:border-amber-900 dark:bg-amber-950/20">
+          <CardContent className="flex flex-col gap-4 py-8 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/40">
+                <WifiOff className="h-5 w-5 text-amber-700 dark:text-amber-300" aria-hidden="true" />
+              </div>
+              <div>
+                <h2 className="font-semibold">Impossibile verificare tutte le azioni</h2>
+                <p className="mt-1 max-w-xl text-sm text-muted-foreground">
+                  Dati non disponibili: {failedSources.join(", ")}. Finché la verifica non riesce,
+                  FitManager non può confermare che sia tutto in regola.
+                </p>
+              </div>
+            </div>
+            <Button type="button" variant="outline" onClick={retryAll} disabled={isRetrying}>
+              {isRetrying ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />}
+              {isRetrying ? "Verifica in corso…" : "Riprova verifica"}
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -764,10 +821,10 @@ export default function RinnoviIncassiPage() {
       ) : null}
 
       {/* ── Sezione: Crediti da incassare (post-chiusura, G7.10) — auto-nascosta se vuota ── */}
-      <CreditiDaIncassareCard />
+      <CreditiDaIncassareCard items={creditItems} />
 
       {/* ── Sezione: Rimborsi da erogare (wallet cliente, G8.1) — auto-nascosta se vuota ── */}
-      <RimborsiDaErogareCard />
+      <RimborsiDaErogareCard items={refundItems} />
 
       {/* ── Sezione: Clienti da recuperare (lapsed) ── */}
       {recoverItems.length > 0 ? (

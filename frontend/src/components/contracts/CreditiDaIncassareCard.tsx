@@ -24,20 +24,22 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useCreditiDaIncassare, useAnnullaCredito } from "@/hooks/useContracts";
+import { useAnnullaCredito } from "@/hooks/useContracts";
 import { IncassaCreditoDialog } from "./IncassaCreditoDialog";
 import { formatCurrency } from "@/lib/format";
 import type { CreditoDaIncassareItem } from "@/types/api";
 
-export function CreditiDaIncassareCard() {
-  const { data, isLoading } = useCreditiDaIncassare();
+interface CreditiDaIncassareCardProps {
+  items: CreditoDaIncassareItem[];
+}
+
+export function CreditiDaIncassareCard({ items }: CreditiDaIncassareCardProps) {
   const annulla = useAnnullaCredito();
   const [incassoTarget, setIncassoTarget] = useState<CreditoDaIncassareItem | null>(null);
   const [incassoOpen, setIncassoOpen] = useState(false);
   const [annulTarget, setAnnulTarget] = useState<CreditoDaIncassareItem | null>(null);
 
-  const items = data?.items ?? [];
-  if (isLoading || items.length === 0) return null; // niente crediti aperti → niente sezione
+  if (items.length === 0) return null; // niente crediti aperti → niente sezione
 
   const openIncasso = (item: CreditoDaIncassareItem) => {
     setIncassoTarget(item);

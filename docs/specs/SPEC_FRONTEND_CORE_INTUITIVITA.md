@@ -1,6 +1,7 @@
 # SPEC — Frontend core intuitivo, affidabile e distintivo
 
-**Stato:** 🟡 APERTA — scheduling ratificato 2026-07-21; codice NON AVVIATO
+**Stato:** 🟡 IN CORSO — FE-0.1 privacy Clienti + verità Rinnovi & Incassi completato 2026-07-21;
+FE-0.2 error/not-found sulle restanti superfici è il prossimo microstep
 **Data:** 2026-07-21
 **Branch:** `FitManager_Studio`
 **Tipo:** remediation frontend e read-model additivi; nessuna nuova policy di prodotto
@@ -88,6 +89,20 @@ scheduling; ogni gate conserva impact map, verifiche e GO operativo previsti dal
 - `tools/scripts/check-all.sh`;
 - test LIVE autenticato desktop: errore simulato per ciascuna fonte, zero submit finanziari reali;
 - review privacy della lista Clienti.
+
+### Consuntivo parziale FE-0.1 — 2026-07-21
+
+- **AC-FE0-1 chiuso:** lista Clienti senza importi/prezzo/crediti; resta solo «Azione
+  amministrativa» non monetaria con accesso a Rinnovi & Incassi.
+- **AC-FE0-2 chiuso:** Rinnovi & Incassi aggrega sei fonti (incluse worklist crediti/rimborsi),
+  blocca KPI/empty positivo se una fonte fallisce, nomina i dati indisponibili e offre retry.
+- Card crediti/rimborsi rese presentazionali: la pagina possiede query state e conteggio, senza
+  doppia sottoscrizione React Query.
+- Test aggiunti: privacy overview + errore mai «Tutto in regola» + worklist credito inclusa.
+- Evidenza: **107/107 Vitest**, lint mirato zero warning/error, `next build` verde (TypeScript + 20
+  pagine). Warning preesistenti non bloccanti: fixture `edge-cases.test.ts` su assegnazione a const;
+  convenzione Next middleware deprecata.
+- **Asse DENARO invariato:** nessuna formula, mutation, invalidazione o transizione modificata.
 
 ## 4. FE-1 — Operabilità e accessibilità core
 

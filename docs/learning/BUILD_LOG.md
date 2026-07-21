@@ -3681,3 +3681,17 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
   nel repository.
 - Sequenza prodotto concordata: `v1.0.15` = blocco P + FE-0 integrità/privacy + criticità FE-1;
   ottimizzazioni/redesign estesi fuori scope; G-MAC apre dopo validazione e consegna della `v1.0.15`.
+
+---
+
+## 2026-07-21 — FE-0.1: privacy Clienti e verità Rinnovi & Incassi
+
+- Lista Clienti resa privacy-safe: rimossi prezzo, versato e crediti dall'overview; il caso con rate
+  scadute espone soltanto «Azione amministrativa» e porta alla worklist dedicata.
+- Rinnovi & Incassi ora possiede e verifica tutte le 6 fonti operative, incluse «Crediti da
+  incassare» e «Rimborsi da erogare»: una fonte fallita blocca KPI/«Tutto in regola», indica cosa
+  manca e offre retry.
+- Le due card finanziarie ricevono dati già verificati dalla pagina; nessun money-math, write-path o
+  invalidazione è cambiato.
+- Verifiche: 4 canary nuovi verdi; suite frontend **107/107**; lint mirato pulito; `next build` verde
+  (TypeScript + 20 pagine). FE-0 prosegue con error/not-found e stati parziali sulle restanti superfici.

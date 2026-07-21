@@ -2,13 +2,12 @@
 "use client";
 
 /**
- * Tabella clienti enriched — 7 colonne responsive con dati da batch queries.
+ * Tabella clienti enriched — overview privacy-safe con dati operativi.
  *
  * Colonne:
  * - Nome (sempre) — cognome nome + icona nota interna
  * - Contatti (hidden sm) — email + telefono con icone
- * - Finanze (hidden md) — progress bar versato/totale
- * - Crediti (hidden lg) — badge emerald/zinc
+ * - Attenzioni (hidden md) — solo segnale amministrativo non monetario
  * - Ultimo Evento (hidden lg) — data formattata o "Mai"
  * - Stato (sempre) — badge Attivo/Inattivo
  * - Azioni (sempre) — dropdown Modifica/Elimina
@@ -55,7 +54,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { formatCurrency, formatShortDate, getFinanceBarColor } from "@/lib/format";
+import { formatShortDate } from "@/lib/format";
 import type { ClientEnriched } from "@/types/api";
 
 /** Strip diacritics for accent-insensitive Italian search */
@@ -128,8 +127,7 @@ export function ClientsTable({ clients, onEdit, onDelete, onNewClient }: Clients
               <TableRow>
                 <TableHead>Nome</TableHead>
                 <TableHead className="hidden sm:table-cell">Contatti</TableHead>
-                <TableHead className="hidden md:table-cell">Finanze</TableHead>
-                <TableHead className="hidden lg:table-cell text-center">Crediti</TableHead>
+                <TableHead className="hidden md:table-cell">Attenzioni</TableHead>
                 <TableHead className="hidden lg:table-cell">Ultimo Evento</TableHead>
                 <TableHead>Stato</TableHead>
                 <TableHead className="w-[80px]">Azioni</TableHead>
@@ -137,14 +135,9 @@ export function ClientsTable({ clients, onEdit, onDelete, onNewClient }: Clients
             </TableHeader>
             <TableBody>
               {filtered.map((client, i) => {
-                const hasContracts = client.contratti_attivi > 0;
-                const prezzo = client.prezzo_totale_attivo;
-                const versato = client.totale_versato;
-                const ratio = prezzo > 0 ? versato / prezzo : 0;
-
                 return (
-                  <TableRow key={client.id} {...(i === 0 ? { "data-guide": "clienti-table-first-row" } : {})} className={`transition-colors hover:bg-muted/50 ${client.ha_rate_scadute ? "bg-red-50/40 dark:bg-red-950/20" : ""}`}>
-                    {/* ── Nome + avatar + nota + dot rate scadute ── */}
+                  <TableRow key={client.id} {...(i === 0 ? { "data-guide": "clienti-table-first-row" } : {})} className="transition-colors hover:bg-muted/50">
+                    {/* ── Nome + avatar + nota ── */}
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold">
@@ -153,9 +146,6 @@ export function ClientsTable({ clients, onEdit, onDelete, onNewClient }: Clients
                         <Link href={`/clienti/${client.id}`} className="font-semibold hover:underline">
                           {client.cognome} {client.nome}
                         </Link>
-                        {client.ha_rate_scadute && (
-                          <span className="h-2 w-2 shrink-0 rounded-full bg-red-500" title="Rate scadute" />
-                        )}
                         {client.note_interne && (
                           <TooltipProvider>
                             <Tooltip>
@@ -194,42 +184,17 @@ export function ClientsTable({ clients, onEdit, onDelete, onNewClient }: Clients
                       </div>
                     </TableCell>
 
-                    {/* ── Finanze (hidden md) — progress bar ── */}
+                    {/* ── Segnale operativo non monetario (privacy-safe) ── */}
                     <TableCell className="hidden md:table-cell">
-                      {hasContracts ? (
-                        <div className="w-28 space-y-1">
-                          <div className="flex items-baseline justify-between text-[11px]">
-                            <span className="font-semibold tabular-nums">
-                              {formatCurrency(versato)}
-                            </span>
-                            <span className="text-muted-foreground">
-                              / {formatCurrency(prezzo)}
-                            </span>
-                          </div>
-                          <div className="h-1.5 w-full rounded-full bg-zinc-100 dark:bg-zinc-800">
-                            <div
-                              className={`h-1.5 rounded-full transition-all ${getFinanceBarColor(ratio)}`}
-                              style={{ width: `${Math.min(ratio * 100, 100)}%` }}
-                            />
-                          </div>
-                        </div>
+                      {client.ha_rate_scadute ? (
+                        <Button variant="outline" size="sm" className="h-7 border-amber-300 text-xs text-amber-800 dark:border-amber-800 dark:text-amber-300" asChild>
+                          <Link href="/rinnovi-incassi">
+                            Azione amministrativa
+                          </Link>
+                        </Button>
                       ) : (
-                        <span className="text-sm italic text-muted-foreground">—</span>
+                        <span className="text-sm text-muted-foreground/50">—</span>
                       )}
-                    </TableCell>
-
-                    {/* ── Crediti (hidden lg) ── */}
-                    <TableCell className="hidden lg:table-cell text-center">
-                      <Badge
-                        variant="secondary"
-                        className={
-                          client.crediti_residui > 0
-                            ? "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400"
-                            : ""
-                        }
-                      >
-                        {client.crediti_residui}
-                      </Badge>
                     </TableCell>
 
                     {/* ── Ultimo Evento (hidden lg) ── */}
