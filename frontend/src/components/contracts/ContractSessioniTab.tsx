@@ -7,11 +7,12 @@
  */
 
 import { Skeleton } from "@/components/ui/skeleton";
+import { DataErrorState } from "@/components/ui/data-error-state";
 import { EventsTable } from "@/components/agenda/EventsTable";
 import { useContractEvents } from "@/hooks/useAgenda";
 
 export function ContractSessioniTab({ contractId }: { contractId: number }) {
-  const { data, isLoading } = useContractEvents(contractId);
+  const { data, isLoading, isError, isFetching, refetch } = useContractEvents(contractId);
 
   if (isLoading) {
     return (
@@ -20,6 +21,17 @@ export function ContractSessioniTab({ contractId }: { contractId: number }) {
         <Skeleton className="h-10 w-full" />
         <Skeleton className="h-10 w-full" />
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <DataErrorState
+        title="Sessioni del contratto non disponibili"
+        message="Non è possibile verificare le sessioni collegate a questo contratto."
+        onRetry={() => void refetch()}
+        isRetrying={isFetching}
+      />
     );
   }
 

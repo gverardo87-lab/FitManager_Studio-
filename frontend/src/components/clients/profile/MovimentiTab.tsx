@@ -10,7 +10,8 @@ import {
 import { Wallet } from "lucide-react";
 import { useMovements } from "@/hooks/useMovements";
 import { formatCurrency } from "@/lib/format";
-import { DataErrorState, TabSkeleton, EmptyTab } from "./ProfileShared";
+import { DataErrorState } from "@/components/ui/data-error-state";
+import { TabSkeleton, EmptyTab } from "./ProfileShared";
 import type { CashMovement } from "@/types/api";
 
 export function MovimentiTab({ clientId }: { clientId: number }) {

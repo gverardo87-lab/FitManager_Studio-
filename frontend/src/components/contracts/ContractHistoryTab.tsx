@@ -31,6 +31,7 @@ import {
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DataErrorState } from "@/components/ui/data-error-state";
 import { formatCurrency, formatShortDate, formatDateTime } from "@/lib/format";
 import { useContractHistory } from "@/hooks/useContracts";
 import type {
@@ -175,7 +176,7 @@ function CashLedgerCard({ movimenti }: { movimenti: ContractMovementItem[] }) {
 // ════════════════════════════════════════════════════════════
 
 function StatusTimelineCard({ contractId }: { contractId: number }) {
-  const { data, isLoading } = useContractHistory(contractId);
+  const { data, isLoading, isError, isFetching, refetch } = useContractHistory(contractId);
 
   // Più recente in cima (il backend ordina cronologico asc).
   const events = useMemo(() => (data ? [...data].reverse() : []), [data]);
@@ -189,7 +190,14 @@ function StatusTimelineCard({ contractId }: { contractId: number }) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {isLoading ? (
+        {isError ? (
+          <DataErrorState
+            title="Attività del contratto non disponibile"
+            message="Il ledger è disponibile, ma la timeline delle attività non può essere verificata."
+            onRetry={() => void refetch()}
+            isRetrying={isFetching}
+          />
+        ) : isLoading ? (
           <div className="space-y-3">
             <Skeleton className="h-10 w-full" />
             <Skeleton className="h-10 w-full" />

@@ -11,7 +11,8 @@ import { Calendar } from "lucide-react";
 
 import { EventsTable } from "@/components/agenda/EventsTable";
 import { useClientEvents } from "@/hooks/useAgenda";
-import { DataErrorState, TabSkeleton, EmptyTab } from "./ProfileShared";
+import { DataErrorState } from "@/components/ui/data-error-state";
+import { TabSkeleton, EmptyTab } from "./ProfileShared";
 
 export function SessioniTab({ clientId }: { clientId: number }) {
   const { data, isLoading, isError, isFetching, refetch } = useClientEvents(clientId);

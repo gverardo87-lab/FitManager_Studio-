@@ -3708,3 +3708,16 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
   auto-nasconde più in errore.
 - Verifiche: 4 canary nuovi; suite frontend **111/111**; lint mirato pulito; `next build` verde.
   Prossimo microstep: dettaglio Contratto e blocchi finanziari Cassa.
+
+---
+
+## 2026-07-21 — FE-0.2b: dettaglio Contratto error≠empty/not-found
+
+- Il dettaglio usa «Contratto non trovato» solo per ID invalido/HTTP 404; rete, 5xx e risposta senza
+  dato hanno errore verificabile e retry.
+- Sessioni non converte più un guasto in «nessuna sessione»; lo Storico mantiene il ledger principale
+  e dichiara separatamente l'eventuale indisponibilità della timeline.
+- Stato errore promosso a primitive UI condivisa per mantenere la stessa grammatica su Cliente e
+  Contratto.
+- Verifiche: 2 canary nuovi + regressione profilo; suite frontend **113/113**; lint pulito; build
+  Next.js verde. Nessun write-path o calcolo monetario toccato. Prossimo microstep: Cassa.

@@ -34,6 +34,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DataErrorState } from "@/components/ui/data-error-state";
 
 import { ContractFinancialHero } from "@/components/contracts/ContractFinancialHero";
 import { PaymentPlanTab } from "@/components/contracts/PaymentPlanTab";
@@ -50,6 +51,7 @@ import { useContract } from "@/hooks/useContracts";
 import { resolveBackNavigation } from "@/lib/url-state";
 import { ContractLifecycleBadge } from "@/lib/contract-status";
 import { getIncassaResiduoAmount } from "@/components/contracts/contract-action-guards";
+import { isNotFoundError } from "@/lib/query-error";
 
 // ════════════════════════════════════════════════════════════
 // PAGE COMPONENT
@@ -65,6 +67,7 @@ export default function ContractDetailPage({
   const { id } = use(params);
   const { from, returnTo } = use(searchParamsPromise);
   const contractId = parseInt(id, 10);
+  const validContractId = Number.isInteger(contractId) && contractId > 0 ? contractId : null;
   const router = useRouter();
   const safeReturnTo =
     returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//") ? returnTo : null;
@@ -74,20 +77,39 @@ export default function ContractDetailPage({
     ? "Torna a Rinnovi & Incassi"
     : backNav.label;
 
-  const { data: contract, isLoading } = useContract(contractId);
+  const contractQuery = useContract(validContractId);
+  const { data: contract, isLoading } = contractQuery;
   const [sheetOpen, setSheetOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [incassaOpen, setIncassaOpen] = useState(false);
   const [terminateOpen, setTerminateOpen] = useState(false);
   const [reopenOpen, setReopenOpen] = useState(false);
 
+  const retryContract = () => {
+    void contractQuery.refetch();
+  };
+
+  if (validContractId === null) return <ContractNotFoundState />;
   if (isLoading) return <PageSkeleton />;
+  if (contractQuery.isError) {
+    if (isNotFoundError(contractQuery.error)) return <ContractNotFoundState />;
+    return (
+      <DataErrorState
+        title="Impossibile aprire il contratto"
+        message="Il contratto non è stato verificato. Controlla la connessione e riprova."
+        onRetry={retryContract}
+        isRetrying={contractQuery.isFetching}
+      />
+    );
+  }
   if (!contract) {
     return (
-      <div className="flex flex-col items-center justify-center gap-3 py-20">
-        <AlertTriangle className="h-12 w-12 text-muted-foreground/30" />
-        <p className="text-lg font-medium">Contratto non trovato</p>
-      </div>
+      <DataErrorState
+        title="Contratto non disponibile"
+        message="La richiesta è terminata senza dati verificabili. Riprova il caricamento."
+        onRetry={retryContract}
+        isRetrying={contractQuery.isFetching}
+      />
     );
   }
 
@@ -300,6 +322,15 @@ function PageSkeleton() {
       </div>
       <Skeleton className="h-40 w-full rounded-xl" />
       <Skeleton className="h-64 w-full rounded-lg" />
+    </div>
+  );
+}
+
+function ContractNotFoundState() {
+  return (
+    <div className="flex flex-col items-center justify-center gap-3 py-20">
+      <AlertTriangle className="h-12 w-12 text-muted-foreground/30" />
+      <p className="text-lg font-medium">Contratto non trovato</p>
     </div>
   );
 }

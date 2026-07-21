@@ -10,7 +10,8 @@ import { AlertTriangle, Coins, FileText } from "lucide-react";
 import { useClientContracts, useClientWalletCredits } from "@/hooks/useContracts";
 import { formatCurrency } from "@/lib/format";
 import { ContractLifecycleBadge, ContractMoneyBadge } from "@/lib/contract-status";
-import { DataErrorState, TabSkeleton, EmptyTab } from "./ProfileShared";
+import { DataErrorState } from "@/components/ui/data-error-state";
+import { TabSkeleton, EmptyTab } from "./ProfileShared";
 import type { ContractListItem } from "@/types/api";
 
 /** Badge sola-lettura del credito a wallet del cliente (G8.1, ADR-020) — link alla worklist erogazione.

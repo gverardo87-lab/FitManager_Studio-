@@ -32,7 +32,8 @@ import { SessioniTab } from "@/components/clients/profile/SessioniTab";
 import { MovimentiTab } from "@/components/clients/profile/MovimentiTab";
 import { SchedeTab } from "@/components/clients/profile/SchedeTab";
 import { AllenamentoTab } from "@/components/clients/profile/AllenamentoTab";
-import { DataErrorState, ProfileSkeleton, NotFoundState } from "@/components/clients/profile/ProfileShared";
+import { ProfileSkeleton, NotFoundState } from "@/components/clients/profile/ProfileShared";
+import { DataErrorState } from "@/components/ui/data-error-state";
 
 import { useClient } from "@/hooks/useClients";
 import { useClientContracts } from "@/hooks/useContracts";

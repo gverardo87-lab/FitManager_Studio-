@@ -1,7 +1,7 @@
 # SPEC — Frontend core intuitivo, affidabile e distintivo
 
-**Stato:** 🟡 IN CORSO — FE-0.1 privacy/worklist + FE-0.2a profilo Cliente completati 2026-07-21;
-FE-0.2b dettaglio Contratto/Cassa è il prossimo microstep
+**Stato:** 🟡 IN CORSO — FE-0.1 privacy/worklist + FE-0.2a Cliente + FE-0.2b Contratto completati
+2026-07-21; FE-0.3 Cassa è il prossimo microstep
 **Data:** 2026-07-21
 **Branch:** `FitManager_Studio`
 **Tipo:** remediation frontend e read-model additivi; nessuna nuova policy di prodotto
@@ -115,6 +115,19 @@ scheduling; ogni gate conserva impact map, verifiche e GO operativo previsti dal
 - Utility condivisa `isNotFoundError` introdotta per riuso sul dettaglio Contratto.
 - Evidenza: 4 canary nuovi verdi; suite frontend **111/111**; lint mirato pulito; `next build` verde.
 - **Asse DENARO invariato:** sole query read-only e stati render; zero mutation/formula/invalidation.
+
+### Consuntivo parziale FE-0.2b — 2026-07-21
+
+- **AC-FE0-3 Contratto chiuso:** «Contratto non trovato» è riservato a ID invalido/HTTP 404; rete,
+  5xx o risposta senza dato hanno errore e retry.
+- Sessioni del contratto distinguono error da empty; nello Storico il ledger già verificato dal
+  read-model principale resta visibile mentre un errore timeline è dichiarato come degradazione
+  parziale, mai «Nessuna attività».
+- `DataErrorState` promosso da helper del profilo a primitive UI condivisa, senza cambiare resa o
+  comportamento dei microstep precedenti.
+- Evidenza: 2 canary nuovi + regressione profilo; suite frontend **113/113**; lint mirato pulito;
+  `next build` verde.
+- **Asse DENARO invariato:** ledger solo renderizzato dal wire; zero calcolo, mutation o invalidazione.
 
 ## 4. FE-1 — Operabilità e accessibilità core
 
