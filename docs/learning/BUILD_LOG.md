@@ -3781,3 +3781,22 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
   `Clienti → Rinnovi & Incassi → rata scaduta`. Astrazione comune soltanto dopo 2–3 casi reali.
 - Casa: aggiornate la SPEC frontend aperta e la relativa riga in `docs/INDEX.md`; nessun ADR e nessun
   nuovo evergreen perché non cambia una regola di dominio né descrive ancora codice implementato.
+
+---
+
+## 2026-07-22 — FE-1.0 implementato, gate in validazione LIVE
+
+- Docs-first `724b74a`; runtime `f678292`. Clienti genera un deep-link con intent e ID, Rinnovi &
+  Incassi risolve la rata del cliente, porta la card nel viewport, assegna focus e mostra un marker
+  accessibile. URL senza PII/importi; nessuna apertura o mutation finanziaria automatica.
+- Parser fail-closed anche su parametri duplicati; `rate_id` è valido solo dentro il `client_id`.
+  Target multiplo dichiarato come «prima di N»; target stale produce un fallback esplicito.
+- Il verifier avversariale ha bloccato il primo pass per StrictMode e live region non persistente.
+  Entrambi corretti e fissati con canary dedicati prima del commit.
+- Verifiche: **148/148 Vitest**, lint mirato pulito, build Next/TypeScript verde (20 pagine),
+  pre-commit Ruff+build verde. `financial-invariant-verifier`: **MONEY AXIS PRESERVED**, zero finding.
+- Limite host invariato: Bash assente e venv backend con launcher Python non disponibile;
+  `check-all.sh` non eseguito, sostituito per questo diff FE-only dai controlli differenziali del
+  verifier. Warning baseline invariati: fixture `edge-cases` e convenzione middleware deprecata.
+- Stato: implementazione automatizzata completa, **LIVE founder ancora richiesto** su target singolo,
+  multiplo/stale e viewport mobile. FE-1.0 non è dichiarato chiuso fino a tale evidenza.

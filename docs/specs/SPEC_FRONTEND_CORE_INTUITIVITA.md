@@ -1,7 +1,7 @@
 # SPEC — Frontend core intuitivo, affidabile e distintivo
 
-**Stato:** 🟡 IN CORSO — FE-0 Integrità completato 2026-07-22; FE-1.0 deep-link contestuale è il
-prossimo microgate autorizzato della v1.0.15
+**Stato:** 🟡 IN CORSO — FE-0 Integrità completato; FE-1.0 implementato (`f678292`) e in
+validazione LIVE founder prima della chiusura
 **Data:** 2026-07-21
 **Branch:** `FitManager_Studio`
 **Tipo:** remediation frontend e read-model additivi; nessuna nuova policy di prodotto
@@ -255,6 +255,31 @@ lecita, senza cambiare calcoli, ownership, transizioni o audit finanziari.
 - test LIVE founder: singola rata, più rate e azione già risolta, desktop + viewport mobile;
 - `financial-invariant-verifier`: conferma asse DENARO preservato, pur trattandosi di sola
   navigazione/read-model.
+
+#### Consuntivo tecnico FE-1.0 — 2026-07-22 (LIVE pendente)
+
+- **Docs-first:** contratto, timing e AC ratificati prima del runtime nel commit `724b74a`.
+- **Implementazione:** commit `f678292`; CTA Clienti con URL privacy-safe, parser fail-closed,
+  risoluzione `client_id`/`rate_id`, focus e scroll contestuali, marker testuale, live region
+  persistente, reduced motion e fallback stale. Nessun dialog o pagamento automatico.
+- **Verifier avversariale:** il primo pass ha trovato un blocker React StrictMode (il cleanup
+  cancellava il primo `requestAnimationFrame` lasciando l'esito consumato) e un gap HIGH sulla live
+  region montata già popolata dopo loading/error. Corretti con dipendenze primitive idempotenti e
+  nodo `role=status` persistente nei tre truth-state; parser irrigidito anche sui parametri duplicati.
+- **Canary:** 13 test del contratto URL + 10 test di integrazione focus; coperti singolo, multiplo,
+  target esatto/mismatch, stale, loading→ready, error→retry, StrictMode, popstate, reduced motion e
+  zero `usePayRate().mutate`.
+- **Evidenza automatica:** suite frontend **148/148**; lint mirato zero warning/error; `next build`
+  verde (TypeScript + 20 pagine); pre-commit reale verde (`ruff check api/` + build Next).
+- **Verifica finanziaria:** `financial-invariant-verifier` **MONEY AXIS PRESERVED** — zero file,
+  simboli, formule, payload, mutation o invalidazioni money-mutating modificati; `handlePay`
+  byte-identico alla base. Zero MONEY-REGRESSION/COVERAGE-GAP/INVARIANT-UNGUARDED.
+- **Limite host dichiarato:** Bash non installato e launcher Python della venv non più disponibile;
+  `check-all.sh`/harness backend non avviabili. Il verifier ha sostituito il controllo con diff
+  differenziale, scan writer/simboli, hash del payload e integrità statica di guard/anchor invariati.
+- **Gate residuo:** test LIVE founder desktop + viewport mobile sui casi target presente, più rate e
+  target già risolto. FE-1.0 resta aperto fino a evidenza LIVE; nessun evergreen viene aggiornato
+  prima della stabilizzazione del pattern su ulteriori destinazioni.
 
 ### Criteri di accettazione
 
