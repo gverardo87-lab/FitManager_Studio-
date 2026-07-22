@@ -68,6 +68,7 @@ import {
   useUpdateContract,
 } from "@/hooks/useContracts";
 import { useTrainerName } from "@/hooks/useTrainerName";
+import { useOverdueRateContextFocus } from "@/hooks/useOverdueRateContextFocus";
 import { usePageReveal } from "@/lib/page-reveal";
 import { formatCurrency, formatShortDate, toISOLocal } from "@/lib/format";
 import { waRenewalReminder, waRateReminder, waCheckIn } from "@/lib/whatsapp-templates";
@@ -93,6 +94,14 @@ const MOTIVI_NON_RINNOVA: { value: string; label: string }[] = [
 ];
 
 const PAYMENT_METHODS = ["CONTANTI", "POS", "BONIFICO"] as const;
+
+function ContextAnnouncement({ message }: { message: string }) {
+  return (
+    <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+      {message}
+    </p>
+  );
+}
 
 // ════════════════════════════════════════════════════════════
 // KPI Card
@@ -156,7 +165,7 @@ function RenewalCard({
     : 0;
 
   return (
-    <div className={`rounded-xl border border-l-4 ${urgencyClass} p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md`}>
+    <div className={`rounded-xl border border-l-4 ${urgencyClass} p-4 shadow-sm transition-[transform,box-shadow] duration-200 motion-reduce:transition-none motion-safe:hover:-translate-y-0.5 hover:shadow-md`}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0 flex-1 space-y-2">
           <div className="flex flex-wrap items-center gap-2">
@@ -230,7 +239,23 @@ function RenewalCard({
 // OverdueRateCard — rata in ritardo con pagamento inline
 // ════════════════════════════════════════════════════════════
 
-function OverdueRateCard({ item, trainerName }: { item: OverdueRateItem; trainerName: string }) {
+interface OverdueRateCardProps {
+  item: OverdueRateItem;
+  trainerName: string;
+  isContextTarget: boolean;
+  isContextHighlighted: boolean;
+  markerLabel: string | null;
+  targetRef?: (node: HTMLDivElement | null) => void;
+}
+
+function OverdueRateCard({
+  item,
+  trainerName,
+  isContextTarget,
+  isContextHighlighted,
+  markerLabel,
+  targetRef,
+}: OverdueRateCardProps) {
   const payRate = usePayRate();
   const [method, setMethod] = useState("CONTANTI");
   const isPaying = payRate.isPending;
@@ -251,7 +276,12 @@ function OverdueRateCard({ item, trainerName }: { item: OverdueRateItem; trainer
       : "border-l-amber-500 bg-gradient-to-br from-amber-50/50 to-white dark:from-amber-950/20 dark:to-zinc-900";
 
   return (
-    <div className={`rounded-xl border border-l-4 ${severityClass} p-4 shadow-sm transition-all duration-200 ${isPaying ? "scale-[0.98] opacity-50" : "hover:-translate-y-0.5 hover:shadow-md"}`}>
+    <div
+      ref={targetRef}
+      data-overdue-rate-id={item.rate_id}
+      tabIndex={isContextTarget ? -1 : undefined}
+      className={`scroll-mt-24 rounded-xl border border-l-4 ${severityClass} p-4 shadow-sm transition-[transform,box-shadow,opacity] duration-200 motion-reduce:transition-none focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:ring-offset-2 dark:focus-visible:ring-teal-400 dark:focus-visible:ring-offset-zinc-950 ${isPaying ? "scale-[0.98] opacity-50 motion-reduce:transform-none" : "motion-safe:hover:-translate-y-0.5 hover:shadow-md"} ${isContextHighlighted ? "ring-2 ring-teal-500 ring-offset-2 dark:ring-teal-400 dark:ring-offset-zinc-950" : ""}`}
+    >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -271,6 +301,11 @@ function OverdueRateCard({ item, trainerName }: { item: OverdueRateItem; trainer
                 ? "1 giorno"
                 : `${item.giorni_ritardo} giorni`} di ritardo
             </Badge>
+            {markerLabel ? (
+              <Badge className="border-teal-300 bg-teal-50 text-xs text-teal-800 dark:border-teal-800 dark:bg-teal-950/40 dark:text-teal-200" variant="outline">
+                {markerLabel}
+              </Badge>
+            ) : null}
           </div>
           <p className="mt-1.5 text-xs text-muted-foreground">
             {item.tipo_pacchetto} · Scadenza {formatShortDate(item.data_scadenza)}
@@ -340,7 +375,7 @@ function RecoverCard({
   };
 
   return (
-    <div className="rounded-xl border border-l-4 border-l-red-400 bg-gradient-to-br from-red-50/50 to-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:from-red-950/20 dark:to-zinc-900">
+    <div className="rounded-xl border border-l-4 border-l-red-400 bg-gradient-to-br from-red-50/50 to-white p-4 shadow-sm transition-[transform,box-shadow] duration-200 motion-reduce:transition-none motion-safe:hover:-translate-y-0.5 hover:shadow-md dark:from-red-950/20 dark:to-zinc-900">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0 flex-1 space-y-1.5">
           <div className="flex flex-wrap items-center gap-2">
@@ -459,7 +494,7 @@ function SuspendedCard({ item }: { item: SuspendedContractItem }) {
   };
 
   return (
-    <div className="rounded-xl border border-l-4 border-l-violet-500 bg-gradient-to-br from-violet-50/50 to-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:from-violet-950/20 dark:to-zinc-900">
+    <div className="rounded-xl border border-l-4 border-l-violet-500 bg-gradient-to-br from-violet-50/50 to-white p-4 shadow-sm transition-[transform,box-shadow] duration-200 motion-reduce:transition-none motion-safe:hover:-translate-y-0.5 hover:shadow-md dark:from-violet-950/20 dark:to-zinc-900">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0 flex-1 space-y-1.5">
           <div className="flex flex-wrap items-center gap-2">
@@ -612,6 +647,12 @@ export default function RinnoviIncassiPage() {
   const totalActions = overdueItems.length + expiringItems.length + recoverItems.length
     + suspendedItems.length + creditItems.length + refundItems.length;
 
+  const overdueContext = useOverdueRateContextFocus({
+    items: overdueItems,
+    isLoading,
+    hasError,
+  });
+
   const totalOverdueAmount = overdueItems.reduce((sum, i) => sum + i.importo_residuo, 0);
 
   const handleRenew = (item: RenewTarget) => {
@@ -626,6 +667,7 @@ export default function RinnoviIncassiPage() {
   if (isLoading && !hasError) {
     return (
       <div className="space-y-6">
+        <ContextAnnouncement message={overdueContext.announcement} />
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
           <Skeleton className="h-20 rounded-xl" />
           <Skeleton className="h-20 rounded-xl" />
@@ -640,6 +682,7 @@ export default function RinnoviIncassiPage() {
   if (hasError) {
     return (
       <div className="space-y-6">
+        <ContextAnnouncement message={overdueContext.announcement} />
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Rinnovi &amp; Incassi</h1>
           <p className="mt-1 text-sm text-muted-foreground">Verifica operativa non completata</p>
@@ -670,6 +713,8 @@ export default function RinnoviIncassiPage() {
 
   return (
     <div className="space-y-6">
+      <ContextAnnouncement message={overdueContext.announcement} />
+
       {/* ── Header ── */}
       <div className={revealClass(0)} style={revealStyle(0)}>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -688,6 +733,20 @@ export default function RinnoviIncassiPage() {
           </div>
         </div>
       </div>
+
+      {overdueContext.isMissing ? (
+        <Card className="border-amber-300 bg-amber-50/60 dark:border-amber-900 dark:bg-amber-950/20">
+          <CardContent className="flex gap-3 py-4">
+            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-700 dark:text-amber-300" aria-hidden="true" />
+            <div>
+              <h2 className="text-sm font-semibold">Azione non più presente</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Questa azione non è più presente; potrebbe essere già stata risolta.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
 
       {/* ── KPI Strip ── */}
       {totalActions > 0 ? (
@@ -863,7 +922,21 @@ export default function RinnoviIncassiPage() {
           </div>
           <div className="space-y-2">
             {overdueItems.map((item) => (
-              <OverdueRateCard key={item.rate_id} item={item} trainerName={trainerName} />
+              <OverdueRateCard
+                key={item.rate_id}
+                item={item}
+                trainerName={trainerName}
+                isContextTarget={item.rate_id === overdueContext.targetRateId}
+                isContextHighlighted={
+                  item.rate_id === overdueContext.targetRateId && overdueContext.isHighlighted
+                }
+                markerLabel={
+                  item.rate_id === overdueContext.targetRateId ? overdueContext.markerLabel : null
+                }
+                targetRef={
+                  item.rate_id === overdueContext.targetRateId ? overdueContext.targetRef : undefined
+                }
+              />
             ))}
           </div>
         </section>

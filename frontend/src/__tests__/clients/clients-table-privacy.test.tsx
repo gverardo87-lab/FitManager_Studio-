@@ -41,7 +41,9 @@ describe("FE-0 — overview Clienti privacy-safe", () => {
     expect(screen.queryByText("37")).not.toBeInTheDocument();
 
     const action = screen.getByRole("link", { name: "Azione amministrativa" });
-    expect(action).toHaveAttribute("href", "/rinnovi-incassi");
+    expect(action).toHaveAttribute(
+      "href",
+      "/rinnovi-incassi?focus=overdue-rate&client_id=7",
+    );
   });
 });
-
