@@ -12,7 +12,7 @@
  */
 
 import { useEffect } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format, parseISO, addDays, differenceInDays, startOfDay, isBefore, isSameDay } from "date-fns";
@@ -33,6 +33,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { useClients } from "@/hooks/useClients";
 import type { Contract } from "@/types/api";
 import { PAYMENT_METHODS } from "@/types/api";
+import { DataErrorState } from "@/components/ui/data-error-state";
 
 // ── Zod schema (allineato a api/schemas/financial.py ContractCreate) ──
 
@@ -122,7 +123,25 @@ export function ContractForm({
 }: ContractFormProps) {
   const isEdit = !!contract;
   const isRenewal = !!renewalDefaults;
-  const { data: clientsData } = useClients();
+  const {
+    data: clientsData,
+    isLoading: clientsLoading,
+    isError: clientsError,
+    isFetching: clientsFetching,
+    refetch: refetchClients,
+  } = useClients();
+  const clientsUnavailable = clientsError || (!clientsLoading && !clientsData);
+  const clientsEmpty = !clientsLoading && !clientsError && !!clientsData && clientsData.items.length === 0;
+  const clientChoiceBlocked = !isEdit && !isRenewal && (
+    clientsLoading || clientsUnavailable || clientsEmpty
+  );
+  const clientPlaceholder = clientsLoading
+    ? "Caricamento clienti..."
+    : clientsUnavailable
+      ? "Clienti non disponibili"
+      : clientsEmpty
+        ? "Nessun cliente disponibile"
+        : "Seleziona cliente...";
 
   // Rinnovo = continuazione sequenziale del padre (§A.2 — derivata, modificabile):
   // - il figlio parte il giorno DOPO la scadenza del padre (continuita', non parallelo);
@@ -147,7 +166,6 @@ export function ContractForm({
     handleSubmit,
     control,
     setValue,
-    watch,
     formState: { errors, isDirty },
   } = useForm<ContractFormValues>({
     resolver: zodResolver(contractSchema),
@@ -177,9 +195,10 @@ export function ContractForm({
 
   useEffect(() => { onDirtyChange?.(isDirty); }, [isDirty, onDirtyChange]);
 
-  const accontoValue = watch("acconto") ?? 0;
-  const senzaScadenza = watch("senza_scadenza") ?? false;
-  const dataScadenzaValue = watch("data_scadenza");
+  const accontoValue = useWatch({ control, name: "acconto" }) ?? 0;
+  const senzaScadenza = useWatch({ control, name: "senza_scadenza" }) ?? false;
+  const dataScadenzaValue = useWatch({ control, name: "data_scadenza" });
+  const metodoAccontoValue = useWatch({ control, name: "metodo_acconto" });
   const today = startOfDay(new Date());
   const normalizedScadenza = dataScadenzaValue ? startOfDay(dataScadenzaValue) : undefined;
   const showTodayNotice =
@@ -222,10 +241,10 @@ export function ContractForm({
             <Select
               value={field.value?.toString() ?? ""}
               onValueChange={(v) => field.onChange(parseInt(v, 10))}
-              disabled={isEdit || isRenewal}
+              disabled={isEdit || isRenewal || clientsLoading || clientsUnavailable || clientsEmpty}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Seleziona cliente..." />
+                <SelectValue placeholder={clientPlaceholder} />
               </SelectTrigger>
               <SelectContent>
                 {clientsData?.items.map((client) => (
@@ -242,6 +261,29 @@ export function ContractForm({
             {errors.id_cliente.message}
           </p>
         )}
+        {clientsLoading ? (
+          <p className="flex items-center gap-2 text-xs text-muted-foreground" role="status">
+            <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+            Caricamento elenco clienti…
+          </p>
+        ) : null}
+        {clientsUnavailable ? (
+          <DataErrorState
+            title="Clienti non disponibili"
+            message={isEdit || isRenewal
+              ? "L’elenco non è stato verificato. Il cliente già collegato resta invariato: puoi continuare o riprovare per visualizzarne il nome."
+              : "L’elenco non è stato verificato. Riprova prima di scegliere il cliente del contratto."}
+            onRetry={() => void refetchClients()}
+            isRetrying={clientsFetching}
+          />
+        ) : null}
+        {clientsEmpty ? (
+          <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
+            {isEdit || isRenewal
+              ? "Il cliente già collegato non compare nell’elenco corrente e non verrà modificato."
+              : "Nessun cliente disponibile. Crea prima il cliente, poi torna al contratto."}
+          </p>
+        ) : null}
       </div>
 
       {/* ── Tipo Pacchetto / Crediti ── */}
@@ -349,12 +391,12 @@ export function ContractForm({
           )}
           {!errors.data_scadenza && showTodayNotice ? (
             <p className="text-xs text-muted-foreground">
-              Con una scadenza pari a oggi, il contratto e' ancora considerato vigente per tutta la giornata.
+              Con una scadenza pari a oggi, il contratto è ancora considerato vigente per tutta la giornata.
             </p>
           ) : null}
           {!errors.data_scadenza && showBackdateWarning ? (
             <p className="text-xs text-amber-700 dark:text-amber-300">
-              Una scadenza nel passato rende il contratto immediatamente scaduto. Lo stato mostrato dal sistema verra'
+              Una scadenza nel passato rende il contratto immediatamente scaduto. Lo stato mostrato dal sistema verrà
               poi derivato in base ai crediti residui.
             </p>
           ) : null}
@@ -383,7 +425,7 @@ export function ContractForm({
               <div className="space-y-2">
                 <Label>Metodo Pagamento</Label>
                 <Select
-                  value={watch("metodo_acconto") ?? ""}
+                  value={metodoAccontoValue ?? ""}
                   onValueChange={(v) =>
                     setValue("metodo_acconto", v, { shouldValidate: true })
                   }
@@ -420,7 +462,7 @@ export function ContractForm({
       </div>
 
       {/* ── Submit ── */}
-      <Button type="submit" className="w-full" disabled={isPending}>
+      <Button type="submit" className="w-full" disabled={isPending || clientChoiceBlocked}>
         {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         {isEdit ? "Salva Modifiche" : isRenewal ? "Rinnova Contratto" : "Crea Contratto"}
       </Button>

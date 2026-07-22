@@ -14,7 +14,7 @@
  */
 
 import { useEffect } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
@@ -38,6 +38,7 @@ import { useClients } from "@/hooks/useClients";
 import { EVENT_CATEGORIES, EVENT_STATUSES, EVENT_STATUS_LABELS } from "@/types/api";
 import { CATEGORY_LABELS } from "./calendar-setup";
 import type { CalendarEvent } from "./calendar-setup";
+import { DataErrorState } from "@/components/ui/data-error-state";
 
 // ── Zod schema ──
 
@@ -112,13 +113,28 @@ export function EventForm({
   onDirtyChange,
 }: EventFormProps) {
   const isEdit = !!event;
-  const { data: clientsData } = useClients();
+  const {
+    data: clientsData,
+    isLoading: clientsLoading,
+    isError: clientsError,
+    isFetching: clientsFetching,
+    refetch: refetchClients,
+  } = useClients();
+  const clientsUnavailable = clientsError || (!clientsLoading && !clientsData);
+  const clientsEmpty = !clientsLoading && !clientsError && !!clientsData && clientsData.items.length === 0;
+  const clientsReady = !clientsLoading && !clientsUnavailable && !clientsEmpty;
+  const clientPlaceholder = clientsLoading
+    ? "Caricamento clienti..."
+    : clientsUnavailable
+      ? "Clienti non disponibili"
+      : clientsEmpty
+        ? "Nessun cliente disponibile"
+        : "Seleziona cliente...";
 
   const {
     register,
     handleSubmit,
     control,
-    watch,
     formState: { errors, isDirty },
   } = useForm<EventFormValues>({
     resolver: zodResolver(eventSchema),
@@ -145,11 +161,13 @@ export function EventForm({
 
   useEffect(() => { onDirtyChange?.(isDirty); }, [isDirty, onDirtyChange]);
 
-  const categoria = watch("categoria");
-  const idCliente = watch("id_cliente");
+  const categoria = useWatch({ control, name: "categoria" });
+  const idCliente = useWatch({ control, name: "id_cliente" });
 
   const showClientSelect = categoria === "PT" || categoria === "COLLOQUIO";
   const isClientRequired = categoria === "PT";
+  const hasPersistedClient = isEdit && !!idCliente;
+  const clientDependencyBlocked = isClientRequired && !clientsReady && !hasPersistedClient;
 
   // Crediti del cliente selezionato
   const selectedClient = clientsData?.items.find((c) => c.id === idCliente);
@@ -264,9 +282,10 @@ export function EventForm({
               <Select
                 value={field.value?.toString() ?? ""}
                 onValueChange={(v) => field.onChange(v ? parseInt(v, 10) : undefined)}
+                disabled={!clientsReady}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Seleziona cliente..." />
+                  <SelectValue placeholder={clientPlaceholder} />
                 </SelectTrigger>
                 <SelectContent>
                   {clientsData?.items.map((client) => (
@@ -283,6 +302,29 @@ export function EventForm({
               {errors.id_cliente.message}
             </p>
           )}
+          {clientsLoading ? (
+            <p className="flex items-center gap-2 text-xs text-muted-foreground" role="status">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+              Caricamento elenco clienti…
+            </p>
+          ) : null}
+          {clientsUnavailable ? (
+            <DataErrorState
+              title="Clienti non disponibili"
+              message={hasPersistedClient
+                ? "L’elenco non è stato verificato. Il cliente già collegato resta invariato: puoi salvare o riprovare per visualizzarne i dati."
+                : "L’elenco non è stato verificato. Riprova prima di associare questa attività."}
+              onRetry={() => void refetchClients()}
+              isRetrying={clientsFetching}
+            />
+          ) : null}
+          {clientsEmpty ? (
+            <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
+              {hasPersistedClient
+                ? "Il cliente già collegato non compare nell’elenco corrente e non verrà modificato."
+                : "Nessun cliente disponibile. Puoi creare attività senza cliente solo nelle categorie che lo consentono."}
+            </p>
+          ) : null}
 
           {/* Soft warning (G9.7.1-bis): crediti esauriti sui contratti attivi — mai blocco */}
           {showExhaustedWarning && (
@@ -399,7 +441,11 @@ export function EventForm({
             Elimina
           </Button>
         )}
-        <Button type="submit" className="flex-1" disabled={isPending}>
+        <Button
+          type="submit"
+          className="flex-1"
+          disabled={isPending || clientDependencyBlocked}
+        >
           {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {isEdit ? "Salva Modifiche" : "Crea Evento"}
         </Button>

@@ -3745,3 +3745,24 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
   della venv non più esistente (nessun file backend o semantica ADR toccati dal diff).
 - Asse DENARO: nessuna formula, mutation, invalidazione o transizione modificata; solo query state e
   render fail-closed. Prossimo microstep: FE-0.4 dipendenze Cliente nei form Contratto/Evento.
+
+---
+
+## 2026-07-22 — FE-0.4: dipendenze Cliente esplicite e chiusura FE-0
+
+- ContractForm ed EventForm non trasformano più caricamento, rete/500 o risposta assente in un menu
+  Cliente vuoto: placeholder contestuale, stato esplicito, retry e empty reale sono distinti.
+- La creazione Contratto e il submit PT restano sospesi finché la relazione obbligatoria non è
+  verificata. Rinnovo/modifica Contratto e categorie Evento che non richiedono Cliente conservano i
+  propri flussi; payload, warning B4/B5 e write-path finanziari non cambiano.
+- I due form usano `useWatch` al posto di `watch`, eliminando i warning React Compiler nei file
+  toccati senza introdurre stato derivato o render aggiuntivi.
+- Il verifier avversariale ha fermato il primo pass: un PT in modifica con Cliente persistito restava
+  bloccato se il lookup falliva. Il gate ora sospende solo i PT che devono ancora scegliere il
+  Cliente; aggiunto il canary speculare prima della pubblicazione.
+- Verifiche: 7 canary nuovi + 7 regressioni B4/B5; suite frontend **125/125**; lint mirato pulito;
+  build Next.js verde (20 pagine). Warning preesistente della fixture `edge-cases` e deprecazione
+  middleware Next invariati.
+- Verifier finale **PASS**, nessun blocker. Gap LOW rinviati al gate accessibilità FE-1:
+  associazione programmatica label/Select e annuncio live dello stato errore condiviso.
+- FE-0 Integrità completato (AC-FE0-1..7). Prossimo gate: criticità FE-1 coordinate con SPEC_P.

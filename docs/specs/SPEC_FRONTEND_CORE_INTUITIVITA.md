@@ -1,7 +1,7 @@
 # SPEC — Frontend core intuitivo, affidabile e distintivo
 
-**Stato:** 🟡 IN CORSO — FE-0.1 privacy/worklist + FE-0.2a Cliente + FE-0.2b Contratto +
-FE-0.3 Cassa completati 2026-07-21; FE-0.4 dipendenze form è il prossimo microstep
+**Stato:** 🟡 IN CORSO — FE-0 Integrità completato 2026-07-22; FE-1 criticità di operabilità è il
+prossimo gate della v1.0.15
 **Data:** 2026-07-21
 **Branch:** `FitManager_Studio`
 **Tipo:** remediation frontend e read-model additivi; nessuna nuova policy di prodotto
@@ -149,6 +149,26 @@ scheduling; ogni gate conserva impact map, verifiche e GO operativo previsti dal
   loading del filtro clienti split e copertura click dei retry secondari.
 - **Asse DENARO invariato:** sole query read-only e stati render; zero formula, mutation,
   invalidazione o transizione finanziaria modificata.
+
+### Consuntivo FE-0.4 e chiusura FE-0 — 2026-07-22
+
+- **AC-FE0-6 chiuso:** i selettori Cliente di Contratto ed Evento distinguono loading, errore e
+  lista realmente vuota; il menu è disabilitato finché la dipendenza non è verificata e ogni errore
+  offre retry.
+- La creazione Contratto e il write-path PT sono sospesi quando il Cliente obbligatorio non è
+  disponibile. Modifica/rinnovo con relazione già fissata e categorie Evento senza Cliente non sono
+  bloccati impropriamente; regole B4/B5 e warning soft restano invariati.
+- `watch()` sostituito con `useWatch()` nei due form toccati: stesso valore osservato, nessun warning
+  React Compiler e nessuno stato derivato aggiuntivo.
+- **AC-FE0-7 consolidato:** 7 canary nuovi per loading/error/empty/retry e non-blocco dei flussi
+  indipendenti; regressione B4/B5 verde. Suite frontend **125/125**, lint mirato zero warning/error,
+  `next build` verde (20 pagine).
+- Verifica avversariale: il primo pass ha rilevato il blocco improprio del PT in modifica con Cliente
+  persistito e lookup KO; condizione ristretta ai soli PT che devono ancora scegliere un Cliente e
+  canary regressivo aggiunto prima del gate finale. Riesame conclusivo: **PASS**, nessun blocker;
+  associazione label/Select e live-region dell’errore restano gap LOW già assorbiti da FE-1.
+- **FE-0 completato:** AC-FE0-1..7 consuntivati nei quattro microstep; nessuna policy, formula
+  monetaria, mutation, invalidazione o transizione finanziaria modificata.
 
 ## 4. FE-1 — Operabilità e accessibilità core
 
