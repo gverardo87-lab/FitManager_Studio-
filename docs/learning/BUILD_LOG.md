@@ -3766,3 +3766,18 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
 - Verifier finale **PASS**, nessun blocker. Gap LOW rinviati al gate accessibilità FE-1:
   associazione programmatica label/Select e annuncio live dello stato errore condiviso.
 - FE-0 Integrità completato (AC-FE0-1..7). Prossimo gate: criticità FE-1 coordinate con SPEC_P.
+
+---
+
+## 2026-07-22 — FE-1.0 docs-first: Contextual Deep-Link Contract v1 autorizzato
+
+- Test LIVE founder FE-0: «Azione amministrativa» preserva la privacy e apre Rinnovi & Incassi, ma
+  perde cliente e intenzione portando all'inizio della pagina.
+- Decisione: URL semantico con `focus`, `client_id` e `rate_id` opzionale; solo ID/enum, zero PII o
+  importi. La destinazione possiede risoluzione, focus accessibile, reduced motion e fallback stale.
+- Money-path invariato: nessuna apertura automatica, precompilazione o mutation; il comando finale
+  resta esplicito e auditabile.
+- Scheduling: FE-1.0 entra ora, dopo FE-0 e prima di P1, come singola vertical slice
+  `Clienti → Rinnovi & Incassi → rata scaduta`. Astrazione comune soltanto dopo 2–3 casi reali.
+- Casa: aggiornate la SPEC frontend aperta e la relativa riga in `docs/INDEX.md`; nessun ADR e nessun
+  nuovo evergreen perché non cambia una regola di dominio né descrive ancora codice implementato.

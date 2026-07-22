@@ -1,16 +1,16 @@
 # SPEC — Frontend core intuitivo, affidabile e distintivo
 
-**Stato:** 🟡 IN CORSO — FE-0 Integrità completato 2026-07-22; FE-1 criticità di operabilità è il
-prossimo gate della v1.0.15
+**Stato:** 🟡 IN CORSO — FE-0 Integrità completato 2026-07-22; FE-1.0 deep-link contestuale è il
+prossimo microgate autorizzato della v1.0.15
 **Data:** 2026-07-21
 **Branch:** `FitManager_Studio`
 **Tipo:** remediation frontend e read-model additivi; nessuna nuova policy di prodotto
 **Audit fondante:** `docs/archive/AUDIT_FRONTEND_CORE_INTUITIVITA_2026-07-21.md`
 **Autorità:** `AGENTS.md` → `MANIFESTO.md` → `LAUNCH_SCOPE.md` → `frontend/CLAUDE.md` → ADR/SSoT finanziarie
 **Sequenza preesistente:** v1.0.14 ✅ → blocco P → G-MAC
-**Decisione di scheduling:** founder 2026-07-21 — `v1.0.15` contiene blocco P + FE-0 completo +
-criticità FE-1; ottimizzazioni/redesign estesi restano fuori release; G-MAC apre dopo validazione e
-consegna della `v1.0.15`.
+**Decisione di scheduling:** founder 2026-07-21/22 — `v1.0.15` contiene blocco P + FE-0 completo +
+criticità FE-1; FE-1.0 entra subito dopo il test LIVE FE-0 e prima di P1. Ottimizzazioni/redesign
+estesi restano fuori release; G-MAC apre dopo validazione e consegna della `v1.0.15`.
 
 > La presente SPEC è la casa del lavoro aperto. A chiusura dell'ultimo gate: consuntivo, fold-back
 > negli evergreen realmente toccati, append a `docs/learning/BUILD_LOG.md` e spostamento in
@@ -171,6 +171,90 @@ scheduling; ogni gate conserva impact map, verifiche e GO operativo previsti dal
   monetaria, mutation, invalidazione o transizione finanziaria modificata.
 
 ## 4. FE-1 — Operabilità e accessibilità core
+
+### FE-1.0 — Contextual Deep-Link Contract v1
+
+**Evidenza fondante:** nel test LIVE founder del 2026-07-22, «Azione amministrativa» dalla lista
+Clienti ha raggiunto correttamente Rinnovi & Incassi, ma ha perso il contesto e aperto la pagina
+dall'inizio. Il difetto è ricorrente per le CTA cross-page: raggiungere la superficie corretta non è
+sufficiente se l'operatore deve ricercare di nuovo cliente e azione.
+
+**Decisione founder:** adottare un contratto di navigazione contestuale URL-based. Non è una nuova
+regola di dominio e non richiede ADR: preserva intenzione e identità durante una navigazione già
+lecita, senza cambiare calcoli, ownership, transizioni o audit finanziari.
+
+#### Quando e perimetro
+
+- **Ora:** FE-1.0 è il primo microgate dopo FE-0 e precede P1. È read-only, chiude un finding LIVE e
+  tocca una sorgente/destinazione già stabilizzate da FE-0.
+- **Vertical slice v1.0.15:** solo `Clienti → Rinnovi & Incassi → rata scaduta`.
+- **Dopo 2–3 destinazioni reali:** estrarre l'eventuale helper/hook comune. FE-1.0 non introduce un
+  router parallelo, registry globale o astrazione generalizzata non ancora provata.
+- **Coordinamento P:** nessuna apertura automatica di dialog finanziari e nessuna modifica ai
+  write-path. Se P apre prima della replica su altre superfici, le estensioni attendono il relativo
+  gate per evitare conflitti.
+
+#### Contratto URL v1
+
+```text
+/rinnovi-incassi?focus=overdue-rate&client_id=<positive-int>
+/rinnovi-incassi?focus=overdue-rate&client_id=<positive-int>&rate_id=<positive-int>
+```
+
+- `focus` esprime l'intenzione semantica; `client_id` identifica il soggetto; `rate_id`, quando la
+  sorgente lo conosce, identifica l'azione esatta.
+- L'URL contiene solo enum e ID: vietati nome, telefono, email, importo, note o altri dati personali
+  e finanziari.
+- Parametri assenti, non supportati o non interi positivi non devono causare crash né selezionare un
+  target diverso: la pagina resta nel proprio stato ordinario.
+- Se sono presenti `rate_id` e `client_id`, il target è valido solo se entrambi appartengono allo
+  stesso item già restituito dal read-model autorizzato. Nessun fetch o bypass ownership dedicato.
+- La sorgente Clienti v1 conosce soltanto `ha_rate_scadute` e `client_id`: la destinazione risolve le
+  rate di quel cliente. Se sono multiple, porta alla prima nel loro ordine canonico e comunica
+  esplicitamente «prima di N», senza aprire o scegliere un pagamento.
+- L'URL semantico resta copiabile e resistente a reload/back-forward; si consuma soltanto
+  l'evidenziazione transitoria, non il parametro.
+
+#### Comportamento della destinazione
+
+1. Durante loading la pagina conserva l'intenzione e non tenta letture DOM premature.
+2. In errore resta valido il truth state FE-0; dopo retry riuscito il focus contestuale riprende.
+3. A dati verificati, il target viene portato nel viewport con offset compatibile con header sticky,
+   riceve focus programmatico (`tabIndex=-1`) e una marcatura testuale temporanea oltre al colore.
+4. Lo scroll è `smooth` solo se `prefers-reduced-motion` non richiede riduzione; altrimenti è
+   immediato. Il focus usa `preventScroll` per evitare un secondo salto.
+5. Una live region `polite` annuncia esito e molteplicità senza spostare il lettore di schermo.
+6. Se il target non esiste più, la pagina non cade silenziosamente in alto: mostra «Questa azione
+   non è più presente; potrebbe essere già stata risolta» e mantiene visibile la worklist verificata.
+7. Il deep-link non apre dialog, non precompila importi e non invoca mutation. L'ultimo comando sui
+   money-path resta esplicito, consapevole e auditabile.
+8. Nessun timeout arbitrario governa il ritrovamento del target: l'effetto dipende da dati verificati
+   e ref DOM effettivamente montato; timer ammessi solo per rimuovere la marcatura transitoria.
+
+#### Criteri di accettazione FE-1.0
+
+- **AC-FE1-0a:** la CTA privacy-safe genera URL con `focus=overdue-rate` e `client_id`, senza PII né
+  valori monetari.
+- **AC-FE1-0b:** con una rata del cliente, la card corretta riceve scroll, focus e indicatore non
+  cromatico; nessuna mutation viene eseguita.
+- **AC-FE1-0c:** con più rate dello stesso cliente, l'esito dichiara la molteplicità e non presenta
+  una scelta arbitraria come azione univoca.
+- **AC-FE1-0d:** target assente/stale, parametri invalidi e query in errore hanno fallback distinti;
+  il retry conserva l'intenzione.
+- **AC-FE1-0e:** reload/back-forward conservano il deep-link; motion ridotta, tastiera e live region
+  sono verificati automaticamente e LIVE.
+- **AC-FE1-0f:** viewport mobile/tablet/desktop non coprono il target e non introducono scroll
+  orizzontale.
+
+#### Verifica FE-1.0
+
+- Vitest: href sorgente, parser parametri, target singolo/multiplo/assente, attesa loading,
+  errore→retry, focus DOM, `prefers-reduced-motion`, zero chiamate a `usePayRate().mutate`;
+- lint mirato + suite frontend completa + `next build`;
+- review Web Interface Guidelines sui file toccati;
+- test LIVE founder: singola rata, più rate e azione già risolta, desktop + viewport mobile;
+- `financial-invariant-verifier`: conferma asse DENARO preservato, pur trattandosi di sola
+  navigazione/read-model.
 
 ### Criteri di accettazione
 
