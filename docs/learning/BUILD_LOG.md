@@ -3823,3 +3823,29 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
   restano dichiarati. Browser integrato non disponibile: nessuna falsa sostituzione del test reale.
 - Stato: fix automatizzato completo; FE-1.0 resta **in validazione LIVE** finché il founder non
   conferma due utilizzi consecutivi e i casi mobile/multiplo/stale previsti dalla SPEC.
+
+---
+
+## 2026-07-23 — FE-1.0: root cause cache/scroll restore chiusa
+
+- Seconda evidenza LIVE founder: `d382a4b` non bastava. Dal secondo click l'URL contestuale era
+  corretto ma lo scroll restava ignorato; il refresh dello stesso URL lo eseguiva immediatamente.
+- Audit: il layout dashboard salva `scroll:${pathname}` e ritenta il restore a
+  0/50/100/250/500/1000/2000 ms. Con cache calda sovrascriveva il singolo scroll dell'hook; al
+  refresh il pathname iniziale non cambia e il restore viene saltato. Il primo canary era falso
+  positivo perché non smontava davvero la card durante `/clienti`.
+- Docs-first `fccb06e`; runtime `8f5ca45`. La CTA contestuale disabilita lo scroll Next e cancella
+  la chiave destinazione tramite il contratto esistente `clearPageState`; il layout non avvia più i
+  restore concorrenti. La card tardiva è stato reattivo e focus/scroll partono nel RAF solo se il
+  nodo è connesso.
+- Correzioni avversariali nello stesso gate: timeout marker avviato dopo il RAF, evitando highlight
+  permanente su tab sospesa; live region vuota durante loading/error anche con overdue cached e
+  popolata soltanto dopo retry verificato.
+- Canary rosso→verde: target tardivo, proprietà `scroll={false}`, consumo exact della chiave
+  `scroll:/rinnovi-incassi`, RAF sospeso e cached-overdue+errore altra fonte. Pacchetto mirato
+  **30/30**; suite frontend **151/151**; lint e `diff --check` puliti; build Next/TypeScript verde
+  (20 pagine) e pre-commit reale Ruff+build verde. Warning baseline invariati.
+- Verifier finale **PASS**, zero blocker/finding; **MONEY AXIS PRESERVED** — nessuna mutation,
+  formula, payload, importo, endpoint o invalidazione finanziaria modificati.
+- Stato: implementazione completa e push-ready; FE-1.0 resta aperto esclusivamente per il retest
+  LIVE founder sul secondo/terzo click e per i casi mobile/multiplo/stale già previsti.

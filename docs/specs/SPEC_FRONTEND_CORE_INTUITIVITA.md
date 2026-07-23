@@ -1,7 +1,7 @@
 # SPEC — Frontend core intuitivo, affidabile e distintivo
 
 **Stato:** 🟡 IN CORSO — FE-0 Integrità completato; FE-1.0 implementato (`f678292`), fix
-re-navigation (`d382a4b`) in validazione LIVE founder prima della chiusura
+router-only (`d382a4b`) integrato dal coordinamento scroll/cache (`8f5ca45`), in retest LIVE founder
 **Data:** 2026-07-21
 **Branch:** `FitManager_Studio`
 **Tipo:** remediation frontend e read-model additivi; nessuna nuova policy di prodotto
@@ -270,11 +270,11 @@ lecita, senza cambiare calcoli, ownership, transizioni o audit finanziari.
   cancellava il primo `requestAnimationFrame` lasciando l'esito consumato) e un gap HIGH sulla live
   region montata già popolata dopo loading/error. Corretti con dipendenze primitive idempotenti e
   nodo `role=status` persistente nei tre truth-state; parser irrigidito anche sui parametri duplicati.
-- **Canary:** 13 test del contratto URL + 10 test di integrazione focus + 1 test di navigazione
-  ripetuta; coperti singolo, multiplo, target esatto/mismatch, stale, loading→ready, error→retry,
+- **Canary:** 13 test del contratto URL + 10 test di integrazione focus + 3 test di navigazione
+  ripetuta/cache; coperti singolo, multiplo, target esatto/mismatch, stale, loading→ready, error→retry,
   StrictMode, popstate, reduced motion, away/back sullo stesso deep-link e zero
   `usePayRate().mutate`.
-- **Evidenza automatica:** suite frontend **149/149**; lint mirato zero warning/error; `next build`
+- **Evidenza automatica:** suite frontend **151/151**; lint mirato zero warning/error; `next build`
   verde (TypeScript + 20 pagine); pre-commit reale verde (`ruff check api/` + build Next).
 - **Verifica finanziaria:** `financial-invariant-verifier` **MONEY AXIS PRESERVED** — zero file,
   simboli, formule, payload, mutation o invalidazioni money-mutating modificati; `handlePay`
@@ -295,12 +295,20 @@ lecita, senza cambiare calcoli, ownership, transizioni o audit finanziari.
   navigazione aggiorna correttamente l'URL ma non porta il target nel viewport; un refresh usa lo
   stesso URL e completa subito lo scroll. Questo falsifica un errore di parsing/router e isola un
   race di commit/scroll sulla navigazione cached.
-- **Root cause falsificabile:** il canary di `d382a4b` manteneva il target DOM montato anche durante
-  la finta permanenza su `/clienti`, mentre il runtime reale lo scollega e lo rimonta. Inoltre il
-  `Link` conservava lo scroll automatico predefinito di Next e l'effetto eseguiva lo scroll nello
-  stesso ciclo della transizione: con cache calda il reset del router può vincere. Prima del runtime
-  devono fallire due canary: target che si monta in ritardo a route/dati invariati e proprietà
-  `scroll={false}` sul link contestuale.
+- **Root cause confermata:** il canary di `d382a4b` manteneva il target DOM montato durante la finta
+  permanenza su `/clienti`, mentre il runtime reale lo scollega e lo rimonta. Soprattutto, il layout
+  dashboard ripristina `scroll:/rinnovi-incassi` con retry a 0/50/100/250/500/1000/2000 ms: con
+  cache calda questi timer sovrascrivevano lo scroll contestuale eseguito una sola volta. Il refresh
+  salta il restore perché il pathname iniziale non cambia, spiegando integralmente l'evidenza LIVE.
+- **Remediation `8f5ca45`:** la CTA usa `scroll={false}` e, prima della navigazione, applica il
+  contratto esistente `clearPageState("/rinnovi-incassi")`; il layout non programma quindi restore
+  concorrenti. La callback ref rende reattivo il remount tardivo della card; scroll, focus, marker e
+  relativo timeout partono nel frame successivo solo su nodo connesso. La live region resta vuota
+  durante loading/error cached e si popola insieme al focus verificato dopo retry.
+- **Canary rosso→verde:** restore key non consumata, target DOM tardivo, durata marker con RAF
+  sospeso e cached-data+errore su altra fonte hanno fallito prima delle rispettive patch. Pacchetto
+  mirato **30/30**, suite **151/151**, build e pre-commit verdi; verifier **PASS**, zero finding e
+  **MONEY AXIS PRESERVED**.
 - **Gate residuo:** ripetere LIVE due volte consecutive il target presente, poi verificare desktop +
   viewport mobile sui casi più rate e target già risolto. FE-1.0 resta aperto fino a evidenza LIVE;
   nessun evergreen viene aggiornato prima della stabilizzazione del pattern su ulteriori
