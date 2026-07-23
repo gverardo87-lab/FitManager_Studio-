@@ -245,6 +245,10 @@ lecita, senza cambiare calcoli, ownership, transizioni o audit finanziari.
   sono verificati automaticamente e LIVE.
 - **AC-FE1-0f:** viewport mobile/tablet/desktop non coprono il target e non introducono scroll
   orizzontale.
+- **AC-FE1-0g:** su navigazione client già in cache, il secondo e i successivi click sullo stesso
+  deep-link rieseguono scroll, focus e marker senza refresh. Il link sorgente cede esplicitamente
+  alla destinazione la gestione dello scroll; la destinazione attende un nodo target connesso al DOM
+  e il frame successivo prima di applicare focus e scroll.
 
 #### Verifica FE-1.0
 
@@ -287,6 +291,16 @@ lecita, senza cambiare calcoli, ownership, transizioni o audit finanziari.
   (secondo `scrollIntoView` assente) ed è verde dopo il fix. Verifier finale **PASS**, zero finding e
   **MONEY AXIS PRESERVED**; restano solo gap di test LOW non bloccanti sulla combinazione
   repeat+StrictMode e sulla sequenza esplicita della live region.
+- **Finding LIVE #2 — 2026-07-23:** `d382a4b` è necessario ma non sufficiente. Dal secondo click la
+  navigazione aggiorna correttamente l'URL ma non porta il target nel viewport; un refresh usa lo
+  stesso URL e completa subito lo scroll. Questo falsifica un errore di parsing/router e isola un
+  race di commit/scroll sulla navigazione cached.
+- **Root cause falsificabile:** il canary di `d382a4b` manteneva il target DOM montato anche durante
+  la finta permanenza su `/clienti`, mentre il runtime reale lo scollega e lo rimonta. Inoltre il
+  `Link` conservava lo scroll automatico predefinito di Next e l'effetto eseguiva lo scroll nello
+  stesso ciclo della transizione: con cache calda il reset del router può vincere. Prima del runtime
+  devono fallire due canary: target che si monta in ritardo a route/dati invariati e proprietà
+  `scroll={false}` sul link contestuale.
 - **Gate residuo:** ripetere LIVE due volte consecutive il target presente, poi verificare desktop +
   viewport mobile sui casi più rate e target già risolto. FE-1.0 resta aperto fino a evidenza LIVE;
   nessun evergreen viene aggiornato prima della stabilizzazione del pattern su ulteriori
