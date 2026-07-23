@@ -3800,3 +3800,26 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
   verifier. Warning baseline invariati: fixture `edge-cases` e convenzione middleware deprecata.
 - Stato: implementazione automatizzata completa, **LIVE founder ancora richiesto** su target singolo,
   multiplo/stale e viewport mobile. FE-1.0 non è dichiarato chiuso fino a tale evidenza.
+
+---
+
+## 2026-07-22 — FE-1.0: bug al secondo utilizzo isolato e corretto
+
+- Evidenza LIVE founder: il deep-link contestuale funzionava al primo utilizzo ma non al secondo
+  attraversamento `Clienti → Rinnovi & Incassi` sullo stesso cliente; gate immediatamente riaperto.
+- Root cause: l'hook leggeva la query solo al mount e ascoltava `popstate`, evento non emesso dalla
+  navigazione client Next App Router. Con pagina/cache riutilizzata, intent e target rimanevano
+  identici e l'effetto di focus non ripartiva.
+- Canary red→green aggiunto prima del fix: simula destinazione, uscita su `/clienti` e ritorno allo
+  stesso URL; sul codice precedente il secondo `scrollIntoView` mancava, sul fix passa.
+- Commit runtime `d382a4b`: `usePathname`/`useSearchParams` rendono route e query reattive e la route
+  completa governa il lifecycle di scroll, focus e marker. Nessun dialog, payload o mutation
+  finanziaria toccati.
+- Verifiche: pacchetto mirato **28/28**, suite frontend **149/149**, lint mirato e `diff --check`
+  puliti, `next build` verde con `/rinnovi-incassi` statico e pre-commit reale Ruff+build verde.
+  Warning baseline della fixture `edge-cases` e deprecazione middleware invariati.
+- Verifier avversariale finale **PASS**, zero finding/blocker e **MONEY AXIS PRESERVED**. Due gap di
+  test LOW non bloccanti (repeat+StrictMode nello stesso canary e sequenza live-region esplicita)
+  restano dichiarati. Browser integrato non disponibile: nessuna falsa sostituzione del test reale.
+- Stato: fix automatizzato completo; FE-1.0 resta **in validazione LIVE** finché il founder non
+  conferma due utilizzi consecutivi e i casi mobile/multiplo/stale previsti dalla SPEC.
