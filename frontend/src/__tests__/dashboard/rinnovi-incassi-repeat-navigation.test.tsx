@@ -25,7 +25,7 @@ const RATE: OverdueRateItem = {
   client_telefono: null,
 };
 
-function Harness({ navigation }: { navigation: number }) {
+function Harness({ navigation, showTarget = true }: { navigation: number; showTarget?: boolean }) {
   const context = useOverdueRateContextFocus({
     items: [RATE],
     isLoading: false,
@@ -35,13 +35,15 @@ function Harness({ navigation }: { navigation: number }) {
   return (
     <div data-navigation={navigation}>
       <p role="status">{context.announcement}</p>
-      <div
-        ref={context.targetRateId === RATE.rate_id ? context.targetRef : undefined}
-        data-testid="target-rate"
-        tabIndex={-1}
-      >
-        {context.markerLabel}
-      </div>
+      {showTarget ? (
+        <div
+          ref={context.targetRateId === RATE.rate_id ? context.targetRef : undefined}
+          data-testid="target-rate"
+          tabIndex={-1}
+        >
+          {context.markerLabel}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -79,5 +81,62 @@ describe("FE-1.0 — navigazione contestuale ripetuta", () => {
     await waitFor(() => expect(scrollIntoView).toHaveBeenCalledTimes(2));
     expect(target).toHaveFocus();
     expect(await screen.findByText("Aperta da Clienti")).toBeInTheDocument();
+  });
+
+  it("attende il remount tardivo del target quando route e dati sono già in cache", async () => {
+    Object.defineProperty(window, "matchMedia", {
+      configurable: true,
+      value: vi.fn().mockReturnValue({ matches: false }),
+    });
+    const scrollIntoView = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+      configurable: true,
+      value: scrollIntoView,
+    });
+    window.history.replaceState({}, "", "/rinnovi-incassi?focus=overdue-rate&client_id=7");
+
+    const view = render(<Harness navigation={1} showTarget={false} />);
+    expect(scrollIntoView).not.toHaveBeenCalled();
+
+    view.rerender(<Harness navigation={1} showTarget />);
+
+    const target = screen.getByTestId("target-rate");
+    await waitFor(() => expect(target).toHaveFocus());
+    expect(scrollIntoView).toHaveBeenCalledTimes(1);
+  });
+
+  it("avvia la durata del marker solo quando il frame di focus viene eseguito", () => {
+    vi.useFakeTimers();
+    let pendingFrame: FrameRequestCallback | null = null;
+    const requestFrame = vi.spyOn(window, "requestAnimationFrame").mockImplementation((callback) => {
+      pendingFrame = callback;
+      return 1;
+    });
+    const cancelFrame = vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => undefined);
+    Object.defineProperty(window, "matchMedia", {
+      configurable: true,
+      value: vi.fn().mockReturnValue({ matches: false }),
+    });
+    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+      configurable: true,
+      value: vi.fn(),
+    });
+    window.history.replaceState({}, "", "/rinnovi-incassi?focus=overdue-rate&client_id=7");
+
+    try {
+      render(<Harness navigation={1} />);
+      expect(pendingFrame).not.toBeNull();
+
+      act(() => vi.advanceTimersByTime(2500));
+      act(() => pendingFrame?.(0));
+      expect(screen.getByText("Aperta da Clienti")).toBeInTheDocument();
+
+      act(() => vi.advanceTimersByTime(2500));
+      expect(screen.queryByText("Aperta da Clienti")).not.toBeInTheDocument();
+    } finally {
+      requestFrame.mockRestore();
+      cancelFrame.mockRestore();
+      vi.useRealTimers();
+    }
   });
 });

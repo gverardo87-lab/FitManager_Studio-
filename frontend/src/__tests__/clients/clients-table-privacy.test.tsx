@@ -2,11 +2,24 @@
  * FE-0 / AC-FE0-1 — l'overview Clienti non espone numeri finanziari.
  */
 
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { ClientsTable } from "@/components/clients/ClientsTable";
 import type { ClientEnriched } from "@/types/api";
+
+vi.mock("next/link", () => ({
+  default: ({ scroll, onClick, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { scroll?: boolean }) => (
+    <a
+      data-next-scroll={String(scroll)}
+      onClick={(event) => {
+        event.preventDefault();
+        onClick?.(event);
+      }}
+      {...props}
+    />
+  ),
+}));
 
 const CLIENT = {
   id: 7,
@@ -45,5 +58,10 @@ describe("FE-0 — overview Clienti privacy-safe", () => {
       "href",
       "/rinnovi-incassi?focus=overdue-rate&client_id=7",
     );
+    expect(action).toHaveAttribute("data-next-scroll", "false");
+
+    sessionStorage.setItem("scroll:/rinnovi-incassi", "640");
+    fireEvent.click(action);
+    expect(sessionStorage.getItem("scroll:/rinnovi-incassi")).toBeNull();
   });
 });

@@ -56,6 +56,7 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { formatShortDate } from "@/lib/format";
 import { buildOverdueRateFocusHref } from "@/lib/renewals-focus";
+import { clearPageState } from "@/lib/url-state";
 import type { ClientEnriched } from "@/types/api";
 
 /** Strip diacritics for accent-insensitive Italian search */
@@ -189,7 +190,11 @@ export function ClientsTable({ clients, onEdit, onDelete, onNewClient }: Clients
                     <TableCell className="hidden md:table-cell">
                       {client.ha_rate_scadute ? (
                         <Button variant="outline" size="sm" className="h-7 border-amber-300 text-xs text-amber-800 dark:border-amber-800 dark:text-amber-300" asChild>
-                          <Link href={buildOverdueRateFocusHref(client.id)}>
+                          <Link
+                            href={buildOverdueRateFocusHref(client.id)}
+                            scroll={false}
+                            onClick={() => clearPageState("/rinnovi-incassi")}
+                          >
                             Azione amministrativa
                           </Link>
                         </Button>

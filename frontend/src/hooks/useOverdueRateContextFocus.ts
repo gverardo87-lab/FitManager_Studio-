@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 
 import { parseRenewalsFocus, type OverdueRateFocusIntent } from "@/lib/renewals-focus";
@@ -31,7 +31,7 @@ export function useOverdueRateContextFocus({
   hasError,
 }: UseOverdueRateContextFocusOptions): OverdueRateContextFocusResult {
   const [isHighlighted, setIsHighlighted] = useState(false);
-  const targetNodeRef = useRef<HTMLDivElement | null>(null);
+  const [targetNode, setTargetNode] = useState<HTMLDivElement | null>(null);
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const search = searchParams.toString();
@@ -57,35 +57,40 @@ export function useOverdueRateContextFocus({
   const clientName = target === null
     ? ""
     : `${target.client_nome} ${target.client_cognome}`.trim();
-  const announcement = isMissing
-    ? "L'azione richiesta non è più presente e potrebbe essere già stata risolta."
-    : target !== null
-      ? clientMatches.length > 1 && intent?.rateId === null
-        ? `Mostrata la prima di ${clientMatches.length} rate in ritardo di ${clientName}.`
-        : `Rata in ritardo di ${clientName} selezionata.`
-      : "";
+  const announcement = !hasVerifiedIntent
+    ? ""
+    : isMissing
+      ? "L'azione richiesta non è più presente e potrebbe essere già stata risolta."
+      : target !== null
+        ? clientMatches.length > 1 && intent?.rateId === null
+          ? `Mostrata la prima di ${clientMatches.length} rate in ritardo di ${clientName}.`
+          : `Rata in ritardo di ${clientName} selezionata.`
+        : "";
 
   const targetRef = useCallback((node: HTMLDivElement | null) => {
-    targetNodeRef.current = node;
+    setTargetNode(node);
   }, []);
 
   useEffect(() => {
     if (currentIntentKey === null || isLoading || hasError || targetRateId === null) return;
 
-    const node = targetNodeRef.current;
-    if (node === null) return;
+    if (targetNode === null) return;
 
-    const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
-    node.scrollIntoView?.({ behavior: reduceMotion ? "auto" : "smooth", block: "center" });
-    node.focus({ preventScroll: true });
+    let timeoutId: number | null = null;
+    const animationFrameId = window.requestAnimationFrame(() => {
+      if (!targetNode.isConnected) return;
 
-    const animationFrameId = window.requestAnimationFrame(() => setIsHighlighted(true));
-    const timeoutId = window.setTimeout(() => setIsHighlighted(false), 2500);
+      const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+      targetNode.scrollIntoView?.({ behavior: reduceMotion ? "auto" : "smooth", block: "center" });
+      targetNode.focus({ preventScroll: true });
+      setIsHighlighted(true);
+      timeoutId = window.setTimeout(() => setIsHighlighted(false), 2500);
+    });
     return () => {
       window.cancelAnimationFrame(animationFrameId);
-      window.clearTimeout(timeoutId);
+      if (timeoutId !== null) window.clearTimeout(timeoutId);
     };
-  }, [currentIntentKey, hasError, isLoading, routeKey, targetRateId]);
+  }, [currentIntentKey, hasError, isLoading, routeKey, targetNode, targetRateId]);
 
   return {
     targetRateId,

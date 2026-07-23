@@ -217,9 +217,9 @@ describe("FE-1.0 — focus contestuale Rinnovi & Incassi", () => {
 
   it("riprende il focus dopo un errore e il retry", async () => {
     const refetch = vi.fn().mockResolvedValue({});
-    state.overdue = {
+    state.overdue = { ...emptyQuery(), data: { items: [overdueRate(41)], total: 1 } };
+    state.expiring = {
       ...emptyQuery(),
-      data: undefined as never,
       isError: true,
       refetch,
     };
@@ -231,10 +231,7 @@ describe("FE-1.0 — focus contestuale Rinnovi & Incassi", () => {
     fireEvent.click(screen.getByRole("button", { name: "Riprova verifica" }));
     expect(refetch).toHaveBeenCalledOnce();
 
-    state.overdue = {
-      ...emptyQuery(),
-      data: { items: [overdueRate(41)], total: 1 },
-    };
+    state.expiring = emptyQuery();
     view.rerender(<RinnoviIncassiPage />);
 
     const target = view.container.querySelector<HTMLElement>('[data-overdue-rate-id="41"]');
