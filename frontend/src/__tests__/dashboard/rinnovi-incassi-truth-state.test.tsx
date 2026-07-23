@@ -7,6 +7,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import RinnoviIncassiPage from "@/app/(dashboard)/rinnovi-incassi/page";
 
+vi.mock("next/navigation", () => ({
+  usePathname: () => window.location.pathname,
+  useSearchParams: () => new URLSearchParams(window.location.search),
+}));
+
 function emptyQuery() {
   return {
     data: { items: [], total: 0 },
@@ -126,4 +131,3 @@ describe("FE-0 — verità percettiva Rinnovi & Incassi", () => {
     expect(screen.queryByText("Tutto in regola")).not.toBeInTheDocument();
   });
 });
-

@@ -5,6 +5,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import RinnoviIncassiPage from "@/app/(dashboard)/rinnovi-incassi/page";
 import type { OverdueRateItem } from "@/types/api";
 
+vi.mock("next/navigation", () => ({
+  usePathname: () => window.location.pathname,
+  useSearchParams: () => new URLSearchParams(window.location.search),
+}));
+
 function emptyQuery() {
   return {
     data: { items: [], total: 0 },
@@ -276,14 +281,15 @@ describe("FE-1.0 — focus contestuale Rinnovi & Incassi", () => {
       data: { items: [overdueRate(41)], total: 1 },
     };
 
-    const { container } = render(<RinnoviIncassiPage />);
-    const target = container.querySelector<HTMLElement>('[data-overdue-rate-id="41"]');
+    const view = render(<RinnoviIncassiPage />);
+    const target = view.container.querySelector<HTMLElement>('[data-overdue-rate-id="41"]');
     expect(target).not.toHaveFocus();
 
     act(() => {
       window.history.replaceState({}, "", "/rinnovi-incassi?focus=overdue-rate&client_id=7");
       window.dispatchEvent(new PopStateEvent("popstate"));
     });
+    view.rerender(<RinnoviIncassiPage />);
 
     await waitFor(() => expect(target).toHaveFocus());
   });

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 
 import { parseRenewalsFocus, type OverdueRateFocusIntent } from "@/lib/renewals-focus";
 import type { OverdueRateItem } from "@/types/api";
@@ -29,16 +30,13 @@ export function useOverdueRateContextFocus({
   isLoading,
   hasError,
 }: UseOverdueRateContextFocusOptions): OverdueRateContextFocusResult {
-  const [intent, setIntent] = useState<OverdueRateFocusIntent | null>(null);
   const [isHighlighted, setIsHighlighted] = useState(false);
   const targetNodeRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    const readIntent = () => setIntent(parseRenewalsFocus(window.location.search));
-    readIntent();
-    window.addEventListener("popstate", readIntent);
-    return () => window.removeEventListener("popstate", readIntent);
-  }, []);
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const search = searchParams.toString();
+  const routeKey = `${pathname}?${search}`;
+  const intent = pathname === "/rinnovi-incassi" ? parseRenewalsFocus(search) : null;
 
   const clientMatches = intent === null
     ? []
@@ -87,7 +85,7 @@ export function useOverdueRateContextFocus({
       window.cancelAnimationFrame(animationFrameId);
       window.clearTimeout(timeoutId);
     };
-  }, [currentIntentKey, hasError, isLoading, targetRateId]);
+  }, [currentIntentKey, hasError, isLoading, routeKey, targetRateId]);
 
   return {
     targetRateId,
