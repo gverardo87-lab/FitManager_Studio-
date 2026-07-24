@@ -78,7 +78,7 @@ commit docs del gate (ciclo di vita: `AGENTS.md`).
 
 | File | Stato | Scopo |
 |------|-------|-------|
-| `SPEC_R0_PROTEZIONE_RELEASE_V1_0_15.md` | 🟠 **APERTA — R0.1 contenimento verde; HOLD TLS live prima di R0.2** | Gate ristretto ratificato 2026-07-24: auto-Funnel rimosso, origine FRP immutabile e UI legacy esclusa sulle istanze provisionate. Live routing 200/404 ma trust TLS self-signed fallisce: decisione founder R0.1.5 vs blocker R0.4. R0.2 non aperto; cleanup massivo fuori scope |
+| `SPEC_R0_PROTEZIONE_RELEASE_V1_0_15.md` | 🟠 **APERTA — R0.1 verde; R0.1.5 TLS APERTO; R0.2 non aperto** | Gate ristretto ratificato 2026-07-24: auto-Funnel rimosso e origine FRP immutabile. Il finding live self-signed viene chiuso subito con Let's Encrypt HTTP-01 ristretto via FRP (ADR-011 Add. I): zero credenziali DNS sui trainer, chiave TLS locale, porta 80 solo challenge/404. Cleanup massivo fuori scope |
 | `SPEC_COLLABORAZIONE_CLAUDE_CODEX.md` | 🟡 **APERTA — A1.1 CHIUSO SU WAIVER; SMOKE CLAUDE DIFFERITO; A2+ NON AUTORIZZATI** | Contratto agent-neutral con gate come unità di commit/push, GO iniziale valido per il checkpoint, remoto `0 0` e zero tracked del gate precedente. Codex PASS dopo remediation del drift coda; ACX-D8 autorizza checkpoint e R0.1.5 senza attribuire PASS a Claude, da recuperare appena possibile e prima di A2+ |
 | `SPEC_FINGERPRINT_CROSSPLATFORM.md` | 🟡 **CODICE FATTO E SIGILLATO — resta T2 su hardware macOS reale** | Gate G-MAC.0: refactor Windows output-invariante PASS; chiusura subordinata al cross-check fingerprint/binding sul Mac reale in G-MAC.4 |
 | `SPEC_FRONTEND_CORE_INTUITIVITA.md` | 🟡 **APERTA — FE-0 E FE-1.0 CHIUSI; FE-1 MONEY-PATH GUIDATO ✅** | Remediation audit frontend core. FE-0 privacy/truth state ✅; FE-1.0 deep-link chiuso dal retest LIVE founder 2026-07-24; Rinnovi & Incassi riusa il pagamento rata standard con importo/metodo/data espliciti, default data odierna autorizzato e coperto, 152/152 test. FE-2..4 restano gated |
@@ -130,7 +130,8 @@ matrice assi×regole, fail-loud, perimetro transizioni, birth-auditor; G9.7) · 
 (temporal fence: storia contabilizzata immutabile, varco unico `reopen`; G7.8-ter) · **ADR-022**
 (financial command layer: penna unica, transition executor, invarianti imposti, read-model cassa,
 rettifiche e Hypothesis; G9). ADR-019/020 restano la base del mastro non-distruttivo e del wallet;
-Addendum recenti: ADR-017 Add. I (stati-penale) e ADR-022 Add. I/II (rettifiche + read-model).
+Addendum recenti: ADR-011 Add. I (ACME HTTP-01 ristretto via FRP), ADR-017 Add. I
+(stati-penale) e ADR-022 Add. I/II (rettifiche + read-model).
 Indice completo e autorevole in `adr/README.md`.
 
 ## incidents/ — Post-mortem

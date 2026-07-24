@@ -1,8 +1,8 @@
 # TUNNEL_ARCHITECTURE.md — Sottosistema tunnel pubblico
 
 **Progetto:** FitManager AI Studio
-**Versione:** 3.0 (consolidata)
-**Stato:** Fase 0 + Fase 1 completate · Fase 2/3 pianificate
+**Versione:** 3.1 (consolidata)
+**Stato:** Fase 0 + Fase 1 completate · R0.1.5 TLS pubblico in implementazione · resto Fase 2/3 pianificato
 **Ambito:** Esposizione pubblica del portale clienti tramite tunnel FRP self-hosted, end-to-end.
 **Documenti correlati:**
 - `ARCHITECTURE.md` (root) — overview dell'intero sistema; i 3 attori vivono lì.
@@ -161,7 +161,7 @@ Vincolanti; le scelte implementative sono libere purché li rispettino.
 ### 7.1 Decisioni prese (D1–D5)
 
 - **D1. Tecnologia tunnel: FRP** (Fast Reverse Proxy). Maturo (40K+ stars, Go, 8+ anni), binario ~15MB bundlabile, TLS e2e via passthrough (preserva P2), brand `*.fitmanagerstudio.com`, nessun sub-processor per dati clinici (solo Hetzner UE). **Cloudflare Tunnel escluso**: termina TLS, vede il traffico, viola P2. Rathole resta alternativa futura se serve binario più leggero (~3MB).
-- **D2. TLS termina sul PC del trainer.** Il VPS fa SNI routing TCP passthrough (non apre il pacchetto TLS). Certificato Let's Encrypt sul PC trainer, challenge **DNS-01** (unica che funziona dietro NAT).
+- **D2. TLS termina sul PC del trainer.** Il VPS fa SNI routing TCP passthrough (non apre il pacchetto TLS). Certificato Let's Encrypt sul PC trainer. **ADR-011 Addendum I:** challenge HTTP-01 attraverso un proxy FRP dedicato alla sola `/.well-known/acme-challenge/`; nessuna credenziale DNS sul trainer.
 - **D3. Instance ID pre-incluso nella licenza.** `instance_id` è un claim del JWT licenza (es. `"instance_id": "alessio-crociani"`). Il wildcard DNS copre tutti i trainer → **zero provisioning DNS per-istanza**.
 - **D4. Separazione piani di accesso.** Middleware Next.js rileva richieste dal tunnel via hostname; route non-`/public/*` dal tunnel → 404. `/public/*` accessibili da tunnel e LAN.
 - **D5. `trainer_id` resta** come defense-in-depth anche con isolamento fisico (non in conflitto con P6).
@@ -176,12 +176,18 @@ Vincolanti; le scelte implementative sono libere purché li rispettino.
 | ngrok | tunnel SaaS | ⚠️ | Zero | A pagamento | Escluso |
 | WireGuard + proxy | VPN site-to-site | ✅ | Zero | ~4.5 €/mese | Più complesso da automatizzare |
 
-### 7.3 Certificati Let's Encrypt dietro NAT
+### 7.3 Certificati Let's Encrypt dietro NAT — ADR-011 Addendum I
 
-Il PC del trainer non risponde su porta 80 da Internet → ACME HTTP-01 non funziona. **Soluzione: DNS-01**
-con API token scoped al solo record `_acme-challenge.<instance_id>.fitmanagerstudio.com`, distribuito via
-licenza/onboarding. Wildcard cert centralizzato gestito da AVGV: **NON ACCETTABILE** (rimetterebbe una chiave
-privata sul VPS, viola P2).
+Il PC trainer non è raggiungibile direttamente sulla porta 80, ma FRP rende pubblicamente
+raggiungibile **solo** il webroot ACME: `frps:80` instrada per host e per location
+`/.well-known/acme-challenge/` a un plugin `static_file` di `frpc`. Il webroot vive sotto
+`data/tunnel/`, non contiene dati applicativi e non ha Next.js/API come upstream. Ogni altro path HTTP
+riceve 404 all'edge.
+
+Questa è la soluzione R0.1.5: HTTP-01 funziona dietro NAT grazie al tunnel già stabilito, mentre
+certificato e chiave privata nascono e restano sul PC trainer. DNS-01 con token Cloudflare distribuito
+è respinto: `DNS Write` è restringibile alla zona, non al singolo record challenge. Wildcard cert
+centralizzato gestito da AVGV resta **NON ACCETTABILE** (chiave privata sull'edge, violazione P2).
 
 ---
 
@@ -195,7 +201,7 @@ privata sul VPS, viola P2).
 |------|-------|---------|
 | **Fase 0** — Infrastruttura AVGV | ✅ **COMPLETATA** (2026-06-02) | VPS Hetzner, hardening, frps v0.61.1, DNS wildcard, test e2e tunnel |
 | **Fase 1** — Tunnel client nel prodotto | ✅ **COMPLETATA** (core 2026-06-07, frpc bundle 2026-06-09) | instance_id, tunnel_manager, tunnel_config, auto-start, route separation, health endpoint, frpc.exe nell'installer |
-| **Fase 2** — TLS e2e + route hardening | ⬜ **PIANIFICATA** | cert_manager Let's Encrypt DNS-01, token hash, inactivity timeout, pagina offline su VPS |
+| **Fase 2** — TLS e2e + route hardening | 🟠 **R0.1.5 TLS IN IMPLEMENTAZIONE** · resto pianificato | cert manager Let's Encrypt HTTP-01 ristretto via FRP; token hash, inactivity timeout e pagina offline restano separati |
 | **Fase 3** — Onboarding zero-touch + dismissione Tailscale | ⬜ **PIANIFICATA** | UI diagnostica, 2FA TOTP, SBOM, export GDPR, rimozione Tailscale |
 
 > **Nota:** l'**apertura del CRM al tunnel** ("Strada B") è un workstream a sé, **approvato ma non implementato**.
@@ -214,7 +220,7 @@ soft delete.
 | G1 | VPS edge (frps + SNI + DNS) | 0 | Infra AVGV | ✅ Fatto |
 | G2 | FRP client bundlato | 1 | `api/services/tunnel_manager.py` | ✅ Fatto |
 | G3 | Instance ID nella licenza JWT | 1 | `generate_license.py` + `license.py` | ✅ Fatto |
-| G4 | Cert manager (Let's Encrypt DNS-01) | 2 | `api/services/cert_manager.py` (nuovo) | ⬜ Da fare |
+| G4 | Cert manager (Let's Encrypt HTTP-01 via FRP) | 2 / R0.1.5 | `api/services/cert_manager.py` (nuovo) | 🟠 In implementazione |
 | G5 | Route separation middleware | 1/2 | `frontend/src/middleware.ts` | ✅ Base (whitelist) · ⬜ blacklist Strada B |
 | G6 | Pagina "studio offline" sul VPS | 2 | VPS edge | ⬜ Da fare |
 | G7 | Inactivity timeout sessione | 2 | `api/auth/router.py` + frontend | ⬜ Da fare |
@@ -249,18 +255,27 @@ name = "<instance_id>"
 type = "https"
 customDomains = ["<instance_id>.fitmanagerstudio.com"]
 [proxies.plugin]
-type = "https2https"
+type = "https2http"
 localAddr = "127.0.0.1:3000"
 crtPath = "data/tunnel/cert.pem"
 keyPath = "data/tunnel/key.pem"
+
+[[proxies]]
+name = "<instance_id>-acme-http"
+type = "http"
+customDomains = ["<instance_id>.fitmanagerstudio.com"]
+locations = ["/.well-known/acme-challenge/"]
+[proxies.plugin]
+type = "static_file"
+localPath = "data/tunnel/acme-webroot"
 ```
 
-### 8.4 Fase 2 — TLS e2e + route hardening (PIANIFICATA)
+### 8.4 Fase 2 — TLS e2e + route hardening (R0.1.5 IN IMPLEMENTAZIONE; resto pianificato)
 
-- **2.1 Cert manager** (`api/services/cert_manager.py`, nuovo): genera/rinnova Let's Encrypt via DNS-01 (libreria acme Python o acme.sh bundlato).
-- **2.2 Credenziali DNS scoped**: API token Cloudflare limitato al challenge `_acme-challenge.<instance_id>`, distribuito via licenza/config.
-- **2.3 Storage**: `data/tunnel/` (cert, key, credenziali DNS), escluso da backup/export.
-- **2.4 Rinnovo automatico**: scheduler, check ogni 12h, rinnovo 30gg prima della scadenza.
+- **2.1 Cert manager — R0.1.5** (`api/services/cert_manager.py`, nuovo): genera/rinnova Let's Encrypt via HTTP-01 con client ACME standalone pinato nel build.
+- **2.2 Trasporto challenge — R0.1.5**: `frps vhostHTTPPort=80` + proxy `frpc type=http`, `locations=["/.well-known/acme-challenge/"]`, plugin `static_file` su webroot dedicato. Nessun token DNS e nessun upstream applicativo su HTTP.
+- **2.3 Storage — R0.1.5**: `data/tunnel/` (account ACME, webroot, cert, key), escluso da backup/export; installazione cert/key atomica dopo verifica.
+- **2.4 Rinnovo automatico — R0.1.5**: opportunistico al boot + check ogni 12h, rinnovo 30gg prima della scadenza, backoff e ultimo certificato valido preservato.
 - **2.7 Pagina offline su VPS**: il VPS serve pagina statica "Studio offline" se il tunnel di quel subdomain è down.
 - **2.9 Token hash**: SHA-256 del `ShareToken` in DB, lookup via hash, token in chiaro solo nel link.
 
@@ -320,6 +335,7 @@ $ dig qualsiasi-slug.fitmanagerstudio.com +short   # → 128.140.91.39 (wildcard
 apt update && apt upgrade -y                         # 5.1 aggiornamenti
 apt install -y ufw                                   # 5.2 firewall
 ufw allow 22/tcp comment 'SSH'
+ufw allow 80/tcp comment 'ACME HTTP-01 via FRP'
 ufw allow 443/tcp comment 'HTTPS tunnel'
 ufw allow 7000/tcp comment 'FRP bind'
 ufw --force enable
@@ -329,6 +345,7 @@ apt install -y fail2ban                              # 5.3 ban SSH brute force (
 | Porta | Scopo | Accessibile da |
 |-------|-------|----------------|
 | 22/tcp | SSH admin | Qualsiasi IP (protetto da chiave) |
+| 80/tcp | Solo `/.well-known/acme-challenge/` → webroot FRP per-istanza | Internet |
 | 443/tcp | Traffico clienti finali → tunnel | Internet |
 | 7000/tcp | Connessioni FRP client (PC trainer → VPS) | Internet |
 
@@ -340,6 +357,7 @@ Installazione FRP v0.61.1 in `/opt/frp/`. Configurazione `/opt/frp/frps.toml`:
 
 ```toml
 bindPort = 7000           # connessioni FRP client (PC trainer)
+vhostHTTPPort = 80        # solo challenge ACME HTTP-01, path ristretto dal proxy client
 vhostHTTPSPort = 443      # traffico HTTPS clienti finali — SNI routing (no TLS termination)
 
 [webServer]
@@ -435,8 +453,9 @@ Aggiornamento FRP: `systemctl stop frps` → scarica nuova release in `/opt/frp/
 | VPS SSH | 128.140.91.39:22 | root (chiave Ed25519 + passphrase) |
 | FRP Dashboard | 127.0.0.1:7500 (via SSH tunnel) | admin |
 
-> **IMPORTANTE:** le password operative (dashboard FRP, credenziali DNS-01) **non** sono archiviate in alcun
-> file versionato. Vivono esclusivamente nel password manager AVGV.
+> **IMPORTANTE:** le password operative (dashboard FRP) **non** sono archiviate in alcun file
+> versionato. R0.1.5 non usa credenziali DNS; account ACME e chiavi private restano nel solo
+> `data/tunnel/` locale, escluso da Git e da export/backup.
 
 ## 12. Rischi residui e aree aperte
 
@@ -446,7 +465,8 @@ Aggiornamento FRP: `systemctl stop frps` → scarica nuova release in `/opt/frp/
 | Trainer chiude il PC durante compilazione | Pagina "studio offline" (Fase 2.7) | Pianificato |
 | VPS edge SPOF per tutti i trainer | Edge ridondato multi-region + failover DNS | Fase 2+ |
 | FRP bloccato da reti aziendali restrittive | FRP via HTTPS porta 443 (raramente bloccata); websocket transport | Mitigato |
-| Cert non rinnovato (PC spento a scadenza) | Retry al riavvio + grace period 30gg + notifica trainer | Fase 2 |
+| Cert non rinnovato (PC spento a scadenza) | Check opportunistico al boot + ogni 12h; rinnovo entro 30gg; ultimo cert valido preservato | R0.1.5 |
+| Porta 80 usata per raggiungere il CRM | FRP `locations` solo challenge + webroot statico dedicato; nessun upstream Next/API; probe 404 fuori path | R0.1.5 |
 | Compromissione PC trainer (malware) | Fuori scope diretto; best practice in onboarding | Documentare |
 | Conformità Art. 9 su transito via edge | P2 data-blind + audit + dossier tcpdump | Dimostrato (routing) |
 
@@ -457,7 +477,8 @@ Aggiornamento FRP: `systemctl stop frps` → scarica nuova release in `/opt/frp/
 - `SECURITY_MODEL.md` — threat model e livelli di protezione
 - `LEGAL_REGULATORY_REPORT.md` v1.3 — compliance GDPR
 - `docs/archive/TAILSCALE_FUNNEL_SETUP.md` — setup legacy (sostituito da FRP)
-- FRP: https://github.com/fatedier/frp · Let's Encrypt DNS-01: https://letsencrypt.org/docs/challenge-types/#dns-01-challenge
+- FRP: https://github.com/fatedier/frp · Let's Encrypt HTTP-01: https://letsencrypt.org/docs/challenge-types/#http-01-challenge · lego webroot: https://go-acme.github.io/lego/obtain/http01/
+- Cloudflare API token permissions (DNS Write = Zone): https://developers.cloudflare.com/fundamentals/api/reference/permissions/
 - GDPR Reg. UE 2016/679 — Art. 5, 9, 28, 32 · ACME RFC 8555
 
 ## 14. Changelog (consolidato)
@@ -469,3 +490,4 @@ Aggiornamento FRP: `systemctl stop frps` → scarica nuova release in `/opt/frp/
 | 1.0 (TUNNEL_MIGRATION_STRATEGY) | 2026-06-01 | Strategia Tailscale→FRP: D1-D5, gap analysis, 4 fasi |
 | 1.0 (VPS_EDGE_SETUP) | 2026-06-02 | Fase 0: dominio, VPS, hardening, frps, DNS wildcard, test e2e |
 | **3.0** | **2026-06-14** | **Consolidamento dei 4 documenti in uno (design + build + ops). Stati di fase allineati alla realtà del codice: Fase 1 completata (incl. frpc bundle + health endpoint `GET /system/tunnel-status`), Fase 2/3 pianificate. Threat model delegato a SECURITY_MODEL; 3 attori delegati ad ARCHITECTURE.md root; acceptance/Strada B delegati a TUNNEL_SECURITY_BOUNDARY.** |
+| **3.1** | **2026-07-24** | **ADR-011 Addendum I/R0.1.5: DNS-01 distribuito sostituito da HTTP-01 ristretto via FRP; zero credenziali DNS sui trainer, webroot ACME dedicato, porta 80 non applicativa, P2 e terminazione TLS locale invariati. Corretto anche l'esempio runtime reale `https2http`.** |

@@ -3994,3 +3994,30 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
   Senior né crea una fallback policy generale.
 - **Chiusura operativa A1.1:** gate pronto per commit/push docs atomico; il gate TLS resta separato e
   può iniziare soltanto dopo verifica del delta remoto `0 0` e working tree tracked pulito.
+
+---
+
+## 2026-07-24 — R0.1.5 TLS: decisione HTTP-01 ristretto via FRP
+
+- **Decisione founder:** non attendere lo smoke Claude delle 22:00; R0.1.5 procede ora. Il controllo
+  Claude resta differito e non è registrato come PASS.
+- **Finding confermato:** il piano storico DNS-01 assumeva un token Cloudflare limitabile al singolo
+  record `_acme-challenge`; la documentazione ufficiale espone invece `DNS Write` come permesso di
+  zona. Distribuire quel token sui PC trainer allargherebbe il blast radius all'intera zona DNS.
+- **ADR-011 Addendum I:** il solo meccanismo challenge passa a HTTP-01 attraverso FRP. `frps` ascolta
+  su 80 e instrada per host/path esclusivamente `/.well-known/acme-challenge/` a un webroot statico
+  dedicato sul PC; ogni altro path HTTP è 404 e non ha Next.js/API come upstream.
+- **P2 preservato:** certificato, account ACME e chiave privata restano in `data/tunnel/` sul PC del
+  trainer. Il traffico applicativo continua su 443, con SNI passthrough e terminazione locale; la
+  porta 80 trasporta soltanto challenge pubbliche.
+- **Alternative respinte:** token DNS zone-wide sui trainer; wildcard/private key sul VPS; broker
+  centrale che riceva la licenza completa con PII; TLS-ALPN-01 più complesso sul terminatore corrente.
+- **Contratto R0.1.5:** client ACME standalone pinato nel build; emissione al boot, check ogni 12h,
+  rinnovo entro 30 giorni; promozione cert/key atomica dopo SAN/tempo/key-match; ultimo certificato
+  valido preservato su ogni failure; restart frpc controllato.
+- **Evidenze pre-codice:** il probe esterno porta 80 è andato in timeout (edge non ancora configurato);
+  `frpc` v0.61.1 ha accettato la sintassi del proxy HTTP con `locations` e plugin `static_file`.
+- **Scope:** aggiornati SPEC R0, ADR-011 + indice ADR, SSoT tunnel/security, adapter root e indice docs.
+  Nessun runtime, schema, dato business, denaro o file sotto `data/tunnel/` modificato dal gate.
+- **Prossimo microstep:** verificare e applicare la configurazione edge con backup/rollback; poi
+  implementare il trasporto challenge e il certificate manager in gate separati e verificati.

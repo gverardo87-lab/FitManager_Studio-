@@ -78,6 +78,56 @@ Migrare a **tunnel FRP self-hosted** con dominio `*.fitmanagerstudio.com`. Cinqu
 - **Fase 2** (TLS e2e Let's Encrypt DNS-01, pagina offline, token hash, inactivity timeout): DA FARE.
 - **Fase 3** (onboarding zero-touch completo, UI diagnostica, **dismissione Tailscale**): DA FARE.
 
+## Addendum I — 2026-07-24 — ACME HTTP-01 ristretto via FRP
+
+### Trigger e rettifica del presupposto
+
+La prova live R0.1 ha confermato routing SNI e separazione 200/404, ma il client strict ha rifiutato
+il certificato self-signed. L'analisi R0.1.5 ha inoltre falsificato il presupposto operativo di D2:
+un token Cloudflare con `DNS Write` può essere ristretto alla zona, non al singolo record
+`_acme-challenge.<instance_id>`. Distribuirlo su ogni PC trainer darebbe quindi capacità CRUD sui DNS
+dell'intera zona e non è accettabile.
+
+La frase D2 «Fase 2: Let's Encrypt via DNS-01» e il follow-up Fase 2 sopra restano storia della
+decisione originaria ma, per il solo meccanismo di validazione ACME, sono sostituiti da questo
+Addendum. FRP, SNI passthrough, terminazione TLS locale e identità da licenza non cambiano.
+
+### Decisione
+
+- **D2-A1 — HTTP-01 attraverso FRP.** `frps` espone `vhostHTTPPort=80`; ogni istanza aggiunge un
+  proxy HTTP che instrada soltanto `/.well-known/acme-challenge/` a un webroot statico dedicato sul
+  PC trainer. Nessuna route applicativa è collegata alla porta 80; ogni altro path termina in 404.
+- **D2-A2 — ACME locale e pinato.** Un client ACME standalone maturo, versionato e verificato dal
+  build, emette e rinnova il certificato sul PC trainer. Account ACME, cert e chiave privata restano
+  in `data/tunnel/`; il risultato entra nei path già consumati da `https2http` solo dopo validazione
+  SAN/tempo/corrispondenza chiave e promozione atomica.
+- **D2-A3 — Fail-local.** Il boot e il CRM locale non dipendono dal successo immediato della CA.
+  Assenza del client, challenge/CA non disponibile o rinnovo fallito mantengono l'ultimo cert valido,
+  producono diagnostica e riprovano con cadenza limitata. Il certificato self-signed resta solo
+  bootstrap tecnico quando non esiste ancora un certificato pubblico.
+- **D2-A4 — P2 preservato.** La porta 80 trasporta esclusivamente token ACME pubblici. Il traffico
+  applicativo resta TLS end-to-end su 443 e termina sul PC trainer; il VPS continua a non possedere
+  la chiave privata e non può leggere body o response del portale.
+
+### Alternative respinte
+
+| Alternativa | Motivo del rifiuto |
+|-------------|--------------------|
+| DNS-01 con token Cloudflare su ogni trainer | Scope effettivo `DNS Write` sull'intera zona; blast radius incompatibile con privacy-first |
+| Wildcard/certificati con chiave privata sul VPS | Sposta la custodia della chiave all'edge e viola P2 |
+| Broker centrale che riceve la licenza completa | Introduce nuovo servizio/autenticazione e porta PII della licenza fuori dal PC; scope sproporzionato per R0.1.5 |
+| TLS-ALPN-01 su 443 | Supporto client più limitato e conflitto più complesso col terminatore `https2http`; nessun vantaggio rispetto al path HTTP ristretto |
+
+### Conseguenze operative
+
+- la porta 80 diventa una superficie intenzionale ma non applicativa: FRP effettua host/path routing,
+  il webroot non contiene dati business e il CRM non è un upstream possibile;
+- il VPS richiede un microstep infrastrutturale verificabile: backup `frps.toml`, apertura UFW 80,
+  `vhostHTTPPort=80`, restart, probe e rollback;
+- il rinnovo opportunistico al boot più controllo periodico chiude il rischio del PC spento senza
+  richiedere credenziali DNS distribuite;
+- acceptance e implementazione vivono in `SPEC_R0_PROTEZIONE_RELEASE_V1_0_15.md` §6.
+
 ## Rollback / Exit Strategy
 
 FRP è **additivo**: finché la Fase 3 non dismette Tailscale, entrambi i percorsi terminano su Next.js:3000 e `get_current_trainer()` protegge entrambi. In caso di problema sul tunnel FRP, il portale resta erogabile via Tailscale Funnel fino alla dismissione pianificata. Il binario frpc e il lifespan step 6 sono disattivabili senza toccare il resto del prodotto.
@@ -93,3 +143,6 @@ FRP è **additivo**: finché la Fase 3 non dismette Tailscale, entrambi i percor
 - `docs/technical/TUNNEL_SECURITY_BOUNDARY.md` — confine di sicurezza, Strada B, P2 data-blind (dimostrato e2e)
 - `docs/learning/BUILD_LOG.md` — diario cronologico (Fase 0 → Fase 1 Step 1-8)
 - `docs/adr/ADR-007-anti-reverse-engineering.md` — hardening bundle (frpc bundlato in Nuitka)
+- Cloudflare API token permissions: https://developers.cloudflare.com/fundamentals/api/reference/permissions/
+- Let's Encrypt challenge types: https://letsencrypt.org/docs/challenge-types/
+- lego HTTP-01 webroot: https://go-acme.github.io/lego/obtain/http01/

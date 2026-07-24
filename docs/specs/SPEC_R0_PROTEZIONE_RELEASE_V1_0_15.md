@@ -1,12 +1,12 @@
 # SPEC R0 — Protezione release v1.0.15
 
-**Stato:** 🟠 APERTA — R0.1 contenimento implementato e verificato; **HOLD decisione TLS live prima di R0.2**
+**Stato:** 🟠 APERTA — R0.1 contenimento verde; **R0.1.5 TLS valido APERTO**; R0.2 non aperto
 **Data:** 2026-07-24
 **Branch:** `FitManager_Studio`
 **Tipo:** contenimento release cross-layer; nessuna nuova macro-feature e nessuna nuova regola finanziaria
 **Audit fondante:** `docs/archive/AUDIT_OBSOLESCENZA_POST_MIGRAZIONI_2026-07-23.md`
 **Autorità:** `AGENTS.md` → `MANIFESTO.md` → `LAUNCH_SCOPE.md` → layer `CLAUDE.md` → ADR/SSoT
-**Sequenza ratificata:** FE-0 + FE-1.0/1.1 ✅ → **R0.1 → R0.2 → R0.3 → R0.4** → P1..P6 → candidate v1.0.15 → G-MAC
+**Sequenza ratificata:** FE-0 + FE-1.0/1.1 ✅ → **R0.1 → R0.1.5 → R0.2 → R0.3 → R0.4** → P1..P6 → candidate v1.0.15 → G-MAC
 
 > Questa SPEC è la casa del solo lavoro release-critical emerso dall'audit. La bonifica massiva di
 > codice morto, API dormienti e tool storici non entra in R0 e non interrompe il blocco P. A chiusura
@@ -73,10 +73,11 @@ La verifica indipendente 2026-07-24 conferma i blocker ma corregge la stima del 
 | Ordine | Gate | Scopo | Dipendenza |
 |---:|---|---|---|
 | 1 | **R0.1 — Percorso pubblico unico** | Contenere transizione FRP/Tailscale | FE-1 chiuso LIVE |
-| 2 | **R0.2 — Binario unico di migrazione** | Rendere sicura l'apertura P1/Alembic | R0.1 indipendente |
-| 3 | **R0.3 — Verità finanziaria e privacy** | Chiudere lordo/netto e denaro globale | G8.4 SSoT |
-| 4 | **R0.4 — Verità operativa release** | Allineare checklist/runbook/contesto | R0.1–R0.3 reali |
-| 5 | **P1** | Apre il blocco P | R0 chiuso e consuntivato |
+| 2 | **R0.1.5 — TLS pubblico valido** | Chiudere il finding live senza cedere P2 | R0.1 verde + decisione founder |
+| 3 | **R0.2 — Binario unico di migrazione** | Rendere sicura l'apertura P1/Alembic | R0.1.5 chiuso |
+| 4 | **R0.3 — Verità finanziaria e privacy** | Chiudere lordo/netto e denaro globale | G8.4 SSoT |
+| 5 | **R0.4 — Verità operativa release** | Allineare checklist/runbook/contesto | R0.1–R0.3 reali |
+| 6 | **P1** | Apre il blocco P | R0 chiuso e consuntivato |
 
 Ogni gate è un'unità coesa e verificabile. Nessun cleanup post-release viene infilato tra questi gate.
 
@@ -115,8 +116,8 @@ Ogni gate è un'unità coesa e verificabile. Nessun cleanup post-release viene i
 
 ### Consuntivo R0.1 — 2026-07-24
 
-**Esito del contenimento:** implementato e verificato. La chiusura formale del gate resta in HOLD per
-una decisione founder sul rischio TLS live emerso durante la prova esterna; R0.2 non è ancora aperto.
+**Esito del contenimento:** implementato e verificato. Il founder ha scelto la remediation immediata
+R0.1.5; R0.2 non è ancora aperto.
 
 - `instance_id` della licenza valida è ora il segnale autorevole della provision FRP, indipendente
   dalla disponibilità temporanea di `frpc`; il runtime imposta sempre origine gestita e fallback
@@ -144,13 +145,84 @@ una decisione founder sul rischio TLS live emerso durante la prova esterna; R0.2
 (`Impossibile stabilire una relazione di trust`). Il routing e la route separation funzionano, ma
 l'end-to-end pubblico non è dichiarabile production-ready finché la Fase 2 TLS descritta nel root
 `CLAUDE.md` non viene completata oppure il founder non ratifica una collocazione diversa. Decisione
-richiesta prima di R0.2: remediation immediata **R0.1.5** oppure blocker falsificabile dentro R0.4.
+presa dal founder: remediation immediata **R0.1.5**, da chiudere prima di R0.2.
 
 **Nota ambiente test:** i warning di rollover `fitmanager.log` dipendono dal server live
 `uvicorn --reload` già in esecuzione che condivide il log con pytest. Il processo `frpc` osservato
 non è orfano: è figlio di quel runtime live e non è stato terminato.
 
-## 6. R0.2 — Binario unico di migrazione
+## 6. R0.1.5 — TLS pubblico valido, P2-preserving
+
+### Decisione ratificata
+
+L'emissione e il rinnovo del certificato pubblico avvengono sul PC del trainer tramite ACME
+**HTTP-01 instradato da FRP**. `frps` ascolta anche sulla porta 80, ma inoltra al trainer soltanto
+`/.well-known/acme-challenge/`; `frpc` serve quella location da un webroot dedicato sotto
+`data/tunnel/`, senza collegarla a Next.js o all'API. Ogni altra route HTTP riceve 404 all'edge.
+
+Il client ACME è un binario standalone maturo, versionato e verificato nel build. Account ACME,
+chiave del certificato e certificato vivono esclusivamente in `data/tunnel/` sul PC trainer. Nessuna
+credenziale Cloudflare/DNS entra in licenza, installer o runtime: i token Cloudflare con `DNS Write`
+sono limitabili alla zona, non al singolo record, quindi distribuirli allargherebbe ingiustificatamente
+il blast radius.
+
+La porta 80 trasporta esclusivamente challenge ACME pubbliche e prive di dati applicativi. Il traffico
+atleta/trainer resta su 443 con terminazione TLS sul PC trainer: P2 data-blind rimane invariato.
+L'edge non custodisce certificati o chiavi private dei trainer.
+
+### Impact map
+
+- **Obiettivo:** browser mainstream in trust strict sul dominio FRP, senza avvisi self-signed.
+- **Layer:** configurazione FRP client/server; nuovo certificate manager backend; boot/scheduler;
+  packaging del client ACME; documentazione tunnel e release.
+- **Invarianti:** route CRM sempre 404 dal tunnel; Next.js mai raggiungibile su HTTP; chiave privata
+  sempre locale; fallback localhost e CRM core disponibili anche se ACME fallisce; ultimo certificato
+  valido mai sovrascritto da un risultato incompleto; zero modifiche a schema, dati business, ledger,
+  ownership o audit finanziario.
+- **Non-obiettivi:** wildcard certificate centralizzato; terminazione TLS sul VPS; DNS-01 con token sul
+  trainer; pagina studio-offline, token hash, inactivity timeout o apertura CRM Strada B.
+
+### Microstep ordinati
+
+1. **Edge challenge path:** backup verificato di `frps.toml`, aggiunta `vhostHTTPPort=80`, apertura
+   UFW 80/tcp, restart e probe; rollback esplicito se health/frps non restano verdi.
+2. **Trasporto challenge locale:** secondo proxy FRP `type=http`, `locations` ristretto alla challenge
+   e plugin `static_file` su webroot dedicato; verifica sintassi con lo stesso `frpc` v0.61.1 del bundle.
+3. **Certificate manager:** emissione opportunistica al boot, controllo ogni 12 ore e rinnovo entro
+   30 giorni dalla scadenza; errori ACME non bloccano il CRM locale e usano backoff senza retry storm.
+4. **Install atomica:** il risultato viene promosso su `cert.pem`/`key.pem` solo dopo verifica SAN,
+   validità temporale e corrispondenza cert↔key; quindi restart controllato di `frpc`.
+5. **Packaging e live gate:** client ACME versionato/hash-verificato nel build; prova esterna strict e
+   route separation ripetuta prima di chiudere R0.1.5.
+
+### Criteri di accettazione
+
+- **AC-R015-1:** nessuna credenziale DNS/API è richiesta o persistita sul trainer; guard statico su
+  licenza, config, installer e `data/tunnel/` di fixture.
+- **AC-R015-2:** config FRP verificata contiene proxy HTTPS applicativo e proxy HTTP limitato a
+  `/.well-known/acme-challenge/`; una route HTTP diversa non raggiunge frontend/API.
+- **AC-R015-3:** assenza client ACME, timeout, CA indisponibile o challenge fallita preservano il CRM
+  locale e l'ultimo cert/key valido, con errore diagnostico e senza loop aggressivo.
+- **AC-R015-4:** installazione cert/key è atomica e rifiuta SAN errato, certificato scaduto/non ancora
+  valido o chiave non corrispondente.
+- **AC-R015-5:** boot e scheduler sono idempotenti; nessun rinnovo se il certificato ha più di 30
+  giorni residui; dopo una promozione riuscita `frpc` rilegge i file senza lasciare processi orfani.
+- **AC-R015-6:** build/installer falliscono se il binario ACME pinato manca o non supera la verifica
+  prevista; nessun path assoluto hardcoded.
+- **AC-R015-7:** test backend mirati, ruff, full backend e gate packaging pertinenti verdi.
+- **AC-R015-8:** live strict su `gvera-dev.fitmanagerstudio.com`: chain browser-trusted e SAN corretto,
+  `/health` 200, `/clienti` 404; nessun `-k`, `--insecure` o trust bypass nell'evidenza finale.
+
+### Evidenza progettuale pre-codice
+
+- probe esterno iniziale su porta 80: timeout, coerente con `vhostHTTPPort`/UFW non ancora attivi;
+- `frpc` v0.61.1 accetta sintatticamente `type=http` + `locations` + plugin `static_file`;
+- la documentazione ufficiale Let's Encrypt richiede HTTP-01 su porta 80 e raccomanda HTTP-01 come
+  default; FRP rende raggiungibile dietro NAT il solo webroot di challenge;
+- ADR-011 Addendum I sostituisce esclusivamente il meccanismo challenge DNS-01, non FRP, SNI
+  passthrough, terminazione locale o identità da licenza.
+
+## 7. R0.2 — Binario unico di migrazione
 
 ### Scope
 
@@ -171,7 +243,7 @@ sono script distruttivi di seed/curation e richiedono triage dedicato post-relea
 - **AC-R02-4:** `api/CLAUDE.md`, root `CLAUDE.md` e ADR-014 non si contraddicono sul modello single-DB.
 - **AC-R02-5:** gate Alembic/schema pertinenti verdi prima di aprire P1.
 
-## 7. R0.3 — Verità finanziaria e privacy
+## 8. R0.3 — Verità finanziaria e privacy
 
 ### Scope
 
@@ -193,7 +265,7 @@ sono script distruttivi di seed/curation e richiedono triage dedicato post-relea
 - **AC-R03-6:** Vitest mirati + suite FE + lint/build; `financial-invariant-verifier` = MONEY AXIS
   PRESERVED.
 
-## 8. R0.4 — Verità operativa release
+## 9. R0.4 — Verità operativa release
 
 Aggiornare solo i documenti e le prove che possono guidare male la candidate:
 
@@ -214,7 +286,7 @@ I conteggi cosmetici, la tabella WhatsApp e altra documentazione non release-cri
 - **AC-R04-3:** review coerenza cross-doc e link/path integrity.
 - **AC-R04-4:** `docs/INDEX.md` rispecchia esattamente il fronte `docs/specs/`.
 
-## 9. Findings già assorbiti o differiti
+## 10. Findings già assorbiti o differiti
 
 ### Assorbiti da lavoro vivo
 
@@ -233,9 +305,9 @@ I conteggi cosmetici, la tabella WhatsApp e altra documentazione non release-cri
 Questi punti non sono autorizzazione a modificare codice: dopo la candidate ricevono una SPEC dedicata
 solo se il founder apre il blocco.
 
-## 10. Definition of Done R0
+## 11. Definition of Done R0
 
-1. AC-R01, AC-R02, AC-R03 e AC-R04 verificati con evidenza reale;
+1. AC-R01, AC-R015, AC-R02, AC-R03 e AC-R04 verificati con evidenza reale;
 2. full suite raccolta verde per backend/frontend e quality gate AGENTS.md;
 3. financial-invariant-verifier PASS su R0.3;
 4. test upgrade/installazione con `.env` legacy e test live FRP da rete esterna;

@@ -252,19 +252,21 @@ Zero configurazione per il trainer. Privacy-first: il VPS non vede il contenuto 
 |-------|------|----------|
 | Config | `api/services/tunnel_config.py` | TunnelConfig dataclass, risoluzione frpc path, cert self-signed auto-generato |
 | Manager | `api/services/tunnel_manager.py` | Babysitter frpc: subprocess, backoff+jitter, drain output, atexit cleanup |
+| Certificato | `api/services/cert_manager.py` | **Target R0.1.5:** Let's Encrypt HTTP-01 via webroot FRP ristretto; emissione/rinnovo locale |
 | Identity | `api/services/license.py` | Claim `instance_id` nel JWT licenza (determina sottodominio) |
 | CLI | `tools/admin_scripts/generate_license.py` | `--instance-id <slug>` nel comando `sign` |
 | Boot | `api/main.py` lifespan step 6 | Auto-start tunnel + auto-set `PUBLIC_BASE_URL` |
 | Route guard | `frontend/src/middleware.ts` | Tunnel guard: solo `/public/*` accessibile, CRM → 404 |
-| VPS | `edge.fitmanagerstudio.com` | frps v0.61.1, Hetzner CPX22, `vhostHTTPSPort=443` |
+| VPS | `edge.fitmanagerstudio.com` | frps v0.61.1, Hetzner CPX22, `vhostHTTPSPort=443`; R0.1.5 aggiunge `vhostHTTPPort=80` solo ACME |
 
 ### Flusso zero-touch
 
-1. AVGV genera licenza con `--instance-id gvera-dev` + crea record DNS
+1. AVGV genera licenza con `--instance-id gvera-dev`; il wildcard DNS esistente copre l'istanza
 2. Trainer installa FitManager (identico per tutti) + inserisce licenza
-3. Al boot: backend legge `instance_id` → genera cert self-signed → avvia frpc → tunnel attivo
-4. `PUBLIC_BASE_URL` settato automaticamente → link pubblici usano `https://slug.fitmanagerstudio.com`
-5. Link anamnesi/schede funzionano via tunnel, CRM accessibile solo da LAN (localhost)
+3. Al boot: backend legge `instance_id` → assicura il bootstrap cert → avvia frpc HTTPS + webroot ACME ristretto
+4. R0.1.5: il certificate manager emette/rinnova Let's Encrypt sul PC e fa rileggere cert/key a frpc
+5. `PUBLIC_BASE_URL` settato automaticamente → link pubblici usano `https://slug.fitmanagerstudio.com`
+6. Link anamnesi/schede funzionano via tunnel, CRM accessibile solo da LAN (localhost)
 
 ### Route separation (sicurezza)
 
@@ -278,16 +280,16 @@ Il CRM (login, dashboard, clienti) e' **completamente invisibile** da Internet.
 
 - **Separazione config/esecuzione**: `tunnel_config.py` assembla il config, `tunnel_manager.py` gestisce il processo. Il manager non sa nulla di licenze o path.
 - **Backoff esponenziale + jitter**: restart frpc con attesa crescente (1s→2s→4s→...60s) + ritardo casuale. Evita retry storm e thundering herd.
-- **Cert self-signed (Fase 1)**: RSA 2048, SAN con subdomain + wildcard, 365gg, rigenerato se scaduto. In Fase 2 sostituito da Let's Encrypt (stessi path, zero cambio codice).
+- **Cert self-signed (Fase 1)**: RSA 2048 usato come bootstrap tecnico. **R0.1.5** lo sostituisce con Let's Encrypt emesso sul PC via HTTP-01 attraverso un proxy FRP dedicato alla sola challenge; cert/key restano negli stessi path, nessuna credenziale DNS sul trainer.
 - **Proxy type HTTPS + plugin `https2http`**: frpc termina TLS e inoltra HTTP a localhost:3000. Il VPS fa SNI passthrough (non apre il pacchetto TLS). P2 data-blind dimostrato.
 - **`PUBLIC_BASE_URL` auto**: se `instance_id` presente, il lifespan setta `PUBLIC_BASE_URL=https://slug.fitmanagerstudio.com` e `PUBLIC_PORTAL_ENABLED=true`. I link generati dal trainer usano l'URL tunnel, non `localhost`.
 
 ### Fase di sviluppo
 
 - Fase 0: COMPLETATA (VPS, frps, DNS wildcard)
-- Fase 1: CORE COMPLETATA (instance_id, tunnel_manager, auto-start, route separation, test e2e)
-  - Rimangono: bundle frpc in Nuitka, script provisioning DNS, health endpoint
-- Fase 2: TLS e2e (cert Let's Encrypt DNS-01, pagina offline, token hash)
+- Fase 1: COMPLETATA (instance_id, tunnel_manager, auto-start, route separation, test e2e, bundle frpc, health endpoint)
+- R0.1.5 / Fase 2 TLS: IN IMPLEMENTAZIONE (Let's Encrypt HTTP-01 ristretto via FRP, rinnovo locale)
+- Fase 2 restante: pagina offline, token hash, inactivity timeout
 - Fase 3: Onboarding zero-touch + dismissione Tailscale
 
 Architettura completa (design + build + operations): `docs/technical/TUNNEL_ARCHITECTURE.md`. Security boundary + Strada B: `docs/technical/TUNNEL_SECURITY_BOUNDARY.md`.

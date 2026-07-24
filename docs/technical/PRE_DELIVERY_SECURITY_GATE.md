@@ -100,9 +100,10 @@ Tutto ciò che è in Tier 1 e Tier 2 è un criterio di accettazione su una di qu
 - Il provisioning e il rinnovo del certificato sono automatizzati (nessuna scadenza silenziosa che il giorno del rinnovo rompa l'accesso di ogni atleta).
 - La proprietà data-blind (P2) è preservata: la gestione del certificato non deve spostare la terminazione TLS sul VPS in modo da consentire al VPS di leggere il traffico di trainer/atleti. **Se l'approccio TLS scelto terminasse sul VPS, è una regressione di P2 e deve essere segnalata a Giacomo prima di procedere, non adottata silenziosamente.**
 
-**Stato nel codice (verificato 2026-06-16):** ❌ Gap reale, su roadmap (cert self-signed generato in `tunnel_config.py`, Fase 2 a piano). Il percorso P2-preserving è **Let's Encrypt DNS-01**: il cert vive su `frpc` (PC trainer), non termina sul VPS. Sfida operativa reale: **rinnovo automatico su un PC consumer che può essere spento** al momento del rinnovo — da affrontare nel design (es. rinnovo opportunistico all'avvio + finestra di grazia).
+**Stato nel codice (riesaminato 2026-07-24):** 🟠 Gap live confermato e R0.1.5 aperto. ADR-011 Addendum I sostituisce il DNS-01 distribuito con **Let's Encrypt HTTP-01 attraverso FRP**: il cert vive su `frpc` (PC trainer), la porta 80 instrada soltanto il webroot challenge e non raggiunge il CRM. Nessuna credenziale DNS viene distribuita. Rinnovo: opportunistico al boot + check ogni 12h, finestra 30 giorni, ultimo cert valido preservato.
 
-**Lasciato a Claude Code:** l'integrazione Let's Encrypt è il percorso assunto (già a roadmap), ma il criterio è *fidato dai browser, auto-rinnovante, P2-preserving* — il meccanismo è scelta di Claude Code.
+**Decisione successiva:** ADR-011 Addendum I e R0.1.5 hanno scelto il meccanismo HTTP-01 ristretto
+via FRP. Restano vincolanti gli esiti: *fidato dai browser, auto-rinnovante, P2-preserving*.
 
 ---
 
@@ -230,7 +231,7 @@ Ordine per rischio strutturale e dipendenze, non per ordine di elenco:
 | **1** | **Design G1 + G5** (palo lungo) → ADR-013 | Boot a due fasi + scelta cifratura + backup cifrato. Decisione strutturale da cui dipende il resto. Zero codice finché l'ADR non è accettato. |
 | **2** | **G2** (real client IP) | Indipendente da G1, sblocca G6. Già blocker tracciato. |
 | **3** | **G4 + G7** | G4: chiudere il 40% mancante. G7: audit a due strati + registrazione. Verifiche mirate, basso rischio. |
-| **4** | **G3** (Let's Encrypt DNS-01) | P2-preserving, sfida operativa (rinnovo su PC spegnibile). |
+| **4** | **G3** (Let's Encrypt HTTP-01 ristretto via FRP) | P2-preserving, zero credenziali DNS sui trainer; rinnovo su PC spegnibile coperto da boot + scheduler. |
 | **5** | **G6 + G8** | Dipendono da G2 (identità reale del client). |
 | **parallelo** | **Tier 3** (G9–G12) | Binario legale, non blocca il codice, gestito da Giacomo con i consulenti. Serve prima dell'onboarding del primo atleta. |
 
