@@ -5,8 +5,8 @@ Legge instance_id dalla licenza, assembla i parametri di connessione,
 risolve i path del binario frpc e della directory dati.
 Il tunnel_manager riceve un TunnelConfig e non deve sapere nulla di licenze o path.
 
-Include generazione certificato self-signed per Fase 1 (SNI routing validation).
-In Fase 2 il cert viene sostituito da Let's Encrypt — zero cambiamenti al codice.
+Include il certificato bootstrap self-signed e il webroot ACME dedicato.
+R0.1.5 sostituisce il bootstrap con Let's Encrypt mantenendo gli stessi path cert/key.
 """
 
 from __future__ import annotations
@@ -30,6 +30,7 @@ TUNNEL_DATA_DIR = DATA_DIR / "tunnel"
 FRPC_CONFIG_PATH = TUNNEL_DATA_DIR / "frpc.toml"
 TUNNEL_CERT_PATH = TUNNEL_DATA_DIR / "cert.pem"
 TUNNEL_KEY_PATH = TUNNEL_DATA_DIR / "key.pem"
+ACME_WEBROOT_PATH = TUNNEL_DATA_DIR / "acme-webroot"
 
 # frpc binary: in compiled mode sta accanto all'exe, in dev in tools/bin/
 _FRPC_FILENAME = "frpc.exe"
@@ -48,6 +49,7 @@ class TunnelConfig:
     config_path: Path                 # path al frpc.toml generato
     cert_path: Path                   # path al certificato TLS (self-signed o LE)
     key_path: Path                    # path alla chiave privata TLS
+    acme_webroot_path: Path           # root statica dedicata alla sola challenge HTTP-01
 
     @property
     def public_url(self) -> str:
@@ -195,8 +197,12 @@ def get_tunnel_config() -> TunnelConfig | None:
         )
         return None
 
-    # Assicura che la directory tunnel esista
+    # Assicura che la directory tunnel e il solo webroot pubblico ACME esistano.
     TUNNEL_DATA_DIR.mkdir(parents=True, exist_ok=True)
+    (ACME_WEBROOT_PATH / ".well-known" / "acme-challenge").mkdir(
+        parents=True,
+        exist_ok=True,
+    )
 
     # Genera cert self-signed se necessario (Fase 1: SNI validation)
     if not _ensure_self_signed_cert(instance_id):
@@ -213,6 +219,7 @@ def get_tunnel_config() -> TunnelConfig | None:
         config_path=FRPC_CONFIG_PATH,
         cert_path=TUNNEL_CERT_PATH,
         key_path=TUNNEL_KEY_PATH,
+        acme_webroot_path=ACME_WEBROOT_PATH,
     )
 
     logger.info("Tunnel config: %s -> %s (frpc: %s)", instance_id, config.public_url, frpc_path)

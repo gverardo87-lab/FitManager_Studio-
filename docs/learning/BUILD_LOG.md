@@ -4021,3 +4021,27 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
   Nessun runtime, schema, dato business, denaro o file sotto `data/tunnel/` modificato dal gate.
 - **Prossimo microstep:** verificare e applicare la configurazione edge con backup/rollback; poi
   implementare il trasporto challenge e il certificate manager in gate separati e verificati.
+
+---
+
+## 2026-07-24 — R0.1.5 microstep client: trasporto ACME separato dal CRM
+
+- **Edge diagnosticato, non mutato:** SSH `BatchMode` verso il target documentato ha restituito
+  `Permission denied (publickey,password)`; `ssh-agent` Windows risulta fermo/disabilitato e non
+  esiste un alias SSH locale. Nessun segreto è stato richiesto o esposto. Il microstep edge resta
+  pendente e non è dichiarato verde.
+- **Config immutabile estesa:** `TunnelConfig` porta il path del webroot ACME dedicato; al boot viene
+  creata soltanto la directory `.well-known/acme-challenge` sotto `data/tunnel/acme-webroot`.
+- **Due upstream separati per costruzione:** il proxy HTTPS continua a terminare TLS e inoltrare a
+  Next.js:3000; il nuovo proxy HTTP ha `locations` limitato alla challenge e plugin `static_file`,
+  senza `localAddr` e senza riferimento a Next.js/API.
+- **Test:** `tests/test_tunnel_config.py` **3/3 PASS**. Il terzo test invoca il binario reale ignorato
+  dal repo e verifica sia versione **0.61.1** sia `frpc verify ... syntax is ok`. Ruff mirato e
+  `git diff --check` PASS.
+- **Nota runner:** `venv/Scripts/python.exe` punta a un base interpreter WindowsApps non più
+  avviabile; i test sono stati eseguiti con l'interprete 3.12.10 funzionante e i `site-packages` della
+  venv FitManager. È un problema ambiente separato, non un test rosso e non viene occultato.
+- **Invarianti:** zero accesso HTTP a CRM/frontend, zero token DNS, zero modifica a processi live,
+  `data/tunnel/`, schema, dati business, ledger o frontend.
+- **Prossimo microstep:** checkpoint commit/push del trasporto client; poi certificate manager e
+  packaging locale. La chiusura live resta subordinata alla configurazione edge e al probe strict.

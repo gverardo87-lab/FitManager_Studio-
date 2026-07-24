@@ -273,7 +273,7 @@ localPath = "data/tunnel/acme-webroot"
 ### 8.4 Fase 2 — TLS e2e + route hardening (R0.1.5 IN IMPLEMENTAZIONE; resto pianificato)
 
 - **2.1 Cert manager — R0.1.5** (`api/services/cert_manager.py`, nuovo): genera/rinnova Let's Encrypt via HTTP-01 con client ACME standalone pinato nel build.
-- **2.2 Trasporto challenge — R0.1.5**: `frps vhostHTTPPort=80` + proxy `frpc type=http`, `locations=["/.well-known/acme-challenge/"]`, plugin `static_file` su webroot dedicato. Nessun token DNS e nessun upstream applicativo su HTTP.
+- **2.2 Trasporto challenge — R0.1.5**: ✅ lato client (`frpc type=http`, `locations=["/.well-known/acme-challenge/"]`, plugin `static_file`, testato con v0.61.1); ⏳ lato edge (`frps vhostHTTPPort=80` + UFW/probe) pendente per accesso SSH interattivo. Nessun token DNS e nessun upstream applicativo su HTTP.
 - **2.3 Storage — R0.1.5**: `data/tunnel/` (account ACME, webroot, cert, key), escluso da backup/export; installazione cert/key atomica dopo verifica.
 - **2.4 Rinnovo automatico — R0.1.5**: opportunistico al boot + check ogni 12h, rinnovo 30gg prima della scadenza, backoff e ultimo certificato valido preservato.
 - **2.7 Pagina offline su VPS**: il VPS serve pagina statica "Studio offline" se il tunnel di quel subdomain è down.

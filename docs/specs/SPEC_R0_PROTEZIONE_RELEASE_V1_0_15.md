@@ -222,6 +222,21 @@ L'edge non custodisce certificati o chiavi private dei trainer.
 - ADR-011 Addendum I sostituisce esclusivamente il meccanismo challenge DNS-01, non FRP, SNI
   passthrough, terminazione locale o identità da licenza.
 
+### Consuntivo parziale R0.1.5 — trasporto challenge locale (2026-07-24)
+
+- `TunnelConfig` espone un `acme_webroot_path` dedicato e crea soltanto
+  `data/tunnel/acme-webroot/.well-known/acme-challenge/` come radice del contenuto HTTP pubblico.
+- `generate_frpc_toml()` genera due proxy distinti: HTTPS applicativo `https2http` verso Next.js e
+  HTTP ACME con `locations=["/.well-known/acme-challenge/"]` + plugin `static_file`. Il blocco ACME
+  non contiene `localAddr` né `127.0.0.1:3000`.
+- Test mirati **3/3**: separazione dei due blocchi, creazione webroot e sintassi reale accettata da
+  `frpc` **0.61.1**. Ruff mirato e `git diff --check` verdi.
+- Il lato edge non è falsamente consuntivato: SSH non interattivo con la chiave documentata ha
+  restituito `Permission denied`; `ssh-agent` locale è disabilitato. Restano quindi pendenti backup,
+  `vhostHTTPPort=80`, UFW, restart/probe e prova 404 fuori challenge.
+- Nessun file `data/tunnel/`, processo live, schema, dato business, ledger o frontend è stato mutato
+  da questo microstep.
+
 ## 7. R0.2 — Binario unico di migrazione
 
 ### Scope

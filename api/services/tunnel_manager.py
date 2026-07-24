@@ -218,10 +218,12 @@ class BackoffTimer:
 def generate_frpc_toml(config: TunnelConfig) -> str:
     """Genera il contenuto di frpc.toml da TunnelConfig.
 
-    Proxy HTTPS con plugin https2http: il VPS fa SNI passthrough (non apre TLS),
-    frpc termina TLS sul PC del trainer e inoltra HTTP a Next.js locale.
-    Fase 1: cert self-signed per validare SNI + P2 data-blind.
-    Fase 2: cert Let's Encrypt (stessi path, zero cambiamenti qui).
+    Il proxy HTTPS applicativo usa https2http: il VPS fa SNI passthrough,
+    frpc termina TLS sul PC trainer e inoltra a Next.js locale.
+
+    Il secondo proxy HTTP serve esclusivamente il path ACME HTTP-01 da un
+    webroot statico dedicato. Non ha Next.js/API come upstream: tutte le altre
+    route HTTP restano senza proxy e ricevono 404 da frps.
     """
     return (
         f'# frpc.toml — generato da FitManager\n'
@@ -241,6 +243,16 @@ def generate_frpc_toml(config: TunnelConfig) -> str:
         f'localAddr = "127.0.0.1:3000"\n'
         f'crtPath = "{config.cert_path.as_posix()}"\n'
         f'keyPath = "{config.key_path.as_posix()}"\n'
+        f'\n'
+        f'[[proxies]]\n'
+        f'name = "{config.instance_id}-acme-http"\n'
+        f'type = "http"\n'
+        f'customDomains = ["{config.public_url}"]\n'
+        f'locations = ["/.well-known/acme-challenge/"]\n'
+        f'\n'
+        f'[proxies.plugin]\n'
+        f'type = "static_file"\n'
+        f'localPath = "{config.acme_webroot_path.as_posix()}"\n'
     )
 
 
