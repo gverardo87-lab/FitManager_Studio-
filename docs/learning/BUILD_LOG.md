@@ -3849,3 +3849,28 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
   formula, payload, importo, endpoint o invalidazione finanziaria modificati.
 - Stato: implementazione completa e push-ready; FE-1.0 resta aperto esclusivamente per il retest
   LIVE founder sul secondo/terzo click e per i casi mobile/multiplo/stale già previsti.
+
+## 2026-07-24 — Audit obsolescenza post-migrazioni depositato
+
+- Trigger founder: dopo tunnel FRP (Hetzner) e filone finanziario G7-G9, sezioni obsolete
+  confondono l'utente e generano rumore. Audit read-only, nessuna modifica applicata.
+- Metodo: workflow 7 agenti (6 sweep per dominio — tunnel, finanza BE, finanza FE, docs,
+  dead-code FE, dead-code BE/tools — + 1 critico adversariale che ha ri-verificato nel codice
+  tutti gli ALTA e i MEDIA user-facing). 54 finding grezzi → **41 CONFERMATI, 1 ridimensionato,
+  0 falsi positivi** + 5 aree aggiunte dal critico (workspace_engine BE morto, 63 file tools/
+  su crm_dev contro gli 8 censiti, alert `overdue_rates` calcolato e sempre scartato dalla UI,
+  numeri pre-ADR-003 in RELEASE_CHECKLIST, `tests/legacy` documentata ma inesistente).
+- Report: `docs/operations/AUDIT_OBSOLESCENZA_POST_MIGRAZIONI_2026-07-23.md` (evidenze
+  file:riga complete, piano a fasce A/B/C).
+- Highlights: **TN-2** `launcher.bat:76-101` shipped in v1.0.14 riattiva `tailscale funnel` se
+  `PUBLIC_PORTAL_ENABLED=true` (doppio percorso vietato dal security boundary → gate consegna
+  Chiara); **MB-2** `migrate-all.sh` («REGOLA BLINDATA») oggi ricrea il crm_dev.db dismesso;
+  ~6.800 LOC morte FE (ProgressiTab ~3.070, workspace ~1.170 + gemello BE ~3.000,
+  smart-programming client ~1.070, export Excel 900, OverdueRatesSheet 264); **FF-1**
+  ContrattiTab mostra il versato LORDO (AC-G84-1 dichiarato chiuso, superficie mancata dal
+  gemello → riaprire SPEC_G8.4 F1.a); sottosistema Connettività interamente Tailscale-based
+  ancora attivo e visibile (Fase 3 pianificata ma senza spec aperta).
+- Integrazione decisa: fascia A (quick win) nella finestra corrente tra chiusura FE-1.0 e
+  apertura P1; TN-2 gated sulla consegna Chiara; fascia B = sessione decisionale founder
+  (Connettività/Fase 3.7, router nutrition esposto, bonifica crm_dev); fascia C resta nelle
+  case già aperte (SPEC_P P4/P5, SPEC_G8.4 F1.a, `signed_contractual_amount` HOLD fino a P1).
