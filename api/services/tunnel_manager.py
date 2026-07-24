@@ -333,6 +333,20 @@ class TunnelManager:
         self._kill()
         self.state = TunnelState.STOPPED
 
+    def restart(self) -> bool:
+        """Rilegge config/certificati riavviando frpc senza creare un secondo processo."""
+        if not self._should_run:
+            logger.warning("Restart tunnel ignorato: manager non in esecuzione")
+            return False
+        logger.info("Restart tunnel richiesto per rilettura certificato/config")
+        self.state = TunnelState.RECONNECTING
+        self._backoff.reset()
+        self._kill()
+        if not self._should_run:
+            return False
+        self._launch()
+        return self._process is not None and self._process.poll() is None
+
     def get_status(self) -> dict:
         """Stato corrente per health endpoint / diagnostica UI."""
         return {
@@ -351,6 +365,9 @@ class TunnelManager:
     def _launch(self):
         """Avvia frpc come processo figlio."""
         with self._lock:
+            if not self._should_run:
+                logger.info("Avvio frpc annullato: manager in arresto")
+                return
             if self._process and self._process.poll() is None:
                 logger.warning(
                     "frpc gia' in esecuzione (PID %d), skip",
@@ -481,8 +498,9 @@ class TunnelManager:
 
             # Processo morto — restart con backoff
             logger.warning("frpc terminato (exit code %d)", exit_code)
-            with self._lock:
-                self._process = None
+            if not self._forget_process_if_current(proc):
+                # Un restart esplicito ha gia' sostituito il processo osservato.
+                continue
 
             if self._should_run:
                 self._restart()
@@ -503,6 +521,14 @@ class TunnelManager:
 
         if self._should_run:
             self._launch()
+
+    def _forget_process_if_current(self, process: subprocess.Popen) -> bool:
+        """Rimuove solo il processo ancora corrente, mai un replacement concorrente."""
+        with self._lock:
+            if self._process is not process:
+                return False
+            self._process = None
+            return True
 
     # --- Cleanup ---
 

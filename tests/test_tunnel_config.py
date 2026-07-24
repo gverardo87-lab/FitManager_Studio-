@@ -2,14 +2,53 @@
 
 from __future__ import annotations
 
+import datetime
 import subprocess
 from pathlib import Path
 
 import pytest
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.x509.oid import NameOID
 
 from api.services import tunnel_config
 from api.services.tunnel_config import TunnelConfig
-from api.services.tunnel_manager import generate_frpc_toml
+from api.services.tunnel_manager import TunnelManager, generate_frpc_toml
+
+
+def _write_pair(cert_path: Path, key_path: Path, hostname: str, *, mismatched: bool) -> None:
+    cert_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    stored_key = (
+        rsa.generate_private_key(public_exponent=65537, key_size=2048)
+        if mismatched
+        else cert_key
+    )
+    now = datetime.datetime.now(datetime.timezone.utc)
+    name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, hostname)])
+    cert = (
+        x509.CertificateBuilder()
+        .subject_name(name)
+        .issuer_name(name)
+        .public_key(cert_key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(now - datetime.timedelta(minutes=1))
+        .not_valid_after(now + datetime.timedelta(days=30))
+        .add_extension(
+            x509.SubjectAlternativeName([x509.DNSName(hostname)]),
+            critical=False,
+        )
+        .sign(cert_key, hashes.SHA256())
+    )
+    cert_path.parent.mkdir(parents=True, exist_ok=True)
+    cert_path.write_bytes(cert.public_bytes(serialization.Encoding.PEM))
+    key_path.write_bytes(
+        stored_key.private_bytes(
+            serialization.Encoding.PEM,
+            serialization.PrivateFormat.TraditionalOpenSSL,
+            serialization.NoEncryption(),
+        )
+    )
 
 
 def _config(tmp_path: Path) -> TunnelConfig:
@@ -24,6 +63,8 @@ def _config(tmp_path: Path) -> TunnelConfig:
         cert_path=tmp_path / "cert.pem",
         key_path=tmp_path / "key.pem",
         acme_webroot_path=tmp_path / "acme-webroot",
+        acme_state_path=tmp_path / "acme",
+        acme_client_path=tmp_path / "lego.exe",
     )
 
 
@@ -56,8 +97,10 @@ def test_get_tunnel_config_creates_only_dedicated_acme_webroot(monkeypatch, tmp_
     monkeypatch.setattr(tunnel_config, "TUNNEL_CERT_PATH", tunnel_dir / "cert.pem")
     monkeypatch.setattr(tunnel_config, "TUNNEL_KEY_PATH", tunnel_dir / "key.pem")
     monkeypatch.setattr(tunnel_config, "ACME_WEBROOT_PATH", tunnel_dir / "acme-webroot")
+    monkeypatch.setattr(tunnel_config, "ACME_STATE_PATH", tunnel_dir / "acme")
     monkeypatch.setattr(tunnel_config, "get_provisioned_instance_id", lambda: "gvera-dev")
     monkeypatch.setattr(tunnel_config, "_resolve_frpc_path", lambda: frpc_path)
+    monkeypatch.setattr(tunnel_config, "_resolve_acme_client_path", lambda: None)
     monkeypatch.setattr(tunnel_config, "_ensure_self_signed_cert", lambda _instance_id: True)
 
     config = tunnel_config.get_tunnel_config()
@@ -67,6 +110,8 @@ def test_get_tunnel_config_creates_only_dedicated_acme_webroot(monkeypatch, tmp_
     assert (
         config.acme_webroot_path / ".well-known" / "acme-challenge"
     ).is_dir()
+    assert config.acme_state_path.is_dir()
+    assert config.acme_client_path is None
 
 
 def test_generated_config_is_accepted_by_frpc_0_61_1(tmp_path):
@@ -96,3 +141,58 @@ def test_generated_config_is_accepted_by_frpc_0_61_1(tmp_path):
     assert version.stdout.strip() == "0.61.1"
     assert verify.returncode == 0, verify.stdout + verify.stderr
     assert "syntax is ok" in verify.stdout
+
+
+def test_bootstrap_replaces_existing_mismatched_cert_key_pair(monkeypatch, tmp_path):
+    tunnel_dir = tmp_path / "tunnel"
+    cert_path = tunnel_dir / "cert.pem"
+    key_path = tunnel_dir / "key.pem"
+    _write_pair(
+        cert_path,
+        key_path,
+        "gvera-dev.fitmanagerstudio.com",
+        mismatched=True,
+    )
+    monkeypatch.setattr(tunnel_config, "TUNNEL_DATA_DIR", tunnel_dir)
+    monkeypatch.setattr(tunnel_config, "TUNNEL_CERT_PATH", cert_path)
+    monkeypatch.setattr(tunnel_config, "TUNNEL_KEY_PATH", key_path)
+
+    assert tunnel_config._ensure_self_signed_cert("gvera-dev") is True
+
+    cert = x509.load_pem_x509_certificate(cert_path.read_bytes())
+    key = serialization.load_pem_private_key(key_path.read_bytes(), password=None)
+    cert_public = cert.public_key().public_bytes(
+        serialization.Encoding.DER,
+        serialization.PublicFormat.SubjectPublicKeyInfo,
+    )
+    key_public = key.public_key().public_bytes(
+        serialization.Encoding.DER,
+        serialization.PublicFormat.SubjectPublicKeyInfo,
+    )
+    assert cert_public == key_public
+
+
+def test_monitor_never_discards_process_installed_by_concurrent_restart(tmp_path):
+    manager = TunnelManager(_config(tmp_path))
+    observed_old_process = object()
+    replacement_process = object()
+    manager._process = replacement_process
+
+    assert manager._forget_process_if_current(observed_old_process) is False
+    assert manager._process is replacement_process
+    assert manager._forget_process_if_current(replacement_process) is True
+    assert manager._process is None
+
+
+def test_launch_is_cancelled_after_concurrent_stop(monkeypatch, tmp_path):
+    manager = TunnelManager(_config(tmp_path))
+    manager._should_run = False
+
+    def forbidden_popen(*_args, **_kwargs):
+        raise AssertionError("frpc non deve partire dopo stop")
+
+    monkeypatch.setattr("api.services.tunnel_manager.subprocess.Popen", forbidden_popen)
+
+    manager._launch()
+
+    assert manager._process is None

@@ -220,7 +220,7 @@ soft delete.
 | G1 | VPS edge (frps + SNI + DNS) | 0 | Infra AVGV | ✅ Fatto |
 | G2 | FRP client bundlato | 1 | `api/services/tunnel_manager.py` | ✅ Fatto |
 | G3 | Instance ID nella licenza JWT | 1 | `generate_license.py` + `license.py` | ✅ Fatto |
-| G4 | Cert manager (Let's Encrypt HTTP-01 via FRP) | 2 / R0.1.5 | `api/services/cert_manager.py` (nuovo) | 🟠 In implementazione |
+| G4 | Cert manager (Let's Encrypt HTTP-01 via FRP) | 2 / R0.1.5 | `api/services/cert_manager.py` | 🟠 Core locale + test ✅ · packaging/edge/live ⏳ |
 | G5 | Route separation middleware | 1/2 | `frontend/src/middleware.ts` | ✅ Base (whitelist) · ⬜ blacklist Strada B |
 | G6 | Pagina "studio offline" sul VPS | 2 | VPS edge | ⬜ Da fare |
 | G7 | Inactivity timeout sessione | 2 | `api/auth/router.py` + frontend | ⬜ Da fare |
@@ -272,10 +272,10 @@ localPath = "data/tunnel/acme-webroot"
 
 ### 8.4 Fase 2 — TLS e2e + route hardening (R0.1.5 IN IMPLEMENTAZIONE; resto pianificato)
 
-- **2.1 Cert manager — R0.1.5** (`api/services/cert_manager.py`, nuovo): genera/rinnova Let's Encrypt via HTTP-01 con client ACME standalone pinato nel build.
+- **2.1 Cert manager — R0.1.5**: ✅ core locale (`api/services/cert_manager.py`) con preflight HTTP prima dell'ordine, client ACME hash/version pin, validazione SAN/tempo/key/chain, installazione con rollback, restart frpc e stop esplicito del processo ACME; ⏳ packaging/live.
 - **2.2 Trasporto challenge — R0.1.5**: ✅ lato client (`frpc type=http`, `locations=["/.well-known/acme-challenge/"]`, plugin `static_file`, testato con v0.61.1); ⏳ lato edge (`frps vhostHTTPPort=80` + UFW/probe) pendente per accesso SSH interattivo. Nessun token DNS e nessun upstream applicativo su HTTP.
 - **2.3 Storage — R0.1.5**: `data/tunnel/` (account ACME, webroot, cert, key), escluso da backup/export; installazione cert/key atomica dopo verifica.
-- **2.4 Rinnovo automatico — R0.1.5**: opportunistico al boot + check ogni 12h, rinnovo 30gg prima della scadenza, backoff e ultimo certificato valido preservato.
+- **2.4 Rinnovo automatico — R0.1.5**: ✅ scheduler opportunistico al boot + check ogni 12h, rinnovo 30gg prima della scadenza, retry 15min e ultimo certificato valido preservato; prova live resta pendente.
 - **2.7 Pagina offline su VPS**: il VPS serve pagina statica "Studio offline" se il tunnel di quel subdomain è down.
 - **2.9 Token hash**: SHA-256 del `ShareToken` in DB, lookup via hash, token in chiaro solo nel link.
 

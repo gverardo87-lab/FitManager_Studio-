@@ -237,6 +237,41 @@ L'edge non custodisce certificati o chiavi private dei trainer.
 - Nessun file `data/tunnel/`, processo live, schema, dato business, ledger o frontend è stato mutato
   da questo microstep.
 
+### Consuntivo parziale R0.1.5 — certificate manager core (2026-07-24)
+
+- Integrato lego **v5.2.1 windows/amd64** come client ACME locale: release GitHub immutabile, ZIP
+  SHA-256 `3e87c133bcb0a6fd4236d11e0583967ecd2f04f454d2ff48286f1ab1183d699e`, binario
+  SHA-256 `e2d5f33c26032197db5953f8cfd93aa960f08cf2014c887b79ba950cb5b525e5`.
+- `CertificateManager` è avviato dopo `frpc`, mai blocca il CRM locale, controlla ogni 12 ore e usa
+  retry a 15 minuti sui fallimenti. Prima di eseguire il binario verifica hash e versione; il comando
+  usa solo `--http --http.webroot`, mai DNS o email/PII.
+- Prima di creare un ordine CA esegue un **preflight falsificabile**: token casuale scritto nel
+  webroot, GET su HTTP pubblico, status 200 e body byte-identico, cleanup sempre. Se fallisce, lego non
+  viene eseguito e nessun ordine viene consumato.
+- La candidate viene accettata solo con SAN esatto, finestra temporale valida, cert↔key match, chain
+  bundled e firma leaf verificata. La promozione usa staging + fsync + backup pair + marker di recovery;
+  un failure sulla seconda replace ripristina entrambi i file. `frpc` viene riavviato una sola volta
+  solo dopo installazione riuscita. Lo shutdown del backend termina esplicitamente l'eventuale
+  processo ACME ancora attivo.
+- Il bootstrap ora rifiuta coppie esistenti con SAN errato, key mismatch o finestra non valida.
+- Test tunnel+certificate manager **16/16**; regressione condivisa connectivity/health/tunnel/cert
+  **43/43**; full suite finale **896/896 PASS** (31 warning baseline, exit 0). Includono hash mismatch
+  fail-closed, assenza ordine prima del preflight, stop processo attivo, race monitor↔restart e
+  stop↔launch, CA failure che preserva la coppia, SAN/key/chain, rollback iniettato e TOML verificato
+  con `frpc` 0.61.1. Ruff mirato e diff check verdi. Un primo run pre-hardening aveva mostrato il
+  warning ambientale Windows `WinError 32` sulla rotazione log con server dev concorrente; il run
+  finale non lo ha riprodotto. Zero processi `lego` o pytest residui a fine gate.
+- **Finding live da reload dev:** prima dell'aggiunta del preflight il server `uvicorn --reload` ha
+  creato l'account ACME locale no-email e tentato due ordini production falliti a 15 minuti di
+  distanza. Nessun certificato è stato emesso/installato; la coppia attiva resta valida ma self-signed
+  (`public_chain=False`, scadenza 2027-06-07), zero processo lego e zero token residuo nel webroot.
+  Dopo il fix il probe reale termina in timeout e l'ordine non parte.
+- **Blocker live esterno:** dal runner corrente le porte edge 22/80/443/7000 risultano tutte non
+  raggiungibili. Non è attribuibile al proxy HTTP (anche SSH e bind FRP sono down), ma impedisce edge
+  setup e prova HTTPS. R0.1.5 resta aperto.
+- Restano fuori da questo checkpoint: packaging/hash gate dell'installer, configurazione edge e prova
+  strict browser-trusted 200/404.
+
 ## 7. R0.2 — Binario unico di migrazione
 
 ### Scope

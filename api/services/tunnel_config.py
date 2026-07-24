@@ -31,9 +31,11 @@ FRPC_CONFIG_PATH = TUNNEL_DATA_DIR / "frpc.toml"
 TUNNEL_CERT_PATH = TUNNEL_DATA_DIR / "cert.pem"
 TUNNEL_KEY_PATH = TUNNEL_DATA_DIR / "key.pem"
 ACME_WEBROOT_PATH = TUNNEL_DATA_DIR / "acme-webroot"
+ACME_STATE_PATH = TUNNEL_DATA_DIR / "acme"
 
 # frpc binary: in compiled mode sta accanto all'exe, in dev in tools/bin/
 _FRPC_FILENAME = "frpc.exe"
+_ACME_CLIENT_FILENAME = "lego.exe"
 
 
 @dataclass(frozen=True)
@@ -50,6 +52,8 @@ class TunnelConfig:
     cert_path: Path                   # path al certificato TLS (self-signed o LE)
     key_path: Path                    # path alla chiave privata TLS
     acme_webroot_path: Path           # root statica dedicata alla sola challenge HTTP-01
+    acme_state_path: Path             # account e output del client ACME
+    acme_client_path: Path | None     # client ACME; None non blocca tunnel/CRM locale
 
     @property
     def public_url(self) -> str:
@@ -89,17 +93,39 @@ def _ensure_self_signed_cert(instance_id: str) -> bool:
     Durata: 365 giorni. Alla scadenza viene rigenerato al prossimo avvio.
     """
     if TUNNEL_CERT_PATH.exists() and TUNNEL_KEY_PATH.exists():
-        # Verifica scadenza
+        # Una coppia esistente e' riusabile solo se tempo, SAN e key-match sono coerenti.
         try:
             from cryptography import x509
+            from cryptography.hazmat.primitives import serialization
 
             cert_data = TUNNEL_CERT_PATH.read_bytes()
             cert = x509.load_pem_x509_certificate(cert_data)
-            if cert.not_valid_after_utc > datetime.datetime.now(datetime.timezone.utc):
+            key = serialization.load_pem_private_key(
+                TUNNEL_KEY_PATH.read_bytes(),
+                password=None,
+            )
+            now = datetime.datetime.now(datetime.timezone.utc)
+            sans = cert.extensions.get_extension_for_class(
+                x509.SubjectAlternativeName
+            ).value.get_values_for_type(x509.DNSName)
+            cert_public = cert.public_key().public_bytes(
+                serialization.Encoding.DER,
+                serialization.PublicFormat.SubjectPublicKeyInfo,
+            )
+            key_public = key.public_key().public_bytes(
+                serialization.Encoding.DER,
+                serialization.PublicFormat.SubjectPublicKeyInfo,
+            )
+            hostname = f"{instance_id}.{TUNNEL_DOMAIN}"
+            if (
+                cert.not_valid_before_utc <= now < cert.not_valid_after_utc
+                and hostname in sans
+                and cert_public == key_public
+            ):
                 return True
-            logger.info("Cert self-signed scaduto, rigenero")
+            logger.warning("Coppia TLS esistente non coerente, genero bootstrap")
         except Exception:
-            logger.warning("Cert self-signed illeggibile, rigenero")
+            logger.warning("Coppia TLS esistente illeggibile, genero bootstrap")
 
     try:
         from cryptography import x509
@@ -174,6 +200,20 @@ def _resolve_frpc_path() -> Path | None:
     return None
 
 
+def _resolve_acme_client_path() -> Path | None:
+    """Trova il client ACME pinato. None mantiene operativo il tunnel bootstrap."""
+    if is_compiled():
+        bundled = Path(__import__("sys").executable).resolve().parent / _ACME_CLIENT_FILENAME
+        if bundled.exists():
+            return bundled
+    else:
+        dev_path = PROJECT_ROOT / "tools" / "bin" / _ACME_CLIENT_FILENAME
+        if dev_path.exists():
+            return dev_path
+
+    return None
+
+
 def get_tunnel_config() -> TunnelConfig | None:
     """
     Assembla la configurazione tunnel dalla licenza e dall'ambiente.
@@ -203,6 +243,7 @@ def get_tunnel_config() -> TunnelConfig | None:
         parents=True,
         exist_ok=True,
     )
+    ACME_STATE_PATH.mkdir(parents=True, exist_ok=True)
 
     # Genera cert self-signed se necessario (Fase 1: SNI validation)
     if not _ensure_self_signed_cert(instance_id):
@@ -220,6 +261,8 @@ def get_tunnel_config() -> TunnelConfig | None:
         cert_path=TUNNEL_CERT_PATH,
         key_path=TUNNEL_KEY_PATH,
         acme_webroot_path=ACME_WEBROOT_PATH,
+        acme_state_path=ACME_STATE_PATH,
+        acme_client_path=_resolve_acme_client_path(),
     )
 
     logger.info("Tunnel config: %s -> %s (frpc: %s)", instance_id, config.public_url, frpc_path)

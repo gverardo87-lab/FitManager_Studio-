@@ -88,6 +88,9 @@ api/
     ├── condition_rules.py  Regole deterministiche anamnesi → condizioni (80 pattern rules)
     ├── goal_engine.py      Calcolo progresso obiettivi
     ├── license.py          Verifica licenza JWT RSA (4-tier key resolution)
+    ├── tunnel_config.py    Config FRP + webroot HTTP-01 dedicato + risoluzione binari
+    ├── tunnel_manager.py   Babysitter frpc + restart controllato per rilettura cert
+    ├── cert_manager.py     ACME HTTP-01 locale: preflight, lego pinato, rinnovo e install transazionale
     ├── system_runtime.py   Helper condivisi health/support snapshot + backup metadata
     ├── connectivity_runtime.py Read-model FRP gestito da licenza + probe legacy Tailscale/Funnel
     ├── connectivity_config.py  Apply legacy idempotente; 409 fail-closed su origine FRP gestita

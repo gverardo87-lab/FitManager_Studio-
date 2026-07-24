@@ -4045,3 +4045,37 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
   `data/tunnel/`, schema, dati business, ledger o frontend.
 - **Prossimo microstep:** checkpoint commit/push del trasporto client; poi certificate manager e
   packaging locale. La chiusura live resta subordinata alla configurazione edge e al probe strict.
+
+---
+
+## 2026-07-24 — R0.1.5 certificate manager core + stop order prematuri
+
+- **Supply chain:** selezionato lego v5.2.1 (release GitHub immutabile). Metadata API, checksum file e
+  ZIP concordano su SHA-256 `3e87…699e`; `lego.exe` dichiara `5.2.1 windows/amd64` e ha SHA-256
+  `e2d5…25e5`. Il binario locale è in `tools/bin/`, ignorato da Git; il packaging resta un gate
+  successivo.
+- **Core:** nuovo `cert_manager.py`, scheduler dopo `frpc`, 12h/15min, nessun blocco al CRM locale.
+  Il client è rifiutato prima dell'esecuzione su hash/version mismatch; argv senza shell e senza DNS.
+- **Validazione/promozione:** SAN, tempo, cert↔key, chain bundled e firma leaf; staging+fsync, backup
+  della coppia, marker di recovery e rollback entrambe le gambe. Solo una installazione verificata
+  richiede restart controllato di frpc. Anche il bootstrap valida SAN/key/time.
+- **Stop condition catturata dal live reload:** con lego appena disponibile, il processo dev in
+  `uvicorn --reload` ha creato l'account ACME locale no-email e tentato due ordini production falliti
+  (20:39 e 20:54), prima che l'edge 80 fosse pronto. Nessun cert emesso/installato e nessun processo
+  orfano, ma il comportamento consumava ordini ogni 15 minuti.
+- **Remediation nello stesso microstep:** preflight proprietario prima della CA — token casuale nel
+  webroot, GET HTTP pubblico, 200+body esatto, cleanup. Sul live il preflight va in timeout e lego non
+  parte; zero token residui e zero processo lego. Lo shutdown ora termina esplicitamente anche un
+  processo ACME già in corso. La coppia attiva è coerente ma self-signed, `public_chain=False`,
+  scadenza 2027-06-07.
+- **Test:** tunnel+cert manager **16/16 PASS**; regressione condivisa connectivity/health/tunnel/cert
+  **43/43 PASS**; full suite finale **896/896 PASS** (31 warning baseline, exit 0), Ruff mirato e diff
+  check PASS. Coperti anche ordine proibito senza preflight, stop del processo ACME, race monitor↔restart,
+  stop↔launch e rollback iniettato sulla seconda replace. Un primo run pre-hardening da 894 test aveva
+  mostrato `WinError 32` sulla rotazione log per il server dev concorrente; il run finale non lo ha
+  riprodotto. A fine gate restano solo server dev e relativo `frpc`, zero `lego`/pytest orfani.
+- **Edge:** al controllo successivo 22/80/443/7000 risultano tutte non raggiungibili dal runner; poiché
+  anche SSH e FRP bind sono down, il fatto non è attribuito al nuovo proxy. Live TLS resta blocker
+  dichiarato, non falsamente verde.
+- **Prossimo microstep:** checkpoint core; poi packaging riproducibile con hash gate. Edge e strict
+  trust 200/404 restano necessari per chiudere R0.1.5.

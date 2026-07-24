@@ -94,8 +94,9 @@ logger = logging.getLogger("fitmanager.api")
 _COMPILED = is_compiled()
 MAX_AUTO_BACKUPS = 5  # solo gli ultimi 5 backup automatici
 
-# Tunnel manager globale (inizializzato nel lifespan se instance_id presente)
+# Manager globali tunnel/certificato (inizializzati nel lifespan se provision FRP presente)
 _tunnel_manager = None
+_certificate_manager = None
 
 LICENSE_EXEMPT_PATHS = {
     "/health",
@@ -317,7 +318,7 @@ async def lifespan(app: FastAPI):
         _integrity_check_on_startup(NUTRITION_DATABASE_URL, NUTRITION_DATABASE_URL)
 
     # ── 6. Tunnel FRP (auto-start se licenza con instance_id + frpc presente) ──
-    global _tunnel_manager
+    global _certificate_manager, _tunnel_manager
     try:
         from api.services.tunnel_config import (
             get_provisioned_public_base_url,
@@ -346,6 +347,18 @@ async def lifespan(app: FastAPI):
                 _tunnel_manager.get_status().get("pid"),
             )
 
+            from api.services.cert_manager import CertificateManager
+
+            _certificate_manager = CertificateManager(
+                tunnel_config,
+                on_certificate_updated=_tunnel_manager.restart,
+            )
+            _certificate_manager.start()
+            logger.info(
+                "  TLS_CERT_MANAGER = %s",
+                _certificate_manager.get_status().get("detail"),
+            )
+
         else:
             logger.info("  TUNNEL = disabilitato (nessun instance_id o frpc assente)")
     except Exception as e:
@@ -354,7 +367,10 @@ async def lifespan(app: FastAPI):
     logger.info("API pronta")
     yield
 
-    # Shutdown: ferma tunnel prima di chiudere
+    # Shutdown: ferma il scheduler certificati prima del tunnel che serve HTTP-01.
+    if _certificate_manager:
+        _certificate_manager.stop()
+        _certificate_manager = None
     if _tunnel_manager:
         _tunnel_manager.stop()
         _tunnel_manager = None
