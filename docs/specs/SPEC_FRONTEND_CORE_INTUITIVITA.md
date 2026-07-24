@@ -1,8 +1,8 @@
 # SPEC — Frontend core intuitivo, affidabile e distintivo
 
-**Stato:** 🟡 IN CORSO — FE-0 Integrità completato; FE-1.0 implementato (`f678292`), fix
-router-only (`d382a4b`) integrato dal coordinamento scroll/cache (`8f5ca45`), in retest LIVE founder
-**Data:** 2026-07-21
+**Stato:** 🟡 IN CORSO — FE-0 Integrità completato; FE-1.0 chiuso con retest LIVE founder
+2026-07-24; pagamento rata guidato su Rinnovi & Incassi completato. FE-2..4 restano gated
+**Data:** 2026-07-24
 **Branch:** `FitManager_Studio`
 **Tipo:** remediation frontend e read-model additivi; nessuna nuova policy di prodotto
 **Audit fondante:** `docs/archive/AUDIT_FRONTEND_CORE_INTUITIVITA_2026-07-21.md`
@@ -260,7 +260,7 @@ lecita, senza cambiare calcoli, ownership, transizioni o audit finanziari.
 - `financial-invariant-verifier`: conferma asse DENARO preservato, pur trattandosi di sola
   navigazione/read-model.
 
-#### Consuntivo tecnico FE-1.0 — 2026-07-22 (LIVE pendente)
+#### Consuntivo tecnico FE-1.0 — implementato 2026-07-22, chiuso LIVE 2026-07-24
 
 - **Docs-first:** contratto, timing e AC ratificati prima del runtime nel commit `724b74a`.
 - **Implementazione:** commit `f678292`; CTA Clienti con URL privacy-safe, parser fail-closed,
@@ -309,10 +309,35 @@ lecita, senza cambiare calcoli, ownership, transizioni o audit finanziari.
   sospeso e cached-data+errore su altra fonte hanno fallito prima delle rispettive patch. Pacchetto
   mirato **30/30**, suite **151/151**, build e pre-commit verdi; verifier **PASS**, zero finding e
   **MONEY AXIS PRESERVED**.
-- **Gate residuo:** ripetere LIVE due volte consecutive il target presente, poi verificare desktop +
-  viewport mobile sui casi più rate e target già risolto. FE-1.0 resta aperto fino a evidenza LIVE;
-  nessun evergreen viene aggiornato prima della stabilizzazione del pattern su ulteriori
-  destinazioni.
+- **Gate LIVE chiuso — 2026-07-24:** il founder ha ripetuto il test LIVE previsto dopo la remediation
+  cache/scroll e ha confermato il corretto funzionamento. FE-1.0 è chiuso; nessuna astrazione comune
+  viene anticipata prima di ulteriori destinazioni reali.
+
+### FE-1.1 — Pagamento rata guidato nella worklist
+
+**Evidenza LIVE founder — 2026-07-24:** nella card rata di Rinnovi & Incassi il pulsante «Incassa»
+eseguiva direttamente `usePayRate` per l'intero residuo, con metodo preselezionato e data odierna
+costruita dalla pagina. Il comportamento divergeva dal pagamento rata standard e trasformava il primo
+click in una scrittura finanziaria senza revisione di importo, metodo e data.
+
+**Decisione founder:** la worklist riusa lo stesso `PayRateForm` del dettaglio Contratto. Il primo
+click apre soltanto il form; la mutation parte dal comando finale dopo che importo, metodo e data sono
+visibili e modificabili. La data proposta è oggi, perché descrive l'ingresso di cassa; resta sempre
+modificabile per registrare un incasso avvenuto in un giorno precedente.
+
+**Consuntivo:**
+
+- `OverdueRateCard` non costruisce più un payload finanziario e non mantiene una lista locale ridotta
+  dei metodi: delega al form condiviso passando soltanto ID rata e residuo;
+- `PayRateForm` espone un contratto TypeScript minimo tramite `Pick<Rate, ...>` e resta l'unica
+  implementazione frontend di importo/parziale, metodi canonici, smart date e submit;
+- canary: il primo click non chiama `mutate`; con orologio fissato al 24 luglio il submit esplicito
+  invia importo `100`, metodo `CONTANTI` e data pagamento `2026-07-24`;
+- verifica: pacchetto mirato **11/11**, suite frontend **152/152**, lint mirato pulito, build
+  Next/TypeScript verde (20 pagine), `git diff --check` pulito;
+- verifier differenziale: **PASS — SANCTIONED-CHANGE** sul solo default temporale autorizzato dal
+  founder; importi, hook, endpoint, invalidazioni, formule e backend non cambiano. Il percorso UI e
+  il payload datato sono coperti dal nuovo canary.
 
 ### Criteri di accettazione
 

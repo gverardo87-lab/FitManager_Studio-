@@ -198,7 +198,7 @@ Il form pagamento rata guida l'utente verso pagamenti parziali:
 - **Helper text**: mostra il residuo e spiega che il parziale e' possibile
 - **Validazione max**: importo > residuo → errore rosso + bottone disabilitato
 - **Label dinamica**: "Paga €X (parziale)" vs "Paga €X (saldo)"
-- **Smart Date Default**: `scadenza <= oggi ? scadenza : oggi` — rate arretrate usano la data scadenza come default, rate future usano oggi. DatePicker sempre visibile per override manuale.
+- **Data pagamento default**: oggi — descrive quando il denaro entra, non quando la rata era dovuta. DatePicker sempre visibile per registrazioni tardive o correzione manuale.
 - **Grid 3 colonne**: `grid-cols-1 sm:grid-cols-3` (importo, metodo, data)
 
 ### Modifica Rate Pagate (RateEditDialog)

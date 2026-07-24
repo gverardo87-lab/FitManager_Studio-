@@ -3874,3 +3874,24 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
   apertura P1; TN-2 gated sulla consegna Chiara; fascia B = sessione decisionale founder
   (Connettività/Fase 3.7, router nutrition esposto, bonifica crm_dev); fascia C resta nelle
   case già aperte (SPEC_P P4/P5, SPEC_G8.4 F1.a, `signed_contractual_amount` HOLD fino a P1).
+
+---
+
+## 2026-07-24 — FE-1.0 chiuso LIVE e incasso rata reso guidato
+
+- Il founder ha ripetuto oggi il test LIVE del deep-link dopo `8f5ca45` e ne ha confermato il
+  corretto funzionamento: FE-1.0 è chiuso.
+- Nuovo finding LIVE: nella worklist Rinnovi & Incassi «Incassa» eseguiva al primo click il pagamento
+  dell'intero residuo con data odierna implicita, diversamente dal pagamento rata standard.
+- La card ora riusa `PayRateForm`: il primo click apre importo, metodo e data; soltanto il submit
+  finale chiama `usePayRate`. La data proposta è oggi, coerente con l'ingresso effettivo di cassa, e
+  resta modificabile per registrazioni tardive; metodi, pagamenti parziali, endpoint e invalidazioni
+  restano quelli canonici.
+- Canary aggiunto: zero mutation al primo click e payload finale esplicito sulla fixture. Verifiche:
+  pacchetto mirato **11/11**, suite frontend **152/152**, lint mirato pulito, build Next/TypeScript
+  verde (20 pagine), `git diff --check` pulito. Warning baseline `edge-cases` e deprecazione
+  middleware invariati.
+- Verifier differenziale: **PASS — SANCTIONED-CHANGE** sul default temporale autorizzato dal founder;
+  importi, writer, formule, endpoint e invalidazioni restano invariati e il nuovo canary copre la
+  data proposta. Commit e push non eseguiti.
+- **⏭️ Coda:** Fascia A audit obsolescenza post-migrazioni → P1 blocco P.
