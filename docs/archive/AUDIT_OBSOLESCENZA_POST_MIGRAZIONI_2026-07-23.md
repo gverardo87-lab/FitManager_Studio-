@@ -1,8 +1,21 @@
 # AUDIT OBSOLESCENZA POST-MIGRAZIONI — 2026-07-23
 
-**Stato:** CONSEGNATO (audit read-only — nessuna modifica applicata al codice o ai doc)
+**Stato:** ✅ CONCLUSO, VERIFICATO E FOLDATO — fotografia del codice al 2026-07-23
 **Trigger:** richiesta founder — dopo le migrazioni recenti (tunnel FRP su VPS Hetzner, filone economico-finanziario G7-G9, rimozione Nutrition UI, dismissione dual-env) alcune sezioni sono obsolete: confondono l'utente e generano rumore nel codice.
 **Metodo:** workflow multi-agente contenuto (budget-aware): 6 auditor read-only in parallelo (tunnel, finanza BE, finanza FE, drift docs, dead-code FE, dead-code BE/tools) + 1 critico adversariale che ha ri-verificato nel codice tutti i finding ALTA e i MEDIA user-facing. 54 finding grezzi → **42 verificati: 41 CONFERMATI, 1 RIDIMENSIONATO (DOC-4), 0 falsi positivi**; i 12 BASSA sono fuori campione di verifica (dichiarato). Il critico ha aggiunto 5 aree che nessun auditor aveva censito (§9). Regola di prova: ogni finding ha evidenza file:riga e/o grep zero-consumatori rifatto dal critico.
+
+**Esito operativo (founder 2026-07-24):** i blocker release-critical sono foldati in
+`docs/specs/SPEC_R0_PROTEZIONE_RELEASE_V1_0_15.md`; la bonifica massiva è differita dopo la candidate
+v1.0.15 e richiederà una SPEC dedicata. Sequenza ratificata: R0.1→R0.4 → P1..P6 → candidate → G-MAC.
+
+**Errata della verifica indipendente 2026-07-24:** il verdetto originario «0 falsi positivi» e le
+stime restano parte della fotografia, ma non governano il lavoro vivo. I sorgenti tracciati con
+`crm_dev` sono 34, non 63 (29 match erano `.pyc` ignorati); `workspace_engine.py` non è morto perché
+`/workspace/today` ne consuma il nucleo, quindi solo i rami list/detail sono candidati; Nutrition è
+autenticato e non esposto dal tunnel pubblico corrente; la dismissione completa Tailscale resta Fase 3.
+
+> Documento storico: non è contesto di lavoro e non prescrive l'implementazione. La posizione in
+> `docs/archive/` dichiara l'audit concluso; decisioni, scope e criteri vivi sono nella SPEC R0.
 
 ---
 

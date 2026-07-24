@@ -7,10 +7,12 @@
 **Tipo:** remediation frontend e read-model additivi; nessuna nuova policy di prodotto
 **Audit fondante:** `docs/archive/AUDIT_FRONTEND_CORE_INTUITIVITA_2026-07-21.md`
 **Autorità:** `AGENTS.md` → `MANIFESTO.md` → `LAUNCH_SCOPE.md` → `frontend/CLAUDE.md` → ADR/SSoT finanziarie
-**Sequenza preesistente:** v1.0.14 ✅ → blocco P → G-MAC
+**Sequenza corrente:** v1.0.14 ✅ → FE-0 + FE-1.0/1.1 ✅ → R0 protezione release → blocco P →
+candidate v1.0.15 → G-MAC
 **Decisione di scheduling:** founder 2026-07-21/22 — `v1.0.15` contiene blocco P + FE-0 completo +
-criticità FE-1; FE-1.0 entra subito dopo il test LIVE FE-0 e prima di P1. Ottimizzazioni/redesign
-estesi restano fuori release; G-MAC apre dopo validazione e consegna della `v1.0.15`.
+criticità FE-1. Founder 2026-07-24 — dopo la chiusura LIVE FE-1 entra il gate ristretto R0
+(`SPEC_R0_PROTEZIONE_RELEASE_V1_0_15.md`), poi apre P1. Ottimizzazioni/redesign e cleanup estesi
+restano fuori release; G-MAC apre dopo validazione e consegna della `v1.0.15`.
 
 > La presente SPEC è la casa del lavoro aperto. A chiusura dell'ultimo gate: consuntivo, fold-back
 > negli evergreen realmente toccati, append a `docs/learning/BUILD_LOG.md` e spostamento in
@@ -56,8 +58,9 @@ Il lavoro non entra come refactor monolitico. Entra per gate indipendenti e veri
 `SPEC_P_PRESTAZIONI_SINGOLE_E_PORTAFOGLIO.md`. Se P1 apre prima di FE-0, i finding sovrapposti sono
 assorbiti nei suoi microstep e verificati anche con gli AC di questa SPEC; non si crea un secondo ramo.
 
-**Ratifica:** il founder ha autorizzato il 2026-07-21 l'inserimento di FE-0 prima di P1 e la nuova
-sequenza `v1.0.14 → v1.0.15 (FE-0 + criticità FE-1 + P) → G-MAC`. L'autorizzazione riguarda lo
+**Ratifica:** il founder ha autorizzato il 2026-07-21 l'inserimento di FE-0 prima di P1 e il
+2026-07-24 ha inserito R0 fra FE-1 e P1. Sequenza vigente:
+`v1.0.14 → FE-0/FE-1 → R0 → P → candidate v1.0.15 → G-MAC`. L'autorizzazione riguarda lo
 scheduling; ogni gate conserva impact map, verifiche e GO operativo previsti dal Delivery Loop.
 
 ## 3. FE-0 — Integrità percettiva e privacy

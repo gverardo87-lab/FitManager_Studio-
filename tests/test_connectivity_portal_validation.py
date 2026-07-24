@@ -8,6 +8,7 @@ def _make_status(**overrides) -> ConnectivityStatusResponse:
     payload = {
         "generated_at": datetime(2026, 3, 11, 12, 0, tzinfo=timezone.utc),
         "profile": "public_portal",
+        "public_access_provider": "legacy_tailscale",
         "tailscale_cli_installed": True,
         "tailscale_version": "1.94.2",
         "tailscale_status": "ok",

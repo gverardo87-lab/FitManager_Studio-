@@ -2,6 +2,7 @@ from api.services import connectivity_runtime as runtime
 
 
 def test_build_connectivity_status_reports_local_only_when_tailscale_is_missing(monkeypatch):
+    monkeypatch.setattr(runtime, "get_provisioned_public_base_url", lambda: None)
     monkeypatch.setattr(runtime, "_resolve_tailscale_binary", lambda: None)
     monkeypatch.setattr(
         runtime,
@@ -33,6 +34,7 @@ def test_build_connectivity_status_reports_local_only_when_tailscale_is_missing(
 
 
 def test_build_connectivity_status_surfaces_permission_denied_for_local_tailscale(monkeypatch):
+    monkeypatch.setattr(runtime, "get_provisioned_public_base_url", lambda: None)
     monkeypatch.setattr(runtime, "_resolve_tailscale_binary", lambda: "tailscale.exe")
     monkeypatch.setattr(
         runtime,
@@ -66,6 +68,7 @@ def test_build_connectivity_status_surfaces_permission_denied_for_local_tailscal
 def test_build_connectivity_status_reports_public_portal_ready_when_dns_base_url_and_funnel_match(
     monkeypatch,
 ):
+    monkeypatch.setattr(runtime, "get_provisioned_public_base_url", lambda: None)
     monkeypatch.setattr(runtime, "_resolve_tailscale_binary", lambda: "tailscale.exe")
     monkeypatch.setattr(
         runtime,
@@ -99,3 +102,41 @@ def test_build_connectivity_status_reports_public_portal_ready_when_dns_base_url
     assert status.public_base_url_matches_dns is True
     assert status.next_recommended_action_code == "ready"
     assert status.missing_requirements == []
+
+
+def test_build_connectivity_status_uses_managed_frp_without_tailscale_actions(monkeypatch):
+    managed_url = "https://chiara.fitmanagerstudio.com"
+    monkeypatch.setattr(runtime, "get_provisioned_public_base_url", lambda: managed_url)
+    monkeypatch.setattr(
+        runtime,
+        "_resolve_tailscale_binary",
+        lambda: (_ for _ in ()).throw(AssertionError("Tailscale non deve essere interrogato")),
+    )
+    monkeypatch.setattr(runtime, "is_public_portal_enabled", lambda: True)
+    monkeypatch.setattr(
+        runtime,
+        "get_public_base_url",
+        lambda: "https://legacy.tailnet.ts.net",
+    )
+
+    status = runtime.build_connectivity_status()
+
+    assert status.profile == "public_portal"
+    assert status.public_access_provider == "managed_frp"
+    assert status.public_portal_enabled is True
+    assert status.public_base_url == managed_url
+    assert status.public_base_url_matches_dns is None
+    assert status.next_recommended_action_code == "verify_public_origin"
+    assert status.missing_requirements == []
+    assert all(
+        action not in {
+            status.next_recommended_action_code,
+            *(check.code for check in status.checks),
+        }
+        for action in {"install_tailscale", "connect_tailscale", "enable_funnel"}
+    )
+    assert not any(
+        "tailscale" in f"{check.label} {check.detail}".lower()
+        or "funnel" in f"{check.label} {check.detail}".lower()
+        for check in status.checks
+    )

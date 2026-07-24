@@ -3895,3 +3895,59 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
   importi, writer, formule, endpoint e invalidazioni restano invariati e il nuovo canary copre la
   data proposta. Commit e push non eseguiti.
 - **⏭️ Coda:** Fascia A audit obsolescenza post-migrazioni → P1 blocco P.
+
+---
+
+## 2026-07-24 — Rettifica audit e apertura docs-first R0 protezione release
+
+- **Decisione founder:** prima di aprire P1 viene introdotto il gate stretto **R0 — Protezione release v1.0.15**. La sequenza operativa diventa `FE0/FE1 chiusi → R0.1–R0.4 → P1–P6 → candidate v1.0.15 → G-MAC`.
+- **Rettifica append-only:** questa voce supera la coda “Fascia A audit obsolescenza post-migrazioni → P1” riportata nelle precedenti registrazioni del 2026-07-24. Le righe storiche non vengono riscritte, in conformità al contratto del `BUILD_LOG`.
+- **Spec aperta:** creata `docs/specs/SPEC_R0_PROTEZIONE_RELEASE_V1_0_15.md`, con impact map, invarianti, non-obiettivi, acceptance criteria e Definition of Done per R0.1–R0.4.
+- **Audit verificato e foldato:** `AUDIT_OBSOLESCENZA_POST_MIGRAZIONI_2026-07-23.md` è stato riclassificato da fotografia operativa a documento concluso e spostato in `docs/archive/`. La vecchia posizione `docs/operations/` citata nelle righe precedenti resta quindi solo un riferimento storico.
+- **Correzioni emerse dal confronto col codice:**
+  - il conteggio verificabile sul branch `crm_dev` è **34 file sorgente tracciati**, non 63; i 29 elementi ulteriori erano bytecode ignorato;
+  - il workspace engine è già raggiunto dal flusso live `/workspace/today`; restano candidati di pulizia soltanto list/detail non esposti;
+  - il modulo nutrition è autenticato e non costituisce l'attuale superficie pubblica FRP; la sua rimozione resta una decisione separata;
+  - la rimozione completa Tailscale rimane nel perimetro Phase 3, mentre R0 protegge il percorso pubblico effettivo della release;
+  - il cleanup frontend esteso (circa 6.900 LOC candidate) è differito dopo v1.0.15 per non allargare il rischio pre-release.
+- **Coordinamento documentale:** aggiornate le SPEC FE, P e G-MAC con il nuovo ordine dei gate; riconciliato `docs/INDEX.md`, includendo anche le SPEC Fingerprint e G-MAC precedentemente mancanti.
+- **Scope della modifica:** solo documentazione e governance; nessun file runtime, schema o dato persistente modificato. Il file locale non tracciato `live-01-dashboard.png` è rimasto intatto.
+- **Verifica documentale:** tutte le 10 SPEC aperte presenti in `docs/specs/` risultano indicizzate; nessuna SPEC marcata `✅ IMPLEMENTATA` resta nella cartella aperta; l'audit non è più presente in `docs/operations/` ed è presente in `docs/archive/`.
+- **⏭️ Prossimo microstep:** avviare R0.1 solo dopo approvazione di questo gate documentale, partendo dal contenimento del singolo percorso pubblico/FRP.
+
+---
+
+## 2026-07-24 — R0.1 contenimento FRP verde, HOLD su trust TLS live
+
+- **Impact map eseguita:** percorso pubblico unico sulle istanze FRP provisionate; nessuna modifica a
+  ledger, rate, schema, ownership, audit trail o comportamento delle installazioni non-FRP.
+- **Autorità FRP:** l'`instance_id` della licenza valida determina l'origine
+  `https://<instance_id>.fitmanagerstudio.com` anche quando `frpc` è temporaneamente indisponibile.
+  Il fallback localhost resta attivo e il vecchio `.env` non può diventare autorità.
+- **Fail-closed configurazione:** `public_access_provider=managed_frp` separa il wire dal percorso
+  legacy; lo status non esegue né propone Funnel/Tailscale e ogni POST legacy riceve `409` prima di
+  mutare file o process env.
+- **Launcher/installazione:** rimosso integralmente l'auto-Funnel. Guard statico verde: zero comando
+  `tailscale funnel`, zero lettura `PUBLIC_PORTAL_ENABLED`; `fitmanager.iss` stagea il launcher
+  corretto.
+- **UI:** sulle istanze FRP `ConnectivityStatusSection` non monta il wizard legacy e mostra soltanto
+  origine gestita, fallback locale, verifica end-to-end e validazione portale. Il ramo legacy non-FRP
+  resta invariato. Applicate le regole React/Next della skill Vercel senza nuove astrazioni laterali.
+- **Test:** backend connectivity **28/28**; full backend **880/880** in 17:41 con 31 warning baseline;
+  frontend full **153/153**, più canary route aggiunto **4/4** e canary UI/route finale **5/5**;
+  ruff e lint mirati verdi; Next production build verde su 20 pagine; `git diff --check` pulito.
+- **Live routing:** sul dominio FRP attivo, diagnostica applicativa con trust disabilitata:
+  `/health` **200**, `/clienti` **404**. La route separation è quindi effettiva e il CRM non è esposto.
+- **HOLD non occultabile:** il probe HTTPS strict fallisce perché il certificato presentato è
+  self-signed (`relazione di trust` non stabilita). È coerente con la Fase 1/Fase 2 già documentata,
+  ma impedisce di dichiarare l'origine pubblica production-ready senza una decisione: remediation
+  immediata R0.1.5 oppure blocker falsificabile in R0.4. **R0.2 non aperto.**
+- **Nota ambiente:** i warning di rollover `fitmanager.log` nella full suite derivano dal server live
+  `uvicorn --reload` concorrente. Il processo `frpc` osservato è suo figlio, non un orfano, ed è stato
+  lasciato intatto. `live-01-dashboard.png` non è stato toccato.
+- **Commit/push:** non eseguiti, in attesa della decisione founder sul finding TLS e sul confine del
+  prossimo commit atomico.
+- **Gate frontend definitivo successivo al consuntivo:** **157/157**; include il canary route
+  aggiunto dopo la prima esecuzione full. Lint mirato ancora verde.
+- **Decisione founder successiva:** richiesti commit e push del gate R0.1 prima di decidere la
+  collocazione del finding TLS. Il file locale `live-01-dashboard.png` resta fuori dal perimetro.

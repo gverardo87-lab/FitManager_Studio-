@@ -12,6 +12,7 @@ from urllib.parse import urlparse
 
 from api.schemas.system import ConnectivityCheck, ConnectivityStatusResponse
 from api.services.system_runtime import get_public_base_url, is_public_portal_enabled
+from api.services.tunnel_config import get_provisioned_public_base_url
 
 TAILSCALE_BINARY_HINTS = (
     Path(r"C:\Program Files\Tailscale\tailscale.exe"),
@@ -241,7 +242,54 @@ def _resolve_next_action(
     return ("ready", "Connettivita pronta")
 
 
+def _build_managed_frp_status(public_base_url: str) -> ConnectivityStatusResponse:
+    """Status FRP senza probe o suggerimenti del percorso Tailscale legacy."""
+    return ConnectivityStatusResponse(
+        generated_at=datetime.now(timezone.utc),
+        profile="public_portal",
+        public_access_provider="managed_frp",
+        tailscale_cli_installed=False,
+        tailscale_version=None,
+        tailscale_status="not_installed",
+        tailscale_connected=False,
+        tailscale_ip=None,
+        tailscale_dns_name=None,
+        funnel_status="not_enabled",
+        funnel_enabled=False,
+        public_portal_enabled=True,
+        public_base_url=public_base_url,
+        public_base_url_matches_dns=None,
+        next_recommended_action_code="verify_public_origin",
+        next_recommended_action_label="Verifica origine pubblica FRP",
+        checks=[
+            ConnectivityCheck(
+                code="managed_frp",
+                label="Percorso pubblico",
+                status="ok",
+                detail="FRP gestito dalla licenza FitManager; l'origine non e modificabile localmente.",
+            ),
+            ConnectivityCheck(
+                code="public_base_url",
+                label="Base URL portale",
+                status="ok",
+                detail=f"Origine autoritativa: {public_base_url}",
+            ),
+            ConnectivityCheck(
+                code="local_fallback",
+                label="Fallback locale",
+                status="ok",
+                detail="Il CRM resta disponibile in locale anche se il tunnel e temporaneamente fermo.",
+            ),
+        ],
+        missing_requirements=[],
+    )
+
+
 def build_connectivity_status() -> ConnectivityStatusResponse:
+    managed_public_base_url = get_provisioned_public_base_url()
+    if managed_public_base_url:
+        return _build_managed_frp_status(managed_public_base_url)
+
     binary = _resolve_tailscale_binary()
     tailscale = _probe_tailscale(binary)
     funnel = _probe_funnel(binary)
@@ -366,6 +414,7 @@ def build_connectivity_status() -> ConnectivityStatusResponse:
     return ConnectivityStatusResponse(
         generated_at=datetime.now(timezone.utc),
         profile=profile,
+        public_access_provider="legacy_tailscale",
         tailscale_cli_installed=tailscale.cli_installed,
         tailscale_version=tailscale.version,
         tailscale_status=tailscale.status,

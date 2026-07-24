@@ -1,6 +1,10 @@
 # SPEC BLOCCO G-MAC — Consegna macOS (pilota Daniele, MacBook Air M1)
 
-**Stato:** ⏸️ IN CODA #3 (sequenza founder 2026-07-19) — apre DOPO la release v1.0.14 (runbook `operations/AUDIT_PRE_RELEASE_2026-07-16.md` §7) e DOPO il blocco P (`SPEC_P`). G-MAC.0 codice FATTO e sigillato (T1 PASS, suite 867); G-MAC.1..5 al varco; ratifica ADR-026 D1-D6 all'apertura del blocco. **Unica azione anticipabile (fuori-codice, founder): enrollment Apple Developer** (D-MAC-1) — la sua coda corre in tempo di calendario, non di sviluppo
+**Stato:** ⏸️ IN CODA #3 — apre DOPO R0, il blocco P e la validazione/consegna della candidate
+v1.0.15 (sequenza founder aggiornata 2026-07-24). G-MAC.0 codice FATTO e sigillato (T1 PASS,
+suite 867); G-MAC.1..5 al varco; ratifica ADR-026 D1-D6 all'apertura del blocco. **Unica azione
+anticipabile (fuori-codice, founder): enrollment Apple Developer** (D-MAC-1) — la sua coda corre in
+tempo di calendario, non di sviluppo
 **ADR di riferimento:** ADR-026 (proposed, da ratificare) · ADR-004 (pipeline release) · ADR-007 (anti-RE) · ADR-011 (tunnel FRP)
 **Ground-truth:** audit accoppiamenti Windows 2026-07-17 (workflow 6 agenti: 4 audit codebase + 2 ricerche web con fonti). Il codice reale vince sulla spec.
 **Timeline:** 14 giorni (§5), decorrenti dall'APERTURA del blocco — non da una data assoluta. (La deadline originaria 2026-07-31 è superata dalla sequenza founder 2026-07-19: prima v1.0.14, poi blocco P.)

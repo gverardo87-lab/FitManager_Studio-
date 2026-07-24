@@ -60,7 +60,8 @@ frontend/src/
 │   ├── settings/            SystemStatusSection, SupportSnapshotSection, ConnectivityStatusSection,
 │   │                        ConnectivitySetupWizard, ConnectivityPortalValidationPanel,
 │   │                        connectivity-status-ui, connectivity-wizard-ui, connectivity-wizard-panels,
-│   │                        connectivity-wizard-state, system-status-utils
+│   │                        connectivity-wizard-state, system-status-utils. ConnectivityStatusSection
+│   │                        non monta il wizard legacy quando `public_access_provider=managed_frp`
 │   ├── workspace/           SessionPrepCard (client+non-client), workspace-ui.ts (config/metadata)
 │   ├── workouts/            SessionCard, SortableExerciseRow, BlockCard, ExerciseSelector (dynamic),
 │   │                        TemplateSelector, ExportButtons, ExerciseDetailPanel, RiskBodyMap,

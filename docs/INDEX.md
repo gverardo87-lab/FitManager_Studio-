@@ -78,18 +78,25 @@ commit docs del gate (ciclo di vita: `AGENTS.md`).
 
 | File | Stato | Scopo |
 |------|-------|-------|
+| `SPEC_R0_PROTEZIONE_RELEASE_V1_0_15.md` | 🟠 **APERTA — R0.1 contenimento verde; HOLD TLS live prima di R0.2** | Gate ristretto ratificato 2026-07-24: auto-Funnel rimosso, origine FRP immutabile e UI legacy esclusa sulle istanze provisionate. Live routing 200/404 ma trust TLS self-signed fallisce: decisione founder R0.1.5 vs blocker R0.4. R0.2 non aperto; cleanup massivo fuori scope |
 | `SPEC_COLLABORAZIONE_CLAUDE_CODEX.md` | 🟡 **APERTA — A0+A1 CHIUSI; A2+ NON AUTORIZZATI E SEPARATI DALLA v1.0.14** | Contratto docs-first agent-neutral: `AGENTS.md` nucleo unico, `CLAUDE.md` preservato come adapter Claude, nessun `CODEX.md`; runbook condiviso + Contract Smoke reali Claude/Codex PASS. Condizione per nuovo codice congiunto soddisfatta; migrazione futura fuori dalla coda prodotto v1.0.14 → P → G-MAC |
+| `SPEC_FINGERPRINT_CROSSPLATFORM.md` | 🟡 **CODICE FATTO E SIGILLATO — resta T2 su hardware macOS reale** | Gate G-MAC.0: refactor Windows output-invariante PASS; chiusura subordinata al cross-check fingerprint/binding sul Mac reale in G-MAC.4 |
 | `SPEC_FRONTEND_CORE_INTUITIVITA.md` | 🟡 **APERTA — FE-0 E FE-1.0 CHIUSI; FE-1 MONEY-PATH GUIDATO ✅** | Remediation audit frontend core. FE-0 privacy/truth state ✅; FE-1.0 deep-link chiuso dal retest LIVE founder 2026-07-24; Rinnovi & Incassi riusa il pagamento rata standard con importo/metodo/data espliciti, default data odierna autorizzato e coperto, 152/152 test. FE-2..4 restano gated |
 | `SPEC_G9_FINANCIAL_COMMAND_LAYER.md` | 🟢 G9.0→G9.5 CHIUSI · **resta G9.6 (differito)** | Write-model del dominio finanziario (ADR-022): penna unica ✅, ledger rettifiche ✅, TransitionExecutor+FSM ✅, enforcement ✅ + test semantici ✅ (grep ritirati), Hypothesis stateful ✅ (G9.5, 2026-07-05); resta SOLO **G9.6** Money centesimi (differito, gated) |
 | `SPEC_G8.4_TRASPARENZA_FINANZIARIA_FE.md` | 🟡 **F1+F5 ✅ · F2+F6 ✅ · F3 ✅** — resta SOLO apertura G8.5 (DoD §8.5) | Trasparenza finanziaria frontend. Netto SSoT + `saldo_progressivo` + guard FE-no-money-math + split <300 (`5086045`..`1978572`) · disclosure D-1 + colore semantico (`0b80bc8`) · raccomandazione solo-visiva + advisory `azione_consigliata` + a11y + penali nel breakdown (`58c01ea`). D-2 «Saldo» ledger → **ADR-019 Add. IV**; ricerca `archive/RICERCA_COMPETITOR_TRASPARENZA_FINANZIARIA_2026-07-06.md`. Chiusura gated su apertura G8.5 (goodwill, ADR+spec) |
 | `SPEC_G9.7_SEMANTICA_PER_CLASSE.md` | 🟢 **G9.7.0→G9.7.5 CHIUSI** · resta solo runbook orfani reali trainer-driven | Generalizzazione per-classe delle leggi semantiche (ADR-024): matrice assi×regole, mai-silenzio eventi, recupero esplicito, occupazione spiegabile, guard di classe, perimetro transizioni, birth-auditor e Hypothesis estesa. Tutti i gate di codice sono consuntivati; la spec resta nel work-queue esclusivamente per il recupero esplicito 640/641/643/647/649 |
 | `SPEC_VOCABOLARIO_E_CLASSIFICAZIONE_CONTRATTI.md` | ✅ Giro 1 · **⏳ Giro 2 pendente** | Consumo-SSoT stati contratto su tutte le superfici: restano `rinnovi-incassi` + `workspace_engine` off-SSoT + grep-guard |
-| `SPEC_P_PRESTAZIONI_SINGOLE_E_PORTAFOGLIO.md` | 🟡 **APERTA — P0 CHIUSO 2026-07-08** (P-D1..P-D6 ratificate, P-D6 rivista: Q9→G8.2+G8.5; riga matrice + birth-review: CP-1..CP-4 foldati) → **prossimo P1** | Blocco «P»: prestazione singola come classe economica di prima classe (7ª `ClasseContabile` col gemello, tabella `prestazioni_singole`, penna dedicata, invarianti IP1-IP4) · insoluto derivato fail-loud · compensazione wallet atomica · condono auditato · suggeritore prezzo spiegabile (W9) · pannello Portafoglio + `crediti_residui_attivi` (chiude P1-P5 audit FE). Gate P0..P6, interlock G9.7.2 (recupero 640/641) |
+| `SPEC_P_PRESTAZIONI_SINGOLE_E_PORTAFOGLIO.md` | 🟡 **APERTA — P0 CHIUSO; P1 apre dopo R0** | Blocco «P»: prestazione singola come classe economica di prima classe (7ª `ClasseContabile` col gemello, tabella `prestazioni_singole`, penna dedicata, invarianti IP1-IP4) · insoluto derivato fail-loud · compensazione wallet atomica · condono auditato · suggeritore prezzo spiegabile (W9) · pannello Portafoglio + `crediti_residui_attivi` (chiude P1-P5 audit FE). Gate P0..P6; interlock R0 e G9.7.2 |
+| `SPEC_G-MAC_CONSEGNA_MACOS.md` | ⏸️ **IN CODA #3 — dopo R0 + P + candidate v1.0.15** | Consegna pilota macOS ARM64: packaging, firma/notarizzazione, launcher, tunnel e binding licenza; G-MAC.0 sigillato, G-MAC.1..5 al varco |
 
 **Backlog (non-spec, censito qui):** G8.2 wallet auto-cross-contratto (in panchina, D2 aperta) + Q9
 conversione singole→pacchetto (casa: G8.2+G8.5, P-D6 blocco P) · wallet
 sotto-ledger append-only + forecast ponderato insolvenza (ROADMAP archiviata §1.1/§1.4, post-lancio) ·
 punto tributarista: policy `pro_sedute` + penale nel recesso (PROVISIONAL) · FDM/TASSONOMIA asse 6-stati.
+
+**Backlog post-v1.0.15 da aprire con SPEC dedicata, non autorizzato ora:** bonifica obsolescenza
+(cluster FE morti; soli rami workspace list/detail orfani; wire/query/pin non consumati; triage dei
+34 sorgenti `crm_dev`; decisione su mount Nutrition/Training e dismissione completa Tailscale Fase 3).
 
 ---
 
@@ -166,7 +173,7 @@ Formazione del founder-developer in parallelo allo sviluppo. Concetti tecnici st
 | Directory | Contenuto |
 |-----------|-----------|
 | `archive/specs/` | Spec storiche frozen (non modificare, **mai contesto di lavoro**): UPG storici + spec implementate. Batch 2026-07-03 (riordino): SPEC_G7.0, SPEC_G7.3, SPEC_REVISIONE_PRE_G7, SPEC_RINVIO (G7.8, superata da G7.8-bis), SPEC_TERMINAZIONE_BILATERALE (G7.9/10), SPEC_INTEGRITA (G8.1-G8.3), SPEC_LATE_CANCEL (G7.8-bis), IMPL_PLAN_FINANCIAL_REALIGN; 2026-07-04: SPEC_TEMPORAL_FENCE (G7.8-ter, ADR-023). Batch precedenti: SPEC_RINNOVO/TEMPORALE/RINNOVI_SCADUTI + IMPL_PLAN (06-23), G7.7_R5 + RETRODATAZIONE (06-27) |
-| `archive/` (root) | Snapshot storici: audit sicurezza pre/post-hardening, strategia anti-RE, pre-delivery audit 04-17, session handoff, DUAL_ENV, Tailscale + (2026-07-03) AUDIT_PRE_G7.3, AUDIT_POSIZIONE_FINANZIARIA, ROADMAP_FINANCIAL_UPGRADES (fotografia foldata) |
+| `archive/` (root) | Snapshot storici: audit sicurezza pre/post-hardening, strategia anti-RE, pre-delivery audit 04-17, session handoff, DUAL_ENV, Tailscale + AUDIT_PRE_G7.3, AUDIT_POSIZIONE_FINANZIARIA, ROADMAP_FINANCIAL_UPGRADES e AUDIT_OBSOLESCENZA_POST_MIGRAZIONI (foldato in `SPEC_R0_PROTEZIONE_RELEASE_V1_0_15.md`) |
 | `archive/nutrition-v2-strategy.md` | Strategia nutrition v2 (obsoleta, 226 alimenti → ora 880) |
 | `upgrades/` | 🗄️ **DISMESSO 2026-07-03** — assorbito da `learning/BUILD_LOG.md` (unico log di sviluppo); resta come storico UPG |
 | `videos/` | Script video-pillole |

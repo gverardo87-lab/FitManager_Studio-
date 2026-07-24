@@ -319,8 +319,22 @@ async def lifespan(app: FastAPI):
     # ── 6. Tunnel FRP (auto-start se licenza con instance_id + frpc presente) ──
     global _tunnel_manager
     try:
-        from api.services.tunnel_config import get_tunnel_config
+        from api.services.tunnel_config import (
+            get_provisioned_public_base_url,
+            get_tunnel_config,
+        )
         from api.services.tunnel_manager import TunnelManager
+
+        # L'instance_id della licenza e l'autorita dell'origine pubblica anche
+        # quando frpc e temporaneamente fermo o non disponibile. Il fallback
+        # localhost resta operativo e nessun secondo tunnel viene attivato.
+        import os
+
+        managed_public_base_url = get_provisioned_public_base_url()
+        if managed_public_base_url:
+            os.environ["PUBLIC_PORTAL_ENABLED"] = "true"
+            os.environ["PUBLIC_BASE_URL"] = managed_public_base_url
+            logger.info("  PUBLIC_BASE_URL = %s (gestita da FRP)", managed_public_base_url)
 
         tunnel_config = get_tunnel_config()
         if tunnel_config:
@@ -332,13 +346,6 @@ async def lifespan(app: FastAPI):
                 _tunnel_manager.get_status().get("pid"),
             )
 
-            # Auto-configura PUBLIC_BASE_URL per i link pubblici (anamnesi, schede)
-            # Il trainer non deve configurare nulla: il tunnel determina l'URL.
-            import os
-            public_url = f"https://{tunnel_config.public_url}"
-            os.environ["PUBLIC_PORTAL_ENABLED"] = "true"
-            os.environ["PUBLIC_BASE_URL"] = public_url
-            logger.info("  PUBLIC_BASE_URL = %s (auto da tunnel)", public_url)
         else:
             logger.info("  TUNNEL = disabilitato (nessun instance_id o frpc assente)")
     except Exception as e:

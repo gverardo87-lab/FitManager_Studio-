@@ -10,6 +10,7 @@ function buildStatus(
   return {
     generated_at: "2026-03-11T14:00:00Z",
     profile: "local_only",
+    public_access_provider: "legacy_tailscale",
     tailscale_cli_installed: false,
     tailscale_version: null,
     tailscale_status: "not_installed",

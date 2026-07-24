@@ -160,6 +160,7 @@ export interface InstallationConnectivityCheck {
 export interface InstallationConnectivityStatusResponse {
   generated_at: string;
   profile: InstallationConnectivityProfile;
+  public_access_provider: "managed_frp" | "legacy_tailscale";
   tailscale_cli_installed: boolean;
   tailscale_version: string | null;
   tailscale_status: InstallationConnectivityProbeStatus;

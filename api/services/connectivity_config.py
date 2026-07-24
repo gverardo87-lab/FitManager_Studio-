@@ -10,9 +10,21 @@ from pathlib import Path
 
 from api.config import DATA_DIR
 from api.schemas.system import ConnectivityConfigRequest, ConnectivityConfigResponse
+from api.services.tunnel_config import get_provisioned_public_base_url
 
 ENV_FILE = DATA_DIR / ".env"
 _ENV_KEY_PATTERN = re.compile(r"^\s*([A-Z0-9_]+)\s*=")
+
+
+class ManagedPublicAccessError(RuntimeError):
+    """Una configurazione legacy ha tentato di mutare un'origine FRP gestita."""
+
+    def __init__(self, public_base_url: str):
+        self.public_base_url = public_base_url
+        super().__init__(
+            "Percorso pubblico gestito da FRP: la base URL "
+            f"{public_base_url} non e modificabile da questa configurazione."
+        )
 
 
 def _normalize_updates(payload: ConnectivityConfigRequest) -> dict[str, str | None]:
@@ -89,6 +101,10 @@ def _apply_process_env(updates: dict[str, str | None]) -> None:
 
 
 def apply_connectivity_config(payload: ConnectivityConfigRequest) -> ConnectivityConfigResponse:
+    managed_public_base_url = get_provisioned_public_base_url()
+    if managed_public_base_url:
+        raise ManagedPublicAccessError(managed_public_base_url)
+
     updates = _normalize_updates(payload)
     written_keys = _write_env_values(ENV_FILE, updates)
     _apply_process_env(updates)

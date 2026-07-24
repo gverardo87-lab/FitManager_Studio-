@@ -14,12 +14,15 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ConnectivitySetupWizard } from "@/components/settings/ConnectivitySetupWizard";
+import { ConnectivityPortalValidationPanel } from "@/components/settings/ConnectivityPortalValidationPanel";
 import {
   ErrorState,
   LoadingState,
   StatusBadge,
   SummaryItem,
+  VerificationStatePanel,
 } from "@/components/settings/connectivity-status-ui";
+import type { InstallationConnectivityVerifyResponse } from "@/types/api";
 import {
   mapConnectivityCheckStatus,
   mapConnectivityProfile,
@@ -37,6 +40,39 @@ function resolveNextActionTone(actionCode: string): Tone {
   }
 }
 
+function ManagedFrpPanel({
+  publicBaseUrl,
+  verification,
+  isVerifying,
+  onVerify,
+}: {
+  publicBaseUrl: string;
+  verification?: InstallationConnectivityVerifyResponse;
+  isVerifying: boolean;
+  onVerify: () => void;
+}) {
+  return (
+    <div className="space-y-4 rounded-xl border bg-background/80 p-4">
+      <div className="space-y-2">
+        <p className="text-sm font-semibold text-foreground">Percorso pubblico gestito</p>
+        <p className="text-sm text-muted-foreground">
+          L&apos;origine <span className="font-medium text-foreground">{publicBaseUrl}</span> deriva
+          dalla licenza FitManager. Non e modificabile da questa pagina e non richiede un secondo
+          tunnel pubblico.
+        </p>
+      </div>
+
+      <VerificationStatePanel
+        verification={verification}
+        isVerifying={isVerifying}
+        onVerify={onVerify}
+      />
+
+      {verification?.status === "ready" ? <ConnectivityPortalValidationPanel /> : null}
+    </div>
+  );
+}
+
 export function ConnectivityStatusSection() {
   const { data, isLoading, isError, isFetching, refetch } = useConnectivityStatus();
   const applyConfig = useApplyConnectivityConfig();
@@ -50,6 +86,7 @@ export function ConnectivityStatusSection() {
     return <ErrorState isRetrying={isFetching} onRetry={() => void refetch()} />;
   }
 
+  const isManagedFrp = data.public_access_provider === "managed_frp";
   const profile = mapConnectivityProfile(data.profile);
   const nextActionTone = resolveNextActionTone(data.next_recommended_action_code);
   const checks = data.checks.map((check) => ({
@@ -67,8 +104,9 @@ export function ConnectivityStatusSection() {
               <CardTitle>Connettivita</CardTitle>
             </div>
             <CardDescription>
-              Surface read-only per capire se il PC e pronto a restare solo locale, aprirsi ai
-              dispositivi fidati o arrivare al portale clienti pubblico.
+              {isManagedFrp
+                ? "Stato del percorso pubblico FRP assegnato alla licenza e del fallback locale."
+                : "Surface read-only per capire se il PC e pronto a restare solo locale, aprirsi ai dispositivi fidati o arrivare al portale clienti pubblico."}
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
@@ -103,21 +141,38 @@ export function ConnectivityStatusSection() {
         </div>
 
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          <SummaryItem
-            label="Nodo Tailscale"
-            value={data.tailscale_dns_name ?? "Non rilevato"}
-            badge={
-              data.tailscale_connected
-                ? { label: "Connesso", tone: "good" }
-                : data.tailscale_cli_installed
-                  ? { label: "Da collegare", tone: "warning" }
-                  : { label: "Non installato", tone: "neutral" }
-            }
-          />
-          <SummaryItem
-            label="IP Tailscale"
-            value={data.tailscale_ip ?? "Non disponibile"}
-          />
+          {isManagedFrp ? (
+            <>
+              <SummaryItem
+                label="Percorso pubblico"
+                value="FRP gestito"
+                badge={{ label: "Dalla licenza", tone: "good" }}
+              />
+              <SummaryItem
+                label="Fallback locale"
+                value="http://localhost:3000"
+                badge={{ label: "Sempre disponibile", tone: "neutral" }}
+              />
+            </>
+          ) : (
+            <>
+              <SummaryItem
+                label="Nodo Tailscale"
+                value={data.tailscale_dns_name ?? "Non rilevato"}
+                badge={
+                  data.tailscale_connected
+                    ? { label: "Connesso", tone: "good" }
+                    : data.tailscale_cli_installed
+                      ? { label: "Da collegare", tone: "warning" }
+                      : { label: "Non installato", tone: "neutral" }
+                }
+              />
+              <SummaryItem
+                label="IP Tailscale"
+                value={data.tailscale_ip ?? "Non disponibile"}
+              />
+            </>
+          )}
           <SummaryItem
             label="Base URL pubblica"
             value={data.public_base_url ?? "Non configurata"}
@@ -131,26 +186,35 @@ export function ConnectivityStatusSection() {
           />
         </div>
 
-        <ConnectivitySetupWizard
-          status={data}
-          verification={verifyConfig.data}
-          isApplying={applyConfig.isPending}
-          isRefreshing={isFetching}
-          isVerifying={verifyConfig.isPending}
-          onApply={(profileToApply, publicBaseUrl, onSuccess) => {
-            verifyConfig.reset();
-            applyConfig.mutate(
-              {
-                profile: profileToApply,
-                public_base_url: publicBaseUrl,
-              },
-              { onSuccess },
-            );
-          }}
-          onRefresh={() => void refetch()}
-          onResetVerification={() => verifyConfig.reset()}
-          onVerify={() => verifyConfig.mutate()}
-        />
+        {isManagedFrp ? (
+          <ManagedFrpPanel
+            publicBaseUrl={data.public_base_url ?? "Origine FRP non disponibile"}
+            verification={verifyConfig.data}
+            isVerifying={verifyConfig.isPending}
+            onVerify={() => verifyConfig.mutate()}
+          />
+        ) : (
+          <ConnectivitySetupWizard
+            status={data}
+            verification={verifyConfig.data}
+            isApplying={applyConfig.isPending}
+            isRefreshing={isFetching}
+            isVerifying={verifyConfig.isPending}
+            onApply={(profileToApply, publicBaseUrl, onSuccess) => {
+              verifyConfig.reset();
+              applyConfig.mutate(
+                {
+                  profile: profileToApply,
+                  public_base_url: publicBaseUrl,
+                },
+                { onSuccess },
+              );
+            }}
+            onRefresh={() => void refetch()}
+            onResetVerification={() => verifyConfig.reset()}
+            onVerify={() => verifyConfig.mutate()}
+          />
+        )}
 
         <div className="grid gap-3 lg:grid-cols-2">
           {checks.map((check) => (
@@ -184,8 +248,9 @@ export function ConnectivityStatusSection() {
           <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-200">
             <p className="font-semibold">Nessun requisito aperto</p>
             <p className="mt-1">
-              La surface read-only non segnala blocchi ulteriori. Il passo successivo puo essere il
-              wizard guidato o la validazione rete sul PC del cliente.
+              {isManagedFrp
+                ? "L'origine FRP e assegnata dalla licenza. Usa la verifica finale per controllarne la raggiungibilita senza modificare la configurazione."
+                : "La surface read-only non segnala blocchi ulteriori. Il passo successivo puo essere il wizard guidato o la validazione rete sul PC del cliente."}
             </p>
           </div>
         )}

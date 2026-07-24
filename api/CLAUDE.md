@@ -89,8 +89,8 @@ api/
     ├── goal_engine.py      Calcolo progresso obiettivi
     ├── license.py          Verifica licenza JWT RSA (4-tier key resolution)
     ├── system_runtime.py   Helper condivisi health/support snapshot + backup metadata
-    ├── connectivity_runtime.py Read-only probe Tailscale/Funnel + profile classification
-    ├── connectivity_config.py  Apply idempotente `PUBLIC_PORTAL_ENABLED` / `PUBLIC_BASE_URL`
+    ├── connectivity_runtime.py Read-model FRP gestito da licenza + probe legacy Tailscale/Funnel
+    ├── connectivity_config.py  Apply legacy idempotente; 409 fail-closed su origine FRP gestita
     ├── connectivity_verify.py  Verify end-to-end dell'origine pubblica via `{PUBLIC_BASE_URL}/health`
     ├── connectivity_portal_validation.py Validazione funzionale link anamnesi pubblico reale
     ├── rate_limiter.py     RateLimiter IP-based riusabile: auth_limiter (5/min, 20/h) + portal_limiter (30/min, 120/h)

@@ -1,6 +1,6 @@
 """Endpoint protetti di diagnostica runtime."""
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
 
 from api.database import get_catalog_session, get_session
@@ -17,7 +17,7 @@ from api.schemas.system import (
     TunnelStatusResponse,
 )
 from api.services.connectivity_portal_validation import validate_public_portal_link
-from api.services.connectivity_config import apply_connectivity_config
+from api.services.connectivity_config import ManagedPublicAccessError, apply_connectivity_config
 from api.services.connectivity_runtime import build_connectivity_status
 from api.services.connectivity_verify import verify_connectivity_setup
 from api.services.system_runtime import build_support_snapshot
@@ -58,7 +58,10 @@ def update_connectivity_config(
     _trainer: Trainer = Depends(get_current_trainer),
 ):
     """Applica solo la configurazione FitManager: profilo, flag portale e base URL."""
-    return apply_connectivity_config(payload)
+    try:
+        return apply_connectivity_config(payload)
+    except ManagedPublicAccessError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
 
 
 @router.post("/connectivity-verify", response_model=ConnectivityVerifyResponse)

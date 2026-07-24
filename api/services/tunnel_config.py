@@ -55,6 +55,28 @@ class TunnelConfig:
         return f"{self.instance_id}.{self.tunnel_domain}"
 
 
+def get_provisioned_instance_id() -> str | None:
+    """Restituisce l'identita FRP assegnata da una licenza valida, se presente.
+
+    La provision FRP dipende dalla licenza, non dalla disponibilita temporanea
+    del binario ``frpc`` o dallo stato del processo tunnel.
+    """
+    from api.services.license import check_license
+
+    result = check_license()
+    if not result.is_valid:
+        return None
+    return result.instance_id or None
+
+
+def get_provisioned_public_base_url() -> str | None:
+    """Origine pubblica autoritativa per un'istanza FRP provisionata."""
+    instance_id = get_provisioned_instance_id()
+    if not instance_id:
+        return None
+    return f"https://{instance_id}.{TUNNEL_DOMAIN}"
+
+
 def _ensure_self_signed_cert(instance_id: str) -> bool:
     """Genera cert self-signed se non esiste. Restituisce True se cert pronto.
 
@@ -159,17 +181,9 @@ def get_tunnel_config() -> TunnelConfig | None:
     - licenza senza instance_id (installazione senza tunnel)
     - binario frpc non trovato
     """
-    from api.services.license import check_license
-
-    result = check_license()
-
-    if not result.is_valid:
-        logger.debug("Tunnel config: licenza non valida (%s)", result.status)
-        return None
-
-    instance_id = result.instance_id
+    instance_id = get_provisioned_instance_id()
     if not instance_id:
-        logger.debug("Tunnel config: licenza valida ma senza instance_id, tunnel disabilitato")
+        logger.debug("Tunnel config: nessuna istanza FRP provisionata, tunnel disabilitato")
         return None
 
     frpc_path = _resolve_frpc_path()

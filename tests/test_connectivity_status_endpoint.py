@@ -19,6 +19,7 @@ def test_connectivity_status_endpoint_returns_read_only_runtime_contract(
         lambda: ConnectivityStatusResponse(
             generated_at=datetime(2026, 3, 10, 12, 0, 0, tzinfo=timezone.utc),
             profile="trusted_devices",
+            public_access_provider="legacy_tailscale",
             tailscale_cli_installed=True,
             tailscale_version="1.94.2",
             tailscale_status="ok",
@@ -50,6 +51,7 @@ def test_connectivity_status_endpoint_returns_read_only_runtime_contract(
     data = response.json()
     assert data["generated_at"].startswith("2026-03-10T12:00:00")
     assert data["profile"] == "trusted_devices"
+    assert data["public_access_provider"] == "legacy_tailscale"
     assert data["tailscale_cli_installed"] is True
     assert data["tailscale_status"] == "ok"
     assert data["tailscale_dns_name"] == "chiara.tail8a3bc3.ts.net"

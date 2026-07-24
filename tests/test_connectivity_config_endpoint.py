@@ -54,3 +54,29 @@ def test_connectivity_config_endpoint_rejects_public_portal_without_https_base_u
     )
 
     assert response.status_code == 422
+
+
+def test_connectivity_config_endpoint_rejects_legacy_write_for_managed_frp(
+    client,
+    auth_headers,
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        "api.services.connectivity_config.get_provisioned_public_base_url",
+        lambda: "https://chiara.fitmanagerstudio.com",
+    )
+
+    response = client.post(
+        "/api/system/connectivity-config",
+        json={
+            "profile": "public_portal",
+            "public_base_url": "https://different.example.com",
+        },
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 409
+    assert response.json()["detail"] == (
+        "Percorso pubblico gestito da FRP: la base URL "
+        "https://chiara.fitmanagerstudio.com non e modificabile da questa configurazione."
+    )

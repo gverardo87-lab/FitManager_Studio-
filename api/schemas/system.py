@@ -13,6 +13,7 @@ LicenseStatus = Literal["valid", "missing", "invalid", "expired", "unconfigured"
 AppMode = Literal["development", "production"]
 DistributionMode = Literal["source", "installer"]
 ConnectivityProfile = Literal["local_only", "trusted_devices", "public_portal"]
+PublicAccessProvider = Literal["managed_frp", "legacy_tailscale"]
 ConnectivityProbeStatus = Literal[
     "ok",
     "not_installed",
@@ -76,6 +77,7 @@ class ConnectivityCheck(BaseModel):
 class ConnectivityStatusResponse(BaseModel):
     generated_at: datetime
     profile: ConnectivityProfile
+    public_access_provider: PublicAccessProvider
     tailscale_cli_installed: bool
     tailscale_version: str | None = None
     tailscale_status: ConnectivityProbeStatus
