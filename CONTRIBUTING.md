@@ -43,7 +43,9 @@ docs/         → Documentazione organizzata per dominio
 tests/        → Test backend (pytest)
 ```
 
-Dettagli architetturali: `CLAUDE.md` (root) → `api/CLAUDE.md` → `frontend/CLAUDE.md`.
+Contratto operativo: leggere prima `AGENTS.md`; il runbook condiviso è
+`docs/operations/AI_ASSISTED_DEVELOPMENT_WORKFLOW.md`. Dettagli architetturali:
+`CLAUDE.md` (root) → `api/CLAUDE.md` → `frontend/CLAUDE.md`.
 
 ## Avvio sviluppo
 
@@ -81,6 +83,10 @@ Aree: `api:`, `frontend:`, `dashboard:`, `fix:`, `docs:`, `security:`, `build:`,
 1. **Quality gate obbligatorio**: un pre-commit hook esegue automaticamente `ruff check api/` e (se tocchi `frontend/`) `next build`. Il commit viene bloccato se fallisce.
 2. **Ogni commit lascia il branch rilasciabile** per il proprio scope.
 3. **Commit atomici**: una unita' coesa e verificabile per commit.
+4. **Un gate alla volta**: il gate è l'unità di commit/push; non aprire il successivo finché il
+   precedente non è pushato, il delta col remoto non è `0 0` e non restano sue modifiche tracked.
+5. **Stage intenzionale**: aggiungere solo i path attribuiti al gate; mai includere file locali o
+   modifiche altrui per comodità.
 
 ### Esempi
 
@@ -106,7 +112,8 @@ cd frontend && npx next build
 
 Per eseguirlo manualmente: `bash tools/scripts/check-all.sh`
 
-Bypass di emergenza: `git commit --no-verify` (da usare con estrema cautela).
+`git commit --no-verify` è vietato nel workflow normale. Un bypass richiede autorizzazione founder
+esplicita, contesto di incidente documentato e ripetizione manuale dei gate saltati prima del push.
 
 ## Test
 

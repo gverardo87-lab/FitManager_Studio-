@@ -1,11 +1,11 @@
 # SPEC — Collaborazione agent-neutral Claude Code + Codex
 
-**Stato:** 🟡 APERTA — A0+A1 CHIUSI; A2+ NON AUTORIZZATI E SEPARATI DALLA v1.0.14
+**Stato:** 🟡 APERTA — A0+A1+A1.1 CHIUSI; SMOKE CLAUDE A1.1 DIFFERITO; A2+ NON AUTORIZZATI
 **Data:** 2026-07-19
-**Ratifica founder:** ACX-D1..D6 ratificate integralmente il 2026-07-19
+**Ratifica founder:** ACX-D1..D6 ratificate integralmente il 2026-07-19; ACX-D7+D8 ratificate il 2026-07-24
 **Tipo:** governance di sviluppo e compatibilità tra agenti; nessuna policy di prodotto
 **Autorità ereditata:** `AGENTS.md` → `MANIFESTO.md` → `LAUNCH_SCOPE.md` → documenti di layer
-**Sequenza prodotto:** fuori dalla coda v1.0.14 → blocco P → blocco G-MAC; non la modifica e non la blocca
+**Sequenza prodotto:** fuori dalla coda R0 → blocco P → candidate v1.0.15 → blocco G-MAC; non la modifica e non la blocca
 
 ---
 
@@ -104,7 +104,8 @@ ridurla prima dell'implementazione.
    adversariale previsto dal DoD.
 7. **Fold-back:** stato/consuntivo SPEC, INDEX, SSoT interessate, `BUILD_LOG.md`, archiviazione se
    il blocco è chiuso.
-8. **Handoff:** cosa è cambiato, evidenze, rischi residui e prossimo passo minimo.
+8. **Checkpoint Git:** fold-back, commit e push del gate, con verifica dell'allineamento remoto.
+9. **Handoff:** hash, cosa è cambiato, evidenze, rischi residui, stato Git e prossimo gate minimo.
 
 L'agente cambia; il loop e le fonti non cambiano.
 
@@ -152,6 +153,58 @@ codice sviluppato con entrambi gli agenti.
    una riga vuota precede il delimitatore YAML: la skill non era richiesta dallo smoke e il contratto
    A1 resta valido; fix da autorizzare come microstep separato prima di fare affidamento sulla skill.
 
+### A1.1 — Protocollo Senior e checkpoint Git falsificabile
+
+**Trigger founder 2026-07-24:** il metodo era applicato in modo meno rigoroso già in precedenza e il
+calo è diventato evidente durante R0.1, quando un gate interamente verificato è rimasto non committato
+mentre veniva analizzato il finding TLS del gate successivo.
+
+**Root cause di processo:** `AGENTS.md` prescriveva il push dopo ogni step completato, ma il runbook
+affermava che commit e push non erano impliciti. Mancavano inoltre definizioni univoche di gate vs
+microstep, l'invariante di working tree tracked pulito tra gate e una tassonomia dei finding.
+
+**Decisione ACX-D7 ratificata:**
+
+- il microstep è verificato subito; il gate è la minima unità rilasciabile e l'unità di commit/push;
+- il GO founder che apre un gate autorizza il checkpoint Git normale alla sua chiusura;
+- nessun gate successivo si apre prima di push, delta remoto `0 0` e assenza di modifiche tracked
+  attribuibili al gate precedente;
+- file estranei dell'utente possono restare dirty solo se identificati, fuori scope e mai staged;
+- un blocker in scope resta nel gate; un finding release-critical fuori scope apre HOLD/nuovo gate
+  senza trattenere o contaminare il gate corrente già verde;
+- docs gate decisionale e code gate sono distinti e il primo va pubblicato prima del secondo.
+
+**Scope A1.1:** `AGENTS.md`, runbook condiviso, adapter root `CLAUDE.md`, `CONTRIBUTING.md`, riferimenti
+del guard lifecycle, questa SPEC, `docs/INDEX.md` e `BUILD_LOG.md`. Nessuna policy prodotto, modifica
+runtime applicativa, schema o dato persistente.
+
+**Pass:** cross-doc review senza contraddizioni; Contract Smoke nuovo Claude Code/Codex equivalente
+anche sul campo `DELIVERY_CHECKPOINT`; lifecycle guard coerente con la sezione univoca §11; diff
+limitato ai file di governance; commit/push docs prima di aprire il gate TLS.
+
+**Stato A1.1:** CHIUSO OPERATIVAMENTE SU WAIVER FOUNDER ACX-D8 — norme ratificate; Codex PASS dopo
+remediation di un drift di coda; Claude Code non eseguibile per session limit fino alle 22:00 e
+differito come follow-up obbligatorio. Il mancato verdetto non è registrato come PASS.
+
+**Evidenze di verifica 2026-07-24:**
+
+- Codex CLI `0.145.0-alpha.27`, sessione nuova read-only: primo run **FAIL** perché l'intestazione
+  conservava la vecchia coda v1.0.14; corrette tutte le fonti vive senza riscrivere i consuntivi
+  storici; secondo run **PASS** sui sei campi, incluso `DELIVERY_CHECKPOINT`;
+- Claude Code `2.1.170`: entrambi i tentativi read-only (default e Haiku) fermati dal provider con
+  `You've hit your session limit · resets 10pm`; nessun verdetto prodotto, quindi nessun PASS
+  attribuito;
+- waiver founder ACX-D8: procedere subito col checkpoint A1.1 e con R0.1.5, recuperando lo smoke
+  Claude appena possibile. Eccezione one-shot: non modifica ACX-D7, il runbook o i pass criteria dei
+  gate futuri e non autorizza a chiamare verde una verifica non eseguita;
+- review deterministica: sezioni `AGENTS.md` univoche 1–11; zero marker contraddittori nelle fonti
+  vive; 10/10 SPEC aperte indicizzate; zero SPEC/IMPL_PLAN in `docs/technical/`; zero SPEC
+  implementate rimaste vive; link locali dei sei documenti Markdown toccati validi; `ruff check
+  api/` e `git diff --check` verdi;
+- `live-01-dashboard.png`, censito come file locale del founder fuori scope all'avvio, risulta assente
+  al controllo finale; il founder ne ha confermato la rimozione. Variazione attribuita e stop
+  condition chiusa; il file non è mai entrato nello stage.
+
 ### A2 — Inventario e riduzione controllata delle duplicazioni
 
 Costruire una matrice riga-per-riga delle responsabilità duplicate tra `AGENTS.md`, `CLAUDE.md` e i
@@ -159,8 +212,8 @@ file di layer. Rimuovere una responsabilità per volta solo dopo averne provato 
 canonica e il link dall'entry point Claude.
 
 **Pass:** nessuna informazione operativa diventa meno raggiungibile; Contract Smoke pre/post
-identico; rollback del singolo commit sufficiente. Da pianificare separatamente dalla release
-v1.0.14 e dai relativi fix R1.
+identico; rollback del singolo commit sufficiente. Da pianificare separatamente dalla coda prodotto
+R0 → P → candidate v1.0.15 → G-MAC.
 
 ### A3 — Hook portabili e fail-loud
 
@@ -195,14 +248,15 @@ come legge operativa senza review umana.
 
 ## 6. Contract Smoke Claude/Codex
 
-Il smoke è read-only e si esegue in una sessione nuova, sullo stesso commit, chiedendo a ciascun
-agente di restituire con puntatore alla fonte:
+Il smoke è read-only e si esegue in una sessione nuova, sullo stesso stato del gate, chiedendo a
+ciascun agente di restituire con puntatore alla fonte:
 
 1. ordine delle fonti autorevoli;
 2. branch di sviluppo e divieto di feature branch non coordinate;
-3. work-queue corrente e suo ordine;
-4. quality gate richiesto per lo scope dichiarato;
-5. lifecycle di ADR, SPEC, SSoT evergreen e `BUILD_LOG.md`.
+3. confine microstep/gate e checkpoint Git richiesto;
+4. work-queue corrente e suo ordine;
+5. quality gate richiesto per lo scope dichiarato;
+6. lifecycle di ADR, SPEC, SSoT evergreen e `BUILD_LOG.md`.
 
 **PASS:** le risposte sono semanticamente equivalenti e nessun agente attribuisce autorità a un
 documento storico o inventa policy.
@@ -212,12 +266,13 @@ regola: si corregge la fonte canonica o l'adapter che non la raggiunge.
 
 ## 7. Guardrail pre-lancio
 
-- Questa migrazione non entra nella sequenza prodotto v1.0.14 → P → G-MAC.
+- Questa migrazione non entra nella sequenza prodotto R0 → P → candidate v1.0.15 → G-MAC.
 - A0 e A1 sono docs-only; i gate A2-A6 hanno scheduling e commit separati.
 - Mai combinare una migrazione di governance con un fix money-path, schema DB, release bump o build.
 - Nessun gate può degradare l'operatività Claude Code già presente.
 - Nessun gate può richiedere l'AI per il funzionamento del CRM.
-- Nessun commit/push è implicito nella ratifica: resta necessaria l'autorizzazione del founder.
+- Il GO founder apre un solo gate e ne autorizza il checkpoint normale; ogni gate successivo richiede
+  autorità propria, ma non una richiesta duplicata di commit/push per il gate già approvato.
 
 ## 8. Rollback e stop conditions
 
@@ -229,6 +284,7 @@ utente. Il gate si ferma prima di ulteriori modifiche se:
 - una modifica richiede permessi più ampi o path locali;
 - emerge una nuova policy di prodotto o dominio non ratificata;
 - il diff invade la coda release/P/G-MAC;
+- il gate precedente non è pushato o lascia modifiche tracked attribuibili;
 - Claude Code perde una capacità disponibile nella baseline A0.
 
 ## 9. Decisioni ratificate
@@ -237,10 +293,12 @@ utente. Il gate si ferma prima di ulteriori modifiche se:
 |---|---|---|
 | ACX-D1 | `AGENTS.md` unico nucleo; nessun `CODEX.md` | **✅ RATIFICATA** |
 | ACX-D2 | Migrazione strangler; nessuna riduzione immediata di `CLAUDE.md` | **✅ RATIFICATA** |
-| ACX-D3 | A1 prima di nuovo codice congiunto; A2+ separati dalla v1.0.14 | **✅ RATIFICATA** |
+| ACX-D3 | A1 prima di nuovo codice congiunto; A2+ separati dalla coda prodotto | **✅ RATIFICATA** |
 | ACX-D4 | Auditor condivisi solo ad A4, dopo prova di parità | **✅ RATIFICATA** |
 | ACX-D5 | `.codex/` nasce solo da un bisogno dimostrato | **✅ RATIFICATA** |
 | ACX-D6 | Learning proposto dagli agenti, promosso a regola solo con review umana | **✅ RATIFICATA** |
+| ACX-D7 | Gate unità di commit/push; GO iniziale autorizza il checkpoint; nessun gate successivo prima dell'allineamento remoto e tracked-clean | **✅ RATIFICATA 2026-07-24** |
+| ACX-D8 | Waiver one-shot: A1.1 può essere pubblicato e R0.1.5 aperto con smoke Codex PASS e smoke Claude differito per quota; recupero Claude obbligatorio appena possibile, senza attribuirgli PASS | **✅ RATIFICATA 2026-07-24** |
 
 ## 10. Definition of Done A0
 
@@ -251,8 +309,9 @@ utente. Il gate si ferma prima di ulteriori modifiche se:
 - [x] Nessuna modifica operativa a Claude Code o Codex.
 - [x] ACX-D1..D6 ratificate dal founder il 2026-07-19.
 
-**Prossimo gate della migrazione:** A2, **non autorizzato** e separato dalla v1.0.14. La chiusura di
-A1 riporta il lavoro alla coda prodotto ratificata.
+**Prossimo gate della migrazione:** A2, **non autorizzato** e separato dalla coda prodotto (alla
+chiusura A0 era v1.0.14; oggi è R0 → P → candidate v1.0.15 → G-MAC). La chiusura di A1 riporta il
+lavoro alla coda prodotto ratificata.
 
 ## 11. Definition of Done A1
 
@@ -266,6 +325,23 @@ A1 riporta il lavoro alla coda prodotto ratificata.
 - [x] Cross-doc review e diff hygiene verdi.
 - [x] Finding residui dichiarati, non corretti fuori scope.
 
-**Condizione per nuovo codice congiunto Claude/Codex: SODDISFATTA.** La coda prodotto torna
-autorevole: v1.0.14 → blocco P → blocco G-MAC. A2-A6 restano chiusi e richiedono un GO separato;
-in particolare A2 non va combinato con i fix R1 della v1.0.14.
+**Condizione per nuovo codice congiunto Claude/Codex: SODDISFATTA.** Alla chiusura A1 la coda allora
+vigente tornava autorevole; questa è una fotografia storica del 2026-07-19, superata dall'interlock
+R0 ratificato il 2026-07-24. A2-A6 restano chiusi e richiedono un GO separato dalla coda prodotto
+corrente R0 → P → candidate v1.0.15 → G-MAC.
+
+## 12. Definition of Done A1.1
+
+- [x] Contraddizione commit/push eliminata da nucleo, runbook e adapter.
+- [x] Gate, microstep, HOLD e state machine definiti in modo falsificabile.
+- [x] Invariante tracked-clean + remoto `0 0` prima del gate successivo.
+- [x] Tassonomia finding in-scope / release-critical fuori scope / informativo.
+- [x] Sezione lifecycle resa univoca come §11 e riferimento guard riallineato.
+- [x] Contract Smoke Codex con campo `DELIVERY_CHECKPOINT`: PASS dopo remediation del drift coda.
+- [ ] Contract Smoke Claude: differito su waiver founder ACX-D8; recupero obbligatorio appena
+  possibile e prima di qualunque gate A2+.
+- [x] Cross-doc review, lifecycle/link/diff hygiene e Ruff completati.
+- [x] Commit e push docs autorizzati nel checkpoint di chiusura A1.1.
+
+**Prossimo gate prodotto:** remediation TLS R0.1.5, apribile soltanto dopo il checkpoint pubblicato di
+A1.1. A2-A6 restano non autorizzati e comunque bloccati fino al recupero dello smoke Claude.

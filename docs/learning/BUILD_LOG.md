@@ -3951,3 +3951,46 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
   aggiunto dopo la prima esecuzione full. Lint mirato ancora verde.
 - **Decisione founder successiva:** richiesti commit e push del gate R0.1 prima di decidere la
   collocazione del finding TLS. Il file locale `live-01-dashboard.png` resta fuori dal perimetro.
+
+---
+
+## 2026-07-24 — Protocollo Senior A1.1 depositato, HOLD sullo smoke Claude
+
+- **Checkpoint R0.1 rettificato append-only:** il gate riportato sopra come non pubblicato è stato
+  successivamente committato e pushato in `824799d` (`fix: rende FRP il percorso pubblico gestito`);
+  delta remoto verificato `0 0`. Soltanto dopo quel checkpoint è iniziato il gate docs/process A1.1.
+- **Root cause del calo di metodo:** `AGENTS.md` chiedeva il push dopo ogni step completato, mentre il
+  runbook dichiarava commit/push non impliciti. Mancavano definizioni falsificabili di gate vs
+  microstep, condizione tracked-clean tra gate e classificazione dei finding.
+- **Decisione founder ACX-D7:** il microstep si verifica subito; il gate è l'unità di commit/push; il
+  GO iniziale ne autorizza il checkpoint normale; nessun gate successivo prima di push, delta remoto
+  `0 0` e zero modifiche tracked attribuibili al gate precedente. HOLD e finding fuori scope non
+  trattengono né contaminano un gate corrente già verde.
+- **Allineamento:** aggiornati nucleo `AGENTS.md`, runbook agent-neutral, adapter root `CLAUDE.md`,
+  `CONTRIBUTING.md`, SPEC/INDEX e riferimento del guard lifecycle. Risolta anche la numerazione
+  duplicata: lifecycle documentale ora univocamente in §11.
+- **Contract Smoke Codex:** primo run read-only **FAIL** su un drift reale della coda prodotto
+  (`v1.0.14 → P → G-MAC` rimasto nell'intestazione); fonti vive riallineate a
+  `R0 → P → candidate v1.0.15 → G-MAC`; secondo run **PASS** sui sei campi, incluso
+  `DELIVERY_CHECKPOINT`.
+- **Contract Smoke Claude:** client `2.1.170` raggiungibile, ma tentativi default e Haiku bloccati dal
+  provider per session limit fino alle 22:00. Nessun output semantico e nessun PASS dichiarato.
+- **Guard deterministici:** sezioni AGENTS 1–11; zero contraddizioni vive; 10/10 SPEC indicizzate;
+  zero leak SPEC/IMPL_PLAN in `docs/technical/`; zero spec implementate rimaste vive; link locali dei
+  documenti toccati validi; Ruff e `git diff --check` verdi. Nessun test applicativo richiesto per il
+  gate docs/process.
+- **Stato:** A1.1 resta IN VERIFICA; commit/push del gate e apertura TLS R0.1.5 restano bloccati dal
+  solo smoke Claude mancante. `live-01-dashboard.png` è intatto, fuori scope e mai staged.
+- **Rettifica immediata prima del checkpoint:** il controllo finale non trova più
+  `live-01-dashboard.png` né nel root né altrove nel workspace. Nessun comando del gate lo ha scritto,
+  spostato o cancellato, ma la variazione non è attribuibile con certezza; stage/commit restano quindi
+  sospesi anche per questa seconda stop condition. La frase precedente non va usata come stato finale.
+- **Attribuzione founder successiva:** il founder conferma di avere rimosso personalmente
+  `live-01-dashboard.png`. La stop condition sul working tree è chiusa; resta soltanto il Contract
+  Smoke Claude eseguibile dopo il reset quota delle 22:00.
+- **Waiver founder ACX-D8:** il founder decide di non attendere le 22:00 e autorizza il checkpoint
+  A1.1 e la successiva apertura di R0.1.5. Lo smoke Claude resta un follow-up obbligatorio appena
+  possibile e prima di A2+; non viene chiamato PASS e la waiver one-shot non modifica il Protocollo
+  Senior né crea una fallback policy generale.
+- **Chiusura operativa A1.1:** gate pronto per commit/push docs atomico; il gate TLS resta separato e
+  può iniziare soltanto dopo verifica del delta remoto `0 0` e working tree tracked pulito.

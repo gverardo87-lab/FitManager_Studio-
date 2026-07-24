@@ -62,7 +62,7 @@ fi
 
 echo ""
 
-echo "=== Docs: guard ciclo-di-vita (AGENTS.md par.7, riordino 2026-07-03) ==="
+echo "=== Docs: guard ciclo-di-vita (AGENTS.md par.11, riordino 2026-07-03) ==="
 DOCS_FAIL=0
 # La POSIZIONE e' lo STATO: technical/ = solo SSoT evergreen, mai spec/piani.
 # NB: compgen -G, non `ls glob1 glob2` (ls torna nonzero se UN glob non matcha -> guard cieco).
@@ -72,7 +72,7 @@ if compgen -G "docs/technical/SPEC_*.md" >/dev/null || compgen -G "docs/technica
 fi
 # Una spec IMPLEMENTATA non resta tra le vive (fold-back + archiviazione nello stesso commit del gate).
 if grep -l "^\*\*Stato:\*\* ✅" docs/specs/*.md >/dev/null 2>&1; then
-    echo "  FAIL [docs]: spec con Stato IMPLEMENTATA in docs/specs/ - consuntiva e archivia (AGENTS.md par.7)."
+    echo "  FAIL [docs]: spec con Stato IMPLEMENTATA in docs/specs/ - consuntiva e archivia (AGENTS.md par.11)."
     grep -l "^\*\*Stato:\*\* ✅" docs/specs/*.md | sed 's/^/         /'
     DOCS_FAIL=1
 fi

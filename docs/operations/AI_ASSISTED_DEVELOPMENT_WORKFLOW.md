@@ -43,16 +43,18 @@ Prima di proporre modifiche, l'agente esegue in ordine:
 
 1. Legge `AGENTS.md` e identifica le istruzioni di layer applicabili.
 2. Controlla branch, commit e working tree senza modificarli.
-3. Identifica la SPEC assegnata e ne legge stato, decisioni aperte, AC, esclusioni e prossimo gate.
-4. Carica soltanto ADR/SSoT/runbook necessari al task; i documenti storici restano fuori contesto.
-5. Produce una impact map breve:
+3. Attribuisce ogni file modificato: se restano modifiche tracked del gate precedente si ferma; file
+   estranei dell'utente sono ammessi solo se identificati, preservati e mai staged.
+4. Identifica la SPEC assegnata e ne legge stato, decisioni aperte, AC, esclusioni e prossimo gate.
+5. Carica soltanto ADR/SSoT/runbook necessari al task; i documenti storici restano fuori contesto.
+6. Produce una impact map breve:
    - obiettivo;
    - file e layer;
    - invarianti;
    - verifiche;
    - esclusioni.
-6. Classifica il task secondo §4.
-7. Se manca autorità per una decisione materiale, si ferma prima del codice e chiede il GO founder.
+7. Classifica il task secondo §4.
+8. Se manca autorità per una decisione materiale, si ferma prima del codice e chiede il GO founder.
 
 Il working tree può contenere modifiche del founder o di un altro agente: sono input da preservare,
 non rumore da cancellare. Nessun reset, checkout distruttivo o sovrascrittura è implicito.
@@ -71,6 +73,17 @@ cambiamento. Non è un fine autonomo: una modifica locale già governata non giu
 
 ## 5. Delivery Loop condiviso
 
+Il contratto vincolante è la state machine del Protocollo Senior in `AGENTS.md` §2:
+
+```
+ORIENTATO → AUTORIZZATO → RED* → GREEN → VERIFICATO → FOLD-BACK
+           → COMMITTATO → PUSHATO → CHECKPOINT PULITO
+```
+
+Il **microstep** si verifica subito; il **gate** è la minima unità rilasciabile e costituisce il
+confine di commit/push. Un HOLD blocca il gate successivo, non la pubblicazione di quello corrente
+già verificato.
+
 ### 5.1 Docs gate
 
 Prima del codice, quando richiesto dalla classificazione:
@@ -82,6 +95,9 @@ Prima del codice, quando richiesto dalla classificazione:
 5. allineare `docs/INDEX.md` e appendere `docs/learning/BUILD_LOG.md` quando il gate lo richiede;
 6. ottenere il GO prima di implementare una decisione ancora aperta.
 
+Un docs gate che ratifica il code gate successivo viene verificato, committato e pushato prima di
+toccare il codice. La ratifica del primo non fonde i due gate.
+
 ### 5.2 Code gate
 
 Per ogni microstep autorizzato:
@@ -91,6 +107,9 @@ Per ogni microstep autorizzato:
 3. non introdurre refactor o astrazioni non richieste;
 4. verificare immediatamente il microstep;
 5. fermarsi se il risultato falsifica una decisione ratificata o allarga lo scope.
+
+Quando pratico, il fix parte da un canary rosso. Se il RED non è applicabile, il motivo entra nel
+report di verifica.
 
 ### 5.3 Verification gate
 
@@ -118,7 +137,29 @@ Prima di dichiarare un gate concluso:
 5. archiviare la SPEC nello stesso gate se il blocco è interamente chiuso;
 6. riportare cambiamenti, evidenze, rischi residui e prossimo passo minimo.
 
-Commit e push non sono impliciti: si eseguono soltanto nel workflow autorizzato dal founder.
+Prima di agire su un finding, classificarlo: un blocker in scope resta nel gate; un rischio
+release-critical fuori scope apre HOLD/nuovo gate; un finding informativo entra nel backlog. Gli
+ultimi due non allargano il diff corrente.
+
+### 5.5 Checkpoint Git obbligatorio
+
+Nel workflow normale su `FitManager_Studio`, il GO founder che apre il gate autorizza anche commit e
+push alla sua chiusura. Non si chiede una seconda autorizzazione, salvo cambio di scope, branch,
+remoto, policy o azione esterna diversa dal push previsto.
+
+Il checkpoint richiede, in ordine:
+
+1. `git diff --check`, stato e lista esatta dei file attribuiti al gate;
+2. stage di path espliciti e review di diff/stat staged; mai `git add .` con file estranei;
+3. commit atomico che lascia il branch rilasciabile per lo scope;
+4. push immediato su `origin/FitManager_Studio`;
+5. verifica che il delta `origin/FitManager_Studio...FitManager_Studio` sia `0 0` e che non restino
+   modifiche tracked del gate;
+6. handoff con hash, test, rischi/HOLD, stato Git e prossimo gate minimo.
+
+Se il consuntivo deve citare l'hash dell'implementazione, sono ammessi due commit nello stesso gate:
+implementazione verificata, poi fold-back con hash esatto; si pushano insieme e non si apre altro
+lavoro tra i due. Un docs-only non crea un commit vuoto per auto-citare il proprio hash.
 
 ## 6. Routing minimo del contesto
 
@@ -146,6 +187,7 @@ Obbligatorio:
 - alla chiusura A1;
 - prima e dopo ogni gate che riduce o sposta contenuto da un bootstrap;
 - dopo una modifica alla precedenza delle fonti, al lifecycle docs o ai quality gate;
+- dopo una modifica al Protocollo Senior o al checkpoint Git;
 - quando Claude Code e Codex producono indicazioni operative divergenti.
 
 ### 7.2 Prompt canonico
@@ -165,6 +207,7 @@ Leggi le istruzioni effettive del repository e restituisci ESATTAMENTE questi ca
 file/sezione:
 AUTHORITY_ORDER: ordine delle fonti autorevoli
 DEVELOPMENT_BRANCH: branch normale di sviluppo e regola sui feature branch
+DELIVERY_CHECKPOINT: confine tra microstep e gate, autorizzazione commit/push e condizione per aprire il gate successivo
 ACTIVE_QUEUE: gate meta corrente e sequenza prodotto, distinguendoli
 QUALITY_GATE_DOCS_PROCESS: verifiche richieste per questo scope e cosa non serve eseguire
 DOCUMENT_LIFECYCLE: casa/stato di ADR, SPEC, SSoT evergreen, AUDIT/ROADMAP, BUILD_LOG e archive
@@ -200,11 +243,12 @@ Il confronto non richiede testo identico, ma questi fatti devono coincidere:
 |---|---|
 | `AUTHORITY_ORDER` | runtime → `AGENTS.md` → `MANIFESTO.md` → `LAUNCH_SCOPE.md` → layer `CLAUDE.md` applicabili → `POSTMORTEMS.md` → altre docs necessarie |
 | `DEVELOPMENT_BRANCH` | `FitManager_Studio`; niente feature branch senza coordinamento esplicito |
+| `DELIVERY_CHECKPOINT` | microstep verificato subito; gate come unità di commit/push; il GO iniziale autorizza il checkpoint; nessun gate successivo prima di push, delta remoto `0 0` e zero modifiche tracked del gate precedente |
 | `ACTIVE_QUEUE` | stesso stato meta e stessa sequenza prodotto letti dalle fonti vive, esplicitamente distinti; nessun gate futuro è aperto per inferenza |
 | `QUALITY_GATE_DOCS_PROCESS` | cross-doc review + lifecycle/link/diff hygiene + Contract Smoke; nessun test applicativo se non cambia codice |
 | `DOCUMENT_LIFECYCLE` | ADR legge/addendum; SPEC aperta→consuntivo→archive; technical evergreen; audit/roadmap fotografia→fold→archive; BUILD_LOG unico append-only; archive non contesto di lavoro |
 
-**PASS:** tutti e cinque i campi sono semanticamente equivalenti, le fonti sono puntate e nessun
+**PASS:** tutti e sei i campi sono semanticamente equivalenti, le fonti sono puntate e nessun
 agente inventa una policy.
 
 **FAIL:** diverge anche un solo fatto vincolante. Correggere fonte o link, aprire due sessioni nuove e
@@ -217,6 +261,7 @@ L'agente si ferma e chiede direzione quando:
 - manca una decisione founder che cambierebbe sostanzialmente il risultato;
 - la richiesta allargherebbe la coda prodotto o le autorizzazioni;
 - working tree e scope si sovrappongono a modifiche non attribuibili con sicurezza;
+- il gate precedente non è pushato o lascia modifiche tracked attribuibili;
 - una verifica critica non è eseguibile o non ha oracolo;
 - emerge drift tra bootstrap, `AGENTS.md`, ADR/SPEC e codice;
 - servirebbe indebolire privacy, multi-tenant safety, auditabilità o determinismo.
@@ -228,6 +273,8 @@ silenziosi.
 
 - Cambi di processo: aggiornare prima la SPEC di collaborazione; ADR solo se cambia una legge di
   prodotto/dominio.
+- Cambi al checkpoint Git: aggiornare `AGENTS.md`, questo runbook e gli adapter nello stesso gate,
+  poi eseguire il Contract Smoke Claude/Codex.
 - Cambi additivi ai link: Contract Smoke dopo la modifica.
 - Rimozioni/spostamenti dai bootstrap: gate dedicato con smoke pre/post e rollback atomico.
 - Il runbook resta agent-neutral: esempi specifici di CLI stanno solo nelle sezioni di invocazione.

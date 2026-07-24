@@ -24,23 +24,73 @@ Il runbook agent-neutral per lavorare con Claude Code e Codex e'
 `docs/operations/AI_ASSISTED_DEVELOPMENT_WORKFLOW.md`: deriva da `AGENTS.md` e non ne modifica la
 precedenza. I bootstrap specifici puntano al nucleo comune senza duplicarlo.
 
-## 2) Delivery Loop
+## 2) Protocollo Senior di Delivery
 
-Per ogni task:
+### Unita' operative
 
-1. scrivere un impact map breve:
-   - obiettivo
-   - file/layer toccati
-   - invarianti da preservare
-2. fare un microstep utile alla volta
-3. verificare subito il microstep
-4. riportare:
-   - cosa e' cambiato
-   - cosa e' stato verificato
-   - rischi/gap emersi
-   - prossimo passo minimo
+- **Task**: la richiesta complessiva; puo' contenere piu' gate.
+- **Gate**: la minima unita' coesa, verificabile e pubblicabile che lascia il branch rilasciabile
+  per il proprio scope. E' l'unita' di commit/push.
+- **Microstep**: una modifica interna al gate; si verifica subito, ma non richiede un commit se da
+  sola non forma un'unita' rilasciabile.
+- **HOLD**: impedisce di aprire il gate successivo; non impedisce di chiudere e pubblicare il gate
+  corrente gia' verificato.
 
-Non nascondere i rischi. Se emergono, esplicitarli presto.
+### Avvio obbligatorio
+
+Prima di modificare file:
+
+1. controllare branch, `HEAD`, delta col remoto e working tree senza mutarli;
+2. attribuire ogni modifica esistente: i file dell'utente o estranei allo scope restano intatti e
+   non vengono mai inclusi per comodita';
+3. leggere la SPEC attiva e le sole fonti necessarie al layer;
+4. scrivere una impact map breve con obiettivo, file/layer, invarianti, verifiche ed esclusioni;
+5. ottenere il GO founder se manca una decisione materiale. Il GO sul gate autorizza il suo normale
+   commit e push a verifica conclusa; serve un nuovo GO se cambiano scope, branch, remoto o policy.
+
+### State machine del gate
+
+```
+ORIENTATO -> AUTORIZZATO -> RED* -> GREEN -> VERIFICATO -> FOLD-BACK
+           -> COMMITTATO -> PUSHATO -> CHECKPOINT PULITO
+```
+
+`RED*` e' obbligatorio quando e' pratico scrivere un canary/regressione prima del fix; se non lo e',
+il motivo va riportato. Le altre transizioni non si saltano.
+
+1. fare un microstep utile alla volta e verificarlo subito;
+2. eseguire i quality gate proporzionati al rischio;
+3. classificare i finding prima di agire:
+   - **in scope e bloccante**: correggere nel gate prima di `GREEN`;
+   - **fuori scope ma release-critical**: registrare HOLD/nuovo gate, senza contaminarvi il gate
+     corrente;
+   - **informativo**: registrare il rischio/backlog senza allargare il diff;
+4. fare il fold-back documentale previsto dal §11;
+5. controllare `git diff --check`, stato e lista esatta dei file; stage solo dei path attribuiti;
+6. controllare diff e stat staged, poi committare con il formato del §8;
+7. push immediato su `FitManager_Studio` e verifica del delta col remoto;
+8. aprire il gate successivo solo al checkpoint: nessuna modifica tracked attribuibile al gate
+   precedente e branch remoto allineato.
+
+Un gate docs-first che ratifica una decisione e il relativo code gate sono due gate distinti: il
+primo va committato e pushato prima di iniziare il secondo. Se il fold-back deve citare l'hash esatto
+dell'implementazione, usare due commit coesi nello stesso gate (implementazione, poi consuntivo) e
+pusharli insieme; non aprire altro lavoro tra i due. Un gate docs-only non genera un commit vuoto per
+auto-citare il proprio hash: registra messaggio/evidenze e riporta l'hash verificato nell'handoff.
+
+Sono ammessi file dirty estranei soltanto se attribuiti esplicitamente (per esempio un asset locale
+del founder), fuori scope e mai staged. Non sono ammessi `git add .`, reset distruttivi o bypass dei
+quality gate. `git add -u` e' ammesso solo quando tutte le modifiche tracked appartengono al gate.
+
+### Stop e reporting
+
+Fermarsi prima del gate successivo se il gate corrente non e' verificato/pushato, se restano sue
+modifiche tracked, se un finding cambia autorita'/scope, se una modifica non e' attribuibile o se un
+verifier critico non e' disponibile. Dopo il push riportare sempre: commit, verifiche reali, rischi o
+HOLD, stato Git/remoto e prossimo gate minimo.
+
+Non nascondere i rischi. Non usare `BUILD_LOG.md` come sostituto del checkpoint Git e non accumulare
+in un unico commit un gate concluso e la remediation di un finding successivo.
 
 ## 3) Principi non negoziabili
 
@@ -88,8 +138,11 @@ Non nascondere i rischi. Se emergono, esplicitarli presto.
 ### Workflow normale
 
 1. Lavorare sempre su `FitManager_Studio`.
-2. Push dopo ogni step completato (commit intermedi frequenti).
-3. Non creare feature branch senza coordinamento esplicito.
+2. Eseguire un gate alla volta secondo il Protocollo Senior del §2.
+3. Commit e push dopo ogni gate completato; il GO founder sul gate autorizza il checkpoint normale
+   di quel gate su questo branch, senza richiesta duplicata.
+4. Verificare dopo il push che `origin/FitManager_Studio...FitManager_Studio` sia `0 0`.
+5. Non creare feature branch senza coordinamento esplicito.
 
 ### Release
 
@@ -228,7 +281,7 @@ Quando si scopre un bug in produzione o un problema critico:
 
 Severita': P0 (sistema inutilizzabile) → P3 (cosmetico).
 
-## 7) Ciclo di vita dei documenti (IL metodo — ratificato 2026-07-03)
+## 11) Ciclo di vita dei documenti (IL metodo — ratificato 2026-07-03)
 
 **Principio: la POSIZIONE è lo STATO.** Un agente (o un umano) decide cosa caricare dal path, senza
 dover leggere gli header. Contratto di contesto sintetico anche in `CLAUDE.md`.
@@ -241,13 +294,13 @@ dover leggere gli header. Contratto di contesto sintetico anche in `CLAUDE.md`.
 | **AUDIT/ROADMAP** | Fotografie | Foldate nelle decisioni che generano (ADR/SPEC), poi → `docs/archive/` con header di esito. Mai riferimento vivo |
 | **LOG** | `docs/learning/BUILD_LOG.md` | UNICO log di sviluppo, append-only, mai riscritto. (`docs/upgrades/` dismesso 2026-07-03) |
 
-**Definition of Done di un gate** (estende il Delivery Loop §2):
+**Definition of Done di un gate** (estende il Protocollo Senior §2):
 
 ```
 implementazione + test → full suite verde → verifier adversariale (financial-invariant-verifier
 sui money-path; docs-code-drift-auditor su richiesta) → FOLD-BACK DOCS (Stato spec consuntivato ·
 INDEX · BUILD_LOG · ADR/Addendum se è cambiata una regola · archiviazione se il blocco è chiuso)
-→ push (su ok del founder)
+→ commit atomico → push → verifica allineamento remoto (GO del gate secondo §2)
 ```
 
 Regole falsificabili (presidiate da guard, non da disciplina):

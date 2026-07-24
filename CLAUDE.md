@@ -362,6 +362,9 @@ Formato: `area: descrizione` — es. `api: ...`, `nutrizione: ...`, `dashboard: 
 
 Quality gate obbligatorio: `bash tools/scripts/check-all.sh` (ruff + next build).
 Ogni commit deve lasciare il branch rilasciabile per il proprio scope.
+Il confine operativo è il gate, non il singolo microstep: Protocollo Senior e checkpoint Git in
+`AGENTS.md` §2. Dopo il GO sul gate, commit/push sono parte della chiusura e il gate successivo non si
+apre finché remoto e modifiche tracked del gate precedente non sono allineati.
 
 ## Pitfalls ricorrenti (top 10)
 
