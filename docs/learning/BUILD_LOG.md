@@ -4079,3 +4079,23 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
   dichiarato, non falsamente verde.
 - **Prossimo microstep:** checkpoint core; poi packaging riproducibile con hash gate. Edge e strict
   trust 200/404 restano necessari per chiudere R0.1.5.
+
+---
+
+## 2026-07-24 — R0.1.5 packaging ACME riproducibile e fail-closed
+
+- **Build:** `build-installer.sh` richiama uno staging dedicato dopo il backend build. `lego.exe` viene
+  copiato nel bundle solo se coincidono SHA-256 pinato, output esatto `5.2.1 windows/amd64` e licenza
+  MIT tracked; anche la copia staged è ri-hashata. Inno Setup include già ricorsivamente il bundle.
+- **Acquisizione:** nuovo `fetch-lego.ps1`, fuori dalla build e senza fallback `latest`: release URL
+  v5.2.1, hash ZIP `3e87…699e`, hash exe `e2d5…25e5`, hash licenza `bf12…ddf6`, target/versione e
+  destinazione finale tutti verificati. Esecuzione end-to-end reale PASS; scratch confinato nel temp
+  root e rimosso. La build resta network-free.
+- **Repository/licenze:** `tools/bin/lego.exe` resta ignorato. Sono tracked solo script, pin e testo MIT;
+  `.gitattributes` forza LF per impedire che CRLF alteri l'hash della licenza o gli script su Windows.
+- **Test:** packaging + connectivity release guard **9/9 PASS** (un warning Hypothesis baseline),
+  inclusi missing, binario corrotto e stage reale; `bash -n` per gli script shell e parse PowerShell
+  PASS. Nessun codice runtime, dato persistente o frontend modificato in questo microstep.
+- **Gap dichiarato:** nessun nuovo installer RC prodotto qui; la checklist richiede ispezione finale di
+  `backend/lego.exe` e `backend/THIRD_PARTY_LICENSES/lego-MIT.txt`. R0.1.5 resta aperto su edge e live
+  strict 200/404; verifica Claude ancora differita, mai registrata come PASS.

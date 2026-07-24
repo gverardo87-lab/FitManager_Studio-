@@ -26,6 +26,8 @@
 - [x] DB cifrati nel bundle: `catalog.db.enc` + `nutrition.db.enc` (AES-256-GCM)
 - [x] Versione `1.0.6` riallineata in `api/__init__.py`, `frontend/package.json` e `installer/fitmanager.iss`
 - [x] Build pipeline safety gates: CRM data leak + ISS reference + nutrition.db integrity
+- [x] R0.1.5: `lego.exe` v5.2.1 entra nel bundle solo dopo verifica SHA-256, target/versione e licenza MIT; la build non effettua download
+- [ ] Release candidate v1.0.15: ispezionare l'installer finale e confermare `backend/lego.exe` + `backend/THIRD_PARTY_LICENSES/lego-MIT.txt`
 - [x] Nome output installer versionato e tracciabile, non solo `FitManager_Setup.exe`
 - [x] Packaging di `catalog.db.enc` e `license_public.pem` tramite snapshot immutabili in `dist/release-data`
 - [x] Bundle sanitizzato: zero Alembic, zero seed JSON, zero `.pyc` (ADR-007)

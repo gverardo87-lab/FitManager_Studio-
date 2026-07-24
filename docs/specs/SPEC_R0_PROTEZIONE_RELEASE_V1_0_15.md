@@ -269,8 +269,27 @@ L'edge non custodisce certificati o chiavi private dei trainer.
 - **Blocker live esterno:** dal runner corrente le porte edge 22/80/443/7000 risultano tutte non
   raggiungibili. Non è attribuibile al proxy HTTP (anche SSH e bind FRP sono down), ma impedisce edge
   setup e prova HTTPS. R0.1.5 resta aperto.
-- Restano fuori da questo checkpoint: packaging/hash gate dell'installer, configurazione edge e prova
-  strict browser-trusted 200/404.
+- Alla data del checkpoint core restavano packaging, configurazione edge e prova strict; il packaging
+  è consuntivato nel blocco successivo.
+
+### Consuntivo parziale R0.1.5 — packaging ACME fail-closed (2026-07-24)
+
+- `build-installer.sh` invoca dopo il build backend uno staging dedicato che fallisce se `lego.exe`
+  manca, ha hash diverso da quello pinato, non dichiara esattamente `5.2.1 windows/amd64`, oppure se
+  la licenza MIT tracked manca/non coincide. Solo dopo i controlli copia binario e licenza sotto
+  `dist/fitmanager/`, già incluso ricorsivamente da Inno Setup.
+- `fetch-lego.ps1` è un'operazione developer esplicita, separata dalla build: URL release v5.2.1
+  immutabile, SHA-256 ZIP/exe/licenza, target/versione e copia finale riverificati; scratch confinato
+  nel temp root e cleanup deterministico. Test end-to-end reale completato con SHA exe
+  `e2d5f33c26032197db5953f8cfd93aa960f08cf2014c887b79ba950cb5b525e5`.
+- Il binario resta ignorato da Git; sono tracked solo script, pin e licenza. `.gitattributes` forza LF
+  sui file soggetti a hash/esecuzione shell, evitando drift CRLF sui checkout Windows.
+- Gate packaging + release guard **9/9 PASS**; `bash -n` sui due script shell, parse PowerShell, fetch
+  end-to-end e diff check verdi. Coperti dinamicamente missing, tampering e staging del client reale.
+- AC-R015-6 è coperto a livello pipeline. Non è stato prodotto un nuovo installer release candidate in
+  questo microstep; l'ispezione dell'artifact finale resta nella checklist release.
+- **Restano aperti per chiudere R0.1.5:** configurazione edge HTTP/80 e prova live browser-trusted con
+  HTTPS 200 sulle sole route ammesse e 404 sui path privati/HTTP non challenge.
 
 ## 7. R0.2 — Binario unico di migrazione
 

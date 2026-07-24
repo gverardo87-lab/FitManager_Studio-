@@ -133,6 +133,10 @@ fi
 cp "$FRPC_SRC" "$FRPC_DEST"
 echo "frpc.exe staged in dist/fitmanager/ ($(du -h "$FRPC_DEST" | cut -f1))"
 
+# Stage del client ACME solo dopo verifica supply-chain (hash, versione e licenza).
+# Nessun download avviene durante la build: l'acquisizione esplicita e' in fetch-lego.ps1.
+bash "$ROOT/tools/build/stage-acme-client.sh"
+
 echo "Staging immutable release data..."
 mkdir -p "$RELEASE_DATA_DIR"
 cp "$ROOT/data/catalog.db" "$RELEASE_DATA_DIR/catalog.db"

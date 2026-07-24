@@ -252,7 +252,7 @@ Zero configurazione per il trainer. Privacy-first: il VPS non vede il contenuto 
 |-------|------|----------|
 | Config | `api/services/tunnel_config.py` | TunnelConfig dataclass, risoluzione frpc path, cert self-signed auto-generato |
 | Manager | `api/services/tunnel_manager.py` | Babysitter frpc: subprocess, backoff+jitter, drain output, atexit cleanup |
-| Certificato | `api/services/cert_manager.py` | **R0.1.5 core implementato:** preflight HTTP pubblico prima dell'ordine, lego pinato, rinnovo locale, validazione e promozione cert/key con rollback; packaging/edge/live ancora pendenti |
+| Certificato | `api/services/cert_manager.py` | **R0.1.5 core + packaging implementati:** preflight HTTP, lego v5.2.1 pinato e staged fail-closed con licenza, rinnovo locale, promozione cert/key con rollback; edge/live ancora pendenti |
 | Identity | `api/services/license.py` | Claim `instance_id` nel JWT licenza (determina sottodominio) |
 | CLI | `tools/admin_scripts/generate_license.py` | `--instance-id <slug>` nel comando `sign` |
 | Boot | `api/main.py` lifespan step 6 | Auto-start tunnel + auto-set `PUBLIC_BASE_URL` |
