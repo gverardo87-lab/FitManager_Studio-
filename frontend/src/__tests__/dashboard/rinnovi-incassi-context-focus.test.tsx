@@ -140,6 +140,40 @@ describe("FE-1.0 — focus contestuale Rinnovi & Incassi", () => {
     expect(payRateMutate).not.toHaveBeenCalled();
   });
 
+  it("apre il pagamento guidato senza incassare al primo click", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 6, 24, 12));
+
+    try {
+      state.overdue = {
+        ...emptyQuery(),
+        data: { items: [overdueRate(41)], total: 1 },
+      };
+
+      render(<RinnoviIncassiPage />);
+
+      fireEvent.click(screen.getByRole("button", { name: "Incassa" }));
+
+      expect(payRateMutate).not.toHaveBeenCalled();
+      expect(screen.getByText("Data Pagamento")).toBeInTheDocument();
+      expect(screen.getByRole("combobox")).toHaveTextContent("CONTANTI");
+
+      fireEvent.click(screen.getByRole("button", { name: /Paga.*100/ }));
+
+      expect(payRateMutate).toHaveBeenCalledWith(
+        {
+          rateId: 41,
+          importo: 100,
+          metodo: "CONTANTI",
+          data_pagamento: "2026-07-24",
+        },
+        { onSuccess: expect.any(Function) },
+      );
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("mantiene marker e highlight nel doppio ciclo di React StrictMode", async () => {
     state.overdue = { ...emptyQuery(), data: { items: [overdueRate(41)], total: 1 } };
     window.history.replaceState({}, "", "/rinnovi-incassi?focus=overdue-rate&client_id=7");

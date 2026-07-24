@@ -9,7 +9,7 @@
  */
 
 import { useState } from "react";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -33,7 +33,7 @@ export function PayRateForm({
   payMutation,
   onCancel,
 }: {
-  rate: Rate;
+  rate: Pick<Rate, "id" | "importo_residuo">;
   payMutation: ReturnType<typeof usePayRate>;
   onCancel: () => void;
 }) {
@@ -41,11 +41,8 @@ export function PayRateForm({
   const [importo, setImporto] = useState(residuo);
   const [metodo, setMetodo] = useState("CONTANTI");
 
-  // Smart default: scadenza passata → usa data_scadenza, futura → oggi
-  const scadenza = parseISO(rate.data_scadenza);
-  const oggi = new Date();
-  const smartDefault = scadenza <= oggi ? scadenza : oggi;
-  const [dataPagamento, setDataPagamento] = useState<Date>(smartDefault);
+  // La data di cassa descrive quando il denaro entra: default oggi, sempre modificabile.
+  const [dataPagamento, setDataPagamento] = useState<Date>(() => new Date());
 
   const isPartial = importo > 0 && importo < residuo - 0.01;
   const exceedsResiduo = importo > residuo + 0.01;

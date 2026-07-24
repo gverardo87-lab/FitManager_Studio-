@@ -59,6 +59,7 @@ import { IncassaResiduoDialog } from "@/components/contracts/IncassaResiduoDialo
 import { TerminateContractDialog } from "@/components/contracts/TerminateContractDialog";
 import { CreditiDaIncassareCard } from "@/components/contracts/CreditiDaIncassareCard";
 import { RimborsiDaErogareCard } from "@/components/contracts/RimborsiDaErogareCard";
+import { PayRateForm } from "@/components/contracts/payment-plan/PayRateForm";
 import { useOverdueRates, useExpiringContracts, useClientsToRecover, useSuspendedContracts } from "@/hooks/useDashboard";
 import { usePayRate } from "@/hooks/useRates";
 import {
@@ -92,8 +93,6 @@ const MOTIVI_NON_RINNOVA: { value: string; label: string }[] = [
   { value: "insoddisfatto", label: "Insoddisfatto" },
   { value: "altro", label: "Altro" },
 ];
-
-const PAYMENT_METHODS = ["CONTANTI", "POS", "BONIFICO"] as const;
 
 function ContextAnnouncement({ message }: { message: string }) {
   return (
@@ -257,17 +256,8 @@ function OverdueRateCard({
   targetRef,
 }: OverdueRateCardProps) {
   const payRate = usePayRate();
-  const [method, setMethod] = useState("CONTANTI");
+  const [showPayForm, setShowPayForm] = useState(false);
   const isPaying = payRate.isPending;
-
-  const handlePay = () => {
-    payRate.mutate({
-      rateId: item.rate_id,
-      importo: item.importo_residuo,
-      metodo: method,
-      data_pagamento: toISOLocal(new Date()).slice(0, 10),
-    });
-  };
 
   const severityClass = item.giorni_ritardo > 30
     ? "border-l-red-600 bg-gradient-to-br from-red-50/80 to-white dark:from-red-950/30 dark:to-zinc-900"
@@ -318,28 +308,24 @@ function OverdueRateCard({
           <span className="whitespace-nowrap text-base font-bold text-red-600 tabular-nums dark:text-red-400">
             {formatCurrency(item.importo_residuo)}
           </span>
-          <Select value={method} onValueChange={setMethod} disabled={isPaying}>
-            <SelectTrigger className="h-8 w-[110px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent position="popper">
-              {PAYMENT_METHODS.map((m) => (
-                <SelectItem key={m} value={m}>
-                  {m === "CONTANTI" ? "Contanti" : m === "POS" ? "POS" : "Bonifico"}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button size="sm" onClick={handlePay} disabled={isPaying}>
-            {isPaying ? (
-              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-            ) : (
+          {!showPayForm ? (
+            <Button size="sm" onClick={() => setShowPayForm(true)}>
               <CreditCard className="mr-1.5 h-3.5 w-3.5" />
-            )}
-            Incassa
-          </Button>
+              Incassa
+            </Button>
+          ) : null}
         </div>
       </div>
+      {showPayForm ? (
+        <PayRateForm
+          rate={{
+            id: item.rate_id,
+            importo_residuo: item.importo_residuo,
+          }}
+          payMutation={payRate}
+          onCancel={() => setShowPayForm(false)}
+        />
+      ) : null}
     </div>
   );
 }
