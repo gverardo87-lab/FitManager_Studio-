@@ -4099,3 +4099,25 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
 - **Gap dichiarato:** nessun nuovo installer RC prodotto qui; la checklist richiede ispezione finale di
   `backend/lego.exe` e `backend/THIRD_PARTY_LICENSES/lego-MIT.txt`. R0.1.5 resta aperto su edge e live
   strict 200/404; verifica Claude ancora differita, mai registrata come PASS.
+
+---
+
+## 2026-07-25 — R0.1.5 edge change preparato, blocker ridotto alla sessione SSH
+
+- **Ground truth live:** DNS wildcard corretto; TCP 22/7000 raggiungibili; HTTPS con trust disabilitato
+  risponde 200. HTTP/80 va in timeout e il client strict rifiuta la root self-signed
+  (`SEC_E_UNTRUSTED_ROOT`): tunnel vivo, finding TLS ancora reale.
+- **Accesso:** SSH BatchMode raggiunge il VPS ma la chiave locale protetta non è sbloccata
+  (`Permission denied (publickey,password)`). Nessuna password/passphrase richiesta in chat e zero
+  write remoti. Non è stato dichiarato alcun apply.
+- **Artefatto apply:** `tools/operations/apply-frps-http01.sh` con renderer idempotente, candidate
+  verificata da `frps`, backup univoco/privato, UFW 80 mirato, restart+listener check e rollback di
+  entrambe le gambe. UFW inattivo è fail-closed: lo script non lo abilita per evitare lockout SSH.
+- **Artefatto closeout:** `probe-r015-tls.ps1` usa trust di sistema e redirect off; controlla HTTP 404,
+  TLS chain/hostname, HTTPS privata 404 e public 200 da URL letto via file ignorato, senza stamparlo.
+- **Test:** edge operations **5/5 PASS**; gate combinato edge+packaging+release guard **14/14 PASS**;
+  `bash -n`, parse PowerShell, Ruff e diff check PASS. Coperti inserimento top-level senza toccare il
+  secret dashboard, byte-idempotenza, porta non canonica fail-closed e guard statici
+  backup/rollback/trust.
+- **Prossimo passo minimo:** sessione SSH interattiva sbloccata → apply unico → attesa emissione locale
+  → probe strict completo. Claude verificherà appena disponibile; fino ad allora resta differito.

@@ -1,3 +1,5 @@
 tools/build/stage-acme-client.sh text eol=lf
 tools/build/fetch-lego.ps1 text eol=lf
 tools/licenses/lego-MIT.txt text eol=lf
+tools/operations/apply-frps-http01.sh text eol=lf
+tools/operations/probe-r015-tls.ps1 text eol=lf

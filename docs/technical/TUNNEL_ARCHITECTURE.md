@@ -220,7 +220,7 @@ soft delete.
 | G1 | VPS edge (frps + SNI + DNS) | 0 | Infra AVGV | ✅ Fatto |
 | G2 | FRP client bundlato | 1 | `api/services/tunnel_manager.py` | ✅ Fatto |
 | G3 | Instance ID nella licenza JWT | 1 | `generate_license.py` + `license.py` | ✅ Fatto |
-| G4 | Cert manager (Let's Encrypt HTTP-01 via FRP) | 2 / R0.1.5 | `api/services/cert_manager.py` | 🟠 Core + packaging fail-closed ✅ · edge/live ⏳ |
+| G4 | Cert manager (Let's Encrypt HTTP-01 via FRP) | 2 / R0.1.5 | `api/services/cert_manager.py` | 🟠 Core + packaging + edge tooling ✅ · apply/live ⏳ |
 | G5 | Route separation middleware | 1/2 | `frontend/src/middleware.ts` | ✅ Base (whitelist) · ⬜ blacklist Strada B |
 | G6 | Pagina "studio offline" sul VPS | 2 | VPS edge | ⬜ Da fare |
 | G7 | Inactivity timeout sessione | 2 | `api/auth/router.py` + frontend | ⬜ Da fare |
@@ -273,7 +273,7 @@ localPath = "data/tunnel/acme-webroot"
 ### 8.4 Fase 2 — TLS e2e + route hardening (R0.1.5 IN IMPLEMENTAZIONE; resto pianificato)
 
 - **2.1 Cert manager — R0.1.5**: ✅ core locale (`api/services/cert_manager.py`) con preflight HTTP prima dell'ordine, client ACME hash/version pin, validazione SAN/tempo/key/chain, installazione con rollback, restart frpc e stop esplicito del processo ACME; ✅ packaging riproducibile tramite `fetch-lego.ps1` esplicito e `stage-acme-client.sh` fail-closed (binario + licenza); ⏳ edge/live.
-- **2.2 Trasporto challenge — R0.1.5**: ✅ lato client (`frpc type=http`, `locations=["/.well-known/acme-challenge/"]`, plugin `static_file`, testato con v0.61.1); ⏳ lato edge (`frps vhostHTTPPort=80` + UFW/probe) pendente per accesso SSH interattivo. Nessun token DNS e nessun upstream applicativo su HTTP.
+- **2.2 Trasporto challenge — R0.1.5**: ✅ lato client (`frpc type=http`, `locations=["/.well-known/acme-challenge/"]`, plugin `static_file`, testato con v0.61.1); ✅ deploy edge rollback-safe e probe strict in `tools/operations/`; ⏳ apply VPS (`frps vhostHTTPPort=80` + UFW) e closeout live pendenti per accesso SSH interattivo. Nessun token DNS e nessun upstream applicativo su HTTP.
 - **2.3 Storage — R0.1.5**: `data/tunnel/` (account ACME, webroot, cert, key), escluso da backup/export; installazione cert/key atomica dopo verifica.
 - **2.4 Rinnovo automatico — R0.1.5**: ✅ scheduler opportunistico al boot + check ogni 12h, rinnovo 30gg prima della scadenza, retry 15min e ultimo certificato valido preservato; prova live resta pendente.
 - **2.7 Pagina offline su VPS**: il VPS serve pagina statica "Studio offline" se il tunnel di quel subdomain è down.
@@ -375,6 +375,34 @@ maxDays = 30              # retention log 30gg
 Servizio systemd `frps.service` (`Restart=always`, `RestartSec=5`, `After=network.target`, `enabled`).
 Gestione: `systemctl status|restart|stop frps`, `journalctl -u frps -f`.
 Dashboard admin via SSH tunnel: `ssh -L 7500:127.0.0.1:7500 -i ~/.ssh/id_ed25519 root@128.140.91.39`.
+
+#### Apply R0.1.5 verificabile (non ancora eseguito sul VPS)
+
+L'apply usa il file corrente come sorgente, non conosce né stampa le credenziali dashboard. Produce
+prima una candidate, la verifica con `frps verify`, conserva un backup byte-identico sotto la root FRP,
+apre solo UFW 80/tcp e fa rollback automatico di config/firewall se restart o listener falliscono.
+L'abilitazione generale di UFW è intenzionalmente rifiutata dallo script per non rischiare il lockout SSH.
+
+```bash
+# Dalla root del repository; SSH resta interattivo per la passphrase locale.
+ssh -t -i ~/.ssh/id_ed25519 root@128.140.91.39 \
+  'bash -s -- --apply --frp-root /opt/frp' \
+  < tools/operations/apply-frps-http01.sh
+```
+
+Dopo l'apply attendere il tentativo automatico del cert manager. Il closeout si esegue dal PC dev con
+trust di sistema, senza `-k` e senza redirect. Il link pubblico temporaneo va salvato sotto
+`data/tunnel/` (ignorato da Git) e non deve essere incollato nei log o nella command line:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/operations/probe-r015-tls.ps1 `
+  -Hostname gvera-dev.fitmanagerstudio.com `
+  -PublicUrlFile data/tunnel/r015-public-url.txt
+```
+
+PASS richiede simultaneamente: HTTP non-challenge 404, chain/hostname TLS validi nello store di sistema,
+HTTPS privata 404 e route `/public/` 200. Senza `-PublicUrlFile` il probe è solo diagnostico e non chiude
+R0.1.5.
 
 ### 9.5 Test e2e Fase 0 (2026-06-02)
 

@@ -64,6 +64,8 @@
 - [x] CORS configurato per localhost, LAN (192.168.x.x), Tailscale (100.x.x.x)
 - [x] Tailscale Funnel: `https://giacomo.tail8a3bc3.ts.net/`
 - [x] Public portal attivo: token generazione + validazione funzionante
+- [x] R0.1.5: deploy `vhostHTTPPort=80` rollback-safe e probe TLS strict versionati/testati
+- [ ] R0.1.5: apply interattivo sul VPS, emissione Let's Encrypt e probe completo `R0.1.5_STRICT_PROBE=PASS`
 - [x] Validazione guidata in-app del portale pubblico: link anamnesi di prova generato da `Impostazioni -> Connettivita` e verifica funzionale pagina pubblica + token (`21 passed` suite connectivity completa)
 - [ ] Test LAN da tablet/smartphone (stesso WiFi)
 - [x] Test Tailscale VPN da rete esterna

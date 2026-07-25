@@ -291,6 +291,24 @@ L'edge non custodisce certificati o chiavi private dei trainer.
 - **Restano aperti per chiudere R0.1.5:** configurazione edge HTTP/80 e prova live browser-trusted con
   HTTPS 200 sulle sole route ammesse e 404 sui path privati/HTTP non challenge.
 
+### Consuntivo parziale R0.1.5 — edge apply/probe pronti, non eseguiti (2026-07-25)
+
+- Ground truth esterna ripetuta: DNS `gvera-dev.fitmanagerstudio.com → 128.140.91.39`; TCP 22 e 7000
+  raggiungibili; HTTPS permissivo (`-k`) 200; HTTP/80 timeout; HTTPS strict fallisce con
+  `SEC_E_UNTRUSTED_ROOT`. Il tunnel applicativo è quindi vivo, mentre challenge e trust restano aperti.
+- SSH BatchMode con la chiave locale documentata arriva al server ma riceve `Permission denied
+  (publickey,password)`: la passphrase non è disponibile al processo. **Zero mutazioni live** eseguite;
+  edge e TLS non sono consuntivati come verdi.
+- `apply-frps-http01.sh` rende idempotente il solo top-level `vhostHTTPPort=80`, preserva tabelle e
+  segreti, verifica la candidate prima del write, usa backup univoco in directory `0700`, non abilita
+  UFW globalmente e rollbacka config/regola 80 su failure di restart/verify/listener.
+- `probe-r015-tls.ps1` non disabilita mai il trust e non segue redirect: richiede HTTP non-challenge
+  404, handshake chain+hostname valido, HTTPS privata 404 e, con link letto da file ignorato, route
+  `/public/` 200 senza stampare URL/token.
+- Test edge operations **5/5 PASS**; gate combinato edge+packaging+release guard **14/14 PASS**; Bash e
+  PowerShell syntax PASS. L'apply reale richiede una sessione SSH interattiva sbloccata; la verifica
+  Claude resta differita e non è un PASS implicito.
+
 ## 7. R0.2 — Binario unico di migrazione
 
 ### Scope
