@@ -1,12 +1,12 @@
 # SPEC R0 — Protezione release v1.0.15
 
-**Stato:** 🟠 APERTA — R0.1 contenimento verde; **R0.1.5 TLS valido APERTO**; R0.2 non aperto
+**Stato:** 🟠 APERTA — R0.1 verde; **R0.1.5-core ✅**; **R0.1.5-live HOLD**; R0.2 prossimo gate, non ancora aperto
 **Data:** 2026-07-24
 **Branch:** `FitManager_Studio`
 **Tipo:** contenimento release cross-layer; nessuna nuova macro-feature e nessuna nuova regola finanziaria
 **Audit fondante:** `docs/archive/AUDIT_OBSOLESCENZA_POST_MIGRAZIONI_2026-07-23.md`
 **Autorità:** `AGENTS.md` → `MANIFESTO.md` → `LAUNCH_SCOPE.md` → layer `CLAUDE.md` → ADR/SSoT
-**Sequenza ratificata:** FE-0 + FE-1.0/1.1 ✅ → **R0.1 → R0.1.5 → R0.2 → R0.3 → R0.4** → P1..P6 → candidate v1.0.15 → G-MAC
+**Sequenza ratificata:** FE-0 + FE-1.0/1.1 ✅ → **R0.1 → R0.1.5-core → R0.2 → R0.3 → R0.1.5-live → R0.4** → P1..P6 → candidate v1.0.15 → G-MAC
 
 > Questa SPEC è la casa del solo lavoro release-critical emerso dall'audit. La bonifica massiva di
 > codice morto, API dormienti e tool storici non entra in R0 e non interrompe il blocco P. A chiusura
@@ -73,11 +73,12 @@ La verifica indipendente 2026-07-24 conferma i blocker ma corregge la stima del 
 | Ordine | Gate | Scopo | Dipendenza |
 |---:|---|---|---|
 | 1 | **R0.1 — Percorso pubblico unico** | Contenere transizione FRP/Tailscale | FE-1 chiuso LIVE |
-| 2 | **R0.1.5 — TLS pubblico valido** | Chiudere il finding live senza cedere P2 | R0.1 verde + decisione founder |
-| 3 | **R0.2 — Binario unico di migrazione** | Rendere sicura l'apertura P1/Alembic | R0.1.5 chiuso |
-| 4 | **R0.3 — Verità finanziaria e privacy** | Chiudere lordo/netto e denaro globale | G8.4 SSoT |
-| 5 | **R0.4 — Verità operativa release** | Allineare checklist/runbook/contesto | R0.1–R0.3 reali |
-| 6 | **P1** | Apre il blocco P | R0 chiuso e consuntivato |
+| 2 | **R0.1.5-core — TLS implementazione** | Client, cert manager, installazione atomica, packaging e tooling edge | R0.1 verde + decisione founder |
+| 3 | **R0.2 — Binario unico di migrazione** | Rendere sicura l'apertura P1/Alembic | R0.1.5-core verde + checkpoint R0-D1 |
+| 4 | **R0.3 — Verità finanziaria e privacy** | Chiudere lordo/netto e denaro globale | R0.2 chiuso + G8.4 SSoT |
+| 5 | **R0.1.5-live — TLS closeout** | Apply edge, emissione reale e probe strict completo | Passphrase SSH disponibile; interlock prima di R0.4 |
+| 6 | **R0.4 — Verità operativa release** | Allineare checklist/runbook/contesto | R0.1–R0.3 reali + R0.1.5-live verde |
+| 7 | **P1** | Apre il blocco P | R0 chiuso e consuntivato |
 
 Ogni gate è un'unità coesa e verificabile. Nessun cleanup post-release viene infilato tra questi gate.
 
@@ -145,7 +146,9 @@ R0.1.5; R0.2 non è ancora aperto.
 (`Impossibile stabilire una relazione di trust`). Il routing e la route separation funzionano, ma
 l'end-to-end pubblico non è dichiarabile production-ready finché la Fase 2 TLS descritta nel root
 `CLAUDE.md` non viene completata oppure il founder non ratifica una collocazione diversa. Decisione
-presa dal founder: remediation immediata **R0.1.5**, da chiudere prima di R0.2.
+presa dal founder il 2026-07-24: remediation immediata **R0.1.5**. La sola dipendenza temporale
+«prima di R0.2» è superata dalla ratifica R0-D1 del 2026-07-26; requisito TLS, architettura e
+interlock pre-R0.4/P restano invariati.
 
 **Nota ambiente test:** i warning di rollover `fitmanager.log` dipendono dal server live
 `uvicorn --reload` già in esecuzione che condivide il log con pytest. Il processo `frpc` osservato
@@ -309,6 +312,33 @@ L'edge non custodisce certificati o chiavi private dei trainer.
   PowerShell syntax PASS. L'apply reale richiede una sessione SSH interattiva sbloccata; la verifica
   Claude resta differita e non è un PASS implicito.
 
+### R0-D1 — split delivery core/live ratificato (2026-07-26)
+
+- **R0.1.5-core è verde:** AC-R015-1, AC-R015-3..7 e il lato client/configurazione di AC-R015-2
+  sono coperti dalle suite e dai checkpoint già consuntivati. Il codice è fail-closed: senza
+  challenge pubblica il preflight non avvia `lego`, il CRM locale resta disponibile e l'ultima coppia
+  cert/key valida viene preservata.
+- **R0.1.5-live resta HOLD, non PASS:** conserva il lato edge di AC-R015-2 e l'intero AC-R015-8.
+  Richiede ancora apply VPS, HTTP non-challenge 404, emissione/installazione di una chain pubblica,
+  HTTPS privata 404 e route `/public/` 200 con trust strict.
+- **Evidenza read-only del 2026-07-26:** il founder osserva che il browser corrente apre la pagina
+  senza blocco. La coppia attiva sotto `data/tunnel/` risulta però ancora quella self-signed del
+  2026-06-07 (`Issuer: FitManager Studio (self-signed)`, scadenza 2027-06-07), non una chain
+  Let's Encrypt. L'osservazione è registrata come evidenza UX locale, non come public-trust PASS.
+- **Probe non conclusivo:** DNS risolve correttamente, ma dal runner del gate le connessioni 80/443
+  non sono risultate raggiungibili. Il probe Windows PowerShell ha inoltre mostrato che
+  `System.Net.Http` non viene caricato automaticamente in questo ambiente; il closeout live deve
+  precaricare l'assembly o correggere il probe con canary prima di usarlo come evidenza finale.
+- **Decisione founder:** la passphrase SSH non è disponibile nella sessione corrente; nessuna
+  modifica a FRPS, UFW o VPS è autorizzata. Il closeout viene posticipato senza waiver sul requisito.
+- **Nuovo interlock minimo:** R0.2 e, dopo il suo checkpoint, R0.3 possono procedere perché non
+  dipendono tecnicamente dalla trust chain pubblica. R0.1.5-live deve tornare verde **prima di aprire
+  R0.4**; di conseguenza continua a bloccare R0 completo, P1 e la candidate v1.0.15.
+- **Autorità:** questo split cambia soltanto l'ordine di delivery della SPEC. ADR-011 Addendum I,
+  terminazione TLS locale, HTTP-01 su porta 80, zero token DNS e P2 data-blind restano invariati.
+- **Prossimo gate:** R0.2, apribile solo dopo commit/push e delta remoto `0 0` di R0-D1, con GO
+  separato e impact map propria.
+
 ## 7. R0.2 — Binario unico di migrazione
 
 ### Scope
@@ -394,7 +424,7 @@ solo se il founder apre il blocco.
 
 ## 11. Definition of Done R0
 
-1. AC-R01, AC-R015, AC-R02, AC-R03 e AC-R04 verificati con evidenza reale;
+1. AC-R01, AC-R015-core, AC-R015-live, AC-R02, AC-R03 e AC-R04 verificati con evidenza reale;
 2. full suite raccolta verde per backend/frontend e quality gate AGENTS.md;
 3. financial-invariant-verifier PASS su R0.3;
 4. test upgrade/installazione con `.env` legacy e test live FRP da rete esterna;

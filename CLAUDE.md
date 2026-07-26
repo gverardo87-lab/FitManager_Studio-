@@ -252,7 +252,7 @@ Zero configurazione per il trainer. Privacy-first: il VPS non vede il contenuto 
 |-------|------|----------|
 | Config | `api/services/tunnel_config.py` | TunnelConfig dataclass, risoluzione frpc path, cert self-signed auto-generato |
 | Manager | `api/services/tunnel_manager.py` | Babysitter frpc: subprocess, backoff+jitter, drain output, atexit cleanup |
-| Certificato | `api/services/cert_manager.py` | **R0.1.5 core + packaging implementati:** preflight HTTP, lego v5.2.1 pinato e staged fail-closed con licenza, rinnovo locale, promozione cert/key con rollback; deploy edge rollback-safe + probe strict pronti, apply/live ancora pendenti |
+| Certificato | `api/services/cert_manager.py` | **R0.1.5-core verde:** preflight HTTP, lego v5.2.1 pinato e staged fail-closed con licenza, rinnovo locale, promozione cert/key con rollback; deploy edge rollback-safe + probe strict pronti. **R0.1.5-live HOLD pre-R0.4/P:** apply VPS, chain pubblica e probe strict pendenti |
 | Identity | `api/services/license.py` | Claim `instance_id` nel JWT licenza (determina sottodominio) |
 | CLI | `tools/admin_scripts/generate_license.py` | `--instance-id <slug>` nel comando `sign` |
 | Boot | `api/main.py` lifespan step 6 | Auto-start tunnel + auto-set `PUBLIC_BASE_URL` |
@@ -264,7 +264,7 @@ Zero configurazione per il trainer. Privacy-first: il VPS non vede il contenuto 
 1. AVGV genera licenza con `--instance-id gvera-dev`; il wildcard DNS esistente copre l'istanza
 2. Trainer installa FitManager (identico per tutti) + inserisce licenza
 3. Al boot: backend legge `instance_id` → assicura il bootstrap cert → avvia frpc HTTPS + webroot ACME ristretto
-4. R0.1.5: il certificate manager emette/rinnova Let's Encrypt sul PC e fa rileggere cert/key a frpc
+4. R0.1.5: dopo l'apply edge, il certificate manager emette/rinnova Let's Encrypt sul PC e fa rileggere cert/key a frpc
 5. `PUBLIC_BASE_URL` settato automaticamente → link pubblici usano `https://slug.fitmanagerstudio.com`
 6. Link anamnesi/schede funzionano via tunnel, CRM accessibile solo da LAN (localhost)
 
@@ -288,7 +288,7 @@ Il CRM (login, dashboard, clienti) e' **completamente invisibile** da Internet.
 
 - Fase 0: COMPLETATA (VPS, frps, DNS wildcard)
 - Fase 1: COMPLETATA (instance_id, tunnel_manager, auto-start, route separation, test e2e, bundle frpc, health endpoint)
-- R0.1.5 / Fase 2 TLS: IN IMPLEMENTAZIONE (Let's Encrypt HTTP-01 ristretto via FRP, rinnovo locale)
+- R0.1.5 / Fase 2 TLS: CORE VERDE; LIVE HOLD prima di R0.4/P (Let's Encrypt HTTP-01 ristretto via FRP, rinnovo locale)
 - Fase 2 restante: pagina offline, token hash, inactivity timeout
 - Fase 3: Onboarding zero-touch + dismissione Tailscale
 

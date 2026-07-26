@@ -4121,3 +4121,32 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
   backup/rollback/trust.
 - **Prossimo passo minimo:** sessione SSH interattiva sbloccata → apply unico → attesa emissione locale
   → probe strict completo. Claude verificherà appena disponibile; fino ad allora resta differito.
+
+---
+
+## 2026-07-26 — R0-D1 separa TLS core verde dal closeout LIVE
+
+- **Decisione founder:** la passphrase SSH non è disponibile nella sessione corrente; nessuna
+  modifica a FRPS, UFW o VPS viene eseguita. Il closeout TLS è posticipato senza attribuirgli PASS e
+  senza cambiare ADR-011 Addendum I, HTTP-01, terminazione locale o P2 data-blind.
+- **Evidenza read-only:** il founder osserva che il browser corrente apre il portale senza blocco. La
+  coppia attiva in `data/tunnel/` è però ancora il self-signed del 2026-06-07 (`Issuer: FitManager
+  Studio (self-signed)`, scadenza 2027-06-07), non una chain Let's Encrypt. L'osservazione resta
+  evidenza UX locale, non public-trust PASS.
+- **Probe:** DNS risolve correttamente, ma dal runner del gate 80/443 non sono risultate raggiungibili;
+  nessun esito TLS è quindi dichiarato. Windows PowerShell non precarica `System.Net.Http` in questa
+  baseline: il comando operativo ora esplicita il preload e il gate LIVE dovrà aggiungere un canary
+  reale o rendere autonomo lo script prima del closeout.
+- **Split ratificato:** **R0.1.5-core ✅** copre cert manager, trasporto client, installazione atomica,
+  scheduler, packaging e tooling edge già verificati; **R0.1.5-live HOLD** conserva apply VPS, lato
+  edge della route challenge e AC-R015-8 strict. R0.2 e poi R0.3 possono procedere perché indipendenti
+  dalla trust chain; il LIVE resta interlock obbligatorio prima di R0.4 e quindi blocca ancora R0,
+  P1 e candidate v1.0.15.
+- **Fold-back:** riallineati SPEC R0, INDEX, SSoT tunnel/security e adapter root; release checklist già
+  corretta e lasciata invariata. Nessuna ADR necessaria perché architettura e requisiti non cambiano.
+- **Verifiche docs/process:** Ruff `api/` PASS; **10/10** SPEC aperte indicizzate; zero
+  `SPEC_*`/`IMPL_PLAN_*` in `docs/technical/`; zero spec implementate rimaste vive; zero link locali
+  rotti nei documenti toccati; zero vecchie formule di stato attive; `git diff --check` PASS.
+  Nessuna suite applicativa richiesta: il gate modifica solo governance e stato documentale.
+- **Prossimo gate:** checkpoint atomico R0-D1; poi R0.2 con GO e impact map separati. Nessuna
+  remediation deep-link o apertura del blocco P è inclusa.
