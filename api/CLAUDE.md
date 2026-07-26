@@ -321,7 +321,7 @@ Riusa `_get_occurrences_in_month()` per le spese ricorrenti (stessa logica del p
 - Error response: `HTTPException` con status code + detail string
 - **Gestione eccezioni: catturare SOLO l'eccezione specifica attesa** (es. `except (ValueError, TypeError)` su un `json.loads`), **MAI `except Exception` largo** per controllo di flusso — degrada un errore duro in **fallimento silenzioso** (viola regola #6 Determinismo, pitfall #2/#7). L'**osservabilità/instrumentation** (es. `invariant_gate` di G9) che non deve toccare la transazione si rende **totale-per-costruzione** (funzione pura che non solleva) o si **disaccoppia post-commit**, **mai** la si avvolge in un catch. Lezione/dettaglio: `docs/specs/SPEC_G9_FINANCIAL_COMMAND_LAYER.md` §A.1-bis · `docs/learning/LEARNING_PROGRAMMAZIONE.md` §0.8.
 - Logging: `import logging; logger = logging.getLogger(__name__)`
-- Migrations: Alembic (`alembic/versions/`). `env.py` legge `DATABASE_URL` da environment (fallback: `alembic.ini`). Ogni migrazione va applicata a ENTRAMBI i DB (prod + dev)
+- Migrations: Alembic (`alembic/versions/`). `env.py` legge `DATABASE_URL` da environment (fallback: `alembic.ini`). Esiste un solo DB business: eseguire `bash tools/scripts/migrate-all.sh`, che applica `upgrade head` una volta al target già bootstrapato/configurato e rifiuta il legacy `crm_dev.db`. I DB fresh nascono dal bootstrap metadata+stamp, non dalla replay della history su un file vuoto.
 
 ## Dipendenze
 

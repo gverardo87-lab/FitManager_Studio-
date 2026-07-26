@@ -4150,3 +4150,31 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
   Nessuna suite applicativa richiesta: il gate modifica solo governance e stato documentale.
 - **Prossimo gate:** checkpoint atomico R0-D1; poi R0.2 con GO e impact map separati. Nessuna
   remediation deep-link o apertura del blocco P è inclusa.
+
+---
+
+## 2026-07-26 — R0.2 chiude il binario unico di migrazione
+
+- **Impact map eseguita:** sole procedure vive di migrazione/rehearsal e fonti operative backend;
+  zero schema reale, revision Alembic, dati business, ledger, frontend, TLS o cleanup massivo dei 34
+  sorgenti storici che nominano `crm_dev`.
+- **RED:** il canary intercettato con Alembic stub fail-closed ha prodotto **3/3 failure causali**:
+  `migrate-all.sh` ignorava il target configurato e forzava PROD+DEV, non rifiutava il legacy e il
+  rehearsal richiedeva positivamente `crm_dev.db`.
+- **Fix:** `migrate-all.sh` usa `DATABASE_URL` o il solo fallback `sqlite:///data/crm.db`, rifiuta
+  `crm_dev.db` prima del subprocess e invoca esattamente una volta `alembic upgrade head`, senza
+  stampare l'URL. Il rehearsal verifica `crm.db` come DB business e non contempla più il DB legacy.
+  Root e `api/CLAUDE.md` convergono sullo script protetto e sul modello single-DB.
+- **GREEN mirato:** canary finale **4/4**; canary + `schema_sync` + terminazione schema **22/22**;
+  Ruff completo sui path Python, sintassi Bash e diff check verdi.
+- **Full suite:** **910/910 PASS** in 20:11, 31 warning baseline. Il launcher della venv resta rotto
+  perché punta a un interprete WindowsApps dismesso; la suite è stata eseguita con Python 3.12
+  funzionante e i `site-packages` della stessa venv, senza installare o cambiare dipendenze.
+- **Negative probe non occultato:** la replay Alembic su un file SQLite totalmente vuoto fallisce a
+  `b4e89834fbef`, perché `2e74a22514ea` è uno stamp iniziale no-op. Il bootstrap autorevole crea lo
+  schema corrente e lo stampa a head; R0.2 non riscrive la history e non scambia questo path grezzo
+  per un PASS. Lo script è la procedura di migrazione di un DB business già bootstrapato/configurato.
+- **Acceptance:** AC-R02-1..5 coperte. Nessuna procedura viva del gate ricrea un secondo DB; i guard
+  build che nominano `crm_dev.db` per impedirne il leak restano correttamente invariati.
+- **Coda:** R0.3 è il prossimo gate, solo dopo checkpoint R0.2 pushato e remoto `0 0` con GO separato;
+  R0.1.5-live resta HOLD obbligatorio prima di R0.4/P.

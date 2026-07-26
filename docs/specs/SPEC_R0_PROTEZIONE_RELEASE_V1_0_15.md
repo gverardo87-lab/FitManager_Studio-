@@ -1,6 +1,6 @@
 # SPEC R0 — Protezione release v1.0.15
 
-**Stato:** 🟠 APERTA — R0.1 verde; **R0.1.5-core ✅**; **R0.1.5-live HOLD**; R0.2 prossimo gate, non ancora aperto
+**Stato:** 🟠 APERTA — R0.1 + R0.1.5-core + **R0.2 ✅**; **R0.1.5-live HOLD**; R0.3 prossimo gate, non ancora aperto
 **Data:** 2026-07-24
 **Branch:** `FitManager_Studio`
 **Tipo:** contenimento release cross-layer; nessuna nuova macro-feature e nessuna nuova regola finanziaria
@@ -359,6 +359,33 @@ sono script distruttivi di seed/curation e richiedono triage dedicato post-relea
 - **AC-R02-3:** prova in directory temporanea: l'esecuzione della procedura non crea un secondo DB.
 - **AC-R02-4:** `api/CLAUDE.md`, root `CLAUDE.md` e ADR-014 non si contraddicono sul modello single-DB.
 - **AC-R02-5:** gate Alembic/schema pertinenti verdi prima di aprire P1.
+
+### Consuntivo R0.2 — 2026-07-26
+
+- `migrate-all.sh` risolve un solo target: `DATABASE_URL` esplicito oppure fallback canonico
+  `sqlite:///data/crm.db`. Rifiuta `crm_dev.db` prima di invocare Alembic, non stampa l'URL
+  configurato e lancia esattamente un `alembic upgrade head`; rimossi secondo upgrade e confronto
+  artificiale PROD/DEV.
+- Il distribution rehearsal richiede soltanto il DB business `crm.db` e `catalog.db`; l'esistenza
+  positiva del database legacy non può più rendere verde o rosso il rehearsal.
+- Root `CLAUDE.md` prescrive ora lo script protetto; `api/CLAUDE.md` dichiara un solo DB business.
+  ADR-014 non contiene una regola dual-DB e resta coerente senza modifiche.
+- Canary RED iniziale: **3/3 FAIL causali** su target configurato ignorato, legacy non rifiutato e
+  requisito positivo nel rehearsal. GREEN finale: **4/4 PASS**, incluso fallback `alembic.ini`, un
+  solo invio Alembic, prova temporanea senza secondo DB e rifiuto legacy prima del subprocess.
+- Gate schema pertinente: canary + `schema_sync` + terminazione schema **22/22 PASS**. Full backend
+  **910/910 PASS** con 31 warning baseline; Ruff completo sui path Python, `bash -n` e
+  `git diff --check` verdi.
+- **Negative probe dichiarato:** `alembic upgrade head` su un file SQLite completamente vuoto fallisce
+  alla revisione `b4e89834fbef`, perché la revisione iniziale `2e74a22514ea` è intenzionalmente uno
+  stamp di schema preesistente. Non è il percorso di bootstrap: i DB fresh vengono creati dal
+  metadata corrente e stampati a head. R0.2 non riscrive la history Alembic né dichiara verde il raw
+  empty-file path; la procedura protetta resta il percorso di migrazione di un DB business già
+  bootstrapato/configurato.
+- Nessun file sotto `data/`, schema reale, migration revision, catalogo, dato business, money-path,
+  frontend o infrastruttura TLS è stato modificato. Il triage dei 34 sorgenti storici `crm_dev`
+  resta esplicitamente fuori scope.
+- **Prossimo gate:** R0.3, apribile solo dopo checkpoint R0.2 pushato, remoto `0 0` e GO separato.
 
 ## 8. R0.3 — Verità finanziaria e privacy
 

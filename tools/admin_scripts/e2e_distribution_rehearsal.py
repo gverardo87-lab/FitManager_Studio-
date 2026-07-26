@@ -372,8 +372,7 @@ def phase_7_config():
     # 1. data/ directory structure
     data_dir = PROJECT_ROOT / "data"
     _log(data_dir.exists(), "data/ directory exists")
-    _log((data_dir / "crm.db").exists(), "Production DB (crm.db) exists")
-    _log((data_dir / "crm_dev.db").exists(), "Development DB (crm_dev.db) exists")
+    _log((data_dir / "crm.db").exists(), "Business DB (crm.db) exists")
     _log((data_dir / "catalog.db").exists(), "Catalog DB (catalog.db) exists")
 
     # 2. Media directory

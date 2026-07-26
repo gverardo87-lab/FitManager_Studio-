@@ -80,7 +80,7 @@ bash tools/scripts/check-all.sh                                    # ruff check 
 cd frontend && npx next build                                      # frontend build (zero errori TS)
 
 # --- Migrazioni ---
-./venv/Scripts/alembic upgrade head                                # crm.db (SOLO business, esclude catalog+nutrition)
+bash tools/scripts/migrate-all.sh                                  # DB business già bootstrapato/configurato; rifiuta crm_dev.db
 ./venv/Scripts/alembic -c alembic_nutrition.ini upgrade head       # nutrition.db (SOLO alimenti)
 # catalog.db NON ha Alembic — costruito da seed ORM + script popolazione
 
