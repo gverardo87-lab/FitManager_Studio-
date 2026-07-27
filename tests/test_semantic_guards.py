@@ -128,6 +128,9 @@ def test_g84_fe_no_money_math():
     forbidden = (
         ("netto ricalcolato (versato - rimborsato)", re.compile(r"versato\s*-\s*rimborsato")),
         ("aritmetica su totale_versato", re.compile(r"totale_versato\s*-")),
+        ("valore sedute residue stimato client-side", re.compile(
+            r"prezzo_totale\s*/\s*(?:\w+\.)?crediti_totali"
+        )),
         ("running balance accumulato client-side", re.compile(r"segno\s*\*\s*m\.importo")),
         ("somma client-side dei movimenti", re.compile(r"\.reduce\([^\n]*importo")),
     )
@@ -166,11 +169,15 @@ def test_g84_fe_consuma_ssot_netto_e_saldo():
     hero = (frontend_src / "components/contracts/ContractFinancialHero.tsx").read_text(encoding="utf-8")
     # La cella Finanze della lista vive in ContractRow.tsx (riga presentazionale, split F5)
     row = (frontend_src / "components/contracts/ContractRow.tsx").read_text(encoding="utf-8")
+    profile_contracts = (
+        frontend_src / "components/clients/profile/ContrattiTab.tsx"
+    ).read_text(encoding="utf-8")
     history = (frontend_src / "components/contracts/ContractHistoryTab.tsx").read_text(encoding="utf-8")
     types_api = (frontend_src / "types/api.ts").read_text(encoding="utf-8")
 
     assert "contract.netto_incassato" in hero          # netto-POSIZIONE dal SSoT (F1.a)
     assert "contract.netto_incassato" in row
+    assert "c.netto_incassato" in profile_contracts   # profilo cliente: stesso SSoT di hero/lista
     assert "saldo_progressivo" in history              # saldo-LEDGER dal wire (F1.b)
     assert "saldo_progressivo" in types_api            # contratto typescript sincronizzato
     # e il campo esiste davvero sul wire: lo schema Pydantic è l'autorità, non il type FE

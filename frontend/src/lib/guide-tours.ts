@@ -49,7 +49,7 @@ export const TOUR_SCOPRI_FITMANAGER: TourDefinition = {
       videoId: "primo-cliente",
       title: "I tuoi Clienti",
       description:
-        "Qui gestisci ogni cliente: anagrafica, stato e storico. Ogni riga mostra a colpo d'occhio crediti residui, contratti attivi e ultima sessione. Filtra per stato (attivo, in pausa, archiviato) o cerca per nome.",
+        "Qui gestisci ogni cliente: anagrafica, stato e storico. La tabella mostra Nome, Contatti, Attenzioni, Ultimo Evento, Stato e Azioni. Lo stato distingue Attivo e Inattivo; Attenzioni espone soltanto un segnale amministrativo, senza importi. Cerca per nome o email e apri il profilo per i dettagli.",
       placement: "bottom",
     },
     {

@@ -1,6 +1,6 @@
 # SPEC R0 — Protezione release v1.0.15
 
-**Stato:** 🟠 APERTA — R0.1 + R0.1.5-core + **R0.2 ✅**; **R0.1.5-live HOLD**; R0.3 prossimo gate, non ancora aperto
+**Stato:** 🟠 APERTA — R0.1 + R0.1.5-core + R0.2 + **R0.3 ✅**; **R0.1.5-live HOLD**; R0.4 bloccato dall'interlock live
 **Data:** 2026-07-24
 **Branch:** `FitManager_Studio`
 **Tipo:** contenimento release cross-layer; nessuna nuova macro-feature e nessuna nuova regola finanziaria
@@ -385,7 +385,8 @@ sono script distruttivi di seed/curation e richiedono triage dedicato post-relea
 - Nessun file sotto `data/`, schema reale, migration revision, catalogo, dato business, money-path,
   frontend o infrastruttura TLS è stato modificato. Il triage dei 34 sorgenti storici `crm_dev`
   resta esplicitamente fuori scope.
-- **Prossimo gate:** R0.3, apribile solo dopo checkpoint R0.2 pushato, remoto `0 0` e GO separato.
+- **Checkpoint R0.2:** al momento il gate successivo era R0.3, apribile solo dopo push, remoto
+  `0 0` e GO separato; il relativo consuntivo è ora nella sezione seguente.
 
 ## 8. R0.3 — Verità finanziaria e privacy
 
@@ -408,6 +409,31 @@ sono script distruttivi di seed/curation e richiedono triage dedicato post-relea
 - **AC-R03-5:** nessuna mutation, endpoint, invalidazione o payload money-path modificato.
 - **AC-R03-6:** Vitest mirati + suite FE + lint/build; `financial-invariant-verifier` = MONEY AXIS
   PRESERVED.
+
+### Consuntivo R0.3 — 2026-07-28
+
+- `ContrattiTab` legge `netto_incassato` dal wire come posizione primaria. In presenza di rimborso
+  mostra la disclosure canonica `lordo · −rimborso` usando `totale_versato` e
+  `totale_rimborsato`, senza sottrazioni frontend; hero, lista e profilo convergono così sullo
+  stesso SSoT.
+- Il gemello anti-vacuità G8.4 include ora `ContrattiTab`; il guard no-money-math intercetta anche
+  una futura reintroduzione della formula `prezzo_totale / crediti_totali`.
+- `ClientPreview` della Command Palette conserva soltanto crediti, numero contratti, stato,
+  attenzione amministrativa e contatti: rimossi `totale_versato` e `prezzo_totale_attivo`.
+  `ExpiringContractsSheet` mostra le sedute residue dal wire ma non ne stima più il valore
+  economico. Il tour Clienti descrive le colonne privacy-safe e i soli stati Attivo/Inattivo.
+- **RED causale:** 4 failure Vitest sulle quattro superfici e 2 failure dei gemelli G8.4. **GREEN
+  mirato:** 6/6 Vitest e 2/2 guard; suite frontend completa **161/161**, rete semantica **11/11**,
+  ESLint/Ruff verdi e build Next/TypeScript verde su 20 pagine.
+- `financial-invariant-verifier`: **MONEY AXIS PRESERVED**. Zero mutation, endpoint, hook, query
+  invalidation, payload o type money-path modificato; nessuna nuova aritmetica monetaria e nessun
+  file backend/data/schema nel diff.
+- Warning baseline non bloccanti invariati: assegnazione intenzionalmente invalida nella fixture
+  Vitest `edge-cases` e convenzione Next `middleware` deprecata. Nessun nuovo finding aperto.
+- Fold-back applicato anche a `frontend/CLAUDE.md`; nessun ADR o evergreen finanziario cambia,
+  perché il gate rende effettive regole già ratificate da G8.4 e FE-0.
+- **Interlock:** R0.1.5-live resta HOLD. R0.4 non è apribile finché apply edge, chain pubblica e
+  probe strict non sono verificati; nessun lavoro FRPS/VPS è stato eseguito in R0.3.
 
 ## 9. R0.4 — Verità operativa release
 

@@ -4178,3 +4178,28 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
   build che nominano `crm_dev.db` per impedirne il leak restano correttamente invariati.
 - **Coda:** R0.3 è il prossimo gate, solo dopo checkpoint R0.2 pushato e remoto `0 0` con GO separato;
   R0.1.5-live resta HOLD obbligatorio prima di R0.4/P.
+
+---
+
+## 2026-07-28 — R0.3 riallinea verità finanziaria e privacy frontend
+
+- **Impact map eseguita:** sole superfici frontend read-only e relativi guard/documenti; zero API,
+  hook, type wire, mutation, invalidazione, schema, dati, TLS/FRPS o apertura R0.4/P.
+- **RED causale:** 4 failure Vitest hanno provato lordo al posto del netto in `ContrattiTab`, due
+  importi nel preview cliente globale, stima `valore ~600` nello sheet e tour Clienti obsoleto. I
+  due gemelli G8.4 sono falliti separatamente su formula residua e superficie profilo non coperta.
+- **Fix:** `ContrattiTab` usa `netto_incassato` e, solo con rimborso, espone i campi wire
+  `totale_versato`/`totale_rimborsato` come disclosure; Command Palette senza importi cliente;
+  `ExpiringContractsSheet` senza stima prezzo/crediti; tour aderente a Nome, Contatti, Attenzioni,
+  Ultimo Evento, Stato e Azioni. Nessun nuovo effect, stato, fetch o astrazione React.
+- **GREEN:** pacchetto mirato **6/6**, suite frontend **161/161**, guard semantici **11/11**,
+  ESLint sui path, Ruff sul guard, `git diff --check` e build Next/TypeScript (20 pagine) verdi.
+  Restano soltanto i warning baseline della fixture Vitest `edge-cases` e della convenzione Next
+  `middleware` deprecata.
+- **Verifier avversariale:** **MONEY AXIS PRESERVED**. La posizione è un consumo del netto wire;
+  zero sottrazioni, formule, mutation, endpoint, payload, hook, query invalidation, type o file
+  backend/data/schema modificati. Il guard anti-vacuità include ora il profilo cliente.
+- **Fold-back:** SPEC, INDEX, BUILD_LOG e `frontend/CLAUDE.md` allineati; nessun ADR necessario,
+  perché R0.3 applica le regole esistenti G8.4/FE-0 senza introdurre policy di dominio.
+- **Coda bloccata:** R0.1.5-live resta HOLD per assenza della passphrase. R0.4 può aprirsi soltanto
+  dopo apply edge, chain pubblica e probe strict verificati; R0.3 non ha toccato il VPS.

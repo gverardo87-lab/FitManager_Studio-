@@ -6,7 +6,7 @@
  * - Barra progresso crediti (usati / totali)
  * - Countdown scadenza con colore severity
  * - CTA "Vai al contratto" per gestione completa
- * - Info cliente e valore economico
+ * - Info cliente
  */
 
 "use client";
@@ -35,7 +35,7 @@ import {
 } from "@/components/ui/sheet";
 import { useExpiringContracts } from "@/hooks/useDashboard";
 import { useTrainerName } from "@/hooks/useTrainerName";
-import { formatCurrency, formatShortDate } from "@/lib/format";
+import { formatShortDate } from "@/lib/format";
 import { waRenewalReminder } from "@/lib/whatsapp-templates";
 
 // ── Helpers ──
@@ -191,13 +191,6 @@ export function ExpiringContractsSheet({ open, onOpenChange }: ExpiringContracts
                       <span className="text-sm font-bold text-amber-600 dark:text-amber-400">
                         {item.crediti_residui} {item.crediti_residui === 1 ? "seduta" : "sedute"} da usare
                       </span>
-                      {item.prezzo_totale && item.crediti_totali > 0 && (
-                        <span className="text-[10px] text-muted-foreground">
-                          (valore ~{formatCurrency(
-                            (item.prezzo_totale / item.crediti_totali) * item.crediti_residui
-                          )})
-                        </span>
-                      )}
                     </div>
 
                     {/* CTA */}

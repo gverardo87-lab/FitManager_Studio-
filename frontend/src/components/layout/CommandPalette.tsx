@@ -163,22 +163,6 @@ function ClientPreview({ client }: { client: ClientEnriched }) {
             {client.contratti_attivi}
           </p>
         </div>
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
-            Versato
-          </p>
-          <p className="text-sm font-bold tabular-nums">
-            {formatCurrency(client.totale_versato)}
-          </p>
-        </div>
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
-            Totale Attivo
-          </p>
-          <p className="text-sm font-bold tabular-nums">
-            {formatCurrency(client.prezzo_totale_attivo)}
-          </p>
-        </div>
       </div>
 
       {/* Warnings */}

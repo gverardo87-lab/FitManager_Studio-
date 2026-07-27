@@ -260,7 +260,8 @@ Stessa architettura `Set<string>` + chip toggle dell'Agenda, applicata a Clienti
 - **Riga 1 (Stato)**: Attivi (emerald) · Inattivi (zinc) — filtro `client.stato`
 - **Riga 2 (Filtro)**: Con Rate Scadute (red) · Con Crediti (blue) — filtro enriched fields
 - Filtraggio interamente client-side — `useClients()` carica tutti (page_size=200)
-- Colonna **Finanze**: progress bar compatta `versato / prezzo_totale_attivo` (emerald >= 80%, amber >= 40%, red < 40%)
+- `ClientsTable` è un'overview privacy-safe: Nome, Contatti, Attenzioni, Ultimo Evento, Stato e
+  Azioni. Nessun importo o credito; `Attenzioni` espone solo il segnale amministrativo navigabile.
 
 ### DatePicker maxDate (Boundary Protection)
 `DatePicker` accetta `maxDate?: Date` → passa come `toDate` al Calendar (react-day-picker).
@@ -410,7 +411,7 @@ La Dashboard (~1760 LOC) e' un pannello di controllo operativo con layout remind
 |-------|------|---------------|------------------|
 | GhostEventsSheet | `useGhostEvents` | Completata/Cancellata 1-click + bulk | `useUpdateEvent` |
 | OverdueRatesSheet | `useOverdueRates` | Pagamento con metodo selezionabile | `usePayRate` |
-| ExpiringContractsSheet | `useExpiringContracts` | Progress bar crediti + link contratto | — (solo info) |
+| ExpiringContractsSheet | `useExpiringContracts` | Progress bar crediti + link contratto; nessuna stima monetaria client-side | — (solo info) |
 | InactiveClientsSheet | `useInactiveClients` | Contatti rapidi (tel/email) + link agenda | — (solo info) |
 
 Pattern architetturale:
@@ -537,7 +538,7 @@ Componente: `CommandPalette.tsx` (~700 LOC), basato su `cmdk` v1.1.1 + shadcn Co
 6. **Azioni**: Nuovo Cliente, Nuovo Contratto, Nuova Sessione
 
 ### Preview panel (desktop)
-- `ClientPreview`: avatar, badge stato, stats grid (crediti, contratti, versato), warning rate scadute, contatti
+- `ClientPreview`: avatar, badge stato, stats grid operativa (crediti, contratti), warning rate scadute e contatti; nessun importo monetario
 - `ExercisePreview`: badges (categoria, difficolta', attrezzatura), pattern/forza, chip muscoli primari/secondari
 - `KpiPreview`: entrate, uscite, margine, clienti attivi, rate pendenti, appuntamenti
 

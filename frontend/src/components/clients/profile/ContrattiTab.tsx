@@ -91,14 +91,24 @@ export function ContrattiTab({ clientId }: { clientId: number }) {
         <TableBody>
           {contracts.map((c: ContractListItem) => {
             const prezzo = c.prezzo_totale ?? 0;
+            const netto = c.netto_incassato;
+            const rimborsato = c.totale_rimborsato ?? 0;
+            const haRimborso = rimborsato > 0.009;
             return (
               <TableRow key={c.id} className="cursor-pointer hover:bg-muted/50" onClick={() => router.push(`/contratti/${c.id}?from=clienti-${clientId}`)}>
                 <TableCell className="font-medium">{c.tipo_pacchetto ?? "—"}</TableCell>
                 <TableCell>
                   {prezzo > 0 ? (
-                    <span className="text-sm tabular-nums">
-                      {formatCurrency(c.totale_versato)} / {formatCurrency(prezzo)}
-                    </span>
+                    <div className="space-y-0.5">
+                      <span className="text-sm tabular-nums">
+                        {formatCurrency(netto)} / {formatCurrency(prezzo)}
+                      </span>
+                      {haRimborso ? (
+                        <p className="text-[10px] tabular-nums text-muted-foreground">
+                          lordo {formatCurrency(c.totale_versato)} · −{formatCurrency(rimborsato)} rimborso
+                        </p>
+                      ) : null}
+                    </div>
                   ) : "—"}
                 </TableCell>
                 <TableCell className="text-center">

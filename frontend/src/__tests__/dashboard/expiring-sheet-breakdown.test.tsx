@@ -68,4 +68,13 @@ describe("G9.7.3/D5 — lo sheet in-scadenza spiega l'occupazione dalla vista", 
     expect(screen.getByText(/2 svolte/)).toBeInTheDocument();
     expect(screen.queryByText(/penali/)).not.toBeInTheDocument();
   });
+
+  it("non stima un valore monetario delle sedute residue nel frontend", () => {
+    state.items = [mkItem({ prezzo_totale: 1000, crediti_totali: 10, crediti_residui: 6 })];
+    renderSheet();
+
+    expect(screen.getByText("6 sedute da usare")).toBeInTheDocument();
+    expect(screen.queryByText(/valore\s*~/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/600/)).not.toBeInTheDocument();
+  });
 });
