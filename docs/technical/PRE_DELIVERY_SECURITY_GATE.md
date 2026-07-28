@@ -103,7 +103,8 @@ Tutto ciò che è in Tier 1 e Tier 2 è un criterio di accettazione su una di qu
 **Stato nel codice e live (riesaminato 2026-07-28):** ✅ **G3 / R0.1.5 core+live verde.** ADR-011 Addendum I usa **Let's Encrypt HTTP-01 attraverso FRP**: il cert vive su `frpc` (PC trainer), la porta 80 instrada soltanto il webroot challenge e non raggiunge il CRM. Nessuna credenziale DNS viene distribuita. Rinnovo: opportunistico al boot + check ogni 12h, finestra 30 giorni, ultimo cert valido preservato. Apply edge e rollback sono stati esercitati; la chain dev Let's Encrypt è trusted dallo store di sistema e il probe strict ha verificato SAN, `/health` e `/public/` 200, HTTP non-challenge e CRM 404, senza bypass di trust. P2 resta intatta.
 
 **Vincolo operativo:** restano vincolanti gli esiti *fidato dai browser, auto-rinnovante,
-P2-preserving*. R0.4 deve riportare questi controlli nelle procedure vive di release/supporto.
+P2-preserving*. R0.4 ha riportato questi controlli nelle procedure vive di release/supporto il
+2026-07-28; la candidate deve ripeterli sul proprio artefatto.
 
 ---
 

@@ -1,129 +1,112 @@
-# FitManager AI Studio - Release Checklist v1.0
+# FitManager AI Studio — Release Checklist v1.0.15
 
-> Checklist operativa pre-lancio. Ogni item deve essere verificato prima del go-live.
+> Checklist viva della prossima candidate. `[x]` indica evidenza valida sul sorgente corrente;
+> `[ ]` indica una prova da ripetere sul nuovo artefatto. Un PASS di una release precedente non viene
+> trasferito automaticamente alla candidate.
 
----
+## 1. Baseline e autorità
 
-## 1. Quality Gates
+- [x] Branch di sviluppo: `FitManager_Studio`.
+- [x] Versione sorgente pre-bump: `1.0.14` in `api/__init__.py` e `frontend/package.json`.
+- [ ] Target candidate: bump sincronizzato a `1.0.15` secondo `AGENTS.md`.
+- [ ] Working tree pulito e `origin/FitManager_Studio...FitManager_Studio = 0 0` prima della pipeline.
+- [x] Fonti operative: questa checklist, [SUPPORT_RUNBOOK.md](SUPPORT_RUNBOOK.md),
+  [UPGRADE_PROCEDURE.md](UPGRADE_PROCEDURE.md) e
+  [TUNNEL_ARCHITECTURE.md](../technical/TUNNEL_ARCHITECTURE.md).
 
-- [x] `bash tools/scripts/check-all.sh` - ruff (0 errori) + next build (0 errori TS)
-- [x] `bash tools/build/build-release.sh` - preflight + build + verify + seal + tag (ADR-004)
-- [x] Audit pre-consegna completato (`docs/archive/PRE_DELIVERY_AUDIT_2026_04_17.md`)
-- [x] ESLint: 0 errori, 5 warning residui (non-actionable `react-hooks/incompatible-library`)
-- [x] `pytest tests/ -v` - suite completa verde, 0 falliti (conteggio dall'output del runner)
-- [x] Frontend vitest: suite completa data protection verde (conteggio dall'output del runner)
-- [x] E2E business rehearsal: 36/36 PASS (client, contract, rate, pay/unpay, ledger, agenda, credits, backup, restore)
-- [x] E2E distribution rehearsal: 62/62 PASS (artifacts, license, enforcement, network, backup, portal, config)
+## 2. Quality gate sul sorgente
 
-## 2. Build Artifacts
+- [x] Backend full suite post-R0.2: **910/910 PASS**; nessun codice backend applicativo modificato dopo.
+- [x] Frontend post-R0.3: **161/161 PASS**, guard semantici **11/11** e build Next/TypeScript verde.
+- [x] R0.1.5-live: edge operations **7/7 PASS**, Ruff e parse Bash/PowerShell verdi.
+- [x] R0.4: canary **5/5**, gate combinato **25/25**, Ruff e review link/path verdi.
+- [ ] Preflight candidate `tools/build/build-release.sh`: full pytest, Ruff, Next build e version sync.
+- [ ] Nessun warning nuovo classificato come release-critical.
 
-- [x] Nuitka backend exe: binario nativo x86-64 (Python->C->nativo, zero bytecode)
-- [x] Next.js standalone: `frontend/.next/standalone/server.js`
-- [x] Inno Setup installer: `dist/FitManager_Setup_1.0.6.exe`
-- [x] Launcher: `installer/launcher.bat` con `LICENSE_ENFORCEMENT_ENABLED=true`
-- [x] License enforcement default ON in compiled mode (Nuitka + PyInstaller)
-- [x] Node runtime: `installer/node/node.exe`
-- [x] DB cifrati nel bundle: `catalog.db.enc` + `nutrition.db.enc` (AES-256-GCM)
-- [x] Versione `1.0.6` riallineata in `api/__init__.py`, `frontend/package.json` e `installer/fitmanager.iss`
-- [x] Build pipeline safety gates: CRM data leak + ISS reference + nutrition.db integrity
-- [x] R0.1.5: `lego.exe` v5.2.1 entra nel bundle solo dopo verifica SHA-256, target/versione e licenza MIT; la build non effettua download
-- [ ] Release candidate v1.0.15: ispezionare l'installer finale e confermare `backend/lego.exe` + `backend/THIRD_PARTY_LICENSES/lego-MIT.txt`
-- [x] Nome output installer versionato e tracciabile, non solo `FitManager_Setup.exe`
-- [x] Packaging di `catalog.db.enc` e `license_public.pem` tramite snapshot immutabili in `dist/release-data`
-- [x] Bundle sanitizzato: zero Alembic, zero seed JSON, zero `.pyc` (ADR-007)
-- [x] Backup restore con size limit 500 MB
+## 3. Build e packaging candidate
 
-## 3. License System
+- [x] Backend build autorevole: Nuitka nativo x86-64 tramite `tools/build/build-backend-nuitka.sh`.
+- [x] Frontend build autorevole: Next standalone tramite `tools/build/build-frontend.sh`.
+- [x] Inno Setup produce `FitManager_Setup_<versione>.exe` e riceve la versione dalla pipeline.
+- [x] Launcher versionato con `LICENSE_ENFORCEMENT_ENABLED=true` e senza avvio del trasporto legacy.
+- [x] Build fail-closed su leak `crm.db`, riferimenti ISS, cataloghi cifrati e nutrition integrity.
+- [x] `lego.exe` v5.2.1 entra nel bundle solo dopo verifica hash/versione/target e licenza MIT.
+- [ ] Costruire `dist/FitManager_Setup_1.0.15.exe` con la pipeline ADR-004.
+- [ ] Ispezionare l'installer finale: `backend/lego.exe` e
+  `backend/THIRD_PARTY_LICENSES/lego-MIT.txt` presenti.
+- [ ] Verificare `dist/manifest.json`, SHA-256, commit, branch, safety gate e tag `v1.0.15`.
 
-- [x] RSA keypair generata (`~/.fitmanager/`)
-- [x] Chiave pubblica in `data/license_public.pem`
-- [x] `license.key` cliente tenuta fuori dal repository e fuori da `installer/assets`, con copia solo verso `data/license.key` sulla macchina target
-- [x] Health endpoint riporta `license_status: valid`
-- [x] Launcher impone `LICENSE_ENFORCEMENT_ENABLED=true` in produzione
-- [x] Nuitka + PyInstaller default: enforcement ON anche senza launcher (v1.0.4+)
-- [x] Verifica manuale post-install/post-upgrade: `data/license.key` presente nella cartella installata finale prima di interpretare errori pagina come bug runtime
-- [ ] Test enforcement negativo manuale: rimuovere `license.key` su installazione reale e verificare pagina `/licenza`
+## 4. Licenza e runtime
 
-## 4. Dati e Configurazione
+- [x] `license.key` cliente esclusa da repository, installer assets e bundle generico.
+- [x] Il bundle contiene soltanto `license_public.pem` per la verifica.
+- [x] Enforcement ON di default nel runtime compiled, anche senza launcher.
+- [x] `/health` espone stato licenza, modo applicativo e modo distribuzione.
+- [ ] Installazione candidata: `data/license.key` presente nel path runtime effettivo.
+- [ ] Prova negativa candidata: licenza assente → `/licenza` e CRM bloccato.
+- [ ] Prova positiva candidata: licenza valida → health e login operativi.
 
-- [ ] `data/crm.db` nel bundle release candidate vuoto e first-run-safe
-- [x] `data/catalog.db` congelato al catalogo canonico corrente (500 esercizi attivi) per il bundle
-- [ ] `data/catalog.db` tassonomia completa verificata: muscoli (>=53), articolazioni (>=15), condizioni_mediche (>=47), esercizi_muscoli (>=1000), esercizi_articolazioni (>=200), esercizi_condizioni (>=1000). **INC-2026-04-19: consegnato vuoto al primo partner per mancata verifica.**
-- [x] `data/nutrition.db` con integrity check automatico nel build (>= 8 template, >= 800 alimenti)
-- [x] `data/.env` - JWT_SECRET (52 char), PUBLIC_PORTAL_ENABLED, PUBLIC_BASE_URL
-- [x] `data/media/exercises/` - 1788 foto esercizi
-- [x] `data/exercises/` - 3 seed JSON (esercizi + relazioni + media)
-- [x] Freeze reality 2026-03-10: `catalog.db` canonico = 400 ID esercizio, `crm.db` locale = 396 attivi; il bundle usa il catalogo come sola fonte per media e tassonomia
-- [ ] Restore del backup reale di Chiara verificato sulla release candidate
-- [ ] Backup/restore ricontrollato con dati sensibili reali: clienti, contratti, schede, agenda, cassa e media
+## 5. Dati e cataloghi
 
-## 5. Rete e Accesso
+- [x] Audit read-only 2026-07-28: `crm.db`, `catalog.db` e `nutrition.db` con
+  `PRAGMA integrity_check = ok`; zero contaminazione catalog/nutrition nel DB business.
+- [x] Catalogo sorgente: **522** righe esercizio, **495** non eliminate, **466** attive
+  (`in_subset=1 AND deleted_at IS NULL`); il gate media richiede esattamente 466 attive.
+- [x] Tassonomia sorgente: **53** muscoli, **15** articolazioni, **47** condizioni mediche;
+  **6996** `esercizi_muscoli`, **1452** `esercizi_articolazioni`, **5154** `esercizi_condizioni`.
+- [x] Relazioni/media sorgente: **868** `esercizi_relazioni`, **738** record `esercizi_media`,
+  **750** file immagine. Nessun numero storico 400/500 viene usato come acceptance corrente.
+- [x] Nutrition sorgente: **880** alimenti attivi e **12** plan template; restano vincolanti le soglie
+  fail-closed della pipeline.
+- [x] Seed sorgente richiesti: esercizi, progressioni, junction tassonomiche e media.
+- [ ] Candidate: `crm.db` generico vuoto e first-run-safe; nessun dato trainer nel bundle.
+- [ ] Candidate: snapshot catalog/nutrition cifrati prodotti dalla pipeline e conteggi nel manifest.
+- [ ] Restore del backup trainer selezionato verificato sull'installazione candidata.
 
-- [x] Backend binding: `--host 0.0.0.0` (LAN + Tailscale)
-- [x] Frontend binding: `-H 0.0.0.0` (LAN + Tailscale)
-- [x] CORS configurato per localhost, LAN (192.168.x.x), Tailscale (100.x.x.x)
-- [x] Tailscale Funnel: `https://giacomo.tail8a3bc3.ts.net/`
-- [x] Public portal attivo: token generazione + validazione funzionante
-- [x] R0.1.5: deploy `vhostHTTPPort=80` rollback-safe e probe TLS strict versionati/testati
-- [ ] R0.1.5: apply interattivo sul VPS, emissione Let's Encrypt e probe completo `R0.1.5_STRICT_PROBE=PASS`
-- [x] Validazione guidata in-app del portale pubblico: link anamnesi di prova generato da `Impostazioni -> Connettivita` e verifica funzionale pagina pubblica + token (`21 passed` suite connectivity completa)
-- [ ] Test LAN da tablet/smartphone (stesso WiFi)
-- [x] Test Tailscale VPN da rete esterna
-- [ ] Test anamnesi self-service da smartphone via Funnel
+## 6. Rete, FRP e portale pubblico
 
-## 6. Backup & Restore
+- [x] Backend compiled in ascolto su `127.0.0.1:8000`; Next è l'unico proxy applicativo esposto.
+- [x] Frontend standalone su `0.0.0.0:3000` per LAN e origine locale del tunnel.
+- [x] Istanza provisionata: `public_access_provider = managed_frp` derivato dalla licenza.
+- [x] Diagnostica autenticata: `GET /api/system/tunnel-status` restituisce stato, `instance_id`,
+  `public_url` e PID; stato atteso durante il test: `connected`.
+- [x] Origine pubblica: `https://<instance_id>.fitmanagerstudio.com`; nessuna configurazione DNS
+  o URL pubblico manuale per singolo trainer.
+- [x] TLS termina sul PC trainer; il VPS esegue SNI passthrough e resta data-blind.
+- [x] R0.1.5-live su `gvera-dev`: `R0.1.5_STRICT_PROBE=PASS`, chain/SAN Let’s Encrypt validi,
+  HTTP non-challenge 404, `/health` → 200, route `/public/` → 200.
+- [x] Route separation live: `/clienti` → 404 e `/api/clients` → 404 dal dominio pubblico.
+- [ ] Ripetere health, portale reale, CRM 404 e TLS strict dall'installer candidato su rete esterna.
+- [ ] Test LAN da tablet/smartphone sullo stesso Wi-Fi.
+- [ ] Test link anamnesi reale da smartphone, inclusa validazione token e salvataggio.
 
-- [x] Create backup: atomico + SHA-256 checksum + integrity check
-- [x] Verify backup: checksum match + integrity OK
-- [x] Download backup: funzionante
-- [x] Restore backup: WAL checkpoint + schema sync + cookie clear + redirect login
-- [x] Export JSON v2.0: 17 entita business in ordine FK-safe
-- [x] Auto-backup al startup (max 5)
-- [x] Retention: max 30 backup manuali
+## 7. Backup, restore e flussi manuali
 
-## 7. Test Manuali (Non Automatizzabili)
+- [x] API backup: create, verify, download e restore WAL-safe con safety backup.
+- [x] Export JSON v2 e auto-backup startup disponibili; retention applicativa presidiata.
+- [ ] Upgrade in-place da un'installazione supportata, preservando `data/` e `license.key`.
+- [ ] Restore candidato: clienti, contratti/rate, schede, agenda, cassa e media verificati.
+- [ ] Cliente → contratto → rata → pagamento → cassa.
+- [ ] Scheda → esercizi → salvataggio → export.
+- [ ] Evento PT → completamento → crediti coerenti.
 
-- [x] Installazione pulita su macchina Windows senza sviluppo
-- [x] Launcher avvia backend + frontend + apre browser
-- [x] Login con credenziali produzione
-- [ ] Flusso completo: cliente -> contratto -> rata -> pagamento -> cassa
-- [ ] Flusso scheda allenamento: crea -> esercizi -> salva -> export
-- [ ] Agenda: crea evento PT -> verifica crediti scalati
-- [ ] Impostazioni: saldo iniziale cassa configurabile
+## 8. Go/no-go candidate
 
-## 8. Operativita e Supporto
+Non consegnare la v1.0.15 finché resta aperto uno di questi punti:
 
-- [x] `docs/operations/SUPPORT_RUNBOOK.md` disponibile come runbook unico per supporto, licenza, backup/restore e recovery post-update
-- [x] `Impostazioni` espone `Stato installazione` + `Snapshot diagnostico`
-- [x] Logging locale attivo in `data/logs/fitmanager.log`
+- [ ] pipeline ADR-004 completa e artefatto sigillato;
+- [ ] installazione/upgrade reale e licenza negativa/positiva;
+- [ ] restore reale e flussi core manuali;
+- [ ] test FRP esterno sulla candidate con TLS strict, portale 200 e CRM 404;
+- [ ] `CHANGELOG.md` con sezione v1.0.15 e note Upgrade;
+- [ ] registrazione dell'artefatto/consegna in `docs/operations/DEPLOYMENTS.md` quando effettuata.
 
----
+## 9. Rollback
 
-## Baseline
+1. Fermare FitManager e conservare log/snapshot diagnostico.
+2. Ripristinare il backup `pre_update_*.sqlite` soltanto tramite la procedura di restore.
+3. Reinstallare l'ultimo installer sigillato noto e riposizionare `data/license.key` se necessario.
+4. Verificare login, health, DB/catalog, backup e percorso pubblico prima di dichiarare recovery.
 
-- **Branch**: `FitManager_Studio`
-- **Versione corrente**: `1.0.6`
-- **Data**: 2026-04-17
-- **Release candidate artifact**: `dist/FitManager_Setup_1.0.6.exe`
-- **Build system**: Nuitka (Python->C->nativo) + Next.js standalone + Inno Setup
-
-### Storico versioni
-| Versione | Data | Note |
-|----------|------|------|
-| 1.0.2 | 2026-03-11 | Prima RC distribuibile (fix rewrite loopback) |
-| 1.0.3 | 2026-03-20 | Fix build pipeline + pitch deck + seed dev realistico |
-| 1.0.4 | 2026-03-21 | License enforcement frozen default + safety gates build + nutrition integrity |
-| 1.0.5 | 2026-03-25 | License hardening (ADR-005) + identity fields + stale cookie cleanup + video guide infra |
-| 1.0.6 | 2026-04-17 | Anti-RE 4 step (ADR-007) + Nuitka build + DB encryption + audit pre-consegna |
-
-## Rollback
-
-In caso di problema critico post-lancio:
-1. Fermare launcher.bat (chiudere finestra)
-2. Ripristinare backup pre-lancio: `data/backups/pre_update_*.sqlite`
-3. Reinstallare versione precedente da installer salvato
-4. Se necessario, restore DB via endpoint `/api/backup/restore`
-
----
-
-*Generata il 2026-03-10 durante Step 6 Launch Hardening.*
+Storico release e prove precedenti: `CHANGELOG.md`, `docs/operations/DEPLOYMENTS.md` e
+`docs/learning/BUILD_LOG.md`.

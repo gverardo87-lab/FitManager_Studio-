@@ -1,8 +1,8 @@
 # TUNNEL_ARCHITECTURE.md — Sottosistema tunnel pubblico
 
 **Progetto:** FitManager AI Studio
-**Versione:** 3.3 (consolidata)
-**Stato:** Fase 0 + Fase 1 completate · R0.1.5 TLS core+live verde · resto Fase 2/3 pianificato
+**Versione:** 3.4 (consolidata)
+**Stato:** Fase 0 + Fase 1 completate · R0 TLS/release-operability verde · resto Fase 2/3 pianificato
 **Ambito:** Esposizione pubblica del portale clienti tramite tunnel FRP self-hosted, end-to-end.
 **Documenti correlati:**
 - `ARCHITECTURE.md` (root) — overview dell'intero sistema; i 3 attori vivono lì.
@@ -281,7 +281,8 @@ localPath = "data/tunnel/acme-webroot"
 l'interlock live. Il 2026-07-28 l'apply VPS e il closeout hanno chiuso quell'interlock: HTTP
 non-challenge 404, chain/hostname validi nello store di sistema, `/health` e `/public/` 200,
 CRM 404. Il certificato dev attivo è Let's Encrypt e scade il 2026-10-26; P2 resta invariata perché
-chiave e terminazione TLS sono ancora sul PC. R0.4 rimane un gate separato.
+chiave e terminazione TLS sono ancora sul PC. R0.4 ha poi chiuso il 2026-07-28 la convergenza delle
+procedure vive di release/supporto su managed FRP; R0 è completo.
 - **2.7 Pagina offline su VPS**: il VPS serve pagina statica "Studio offline" se il tunnel di quel subdomain è down.
 - **2.9 Token hash**: SHA-256 del `ShareToken` in DB, lookup via hash, token in chiaro solo nel link.
 
@@ -537,3 +538,4 @@ Aggiornamento FRP: `systemctl stop frps` → scarica nuova release in `/opt/frp/
 | **3.1** | **2026-07-24** | **ADR-011 Addendum I/R0.1.5: DNS-01 distribuito sostituito da HTTP-01 ristretto via FRP; zero credenziali DNS sui trainer, webroot ACME dedicato, porta 80 non applicativa, P2 e terminazione TLS locale invariati. Corretto anche l'esempio runtime reale `https2http`.** |
 | **3.2** | **2026-07-26** | **R0-D1: core TLS verificato separato dal closeout LIVE. R0.2/R0.3 possono procedere; apply VPS, chain pubblica e probe strict restano HOLD obbligatorio prima di R0.4/P. Registrata la coppia self-signed ancora attiva e la necessità di preload/canary `System.Net.Http` nel probe Windows PowerShell.** |
 | **3.3** | **2026-07-28** | **R0.1.5-live chiuso: apply edge con rollback reale provato e attesa listener race-safe; HTTP-01 ed emissione Let's Encrypt sul PC; probe strict trust/SAN + route separation verde. R0.4 è il prossimo gate separato.** |
+| **3.4** | **2026-07-28** | **R0.4 chiuso: checklist candidate, supporto, launch scope e adapter operativi convergono su managed FRP, tunnel-status, TLS strict e route separation; R0 completo.** |

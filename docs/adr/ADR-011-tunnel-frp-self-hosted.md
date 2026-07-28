@@ -126,7 +126,8 @@ Addendum. FRP, SNI passthrough, terminazione TLS locale e identità da licenza n
   `vhostHTTPPort=80`, restart, probe e rollback;
 - il rinnovo opportunistico al boot più controllo periodico chiude il rischio del PC spento senza
   richiedere credenziali DNS distribuite;
-- acceptance e implementazione vivono in `SPEC_R0_PROTEZIONE_RELEASE_V1_0_15.md` §6.
+- acceptance e consuntivo dell'implementazione vivono nella SPEC storica
+  `docs/archive/specs/SPEC_R0_PROTEZIONE_RELEASE_V1_0_15.md` §6.
 
 ## Rollback / Exit Strategy
 

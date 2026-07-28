@@ -1,12 +1,14 @@
 # SPEC R0 — Protezione release v1.0.15
 
-**Stato:** 🟠 APERTA — R0.1 + R0.1.5-core + R0.2 + R0.3 + **R0.1.5-live ✅**; **R0.4 prossimo gate**
+**Stato:** ✅ IMPLEMENTATA — R0.1 + R0.1.5-core + R0.2 + R0.3 + R0.1.5-live + R0.4
+chiusi il 2026-07-28; P1 è soltanto eleggibile e richiede un GO separato
 **Data:** 2026-07-24
 **Branch:** `FitManager_Studio`
 **Tipo:** contenimento release cross-layer; nessuna nuova macro-feature e nessuna nuova regola finanziaria
 **Audit fondante:** `docs/archive/AUDIT_OBSOLESCENZA_POST_MIGRAZIONI_2026-07-23.md`
 **Autorità:** `AGENTS.md` → `MANIFESTO.md` → `LAUNCH_SCOPE.md` → layer `CLAUDE.md` → ADR/SSoT
-**Sequenza ratificata:** FE-0 + FE-1.0/1.1 ✅ → **R0.1 → R0.1.5-core → R0.2 → R0.3 → R0.1.5-live → R0.4** → P1..P6 → candidate v1.0.15 → G-MAC
+**Sequenza ratificata:** FE-0 + FE-1.0/1.1 ✅ → **R0 ✅** → P1..P6 (GO separato) →
+candidate v1.0.15 → G-MAC
 
 > Questa SPEC è la casa del solo lavoro release-critical emerso dall'audit. La bonifica massiva di
 > codice morto, API dormienti e tool storici non entra in R0 e non interrompe il blocco P. A chiusura
@@ -478,6 +480,40 @@ I conteggi cosmetici, la tabella WhatsApp e altra documentazione non release-cri
 - **AC-R04-2:** checklist FRP falsificabile: stato tunnel, URL pubblico, portale, 404 CRM dal tunnel.
 - **AC-R04-3:** review coerenza cross-doc e link/path integrity.
 - **AC-R04-4:** `docs/INDEX.md` rispecchia esattamente il fronte `docs/specs/`.
+
+### Consuntivo R0.4 e closeout R0 — 2026-07-28
+
+- **RED causale:** il canary operational-truth ha prodotto **5/5 failure** sugli assi previsti:
+  checklist ancora Tailscale e non falsificabile su FRP, supporto/launch scope legacy, adapter e
+  rehearsal operativamente obsoleti, link locali assoluti e dipendenza dal percorso `docs/upgrades/`
+  dismesso.
+- **Verità operativa:** `RELEASE_CHECKLIST.md` separa ora evidenza sorgente già raccolta da prove
+  ancora obbligatorie sulla candidate. Il percorso autorevole è `managed_frp`, diagnosticato da
+  `GET /api/system/tunnel-status` e verificato su origine
+  `https://<instance_id>.fitmanagerstudio.com` con TLS strict, portale pubblico 200 e CRM 404.
+  Nessuna procedura viva del gate prescrive Funnel Tailscale.
+- **Supporto e adapter:** `SUPPORT_RUNBOOK.md` usa link relativi risolvibili e una sequenza di diagnosi
+  FRP; `LAUNCH_SCOPE.md`, `frontend/CLAUDE.md` e la checklist manuale del distribution rehearsal
+  convergono sulla stessa origine. `api/CLAUDE.md` e l'esempio `https2http` della SSoT tunnel erano
+  già allineati e non sono stati modificati senza causa.
+- **Cataloghi read-only:** `audit_db.py` ha chiuso **11 OK, 1 WARN, 0 FAIL** con integrity check verde
+  sui tre DB e zero contaminazione catalog/nutrition nel DB business. Ground truth: 522 righe
+  esercizio, 495 non eliminate, 466 attive; 53 muscoli, 15 articolazioni, 47 condizioni mediche;
+  junction 6996/1452/5154; 868 relazioni, 738 record media e 750 file; nutrition 880 alimenti attivi
+  e 12 template. Il warning informativo riguarda 6 riferimenti esercizio storici assenti dal catalogo
+  corrente, già gestiti dal fallback UI: nessuna mutazione o HOLD R0.4.
+- **GREEN:** canary **5/5**; gate combinato operational truth + release guard + single-DB + edge +
+  packaging **25/25 PASS**; Ruff sui path Python, review link/path e `git diff --check` verdi.
+- **DoD R0:** restano valide la full backend **910/910** di R0.2 e la full frontend **161/161**,
+  guard semantici **11/11** e build Next di R0.3, perché i gate successivi non hanno modificato codice
+  applicativo di quei layer. Il verifier R0.3 ha chiuso **MONEY AXIS PRESERVED**; il guard legacy
+  prova che un `.env` preservato non avvia Funnel. Installazione v1.0.14 e restore reale da v1.0.10
+  sono evidenze di campo già raccolte; R0.1.5-live ha chiuso il probe FRP esterno strict. Le prove
+  specifiche del futuro artefatto v1.0.15 restano correttamente non spuntate nella checklist candidate
+  e non vengono attribuite a R0.
+- **Chiusura:** AC-R04-1..4 e DoD R0 soddisfatti. La SPEC viene archiviata nello stesso gate; nessuna
+  ADR cambia. P1 diventa strutturalmente apribile solo dopo commit, push, remoto `0 0` e nuovo GO del
+  founder: questo closeout non lo apre.
 
 ## 10. Findings già assorbiti o differiti
 

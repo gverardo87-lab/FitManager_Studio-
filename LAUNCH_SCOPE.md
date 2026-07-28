@@ -34,7 +34,8 @@ Prima del lancio allargato servono evidenze su:
 - installazione o upgrade su macchina Windows non-dev
 - percorso negativo licenza (`/licenza`) verificato
 - backup e restore riusciti con dati reali
-- validazione reale LAN / Tailscale / Funnel
+- validazione LAN e origine FRP gestita `https://<instance_id>.fitmanagerstudio.com` da rete esterna
+- TLS strict browser-trusted, portale pubblico operativo e CRM → 404 sul dominio pubblico
 - artefatto di rilascio ripetibile, versionato e tracciabile
 - issue note e fallback di supporto chiari
 
@@ -49,8 +50,9 @@ Prima del lancio allargato servono evidenze su:
 - redesign trasversali che non spostano affidabilita' o supportabilita'
 
 > **Post-launch**: la roadmap 90 giorni (ADR-006 + `docs/product/POST_LAUNCH_ROADMAP_90D.md`) definisce
-> la strategia di accesso mobile (PWA + Tailscale full-app) e il modello hardware FitManager Box.
-> Queste iniziative partono DOPO il lancio Windows, non lo rallentano.
+> la strategia PWA sul percorso FRP e il modello hardware FitManager Box. L'eventuale accesso CRM
+> remoto segue esclusivamente la Strada B di `TUNNEL_SECURITY_BOUNDARY.md`, dopo i relativi gate di
+> sicurezza; non fa parte del lancio Windows corrente.
 
 ## Regole anti-scope-creep
 
@@ -69,6 +71,4 @@ Per la procedura concreta usare:
 
 Per la storia dettagliata dei microstep:
 
-- `docs/upgrades/UPGRADE_LOG.md`
-- `docs/upgrades/specs/UPG-2026-03-10-09-launch-operations-plan-v1.md`
-- `docs/upgrades/specs/UPG-2026-03-04-06-launch-market-readiness-roadmap.md`
+- `docs/learning/BUILD_LOG.md` (log unico append-only)

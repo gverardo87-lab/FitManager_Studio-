@@ -4243,3 +4243,30 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
   cambia, perché HTTP-01 locale, terminazione sul trainer e P2 erano già ratificati da ADR-011
   Addendum I. R0.4 è ora il prossimo gate minimo, ma resta separato fino al checkpoint remoto `0 0`
   e nuovo GO.
+
+---
+
+## 2026-07-28 — R0.4 chiude la verità operativa e l'intero blocco R0
+
+- **Scope:** documenti/prove che guidano release e supporto, più il testo manuale del distribution
+  rehearsal e un canary statico. Zero codice applicativo backend/frontend, schema, dati business,
+  ledger, FRPS/VPS, certificati, candidate v1.0.15 o apertura P1.
+- **RED causale:** **5/5 failure** hanno provato i cinque drift: checklist Tailscale e non
+  falsificabile su FRP, support/launch scope legacy, adapter/rehearsal obsoleti, link locali assoluti
+  e dipendenza dal percorso `docs/upgrades/` dismesso.
+- **Fix:** `RELEASE_CHECKLIST.md` distingue evidenze del sorgente da test ancora obbligatori sulla
+  candidate; runtime e diagnosi usano managed FRP, `GET /api/system/tunnel-status`, origine
+  `*.fitmanagerstudio.com`, TLS strict e route separation. Runbook, launch scope, frontend adapter e
+  rehearsal convergono; link operativi relativi e `BUILD_LOG.md` unico log vivo.
+- **Ground truth cataloghi:** audit read-only **11 OK, 1 WARN, 0 FAIL**, integrity verde e zero
+  contaminazione. 522 esercizi totali, 495 non eliminati, 466 attivi; tassonomia 53/15/47, junction
+  6996/1452/5154, 868 relazioni, 738 record media/750 file; nutrition 880 alimenti attivi e 12
+  template. Il warning sui 6 riferimenti storici mancanti è informativo e già coperto dal fallback UI.
+- **GREEN:** canary **5/5**; gate combinato operational truth/release guard/single-DB/edge/packaging
+  **25/25 PASS**; Ruff sui path e review link/path verdi. Restano valide backend **910/910**,
+  frontend **161/161** + guard **11/11** + build e verifier **MONEY AXIS PRESERVED**, perché R0.4 non
+  cambia codice applicativo. Install/restore di campo v1.0.14 e probe strict R0.1.5-live chiudono il
+  DoD R0; le prove specifiche dell'artefatto v1.0.15 restano deliberatamente aperte in checklist.
+- **Fold-back:** SPEC R0 consuntivata e archiviata, INDEX/interlock P aggiornati, evergreen tunnel e
+  security gate allineati. Nessuna ADR necessaria. R0 è chiuso; P1 diventa soltanto eleggibile dopo
+  checkpoint remoto `0 0` e richiede un nuovo GO founder.

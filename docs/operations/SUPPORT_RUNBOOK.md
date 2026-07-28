@@ -1,7 +1,7 @@
 # FitManager AI Studio - Runbook Supporto, Licenza e Recovery
 
-> Documento operativo unico per assistenza su installazione locale, licenza, backup/restore
-> e recovery post-update. Versione iniziale allineata allo stato del prodotto del 10 marzo 2026.
+> Documento operativo unico per assistenza su installazione locale, licenza, backup/restore,
+> connettività FRP e recovery post-update. Riallineato da R0.4 il 28 luglio 2026.
 
 ---
 
@@ -34,11 +34,11 @@ Usare questo documento se il problema riguarda almeno uno di questi casi:
 - c'e un dubbio su ambiente `dev/prod`, runtime `source/installer` o stato del portale pubblico
 
 Per problemi di rete/tunnel usare questo runbook come ingresso rapido e poi
-passare a [TUNNEL_ARCHITECTURE.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/technical/TUNNEL_ARCHITECTURE.md)
+passare a [TUNNEL_ARCHITECTURE.md](../technical/TUNNEL_ARCHITECTURE.md)
 (setup VPS edge + operations FRP; il legacy Tailscale è in `docs/archive/TAILSCALE_FUNNEL_SETUP.md`).
 
 Per diagnosi shell rapide su porte locali, `health` e `license.key`, usare anche
-[RUNTIME_DIAGNOSTICS_PLAYBOOK.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/operations/RUNTIME_DIAGNOSTICS_PLAYBOOK.md).
+[RUNTIME_DIAGNOSTICS_PLAYBOOK.md](RUNTIME_DIAGNOSTICS_PLAYBOOK.md).
 
 Nota aggiornata sul prodotto:
 - da `Impostazioni -> Connettivita` FitManager sa ora anche generare un link anamnesi
@@ -80,6 +80,7 @@ Prima di toccare file o reinstallare:
    - stato `db` e `catalog`
    - `public_portal_enabled`
    - `public_base_url`
+   - `public_access_provider` dalla sezione Connettività
    - backup recenti visibili
 5. Recuperare il file log locale:
    - `data/logs/fitmanager.log`
@@ -92,14 +93,19 @@ Se l'app non arriva nemmeno alla UI:
 - raccogliere comunque `data/logs/fitmanager.log`;
 - verificare che esistano `data/crm.db`, `data/catalog.db`, `data/.env`;
 - usare la sezione 7 di questo runbook e il playbook shell
-  [RUNTIME_DIAGNOSTICS_PLAYBOOK.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/operations/RUNTIME_DIAGNOSTICS_PLAYBOOK.md).
+  [RUNTIME_DIAGNOSTICS_PLAYBOOK.md](RUNTIME_DIAGNOSTICS_PLAYBOOK.md).
 
 Se il problema riguarda il portale anamnesi pubblico ma l'app arriva alla UI:
 1. Aprire `Impostazioni -> Connettivita`.
 2. Completare o ricontrollare il wizard fino allo step finale.
 3. Generare un link anamnesi di prova per un cliente attivo.
 4. Eseguire la validazione guidata del link pubblico.
-5. Solo dopo passare al test manuale da smartphone o ai comandi Tailscale/Funnel.
+5. Verificare `GET /api/system/tunnel-status` con sessione trainer: `state = connected`,
+   `instance_id` e `public_url` coerenti, PID presente.
+6. Verificare in Connettività `public_access_provider = managed_frp` e origine
+   `https://<instance_id>.fitmanagerstudio.com` non modificabile.
+7. Solo dopo passare al test manuale da smartphone/rete esterna: TLS strict, link `/public/`
+   funzionante e route CRM in 404. Non usare bypass del trust TLS.
 
 ---
 
@@ -191,7 +197,7 @@ In questo scenario:
 - riposizionare prima `data\\license.key`, poi riaprire FitManager.
 
 Per i comandi esatti di conferma su `3000`, `8000` e file licenza, usare
-[RUNTIME_DIAGNOSTICS_PLAYBOOK.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/operations/RUNTIME_DIAGNOSTICS_PLAYBOOK.md).
+[RUNTIME_DIAGNOSTICS_PLAYBOOK.md](RUNTIME_DIAGNOSTICS_PLAYBOOK.md).
 
 ### 5.3 Avvio corretto in produzione
 
@@ -374,7 +380,7 @@ La procedura corretta e:
 3. Annotare la versione corrente.
 
 Per la procedura sequenziale lato utente/installatore durante un upgrade reale usare:
-- [UPGRADE_PROCEDURE.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/operations/UPGRADE_PROCEDURE.md)
+- [UPGRADE_PROCEDURE.md](UPGRADE_PROCEDURE.md)
 
 Questo runbook resta invece la fonte tecnica per recovery, restore ed escalation.
 
@@ -435,11 +441,11 @@ Per ogni ticket serio raccogliere:
 
 ## 11. Collegamenti Operativi
 
-- [RELEASE_CHECKLIST.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/operations/RELEASE_CHECKLIST.md)
-- [TUNNEL_ARCHITECTURE.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/technical/TUNNEL_ARCHITECTURE.md)
-- [UPGRADE_PROCEDURE.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/operations/UPGRADE_PROCEDURE.md)
-- [DEPLOYMENT_PLAN.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/technical/DEPLOYMENT_PLAN.md)
-- [UPG-2026-03-10-09-launch-operations-plan-v1.md](/Users/gvera/Projects/FitManager_AI_Studio/docs/upgrades/specs/UPG-2026-03-10-09-launch-operations-plan-v1.md)
+- [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md)
+- [TUNNEL_ARCHITECTURE.md](../technical/TUNNEL_ARCHITECTURE.md)
+- [UPGRADE_PROCEDURE.md](UPGRADE_PROCEDURE.md)
+- [DEPLOYMENT_PLAN.md](../technical/DEPLOYMENT_PLAN.md)
+- [BUILD_LOG.md](../learning/BUILD_LOG.md)
 
 ---
 

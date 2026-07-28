@@ -7,12 +7,13 @@
 **Tipo:** remediation frontend e read-model additivi; nessuna nuova policy di prodotto
 **Audit fondante:** `docs/archive/AUDIT_FRONTEND_CORE_INTUITIVITA_2026-07-21.md`
 **Autorità:** `AGENTS.md` → `MANIFESTO.md` → `LAUNCH_SCOPE.md` → `frontend/CLAUDE.md` → ADR/SSoT finanziarie
-**Sequenza corrente:** v1.0.14 ✅ → FE-0 + FE-1.0/1.1 ✅ → R0 protezione release → blocco P →
-candidate v1.0.15 → G-MAC
+**Sequenza corrente:** v1.0.14 ✅ → FE-0 + FE-1.0/1.1 ✅ → R0 protezione release ✅ →
+blocco P (prossimo, solo con GO) → candidate v1.0.15 → G-MAC
 **Decisione di scheduling:** founder 2026-07-21/22 — `v1.0.15` contiene blocco P + FE-0 completo +
-criticità FE-1. Founder 2026-07-24 — dopo la chiusura LIVE FE-1 entra il gate ristretto R0
-(`SPEC_R0_PROTEZIONE_RELEASE_V1_0_15.md`), poi apre P1. Ottimizzazioni/redesign e cleanup estesi
-restano fuori release; G-MAC apre dopo validazione e consegna della `v1.0.15`.
+criticità FE-1. Founder 2026-07-24 — dopo la chiusura LIVE FE-1 entra il gate ristretto R0;
+R0 è chiuso e archiviato dal 2026-07-28, quindi P1 è ora eleggibile ma richiede un GO separato.
+Ottimizzazioni/redesign e cleanup estesi restano fuori release; G-MAC apre dopo validazione e
+consegna della `v1.0.15`.
 
 > La presente SPEC è la casa del lavoro aperto. A chiusura dell'ultimo gate: consuntivo, fold-back
 > negli evergreen realmente toccati, append a `docs/learning/BUILD_LOG.md` e spostamento in
