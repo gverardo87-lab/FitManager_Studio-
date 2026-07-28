@@ -1,6 +1,6 @@
 # SPEC R0 — Protezione release v1.0.15
 
-**Stato:** 🟠 APERTA — R0.1 + R0.1.5-core + R0.2 + **R0.3 ✅**; **R0.1.5-live HOLD**; R0.4 bloccato dall'interlock live
+**Stato:** 🟠 APERTA — R0.1 + R0.1.5-core + R0.2 + R0.3 + **R0.1.5-live ✅**; **R0.4 prossimo gate**
 **Data:** 2026-07-24
 **Branch:** `FitManager_Studio`
 **Tipo:** contenimento release cross-layer; nessuna nuova macro-feature e nessuna nuova regola finanziaria
@@ -434,6 +434,29 @@ sono script distruttivi di seed/curation e richiedono triage dedicato post-relea
   perché il gate rende effettive regole già ratificate da G8.4 e FE-0.
 - **Interlock:** R0.1.5-live resta HOLD. R0.4 non è apribile finché apply edge, chain pubblica e
   probe strict non sono verificati; nessun lavoro FRPS/VPS è stato eseguito in R0.3.
+
+### Consuntivo R0.1.5-live — 2026-07-28
+
+- **Probe autonomo:** un canary RED ha riprodotto l'assenza di `System.Net.Http` nella baseline
+  Windows PowerShell. `probe-r015-tls.ps1` carica ora l'assembly prima del primo tipo HTTP e non
+  richiede più preload manuale; restano vietati callback custom, `-k`, `--insecure` e redirect.
+- **Apply edge rollback-safe:** il primo apply ha verificato candidate e backup, poi ha rilevato una
+  race tra `systemd Type=simple` e apertura del socket 80; il rollback automatico ha ripristinato
+  config e firewall. Un secondo canary RED ha fissato il finding; l'apply usa ora attesa limitata a
+  10 secondi e il retry live ha lasciato `frps` attivo, config verificata, UFW 80/tcp IPv4/IPv6 e
+  listener 80 presenti. HTTP fuori `/.well-known/acme-challenge/` risponde 404.
+- **Emissione reale:** il lifecycle di produzione ha superato il preflight HTTP-01, eseguito lego,
+  promosso atomicamente la full chain Let's Encrypt e riavviato `frpc` una sola volta. Il certificato
+  per `gvera-dev.fitmanagerstudio.com` è trusted dallo store di sistema, issuer `Let's Encrypt YR2`,
+  scadenza UTC `2026-10-26T19:37:20Z`; terminazione TLS e chiave privata restano sul PC trainer.
+- **Closeout strict:** `HTTP_NON_CHALLENGE=404`, `TLS_STRICT=PASS`, `HTTPS_PRIVATE=404`, route
+  `/public/` 200, `/health` 200 e `/clienti` 404. Il file link è sotto `data/tunnel/`, ignorato da Git,
+  e il probe non stampa URL/token. AC-R015-2 lato edge e AC-R015-8 sono verdi.
+- **Hygiene runtime:** backend/Next usati per il test sono stati arrestati; `frpc` e `lego` non hanno
+  processi residui. Nessun token DNS, segreto dashboard, dato business o configurazione R0.4 è stato
+  introdotto o letto nel closeout.
+- **Transizione:** l'interlock R0.1.5-live è chiuso senza waiver. R0.4 diventa il prossimo gate minimo,
+  da aprire solo dopo commit/push e delta remoto `0 0` di questo checkpoint.
 
 ## 9. R0.4 — Verità operativa release
 

@@ -62,6 +62,22 @@ render_config() {
   ' "$input_path" > "$output_path"
 }
 
+wait_for_listener() {
+  local port="$1"
+  local max_attempts="$2"
+  local attempt
+
+  for ((attempt = 1; attempt <= max_attempts; attempt++)); do
+    if ss -H -ltn "sport = :$port" | grep -q .; then
+      return 0
+    fi
+    if [ "$attempt" -lt "$max_attempts" ]; then
+      sleep 1
+    fi
+  done
+  return 1
+}
+
 while [ $# -gt 0 ]; do
   case "$1" in
     --render-only)
@@ -120,7 +136,7 @@ if [ "${EUID:-$(id -u)}" -ne 0 ]; then
   exit 1
 fi
 
-for required_command in awk chmod chown cmp cp date grep install mktemp mv readlink rm ss systemctl ufw; do
+for required_command in awk chmod chown cmp cp date grep install mktemp mv readlink rm sleep ss systemctl ufw; do
   command -v "$required_command" >/dev/null 2>&1 || {
     echo "ERRORE: comando richiesto assente: $required_command" >&2
     exit 1
@@ -229,7 +245,7 @@ fi
 systemctl restart "$SERVICE_NAME"
 systemctl is-active --quiet "$SERVICE_NAME"
 "$FRPS_BIN" verify -c "$CONFIG_PATH"
-ss -H -ltn 'sport = :80' | grep -q . || {
+wait_for_listener 80 10 || {
   echo "ERRORE: FRPS attivo ma nessun listener su 80/tcp." >&2
   exit 1
 }

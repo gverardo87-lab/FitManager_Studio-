@@ -93,18 +93,17 @@ Tutto ciò che è in Tier 1 e Tier 2 è un criterio di accettazione su una di qu
 
 **Cosa deve essere vero:** Un atleta che apre il link del portale su telefono o laptop deve raggiungerlo su un TLS che il browser considera fidato, senza alcun avviso sul certificato.
 
-**Perché:** Il sistema usa attualmente un certificato self-signed per la validazione SNI (tracciato come Fase 2). È accettabile per la validazione interna; non è accettabile davanti a un atleta reale. Un avviso di sicurezza del browser al primo contatto (a) distrugge la fiducia in un prodotto B2B2C il cui intero pitch è la privacy, (b) abitua gli utenti a cliccare oltre gli avvisi di sicurezza, che è di per sé un danno, e (c) rende il portale legittimo indistinguibile da un'intercettazione malevola per chiunque presti attenzione.
+**Perché:** Prima di R0.1.5 il sistema usava un certificato self-signed per la validazione SNI. Era accettabile per la validazione interna, non davanti a un atleta reale. Un avviso di sicurezza del browser al primo contatto (a) distrugge la fiducia in un prodotto B2B2C il cui intero pitch è la privacy, (b) abitua gli utenti a cliccare oltre gli avvisi di sicurezza, che è di per sé un danno, e (c) rende il portale legittimo indistinguibile da un'intercettazione malevola per chiunque presti attenzione.
 
 **Criteri di accettazione:**
 - Il portale pubblico presenta un certificato fidato dai browser mobile e desktop mainstream attuali.
 - Il provisioning e il rinnovo del certificato sono automatizzati (nessuna scadenza silenziosa che il giorno del rinnovo rompa l'accesso di ogni atleta).
 - La proprietà data-blind (P2) è preservata: la gestione del certificato non deve spostare la terminazione TLS sul VPS in modo da consentire al VPS di leggere il traffico di trainer/atleti. **Se l'approccio TLS scelto terminasse sul VPS, è una regressione di P2 e deve essere segnalata a Giacomo prima di procedere, non adottata silenziosamente.**
 
-**Stato nel codice (riesaminato 2026-07-26):** 🟠 **R0.1.5-core verde; R0.1.5-live HOLD pre-R0.4/P.** ADR-011 Addendum I sostituisce il DNS-01 distribuito con **Let's Encrypt HTTP-01 attraverso FRP**: il cert vive su `frpc` (PC trainer), la porta 80 instrada soltanto il webroot challenge e non raggiunge il CRM. Nessuna credenziale DNS viene distribuita. Rinnovo: opportunistico al boot + check ogni 12h, finestra 30 giorni, ultimo cert valido preservato. Cert manager, installazione atomica, packaging e tooling edge sono verificati; apply VPS, chain pubblica e probe strict non sono stati eseguiti. La coppia attiva osservata resta self-signed: l'apertura senza blocco sul browser founder è evidenza UX locale, non PASS di public trust.
+**Stato nel codice e live (riesaminato 2026-07-28):** ✅ **G3 / R0.1.5 core+live verde.** ADR-011 Addendum I usa **Let's Encrypt HTTP-01 attraverso FRP**: il cert vive su `frpc` (PC trainer), la porta 80 instrada soltanto il webroot challenge e non raggiunge il CRM. Nessuna credenziale DNS viene distribuita. Rinnovo: opportunistico al boot + check ogni 12h, finestra 30 giorni, ultimo cert valido preservato. Apply edge e rollback sono stati esercitati; la chain dev Let's Encrypt è trusted dallo store di sistema e il probe strict ha verificato SAN, `/health` e `/public/` 200, HTTP non-challenge e CRM 404, senza bypass di trust. P2 resta intatta.
 
-**Decisione successiva:** ADR-011 Addendum I e R0.1.5 hanno scelto il meccanismo HTTP-01 ristretto
-via FRP. R0-D1 consente soltanto a R0.2/R0.3 di procedere; il closeout LIVE resta interlock prima di
-R0.4/P. Restano vincolanti gli esiti: *fidato dai browser, auto-rinnovante, P2-preserving*.
+**Vincolo operativo:** restano vincolanti gli esiti *fidato dai browser, auto-rinnovante,
+P2-preserving*. R0.4 deve riportare questi controlli nelle procedure vive di release/supporto.
 
 ---
 

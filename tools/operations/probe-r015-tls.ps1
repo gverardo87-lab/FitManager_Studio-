@@ -8,6 +8,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+Add-Type -AssemblyName System.Net.Http
 $timeout = [TimeSpan]::FromSeconds(12)
 
 function Get-HttpStatus {

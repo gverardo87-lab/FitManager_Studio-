@@ -103,6 +103,16 @@ def test_apply_path_has_backup_verify_rollback_and_no_firewall_auto_enable():
     assert "/opt/frp" not in script
 
 
+def test_apply_waits_bounded_for_http_listener_after_restart():
+    """Type=simple può risultare active prima che il socket vhost sia osservabile."""
+    script = APPLY_SCRIPT.read_text(encoding="utf-8")
+
+    assert "wait_for_listener()" in script
+    assert "wait_for_listener 80 10" in script
+    assert "sleep 1" in script
+    assert "for ((attempt = 1; attempt <= max_attempts; attempt++))" in script
+
+
 def test_strict_probe_never_disables_tls_or_prints_public_url():
     script = PROBE_SCRIPT.read_text(encoding="utf-8")
 
@@ -113,3 +123,13 @@ def test_strict_probe_never_disables_tls_or_prints_public_url():
     assert "HTTPS_PRIVATE=404" in script
     assert "HTTPS_PUBLIC_200=PASS" in script
     assert "Write-Output $publicUrl" not in script
+
+
+def test_strict_probe_loads_http_assembly_before_first_http_type_use():
+    """Il closeout deve funzionare in Windows PowerShell senza preload manuale."""
+    script = PROBE_SCRIPT.read_text(encoding="utf-8")
+
+    load = "Add-Type -AssemblyName System.Net.Http"
+    first_http_type = "$handler = [System.Net.Http.HttpClientHandler]::new()"
+    assert load in script
+    assert script.index(load) < script.index(first_http_type)

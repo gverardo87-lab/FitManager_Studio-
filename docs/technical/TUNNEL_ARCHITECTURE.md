@@ -1,8 +1,8 @@
 # TUNNEL_ARCHITECTURE.md — Sottosistema tunnel pubblico
 
 **Progetto:** FitManager AI Studio
-**Versione:** 3.2 (consolidata)
-**Stato:** Fase 0 + Fase 1 completate · R0.1.5-core verde · R0.1.5-live HOLD pre-R0.4/P · resto Fase 2/3 pianificato
+**Versione:** 3.3 (consolidata)
+**Stato:** Fase 0 + Fase 1 completate · R0.1.5 TLS core+live verde · resto Fase 2/3 pianificato
 **Ambito:** Esposizione pubblica del portale clienti tramite tunnel FRP self-hosted, end-to-end.
 **Documenti correlati:**
 - `ARCHITECTURE.md` (root) — overview dell'intero sistema; i 3 attori vivono lì.
@@ -201,7 +201,7 @@ centralizzato gestito da AVGV resta **NON ACCETTABILE** (chiave privata sull'edg
 |------|-------|---------|
 | **Fase 0** — Infrastruttura AVGV | ✅ **COMPLETATA** (2026-06-02) | VPS Hetzner, hardening, frps v0.61.1, DNS wildcard, test e2e tunnel |
 | **Fase 1** — Tunnel client nel prodotto | ✅ **COMPLETATA** (core 2026-06-07, frpc bundle 2026-06-09) | instance_id, tunnel_manager, tunnel_config, auto-start, route separation, health endpoint, frpc.exe nell'installer |
-| **Fase 2** — TLS e2e + route hardening | 🟠 **R0.1.5-core ✅ · live HOLD pre-R0.4/P** · resto pianificato | cert manager e tooling HTTP-01 verdi; apply edge, chain pubblica e probe strict differiti senza waiver; token hash, inactivity timeout e pagina offline restano separati |
+| **Fase 2** — TLS e2e + route hardening | 🟠 **TLS R0.1.5 core+live ✅** · resto pianificato | cert manager, edge HTTP-01, chain pubblica e probe strict verdi; token hash, inactivity timeout e pagina offline restano separati |
 | **Fase 3** — Onboarding zero-touch + dismissione Tailscale | ⬜ **PIANIFICATA** | UI diagnostica, 2FA TOTP, SBOM, export GDPR, rimozione Tailscale |
 
 > **Nota:** l'**apertura del CRM al tunnel** ("Strada B") è un workstream a sé, **approvato ma non implementato**.
@@ -220,7 +220,7 @@ soft delete.
 | G1 | VPS edge (frps + SNI + DNS) | 0 | Infra AVGV | ✅ Fatto |
 | G2 | FRP client bundlato | 1 | `api/services/tunnel_manager.py` | ✅ Fatto |
 | G3 | Instance ID nella licenza JWT | 1 | `generate_license.py` + `license.py` | ✅ Fatto |
-| G4 | Cert manager (Let's Encrypt HTTP-01 via FRP) | 2 / R0.1.5 | `api/services/cert_manager.py` | 🟠 Core + packaging + edge tooling ✅ · apply/live HOLD pre-R0.4/P |
+| G4 | Cert manager (Let's Encrypt HTTP-01 via FRP) | 2 / R0.1.5 | `api/services/cert_manager.py` | ✅ Core, packaging, edge apply, emissione e probe strict |
 | G5 | Route separation middleware | 1/2 | `frontend/src/middleware.ts` | ✅ Base (whitelist) · ⬜ blacklist Strada B |
 | G6 | Pagina "studio offline" sul VPS | 2 | VPS edge | ⬜ Da fare |
 | G7 | Inactivity timeout sessione | 2 | `api/auth/router.py` + frontend | ⬜ Da fare |
@@ -238,7 +238,7 @@ soft delete.
 | 1.1 | Instance ID nella licenza | `tools/admin_scripts/generate_license.py` | claim `instance_id` nel JWT |
 | 1.2 | Lettura instance_id | `api/services/license.py` | estrazione dal JWT licenza |
 | 1.3 | Tunnel manager | `api/services/tunnel_manager.py` | babysitter frpc: subprocess, backoff+jitter, drain, cleanup |
-| 1.4 | Config tunnel + cert | `api/services/tunnel_config.py` | TunnelConfig, frpc path, cert self-signed auto |
+| 1.4 | Config tunnel + cert | `api/services/tunnel_config.py` | TunnelConfig, frpc path, bootstrap cert e path ACME |
 | 1.5 | Bundle FRP binary | `tools/build/build-installer.sh` | frpc.exe staged + safety gate (2026-06-09) |
 | 1.6 | Auto-start tunnel | `api/main.py` lifespan step 6 | startup/shutdown + auto `PUBLIC_BASE_URL` |
 | 1.7 | Route separation | `frontend/src/middleware.ts` | tunnel guard (hostname) + auth guard, CRM 404 dal tunnel |
@@ -270,19 +270,18 @@ type = "static_file"
 localPath = "data/tunnel/acme-webroot"
 ```
 
-### 8.4 Fase 2 — TLS e2e + route hardening (R0.1.5-core verde; live HOLD; resto pianificato)
+### 8.4 Fase 2 — TLS e2e + route hardening (R0.1.5 core+live verde; resto pianificato)
 
-- **2.1 Cert manager — R0.1.5**: ✅ core locale (`api/services/cert_manager.py`) con preflight HTTP prima dell'ordine, client ACME hash/version pin, validazione SAN/tempo/key/chain, installazione con rollback, restart frpc e stop esplicito del processo ACME; ✅ packaging riproducibile tramite `fetch-lego.ps1` esplicito e `stage-acme-client.sh` fail-closed (binario + licenza); ⏳ edge/live.
-- **2.2 Trasporto challenge — R0.1.5**: ✅ lato client (`frpc type=http`, `locations=["/.well-known/acme-challenge/"]`, plugin `static_file`, testato con v0.61.1); ✅ deploy edge rollback-safe e probe strict in `tools/operations/`; ⏳ apply VPS (`frps vhostHTTPPort=80` + UFW) e closeout live pendenti per accesso SSH interattivo. Nessun token DNS e nessun upstream applicativo su HTTP.
+- **2.1 Cert manager — R0.1.5**: ✅ core locale (`api/services/cert_manager.py`) con preflight HTTP prima dell'ordine, client ACME hash/version pin, validazione SAN/tempo/key/chain, installazione con rollback, restart frpc e stop esplicito del processo ACME; ✅ packaging riproducibile tramite `fetch-lego.ps1` esplicito e `stage-acme-client.sh` fail-closed (binario + licenza); ✅ emissione live Let's Encrypt e promozione atomica.
+- **2.2 Trasporto challenge — R0.1.5**: ✅ lato client (`frpc type=http`, `locations=["/.well-known/acme-challenge/"]`, plugin `static_file`, testato con v0.61.1); ✅ edge VPS con `frps vhostHTTPPort=80`, UFW 80/tcp IPv4/IPv6, listener verificato e rollback reale provato; ✅ closeout strict. Nessun token DNS e nessun upstream applicativo su HTTP.
 - **2.3 Storage — R0.1.5**: `data/tunnel/` (account ACME, webroot, cert, key), escluso da backup/export; installazione cert/key atomica dopo verifica.
-- **2.4 Rinnovo automatico — R0.1.5**: ✅ scheduler opportunistico al boot + check ogni 12h, rinnovo 30gg prima della scadenza, retry 15min e ultimo certificato valido preservato; prova live resta pendente.
+- **2.4 Rinnovo automatico — R0.1.5**: ✅ scheduler opportunistico al boot + check ogni 12h, rinnovo 30gg prima della scadenza, retry 15min e ultimo certificato valido preservato; il boot live ha emesso, installato e fatto rileggere la chain a `frpc`.
 
-**Interlock di delivery R0-D1 (2026-07-26).** Il core è verificato e consente di aprire R0.2/R0.3,
-che non dipendono dalla trust chain pubblica. L'apply VPS e il closeout strict restano un gate LIVE
-esplicito, da chiudere prima di R0.4 e quindi prima di P1/candidate. Il browser del founder ha aperto
-la pagina senza blocco, ma il certificato attivo osservato sul PC è ancora il self-signed del
-2026-06-07: l'esperienza locale non equivale a una chain pubblicamente trusted e non chiude G4.
-Nessuna modifica a FRPS/UFW è stata eseguita durante R0-D1.
+**Transizione R0-D1 → closeout (2026-07-26/28).** R0-D1 ha consentito R0.2/R0.3 lasciando intatto
+l'interlock live. Il 2026-07-28 l'apply VPS e il closeout hanno chiuso quell'interlock: HTTP
+non-challenge 404, chain/hostname validi nello store di sistema, `/health` e `/public/` 200,
+CRM 404. Il certificato dev attivo è Let's Encrypt e scade il 2026-10-26; P2 resta invariata perché
+chiave e terminazione TLS sono ancora sul PC. R0.4 rimane un gate separato.
 - **2.7 Pagina offline su VPS**: il VPS serve pagina statica "Studio offline" se il tunnel di quel subdomain è down.
 - **2.9 Token hash**: SHA-256 del `ShareToken` in DB, lookup via hash, token in chiaro solo nel link.
 
@@ -383,7 +382,7 @@ Servizio systemd `frps.service` (`Restart=always`, `RestartSec=5`, `After=networ
 Gestione: `systemctl status|restart|stop frps`, `journalctl -u frps -f`.
 Dashboard admin via SSH tunnel: `ssh -L 7500:127.0.0.1:7500 -i ~/.ssh/id_ed25519 root@128.140.91.39`.
 
-#### Apply R0.1.5 verificabile (non ancora eseguito sul VPS)
+#### Apply R0.1.5 verificato sul VPS
 
 L'apply usa il file corrente come sorgente, non conosce né stampa le credenziali dashboard. Produce
 prima una candidate, la verifica con `frps verify`, conserva un backup byte-identico sotto la root FRP,
@@ -402,26 +401,31 @@ trust di sistema, senza `-k` e senza redirect. Il link pubblico temporaneo va sa
 `data/tunnel/` (ignorato da Git) e non deve essere incollato nei log o nella command line:
 
 ```powershell
-Add-Type -AssemblyName System.Net.Http
 & tools/operations/probe-r015-tls.ps1 `
     -Hostname gvera-dev.fitmanagerstudio.com `
     -PublicUrlFile data/tunnel/r015-public-url.txt
 ```
 
-Il preload è necessario nella baseline Windows PowerShell verificata il 2026-07-26. Prima del
-closeout, il gate LIVE deve aggiungere un canary di esecuzione reale o rendere autonomo il caricamento
-dell'assembly nello script; la sola validazione sintattica non basta.
+Lo script carica autonomamente `System.Net.Http`; un canary ne presidia l'ordine prima del primo tipo
+HTTP. La sola validazione sintattica non sostituisce il probe live.
 
 PASS richiede simultaneamente: HTTP non-challenge 404, chain/hostname TLS validi nello store di sistema,
 HTTPS privata 404 e route `/public/` 200. Senza `-PublicUrlFile` il probe è solo diagnostico e non chiude
 R0.1.5.
+
+**Evidenza live 2026-07-28:** il primo apply ha esercitato con successo il rollback di config e UFW
+quando il listener 80 non era ancora osservabile dopo `systemd Type=simple`. L'attesa limitata del
+listener ha rimosso la race; il secondo apply ha verificato config, servizio, firewall e socket.
+Il lifecycle locale ha emesso una chain Let's Encrypt (`YR2`, scadenza UTC 2026-10-26), riavviato
+`frpc` e il probe completo ha restituito PASS su trust/SAN, 404 HTTP non-challenge, 404 CRM e 200
+health/public, senza trust bypass.
 
 ### 9.5 Test e2e Fase 0 (2026-06-02)
 
 FRP client di test (`tcp`, porta 8080) dal PC dev Windows → frps sul VPS → `localhost:3001`. `curl` dal VPS
 su `127.0.0.1:8080` → **HTTP 307** (redirect al login FitManager). Il traffico ha percorso VPS (DE) → PC (IT)
 attraverso il tunnel, in modo trasparente. *(Test connettività di base; il test TLS e2e — `https`, porta 443,
-cert Let's Encrypt — è rimandato a Fase 2.)* Porta 8080 rimossa dal firewall a fine test.
+cert Let's Encrypt — è stato completato da R0.1.5-live il 2026-07-28.)* Porta 8080 rimossa dal firewall a fine test.
 
 ## 10. Flusso di una richiesta (end-to-end)
 
@@ -532,3 +536,4 @@ Aggiornamento FRP: `systemctl stop frps` → scarica nuova release in `/opt/frp/
 | **3.0** | **2026-06-14** | **Consolidamento dei 4 documenti in uno (design + build + ops). Stati di fase allineati alla realtà del codice: Fase 1 completata (incl. frpc bundle + health endpoint `GET /system/tunnel-status`), Fase 2/3 pianificate. Threat model delegato a SECURITY_MODEL; 3 attori delegati ad ARCHITECTURE.md root; acceptance/Strada B delegati a TUNNEL_SECURITY_BOUNDARY.** |
 | **3.1** | **2026-07-24** | **ADR-011 Addendum I/R0.1.5: DNS-01 distribuito sostituito da HTTP-01 ristretto via FRP; zero credenziali DNS sui trainer, webroot ACME dedicato, porta 80 non applicativa, P2 e terminazione TLS locale invariati. Corretto anche l'esempio runtime reale `https2http`.** |
 | **3.2** | **2026-07-26** | **R0-D1: core TLS verificato separato dal closeout LIVE. R0.2/R0.3 possono procedere; apply VPS, chain pubblica e probe strict restano HOLD obbligatorio prima di R0.4/P. Registrata la coppia self-signed ancora attiva e la necessità di preload/canary `System.Net.Http` nel probe Windows PowerShell.** |
+| **3.3** | **2026-07-28** | **R0.1.5-live chiuso: apply edge con rollback reale provato e attesa listener race-safe; HTTP-01 ed emissione Let's Encrypt sul PC; probe strict trust/SAN + route separation verde. R0.4 è il prossimo gate separato.** |

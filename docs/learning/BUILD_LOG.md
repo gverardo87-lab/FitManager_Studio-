@@ -4203,3 +4203,43 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
   perché R0.3 applica le regole esistenti G8.4/FE-0 senza introdurre policy di dominio.
 - **Coda bloccata:** R0.1.5-live resta HOLD per assenza della passphrase. R0.4 può aprirsi soltanto
   dopo apply edge, chain pubblica e probe strict verificati; R0.3 non ha toccato il VPS.
+
+---
+
+## 2026-07-28 — R0.1.5-live chiude TLS pubblico strict e interlock pre-R0.4
+
+- **Orientamento:** branch `FitManager_Studio` a `9ccc200`, remoto `0 0` e working tree iniziale
+  pulito. Scope limitato a edge HTTP-01, emissione locale, probe strict e fold-back; zero DNS token,
+  segreti dashboard, dati business, refactor applicativi o apertura anticipata di R0.4/P.
+- **RED/GREEN probe:** un canary causale ha provato che Windows PowerShell non rendeva disponibile
+  `System.Net.Http` senza preload. Il probe carica ora autonomamente l'assembly prima del primo tipo
+  HTTP, conservando trust di sistema, redirect off e zero callback custom/`-k`/`--insecure`.
+- **Apply edge con rollback reale:** preflight SSH read-only ha confermato servizio/config esistenti,
+  listener 443/7000/7500 e assenza di UFW/listener 80. Il primo apply ha creato il backup
+  `/opt/frp/backups/frps.toml.20260728T194430Z.FHOAfR.r015.bak`, verificato la candidate e poi
+  rollbackato config+firewall quando il socket 80 non era ancora osservabile. Root cause: race
+  `systemd Type=simple`; nessun errore FRPS e stato precedente ripristinato.
+- **Hardening apply:** un secondo canary RED ha fissato l'assenza di attesa. Lo script effettua ora
+  polling limitato a 10×1s e mantiene il rollback fail-closed. Il retry ha creato il backup
+  `/opt/frp/backups/frps.toml.20260728T200938Z.idT20L.r015.bak` e chiuso PASS su config `frps verify`,
+  servizio active, UFW 80/tcp IPv4/IPv6 e listener 80. HTTP fuori challenge restituisce 404.
+- **Emissione/installazione:** il lifecycle reale `api.main` ha avviato `frpc`, superato il preflight
+  HTTP-01, eseguito lego, promosso atomicamente cert/key e riavviato `frpc` una sola volta. Chain
+  Let's Encrypt `YR2`, SAN `gvera-dev.fitmanagerstudio.com`, scadenza UTC
+  `2026-10-26T19:37:20Z`; chiave e TLS termination restano sul PC, quindi P2 data-blind è preservata.
+- **Probe strict finale:** `HTTP_NON_CHALLENGE=404`, `TLS_STRICT=PASS`, `HTTPS_PRIVATE=404`,
+  `HTTPS_PUBLIC_200=PASS`, `/health` **200** e `/clienti` **404**. Il link `/public/` è letto da un
+  file ignorato sotto `data/tunnel/` e non viene stampato. AC-R015-2 edge e AC-R015-8 sono chiusi.
+- **Verifiche:** edge operations **7/7 PASS**; parse Bash e PowerShell PASS; Ruff test mirato e
+  `ruff check api/` PASS; guard docs: **10/10** SPEC aperte indicizzate, zero workdoc in
+  `docs/technical/`, zero spec implementate rimaste vive; `git diff --check` PASS. La full suite
+  applicativa non è stata ripetuta perché il gate modifica solo tooling operativo/test/docs e usa
+  il runtime già coperto da R0.1.5-core; il probe live è il verifier specifico non simulabile.
+- **Hygiene:** backend e Next di collaudo arrestati, porte 8000/3000 chiuse, zero processi `frpc` o
+  `lego` residui. Un file webroot ignorato datato 2026-07-25 era preesistente; l'esecuzione odierna
+  non ha lasciato nuovi file challenge e non lo ha attribuito o cancellato alla cieca.
+- **Fold-back:** SPEC R0, INDEX, root adapter e SSoT tunnel/security allineati; nessun ADR cambia,
+  rimossi anche i bypass `curl -k` dai comandi vivi di verifica del security boundary. Nessun ADR
+  cambia, perché HTTP-01 locale, terminazione sul trainer e P2 erano già ratificati da ADR-011
+  Addendum I. R0.4 è ora il prossimo gate minimo, ma resta separato fino al checkpoint remoto `0 0`
+  e nuovo GO.

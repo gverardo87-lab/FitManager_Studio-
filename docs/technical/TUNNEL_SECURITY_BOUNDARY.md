@@ -279,32 +279,32 @@ resta come layer aggiuntivo. La valutazione definitiva (incluso se introdurre Pr
 
 ```bash
 # 1. Senza token → 401
-curl -sk https://gvera-dev.fitmanagerstudio.com/api/clients
+curl -sS https://gvera-dev.fitmanagerstudio.com/api/clients
 
 # 2. JWT artigianale senza role → 401
-curl -sk -H "Authorization: Bearer <jwt_senza_role>" https://gvera-dev.fitmanagerstudio.com/api/clients
+curl -sS -H "Authorization: Bearer <jwt_senza_role>" https://gvera-dev.fitmanagerstudio.com/api/clients
 
 # 3. JWT trainer valido (role: trainer) → 200
-curl -sk -H "Authorization: Bearer <jwt_con_role>" https://gvera-dev.fitmanagerstudio.com/api/clients
+curl -sS -H "Authorization: Bearer <jwt_con_role>" https://gvera-dev.fitmanagerstudio.com/api/clients
 
 # 4. JWT manomesso → 401
-curl -sk -H "Authorization: Bearer <jwt_payload_alterato>" https://gvera-dev.fitmanagerstudio.com/api/clients
+curl -sS -H "Authorization: Bearer <jwt_payload_alterato>" https://gvera-dev.fitmanagerstudio.com/api/clients
 
 # 5. Register bloccato dal tunnel → 404
-curl -sk https://gvera-dev.fitmanagerstudio.com/register
+curl -sS https://gvera-dev.fitmanagerstudio.com/register
 
 # 6. Host spoofing → non 200
-curl -sk -H "Host: localhost" https://gvera-dev.fitmanagerstudio.com/api/clients   # atteso: 401 (mai 200)
+curl -sS -H "Host: localhost" https://gvera-dev.fitmanagerstudio.com/api/clients   # atteso: 401 (mai 200)
 
 # 7. Login brute force → lockout
 for i in $(seq 1 6); do
-  curl -sk -X POST -H "Content-Type: application/json" \
+  curl -sS -X POST -H "Content-Type: application/json" \
     -d '{"email":"test@test.com","password":"wrong"}' \
     https://gvera-dev.fitmanagerstudio.com/api/auth/login
 done                                                       # atteso: primi 5 → 401, 6° → 429
 
 # 8. Portale pubblico funziona ancora
-curl -sk "https://gvera-dev.fitmanagerstudio.com/api/public/anamnesi/validate?token=<token_valido>"   # atteso: 200
+curl -sS "https://gvera-dev.fitmanagerstudio.com/api/public/anamnesi/validate?token=<token_valido>"   # atteso: 200
 ```
 
 ---
@@ -330,7 +330,7 @@ curl -sk "https://gvera-dev.fitmanagerstudio.com/api/public/anamnesi/validate?to
 | Rate limiter portale (`portal_limiter` 30/min, 120/h) | Invariato |
 | P2 data-blind (SNI passthrough, TLS su frpc) | Invariato |
 | Portale pubblico (`ShareToken` UUID4) | Invariato |
-| Cert self-signed Fase 1 | Invariato (Fase 2 = Let's Encrypt) |
+| TLS locale per istanza | Let's Encrypt attivo da R0.1.5; self-signed resta solo bootstrap tecnico |
 
 ### 11.3 Rischi residui post-implementazione
 
@@ -350,7 +350,7 @@ curl -sk "https://gvera-dev.fitmanagerstudio.com/api/public/anamnesi/validate?to
 ## Note di confine (cosa questo documento NON copre)
 
 - Non specifica la struttura esatta dei claim JWT oltre `role` (lasciata all'implementazione, purché firmati).
-- Non ridiscute il routing SNI (validato, §5). Fase 2 / `cert_manager.py` sostituisce solo il certificato (self-signed → Let's Encrypt), senza cambiamenti architetturali. **Vincolo Fase 2:** ogni `frpc` mantiene il cert del *proprio* `instance_id`; nessun wildcard cert condiviso sul VPS (rimetterebbe una chiave privata sul VPS, contraddice il data-blind).
+- Non ridiscute il routing SNI (validato, §5). R0.1.5 / `cert_manager.py` sostituisce il bootstrap self-signed con Let's Encrypt, senza cambiamenti architetturali. **Vincolo permanente:** ogni `frpc` mantiene il cert del *proprio* `instance_id`; nessun wildcard cert condiviso sul VPS (rimetterebbe una chiave privata sul VPS, contraddice il data-blind).
 - Non sostituisce la verifica con un consulente legale sulla tesi GDPR; fornisce la condizione tecnica necessaria perché quella tesi sia difendibile.
 - Setup, decisioni architetturali e operations del tunnel: → `TUNNEL_ARCHITECTURE.md`.
 

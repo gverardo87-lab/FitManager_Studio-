@@ -250,21 +250,21 @@ Zero configurazione per il trainer. Privacy-first: il VPS non vede il contenuto 
 
 | Layer | File | Funzione |
 |-------|------|----------|
-| Config | `api/services/tunnel_config.py` | TunnelConfig dataclass, risoluzione frpc path, cert self-signed auto-generato |
+| Config | `api/services/tunnel_config.py` | TunnelConfig dataclass, risoluzione frpc path, bootstrap cert e path ACME locali |
 | Manager | `api/services/tunnel_manager.py` | Babysitter frpc: subprocess, backoff+jitter, drain output, atexit cleanup |
-| Certificato | `api/services/cert_manager.py` | **R0.1.5-core verde:** preflight HTTP, lego v5.2.1 pinato e staged fail-closed con licenza, rinnovo locale, promozione cert/key con rollback; deploy edge rollback-safe + probe strict pronti. **R0.1.5-live HOLD pre-R0.4/P:** apply VPS, chain pubblica e probe strict pendenti |
+| Certificato | `api/services/cert_manager.py` | **R0.1.5 verde core+live:** preflight HTTP, lego v5.2.1 pinato e staged fail-closed con licenza, rinnovo locale, promozione cert/key con rollback; edge HTTP/80 e chain Let's Encrypt verificati con probe strict |
 | Identity | `api/services/license.py` | Claim `instance_id` nel JWT licenza (determina sottodominio) |
 | CLI | `tools/admin_scripts/generate_license.py` | `--instance-id <slug>` nel comando `sign` |
 | Boot | `api/main.py` lifespan step 6 | Auto-start tunnel + auto-set `PUBLIC_BASE_URL` |
 | Route guard | `frontend/src/middleware.ts` | Tunnel guard: solo `/public/*` accessibile, CRM → 404 |
-| VPS | `edge.fitmanagerstudio.com` | frps v0.61.1, Hetzner CPX22, `vhostHTTPSPort=443`; R0.1.5 aggiunge `vhostHTTPPort=80` solo ACME |
+| VPS | `edge.fitmanagerstudio.com` | frps v0.61.1, Hetzner CPX22, `vhostHTTPSPort=443`; `vhostHTTPPort=80` serve solo ACME HTTP-01 |
 
 ### Flusso zero-touch
 
 1. AVGV genera licenza con `--instance-id gvera-dev`; il wildcard DNS esistente copre l'istanza
 2. Trainer installa FitManager (identico per tutti) + inserisce licenza
 3. Al boot: backend legge `instance_id` → assicura il bootstrap cert → avvia frpc HTTPS + webroot ACME ristretto
-4. R0.1.5: dopo l'apply edge, il certificate manager emette/rinnova Let's Encrypt sul PC e fa rileggere cert/key a frpc
+4. Il certificate manager emette/rinnova Let's Encrypt sul PC e fa rileggere cert/key a frpc
 5. `PUBLIC_BASE_URL` settato automaticamente → link pubblici usano `https://slug.fitmanagerstudio.com`
 6. Link anamnesi/schede funzionano via tunnel, CRM accessibile solo da LAN (localhost)
 
@@ -280,7 +280,7 @@ Il CRM (login, dashboard, clienti) e' **completamente invisibile** da Internet.
 
 - **Separazione config/esecuzione**: `tunnel_config.py` assembla il config, `tunnel_manager.py` gestisce il processo. Il manager non sa nulla di licenze o path.
 - **Backoff esponenziale + jitter**: restart frpc con attesa crescente (1s→2s→4s→...60s) + ritardo casuale. Evita retry storm e thundering herd.
-- **Cert self-signed (Fase 1)**: RSA 2048 usato come bootstrap tecnico. **R0.1.5** lo sostituisce con Let's Encrypt emesso sul PC via HTTP-01 attraverso un proxy FRP dedicato alla sola challenge; cert/key restano negli stessi path, nessuna credenziale DNS sul trainer.
+- **Bootstrap cert locale**: RSA 2048 self-signed usato soltanto finché HTTP-01 non emette Let's Encrypt sul PC attraverso il proxy FRP dedicato alla challenge; cert/key restano negli stessi path, nessuna credenziale DNS sul trainer.
 - **Proxy type HTTPS + plugin `https2http`**: frpc termina TLS e inoltra HTTP a localhost:3000. Il VPS fa SNI passthrough (non apre il pacchetto TLS). P2 data-blind dimostrato.
 - **`PUBLIC_BASE_URL` auto**: se `instance_id` presente, il lifespan setta `PUBLIC_BASE_URL=https://slug.fitmanagerstudio.com` e `PUBLIC_PORTAL_ENABLED=true`. I link generati dal trainer usano l'URL tunnel, non `localhost`.
 
@@ -288,7 +288,7 @@ Il CRM (login, dashboard, clienti) e' **completamente invisibile** da Internet.
 
 - Fase 0: COMPLETATA (VPS, frps, DNS wildcard)
 - Fase 1: COMPLETATA (instance_id, tunnel_manager, auto-start, route separation, test e2e, bundle frpc, health endpoint)
-- R0.1.5 / Fase 2 TLS: CORE VERDE; LIVE HOLD prima di R0.4/P (Let's Encrypt HTTP-01 ristretto via FRP, rinnovo locale)
+- R0.1.5 / Fase 2 TLS: CORE + LIVE VERDI (Let's Encrypt HTTP-01 ristretto via FRP, rinnovo locale, probe strict)
 - Fase 2 restante: pagina offline, token hash, inactivity timeout
 - Fase 3: Onboarding zero-touch + dismissione Tailscale
 
