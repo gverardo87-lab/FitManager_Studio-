@@ -4270,3 +4270,28 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
 - **Fold-back:** SPEC R0 consuntivata e archiviata, INDEX/interlock P aggiornati, evergreen tunnel e
   security gate allineati. Nessuna ADR necessaria. R0 è chiuso; P1 diventa soltanto eleggibile dopo
   checkpoint remoto `0 0` e richiede un nuovo GO founder.
+
+---
+
+## 2026-07-31 — D0 ratifica una sola strategia pre-POC
+
+- **Decisione:** `SPEC_PRE_POC.md` diventa l'unica regia operativa fino alla Wave 0. `v1.0.15` è
+  security/readiness: prima portability canary, core e application freeze; poi distribuzione
+  Windows e macOS ARM64 dalla stessa baseline; infine release freeze, consegna e POC misurata.
+- **Priorità stabili:** macOS ARM64 è un deliverable impegnato; Daniele è il primo target di
+  accettazione, non il centro strategico. Alessio è un abilitatore con gate A0/A1; Virgin resta
+  upside. P1–P6 e FE non dimostrato sono in HOLD fino alle evidenze Wave 0.
+- **Security stance:** nessuna consegna data-bearing senza G1–G4 e nessun atleta reale senza
+  G9–G11. L'artefatto Mac esterno richiede Developer ID e notarizzazione; ad-hoc resta soltanto per
+  canary/debug interno e non è un workaround di consegna.
+- **Pulizia documentale:** due analisi pre-POC, Strategy Plan, Revenue Acceleration, materiale
+  partner non verificato e roadmap post-launch sono stati preservati in `docs/archive/` con esito
+  superseded. BP/FM restano baseline numerica pre-validazione, non fonti di scheduling.
+- **Fold-back:** CLAUDE, LAUNCH_SCOPE, INDEX, ADR-026/indice ADR, Release Checklist, Security Gate e
+  SPEC FE/P/G-MAC convergono sulla stessa sequenza e sugli stessi interlock.
+- **Verifiche:** `git diff --check` PASS; Ruff `api/` PASS; lifecycle docs PASS; SPEC vive indicizzate
+  **10/10**; zero riferimenti vivi ai file archiviati; link Markdown operativi PASS; **24/24**
+  asserzioni statiche del canary R0.4 PASS. La venv Python locale è non eseguibile perché punta a un
+  interprete Windows Store rimosso: pytest non è stato dichiarato eseguito e la sua riparazione è
+  prerequisito di C0. Nessun codice applicativo/frontend, schema o dato è cambiato.
+- **Prossimo gate minimo:** C0 scope + portability canary, dopo checkpoint D0 pushato e remoto `0 0`.

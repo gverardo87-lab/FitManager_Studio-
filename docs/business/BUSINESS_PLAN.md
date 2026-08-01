@@ -2,13 +2,20 @@
 
 **Versione:** 4.3 — 27 marzo 2026
 **Autore:** Giacomo Verardo
-**Stato:** Confidenziale
+**Stato:** Confidenziale · baseline pre-validazione, non autorità operativa corrente
+
+> **Avvertenza 2026-07-31:** questo documento conserva modello economico, pricing e ipotesi di
+> marzo 2026. Non è fonte di verità per versione prodotto, stato deployment, tecnologia di accesso,
+> claim marketing, sequenza pre-POC o calendario. La regia operativa corrente vive in
+> `docs/specs/SPEC_PRE_POC.md`; i claim commerciali vengono autorizzati dal product marketing context.
 
 ---
 
 ## Guida alla lettura
 
-Questo documento è il Business Plan completo di FitManager Studio+. È la fonte di verità per tutti i numeri, le assunzioni e le proiezioni del progetto. Tutti gli altri documenti (Strategy Plan, Pitch Deck, Proposte specifiche) derivano da questo e lo referenziano.
+Questo documento è la baseline economica pre-validazione di FitManager Studio+. È la fonte di
+tracciabilità per numeri, assunzioni e proiezioni datati marzo 2026, fino alla loro revisione con i
+dati POC. Non governa il lavoro corrente e non prova da solo alcun claim di prodotto o di mercato.
 
 Ogni numero è tracciabile a un'assunzione dichiarata (Appendice A4). Le proiezioni sono costruite dal basso (bottom-up) partendo dalla capacità reale di generare vendite. Tre scenari (conservativo, base, ottimistico) coprono la gamma di risultati possibili. Le proiezioni sono presentate in due configurazioni strutturali (con e senza Industry Partner) per mostrare che il business sta in piedi indipendentemente dalla partnership.
 

@@ -3,7 +3,9 @@
 **Versione:** 1.1 — 29 marzo 2026
 **Autore:** Giacomo Verardo
 **Stato:** Confidenziale
-**Dipende da:** `business/BUSINESS_PLAN.md` · `business/STRATEGY_PLAN.md` · `business/DOCUMENTO_OPERATIVO_PARTNER.md`
+**Dipende da:** `docs/business/BUSINESS_PLAN.md` per le assunzioni pre-validazione · fonti storiche
+`docs/archive/business/STRATEGY_PLAN_V3_1_2026-03-27.md` e
+`docs/archive/business/DOCUMENTO_OPERATIVO_PARTNER_2026-03.md`; non governa lo scheduling pre-POC
 
 ---
 

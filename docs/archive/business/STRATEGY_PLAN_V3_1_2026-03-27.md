@@ -1,5 +1,8 @@
 # FitManager Studio+ — Strategy Plan
 
+> **Esito 2026-07-31:** piano storico superseded da `docs/specs/SPEC_PRE_POC.md`. Le assunzioni
+> commerciali restano materiale di confronto, non autorità su prodotto, sequenza o scadenze.
+
 **Versione:** 3.1 — 27 marzo 2026
 **Contesto:** Piano strategico di lancio, category creation e definizione operativa della partnership.
 **Riferimento:** Business Plan v4.3 (fonte di verità per tutti i numeri e le assunzioni).

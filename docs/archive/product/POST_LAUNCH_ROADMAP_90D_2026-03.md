@@ -1,5 +1,8 @@
 # FitManager AI Studio — Roadmap 90 Giorni Post-Lancio
 
+> **Esito 2026-07-31:** roadmap superseded e archiviata. Il post-POC sarà ricalibrato sui dati di
+> Wave 0; questo documento non autorizza lavoro pre-POC né date future.
+
 > Data: 2026-03-25
 > Stato: attivo
 > ADR di riferimento: ADR-006 (FitManager Box multi-platform)

@@ -7,19 +7,18 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 
 ---
 
-## business/ — Strategia, numeri, partner, legal
+## business/ — Numeri, mercato e legal
 
 | File | Scopo | SSoT per |
 |------|-------|----------|
-| `BUSINESS_PLAN.md` | BP v4.3 — strategia, mercato, team, pricing, POC, community | Numeri, pricing, modello |
-| `STRATEGY_PLAN.md` | Piano operativo lancio, category creation PT Evoluto, ruolo partner | Go-to-market |
+| `BUSINESS_PLAN.md` | BP v4.3 — baseline economica e ipotesi pre-validazione; non governa prodotto o scheduling corrente | Numeri, pricing e assunzioni marzo 2026 |
 | `FINANCIAL_MODEL.md` | Modello analitico — ogni euro tracciabile, formule, 3 scenari, NASpI (§8), fondi (§9) | Proiezioni finanziarie |
-| `DOCUMENTO_OPERATIVO_PARTNER.md` | Accordo partner: compenso, equity, milestone, obblighi | Termini partnership |
 | `LEGAL_REGULATORY_REPORT.md` | Report legale-regolamentare v1.3: GDPR (modello distribuito), fiscale, IP, EAA, SBOM, PSD2 | Compliance |
 | `COMPETITIVE_ANALYSIS.md` | Competitor, posizionamento, differenziatori | Analisi mercato |
-| `REVENUE_ACCELERATION_STRATEGY.md` | 5 leve per accelerare ricavi senza compromettere conquista mercato | Gap reddito founder, pricing internazionale, upsell |
 
-**Gerarchia**: BP e' la fonte di verita' strategica. SP operativizza il BP. FM quantifica il BP. RAS identifica leve incrementali. Partner Doc e Legal sono satelliti.
+**Gerarchia:** `SPEC_PRE_POC.md` governa il lavoro corrente. BP/FM conservano assunzioni e numeri
+pre-validazione; Legal governa il proprio dominio. Strategie, roadmap e materiali partner superseded
+vivono in `docs/archive/` e non sono contesto operativo.
 
 ---
 
@@ -28,7 +27,6 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 | File | Scopo |
 |------|-------|
 | `CATALOGO_SCENARI_PT.md` | **Fondamento product ADR-025 (vivo):** 96 scenari quotidiani reali del PT/chinesiologo (6 lenti + critic), copertura mappata sul modello attuale (15% piena · 51% parziale · 34% assente), 23 domande aperte per l'ADR. Base di conoscenza del futuro agente `pt-reality-auditor`. Gemello: `archive/RICERCA_COMPETITOR_WALLET_SEDUTE_SINGOLE_2026-07-07.md` (leggi W1-W11) |
-| `POST_LAUNCH_ROADMAP_90D.md` | Roadmap 90 giorni: PWA, mobile, Box, science nudges, GTM |
 | `POST_LAUNCH_ISSUES.md` | Issue aperte post-lancio |
 | `FITSCAN_ARCHITECTURE.md` | Spec tecnica FitScan: DB schema, Biomechanical Engine, Pose Provider |
 | `VIDEO_GUIDE_STRATEGY.md` | Sistema video-guide contestuali: 4 livelli, mapping pagine |
@@ -78,15 +76,16 @@ commit docs del gate (ciclo di vita: `AGENTS.md`).
 
 | File | Stato | Scopo |
 |------|-------|-------|
+| `SPEC_PRE_POC.md` | 🟡 **IN CORSO — D0 CHIUSO; PROSSIMO C0** | Unica regia pre-POC: v1.0.15 security/readiness, application freeze prima della distribuzione, Windows + macOS ARM64 dalla stessa baseline, partner enablement, Wave 0 e anti-scope |
 | `SPEC_COLLABORAZIONE_CLAUDE_CODEX.md` | 🟡 **APERTA — A1.1 CHIUSO SU WAIVER; SMOKE CLAUDE DIFFERITO; A2+ NON AUTORIZZATI** | Contratto agent-neutral con gate come unità di commit/push, GO iniziale valido per il checkpoint, remoto `0 0` e zero tracked del gate precedente. Codex PASS dopo remediation del drift coda; ACX-D8 autorizza checkpoint e R0.1.5 senza attribuire PASS a Claude, da recuperare appena possibile e prima di A2+ |
 | `SPEC_FINGERPRINT_CROSSPLATFORM.md` | 🟡 **CODICE FATTO E SIGILLATO — resta T2 su hardware macOS reale** | Gate G-MAC.0: refactor Windows output-invariante PASS; chiusura subordinata al cross-check fingerprint/binding sul Mac reale in G-MAC.4 |
-| `SPEC_FRONTEND_CORE_INTUITIVITA.md` | 🟡 **APERTA — FE-0 E FE-1.0 CHIUSI; FE-1 MONEY-PATH GUIDATO ✅** | Remediation audit frontend core. FE-0 privacy/truth state ✅; FE-1.0 deep-link chiuso dal retest LIVE founder 2026-07-24; Rinnovi & Incassi riusa il pagamento rata standard con importo/metodo/data espliciti, default data odierna autorizzato e coperto, 152/152 test. FE-2..4 restano gated |
+| `SPEC_FRONTEND_CORE_INTUITIVITA.md` | ⏸️ **HOLD PRE-POC — FE-0/FE-1 CHIUSI** | FE-2..4 e cleanup riaprono soltanto su finding osservato da rehearsal/pilota; nessun lavoro frontend generalista nella v1.0.15 |
 | `SPEC_G9_FINANCIAL_COMMAND_LAYER.md` | 🟢 G9.0→G9.5 CHIUSI · **resta G9.6 (differito)** | Write-model del dominio finanziario (ADR-022): penna unica ✅, ledger rettifiche ✅, TransitionExecutor+FSM ✅, enforcement ✅ + test semantici ✅ (grep ritirati), Hypothesis stateful ✅ (G9.5, 2026-07-05); resta SOLO **G9.6** Money centesimi (differito, gated) |
 | `SPEC_G8.4_TRASPARENZA_FINANZIARIA_FE.md` | 🟡 **F1+F5 ✅ · F2+F6 ✅ · F3 ✅** — resta SOLO apertura G8.5 (DoD §8.5) | Trasparenza finanziaria frontend. Netto SSoT + `saldo_progressivo` + guard FE-no-money-math + split <300 (`5086045`..`1978572`) · disclosure D-1 + colore semantico (`0b80bc8`) · raccomandazione solo-visiva + advisory `azione_consigliata` + a11y + penali nel breakdown (`58c01ea`). D-2 «Saldo» ledger → **ADR-019 Add. IV**; ricerca `archive/RICERCA_COMPETITOR_TRASPARENZA_FINANZIARIA_2026-07-06.md`. Chiusura gated su apertura G8.5 (goodwill, ADR+spec) |
 | `SPEC_G9.7_SEMANTICA_PER_CLASSE.md` | 🟢 **G9.7.0→G9.7.5 CHIUSI** · resta solo runbook orfani reali trainer-driven | Generalizzazione per-classe delle leggi semantiche (ADR-024): matrice assi×regole, mai-silenzio eventi, recupero esplicito, occupazione spiegabile, guard di classe, perimetro transizioni, birth-auditor e Hypothesis estesa. Tutti i gate di codice sono consuntivati; la spec resta nel work-queue esclusivamente per il recupero esplicito 640/641/643/647/649 |
 | `SPEC_VOCABOLARIO_E_CLASSIFICAZIONE_CONTRATTI.md` | ✅ Giro 1 · **⏳ Giro 2 pendente** | Consumo-SSoT stati contratto su tutte le superfici: restano `rinnovi-incassi` + `workspace_engine` off-SSoT + grep-guard |
-| `SPEC_P_PRESTAZIONI_SINGOLE_E_PORTAFOGLIO.md` | 🟡 **APERTA — P0 CHIUSO; P1 PROSSIMO, SOLO CON GO** | Blocco «P»: prestazione singola come classe economica di prima classe (7ª `ClasseContabile` col gemello, tabella `prestazioni_singole`, penna dedicata, invarianti IP1-IP4) · insoluto derivato fail-loud · compensazione wallet atomica · condono auditato · suggeritore prezzo spiegabile (W9) · pannello Portafoglio + `crediti_residui_attivi` (chiude P1-P5 audit FE). Gate P0..P6; R0 chiuso, resta l'interlock G9.7.2 |
-| `SPEC_G-MAC_CONSEGNA_MACOS.md` | ⏸️ **IN CODA — dopo P + candidate v1.0.15** | Consegna pilota macOS ARM64: packaging, firma/notarizzazione, launcher, tunnel e binding licenza; G-MAC.0 sigillato, G-MAC.1..5 al varco |
+| `SPEC_P_PRESTAZIONI_SINGOLE_E_PORTAFOGLIO.md` | ⏸️ **HOLD PRE-POC — P0 CHIUSO; P1–P6 NON AUTORIZZATI** | Decisioni preservate; riapertura solo dopo Wave 0 e nuovo GO. Escluso dalla v1.0.15 |
+| `SPEC_G-MAC_CONSEGNA_MACOS.md` | 🟡 **DELIVERABLE PRE-POC IMPEGNATO** | G-MAC.0 sigillato; portability canary + G-MAC.1 prima dell'application freeze, G-MAC.2–5 dopo, artifact ARM64 firmato/notarizzato dalla stessa baseline v1.0.15 |
 
 **Backlog (non-spec, censito qui):** G8.2 wallet auto-cross-contratto (in panchina, D2 aperta) + Q9
 conversione singole→pacchetto (casa: G8.2+G8.5, P-D6 blocco P) · wallet
@@ -122,8 +121,9 @@ punto tributarista: policy `pro_sedute` + penale nel recesso (PROVISIONAL) · FD
 
 ## adr/ — Architecture Decision Records
 
-23 ADR accettati (ADR-001 → ADR-025; ADR-002 rimossa come obsoleta, ADR-012 riservato). Ultimi:
-**ADR-025** (prestazione singola + Portafoglio cliente: fatto economico proprio, insoluto derivato
+24 ADR accettati (ADR-001 → ADR-026; ADR-002 rimossa come obsoleta, ADR-012 riservato). Ultimi:
+**ADR-026** (macOS ARM64: portability canary prima del freeze, distribuzione firmata/notarizzata
+dopo; primo target Daniele, capacità indipendente dal prospect) · **ADR-025** (prestazione singola + Portafoglio cliente: fatto economico proprio, insoluto derivato
 fail-loud, compensazione wallet come atto esplicito; blocco P) · **ADR-024** (semantica per-classe:
 matrice assi×regole, fail-loud, perimetro transizioni, birth-auditor; G9.7) · **ADR-023**
 (temporal fence: storia contabilizzata immutabile, varco unico `reopen`; G7.8-ter) · **ADR-022**

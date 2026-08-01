@@ -1,19 +1,16 @@
 # SPEC — Frontend core intuitivo, affidabile e distintivo
 
-**Stato:** 🟡 IN CORSO — FE-0 Integrità completato; FE-1.0 chiuso con retest LIVE founder
-2026-07-24; pagamento rata guidato su Rinnovi & Incassi completato. FE-2..4 restano gated
+**Stato:** ⏸️ HOLD PRE-POC — FE-0 e FE-1.0/1.1 chiusi; FE-2..4 riaprono soltanto su evidenza
+da rehearsal/pilota secondo `SPEC_PRE_POC.md`
 **Data:** 2026-07-24
 **Branch:** `FitManager_Studio`
 **Tipo:** remediation frontend e read-model additivi; nessuna nuova policy di prodotto
 **Audit fondante:** `docs/archive/AUDIT_FRONTEND_CORE_INTUITIVITA_2026-07-21.md`
 **Autorità:** `AGENTS.md` → `MANIFESTO.md` → `LAUNCH_SCOPE.md` → `frontend/CLAUDE.md` → ADR/SSoT finanziarie
-**Sequenza corrente:** v1.0.14 ✅ → FE-0 + FE-1.0/1.1 ✅ → R0 protezione release ✅ →
-blocco P (prossimo, solo con GO) → candidate v1.0.15 → G-MAC
-**Decisione di scheduling:** founder 2026-07-21/22 — `v1.0.15` contiene blocco P + FE-0 completo +
-criticità FE-1. Founder 2026-07-24 — dopo la chiusura LIVE FE-1 entra il gate ristretto R0;
-R0 è chiuso e archiviato dal 2026-07-28, quindi P1 è ora eleggibile ma richiede un GO separato.
-Ottimizzazioni/redesign e cleanup estesi restano fuori release; G-MAC apre dopo validazione e
-consegna della `v1.0.15`.
+**Sequenza corrente:** autorità e scheduling vivono in `SPEC_PRE_POC.md`. La `v1.0.15` non contiene
+FE-2..4; entrano soltanto fix release-critical dimostrati da test, rehearsal o utente pilota.
+**Decisione di scheduling:** founder 2026-07-31 — P, ottimizzazioni, redesign e cleanup restano in
+HOLD; prima core/security e application freeze, poi distribuzione Windows/macOS.
 
 > La presente SPEC è la casa del lavoro aperto. A chiusura dell'ultimo gate: consuntivo, fold-back
 > negli evergreen realmente toccati, append a `docs/learning/BUILD_LOG.md` e spostamento in

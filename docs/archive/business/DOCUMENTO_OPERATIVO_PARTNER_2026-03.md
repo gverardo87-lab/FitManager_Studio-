@@ -1,5 +1,9 @@
 # FitManager Studio+ — Documento Operativo Partner
 
+> **Esito 2026-07-31:** bozza storica non verificata e superseded. Nessun claim, numero o messaggio
+> contenuto qui è autorizzato verso prospect o partner senza nuova validazione sul prodotto reale.
+> Il file non è contesto operativo pre-POC.
+
 **22 slide. Stile coerente con il Business Plan v4.3 e lo Strategy Plan v3.1 (stessa palette scura, stessa famiglia visiva). Variare i layout tra le slide: tabelle, stat box, colonne, timeline, blocchi testo — non ripetere sempre lo stesso schema. Ogni slide deve essere piena e bilanciata, senza grandi spazi vuoti.**
 
 ---

@@ -1,5 +1,9 @@
 # FitManager Studio+ — Strategia di Accelerazione Ricavi
 
+> **Esito 2026-07-31:** ipotesi storiche pre-validazione. Il documento è superseded e archiviato;
+> non autorizza iniziative, claim o scadenze pre-POC. La direzione operativa vive in
+> `docs/specs/SPEC_PRE_POC.md`.
+
 **Versione:** 1.0 — 30 marzo 2026
 **Autore:** Giacomo Verardo
 **Stato:** Confidenziale

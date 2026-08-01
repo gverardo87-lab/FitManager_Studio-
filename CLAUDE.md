@@ -31,7 +31,7 @@ Mentorship:       €499-599/anno (futuro Anno 3+, max 15-20 membri)
 
 4 livelli community: Base (gratuita) → PRO → Inner Circle → Mentorship.
 PRO = solo aggiornamenti software e supporto. Masterclass e formazione = esclusivi Inner Circle.
-SSoT numeri e proiezioni: `docs/business/BUSINESS_PLAN.md` (v4.3). Strategia operativa: `docs/business/STRATEGY_PLAN.md`. Modello finanziario analitico: `docs/business/FINANCIAL_MODEL.md`.
+SSoT numeri e proiezioni pre-validazione: `docs/business/BUSINESS_PLAN.md` (v4.3). Strategia operativa pre-POC: `docs/specs/SPEC_PRE_POC.md`. Modello finanziario analitico: `docs/business/FINANCIAL_MODEL.md`.
 
 ## Architettura
 

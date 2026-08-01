@@ -3,7 +3,8 @@
 - Date: 2026-03-25
 - Status: accepted
 - Deciders: gvera
-- Related: ADR-006 (FitManager Box), POST_LAUNCH_ROADMAP_90D, FITSCAN_ARCHITECTURE.md
+- Related: ADR-006 (FitManager Box), `docs/archive/product/POST_LAUNCH_ROADMAP_90D_2026-03.md`
+  (storico), FITSCAN_ARCHITECTURE.md
 
 ## Context
 

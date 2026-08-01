@@ -4,6 +4,11 @@
 > `[ ]` indica una prova da ripetere sul nuovo artefatto. Un PASS di una release precedente non viene
 > trasferito automaticamente alla candidate.
 
+> **Scope ratificato 2026-07-31:** `v1.0.15` è la release security/readiness pre-POC. Il blocco P è
+> in HOLD. Prima si chiude e congela il codice applicativo (inclusi G1/G2/G4 e portability canary),
+> poi si producono gli artefatti Windows e macOS ARM64 dalla stessa baseline; seal e tag arrivano
+> soltanto dopo le verifiche di distribuzione. Regia: `../specs/SPEC_PRE_POC.md`.
+
 ## 1. Baseline e autorità
 
 - [x] Branch di sviluppo: `FitManager_Studio`.
@@ -22,6 +27,8 @@
 - [x] R0.4: canary **5/5**, gate combinato **25/25**, Ruff e review link/path verdi.
 - [ ] Preflight candidate `tools/build/build-release.sh`: full pytest, Ruff, Next build e version sync.
 - [ ] Nessun warning nuovo classificato come release-critical.
+- [ ] G1/G2/G4 soddisfatti sulla baseline applicativa; G9–G11 pronti prima del real-data GO.
+- [ ] Portability canary ARM64 prova runtime, dipendenze e percorso G1 prima dell'application freeze.
 
 ## 3. Build e packaging candidate
 

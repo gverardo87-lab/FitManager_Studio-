@@ -3,7 +3,7 @@
 **Versione:** 1.1
 **Stato:** Vincolante sui criteri di accettazione — non vincolante sull'implementazione
 **Owner:** Giacomo Verardo (AVGV Technologies)
-**Destinatario:** Claude Code (architetto finale nel codebase)
+**Destinatario:** agenti e sviluppatori che implementano o verificano la consegna
 **Collocazione:** `docs/technical/`
 
 > **Nota di versione 1.1 (2026-06-16):** documento annotato contro il codice reale (bridge rule §6).
@@ -18,7 +18,11 @@
 
 ## 0. Perché esiste questo documento
 
-Un personal trainer storico di Virgin Active (segnalato tramite Alessio Crociani) ha espresso interesse per FitManager. È la **prima possibile consegna in assoluto** del software a un trainer che lo userà con **atleti reali e dati personali reali**, in anticipo rispetto al POC più ampio di settembre. Non è un semplice potenziale cliente: sarà il primo deployment reale, e in quanto tale **fissa lo standard di consegna che ogni trainer successivo erediterà** — POC di settembre incluso.
+Un possibile lighthouse pilot macOS, segnalato tramite Alessio, ha reso concreta la prima consegna a
+un trainer che potrebbe usare FitManager con **atleti reali e dati personali reali**. Il target di
+accettazione non modifica il criterio: qualunque primo deployment data-bearing fissa lo standard che
+ogni trainer successivo eredita — POC incluso. Daniele è il primo target Mac noto, non una deroga né
+il fondamento unico della strategia.
 
 Questo cambia il modello di rischio in modo radicale. Finora la modalità di fallimento operativa era *"il software ha un bug"* — recuperabile con una patch. Dal momento in cui i dati di un atleta reale entrano nel sistema, la modalità di fallimento operativa diventa *"i dati personali di persone identificabili sono esposti, persi, o accessibili a chi non dovrebbe averli"* — un data breach, con obbligo di notifica al Garante entro 72 ore ai sensi dell'art. 33 GDPR, e potenzialmente verso gli interessati stessi ai sensi dell'art. 34.
 

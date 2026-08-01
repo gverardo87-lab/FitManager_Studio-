@@ -1,7 +1,12 @@
 # ADR-026 — Distribuzione macOS (Apple Silicon)
 
-**Stato:** proposed (2026-07-17) — decisioni D1-D6 raccomandate, da ratificare una a una col founder **all'apertura del blocco G-MAC** (⏸️ coda #3, sequenza founder 2026-07-19: prima release v1.0.14, poi blocco P). Anticipabile solo l'enrollment Apple Developer (D5): coda in tempo di calendario
-**Contesto di nascita:** primo cliente reale (Daniele, PT pilota) ha un MacBook Air M1 2020 (ARM64, 8 GB, macOS Tahoe 26.5). Consegna richiesta entro 2 settimane. Spec operativa: `docs/specs/SPEC_G-MAC_CONSEGNA_MACOS.md`. Ground-truth: audit accoppiamenti Windows 2026-07-17 (4 agenti codebase + 2 ricerche web con fonti).
+**Stato:** accepted (2026-07-31) — D1–D6 ratificate dal founder. macOS ARM64 è un deliverable
+pre-POC impegnato; portability canary prima dell'application freeze, full distribution G-MAC dopo.
+Sequenza e stop condition: `docs/specs/SPEC_PRE_POC.md`.
+**Contesto di nascita:** Daniele, primo target di accettazione e consegna Mac noto, ha un MacBook Air
+M1 2020 (ARM64, 8 GB, macOS Tahoe 26.5). La capacità di distribuzione conserva valore indipendente
+dal singolo prospect; Virgin resta upside non validato. Spec operativa:
+`docs/specs/SPEC_G-MAC_CONSEGNA_MACOS.md`.
 
 ---
 
@@ -21,17 +26,27 @@ Nuitka non cross-compila (conferma ufficiale): la build DEVE avvenire su macOS A
 
 Su Darwin Nuitka usa clang (Xcode CLT), niente `--msvc`/`--windows-console-mode`, output senza estensione. I 3 safety gates ADR-004, la cifratura build-time dei cataloghi (`db_crypto` è byte-oriented: i `.db.enc` sono identici cross-arch) e il verify/seal restano identici. Se la build arm64 incontra blocchi nei tempi del pilota: fallback PyInstaller (spec darwin dedicata) accettando un **downgrade anti-RE esplicito, temporaneo e tracciato** — mai silenzioso.
 
-## Decisione D5 — Firma: Developer ID + notarizzazione come traguardo; ponte ad-hoc SOLO per il pilota e SOLO via canale senza quarantena
+## Decisione D5 — L'artefatto consegnato richiede Developer ID e notarizzazione
 
-Fatti (ricerca 2026, fonti nella spec): su ARM64 la firma almeno ad-hoc è obbligatoria; il bypass right-click→Apri è stato rimosso (Sequoia); su Tahoe un bundle ad-hoc in quarantena produce "app danneggiata" e "Open Anyway" è inaffidabile. Quindi: (a) enrollment Apple Developer ($99/anno) da avviare subito → codesign Developer ID + hardened runtime + notarytool in CI (automatizzabile, minuti); (b) finché (a) non è pronto, il pilota riceve il bundle via **scp o zip su USB** (canale che non applica `com.apple.quarantine`; MAI AirDrop/download browser) con `install.sh` che fa `xattr -dr` + `codesign -s -`. Il percorso (b) è dichiarato ponte: inaccettabile come esperienza di prodotto oltre il pilota.
+Fatti (ricerca 2026, fonti nella spec): su ARM64 la firma almeno ad-hoc è obbligatoria; il bypass
+right-click→Apri è stato rimosso (Sequoia); su Tahoe un bundle ad-hoc in quarantena produce "app
+danneggiata" e "Open Anyway" è inaffidabile. L'enrollment Apple Developer va quindi avviato prima
+del gate di distribuzione e la candidate consegnabile deve passare Developer ID, hardened runtime
+e notarizzazione. La firma ad-hoc resta ammessa solo su artefatti interni del portability canary o
+di debug: non è un canale di consegna e non genera workaround USB/scp al cliente. Se credenziali o
+notarizzazione non sono disponibili, G-MAC.5 resta chiuso e si sposta il milestone.
 
 ## Decisione D6 — Kill-on-close di frpc su macOS: process-group + trap nel launcher, pkill nell'upgrade
 
 Su macOS non esistono Job Object né PDEATHSIG. Equivalente a 2 livelli (specchio del modello Windows di pitfall #16): (1) frpc resta nel process-group/sessione del backend e `launcher.command` fa `trap 'kill -- -$$' EXIT` → chiusura finestra Terminal = morte dell'intero albero; (2) install/upgrade esegue `pkill -f frpc.toml` + kill backend prima di sostituire i file, sostituzione per rename mai in-place (un Mach-O in esecuzione sovrascritto in-place viene SIGKILLato per firma invalida). Rischio residuo dichiarato: orfano da SIGKILL diretto del backend (mitigabile con PID-file sweep al boot, opzionale nel pilota). Nota: su macOS l'orfano non locka il file immagine (l'upgrade non fallisce con codice 5) ma tiene il proxy-name su frps → tunnel rotto fino al kill.
 
-## Questione aperta (fuori da questo ADR, decisione founder): interplay con G1
+## Interplay con G1 — chiuso dalla decisione founder 2026-07-31
 
-La consegna al primo cliente reale era gated sul Pre-Delivery Security Gate (ADR-013 accepted, zero codice: crm.db oggi plaintext). Su macOS SQLCipher è più oneroso (nessun wheel: brew + build da sorgente; spike Nuitka da ripetere su darwin). Le opzioni — consegnare il pilota con crm.db plaintext (accettazione esplicita, G1 dopo) o spostare la deadline — sono D-MAC-5 nella spec. Qualunque scelta, il vincolo cross-platform entra nel design di dettaglio G1 da subito.
+La consegna data-bearing resta gated sul Pre-Delivery Security Gate. Il portability canary verifica
+SQLCipher/Nuitka su Darwin prima che G1 venga congelato; il packaging finale segue l'application
+freeze. Non esiste un'opzione di consegna operativa con `crm.db` plaintext. Se la compatibilità Mac
+richiede lavoro aggiuntivo, il finding entra nello scope della v1.0.15 o sposta il milestone: non
+genera una deroga di sicurezza.
 
 ## Conseguenze
 
