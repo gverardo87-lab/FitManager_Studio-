@@ -47,6 +47,12 @@ Fino alla chiusura di quel gate non si riusa alla cieca il path Windows e non si
 `generate_license.py` sul Mac cliente. Il fingerprint completo transita soltanto nel canale
 amministrativo di attivazione; nei report tecnici si registra solo `MATCH/MISMATCH`.
 
+Il portability canary C0 non è un'attivazione e non crea eccezioni a questo modello. Senza licenza
+target-bound può usare soltanto `/health` con redazione di `machine_id_full`, gli endpoint auth già
+esenti e self-test compilati su DB sintetico. Non modifica `LicenseMiddleware`/lista exempt, non
+disabilita l'enforcement compiled, non include licenze fittizie e non valida rotte CRM protette. Il
+binding e il flusso applicativo completo sul Mac appartengono a G-MAC.4.
+
 ## Flusso admin (lato sviluppatore)
 
 ### Prerequisiti

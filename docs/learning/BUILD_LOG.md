@@ -4330,3 +4330,27 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
   prerequisito già noto del canary runtime.
 - **Prossimo gate minimo:** C0.1 canary RED. L'eventuale remediation G-MAC.1 è un gate codice
   separato; C0.1 deve tornare GREEN prima del probe C0.2 sul Mac di Daniele.
+
+---
+
+## 2026-08-02 — C0.0 chiude il weak point license-enforcement del canary
+
+- **Trigger:** la formula «login sintetico e smoke core» permetteva due letture incompatibili: test
+  tecnico di portabilità oppure sessione CRM senza licenza. La seconda avrebbe incentivato un bypass
+  del controllo licenza per ottenere un falso verde.
+- **Boundary ratificato:** senza licenza target-bound C0 usa soltanto `/health` con output redatto,
+  gli endpoint auth già esenti (`setup-status`, `register`, `login`) su DB sintetico, le superfici
+  frontend corrispondenti e self-test tecnici compilati non esposti come rotte CRM.
+- **Fail-closed:** modificare `LicenseMiddleware`/lista exempt, disabilitare enforcement compiled,
+  introdurre test mode nel runtime, includere licenze fittizie, acquisire il fingerprint completo o
+  attribuire PASS alle API CRM protette rende C0 FAIL anche se il processo si avvia.
+- **Ownership preservata:** G-MAC.4 resta l'unico gate per licenza realmente legata al target, login
+  applicativo completo, CRM protetto, tunnel/portale, upgrade e lifecycle end-to-end. C0 prova
+  portabilità ARM64 e G1; non simula una consegna.
+- **Fold-back:** aggiornati SPEC G-MAC, regia pre-POC, ADR-026 Addendum I, Release Checklist e SSoT
+  `LICENSE_ACTIVATION`. Nessun file di codice, workflow, dipendenza, artifact o dato è stato toccato.
+- **Verifiche docs/process:** `git diff --check` PASS; lifecycle docs PASS; link Markdown locali
+  PASS; guard lessicale C0 boundary PASS; zero file fuori `docs/`. Nessuna suite applicativa
+  eseguita o dichiarata: gate esclusivamente documentale.
+- **Prossimo gate minimo:** C0.1 canary RED sul contratto ora non ambiguo; qualunque necessità di
+  ampliare exempt/enforcement è un finding di design, non una scorciatoia implementativa.

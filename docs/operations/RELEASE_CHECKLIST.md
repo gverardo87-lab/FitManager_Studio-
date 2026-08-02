@@ -32,9 +32,10 @@
   seriale/foto/UUID conservato nel repository o nei log.
 - [ ] C0.1 RED→GREEN: build canary su `macos-15`, esecuzione dello stesso artefatto su `macos-26`;
   SQLCipher/G1, Nuitka standalone, frontend darwin-arm64 e dipendenze/hash verificati.
-- [ ] C0.2 source-free sul target esatto: health/core smoke, fingerprint booleano, 30 minuti di
-  stabilità, memoria combinata backend+Node (warning >1,5 GB; FAIL >2 GB/memory pressure), viewport
-  1440×900 e 1024×640. Nessun dato reale o identificatore hardware nel report.
+- [ ] C0.2 source-free sul target esatto: `/health` redatto, auth già exempt e self-test tecnico su
+  DB sintetico; fingerprint booleano, 30 minuti di stabilità, memoria combinata backend+Node
+  (warning >1,5 GB; FAIL >2 GB/memory pressure), viewport 1440×900 e 1024×640. Nessun dato reale,
+  identificatore hardware, bypass licenza o claim sulle API CRM protette nel report.
 
 ## 3. Build e packaging candidate
 
@@ -59,6 +60,8 @@
 - [x] Il bundle contiene soltanto `license_public.pem` per la verifica.
 - [x] Enforcement ON di default nel runtime compiled, anche senza launcher.
 - [x] `/health` espone stato licenza, modo applicativo e modo distribuzione.
+- [x] Contratto C0 fail-closed: nessuna modifica a middleware/exempt/enforcement e nessuna licenza
+  fittizia per ampliare lo smoke; il CRM target-bound si verifica in G-MAC.4.
 - [ ] Installazione candidata: `data/license.key` presente nel path runtime effettivo.
 - [ ] Prova negativa candidata: licenza assente → `/licenza` e CRM bloccato.
 - [ ] Prova positiva candidata: licenza valida → health e login operativi.

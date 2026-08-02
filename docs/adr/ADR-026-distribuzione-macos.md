@@ -73,6 +73,13 @@ non certificazione del target. C0.2 non riceve sorgenti, toolchain, dati reali o
 emette seriale, `IOPlatformUUID`, output `ioreg` o fingerprint nei log/report. La prova di binding
 licenza resta nel gate G-MAC.4/G-MAC.5 e nel canale amministrativo dedicato.
 
+**Boundary licenza C0:** il portability canary non disabilita né aggira l'enforcement compiled.
+Senza licenza target-bound può verificare soltanto health con output redatto, endpoint auth già
+esenti, superfici frontend corrispondenti e self-test tecnici compilati su dati sintetici. Modificare
+middleware/lista exempt, introdurre test mode nel runtime, usare una licenza fittizia o attribuire
+PASS a rotte CRM protette rende il gate FAIL. Il flusso applicativo licenziato end-to-end appartiene
+a G-MAC.4.
+
 Un finding C0 diventa requisito della `v1.0.15` o sposta il milestone. Non può essere convertito in
 waiver di sicurezza, in packaging anticipato o in un PASS condizionale presentato come compatibilità
 confermata. Soglie e matrice falsificabile vivono in

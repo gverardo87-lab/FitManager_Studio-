@@ -1,6 +1,7 @@
 # SPEC — Strategia e readiness pre-POC
 
-**Stato:** 🟡 IN CORSO — D0 e C0.0 contratto target chiusi; prossimo gate C0.1 canary RED
+**Stato:** 🟡 IN CORSO — D0 e C0.0 contratto target/boundary licenza chiusi; prossimo gate C0.1
+canary RED
 **Data di ratifica founder:** 2026-07-31
 **Branch:** `FitManager_Studio`
 **Tipo:** regia operativa pre-POC; non duplica le specifiche tecniche sottostanti
@@ -99,6 +100,11 @@ esatto. Il runner non garantisce la patch `26.5.1`: un PASS solo CI resta condiz
 Daniele non arrivano sorgenti, toolchain, dati reali o chiavi private e il report non contiene
 seriale, UUID o fingerprint. Soglie, matrice e DoD sono in `SPEC_G-MAC_CONSEGNA_MACOS.md` §3 C0.
 
+C0 non è una sessione CRM licenziata. Senza licenza target-bound verifica soltanto `/health`
+redatto, endpoint auth già esenti, superfici frontend corrispondenti e self-test tecnici compilati su
+dati sintetici. Non modifica middleware/exempt/enforcement, non usa licenze fittizie e non attribuisce
+PASS alle API CRM protette. Licenza reale e flusso applicativo end-to-end restano G-MAC.4.
+
 L'intero percorso definito è pre-autorizzato. Non servono nuovi GO founder tra gate già descritti;
 serve escalation solo se cambiano scope, policy di sicurezza, architettura, branch/remoto, support
 boundary o costi esterni materiali.
@@ -110,7 +116,8 @@ self-service generalizzato e parità non verificata con ogni configurazione Mac 
 
 Nessun trainer riceve una build per uso data-bearing senza G1–G4. Nessun atleta reale viene onboardato
 senza G1–G4 e G9–G11. Una technical preview usa soltanto dati sintetici e non costituisce consegna
-operativa. Deadline e opportunità commerciali non possono trasformarsi in waiver impliciti.
+operativa. Non può disabilitare o aggirare l'enforcement della licenza per ampliare uno smoke test.
+Deadline e opportunità commerciali non possono trasformarsi in waiver impliciti.
 
 ### D6 — Il blocco P è in HOLD
 
@@ -158,7 +165,7 @@ Le scadenze sono deadline di evidenza e decisione, mai autorizzazioni a saltare 
 | Deadline | Gate | Evidenza di uscita |
 |---|---|---|
 | 2026-08-02 | **D0 — Autorità documentale** | questa SPEC viva; fonti concorrenti archiviate; INDEX/CLAUDE/LAUNCH_SCOPE e interlock allineati |
-| 2026-08-04 | **C0 — Scope + portability canary** | C0.0 contratto target chiuso; C0.1 build `macos-15` + esecuzione medesimo artefatto `macos-26`; C0.2 probe source-free su M1/8 GB/Tahoe 26.5.1; SQLCipher/G1, Nuitka, frontend ARM64, memoria e display verificati senza packaging cliente |
+| 2026-08-04 | **C0 — Scope + portability canary** | C0.0 contratto target e boundary licenza chiusi; C0.1 build `macos-15` + esecuzione medesimo artefatto `macos-26`; C0.2 probe source-free su M1/8 GB/Tahoe 26.5.1; SQLCipher/G1, Nuitka, frontend ARM64, auth exempt, memoria e display verificati senza packaging cliente né claim sul CRM protetto |
 | 2026-08-07 | **A0 — Product truth** | context agent-neutral, materiale raw di Alessio classificato e claims matrix approvata; nessun claim esterno non sostenuto |
 | 2026-08-21 | **S1 — Core/security** | G1/G2/G4 verdi; backup/restore coerenti; G9–G11 pronti per il real-data gate |
 | 2026-08-24 | **F0 — Application code freeze** | suite completa Windows + runtime Mac CI; nessuna feature o finding release-critical aperto |

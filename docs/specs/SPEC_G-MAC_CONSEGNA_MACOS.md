@@ -1,7 +1,8 @@
 # SPEC BLOCCO G-MAC — Consegna macOS ARM64
 
-**Stato:** 🟡 DELIVERABLE PRE-POC IMPEGNATO — C0.0 contratto target CHIUSO; prossimo gate C0.1
-canary RED. G-MAC.0 codice FATTO e sigillato (T1 PASS, suite 867). Prima dell'application freeze
+**Stato:** 🟡 DELIVERABLE PRE-POC IMPEGNATO — C0.0 contratto target + boundary licenza CHIUSI;
+prossimo gate C0.1 canary RED. G-MAC.0 codice FATTO e sigillato (T1 PASS, suite 867). Prima
+dell'application freeze
 `v1.0.15` chiudono C0 + G-MAC.1 runtime; G-MAC.2–5 di distribuzione completano dopo il freeze
 applicativo, senza ulteriori GO finché scope e policy non cambiano. Sequenza vincolante:
 `SPEC_PRE_POC.md` (decisione founder 2026-07-31; Addendum ADR-026 del 2026-08-02).
@@ -72,10 +73,10 @@ Spec di dettaglio: `SPEC_FINGERPRINT_CROSSPLATFORM.md` (bozza 25/06, decisione p
 
 C0 è un gate di evidenza pre-freeze, non packaging cliente. È composto da tre checkpoint distinti:
 
-- **C0.0 — contratto target (questo gate docs): CHIUSO.** Configurazione supportata, matrice di
-  prova, limiti privacy e soglie sono fissati prima del codice.
-- **C0.1 — canary CI RED→GREEN.** Un workflow minimo costruisce l'artefatto canary ARM64 su `macos-15`
-  ARM64 e lo esegue, senza ricompilarlo, su `macos-26`. Il primo risultato reale è RED finché tutte
+- **C0.0 — contratto target (docs): CHIUSO.** Configurazione supportata, matrice di prova, limiti
+  privacy, soglie e boundary license-enforcement sono fissati prima del codice.
+- **C0.1 — canary CI RED→GREEN.** Un workflow minimo costruisce l'artefatto canary ARM64 su
+  `macos-15` e lo esegue, senza ricompilarlo, su `macos-26`. Il primo risultato reale è RED finché tutte
   le prove sotto non producono evidenza; ogni incompatibilità apre un requisito v1.0.15, non una
   deroga.
 - **C0.2 — conferma target source-free.** Lo stesso canary compilato viene eseguito in call guidata
@@ -89,12 +90,29 @@ Matrice minima e falsificabile:
 | Identità ambiente | `arm64`; build `macos-15`; esecuzione dello stesso artefatto su `macos-26` | `arm64`; macOS `26.5.1`; modello M1/2020 e RAM 8 GB già confermati, senza esportare identificatori |
 | Supply chain | versioni + SHA-256; solo wheel/tag ARM64; `file` e `otool` senza slice x86 o dylib irrisolte | nessuna dipendenza installata e nessuna richiesta Rosetta |
 | SQLCipher/G1 | create→write→close→reopen, wrong-key fail, plaintext assente, smoke dal binario Nuitka standalone | medesimo smoke con DB sintetico temporaneo, poi rimozione |
-| Frontend | `npm ci` + `next build` su ARM64; moduli nativi darwin-arm64 | boot standalone e navigazione core sintetica |
-| Stabilità | `/health`, login sintetico e smoke core; nessun crash | 30 minuti dopo warm-up senza crash, memory pressure o terminazione |
+| Frontend | `npm ci` + `next build` su ARM64; moduli nativi darwin-arm64 | boot standalone e render delle sole superfici auth/diagnostiche ammesse; nessun claim sul CRM protetto |
+| Runtime/auth | `/health`, endpoint auth già esenti e self-test tecnico compilato su DB sintetico; nessuna rotta CRM protetta | medesimo perimetro source-free sul target; nessuna modifica all'enforcement |
+| Stabilità | stack nel perimetro C0 acceso dopo warm-up; nessun crash | 30 minuti senza crash, memory pressure o terminazione |
 | Memoria | RSS combinata backend + Node registrata dopo warm-up e smoke | warning oltre 1,5 GB; FAIL oltre 2 GB, memory pressure o terminazione |
-| Display | smoke browser alle viewport 1440×900 e 1024×640 | nessun blocco del flusso core alla risoluzione usata dal target |
+| Display | smoke browser alle viewport 1440×900 e 1024×640 | nessun blocco delle superfici auth/diagnostiche ammesse alla risoluzione usata dal target |
 | Storage | dimensione artefatto e spazio libero registrati | spazio libero registrato; la soglia installer finale viene fissata in G-MAC.3 sul bundle reale |
 | Fingerprint | test automatici Darwin già presenti | probe compilato: stabilità booleana tra due letture; nessun valore grezzo o fingerprint nei log |
+
+Boundary C0 licenza/smoke, non negoziabile:
+
+- **ammesso senza licenza target-bound:** `/health` con output redatto; gli endpoint già esenti
+  `/api/auth/setup-status`, `/api/auth/register` e `/api/auth/login` su DB sintetico temporaneo;
+  boot/render delle relative superfici frontend; self-test compilato di SQLCipher/G1 e dipendenze
+  che non espone una rotta CRM protetta;
+- **vietato:** cambiare `LicenseMiddleware` o la lista exempt, disattivare l'enforcement compiled,
+  introdurre flag/test mode nel runtime di produzione, includere una `license.key` fittizia,
+  acquisire il fingerprint completo per far passare C0 o chiamare API CRM protette presentandole
+  come validate;
+- **ownership G-MAC.4:** licenza realmente legata al fingerprint del target, login applicativo
+  completo, CRM protetto, tunnel/portale, upgrade e lifecycle end-to-end.
+
+Qualunque bypass rende C0 **FAIL per costruzione**, anche se il processo si avvia. Il self-test C0
+prova portabilità di runtime e G1; non equivale a una sessione CRM licenziata.
 
 Privacy del probe C0.2:
 
@@ -105,9 +123,10 @@ Privacy del probe C0.2:
 - il report committato contiene solo esiti e misure non identificanti. La prova di binding licenza
   resta G-MAC.4/G-MAC.5 nel canale amministrativo dedicato.
 
-**Definition of Done C0:** C0.1 e C0.2 entrambi PASS sullo stesso artefatto. Ogni finding viene
-classificato; se richiede G-MAC.1, la remediation avviene in un gate codice separato e C0.1 viene
-rieseguito prima di C0.2. C0 non produce un installer consegnabile e non autorizza dati reali.
+**Definition of Done C0:** C0.1 e C0.2 entrambi PASS sullo stesso artefatto, con zero bypass e zero
+claim sul CRM protetto. Ogni finding viene classificato; se richiede G-MAC.1, la remediation avviene
+in un gate codice separato e C0.1 viene rieseguito prima di C0.2. C0 non produce un installer
+consegnabile e non autorizza dati reali.
 
 ### G-MAC.1 — Portabilità runtime tunnel (unico codice `api/` rimasto)
 - `tunnel_config.py`: `_FRPC_FILENAME` e `_ACME_CLIENT_FILENAME` platform-conditional
@@ -181,6 +200,7 @@ rieseguito prima di C0.2. C0 non produce un installer consegnabile e non autoriz
   freeze il canary verifica la compatibilità Darwin e impedisce un design G1 Windows-only.
 - ❌ Niente Intel/x86_64 macOS: ARM64-only.
 - ❌ Niente modifiche a `license.py`/`generate_license.py` (il fingerprint resta stringa opaca).
+- ❌ Niente modifica a `LicenseMiddleware`, endpoint exempt o enforcement per ampliare lo smoke C0.
 - ❌ Il tooling dev Windows (kill-port.sh, restart-backend.sh, pipeline video) resta com'è.
 
 ## 7. Rischi principali
@@ -195,6 +215,7 @@ rieseguito prima di C0.2. C0 non produce un installer consegnabile e non autoriz
 | frpc orfano su SIGKILL (no Job Object) | trap process-group nel launcher + pkill nell'upgrade; PID-file sweep se il tempo regge; rischio residuo dichiarato |
 | 8 GB RAM sul Mac target | Misura combinata backend+Node: warning >1,5 GB, FAIL >2 GB/memory pressure; MAI buildare sul target |
 | Identificatori hardware nei log | Probe source-free con soli esiti booleani e misure non identificanti; seriale/UUID/fingerprint vietati nei report |
+| Canary verde ottenuto bypassando la licenza | FAIL automatico; C0 usa solo health/auth exempt e self-test tecnico, il CRM target-bound resta G-MAC.4 |
 
 ## 8. Fonti verificate per C0.0 (2026-08-02)
 
