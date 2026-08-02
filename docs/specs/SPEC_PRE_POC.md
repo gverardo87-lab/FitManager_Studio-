@@ -1,6 +1,6 @@
 # SPEC — Strategia e readiness pre-POC
 
-**Stato:** 🟡 IN CORSO — D0 autorità documentale chiuso; prossimo gate C0 portability canary
+**Stato:** 🟡 IN CORSO — D0 e C0.0 contratto target chiusi; prossimo gate C0.1 canary RED
 **Data di ratifica founder:** 2026-07-31
 **Branch:** `FitManager_Studio`
 **Tipo:** regia operativa pre-POC; non duplica le specifiche tecniche sottostanti
@@ -35,7 +35,9 @@ esperimenti separati o secondari: non devono rendere il risultato prodotto illeg
 - la consegna con dati reali resta vincolata a G1–G4 e l'onboarding del primo atleta anche a G9–G11;
 - il blocco P è nuovo sviluppo, non remediation pre-POC;
 - Alessio non usa oggi il prodotto e non è ancora abilitato a presentarlo autonomamente;
-- Daniele è il primo target macOS noto; il potenziale rapporto Virgin è upside non validato;
+- Daniele è il primo target macOS noto: MacBook Air M1 2020, ARM64, 8 GB, macOS Tahoe 26.5.1,
+  configurazione confermata il 2026-08-02; foto e identificatori hardware non sono conservati nel
+  repository o nei log. Il potenziale rapporto Virgin è upside non validato;
 - non esiste ancora `.agents/product-marketing-context.md`.
 
 I fatti cambiano solo con evidenza. Le valutazioni founder su fiducia, opportunità e priorità sono
@@ -90,6 +92,12 @@ Prima dell'application freeze sono autorizzati il portability canary e i minimi 
 che esso dimostra necessari, incluso G-MAC.1. Devono provare che dipendenze e G1 siano realmente
 implementabili su ARM64 senza avviare packaging cliente. G-MAC.2–5 — pipeline di distribuzione,
 firma, notarizzazione, installazione e validazione — aprono dopo l'application freeze.
+
+Il canary C0 usa tre checkpoint: C0.0 fissa il contratto; C0.1 costruisce su GitHub `macos-15` e
+prova lo stesso artefatto su `macos-26`; C0.2 esegue un probe compilato e source-free sul target
+esatto. Il runner non garantisce la patch `26.5.1`: un PASS solo CI resta condizionale. Sul Mac di
+Daniele non arrivano sorgenti, toolchain, dati reali o chiavi private e il report non contiene
+seriale, UUID o fingerprint. Soglie, matrice e DoD sono in `SPEC_G-MAC_CONSEGNA_MACOS.md` §3 C0.
 
 L'intero percorso definito è pre-autorizzato. Non servono nuovi GO founder tra gate già descritti;
 serve escalation solo se cambiano scope, policy di sicurezza, architettura, branch/remoto, support
@@ -150,7 +158,7 @@ Le scadenze sono deadline di evidenza e decisione, mai autorizzazioni a saltare 
 | Deadline | Gate | Evidenza di uscita |
 |---|---|---|
 | 2026-08-02 | **D0 — Autorità documentale** | questa SPEC viva; fonti concorrenti archiviate; INDEX/CLAUDE/LAUNCH_SCOPE e interlock allineati |
-| 2026-08-04 | **C0 — Scope + portability canary** | scope applicativo congelato; runner ARM64, dipendenze, Nuitka e spike SQLCipher/boot verificati senza packaging cliente |
+| 2026-08-04 | **C0 — Scope + portability canary** | C0.0 contratto target chiuso; C0.1 build `macos-15` + esecuzione medesimo artefatto `macos-26`; C0.2 probe source-free su M1/8 GB/Tahoe 26.5.1; SQLCipher/G1, Nuitka, frontend ARM64, memoria e display verificati senza packaging cliente |
 | 2026-08-07 | **A0 — Product truth** | context agent-neutral, materiale raw di Alessio classificato e claims matrix approvata; nessun claim esterno non sostenuto |
 | 2026-08-21 | **S1 — Core/security** | G1/G2/G4 verdi; backup/restore coerenti; G9–G11 pronti per il real-data gate |
 | 2026-08-24 | **F0 — Application code freeze** | suite completa Windows + runtime Mac CI; nessuna feature o finding release-critical aperto |
@@ -172,14 +180,17 @@ Un solo gate repository è attivo alla volta, secondo `AGENTS.md`. Attività est
 in calendario, ma non sono «zero ore founder» e non autorizzano lavoro concorrente sugli stessi file.
 
 1. D0 docs-first e checkpoint remoto pulito;
-2. C0 portability canary;
-3. A0 product truth, docs-only e checkpoint remoto pulito;
-4. S1 in gate tecnici atomici secondo ADR-013 e Security Gate;
-5. F0 application freeze;
-6. D1 distribuzione Windows e macOS in gate separati ma sulla stessa baseline applicativa;
-7. R1 build/seal/tag;
-8. M0 consegne e registrazione;
-9. W1 Wave 0.
+2. C0.0 contratto target docs-first e checkpoint remoto pulito;
+3. C0.1 canary RED;
+4. G-MAC.1 remediation runtime dimostrata dal canary, in gate codice separato, e re-run C0.1 GREEN;
+5. C0.2 probe source-free sul target esatto;
+6. A0 product truth, docs-only e checkpoint remoto pulito;
+7. S1 in gate tecnici atomici secondo ADR-013 e Security Gate;
+8. F0 application freeze;
+9. D1 distribuzione Windows e macOS in gate separati ma sulla stessa baseline applicativa;
+10. R1 build/seal/tag;
+11. M0 consegne e registrazione;
+12. W1 Wave 0.
 
 La pratica di Alessio sul prodotto, il suo materiale raw, l'enrollment Apple, il recruiting e gli
 appuntamenti possono avanzare fuori dal codice. Ogni modifica repository relativa viene però chiusa
@@ -197,7 +208,9 @@ in un gate proprio: il parallelismo organizzativo non viola il checkpoint Git si
 
 ### macOS consegnabile
 
-- build nativa ARM64 da CI, senza sorgenti sul Mac cliente;
+- build nativa ARM64 su `macos-15`, esecuzione del medesimo artefatto su `macos-26` e cross-check
+  sul target M1/8 GB/Tahoe 26.5.1, senza sorgenti sul Mac cliente;
+- budget memoria C0 rispettato e flusso core usabile alle risoluzioni target;
 - Developer ID e notarizzazione valide sull'artefatto consegnato;
 - clean install e avvio senza workaround di quarantena destinati al cliente;
 - fingerprint/licenza, health, login, tunnel e portale verificati;
@@ -206,7 +219,8 @@ in un gate proprio: il parallelismo organizzativo non viola il checkpoint Git si
 - chiusura lascia zero processi orfani;
 - runbook e deployment registry aggiornati.
 
-Un artifact che parte soltanto sul runner CI non è consegnabile.
+Un artifact che parte soltanto sul runner CI non è consegnabile; una label `macos-26` non sostituisce
+la verifica sulla patch esatta del primo target.
 
 ### Real-data GO
 

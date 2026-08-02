@@ -1,10 +1,12 @@
 # ADR-026 — Distribuzione macOS (Apple Silicon)
 
-**Stato:** accepted (2026-07-31) — D1–D6 ratificate dal founder. macOS ARM64 è un deliverable
-pre-POC impegnato; portability canary prima dell'application freeze, full distribution G-MAC dopo.
+**Stato:** accepted (2026-07-31) + Addendum I (2026-08-02) — D1–D6 ratificate dal founder.
+macOS ARM64 è un deliverable pre-POC impegnato; portability canary prima dell'application freeze,
+full distribution G-MAC dopo.
 Sequenza e stop condition: `docs/specs/SPEC_PRE_POC.md`.
 **Contesto di nascita:** Daniele, primo target di accettazione e consegna Mac noto, ha un MacBook Air
-M1 2020 (ARM64, 8 GB, macOS Tahoe 26.5). La capacità di distribuzione conserva valore indipendente
+M1 2020 (ARM64, 8 GB, macOS Tahoe 26.5.1; configurazione confermata il 2026-08-02 senza conservare
+foto o identificatori hardware). La capacità di distribuzione conserva valore indipendente
 dal singolo prospect; Virgin resta upside non validato. Spec operativa:
 `docs/specs/SPEC_G-MAC_CONSEGNA_MACOS.md`.
 
@@ -12,7 +14,11 @@ dal singolo prospect; Virgin resta upside non validato. Spec operativa:
 
 ## Decisione D1 — macOS ARM64 è la seconda piattaforma di distribuzione; il codice si biforca per branch, mai per fork
 
-Un solo codebase, dispatch per piattaforma nei (pochissimi) punti OS-specific: `machine_fingerprint.py` (fatto, G-MAC.0), `tunnel_config.py` filename frpc, launcher/installer per piattaforma. **Ogni branch macOS lascia l'output Windows bit-identico** (oracolo: fingerprint hash, installer, launcher.bat). Niente supporto Intel x86_64: ARM64-only (il parco Mac 2026 e il pilota lo sono).
+Un solo codebase, dispatch per piattaforma nei (pochissimi) punti OS-specific:
+`machine_fingerprint.py` (fatto, G-MAC.0), `tunnel_config.py` per i companion `frpc` e `lego`,
+launcher/installer per piattaforma. **Ogni branch macOS lascia l'output Windows bit-identico**
+(oracolo: fingerprint hash, installer, launcher.bat). Niente supporto Intel x86_64: ARM64-only
+(il pilota lo è).
 
 ## Decisione D2 — Layout flat, niente .app bundle
 
@@ -20,7 +26,12 @@ La distribuzione macOS replica il layout Windows: `FitManager/{backend/,frontend
 
 ## Decisione D3 — Build su GitHub Actions macOS runner; mai sul Mac del cliente
 
-Nuitka non cross-compila (conferma ufficiale): la build DEVE avvenire su macOS ARM64. Build machine: runner GitHub-hosted `macos-15` (M1, ARM64; repo privato = ~200 min-orologio/mese inclusi, poi $0.062/min). Il sorgente non tocca MAI la macchina del cliente (coerenza ADR-007). Validazione manuale pre-consegna: Mac cloud spot (Scaleway M4, €0,22/h, minimo 24h) o call guidata. La CI è anche il primo enforcement automatico della suite (pytest su darwin prima della build).
+Nuitka non cross-compila: la build DEVE avvenire su macOS ARM64. Build machine: runner
+GitHub-hosted `macos-15` (M1, ARM64). Il sorgente non tocca MAI la macchina del cliente (coerenza
+ADR-007). Lo stesso artefatto canary viene eseguito su un runner `macos-26`; il cross-check finale
+avviene sul target esatto con probe source-free. Quote/billing CI e costi/versione OS di un Mac cloud
+si verificano prima dell'uso, senza cristallizzare prezzi temporali nell'ADR. La CI è anche il primo
+enforcement automatico della suite (pytest su Darwin prima della build).
 
 ## Decisione D4 — Compilazione: Nuitka anche su macOS (parità ADR-007), PyInstaller come fallback dichiarato
 
@@ -48,9 +59,29 @@ freeze. Non esiste un'opzione di consegna operativa con `crm.db` plaintext. Se l
 richiede lavoro aggiuntivo, il finding entra nello scope della v1.0.15 o sposta il milestone: non
 genera una deroga di sicurezza.
 
+## Addendum I — 2026-08-02: build evidence ≠ target compatibility
+
+L'evidenza hardware del primo target ratifica **MacBook Air M1 2020, ARM64, 8 GB, macOS Tahoe
+26.5.1**. Ne consegue un contratto di prova a tre livelli:
+
+1. C0.0 fissa matrice, soglie e privacy prima del codice;
+2. C0.1 costruisce su `macos-15` ed esegue il medesimo artefatto su `macos-26`;
+3. C0.2 esegue quel canary compilato e source-free sul target esatto.
+
+La label `macos-26` non garantisce la patch `26.5.1`: un PASS solo runner è evidenza di portabilità,
+non certificazione del target. C0.2 non riceve sorgenti, toolchain, dati reali o chiavi private e non
+emette seriale, `IOPlatformUUID`, output `ioreg` o fingerprint nei log/report. La prova di binding
+licenza resta nel gate G-MAC.4/G-MAC.5 e nel canale amministrativo dedicato.
+
+Un finding C0 diventa requisito della `v1.0.15` o sposta il milestone. Non può essere convertito in
+waiver di sicurezza, in packaging anticipato o in un PASS condizionale presentato come compatibilità
+confermata. Soglie e matrice falsificabile vivono in
+`docs/specs/SPEC_G-MAC_CONSEGNA_MACOS.md` §3 C0.
+
 ## Conseguenze
 
-- Nasce la prima CI del repo (GH Actions macOS): pytest su darwin + build + safety gates ADR-004 su ogni release macOS.
+- Nasce la prima CI del repo (GH Actions macOS): pytest su Darwin, build `macos-15`, smoke dello
+  stesso artefatto su `macos-26` e safety gates ADR-004 su ogni release macOS.
 - `SPEC_FINGERPRINT_CROSSPLATFORM` (G-MAC.0) è il cancello di fattibilità: codice fatto e T1 verificato (hash Windows invariato); T2 chiude su hardware reale.
 - Il registro deployment (`DEPLOYMENTS.md`) traccia la piattaforma per cliente; il runbook di consegna macOS nasce in `docs/operations/`.
 - Ogni futuro binario long-lived aggiunto al bundle deve dichiarare il proprio destino su ENTRAMBE le piattaforme (Job Object su win, process-group/trap su mac) — estensione del pitfall #16.

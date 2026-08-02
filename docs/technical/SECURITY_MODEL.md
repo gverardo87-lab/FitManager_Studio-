@@ -3,7 +3,8 @@
 Modello di sicurezza del prodotto. Copre: threat model, protezioni implementate,
 limitazioni note, roadmap futuri interventi.
 
-Ultimo aggiornamento: 2026-06-23 (drift Tailscale→FRP, tassonomia attaccanti L0–L4, gate G1 crm.db attivo).
+Ultimo aggiornamento: 2026-08-02 (hardware binding Windows/macOS e privacy identificatori;
+drift Tailscale→FRP, tassonomia attaccanti L0–L4, gate G1 crm.db attivo).
 
 ## Principi
 
@@ -40,7 +41,7 @@ Ultimo aggiornamento: 2026-06-23 (drift Tailscale→FRP, tassonomia attaccanti L
 ├─────────────────────────────────────────────────────────────┤
 │  L6 — Anti-Reverse Engineering                             │
 │  Bundle sanitization (zero Alembic/seed/pyc),              │
-│  DB encryption (AES-256-GCM), Nuitka (Python→C→x86-64)    │
+│  DB encryption (AES-256-GCM), Nuitka (Python→C→nativo)    │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -94,7 +95,7 @@ Utilizzo non autorizzato del software su macchine non licenziate.
 | Meccanismo | Implementazione | File chiave |
 |-----------|----------------|-------------|
 | Firma digitale | JWT RS256 (RSA 2048-bit) | `api/services/license.py` |
-| Hardware binding | SHA-256 di CPU+Board+BIOS (PowerShell WMI) | `api/services/machine_fingerprint.py` |
+| Hardware binding | SHA-256 di CPU+Board+BIOS via WMI su Windows; `IOPlatformUUID`+seriale da una sola lettura `ioreg` su macOS | `api/services/machine_fingerprint.py` |
 | Enforcement middleware | Blocco 403 su rotte protette | `api/main.py` (LicenseMiddleware) |
 | Key management | Private key offline (`~/.fitmanager/`), public key nell'installer | CLI + installer |
 | Expiry | Claim `exp` nel JWT, verificato a ogni request | `api/services/license.py` |
@@ -115,6 +116,10 @@ Request → LicenseMiddleware → check_license()
 Guida completa per generazione, attivazione, trasferimento e rinnovo:
 `docs/technical/LICENSE_ACTIVATION.md`
 
+Le primitive hardware raw non vengono persistite o esportate. Il fingerprint derivato resta un
+identificatore univoco: il valore completo è confinato al canale amministrativo di attivazione;
+log, report e documentazione registrano solo forme mascherate o esiti `MATCH/MISMATCH`.
+
 ---
 
 ## L3 — Anti-Tampering (compiled mode)
@@ -131,7 +136,7 @@ blocco fingerprint, patching.
 |---------------|-----------|--------|
 | Sostituzione `license_public.pem` | Chiave pubblica embedded nel codice | File su disco ignorato in compiled mode |
 | Env `LICENSE_ENFORCEMENT_ENABLED=false` | `is_license_enforcement_enabled()` ritorna sempre `True` in compiled mode | Env var ignorata |
-| PowerShell bloccato / WMI disabilitato | Fingerprint `"unavailable"` → `wrong_machine` | Blocco con messaggio supporto |
+| Primitiva OS indisponibile (PowerShell/WMI o `ioreg`) | Fingerprint `"unavailable"` → `wrong_machine` | Blocco con messaggio supporto |
 | Patching chiave embedded | SHA-256 integrity hash verificato a runtime | Chiave alterata → `unconfigured` → blocco |
 
 ### Detection compiled mode
@@ -233,7 +238,7 @@ Proprieta' intellettuale: codice sorgente (Training Science ~9K LOC, Nutrition S
 | 1. Bundle sanitization (Alembic) | Rimossi migrations dal bundle | Schema DB nascosto |
 | 2. Bundle sanitization (Seed) | Rimossi JSON dal bundle | Dati esercizi non in chiaro |
 | 3. DB encryption | AES-256-GCM su catalog.db + nutrition.db | Cataloghi illeggibili |
-| 4. Native compilation | Nuitka (Python → C → x86-64) | Zero bytecode decompilabile |
+| 4. Native compilation | Nuitka (Python → C → binario nativo x86-64/ARM64) | Zero bytecode decompilabile |
 
 ### Impatto TTC (Time-to-Crack)
 
@@ -311,7 +316,7 @@ vita dell'engine (boot a due fasi).
 - [x] Integrity hash chiave pubblica (L3)
 - [x] AES-256-GCM su catalog.db + nutrition.db (L3b)
 - [x] Bundle sanitization — zero Alembic/seed/pyc (L5/L6)
-- [x] Nuitka native compilation — Python → C → x86-64 (L5/L6)
+- [x] Nuitka native compilation Windows — Python → C → x86-64 (L5/L6); ARM64 macOS resta gate G-MAC
 - [x] 5-phase release pipeline con safety gates (L5)
 - [x] Backend bind 127.0.0.1 in produzione (L1)
 - [x] Swagger/Redoc/OpenAPI disabilitati in compiled mode (L1)

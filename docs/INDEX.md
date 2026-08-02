@@ -56,8 +56,8 @@ vivono in `docs/archive/` e non sono contesto operativo.
 | File | Scopo |
 |------|-------|
 | `MATRICE_ASSI_SEMANTICI.md` | **Matrice assi×regole (ADR-024, vivo):** ogni asse di stato × le 4 regole del metodo + derivati-a-video + composizione protezioni. Un asse senza riga = non governato. Nata G9.7.0 (2026-07-07); a G9.7 chiuso deve essere tutta ✅ o rischio dichiarato |
-| `SECURITY_MODEL.md` | **Reference unico sicurezza (vivo):** threat model + tassonomia attaccanti L0-L4, 6 livelli protezione (L1-L6 + L3b), network hardening, roadmap (cifratura crm.db = gate Tier-1 attivo G1). Gli audit storici e la strategia anti-RE sono in `docs/archive/` |
-| `LICENSE_ACTIVATION.md` | Attivazione licenza, hardware binding, CLI admin |
+| `SECURITY_MODEL.md` | **Reference unico sicurezza (vivo):** threat model + tassonomia attaccanti L0-L4, 6 livelli protezione (L1-L6 + L3b), hardware binding Windows/macOS con primitive raw confinate, network hardening, roadmap (cifratura crm.db = gate Tier-1 attivo G1). Gli audit storici e la strategia anti-RE sono in `docs/archive/` |
+| `LICENSE_ACTIVATION.md` | Attivazione licenza e hardware binding Windows/macOS; fingerprint completo confinato al canale amministrativo |
 | `TUNNEL_ARCHITECTURE.md` | **Sottosistema tunnel (riferimento unico):** design (problema, P1-P10, P2 data-blind), build (migrazione Tailscale→FRP, 4 fasi, gap analysis), operations (setup VPS edge, costi, DR). Consolida i 4 doc storici. |
 | `TUNNEL_SECURITY_BOUNDARY.md` | **Confine di sicurezza + piano "Strada B":** acceptance criteria (confine JWT, rate limiter, apertura selettiva), piano implementazione (lockout, role JWT, guard, test e2e). Stato: approvato, non ancora implementato. |
 | `DEPLOYMENT_PLAN.md` | Piano deploy: PyInstaller/Nuitka, standalone, Inno Setup |
@@ -76,16 +76,16 @@ commit docs del gate (ciclo di vita: `AGENTS.md`).
 
 | File | Stato | Scopo |
 |------|-------|-------|
-| `SPEC_PRE_POC.md` | 🟡 **IN CORSO — D0 CHIUSO; PROSSIMO C0** | Unica regia pre-POC: v1.0.15 security/readiness, application freeze prima della distribuzione, Windows + macOS ARM64 dalla stessa baseline, partner enablement, Wave 0 e anti-scope |
+| `SPEC_PRE_POC.md` | 🟡 **IN CORSO — D0+C0.0 CHIUSI; PROSSIMO C0.1** | Unica regia pre-POC: v1.0.15 security/readiness, canary mirato M1/8 GB/Tahoe 26.5.1, application freeze prima della distribuzione, Windows + macOS ARM64 dalla stessa baseline, partner enablement, Wave 0 e anti-scope |
 | `SPEC_COLLABORAZIONE_CLAUDE_CODEX.md` | 🟡 **APERTA — A1.1 CHIUSO SU WAIVER; SMOKE CLAUDE DIFFERITO; A2+ NON AUTORIZZATI** | Contratto agent-neutral con gate come unità di commit/push, GO iniziale valido per il checkpoint, remoto `0 0` e zero tracked del gate precedente. Codex PASS dopo remediation del drift coda; ACX-D8 autorizza checkpoint e R0.1.5 senza attribuire PASS a Claude, da recuperare appena possibile e prima di A2+ |
-| `SPEC_FINGERPRINT_CROSSPLATFORM.md` | 🟡 **CODICE FATTO E SIGILLATO — resta T2 su hardware macOS reale** | Gate G-MAC.0: refactor Windows output-invariante PASS; chiusura subordinata al cross-check fingerprint/binding sul Mac reale in G-MAC.4 |
+| `SPEC_FINGERPRINT_CROSSPLATFORM.md` | 🟡 **CODICE FATTO E SIGILLATO — C0.2 T2 SOURCE-FREE, BINDING IN G-MAC.4** | Gate G-MAC.0: Windows output-invariante PASS; stabilità T2 senza identificatori nei log sul target esatto, binding finale nel canale amministrativo |
 | `SPEC_FRONTEND_CORE_INTUITIVITA.md` | ⏸️ **HOLD PRE-POC — FE-0/FE-1 CHIUSI** | FE-2..4 e cleanup riaprono soltanto su finding osservato da rehearsal/pilota; nessun lavoro frontend generalista nella v1.0.15 |
 | `SPEC_G9_FINANCIAL_COMMAND_LAYER.md` | 🟢 G9.0→G9.5 CHIUSI · **resta G9.6 (differito)** | Write-model del dominio finanziario (ADR-022): penna unica ✅, ledger rettifiche ✅, TransitionExecutor+FSM ✅, enforcement ✅ + test semantici ✅ (grep ritirati), Hypothesis stateful ✅ (G9.5, 2026-07-05); resta SOLO **G9.6** Money centesimi (differito, gated) |
 | `SPEC_G8.4_TRASPARENZA_FINANZIARIA_FE.md` | 🟡 **F1+F5 ✅ · F2+F6 ✅ · F3 ✅** — resta SOLO apertura G8.5 (DoD §8.5) | Trasparenza finanziaria frontend. Netto SSoT + `saldo_progressivo` + guard FE-no-money-math + split <300 (`5086045`..`1978572`) · disclosure D-1 + colore semantico (`0b80bc8`) · raccomandazione solo-visiva + advisory `azione_consigliata` + a11y + penali nel breakdown (`58c01ea`). D-2 «Saldo» ledger → **ADR-019 Add. IV**; ricerca `archive/RICERCA_COMPETITOR_TRASPARENZA_FINANZIARIA_2026-07-06.md`. Chiusura gated su apertura G8.5 (goodwill, ADR+spec) |
 | `SPEC_G9.7_SEMANTICA_PER_CLASSE.md` | 🟢 **G9.7.0→G9.7.5 CHIUSI** · resta solo runbook orfani reali trainer-driven | Generalizzazione per-classe delle leggi semantiche (ADR-024): matrice assi×regole, mai-silenzio eventi, recupero esplicito, occupazione spiegabile, guard di classe, perimetro transizioni, birth-auditor e Hypothesis estesa. Tutti i gate di codice sono consuntivati; la spec resta nel work-queue esclusivamente per il recupero esplicito 640/641/643/647/649 |
 | `SPEC_VOCABOLARIO_E_CLASSIFICAZIONE_CONTRATTI.md` | ✅ Giro 1 · **⏳ Giro 2 pendente** | Consumo-SSoT stati contratto su tutte le superfici: restano `rinnovi-incassi` + `workspace_engine` off-SSoT + grep-guard |
 | `SPEC_P_PRESTAZIONI_SINGOLE_E_PORTAFOGLIO.md` | ⏸️ **HOLD PRE-POC — P0 CHIUSO; P1–P6 NON AUTORIZZATI** | Decisioni preservate; riapertura solo dopo Wave 0 e nuovo GO. Escluso dalla v1.0.15 |
-| `SPEC_G-MAC_CONSEGNA_MACOS.md` | 🟡 **DELIVERABLE PRE-POC IMPEGNATO** | G-MAC.0 sigillato; portability canary + G-MAC.1 prima dell'application freeze, G-MAC.2–5 dopo, artifact ARM64 firmato/notarizzato dalla stessa baseline v1.0.15 |
+| `SPEC_G-MAC_CONSEGNA_MACOS.md` | 🟡 **C0.0 CHIUSO; PROSSIMO C0.1 RED** | Target M1/8 GB/Tahoe 26.5.1; build `macos-15`, stesso artefatto su `macos-26`, probe source-free sul target; G-MAC.1 prima dell'application freeze, G-MAC.2–5 dopo |
 
 **Backlog (non-spec, censito qui):** G8.2 wallet auto-cross-contratto (in panchina, D2 aperta) + Q9
 conversione singole→pacchetto (casa: G8.2+G8.5, P-D6 blocco P) · wallet
@@ -122,8 +122,9 @@ punto tributarista: policy `pro_sedute` + penale nel recesso (PROVISIONAL) · FD
 ## adr/ — Architecture Decision Records
 
 24 ADR accettati (ADR-001 → ADR-026; ADR-002 rimossa come obsoleta, ADR-012 riservato). Ultimi:
-**ADR-026** (macOS ARM64: portability canary prima del freeze, distribuzione firmata/notarizzata
-dopo; primo target Daniele, capacità indipendente dal prospect) · **ADR-025** (prestazione singola + Portafoglio cliente: fatto economico proprio, insoluto derivato
+**ADR-026 + Addendum I** (macOS ARM64: build evidence separata dalla compatibilità target; canary
+prima del freeze, distribuzione firmata/notarizzata dopo; primo target Daniele, capacità indipendente
+dal prospect) · **ADR-025** (prestazione singola + Portafoglio cliente: fatto economico proprio, insoluto derivato
 fail-loud, compensazione wallet come atto esplicito; blocco P) · **ADR-024** (semantica per-classe:
 matrice assi×regole, fail-loud, perimetro transizioni, birth-auditor; G9.7) · **ADR-023**
 (temporal fence: storia contabilizzata immutabile, varco unico `reopen`; G7.8-ter) · **ADR-022**

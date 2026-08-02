@@ -28,7 +28,13 @@
 - [ ] Preflight candidate `tools/build/build-release.sh`: full pytest, Ruff, Next build e version sync.
 - [ ] Nessun warning nuovo classificato come release-critical.
 - [ ] G1/G2/G4 soddisfatti sulla baseline applicativa; G9–G11 pronti prima del real-data GO.
-- [ ] Portability canary ARM64 prova runtime, dipendenze e percorso G1 prima dell'application freeze.
+- [x] C0.0 contratto target chiuso: MacBook Air M1 2020, ARM64, 8 GB, Tahoe 26.5.1; nessun
+  seriale/foto/UUID conservato nel repository o nei log.
+- [ ] C0.1 RED→GREEN: build canary su `macos-15`, esecuzione dello stesso artefatto su `macos-26`;
+  SQLCipher/G1, Nuitka standalone, frontend darwin-arm64 e dipendenze/hash verificati.
+- [ ] C0.2 source-free sul target esatto: health/core smoke, fingerprint booleano, 30 minuti di
+  stabilità, memoria combinata backend+Node (warning >1,5 GB; FAIL >2 GB/memory pressure), viewport
+  1440×900 e 1024×640. Nessun dato reale o identificatore hardware nel report.
 
 ## 3. Build e packaging candidate
 
@@ -38,6 +44,10 @@
 - [x] Launcher versionato con `LICENSE_ENFORCEMENT_ENABLED=true` e senza avvio del trasporto legacy.
 - [x] Build fail-closed su leak `crm.db`, riferimenti ISS, cataloghi cifrati e nutrition integrity.
 - [x] `lego.exe` v5.2.1 entra nel bundle solo dopo verifica hash/versione/target e licenza MIT.
+- [ ] Bundle macOS: companion `frpc` e `lego` Darwin ARM64 entrano solo dopo verifica
+  versione/SHA-256/licenza; nessun `.exe`, slice x86 o dipendenza Rosetta.
+- [ ] Artifact Mac costruito su `macos-15`, provato invariato su `macos-26` e poi sul target esatto;
+  un PASS solo CI non è accettazione del target.
 - [ ] Costruire `dist/FitManager_Setup_1.0.15.exe` con la pipeline ADR-004.
 - [ ] Ispezionare l'installer finale: `backend/lego.exe` e
   `backend/THIRD_PARTY_LICENSES/lego-MIT.txt` presenti.
@@ -105,6 +115,8 @@ Non consegnare la v1.0.15 finché resta aperto uno di questi punti:
 - [ ] installazione/upgrade reale e licenza negativa/positiva;
 - [ ] restore reale e flussi core manuali;
 - [ ] test FRP esterno sulla candidate con TLS strict, portale 200 e CRM 404;
+- [ ] macOS: C0.1+C0.2 verdi, artifact Developer ID/notarizzato, fingerprint/licenza, upgrade
+  `data/`-safe e zero processi orfani verificati sul target M1/8 GB/Tahoe 26.5.1;
 - [ ] `CHANGELOG.md` con sezione v1.0.15 e note Upgrade;
 - [ ] registrazione dell'artefatto/consegna in `docs/operations/DEPLOYMENTS.md` quando effettuata.
 

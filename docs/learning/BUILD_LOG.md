@@ -4295,3 +4295,38 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
   interprete Windows Store rimosso: pytest non è stato dichiarato eseguito e la sua riparazione è
   prerequisito di C0. Nessun codice applicativo/frontend, schema o dato è cambiato.
 - **Prossimo gate minimo:** C0 scope + portability canary, dopo checkpoint D0 pushato e remoto `0 0`.
+
+---
+
+## 2026-08-02 — C0.0 blinda il target macOS prima del codice
+
+- **Scope docs-first:** gate esclusivamente documentale. Nessun file backend/frontend, workflow CI,
+  script, dipendenza, artifact, dato o macchina cliente è stato modificato.
+- **Target confermato e sanitizzato:** MacBook Air M1 2020, ARM64, 8 GB, macOS Tahoe 26.5.1.
+  L'evidenza del founder è stata usata per il contratto tecnico; foto, seriale e altri identificatori
+  hardware non sono stati copiati nel repository o nei log.
+- **Decisione C0:** la build resta su GitHub `macos-15`; C0.1 esegue lo stesso artefatto anche su
+  `macos-26`; C0.2 lo prova source-free sul target esatto. Un PASS del solo runner resta
+  condizionale perché la label non garantisce la patch `26.5.1`.
+- **Matrice falsificabile:** C0 copre supply chain ARM64, SQLCipher/G1 (round-trip, wrong-key e
+  assenza plaintext), Nuitka standalone, frontend darwin-arm64, health/core smoke, stabilità 30
+  minuti, RSS combinata backend+Node, viewport 1440×900/1024×640, storage e fingerprint booleano.
+  Warning memoria oltre 1,5 GB; FAIL oltre 2 GB, memory pressure o terminazione.
+- **Ground truth dal codice:** `tunnel_config.py` contiene accoppiamenti Windows per entrambi i
+  companion `frpc.exe` e `lego.exe`; G-MAC.1 deve quindi coprire entrambi, con regressione Windows e
+  test Darwin. La pipeline Nuitka attuale resta Windows-specific; il lock frontend contiene le
+  varianti darwin-arm64. La wheel `sqlcipher3 0.6.2` CPython 3.12 ARM64 è disponibile, ma C0 deve
+  ancora pinneare hash e provarne il comportamento: disponibilità non è PASS.
+- **Privacy:** il probe target non emette seriale, `IOPlatformUUID`, output `ioreg` o fingerprint.
+  Il fingerprint completo resta confinato al canale amministrativo di attivazione; i report tecnici
+  registrano solo esiti booleani o `MATCH/MISMATCH`.
+- **Fold-back:** allineati regia pre-POC, SPEC G-MAC e fingerprint, ADR-026 Addendum I, checklist
+  release, INDEX/indice ADR e le SSoT evergreen `LICENSE_ACTIVATION`/`SECURITY_MODEL`. Rimossi prezzi
+  e quote temporali cristallizzati; billing/costi vengono verificati al momento dell'uso.
+- **Verifiche docs/process:** `git diff --check` PASS; lifecycle docs PASS; link Markdown locali dei
+  documenti toccati PASS; ricerca drift prezzi/vecchie assunzioni target senza match nelle fonti
+  operative toccate (il `BUILD_LOG` storico resta append-only); zero file fuori `docs/`. La suite
+  applicativa non è stata eseguita né dichiarata: C0.0 non modifica codice e la venv locale resta il
+  prerequisito già noto del canary runtime.
+- **Prossimo gate minimo:** C0.1 canary RED. L'eventuale remediation G-MAC.1 è un gate codice
+  separato; C0.1 deve tornare GREEN prima del probe C0.2 sul Mac di Daniele.

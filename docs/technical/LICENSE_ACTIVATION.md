@@ -1,12 +1,16 @@
 # Attivazione Licenza — Guida Operativa
 
-Procedura completa per attivare FitManager su un nuovo PC cliente.
+Procedura operativa corrente per attivare FitManager. I passi installer/path qui sotto descrivono la
+distribuzione Windows; il pilota macOS usa il runbook che verrà chiuso in G-MAC.5 e non deve
+improvvisare path o trasferire sorgenti sul Mac cliente.
 
 ## Architettura anti-copia
 
-La licenza e' un JWT RS256 con **hardware binding**: il token contiene un hash SHA-256
-della macchina del trainer (CPU + Motherboard + BIOS). Se copiato su un altro PC, il
-fingerprint non corrisponde e l'app mostra "Computer non autorizzato".
+La licenza e' un JWT RS256 con **hardware binding**: il token contiene un hash SHA-256 derivato da
+primitive hardware platform-specific. Windows usa CPU + motherboard + BIOS; macOS usa
+`IOPlatformUUID` + seriale letti con una sola invocazione `ioreg`. Se copiato su un altro computer,
+il fingerprint non corrisponde e l'app mostra "Computer non autorizzato". Le primitive grezze non
+devono lasciare la macchina né apparire in log, report, ticket o documentazione.
 
 ```
 ┌──────────────────┐     ┌─────────────────┐     ┌──────────────────┐
@@ -15,11 +19,11 @@ fingerprint non corrisponde e l'app mostra "Computer non autorizzato".
 │  - client_id     │     │  1. firma RSA    │     │  - CPU ID        │
 │  - tier          │     │  2. expiry       │     │  - Board serial  │
 │  - machine_id    │     │  3. machine_id   │     │  - BIOS serial   │
-│  - exp           │     │     == fp reale? │     │  (via PowerShell) │
+│  - exp           │     │     == fp reale? │     │  (primitive OS)   │
 └──────────────────┘     └─────────────────┘     └──────────────────┘
 ```
 
-## Flusso trainer (lato cliente)
+## Flusso trainer Windows corrente (lato cliente)
 
 ```
 1. Installa FitManager_Setup.exe
@@ -37,6 +41,11 @@ fingerprint non corrisponde e l'app mostra "Computer non autorizzato".
 8. Copia license.key in C:\Program Files\FitManager\data\
 9. Riavvia FitManager → licenza valida → dashboard
 ```
+
+Per macOS, G-MAC.5 deve fornire il path reale dell'installazione flat e una procedura source-free.
+Fino alla chiusura di quel gate non si riusa alla cieca il path Windows e non si esegue
+`generate_license.py` sul Mac cliente. Il fingerprint completo transita soltanto nel canale
+amministrativo di attivazione; nei report tecnici si registra solo `MATCH/MISMATCH`.
 
 ## Flusso admin (lato sviluppatore)
 
@@ -118,7 +127,7 @@ La vecchia licenza smette automaticamente di funzionare sul vecchio PC
 
 | Componente | Path | Ruolo |
 |-----------|------|-------|
-| Fingerprint engine | `api/services/machine_fingerprint.py` | SHA-256 di CPU+Board+BIOS via PowerShell |
+| Fingerprint engine | `api/services/machine_fingerprint.py` | SHA-256 da WMI/PowerShell su Windows o `ioreg` su macOS; primitive raw solo in memoria |
 | License service | `api/services/license.py` | Validazione JWT + check machine_id |
 | License middleware | `api/main.py` (middleware) | Blocca API se licenza non valida (403) |
 | CLI admin | `tools/admin_scripts/generate_license.py` | Genera keypair, firma licenze, verifica |
@@ -144,7 +153,9 @@ Questi endpoint funzionano anche senza licenza valida (necessari per setup e att
 
 - **Chiave privata** (`~/.fitmanager/private_key.pem`): MAI distribuire, MAI committare
 - **Chiave pubblica**: embedded nel codice Python compilato (non piu' da file in produzione)
-- **Fingerprint**: hash SHA-256, non espone seriali hardware reali
+- **Fingerprint**: non contiene primitive in chiaro, ma resta un identificatore univoco; valore
+  completo solo nel canale amministrativo di attivazione, mai in log/report/docs
+- **Primitive raw**: seriale, UUID e output WMI/`ioreg` non vengono memorizzati o esportati
 - **Backward compat**: licenze senza `machine_id` continuano a funzionare (campo opzionale)
 - **Proxy fix**: `/licenza` rimossa da `AUTH_ONLY_PAGES` — un trainer loggato senza licenza deve poterla vedere
 
@@ -157,7 +168,7 @@ In build PyInstaller (frozen mode), sono attive 4 protezioni aggiuntive:
 | Chiave pubblica embedded nel codice | `license_public.pem` su disco viene ignorato — impedisce sostituzione chiave |
 | Integrity hash SHA-256 | Se la chiave embedded viene alterata nel bytecode, l'hash non corrisponde → blocco |
 | Enforcement sempre ON | `LICENSE_ENFORCEMENT_ENABLED` env var viene ignorata — impossibile disabilitare |
-| Fingerprint fail-closed | Se PowerShell/WMI non disponibile → blocco (non bypass silenzioso) |
+| Fingerprint fail-closed | Se la primitiva di sistema (PowerShell/WMI o `ioreg`) non è disponibile → blocco (non bypass silenzioso) |
 
 In dev mode (non-frozen) il comportamento resta invariato per comodita' sviluppo.
 

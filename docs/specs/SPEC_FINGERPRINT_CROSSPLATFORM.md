@@ -1,6 +1,9 @@
 # SPEC — Machine Fingerprint cross-platform (Windows preservato + ramo macOS)
 
-**Stato:** 🟡 CODICE FATTO E SIGILLATO (2026-07-17) — T1 PASS (hash Windows `695ad621…4315` invariato pre/post refactor, suite 867 verde); il gate CHIUDE con T2 + cross-check binding su hardware macOS reale (G-MAC.4 di `SPEC_G-MAC_CONSEGNA_MACOS.md`, blocco ⏸️ in coda #3 — sequenza founder 2026-07-19)
+**Stato:** 🟡 CODICE FATTO E SIGILLATO (2026-07-17) — T1 PASS (hash Windows mascherato e
+invariato pre/post refactor, suite 867 verde). C0.2 verifica stabilità T2 con probe source-free sul
+target M1/8 GB/Tahoe 26.5.1; il gate chiude definitivamente con cross-check binding in G-MAC.4.
+Sequenza: `SPEC_PRE_POC.md`; contratto C0: `SPEC_G-MAC_CONSEGNA_MACOS.md` §3.
 **Blocco:** G-MAC.0 — Fingerprint feasibility gate
 **Tipo:** Refactor isolato (Windows) + estensione additiva (macOS)
 **File toccato:** `api/services/machine_fingerprint.py` — **UNICO**
@@ -93,8 +96,20 @@ I due identificatori **DEVONO** essere estratti da **una sola** chiamata a `iore
 ## 5. Conseguenza dichiarata (nessuna regressione)
 
 - Le licenze Windows **già firmate restano valide su Windows**: l'hash dei 3 valori WMI è preservato bit-per-bit (AC2).
-- Un Mac produce un hash da primitive diverse — **corretto e inevitabile**. Non esiste "la stessa licenza su Windows e Mac": ogni macchina ha sempre avuto il suo `machine_id`. Daniele riceverà una licenza firmata col **suo** fingerprint Mac (ottenuto eseguendo `generate_license fingerprint` sulla sua macchina, vedi §7).
+- Un Mac produce un hash da primitive diverse — **corretto e inevitabile**. Non esiste "la stessa
+  licenza su Windows e Mac": ogni macchina ha sempre avuto il suo `machine_id`. Il fingerprint del
+  target viene acquisito dall'artefatto installato e trasferito soltanto nel canale amministrativo
+  di attivazione; sul Mac cliente non si esegue il tool Python da sorgente.
 - Nessuna licenza esistente si invalida. Il ramo macOS è puramente additivo.
+
+### Privacy degli identificatori hardware
+
+- `IOPlatformUUID`, seriale e output completo di `ioreg` non lasciano la macchina, non sono loggati
+  e non entrano in repository, report, screenshot o artifact CI.
+- Il probe C0.2 emette solo esiti booleani di disponibilità/stabilità; non emette il fingerprint.
+- Il fingerprint derivato completo è comunque un identificatore univoco: è ammesso solo nel flusso
+  amministrativo di firma licenza, non nei log tecnici o nella documentazione. Nei consuntivi si usa
+  soltanto una forma mascherata o, preferibilmente, `MATCH/MISMATCH`.
 
 ---
 
@@ -122,16 +137,23 @@ Questo blocco **NON deve**:
 3. **PASS** se gli hash coincidono carattere per carattere. **FAIL** altrimenti.
 
 **macOS (T2 — comportamento nuovo):**
-1. Su una macchina macOS, eseguire `python -m tools.admin_scripts.generate_license fingerprint`.
-2. **PASS** se ritorna un SHA-256 di 64 char (non `UNAVAILABLE`) e il valore è **stabile** rieseguendo il comando dopo un riavvio.
-3. Verifica tutto-o-niente: simulare l'indisponibilità di una primitiva (es. mock che ritorna vuoto su una delle due letture) → deve ritornare `UNAVAILABLE`, **mai** un hash parziale.
+1. In C0.1, eseguire i test automatici Darwin e un probe compilato sul runner `macos-26` usando
+   l'artefatto costruito su `macos-15`.
+2. In C0.2, eseguire lo stesso probe source-free sul target M1/8 GB/Tahoe 26.5.1.
+3. **PASS** se il probe riporta `AVAILABLE=true` e `STABLE=true` tra letture previste dal contratto,
+   senza stampare primitive o hash. La stabilità attraverso riavvio viene chiusa in G-MAC.4.
+4. Verifica tutto-o-niente automatica: simulare una primitiva vuota → `UNAVAILABLE`, mai hash
+   parziale.
 
 **Cross-check binding (end-to-end, su Mac):**
-1. Eseguire `fingerprint` su Mac → ottenere `<FP_MAC>`.
-2. Firmare una licenza con `sign --machine-id <FP_MAC> ...`.
-3. `verify` della licenza sulla stessa macchina → deve riportare `Machine ID (corrente): <FP_MAC> -- MATCH`.
+1. L'artefatto installato espone il fingerprint nel canale locale di attivazione; il valore viene
+   trasferito al solo amministratore licenze, fuori da log/report.
+2. Firmare la licenza per quel valore nel sistema amministrativo.
+3. `verify` sulla stessa macchina deve riportare `MATCH`; il consuntivo registra solo l'esito.
 
-> ⚠️ **Vincolo operativo:** T2 e il cross-check richiedono una **macchina macOS reale**. Non sono falsificabili in CI Linux né su Windows. La build/test macOS userà un runner `macos-*` in CI per la compilazione, e la macchina di Daniele (o un Mac cloud orario) per la validazione interattiva. Questo blocco di codice può essere **scritto** senza un Mac, ma **non può essere chiuso** (PASS dichiarato) finché T2 non è verificato su hardware macOS.
+> ⚠️ **Vincolo operativo:** il runner macOS prova il ramo Darwin, ma non certifica la patch esatta
+> del target. T2 richiede C0.2 sul Mac reale; il binding end-to-end chiude in G-MAC.4. Nessun sorgente
+> o toolchain viene copiato sul Mac cliente.
 
 ---
 
