@@ -3,6 +3,9 @@
 **Tipo:** specifica prescrittiva (cosa-deve-essere-vero; silente sul come dove possibile). Bridge Chat→Code.
 **Data:** 2026-06-30 · **Branch:** `FitManager_Studio`
 **Stato:** 🟡 **IN CORSO** — **fetta-RIGORE (F1+F5) ✅ COMPLETATA 2026-07-06**: F1 `5086045` (netto SSoT + `saldo_progressivo` + guard semantico FE-no-money-math) · F5.a `4f2d07c` (page 511→280 + EventsTable condivisa) · F5.b `ab38c90` (dialog 357→192, table 370→166) · F5.c `1978572` (PaymentPlanTab 897→198). Suite full **836**, verifica Playwright LIVE su crm.db reale (lista+dettaglio+Storico «Saldo» per riga+dialog Termina, zero submit). **fetta-UX-presentazionale (F2+F6) ✅ COMPLETATA 2026-07-07** (`0b80bc8`): hero con disclosure D-1 (collassati SOLO Acconto · Da Rateizzare-se-coperto · riga Crediti; segnali e sub-label lordo−rimborsi SEMPRE visibili; Da Rateizzare resta fuori dal toggle quando il piano non copre), righe ledger collassabili alla coda-6 (footer sempre), token decorativi → zinc (F6); AC-G84-5 = 3 render-test vitest (85/85), verifica visiva LIVE. **fetta-comportamentale (F3) ✅ COMPLETATA 2026-07-07** (`58c01ea`): F3.c advisory `azione_consigliata` sul preview (ramo trainer = INCASSA_ORA, mai rinuncia, mai gate) · F3.a badge «Consigliato»+ring dal wire, SOLO visivo (zero pre-selezione) · F3.d gruppo scelta `aria-pressed` + marcatore Check non-cromatico sul selezionato · F3.e `sedute_penali` sync in types/api.ts + riga separata nel breakdown · F3.f era già in codice. AC-G84-4/7/8 = 6 vitest col dialog a hook mockati (91/91); suite backend full **839**. **TUTTE LE FETTE CHIUSE — per la DoD §8 resta SOLO il punto (5): apertura governance G8.5** (ADR goodwill proposed + spec; il workaround amber «Riapri e poi Termina» resta visibile finché G8.5 non shippa). RI-GROUNDATA sul codice vivo 2026-07-06 (§0-bis). **Decisioni founder ratificate 2026-06-30:** D-3 = rimborso *goodwill* del non-svolto (scorporato in **G8.5**, nuovo money-path con ADR proprio) · sequenza = tutte le fette UX-pure ora (F1/F2/F3/F5/F6), F4 governance-first · collocazione = file dedicato (questo). **Decisioni founder ratificate 2026-07-06** (evidenza: `docs/archive/RICERCA_COMPETITOR_TRASPARENZA_FINANZIARIA_2026-07-06.md`, leggi L1-L6): **D-1 EMENDATA** = lista always-visible §F2 confermata + breakdown «lordo − rimborsi» promosso a **sub-label always-visible** (pattern G9.4-bis.3, legge L2) · **D-2** = colonna **«Saldo»** per riga + footer **«Saldo movimenti del contratto»** (mai "netto" sul ledger, legge L1) → **ADR-019 Addendum IV** (D-LEDGER-SALDO).
+**Addendum FT 2026-08-05:** **FT.0 DOCUMENTALE CHIUSO; FT.1–FT.5 APERTI. F0 HOLD SU FT.1–FT.4;
+REAL-DATA GO DEL DATABASE INTERESSATO HOLD SU FT.5.** Consuntivi originali e decisioni D-1/D-2/D-3
+restano invariati.
 **Blocco proposto:** **G8.4** — remediation UX/rigore della *presentazione* finanziaria sul frontend (estende il programma G8 «integrità contabile + trasparenza CRM-grade»). Conseguenza di decisioni già accettate (ADR-016 EROGATO · ADR-017 rinvio-libera-credito · ADR-018 bilateralità · ADR-019 cassa-immutabile/reopen-ricalcola · ADR-020 wallet · ADR-021 INV-RATE); **nessun nuovo ADR**, candidato Addendum ad ADR-019 (relabel ledger) se necessario.
 **Mappa di verità:** `docs/adr/ADR-019-*.md` (D-CASSA-VISIBILE) · `docs/adr/ADR-018-*.md` (D-SCELTA) · `docs/adr/ADR-016-*.md` (EROGATO) · `docs/technical/FINANCIAL_DOMAIN_MODEL.md` · `docs/archive/specs/SPEC_INTEGRITA_CONTABILE_E_WALLET.md` (programma G8) · `frontend/src/lib/contract-status.tsx` (SSoT vocabolario colore/stato) · `api/services/contract_state.py` · `api/routers/contracts.py` · `tools/scripts/check-all.sh`.
 
@@ -224,4 +227,116 @@ G8.4 è finito quando: (1) nessuna superficie mostra un netto ricalcolato diverg
 
 ## Follow-up a implementazione
 
-A chiusura di ogni fetta: `FINANCIAL_DOMAIN_MODEL.md` (nota sui due netti, se F1.c), `api/CLAUDE.md` (pattern «FE legge netto_incassato»), `BUILD_LOG.md` (entry `### 2026-… — G8.4 / trasparenza FE`), `docs/INDEX.md`, `docs/adr/README.md` (se Addendum ADR-019), `tools/scripts/check-all.sh` (grep-guard). Depositare l'audit fondante `docs/operations/AUDIT_FRONTEND_FINANZIARIO_2026-06-30.md`. Aggiornare MEMORY `project_financial_workstream.md` (riga di stato G8.4) tenendo l'index a una riga.
+A chiusura di ogni fetta: `FINANCIAL_DOMAIN_MODEL.md` (nota sui due netti, se F1.c), `api/CLAUDE.md` (pattern «FE legge netto_incassato»), `BUILD_LOG.md` (entry `### 2026-… — G8.4 / trasparenza FE`), `docs/INDEX.md`, `docs/adr/README.md` (se Addendum ADR-019), `tools/scripts/check-all.sh` (grep-guard). L'audit fondante 2026-06-30 è già foldato nei §0/§0-bis: non si crea retroattivamente un documento storico duplicato. Aggiornare MEMORY `project_financial_workstream.md` (riga di stato G8.4) tenendo l'index a una riga.
+
+---
+
+## 9. Addendum FT — Financial Truth dopo conguagli/rimborsi (2026-08-05)
+
+### 9.1 Trigger e baseline verificata
+
+Il founder ha segnalato il grafico Cassa del **24 luglio 2026** dopo lo sviluppo di
+conguagli/rimborsi. L'audit è stato read-only sul `data/crm.db` attivo; lo snapshot di verifica è
+stato creato con online backup SQLite, verificato con `integrity_check` e poi rimosso. Nessun dato
+persistente è stato modificato.
+
+| Evidenza | Valore verificato |
+|---|---:|
+| Inflow reali 24 luglio | 333,25 € |
+| Rimborsi/outflow reali 24 luglio | 537,50 € |
+| Delta saldo reale 24 luglio | −204,25 € |
+| Barre spedite al grafico | Entrate 0,00 € · Uscite 204,25 € |
+| Luglio: inflow lordi / rimborsi / netto | 848,25 € / 537,50 € / 310,75 € |
+| Saldo inizio / fine luglio | 8.932,36 € / 9.243,11 € |
+
+Il saldo e il ledger riconciliano. Non sono emersi tenant mismatch, orfani, duplicati esatti o
+movimenti invalidi; le relazioni contratto/ledger/wallet attive rispettano le ancore. L'unica
+anomalia dati è legacy: rata `#98` del contratto `#29`, pianificata 120,00 €, pagata 110,00 € e
+ancora `PARZIALE`, mentre il contratto ha prezzo 110,00 € ed è `SALDATO`/chiuso.
+
+Incident canonico: `docs/incidents/INC-2026-08-05-grafico-cassa-netting-rimborsi.md`.
+
+### 9.2 Finding classificati
+
+| ID | Sev. | Finding | Root cause | Gate / interlock |
+|---|---|---|---|---|
+| **FT-F1** | **P1** | il grafico giornaliero cancella i due flussi reali e mostra soltanto il delta sotto il verso opposto | `/stats` applica netting per classe e, quando il bucket diventa negativo, lo ribalta nell'altra serie | FT.1 · blocca F0 |
+| **FT-F2** | **P1 latente** | Andamento può mostrare empty con dati reali se cash flow e venduto non sono positivi | `hasData = tot_cash_flow_reale > 0 || tot_venduto > 0` usa il segno del totale come proxy di esistenza | FT.2 · blocca F0 |
+| **FT-F3** | **P2** | i conguagli contrattuali confluiscono in `incassi_rate` | nel taglio acconti/rate ogni inflow contrattuale non-acconto cade nell'`else` “rate” | FT.2 · blocca F0 |
+| **FT-F4** | **P2** | invalidazioni non simmetriche possono lasciare forecast/trend stale dopo mutazioni finanziarie | set di query duplicati e divergenti tra hook contratto, rate, movimenti e ricorrenze | FT.4 · blocca F0 |
+| **FT-F5** | **P2** | audit timeline marca ogni evento contract/rate come `ENTRATA`, incluse transizioni non-cassa o inverse | `flow_hint` è hardcoded per tipo entità invece di derivare dal fatto auditato | FT.3 · blocca F0 |
+| **FT-F6** | **P2 dati** | rata legacy #98 diverge dal contratto già saldato/chiuso | storico precedente ai guard correnti; il residuo contratto è corretto, la proiezione rata no | FT.5 · blocca Real-data GO del DB interessato |
+
+### 9.3 Decisioni già governate dagli ADR esistenti
+
+1. **D-FT-CASH-DIRECTION:** il grafico giornaliero parla la lingua del saldo e mostra i flussi di
+   cassa per verso fisico. Sul 24 luglio deve conservare sia `333,25 €` in entrata sia `537,50 €` in
+   uscita; il saldo varia di `−204,25 €`. Nessun netting incrociato tra serie. Il KPI economico
+   mensile può restare netto, ma espone già lordo e rimborsi e non viene rinominato implicitamente.
+2. **D-FT-EXISTENCE:** empty/loading/error dipendono dall'esistenza strutturale della serie, mai dal
+   fatto che un totale netto sia positivo. Una serie con soli rimborsi, totale zero o cash flow
+   negativo è dato reale, non empty state.
+3. **D-FT-CONGUAGLIO:** `INCASSO_CONGUAGLIO_CONTRATTO` è un bucket esplicito; non è una rata.
+   `acconti + rate + conguagli == incassi_contratti` per ogni periodo e sul totale. Categoria
+   contrattuale nuova/non trattata fallisce rumorosamente nel test di esaustività.
+4. **D-FT-AUDIT:** `flow_hint` descrive un flusso di cassa realmente provato. È `None` per transizioni
+   lifecycle/non-cassa; non viene inferito soltanto da `entity_type`.
+5. **D-FT-CACHE:** le mutation che possono cambiare un read-model finanziario usano una matrice/helper
+   condivisa e testata. Operazioni inverse invalidano lo stesso insieme; nessun hook mantiene una
+   lista privata divergente.
+6. **D-FT-DATA:** FT.0 non autorizza la modifica della rata #98. FT.5 richiede scelta business
+   esplicita, backup, dry-run, script/runbook per-record, audit e rollback; vietata la bonifica bulk.
+
+Queste decisioni applicano ADR-019/021/022 e le SSoT finanziarie esistenti. Nessuna nuova legge di
+dominio è introdotta; se il RED dimostra il contrario, il code gate si ferma prima del fix.
+
+### 9.4 Gate atomici e acceptance criteria
+
+| Gate | Scope minimo | RED obbligatorio | Acceptance |
+|---|---|---|---|
+| **FT.0** | questo Addendum, regia pre-POC, incident/postmortem, INDEX/BUILD_LOG | n/a: gate docs-only; la baseline reale è già la prova del difetto | finding, interlock, rollback e verifiche ratificati; checkpoint remoto pulito |
+| **FT.1** | read-model `/movements/stats`, schema/type sync e grafico Cassa | fixture con inflow e rimborso nello stesso giorno riproduce `0/204,25` | entrambe le barre lorde restano visibili; `saldo[d]−saldo[d−1] == entrate[d]−uscite[d]`; totali mensili economici invariati; test FE del tooltip/serie |
+| **FT.2** | financial trend + Andamento + tipo conguaglio | serie solo-rimborsi/negativa produce oggi empty; conguaglio finisce oggi in rate | serie reale mai empty per segno; bucket conguagli esplicito; riconciliazione per periodo/totale; schema e copy coerenti |
+| **FT.3** | audit timeline `flow_hint` | terminate/reopen o update rata non-cassa risultano oggi `ENTRATA` | hint derivato dal fatto o `None`; filtri non attribuiscono flussi inesistenti; test lifecycle/audit multi-tenant |
+| **FT.4** | invalidazione read-model finanziari | test matrice individua almeno i path oggi privi di `forecast`/`financial-trend` | helper/matrice unica; symmetry test su azioni inverse; niente refetch globale o refactor fuori scope |
+| **FT.5** | sola rata #98/contratto #29 sul DB interessato | dry-run riproduce la divergenza senza scritture | GO founder sulla verità business; backup verificato; mutazione per-record auditata; invarianti, SQLite/FK e post-snapshot verdi; rollback provato |
+
+### 9.5 Contratto di verifica dei code gate
+
+- riparazione della venv Python prima di FT.1: pytest backend non può essere sostituito da Ruff;
+- RED prima del GREEN quando indicato in tabella, con commit/checkpoint soltanto a gate concluso;
+- test backend mirati (`test_read_model_cassa`, `test_financial_trend`, `test_cash_audit_log`,
+  lifecycle e invarianti) più suite completa realmente eseguita;
+- test frontend mirati, suite Vitest completa, lint dei file toccati e `next build`;
+- `ruff check api/`, `git diff --check`, type sync e nessun file fuori scope;
+- verifier avversariale sul money/read path: I5, I6/INV-RATE, wallet, tenant ownership, orfani,
+  duplicati e uguaglianza saldo/ledger. I code gate FT.1–FT.4 non mutano il DB reale;
+- verifica visuale della Cassa al 24 luglio quando il browser/runtime locale è disponibile. Se non è
+  eseguibile, il gate resta non verificato sul requisito visuale e non viene chiamato done.
+
+### 9.6 Scheduling, rollback e stop
+
+FT non apre un branch o una roadmap parallela. `SPEC_PRE_POC.md` resta la regia; questa SPEC è la
+casa tecnica. C0.1 resta il prossimo gate esecutivo. FT.1–FT.4 entrano dopo C0.2/A0 e dopo le
+fondazioni S1 G1/G2/G4, un gate alla volta, prima di F0. Se un gate S1 tocca gli stessi file, la
+precedenza viene risolta prima di aprire lo stage: mai modifiche concorrenti.
+
+Ogni code gate è revertibile con il proprio commit. FT.5 usa backup/restore, non il revert Git, per
+la mutazione dati. Stop se cambia la semantica economica, se una verifica contabile critica non è
+eseguibile, se il diff richiede una nuova policy o se emerge una seconda anomalia dati non
+riconducibile alla stessa causa.
+
+### 9.7 Definition of Done FT.0
+
+**Consuntivo FT.0 — ✅ CHIUSO 2026-08-05:** regia, casa tecnica, incident e prevenzione allineati;
+15/15 asserzioni semantiche/code-grounding PASS; lifecycle 10/10, riferimenti documentali, Ruff
+`api/` e `git diff --check` PASS. Nessun codice, schema o dato modificato; suite applicative non
+eseguite né dichiarate. Il checkpoint Git del docs-only è riportato nell'handoff, senza auto-citarsi.
+
+- [x] baseline numerica del 24 luglio e verdetto di integrità depositati;
+- [x] finding FT-F1–FT-F6 classificati con ownership e interlock;
+- [x] gate FT.1–FT.5 e relativi RED/acceptance definiti;
+- [x] nessuna ADR nuova e nessuna mutazione di codice/dati;
+- [x] coerenza cross-doc, lifecycle, link e diff hygiene;
+- [x] fold-back in INDEX/BUILD_LOG; commit/push e remoto `0 0` riportati nell'handoff del gate
+  docs-only, senza auto-citazione o commit vuoto.

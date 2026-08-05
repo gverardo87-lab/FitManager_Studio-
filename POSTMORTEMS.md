@@ -3,6 +3,28 @@
 Questa non e' una fonte di regole nuove.
 Raccoglie solo lezioni concrete da errori gia' emersi, per evitare che la memoria orale torni a guidare il progetto.
 
+## 2026-08-05 - Grafico Cassa giornaliero: delta corretto, flussi lordi falsificati (P1)
+
+Problema:
+- il 24 luglio aveva 333,25 € di inflow e 537,50 € di rimborsi, delta saldo −204,25 €; il grafico
+  mostrava Entrate 0 e Uscite 204,25 perché `/movements/stats` nettava i contra-ricavi e ribaltava il
+  bucket negativo nell'altra serie
+- ledger, saldo e ancore contratto/wallet erano corretti: il difetto era di rappresentazione, ma
+  rendeva falso il significato esplicito “Entrate e uscite per giorno”
+- la remediation dell'incident 2026-07-03 aveva coperto il KPI mensile lordo/rimborsi, non ogni
+  timeslice né le superfici adiacenti; l'audit ha trovato anche empty state basato sul segno,
+  conguagli nel bucket rate, invalidazioni cache divergenti e hint audit hardcoded
+
+Lezioni:
+- conservare il delta non equivale a conservare i fatti: un grafico di cassa bidirezionale deve
+  mantenere inflow e outflow lordi separati e riconciliare entrambi con la variazione saldo
+- ogni fix di trasparenza finanziaria richiede un canary sulla minima slice temporale esposta, non
+  soltanto sul totale mensile
+- esistenza del dato e segno del netto sono assi diversi: zero o negativo non significa empty
+- tassonomie e invalidazioni condividono la stessa legge strutturale: insieme chiuso, interprete
+  unico, totalità fail-loud e test gemello di esaustività/simmetria
+- report completo: `docs/incidents/INC-2026-08-05-grafico-cassa-netting-rimborsi.md`
+
 ## 2026-07-03 - Falso allarme: entrate negative in Cassa percepite come bug del rimborso (P2 - trasparenza)
 
 Problema:

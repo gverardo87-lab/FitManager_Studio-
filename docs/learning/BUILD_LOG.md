@@ -4377,3 +4377,30 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
   applicativa eseguita o dichiarata: zero codice, schema o dato modificato.
 - **Prossimo gate minimo:** FT.0 docs-only registra il remediation track Financial Truth nella
   regia pre-POC senza sostituire C0.1 come prossimo gate esecutivo.
+
+---
+
+## 2026-08-05 — FT.0 integra Financial Truth nella regia pre-POC
+
+- **Trigger:** audit founder del grafico Cassa del 24 luglio dopo conguagli/rimborsi. L'asse DENARO
+  riconcilia, ma il read-model giornaliero trasforma 333,25 € di inflow e 537,50 € di rimborsi in
+  Entrate 0 e Uscite 204,25 €, conservando soltanto il delta −204,25 €.
+- **Classificazione:** FT-F1 P1 attivo (grafico), FT-F2 P1 latente (empty su netto non positivo),
+  FT-F3–FT-F5 P2 (conguagli nel bucket rate, invalidazioni divergenti, hint audit hardcoded) e
+  FT-F6 P2 dati (rata legacy #98 / contratto #29).
+- **Scheduling:** nessuna roadmap o branch parallelo. C0.1 resta il prossimo gate esecutivo;
+  FT.1–FT.4 entrano dopo C0.2/A0 e le fondazioni G1/G2/G4, un gate alla volta, e bloccano F0. FT.5
+  è una bonifica dati separata con backup, dry-run e GO specifico; blocca il Real-data GO del DB.
+- **Contratto tecnico:** grafico per verso fisico senza netting tra serie; esistenza dato separata
+  dal segno; conguagli bucket esplicito ed esaustivo; audit flow derivato dal fatto; matrice/helper
+  unico per invalidazioni finanziarie. Nessuna nuova ADR: applicazione di ADR-019/021/022.
+- **Incident e prevenzione:** creato `INC-2026-08-05-grafico-cassa-netting-rimborsi.md` e aggiunta la
+  lezione a `POSTMORTEMS.md`. Il riferimento fantasma all'audit FE 2026-06-30 è stato rimosso:
+  l'evidenza storica è già foldata in G8.4 §0/§0-bis, senza nuovo documento duplicato.
+- **Verifiche docs/process:** 15/15 asserzioni semantiche/code-grounding PASS; lifecycle PASS (10/10
+  SPEC vive indicizzate, zero file vietati in `docs/technical/`, zero SPEC implementate ancora
+  vive); riferimenti documentali PASS; Ruff `api/` PASS; `git diff --check` PASS. Nessuna suite
+  applicativa eseguita o dichiarata: FT.0 non modifica codice, schema o dati.
+- **Precondizione code gate:** riparare la venv Python; nessun FT.1–FT.4 può essere chiamato verde
+  senza pytest reale, suite frontend/build proporzionati e verifier contabile avversariale.
+- **Prossimo gate minimo:** C0.1 canary RED. FT.1 non è ancora aperto.

@@ -1,7 +1,7 @@
 # SPEC — Strategia e readiness pre-POC
 
-**Stato:** 🟡 IN CORSO — D0 e C0.0 contratto target/boundary licenza chiusi; prossimo gate C0.1
-canary RED
+**Stato:** 🟡 IN CORSO — D0, C0.0 e FT.0 documentale chiusi; prossimo gate C0.1 canary RED;
+F0 in HOLD finché FT.1–FT.4 non sono chiusi
 **Data di ratifica founder:** 2026-07-31
 **Branch:** `FitManager_Studio`
 **Tipo:** regia operativa pre-POC; non duplica le specifiche tecniche sottostanti
@@ -61,6 +61,7 @@ La `v1.0.15` è la release di sicurezza e readiness pre-POC. Comprende:
 - backup/restore e recovery coerenti con G1;
 - minimi adattamenti runtime necessari a non congelare una soluzione Windows-only;
 - fix release-critical dimostrati da test o rehearsal.
+- remediation Financial Truth FT.1–FT.4, dimostrata dall'audit del grafico Cassa del 24 luglio.
 
 Non comprende P, nuove macro-feature, cleanup generalisti, refactor monolitici o framework frontend
 non richiesti da evidenza utente.
@@ -129,6 +130,10 @@ preservare le decisioni già ratificate; non appartiene alla `v1.0.15`.
 FE-2–FE-4 e cleanup estesi restano in HOLD. Un fix frontend entra pre-POC soltanto se un test, un
 rehearsal o un utente pilota dimostra che blocca o falsifica demo, onboarding o workflow core.
 
+Il grafico giornaliero Cassa del 24 luglio soddisfa il criterio: rappresenta come `0` Entrate e
+`204,25 €` Uscite una giornata con `333,25 €` di inflow e `537,50 €` di rimborsi. Non è redesign:
+è una remediation di verità finanziaria osservata su dati reali, con ledger e saldo corretti.
+
 ### D8 — Alessio è un abilitatore, non una dipendenza
 
 Alessio apre porte, qualifica candidati e porta linguaggio di mercato. Fino al readiness gate le demo
@@ -145,11 +150,29 @@ solo dopo un checkpoint che confermi: security gate intatto, nessun P0/P1 aperto
 riuscito, carico di supporto sostenibile e misurazione utilizzabile. I risultati delle coorti non
 vengono aggregati ignorando date o condizioni diverse.
 
+### D10 — Financial Truth è release-critical, non un filone parallelo
+
+L'audit read-only del 2026-08-05 sul 24 luglio ha escluso corruzione dell'asse DENARO ma ha provato
+un P1 attivo, un P1 latente e quattro gap P2 correlati dopo lo sviluppo conguagli/rimborsi. La casa
+tecnica è l'Addendum FT in `SPEC_G8.4_TRASPARENZA_FINANZIARIA_FE.md`; l'incident è
+`INC-2026-08-05-grafico-cassa-netting-rimborsi.md`. Non nasce una roadmap concorrente né una nuova
+ADR: le leggi esistenti su cassa bidirezionale, nessun netto nudo, auditabilità e determinismo sono
+sufficienti.
+
+- FT.0 è il gate docs-only che registra baseline, finding, canary e interlock;
+- C0.1 resta il prossimo gate esecutivo: il finding non corrompe dati e non invalida il canary Mac;
+- FT.1–FT.4 aprono in gate atomici dopo C0.2/A0 e dopo le fondazioni S1 G1/G2/G4, senza lavoro
+  concorrente sugli stessi file, e devono chiudere prima di F0;
+- FT.5 è una bonifica dati separata: richiede backup, dry-run, GO founder specifico e verifier; fino
+  alla sua chiusura il database interessato non ottiene il Real-data GO;
+- nessun code gate finanziario può essere dichiarato verde finché il runner pytest locale non è
+  nuovamente eseguibile.
+
 ## 4. Classificazione stabile delle priorità
 
 | Classe | Elementi | Regola |
 |---|---|---|
-| Fondamentali | G1–G4, G9–G11, candidate, backup/restore, onboarding, misurazione, macOS ARM64 consegnabile | Senza questi la POC non parte o non è interpretabile |
+| Fondamentali | G1–G4, G9–G11, Financial Truth FT.1–FT.4, candidate, backup/restore, onboarding, misurazione, macOS ARM64 consegnabile | Senza questi la POC non parte o non è interpretabile |
 | Abilitatori | Alessio, recruitment, product truth, materiali e rehearsal | Accelerano; esiste fallback founder-led |
 | Target di accettazione | Chiara/non-dev Windows, Daniele macOS | Verificano gli artefatti; non governano la roadmap |
 | Upside | Virgin, scala commerciale Mac, category creation | Non entra nel critical path senza evidenza |
@@ -168,7 +191,7 @@ Le scadenze sono deadline di evidenza e decisione, mai autorizzazioni a saltare 
 | 2026-08-04 | **C0 — Scope + portability canary** | C0.0 contratto target e boundary licenza chiusi; C0.1 build `macos-15` + esecuzione medesimo artefatto `macos-26`; C0.2 probe source-free su M1/8 GB/Tahoe 26.5.1; SQLCipher/G1, Nuitka, frontend ARM64, auth exempt, memoria e display verificati senza packaging cliente né claim sul CRM protetto |
 | 2026-08-07 | **A0 — Product truth** | context agent-neutral, materiale raw di Alessio classificato e claims matrix approvata; nessun claim esterno non sostenuto |
 | 2026-08-21 | **S1 — Core/security** | G1/G2/G4 verdi; backup/restore coerenti; G9–G11 pronti per il real-data gate |
-| 2026-08-24 | **F0 — Application code freeze** | suite completa Windows + runtime Mac CI; nessuna feature o finding release-critical aperto |
+| 2026-08-24 | **F0 — Application code freeze** | suite completa Windows + runtime Mac CI; FT.1–FT.4 chiusi; nessuna feature o finding release-critical aperto |
 | 2026-08-28 | **A1 — Alessio readiness** | uso hands-on dei workflow core, truth sheet, demo script e rehearsal founder-partner superati |
 | 2026-09-04 | **W0 — Protocollo Wave 0** | massimo tre candidati qualificati; ipotesi, metriche, calendario, support boundary e criteri stop scritti |
 | 2026-09-08 | **D1 — Distribution engineering** | installer Windows e artifact Mac ARM64 firmato/notarizzato; clean install, upgrade, licenza, process lifecycle e data preservation verificati |
@@ -188,16 +211,22 @@ in calendario, ma non sono «zero ore founder» e non autorizzano lavoro concorr
 
 1. D0 docs-first e checkpoint remoto pulito;
 2. C0.0 contratto target docs-first e checkpoint remoto pulito;
-3. C0.1 canary RED;
-4. G-MAC.1 remediation runtime dimostrata dal canary, in gate codice separato, e re-run C0.1 GREEN;
-5. C0.2 probe source-free sul target esatto;
-6. A0 product truth, docs-only e checkpoint remoto pulito;
-7. S1 in gate tecnici atomici secondo ADR-013 e Security Gate;
-8. F0 application freeze;
-9. D1 distribuzione Windows e macOS in gate separati ma sulla stessa baseline applicativa;
-10. R1 build/seal/tag;
-11. M0 consegne e registrazione;
-12. W1 Wave 0.
+3. FT.0 Financial Truth docs-only e checkpoint remoto pulito;
+4. C0.1 canary RED;
+5. G-MAC.1 remediation runtime dimostrata dal canary, in gate codice separato, e re-run C0.1 GREEN;
+6. C0.2 probe source-free sul target esatto;
+7. A0 product truth, docs-only e checkpoint remoto pulito;
+8. S1 in gate tecnici atomici secondo ADR-013 e Security Gate; dopo G1/G2/G4 e prima di F0 si
+   inseriscono FT.1–FT.4, ciascuno con checkpoint proprio;
+9. F0 application freeze;
+10. D1 distribuzione Windows e macOS in gate separati ma sulla stessa baseline applicativa;
+11. R1 build/seal/tag;
+12. M0 consegne e registrazione;
+13. W1 Wave 0.
+
+FT.5 non è un gate di codice e non viene assorbito in FT.1–FT.4: è una manutenzione controllata del
+database interessato, dopo i relativi checkpoint e prima del suo Real-data GO, con autorizzazione
+specifica alla mutazione.
 
 La pratica di Alessio sul prodotto, il suo materiale raw, l'enrollment Apple, il recruiting e gli
 appuntamenti possono avanzare fuori dal codice. Ogni modifica repository relativa viene però chiusa
@@ -235,6 +264,8 @@ la verifica sulla patch esatta del primo target.
 - G9–G11 disponibili;
 - candidate installata e verificata;
 - backup/recovery provati;
+- FT.1–FT.4 chiusi e nessun P1/P2 Financial Truth aperto sul codice candidato;
+- FT.5 chiuso per ogni database data-bearing interessato da un'anomalia censita;
 - nessuna eccezione implicita o promessa commerciale usata come waiver.
 
 ## 8. Anti-scope fino alla Wave 0
@@ -269,6 +300,8 @@ strategica: si diagnostica, si corregge o si riporta il milestone dipendente.
 - release: `docs/operations/RELEASE_CHECKLIST.md` + ADR-004;
 - macOS: `docs/specs/SPEC_G-MAC_CONSEGNA_MACOS.md` + ADR-026;
 - frontend: `docs/specs/SPEC_FRONTEND_CORE_INTUITIVITA.md`;
+- verità finanziaria: `docs/specs/SPEC_G8.4_TRASPARENZA_FINANZIARIA_FE.md` Addendum FT +
+  `docs/incidents/INC-2026-08-05-grafico-cassa-netting-rimborsi.md`;
 - blocco P in HOLD: `docs/specs/SPEC_P_PRESTAZIONI_SINGOLE_E_PORTAFOGLIO.md`;
 - verità prodotto: `MANIFESTO.md` e, dopo il gate dedicato, `.agents/product-marketing-context.md`;
 - storia di sviluppo: `docs/learning/BUILD_LOG.md`.
