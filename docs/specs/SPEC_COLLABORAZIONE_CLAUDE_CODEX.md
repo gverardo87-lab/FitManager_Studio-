@@ -1,11 +1,11 @@
 # SPEC — Collaborazione agent-neutral Claude Code + Codex
 
-**Stato:** 🟡 APERTA — A0+A1+A1.1 CHIUSI; SMOKE CLAUDE A1.1 DIFFERITO; A2+ NON AUTORIZZATI
+**Stato:** 🟡 APERTA — A0+A1+A1.1+A1.2 CHIUSI; SMOKE CLAUDE A1.1 DIFFERITO; A2+ NON AUTORIZZATI
 **Data:** 2026-07-19
-**Ratifica founder:** ACX-D1..D6 ratificate integralmente il 2026-07-19; ACX-D7+D8 ratificate il 2026-07-24
+**Ratifica founder:** ACX-D1..D6 ratificate integralmente il 2026-07-19; ACX-D7+D8 ratificate il 2026-07-24; ACX-D9 ratificata il 2026-08-05
 **Tipo:** governance di sviluppo e compatibilità tra agenti; nessuna policy di prodotto
 **Autorità ereditata:** `AGENTS.md` → `MANIFESTO.md` → `LAUNCH_SCOPE.md` → documenti di layer
-**Sequenza prodotto:** fuori dalla coda R0 → blocco P → candidate v1.0.15 → blocco G-MAC; non la modifica e non la blocca
+**Sequenza prodotto:** fuori dalla coda unica governata da `SPEC_PRE_POC.md`; non la modifica e non la blocca
 
 ---
 
@@ -205,6 +205,43 @@ differito come follow-up obbligatorio. Il mancato verdetto non è registrato com
   al controllo finale; il founder ne ha confermato la rimozione. Variazione attribuita e stop
   condition chiusa; il file non è mai entrato nello stage.
 
+### A1.2 — Staging preciso, commit atomico e fold-back
+
+**Trigger founder 2026-08-05:** rendere esplicita, anche a scopo didattico, la differenza tra la
+selezione meccanica dello staging, l'atomicità semantica del commit e il fold-back documentale.
+
+**Decisione ACX-D9 ratificata:** i tre concetti sono complementari, non intercambiabili.
+
+| Concetto | Responsabilità | Vantaggio | Rischio da prevenire |
+|---|---|---|---|
+| `git add` | prepara l'indice scegliendo file o hunk destinati al prossimo commit | controllo chirurgico dello scope e protezione delle modifiche estranee | stage troppo ampio (`git add .`) o incompleto; lo staging preciso, da solo, non rende atomico il commit |
+| commit atomico | sigilla una sola unità semantica completa, verificata e pubblicabile per il proprio scope | review, revert, bisect e handoff comprensibili | mega-commit con lavori indipendenti oppure micro-commit che lasciano il gate incoerente/non verificabile |
+| fold-back | riallinea SPEC, SSoT, INDEX e log realmente richiesti con l'esito del gate | codice e documentazione descrivono lo stesso sistema | documentazione cerimoniale, anticipazione di lavoro futuro o consuntivo separato dal cambiamento che deve spiegare |
+
+La sequenza resta quella già vincolante in `AGENTS.md` e nel runbook condiviso:
+
+```text
+implementazione → verifica → fold-back → diff check → stage dei soli path attribuiti
+               → review staged → commit atomico → push → checkpoint pulito
+```
+
+Il fold-back completa normalmente lo stesso commit atomico del gate. L'unica eccezione già prevista
+è il consuntivo che deve citare l'hash esatto dell'implementazione: due commit coesi nello stesso
+gate, consecutivi e pushati insieme, senza aprire altro lavoro tra i due. Un docs-only non crea un
+commit vuoto per auto-citare il proprio hash.
+
+**Scope A1.2:** questa SPEC, approfondimento didattico in `LEARNING_GIT_VERSIONAMENTO.md`, riga di
+stato in `docs/INDEX.md` e append a `BUILD_LOG.md`. Nessuna modifica a `AGENTS.md`, runbook o adapter:
+ACX-D9 chiarisce la policy esistente e non cambia ordine, comandi obbligatori o branch strategy.
+
+**Pass:** coerenza letterale e semantica con `AGENTS.md` §2/§11 e runbook §5.4/§5.5; lifecycle,
+link e diff hygiene verdi; zero file applicativi; checkpoint docs atomico prima di FT.0.
+
+**Consuntivo A1.2 — ✅ CHIUSO 2026-08-05:** ACX-D9 depositata senza cambiare la policy Git; 8/8
+asserzioni di coerenza con nucleo/runbook PASS; lifecycle PASS (10/10 SPEC vive indicizzate, zero
+SPEC vietate in `docs/technical/`, zero SPEC implementate rimaste vive); link locali dei documenti
+toccati PASS; Ruff `api/` e `git diff --check` PASS. Nessun codice, dato, branch o adapter toccato.
+
 ### A2 — Inventario e riduzione controllata delle duplicazioni
 
 Costruire una matrice riga-per-riga delle responsabilità duplicate tra `AGENTS.md`, `CLAUDE.md` e i
@@ -213,7 +250,7 @@ canonica e il link dall'entry point Claude.
 
 **Pass:** nessuna informazione operativa diventa meno raggiungibile; Contract Smoke pre/post
 identico; rollback del singolo commit sufficiente. Da pianificare separatamente dalla coda prodotto
-R0 → P → candidate v1.0.15 → G-MAC.
+vigente in `SPEC_PRE_POC.md`.
 
 ### A3 — Hook portabili e fail-loud
 
@@ -266,7 +303,7 @@ regola: si corregge la fonte canonica o l'adapter che non la raggiunge.
 
 ## 7. Guardrail pre-lancio
 
-- Questa migrazione non entra nella sequenza prodotto R0 → P → candidate v1.0.15 → G-MAC.
+- Questa migrazione non entra nella sequenza prodotto vigente in `SPEC_PRE_POC.md`.
 - A0 e A1 sono docs-only; i gate A2-A6 hanno scheduling e commit separati.
 - Mai combinare una migrazione di governance con un fix money-path, schema DB, release bump o build.
 - Nessun gate può degradare l'operatività Claude Code già presente.
@@ -299,6 +336,7 @@ utente. Il gate si ferma prima di ulteriori modifiche se:
 | ACX-D6 | Learning proposto dagli agenti, promosso a regola solo con review umana | **✅ RATIFICATA** |
 | ACX-D7 | Gate unità di commit/push; GO iniziale autorizza il checkpoint; nessun gate successivo prima dell'allineamento remoto e tracked-clean | **✅ RATIFICATA 2026-07-24** |
 | ACX-D8 | Waiver one-shot: A1.1 può essere pubblicato e R0.1.5 aperto con smoke Codex PASS e smoke Claude differito per quota; recupero Claude obbligatorio appena possibile, senza attribuirgli PASS | **✅ RATIFICATA 2026-07-24** |
+| ACX-D9 | `git add` governa la selezione; l'atomicità appartiene al significato completo del commit; il fold-back documentale completa normalmente lo stesso gate/commit | **✅ RATIFICATA 2026-08-05** |
 
 ## 10. Definition of Done A0
 
@@ -309,9 +347,9 @@ utente. Il gate si ferma prima di ulteriori modifiche se:
 - [x] Nessuna modifica operativa a Claude Code o Codex.
 - [x] ACX-D1..D6 ratificate dal founder il 2026-07-19.
 
-**Prossimo gate della migrazione:** A2, **non autorizzato** e separato dalla coda prodotto (alla
-chiusura A0 era v1.0.14; oggi è R0 → P → candidate v1.0.15 → G-MAC). La chiusura di A1 riporta il
-lavoro alla coda prodotto ratificata.
+**Prossimo gate della migrazione:** A2, **non autorizzato** e separato dalla coda prodotto. Alla
+chiusura A0 la release corrente era v1.0.14; lo scheduling attuale vive esclusivamente in
+`SPEC_PRE_POC.md`. La chiusura di A1 ha riportato il lavoro alla coda prodotto ratificata.
 
 ## 11. Definition of Done A1
 
@@ -326,9 +364,8 @@ lavoro alla coda prodotto ratificata.
 - [x] Finding residui dichiarati, non corretti fuori scope.
 
 **Condizione per nuovo codice congiunto Claude/Codex: SODDISFATTA.** Alla chiusura A1 la coda allora
-vigente tornava autorevole; questa è una fotografia storica del 2026-07-19, superata dall'interlock
-R0 ratificato il 2026-07-24. A2-A6 restano chiusi e richiedono un GO separato dalla coda prodotto
-corrente R0 → P → candidate v1.0.15 → G-MAC.
+vigente tornava autorevole; questa è una fotografia storica del 2026-07-19. A2-A6 restano chiusi e
+richiedono un GO separato dalla coda prodotto corrente in `SPEC_PRE_POC.md`.
 
 ## 12. Definition of Done A1.1
 
@@ -343,5 +380,20 @@ corrente R0 → P → candidate v1.0.15 → G-MAC.
 - [x] Cross-doc review, lifecycle/link/diff hygiene e Ruff completati.
 - [x] Commit e push docs autorizzati nel checkpoint di chiusura A1.1.
 
-**Prossimo gate prodotto:** remediation TLS R0.1.5, apribile soltanto dopo il checkpoint pubblicato di
-A1.1. A2-A6 restano non autorizzati e comunque bloccati fino al recupero dello smoke Claude.
+**Prossimo gate prodotto alla chiusura A1.1:** remediation TLS R0.1.5, allora apribile soltanto dopo
+il checkpoint pubblicato di A1.1. È un consuntivo storico: lo scheduling corrente vive in
+`SPEC_PRE_POC.md`. A2-A6 restano non autorizzati e comunque bloccati fino al recupero dello smoke
+Claude.
+
+## 13. Definition of Done A1.2
+
+- [x] Differenza staging/atomicità/fold-back formulata senza introdurre una nuova policy Git.
+- [x] Pro, contro e failure mode resi espliciti nella SPEC e nella casa didattica Git.
+- [x] Cross-doc review contro `AGENTS.md` e runbook condiviso.
+- [x] Lifecycle, link e diff hygiene.
+- [x] Fold-back in `docs/INDEX.md` e `docs/learning/BUILD_LOG.md`.
+- [x] Checkpoint docs autorizzato; commit/push e remoto `0 0` riportati nell'handoff, senza
+  auto-citazione o commit vuoto del gate docs-only.
+
+**Prossimo gate prodotto invariato:** C0.1 canary RED. **Nuovo gate release-critical registrato:**
+FT.0, docs-only, da aprire dopo il checkpoint A1.2 senza anticiparne il code gate.

@@ -4354,3 +4354,26 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
   eseguita o dichiarata: gate esclusivamente documentale.
 - **Prossimo gate minimo:** C0.1 canary RED sul contratto ora non ambiguo; qualunque necessità di
   ampliare exempt/enforcement è un finding di design, non una scorciatoia implementativa.
+
+---
+
+## 2026-08-05 — A1.2 chiarisce staging, commit atomico e fold-back
+
+- **Trigger founder:** prima di aprire la remediation Financial Truth, distinguere il ruolo di
+  `git add`, l'atomicità del commit e il fold-back, preservando il metodo come parte esplicita
+  dell'apprendimento sul repository reale.
+- **Decisione ACX-D9:** `git add` seleziona meccanicamente file/hunk nell'indice; l'atomicità è la
+  coesione semantica di un checkpoint completo e pubblicabile; il fold-back sincronizza le fonti
+  vive con l'esito verificato e normalmente completa lo stesso commit del gate.
+- **Trade-off resi espliciti:** staging chirurgico protegge lo scope ma può essere incompleto;
+  commit atomico abilita review/revert/bisect ma non coincide con “commit piccolo”; fold-back evita
+  drift documentale ma deve restare proporzionato e non anticipare lavoro futuro.
+- **Drift corretto:** la SPEC di collaborazione puntava ancora in alcune righe correnti alla vecchia
+  sequenza R0/P/G-MAC. I consuntivi storici restano fotografie; le indicazioni vive ora delegano lo
+  scheduling esclusivamente a `SPEC_PRE_POC.md`.
+- **Verifiche docs/process:** 8/8 asserzioni semantiche contro `AGENTS.md` e runbook PASS; lifecycle
+  PASS (10/10 SPEC vive indicizzate, zero file vietati in `docs/technical/`, zero SPEC implementate
+  ancora vive); link locali PASS; Ruff `api/` PASS; `git diff --check` PASS. Nessuna suite
+  applicativa eseguita o dichiarata: zero codice, schema o dato modificato.
+- **Prossimo gate minimo:** FT.0 docs-only registra il remediation track Financial Truth nella
+  regia pre-POC senza sostituire C0.1 come prossimo gate esecutivo.

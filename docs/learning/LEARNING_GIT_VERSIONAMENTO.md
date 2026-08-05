@@ -40,3 +40,66 @@ git push origin main                             # 262218f..45774dc, niente --fo
 **Regola operativa (affinata 2026-06-17):** `main` va allineato **obbligatoriamente dopo ogni release verificata** (trigger non negoziabile) e **può** essere tenuto al passo a confini puliti (docs, unità completate). L'**unico divieto assoluto**: `main` non deve mai contenere codice **in-progress / non rilasciabile**. Conseguenza pratica: durante l'implementazione G1 (refactor `database.py` a metà, boot a due fasi incompleto) `main` **resta congelato** all'ultimo punto pulito finché G1 non è verificata. Così `main` è sempre un backup **solido** (mai rotto) senza diventare una reliquia stantia. Non è il "balletto a ogni commit": è "allinea quando è pulito, congela quando è in lavorazione".
 
 **Domande aperte:** [x] rami zombie `codex_02` e `fit_launch_01` — **cancellati 2026-06-18** (locale + remoto): entrambi 0 commit unici vs `FitManager_Studio` (interamente contenuti) e fermi da 3 mesi → `git branch -d` (sicuro) + `git push origin --delete`. Repo ora a 2 rami; [ ] valutare un reminder/automazione dell'allineamento `main` in `build-release.sh` (la deriva dimostra che il solo "step 6 a memoria" non basta).
+
+---
+
+## `git add`, commit atomico e fold-back — 05/08/2026
+
+**Contesto:** prima di aprire la remediation Financial Truth, voglio capire perché selezionare i file
+con `git add`, creare un commit atomico e fare il fold-back non sono tre modi diversi di fare la
+stessa cosa.
+
+**Analogia — una spedizione verificabile:** il working tree è il laboratorio; `git add` sceglie cosa
+mettere nella scatola; il fold-back aggiorna distinta, manuale e registro; `git commit` sigilla la
+scatola come una consegna identificabile.
+
+```text
+working tree
+    │
+    ├── git add <path/hunk> ──► indice: contenuto scelto
+    │                               │
+    ├── fold-back docs ─────────────┤  stesso significato del gate
+    │                               │
+    └── review staged ──────────────┴──► commit atomico ─► push ─► checkpoint pulito
+```
+
+### Livello 1 — Cosa fa ciascuno
+
+- **`git add` prepara, non salva nella storia.** Copia nell'indice la versione selezionata di un
+  file o di un hunk. Posso cambiare ancora il working tree; il commit userà ciò che è staged.
+- **Il commit atomico salva una decisione completa.** “Atomico” non significa “piccolo”: significa
+  che il commit fa una sola cosa coerente, passa le verifiche richieste e può essere compreso,
+  revisionato o revertito senza trascinare modifiche indipendenti.
+- **Il fold-back sincronizza la verità documentale.** Non è un comando Git. Consuntiva nelle sole
+  fonti previste cosa è stato realmente deciso, implementato e verificato. Normalmente entra nello
+  stesso commit del gate perché ne completa il significato.
+
+### Livello 2 — Pro, contro e criterio senior
+
+| Pratica | Pro | Contro/failure mode | Criterio |
+|---|---|---|---|
+| stage di path/hunk espliciti | evita di inglobare file del founder o lavoro estraneo; rende visibile lo scope reale | si può dimenticare un file necessario o creare incoerenza tra staged e working tree | controllare `git status`, `git diff` e poi `git diff --cached`; mai assumere che “file per file” significhi già atomico |
+| commit atomico | storia leggibile; review, revert e `git bisect` affidabili; handoff netto | un mega-commit nasconde cause diverse; troppi micro-commit possono lasciare stati non pubblicabili | scegliere il gate minimo che conserva tutti i suoi invarianti e lascia il branch rilasciabile per lo scope |
+| fold-back nello stesso gate | documenti e codice non divergono; il perché resta accanto al cosa | se diventa rituale può gonfiare il diff o anticipare decisioni non implementate | aggiornare solo SPEC/SSoT/INDEX/log realmente richiesti, descrivendo evidenze già ottenute |
+
+### Livello 3 — Sequenza reale
+
+```text
+1. implemento un microstep e lo verifico
+2. completo il gate e le verifiche proporzionate al rischio
+3. faccio il fold-back delle sole fonti toccate
+4. controllo diff, stato e lista esatta dei file attribuiti
+5. eseguo git add sui path/hunk intenzionali
+6. controllo diff e stat staged
+7. creo un commit atomico e lo pusho
+8. verifico remoto 0/0 e nessun residuo tracked del gate
+```
+
+**Gotcha:** `git add file1 file2` non prova che il commit sia atomico. Lo staging è una proprietà
+meccanica dell'indice; l'atomicità è una proprietà semantica del risultato. Due file possono essere
+un solo cambiamento indivisibile, mentre due hunk dello stesso file possono appartenere a due gate
+diversi.
+
+**Eccezione controllata:** se il fold-back deve citare l'hash esatto dell'implementazione, il gate può
+avere due commit coesi — implementazione verificata, poi consuntivo — pushati insieme e senza aprire
+altro lavoro nel mezzo. Un gate docs-only non crea un commit vuoto per citare sé stesso.
