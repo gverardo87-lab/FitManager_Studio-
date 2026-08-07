@@ -1,0 +1,424 @@
+name: macOS portability canary (C0.1)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: macos-portability-c0-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  PYTHON_VERSION: "3.12.10"
+  NODE_VERSION: "24.13.1"
+  NUITKA_CACHE_DIR: ${{ github.workspace }}/.cache/nuitka
+
+jobs:
+  build-canary:
+    name: Build ARM64 canary on macos-15
+    runs-on: macos-15
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout exact source commit
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up CPython ARM64
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          architecture: arm64
+          cache: ""
+
+      - name: Set up Node ARM64
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          architecture: arm64
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+          package-manager-cache: false
+
+      - name: Prove build-runner identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "arm64"
+          python -c 'import platform; assert platform.machine().lower() == "arm64"'
+          node -e 'if (process.arch !== "arm64") process.exit(1)'
+          sw_vers
+          python --version
+          node --version
+          clang --version | head -1
+
+      - name: Download the pinned macOS wheelhouse
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/macos-c0/wheelhouse
+          python -m pip download \
+            --no-deps \
+            --only-binary=:all: \
+            --dest build/macos-c0/wheelhouse \
+            -r tools/canary/requirements-macos-c0.txt
+
+      - name: Record the strict ARM64 wheel-tag contract
+        id: wheelhouse-contract
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/canary/wheelhouse_manifest.py \
+            build/macos-c0/wheelhouse \
+            --output build/macos-c0/wheelhouse-manifest.json
+
+      - name: Install the audited wheelhouse
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --no-index --no-deps build/macos-c0/wheelhouse/*.whl
+          python -m pip check
+
+      - name: Install hash-pinned Nuitka build tool
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$NUITKA_CACHE_DIR"
+          python -m pip install \
+            --no-deps \
+            --no-build-isolation \
+            --require-hashes \
+            -r tools/canary/requirements-macos-c0-build.txt
+          python -m nuitka --version
+
+      - name: Build frontend standalone on ARM64
+        working-directory: frontend
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci
+          npm run build
+
+      - name: Record the current G-MAC.1 runtime coupling
+        id: runtime-contract
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/canary/check_macos_runtime_contract.py \
+            --target-system Darwin \
+            --output build/macos-c0/portability-contract.json
+
+      - name: Compile the source-free technical/auth runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/macos-c0/nuitka
+          python -m nuitka \
+            --mode=standalone \
+            --assume-yes-for-downloads \
+            --clang \
+            --macos-target-arch=arm64 \
+            --include-package=sqlcipher3 \
+            --include-package=api.auth \
+            --include-package=api.models \
+            --output-dir=build/macos-c0/nuitka \
+            --output-filename=fitmanager-c0-canary \
+            --remove-output \
+            tools/canary/macos_c0_runtime.py
+
+          dist_dir="$(find build/macos-c0/nuitka -maxdepth 1 -type d -name '*.dist' -print -quit)"
+          test -n "$dist_dir"
+          test -x "$dist_dir/fitmanager-c0-canary"
+          "$dist_dir/fitmanager-c0-canary" --self-test \
+            | tee build/macos-c0/self-test-build.json
+          printf '%s\n' "$dist_dir" > build/macos-c0/nuitka-dist-path.txt
+
+      - name: Assemble canary with frontend and bundled Node
+        shell: bash
+        run: |
+          set -euo pipefail
+          package=build/macos-c0/package
+          dist_dir="$(cat build/macos-c0/nuitka-dist-path.txt)"
+          mkdir -p "$package/backend" "$package/frontend/.next" "$package/node/bin"
+          cp -R "$dist_dir"/. "$package/backend"/
+          cp -R frontend/.next/standalone/. "$package/frontend"/
+          cp -R frontend/.next/static "$package/frontend/.next/static"
+          if [ -d frontend/public ]; then
+            cp -R frontend/public "$package/frontend/public"
+          fi
+          cp "$(command -v node)" "$package/node/bin/node"
+          chmod 0755 "$package/backend/fitmanager-c0-canary" "$package/node/bin/node"
+
+      - name: Thin universal Mach-O inputs to the ARM64 canary slice
+        shell: bash
+        run: |
+          set -euo pipefail
+          package=build/macos-c0/package
+          thinned=0
+          while IFS= read -r -d '' candidate; do
+            description="$(file -b "$candidate")"
+            if [[ "$description" == Mach-O*universal* || "$description" == *"2 architectures"* ]]; then
+              mode="$(stat -f '%Lp' "$candidate")"
+              lipo "$candidate" -thin arm64 -output "$candidate.arm64"
+              mv "$candidate.arm64" "$candidate"
+              chmod "$mode" "$candidate"
+              codesign --force --sign - "$candidate"
+              thinned=$((thinned + 1))
+            fi
+          done < <(find "$package" -type f -print0)
+          printf 'universal_inputs_thinned=%s\n' "$thinned" \
+            > build/macos-c0/thinning-evidence.txt
+
+      - name: Write the sanitized package manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          package=build/macos-c0/package
+          python tools/canary/build_macos_c0_manifest.py \
+            --package-root "$package" \
+            --wheel-manifest build/macos-c0/wheelhouse-manifest.json \
+            --source-commit "$GITHUB_SHA" \
+            --output "$package/manifest.json"
+
+      - name: Audit every packaged Mach-O slice and dependency
+        shell: bash
+        run: |
+          set -euo pipefail
+          audit=build/macos-c0/macho-audit.txt
+          : > "$audit"
+          count=0
+          while IFS= read -r -d '' candidate; do
+            description="$(file -b "$candidate")"
+            if [[ "$description" == Mach-O* ]]; then
+              count=$((count + 1))
+              printf '%s :: %s\n' "${candidate#build/macos-c0/package/}" "$description" >> "$audit"
+              if [[ "$description" == *x86_64* || "$description" == *universal* ]]; then
+                echo "Native slice non ARM64: $candidate" >&2
+                exit 1
+              fi
+              otool -L "$candidate" >> "$audit"
+            fi
+          done < <(find build/macos-c0/package -type f -print0)
+          test "$count" -gt 0
+          cat "$audit"
+
+      - name: Seal the exact transfer artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          tar -C build/macos-c0/package -czf build/macos-c0/fitmanager-c0-canary.tar.gz .
+          (
+            cd build/macos-c0
+            shasum -a 256 fitmanager-c0-canary.tar.gz > fitmanager-c0-canary.tar.gz.sha256
+          )
+          du -h build/macos-c0/fitmanager-c0-canary.tar.gz
+          df -h .
+
+      - name: Upload sealed canary and build evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: macos-c0-canary-${{ github.run_id }}
+          retention-days: 14
+          if-no-files-found: error
+          path: |
+            build/macos-c0/fitmanager-c0-canary.tar.gz
+            build/macos-c0/fitmanager-c0-canary.tar.gz.sha256
+            build/macos-c0/macho-audit.txt
+            build/macos-c0/portability-contract.json
+            build/macos-c0/self-test-build.json
+            build/macos-c0/thinning-evidence.txt
+            build/macos-c0/wheelhouse-manifest.json
+
+      - name: Preserve RED as evidence, not an early abort
+        shell: bash
+        run: |
+          echo "Runtime contract step outcome: ${{ steps.runtime-contract.outcome }}"
+          echo "Wheelhouse contract step outcome: ${{ steps.wheelhouse-contract.outcome }}"
+          test "${{ steps.runtime-contract.outcome }}" = "failure"
+          test "${{ steps.wheelhouse-contract.outcome }}" = "failure"
+
+  smoke-same-artifact:
+    name: Run the same artifact on macos-26
+    needs: build-canary
+    runs-on: macos-26
+    timeout-minutes: 30
+
+    steps:
+      - name: Download artifact without checking out source
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: macos-c0-canary-${{ github.run_id }}
+          path: artifact
+          digest-mismatch: error
+
+      - name: Verify runner identity and exact artifact SHA-256
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "arm64"
+          sw_vers
+          (
+            cd artifact
+            shasum -a 256 -c fitmanager-c0-canary.tar.gz.sha256
+          )
+          mkdir canary evidence
+          tar -C canary -xzf artifact/fitmanager-c0-canary.tar.gz
+          test -x canary/backend/fitmanager-c0-canary
+          test -x canary/node/bin/node
+          test "$(canary/node/bin/node -p 'process.arch')" = "arm64"
+
+      - name: Re-audit transferred Mach-O files
+        shell: bash
+        run: |
+          set -euo pipefail
+          count=0
+          while IFS= read -r -d '' candidate; do
+            description="$(file -b "$candidate")"
+            if [[ "$description" == Mach-O* ]]; then
+              count=$((count + 1))
+              if [[ "$description" == *x86_64* || "$description" == *universal* ]]; then
+                echo "Native slice non ARM64: $candidate" >&2
+                exit 1
+              fi
+              otool -L "$candidate"
+            fi
+          done < <(find canary -type f -print0)
+          test "$count" -gt 0
+
+      - name: Run compiled self-test, auth, stability, memory and display smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          /usr/bin/time -l canary/backend/fitmanager-c0-canary --self-test \
+            > evidence/self-test-macos-26.json \
+            2> evidence/self-test-time.txt
+
+          canary/backend/fitmanager-c0-canary --serve --port 8000 \
+            > evidence/backend.log 2>&1 &
+          backend_pid=$!
+          pushd canary/frontend > /dev/null
+          PORT=3000 HOSTNAME=127.0.0.1 ../node/bin/node server.js \
+            > ../../evidence/frontend.log 2>&1 &
+          frontend_pid=$!
+          popd > /dev/null
+
+          cleanup() {
+            kill "$frontend_pid" "$backend_pid" 2>/dev/null || true
+            wait "$frontend_pid" "$backend_pid" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          backend_ready=false
+          frontend_ready=false
+          for _attempt in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:3000/setup > /dev/null; then
+              frontend_ready=true
+            fi
+            if curl -fsS http://127.0.0.1:8000/health > /dev/null; then
+              backend_ready=true
+            fi
+            if [ "$backend_ready" = "true" ] && [ "$frontend_ready" = "true" ]; then
+              break
+            fi
+            sleep 1
+          done
+          test "$backend_ready" = "true"
+          test "$frontend_ready" = "true"
+
+          chrome="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+          test -x "$chrome"
+
+          capture_route() {
+            route="$1"
+            viewport="$2"
+            width="${viewport%x*}"
+            height="${viewport#*x}"
+            "$chrome" \
+              --headless=new \
+              --disable-gpu \
+              --hide-scrollbars \
+              --virtual-time-budget=3000 \
+              --user-data-dir="$RUNNER_TEMP/chrome-${viewport}-${route}" \
+              --window-size="$width,$height" \
+              --screenshot="$GITHUB_WORKSPACE/evidence/${route}-${viewport}.png" \
+              "http://127.0.0.1:3000/${route}"
+            sips -g pixelWidth -g pixelHeight "evidence/${route}-${viewport}.png"
+          }
+
+          # Before registration, /setup is the truthful first-run surface.
+          for viewport in 1440x900 1024x640; do
+            capture_route setup "$viewport"
+          done
+
+          "$chrome" --headless=new --virtual-time-budget=3000 \
+            --dump-dom http://127.0.0.1:3000/setup > evidence/setup-dom.html
+          if grep -Eqi 'Application error|Internal Server Error' evidence/setup-dom.html; then
+            echo "Frontend auth surface contains an application error" >&2
+            exit 1
+          fi
+
+          canary/backend/fitmanager-c0-canary \
+            --smoke-auth \
+            --base-url http://127.0.0.1:8000 \
+            > evidence/auth-smoke.json
+
+          # After registration, /login is the truthful returning-user surface.
+          for viewport in 1440x900 1024x640; do
+            capture_route login "$viewport"
+          done
+
+          "$chrome" --headless=new --virtual-time-budget=3000 \
+            --dump-dom http://127.0.0.1:3000/login > evidence/login-dom.html
+          if grep -Eqi 'Application error|Internal Server Error' evidence/login-dom.html; then
+            echo "Frontend auth surface contains an application error" >&2
+            exit 1
+          fi
+
+          sleep 15
+          kill -0 "$backend_pid"
+          kill -0 "$frontend_pid"
+          backend_rss_kb="$(ps -o rss= -p "$backend_pid" | tr -d ' ')"
+          frontend_rss_kb="$(ps -o rss= -p "$frontend_pid" | tr -d ' ')"
+          total_rss_kb=$((backend_rss_kb + frontend_rss_kb))
+          printf 'backend_rss_kb=%s\nfrontend_rss_kb=%s\ntotal_rss_kb=%s\n' \
+            "$backend_rss_kb" "$frontend_rss_kb" "$total_rss_kb" \
+            > evidence/runtime-metrics.txt
+          du -sk canary >> evidence/runtime-metrics.txt
+          df -k . >> evidence/runtime-metrics.txt
+
+          cleanup
+          trap - EXIT
+
+      - name: Upload macos-26 smoke evidence before verdict
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: macos-c0-smoke-${{ github.run_id }}
+          retention-days: 14
+          if-no-files-found: warn
+          path: |
+            evidence/
+            artifact/portability-contract.json
+            artifact/wheelhouse-manifest.json
+
+      - name: Enforce the falsifiable C0.1 verdict
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          canary/node/bin/node -e '
+            const fs = require("fs");
+            const runtime = JSON.parse(fs.readFileSync("artifact/portability-contract.json", "utf8"));
+            const wheels = JSON.parse(fs.readFileSync("artifact/wheelhouse-manifest.json", "utf8"));
+            const findings = [
+              ...runtime.findings.map((item) => item.code),
+              ...wheels.findings,
+            ];
+            if (findings.length) {
+              console.error(`C0.1 RED: ${findings.join(",")}`);
+              process.exit(1);
+            }
+          '
