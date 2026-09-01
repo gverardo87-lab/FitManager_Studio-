@@ -7,6 +7,11 @@
 `docs/archive/business/STRATEGY_PLAN_V3_1_2026-03-27.md` e
 `docs/archive/business/DOCUMENTO_OPERATIVO_PARTNER_2026-03.md`; non governa lo scheduling pre-POC
 
+> **Interlock 2026-08-29 — exit Alessio:** tutte le formule partner 20% prodotto / 35% ricorrente e
+> le viste founder+partner restano scenari storici di marzo, non forecast corrente, obbligo economico
+> o base per un nuovo accordo. Il modello commerciale sarà sostituito in un gate separato dopo
+> `docs/specs/SPEC_EXIT_ALESSIO.md` E1–E4.
+
 ---
 
 ## Scopo

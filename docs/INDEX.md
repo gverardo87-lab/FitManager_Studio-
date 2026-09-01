@@ -11,14 +11,15 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 
 | File | Scopo | SSoT per |
 |------|-------|----------|
-| `BUSINESS_PLAN.md` | BP v4.3 — baseline economica e ipotesi pre-validazione; non governa prodotto o scheduling corrente | Numeri, pricing e assunzioni marzo 2026 |
-| `FINANCIAL_MODEL.md` | Modello analitico — ogni euro tracciabile, formule, 3 scenari, NASpI (§8), fondi (§9) | Proiezioni finanziarie |
-| `LEGAL_REGULATORY_REPORT.md` | Report legale-regolamentare v1.3: GDPR (modello distribuito), fiscale, IP, EAA, SBOM, PSD2 | Compliance |
+| `BUSINESS_PLAN.md` | BP v4.3 — baseline marzo; struttura partner superseded 2026-08-29; non governa prodotto o scheduling | Numeri e assunzioni storiche pre-validazione |
+| `FINANCIAL_MODEL.md` | Modello analitico marzo; formule partner e viste founder+partner superseded; da sostituire col reset commerciale | Proiezioni storiche pre-validazione |
+| `LEGAL_REGULATORY_REPORT.md` | Report legale-regolamentare v1.4: GDPR, fiscale, IP, EAA, SBOM, PSD2, exit partner | Compliance |
 | `COMPETITIVE_ANALYSIS.md` | Competitor, posizionamento, differenziatori | Analisi mercato |
 
-**Gerarchia:** `SPEC_PRE_POC.md` governa il lavoro corrente. BP/FM conservano assunzioni e numeri
-pre-validazione; Legal governa il proprio dominio. Strategie, roadmap e materiali partner superseded
-vivono in `docs/archive/` e non sono contesto operativo.
+**Gerarchia:** `SPEC_PRE_POC.md` governa il lavoro corrente; `SPEC_EXIT_ALESSIO.md` governa il blocco
+di uscita partner. BP/FM conservano assunzioni e numeri pre-validazione, ora superseded per la
+struttura partner; Legal governa il proprio dominio. Strategie, roadmap e materiali partner
+superseded vivono in `docs/archive/` e non sono contesto operativo.
 
 ---
 
@@ -76,7 +77,8 @@ commit docs del gate (ciclo di vita: `AGENTS.md`).
 
 | File | Stato | Scopo |
 |------|-------|-------|
-| `SPEC_PRE_POC.md` | 🟡 **IN CORSO — D0+C0.0+FT.0 CHIUSI; PROSSIMO C0.1; F0 HOLD FT.1–FT.4** | Unica regia pre-POC: v1.0.15 security/readiness, canary mirato M1/8 GB/Tahoe 26.5.1, Financial Truth release-critical prima dell'application freeze, Windows + macOS ARM64 dalla stessa baseline, partner enablement, Wave 0 e anti-scope |
+| `SPEC_PRE_POC.md` | 🟡 **IN CORSO — D0+C0.0+FT.0+E0 CHIUSI; PROSSIMO FOUNDER E1; PROSSIMO TECNICO C0.1; F0 HOLD FT.1–FT.4** | Unica regia pre-POC: v1.0.15 security/readiness, canary mirato M1/8 GB/Tahoe 26.5.1, Financial Truth, Windows + macOS ARM64, percorso founder-led; Wave 0 HOLD fino alla nuova strategia commerciale |
+| `SPEC_EXIT_ALESSIO.md` | 🟡 **E0 STRATEGIA RATIFICATA; E1 TESTO DA COSTRUIRE; E2–E4 NON ESEGUITI** | Exit commerciale/contrattuale/operativa: comunicazione separata, verifica NDA, export/no-data, licenza/tunnel, fold-back e reset commerciale; nessuna revoca implicita |
 | `SPEC_COLLABORAZIONE_CLAUDE_CODEX.md` | 🟡 **APERTA — A1.2 CHIUSO; SMOKE CLAUDE A1.1 DIFFERITO; A2+ NON AUTORIZZATI** | Contratto agent-neutral: gate come unità di commit/push; ACX-D9 distingue staging meccanico, atomicità semantica e fold-back nello stesso checkpoint. Remoto `0 0` e zero tracked del gate precedente restano obbligatori; smoke Claude A1.1 da recuperare prima di A2+ |
 | `SPEC_FINGERPRINT_CROSSPLATFORM.md` | 🟡 **CODICE FATTO E SIGILLATO — C0.2 T2 SOURCE-FREE, BINDING IN G-MAC.4** | Gate G-MAC.0: Windows output-invariante PASS; stabilità T2 senza identificatori nei log sul target esatto, binding finale nel canale amministrativo |
 | `SPEC_FRONTEND_CORE_INTUITIVITA.md` | ⏸️ **HOLD PRE-POC — FE-0/FE-1 CHIUSI** | FE-2..4 e cleanup riaprono soltanto su finding osservato da rehearsal/pilota; nessun lavoro frontend generalista nella v1.0.15 |

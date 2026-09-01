@@ -4404,3 +4404,34 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
 - **Precondizione code gate:** riparare la venv Python; nessun FT.1–FT.4 può essere chiamato verde
   senza pytest reale, suite frontend/build proporzionati e verifier contabile avversariale.
 - **Prossimo gate minimo:** C0.1 canary RED. FT.1 non è ancora aperto.
+
+---
+
+## 2026-08-29 — E0 ratifica l'exit Alessio e ritira la dipendenza partner
+
+- **Trigger founder:** nessun uso autonomo/hands-on/data-bearing noto, nessun cliente o pipeline
+  qualificata in circa quattro mesi, interlocuzione assente da circa metà luglio e unico contatto
+  macOS/Virgin indiretto e non validato. Richiesta una strategia di exit prima del testo della
+  comunicazione e della nuova strategia commerciale.
+- **Decisione:** Alessio passa da Industry Partner/abilitatore a contatto esterno in uscita. Nessun
+  milestone, claim, recruiting, delivery o sviluppo dipende da lui; le vecchie formule 20% prodotto,
+  35% ricorrente ed equity fino al 12% restano scenari storici superseded e non si riattivano per
+  inerzia.
+- **Contratto prudenziale:** la bozza NDA v7 esaminata non supporta una scadenza generale a luglio e
+  prevede sopravvivenza della riservatezza/IP. La copia eseguita resta da recuperare e verificare;
+  nessuna contestazione, notifica, revoca o disattivazione è stata eseguita in E0.
+- **Gate aperti:** E1 testo comunicazione in `docs/`, senza invio; E2 verifica legale e notifica con
+  GO specifico; E3 export/no-data e offboarding tecnico con GO specifico; E4 fold-back completo e
+  nuova strategia commerciale separata.
+- **G-MAC:** scope tecnico invariato e separato dalla relazione Alessio. Daniele resta target tecnico
+  noto; Virgin è upside non validato e ogni consegna richiede contatto diretto e disponibilità
+  verificata.
+- **Fold-back:** create `SPEC_EXIT_ALESSIO.md`; aggiornate regia pre-POC, SPEC G-MAC, INDEX, Business
+  Plan, Financial Model, Legal Report v1.4 e Deployment Registry. Gli archivi e gli eventi storici
+  restano immutati.
+- **Verifiche docs/process:** 12/12 interlock semantici PASS; lifecycle PASS (11/11 SPEC vive con
+  `Stato:` e indicizzate, zero file vietati in `docs/technical/`, zero SPEC implementate ancora vive);
+  link Markdown locali dei documenti toccati PASS; Ruff `api/` PASS; `git diff --check` PASS.
+  Nessuna suite applicativa eseguita o dichiarata: gate esclusivamente documentale.
+- **Prossimo gate minimo:** E1, costruzione founder-led del testo della comunicazione da salvare in
+  `docs/`; nessun invio esterno implicito. C0.1 resta il prossimo gate tecnico.

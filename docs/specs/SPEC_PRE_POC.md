@@ -1,7 +1,7 @@
 # SPEC — Strategia e readiness pre-POC
 
-**Stato:** 🟡 IN CORSO — D0, C0.0 e FT.0 documentale chiusi; prossimo gate C0.1 canary RED;
-F0 in HOLD finché FT.1–FT.4 non sono chiusi
+**Stato:** 🟡 IN CORSO — D0, C0.0, FT.0 ed E0 chiusi; prossimo gate founder E1 testo exit;
+prossimo gate tecnico C0.1 canary RED; F0 in HOLD finché FT.1–FT.4 non sono chiusi
 **Data di ratifica founder:** 2026-07-31
 **Branch:** `FitManager_Studio`
 **Tipo:** regia operativa pre-POC; non duplica le specifiche tecniche sottostanti
@@ -35,7 +35,10 @@ esperimenti separati o secondari: non devono rendere il risultato prodotto illeg
 - G1 è ancora assente dal codice di produzione; G2 è aperto; G4 è parziale;
 - la consegna con dati reali resta vincolata a G1–G4 e l'onboarding del primo atleta anche a G9–G11;
 - il blocco P è nuovo sviluppo, non remediation pre-POC;
-- Alessio non usa oggi il prodotto e non è ancora abilitato a presentarlo autonomamente;
+- al 2026-08-29 non esiste evidenza di uso autonomo, hands-on o data-bearing del prodotto da parte di
+  Alessio, né di clienti o pipeline qualificata prodotti in circa quattro mesi; nessuna interlocuzione
+  sostanziale è nota da circa metà luglio. Il ruolo partner è ritirato e l'exit è governata da
+  `SPEC_EXIT_ALESSIO.md`;
 - Daniele è il primo target macOS noto: MacBook Air M1 2020, ARM64, 8 GB, macOS Tahoe 26.5.1,
   configurazione confermata il 2026-08-02; foto e identificatori hardware non sono conservati nel
   repository o nei log. Il potenziale rapporto Virgin è upside non validato;
@@ -88,7 +91,9 @@ sigillare. Il tag `v1.0.15` deve identificare la stessa baseline dei due artefat
 
 macOS ARM64 non è subordinato a ulteriori conferme commerciali. Daniele è il primo target di
 accettazione e consegna, non il centro della strategia né un gate allo sviluppo. Il percorso conserva
-valore come capacità di distribuzione e come presidio della credibilità con Alessio.
+valore come capacità di distribuzione riutilizzabile; non è più legato alla credibilità o alla
+relazione commerciale con Alessio. Una consegna a Daniele richiede contatto diretto e disponibilità
+verificata, oltre ai normali gate tecnici e di sicurezza.
 
 Prima dell'application freeze sono autorizzati il portability canary e i minimi adattamenti runtime
 che esso dimostra necessari, incluso G-MAC.1. Devono provare che dipendenze e G1 siano realmente
@@ -134,14 +139,17 @@ Il grafico giornaliero Cassa del 24 luglio soddisfa il criterio: rappresenta com
 `204,25 €` Uscite una giornata con `333,25 €` di inflow e `537,50 €` di rimborsi. Non è redesign:
 è una remediation di verità finanziaria osservata su dati reali, con ledger e saldo corretti.
 
-### D8 — Alessio è un abilitatore, non una dipendenza
+### D8 — Exit Alessio; percorso founder-led
 
-Alessio apre porte, qualifica candidati e porta linguaggio di mercato. Fino al readiness gate le demo
-e i claim restano founder-led. Il suo materiale raw viene preservato e classificato in: provato,
-da validare in POC, roadmap, ipotesi, non sostenibile.
+Dal 2026-08-29 Alessio non è partner, abilitatore, recruiter, demo owner o dipendenza del percorso
+pre-POC. L'uscita commerciale, contrattuale e operativa segue `SPEC_EXIT_ALESSIO.md`; nessuna vecchia
+proposta di percentuale, revenue share o equity è autorizzata dalla permanenza nei documenti storici.
 
-Il product marketing context agent-neutral viene auto-draftato dal repository, corretto col founder e
-poi aggiornato con il materiale raw. Nessun claim esterno nuovo è autorizzato prima della revisione.
+Demo, claim, recruiting e product truth sono founder-led fino alla ratifica della nuova strategia
+commerciale. Il product marketing context agent-neutral viene auto-draftato dal repository e corretto
+col founder. L'eventuale materiale raw ricevuto da terzi può essere classificato soltanto come
+evidenza o ipotesi, senza attribuirgli autorità e nel rispetto degli obblighi di riservatezza. Nessun
+claim esterno nuovo è autorizzato prima della revisione.
 
 ### D9 — POC a coorti
 
@@ -173,32 +181,36 @@ sufficienti.
 | Classe | Elementi | Regola |
 |---|---|---|
 | Fondamentali | G1–G4, G9–G11, Financial Truth FT.1–FT.4, candidate, backup/restore, onboarding, misurazione, macOS ARM64 consegnabile | Senza questi la POC non parte o non è interpretabile |
-| Abilitatori | Alessio, recruitment, product truth, materiali e rehearsal | Accelerano; esiste fallback founder-led |
+| Abilitatori | Recruitment founder-led, product truth, materiali approvati e rehearsal | Accelerano senza creare dipendenze esterne |
 | Target di accettazione | Chiara/non-dev Windows, Daniele macOS | Verificano gli artefatti; non governano la roadmap |
-| Upside | Virgin, scala commerciale Mac, category creation | Non entra nel critical path senza evidenza |
-| HOLD | P, FE non dimostrato, cleanup, refactor, nuove feature | Nuovo GO dopo Wave 0 |
+| Exit | Alessio: E1–E4 in `SPEC_EXIT_ALESSIO.md` | Nessuna dipendenza; nessuna azione esterna o tecnica implicita |
+| Upside | Contatto indiretto associato a Virgin, scala commerciale Mac, category creation | Non entra nel critical path senza rapporto diretto ed evidenza |
+| HOLD | Nuova strategia commerciale, Wave 0 commerciale, P, FE non dimostrato, cleanup, refactor, nuove feature | Nuovo GO secondo la SPEC pertinente |
 
 Una nuova informazione aggiorna questa matrice solo con evidenza o decisione founder esplicita. Non
 riscrive automaticamente l'intera strategia.
 
 ## 5. Gate e scadenze
 
-Le scadenze sono deadline di evidenza e decisione, mai autorizzazioni a saltare un gate.
+Le scadenze sono deadline di evidenza e decisione, mai autorizzazioni a saltare un gate. Dal
+2026-08-29 le date non raggiunte del piano originario sono ritirate: l'ordine tecnico resta valido,
+ma il calendario viene ripianificato dopo E1 e nella nuova strategia commerciale.
 
 | Deadline | Gate | Evidenza di uscita |
 |---|---|---|
 | 2026-08-02 | **D0 — Autorità documentale** | questa SPEC viva; fonti concorrenti archiviate; INDEX/CLAUDE/LAUNCH_SCOPE e interlock allineati |
-| 2026-08-04 | **C0 — Scope + portability canary** | C0.0 contratto target e boundary licenza chiusi; C0.1 build `macos-15` + esecuzione medesimo artefatto `macos-26`; C0.2 probe source-free su M1/8 GB/Tahoe 26.5.1; SQLCipher/G1, Nuitka, frontend ARM64, auth exempt, memoria e display verificati senza packaging cliente né claim sul CRM protetto |
-| 2026-08-07 | **A0 — Product truth** | context agent-neutral, materiale raw di Alessio classificato e claims matrix approvata; nessun claim esterno non sostenuto |
-| 2026-08-21 | **S1 — Core/security** | G1/G2/G4 verdi; backup/restore coerenti; G9–G11 pronti per il real-data gate |
-| 2026-08-24 | **F0 — Application code freeze** | suite completa Windows + runtime Mac CI; FT.1–FT.4 chiusi; nessuna feature o finding release-critical aperto |
-| 2026-08-28 | **A1 — Alessio readiness** | uso hands-on dei workflow core, truth sheet, demo script e rehearsal founder-partner superati |
-| 2026-09-04 | **W0 — Protocollo Wave 0** | massimo tre candidati qualificati; ipotesi, metriche, calendario, support boundary e criteri stop scritti |
-| 2026-09-08 | **D1 — Distribution engineering** | installer Windows e artifact Mac ARM64 firmato/notarizzato; clean install, upgrade, licenza, process lifecycle e data preservation verificati |
-| 2026-09-11 | **R1 — Release freeze** | candidate e2e, restore, FRP/TLS, seal, manifest e tag `v1.0.15` dalla stessa baseline |
-| 2026-09-14 | **M0 — Field delivery** | Windows non-dev verificato; consegna assistita Daniele registrata; dati reali solo dopo GO security |
-| 2026-09-18 | **W1 — Wave 0 live** | massimo tre design partner attivati e misurazione avviata |
-| 2026-09-21 | **W2 — Scale checkpoint** | decisione evidence-based su espansione 5→10 |
+| Da ripianificare | **C0 — Scope + portability canary** | C0.0 contratto target e boundary licenza chiusi; C0.1 build `macos-15` + esecuzione medesimo artefatto `macos-26`; C0.2 probe source-free su M1/8 GB/Tahoe 26.5.1; SQLCipher/G1, Nuitka, frontend ARM64, auth exempt, memoria e display verificati senza packaging cliente né claim sul CRM protetto |
+| Da ripianificare | **A0 — Product truth founder-led** | context agent-neutral e claims matrix approvata; nessun claim esterno non sostenuto; nessuna dipendenza da materiale o readiness Alessio |
+| Da ripianificare | **S1 — Core/security** | G1/G2/G4 verdi; backup/restore coerenti; G9–G11 pronti per il real-data gate |
+| Da ripianificare | **F0 — Application code freeze** | suite completa Windows + runtime Mac CI; FT.1–FT.4 chiusi; nessuna feature o finding release-critical aperto |
+| 2026-08-29 | **E0 — Strategia exit Alessio** | ruolo e dipendenza ritirati; interlock documentale e `SPEC_EXIT_ALESSIO.md` ratificati; nessuna azione esterna o tecnica |
+| Prossimo gate founder | **E1 — Testo comunicazione exit** | testo costruito e approvato col founder in `docs/`; nessun invio nel gate E1 |
+| HOLD nuova strategia | **W0 — Protocollo Wave 0** | massimo tre candidati qualificati; ipotesi, metriche, calendario, support boundary e criteri stop scritti |
+| Da ripianificare | **D1 — Distribution engineering** | installer Windows e artifact Mac ARM64 firmato/notarizzato; clean install, upgrade, licenza, process lifecycle e data preservation verificati |
+| Da ripianificare | **R1 — Release freeze** | candidate e2e, restore, FRP/TLS, seal, manifest e tag `v1.0.15` dalla stessa baseline |
+| HOLD nuova strategia | **M0 — Field delivery** | target e canale di consegna nuovamente confermati; dati reali solo dopo GO security |
+| HOLD nuova strategia | **W1 — Wave 0 live** | massimo tre design partner attivati e misurazione avviata |
+| HOLD nuova strategia | **W2 — Scale checkpoint** | decisione evidence-based su espansione 5→10 |
 
 Se C0 scopre un'incompatibilità Mac, il finding diventa requisito della v1.0.15: non riapre la
 decisione strategica G-MAC. Se un gate supera la deadline, slitta il milestone dipendente o si riduce
@@ -212,35 +224,38 @@ in calendario, ma non sono «zero ore founder» e non autorizzano lavoro concorr
 1. D0 docs-first e checkpoint remoto pulito;
 2. C0.0 contratto target docs-first e checkpoint remoto pulito;
 3. FT.0 Financial Truth docs-only e checkpoint remoto pulito;
-4. C0.1 canary RED;
-5. G-MAC.1 remediation runtime dimostrata dal canary, in gate codice separato, e re-run C0.1 GREEN;
-6. C0.2 probe source-free sul target esatto;
-7. A0 product truth, docs-only e checkpoint remoto pulito;
-8. S1 in gate tecnici atomici secondo ADR-013 e Security Gate; dopo G1/G2/G4 e prima di F0 si
+4. E0 strategia exit Alessio docs-only e checkpoint remoto pulito;
+5. E1 testo comunicazione exit, docs-only e senza invio esterno;
+6. C0.1 canary RED;
+7. G-MAC.1 remediation runtime dimostrata dal canary, in gate codice separato, e re-run C0.1 GREEN;
+8. C0.2 probe source-free sul target esatto;
+9. A0 product truth founder-led, docs-only e checkpoint remoto pulito;
+10. S1 in gate tecnici atomici secondo ADR-013 e Security Gate; dopo G1/G2/G4 e prima di F0 si
    inseriscono FT.1–FT.4, ciascuno con checkpoint proprio;
-9. F0 application freeze;
-10. D1 distribuzione Windows e macOS in gate separati ma sulla stessa baseline applicativa;
-11. R1 build/seal/tag;
-12. M0 consegne e registrazione;
-13. W1 Wave 0.
+11. F0 application freeze;
+12. D1 distribuzione Windows e macOS in gate separati ma sulla stessa baseline applicativa;
+13. R1 build/seal/tag;
+14. M0 consegne e registrazione, dopo nuova conferma commerciale dei target;
+15. W1 Wave 0, dopo la nuova strategia commerciale.
 
 FT.5 non è un gate di codice e non viene assorbito in FT.1–FT.4: è una manutenzione controllata del
 database interessato, dopo i relativi checkpoint e prima del suo Real-data GO, con autorizzazione
 specifica alla mutazione.
 
-La pratica di Alessio sul prodotto, il suo materiale raw, l'enrollment Apple, il recruiting e gli
-appuntamenti possono avanzare fuori dal codice. Ogni modifica repository relativa viene però chiusa
-in un gate proprio: il parallelismo organizzativo non viola il checkpoint Git singolo.
+E2–E4 dell'exit Alessio seguono le precondizioni e le autorizzazioni di `SPEC_EXIT_ALESSIO.md`.
+Recruiting, enrollment Apple e appuntamenti restano founder-led o richiedono una nuova assegnazione
+esplicita. Ogni modifica repository relativa viene chiusa in un gate proprio: il parallelismo
+organizzativo non viola il checkpoint Git singolo.
 
 ## 7. Definition of Done dei milestone esterni
 
-### Alessio readiness
+### Exit Alessio
 
-- ha usato il prodotto per i workflow core assegnati;
-- distingue capacità provate, limiti, roadmap e ipotesi;
-- usa truth sheet e demo script verificati;
-- non presenta autonomamente claim non approvati;
-- il founder conserva un percorso POC senza dipendenza dal partner.
+- E1 testo approvato senza invio implicito;
+- E2 verifica contrattuale e notifica concluse sul canale corretto;
+- E3 dati, licenza, tunnel e accessi portati a stato finale verificato;
+- E4 fonti vive e nuova strategia commerciale allineate;
+- nessun milestone pre-POC dipende da Alessio durante l'intero percorso.
 
 ### macOS consegnabile
 
@@ -304,6 +319,7 @@ strategica: si diagnostica, si corregge o si riporta il milestone dipendente.
   `docs/incidents/INC-2026-08-05-grafico-cassa-netting-rimborsi.md`;
 - blocco P in HOLD: `docs/specs/SPEC_P_PRESTAZIONI_SINGOLE_E_PORTAFOGLIO.md`;
 - verità prodotto: `MANIFESTO.md` e, dopo il gate dedicato, `.agents/product-marketing-context.md`;
+- exit relazione Alessio: `docs/specs/SPEC_EXIT_ALESSIO.md`;
 - storia di sviluppo: `docs/learning/BUILD_LOG.md`.
 
 ## 11. Consuntivo D0 — 2026-07-31
@@ -325,7 +341,19 @@ interprete Windows Store rimosso. Per questo gate docs-only le asserzioni del ca
 replicate in PowerShell e controllate una per una; la riparazione della venv resta un prerequisito
 operativo del prossimo gate C0, che richiede prove runtime reali.
 
-## 12. Chiusura della SPEC
+## 12. Addendum E0 — Exit Alessio — 2026-08-29
+
+- ritirato il ruolo Alessio come Industry Partner, abilitatore e dipendenza pre-POC;
+- ritirato A1 Alessio readiness; A0 resta esclusivamente founder-led;
+- messe in HOLD Wave 0, field delivery e scale checkpoint fino alla nuova strategia commerciale;
+- separate capacità tecnica G-MAC e opportunità commerciale indiretta: nessun credito, relazione
+  Virgin o target di consegna deriva dal solo contatto di secondo grado;
+- aperta `SPEC_EXIT_ALESSIO.md` con E1 testo, E2 notifica, E3 offboarding tecnico ed E4 reset
+  commerciale come gate distinti;
+- nessuna comunicazione esterna, revoca, modifica infrastrutturale, nuova politica commerciale o
+  modifica applicativa eseguita in E0.
+
+## 13. Chiusura della SPEC
 
 La SPEC chiude quando la Wave 0 è attiva, le evidenze iniziali sono raccolte e la decisione di scala è
 registrata. A quel punto riceve consuntivo, fold-back nelle SSoT toccate e viene spostata in

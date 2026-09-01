@@ -12,6 +12,12 @@ Ogni riga = un installer consegnato e installato su macchina del cliente.
 | 2026-04-19 | Alessio Crociani | alessio@crocianicoaching.com | v1.0.7 | `4c06bb47ead1...9d0f37` | pro | 2027-04-14 | `7085add53826...09922` | Primo install — primo partner ufficiale |
 | 2026-06-18 | Alessio Crociani | alessio@crocianicoaching.com | v1.0.13 | `4c06bb47ead1...9d0f37` | pro | 2027-06-13 | `948b5e426b69...57eb88` | **Upgrade da v1.0.7.** Prima istanza con **tunnel FRP attivo** (`instance_id=alessio-crociani` → `alessio-crociani.fitmanagerstudio.com`). Include fix fingerprint INC-2026-06-18 + tutte le release intermedie (1.0.8→1.0.13). Consegnato via WeTransfer (installer + nuova `license.key`, stesso machine_id). **Testato live in call: portale schede pubbliche via tunnel funzionante.** |
 
+> **Stato relazione 2026-08-29:** exit Alessio ratificata in
+> `docs/specs/SPEC_EXIT_ALESSIO.md`. Le righe sopra restano storico fedele delle consegne, ma non
+> attestano un rapporto partner corrente né uso operativo del CRM. In E0 non sono stati revocati
+> licenza, tunnel, DNS o accessi: lo stato tecnico resta da verificare e chiudere soltanto dopo
+> comunicazione, review contrattuale ed eventuale export/no-data nei gate E1–E3.
+
 ---
 
 > 🎯 **Milestone 2026-06-18 — Primo accesso reale al portale pubblico via tunnel FRP.** Con la consegna di v1.0.13 ad Alessio (primo partner), un cliente esterno ha aperto **dal vivo** un link scheda pubblico instradato attraverso il tunnel FRP self-hosted (VPS edge Hetzner, SNI passthrough, P2 data-blind), terminato sul PC del trainer. È la **prima validazione sul campo** dell'architettura tunnel (Fase 1) con un trainer reale e un link condiviso reale — non più solo test e2e interni. Da qui in poi l'architettura data-blind non è teoria: è in produzione. Residuo noto: cert self-signed (G3/Fase 2) → eventuali avvisi browser sui link pubblici fino a Let's Encrypt.

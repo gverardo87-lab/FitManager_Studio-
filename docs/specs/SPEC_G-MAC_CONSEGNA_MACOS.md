@@ -19,8 +19,11 @@ Daniele, primo target di accettazione e consegna macOS noto, ha un **MacBook Air
 Silicon ARM64, 8 GB RAM, macOS Tahoe 26.5.1**. La configurazione è stata confermata il 2026-08-02
 da evidenza fornita dal founder. Foto e identificatori hardware grezzi non sono copiati nel
 repository né nei log di verifica. L'app oggi è distribuita solo Windows (Nuitka MSVC, Inno Setup
-e launcher.bat). Daniele non è un gate allo sviluppo e il potenziale percorso Virgin resta upside
-commerciale non validato.
+e launcher.bat). Daniele non è un gate allo sviluppo. Dal 2026-08-29 il percorso tecnico G-MAC è
+esplicitamente indipendente dalla relazione con Alessio: il potenziale percorso Virgin resta upside
+commerciale non validato e qualunque consegna a Daniele richiede contatto diretto e disponibilità
+verificata. L'exit partner è governata da `SPEC_EXIT_ALESSIO.md` e non modifica lo scope tecnico di
+questa SPEC.
 
 ## 1. Verità fondanti (dall'audit — cosa è vero DAVVERO)
 

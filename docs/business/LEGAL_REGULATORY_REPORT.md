@@ -1,11 +1,12 @@
 # LEGAL_REGULATORY_REPORT.md
 
 **Progetto:** FitManager (operatore: AVGV Technologies)  
-**Versione:** 1.3  
+**Versione:** 1.4
 **Stato:** Documento operativo di riferimento per pre-launch e POC  
 **Documenti correlati:**
 - `TUNNEL_ARCHITECTURE.md` (architettura di accesso e tunnel; ex `CRM_ACCESS_ARCHITECTURE.md` v2.0, consolidato 2026-06-14)
 - `BUSINESS_PLAN.md` v1.0 (modello di business, proiezioni, partnership)
+- `docs/specs/SPEC_EXIT_ALESSIO.md` (uscita partner e offboarding, ratificata 2026-08-29)
 
 ---
 
@@ -512,16 +513,28 @@ Il codice sorgente, le query SQL specifiche, i prompt agli AI, le metriche di ad
 2. Valore commerciale dal suo essere segreta
 3. Misure ragionevoli per mantenerne la segretezza (NDA, controllo accessi, classificazione interna)
 
-NDA con Alessio Crociani già firmato → coerente con questo regime.
+Il founder attesta che l'NDA con Alessio Crociani è stato firmato. La copia elettronica v7 esaminata
+il 2026-08-29 è però un template non sottoscritto: prima di qualunque notifica o revoca va recuperata
+e verificata la copia realmente eseguita, incluse data, firme e approvazioni specifiche. Il testo v7
+prevede cinque anni di riservatezza da ciascuna divulgazione, tutela dei segreti industriali finché
+restano segreti e sopravvivenza dopo la cessazione; non supporta quindi l'assunzione di una scadenza
+generale a luglio. Stato operativo e gate: `docs/specs/SPEC_EXIT_ALESSIO.md`.
 
 ### 8.5 IP nel rapporto con Alessio Crociani
 
-Riferimento al `BUSINESS_PLAN.md` v1.0: la titolarità del marchio FitManager e del codice sorgente è **esclusiva di AVGV/Giacomo**. La partnership con Alessio è B2B tra entità giuridiche distinte; la sua azienda fornisce consulenza scientifica e attività commerciale, **non co-sviluppo IP**.
+Riferimento al `BUSINESS_PLAN.md` v1.0: la titolarità del marchio FitManager e del codice sorgente è
+**esclusiva di AVGV/Giacomo**. Il rapporto ipotizzato con Alessio era B2B tra entità distinte e non
+co-sviluppo IP. Al 2026-08-29 nessun Partnership Agreement eseguito è censito nel repository; le
+proposte economiche di marzo sono superseded e non governano l'exit.
 
-Il Term Sheet e il futuro Partnership Agreement dovranno esplicitare:
-- Nessun co-ownership IP
-- Eventuali contributi di Alessio (es. protocolli scientifici, metodologie) sono concessi in licenza ad AVGV o sviluppati come work-for-hire
-- NDA esistente resta in vigore e si integra con il contratto commerciale
+L'offboarding deve preservare:
+
+- nessun co-ownership IP implicito;
+- verifica della disciplina dei contributi eventualmente prodotti, senza assumere che ne esistano;
+- sopravvivenza dell'NDA secondo la copia eseguita;
+- distinzione tra cessazione della collaborazione, licenza Software, eventuale export dati e
+  riservatezza;
+- comunicazione formale e disattivazioni solo nei gate E1–E3 di `SPEC_EXIT_ALESSIO.md`.
 
 ---
 
@@ -694,7 +707,7 @@ Da affrontare in fase di pianificazione Phase 2 con consulente prodotto/CE.
 - [ ] Ricerca anteriorità marchi (TMview + UIBM/EUIPO)
 - [ ] Decisione marchio nazionale UIBM vs UE EUIPO → deposito
 - [ ] Timestamping codice sorgente via PEC
-- [ ] Bozza Partnership Agreement con Alessio (avvocato societario)
+- [ ] Recupero copia NDA Alessio eseguita + review legale exit/licenza/offboarding
 
 ### Fase 3 — Setup tecnico-compliance (settimane 3–6)
 
@@ -753,7 +766,7 @@ Da affrontare in fase di pianificazione Phase 2 con consulente prodotto/CE.
 | 7 | EAA si applica e microimpresa decade → multe per non conformità | Bassa | Medio | Implementare WCAG 2.1 AA sostanziale anche in esenzione |
 | 8 | Tunnel VPS edge AVGV down → tutti i trainer offline simultaneamente | Bassa | Medio | Monitoring; provider VPS affidabile; Phase 2 multi-region |
 | 9 | VPS edge compromesso da attaccante | Bassa | Medio (TLS e2e mitiga) | Hardening; SSH key-only; fail2ban; aggiornamenti OS |
-| 10 | Partnership Alessio si rompe in modo conflittuale | Media | Medio | Term Sheet chiaro; clausole di uscita; NDA permane; IP confermata di AVGV |
+| 10 | Exit Alessio resta ambigua o conflittuale mentre licenza/tunnel risultano attivi | Media | Medio/alto | `SPEC_EXIT_ALESSIO.md`; copia eseguita; review legale; notifica formale; export/no-data; offboarding registrato |
 | 11 | Sanzioni privacy per uso non conforme di marketing | Bassa | Medio | Opt-in esplicito; documentazione consensi; modello double opt-in |
 | 12 | Cliente finale tronca URL e raggiunge CRM trainer (problema originario) | Bassa | Alto | Architettura `TUNNEL_ARCHITECTURE.md` risolve strutturalmente |
 | 13 | Concorrente registra marchio simile in classe diversa | Media | Basso | Registrare in classi 9 e 42; monitorare nuovi depositi |
@@ -858,7 +871,7 @@ Da affrontare in fase di pianificazione Phase 2 con consulente prodotto/CE.
 - [ ] Documento sintetico distribuzione e ruoli GDPR (riferibile in supporto)
 - [ ] Marchi depositati (almeno "FitManager")
 - [ ] Timestamping codice sorgente eseguito
-- [ ] Partnership Agreement con Alessio firmato
+- [ ] Exit Alessio completata: copia NDA verificata, comunicazione consegnata, dati/licenza/tunnel chiusi e registrati
 
 **Setup tecnico-compliance**
 - [ ] Architettura `TUNNEL_ARCHITECTURE.md` implementata e testata

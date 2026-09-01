@@ -8,6 +8,12 @@
 > marzo 2026. Non è fonte di verità per versione prodotto, stato deployment, tecnologia di accesso,
 > claim marketing, sequenza pre-POC o calendario. La regia operativa corrente vive in
 > `docs/specs/SPEC_PRE_POC.md`; i claim commerciali vengono autorizzati dal product marketing context.
+>
+> **Interlock 2026-08-29 — exit Alessio:** il ruolo Industry Partner e la proposta economica
+> 20% prodotto / 35% ricorrente / equity fino al 12% sono ipotesi storiche **superseded**, non
+> un'offerta corrente né una policy riutilizzabile. Nessuna parte del modello matura compensi o diritti
+> per Alessio. Il percorso è founder-led fino alla nuova strategia commerciale; fonte operativa:
+> `docs/specs/SPEC_EXIT_ALESSIO.md`.
 
 ---
 
