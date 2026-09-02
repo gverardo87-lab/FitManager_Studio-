@@ -4525,3 +4525,29 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
   zero; righe AUDIT rimosse dall'INDEX = 7/7; Ruff `api/` PASS; `git diff --check` PASS. Gate
   esclusivamente documentale.
 - **Prossimo:** G-DOC.2 bonifica work-queue specs (stesso mandato founder).
+
+---
+
+## 2026-09-02 — G-DOC.2: la work-queue torna a dire la verità (11 → 4 spec vive)
+
+- **Mandato founder:** bonifica completa della work-queue (decisione 2/3 dell'audit architetturale).
+- **Archiviate con consuntivo (header in testa, `git mv` → `docs/archive/specs/`):** `SPEC_G9`
+  (G9.0→G9.5 chiusi 2026-07-05; G9.6 resta differito e prescritto SOLO nella spec archiviata,
+  riapertura = nuovo gate + GO founder) · `SPEC_G9.7` (G9.7.0→.5 chiusi 2026-07-16; la voce
+  pendente è estratta nel runbook vivo **`operations/RUNBOOK_RECUPERO_ORFANI.md`** — nuovo file,
+  worklist 640/641/643 + 647/649, trainer-driven) · `SPEC_FINGERPRINT` (sigillata 2026-07-17;
+  T2/binding = gate C0.2/G-MAC.4 di SPEC_G-MAC viva: nessun lavoro orfano).
+- **Congelate in `docs/specs/hold/` (nuova casa, posizione=stato anche per il freeze):**
+  SPEC_FRONTEND (D7) · SPEC_P (D6) · **SPEC_VOCABOLARIO** · **SPEC_COLLABORAZIONE**.
+  ⚠️ **Due deviazioni dichiarate dal piano ratificato:** VOCABOLARIO doveva andare in `technical/`
+  ma il suo Giro 2 è lavoro aperto pendente (non è evergreen) → hold è la casa veritiera;
+  COLLABORAZIONE doveva andare in `operations/` ma ha gate A2+ non autorizzati (è una spec, non
+  una procedura) → hold. Entrambe più conservative del ratificato, nessuna perdita.
+- **Legge e guard estesi:** AGENTS §11 riga SPEC menziona `specs/hold/`; CLAUDE.md riga specs
+  idem; guard check-all «spec ✅ tra le vive» ora copre anche `hold/`.
+- **Puntatori aggiornati:** api/CLAUDE.md ×2, `api/services/financial/__init__.py` (docstring),
+  LEARNING_PROGRAMMAZIONE, AI_ASSISTED_DEVELOPMENT_WORKFLOW, SPEC_PRE_POC §10 ×2, INDEX (tabella
+  specs = 4 vive + sottosezione hold + nota archiviazioni; riga runbook nuovo in operations).
+- **Verifiche:** `ls docs/specs/` = 4 spec vive + hold/; guard docs-lifecycle PASS; Ruff PASS;
+  `git diff --check` PASS. Gate documentale (unico tocco codice: path in una docstring).
+- **Prossimo:** G-DOC.3 contratto di specie del dominio commerciale in `docs/business/`.

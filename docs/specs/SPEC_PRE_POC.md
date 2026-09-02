@@ -343,10 +343,10 @@ strategica: si diagnostica, si corregge o si riporta il milestone dipendente.
 - sicurezza e real-data gate: `docs/technical/PRE_DELIVERY_SECURITY_GATE.md` + ADR-013;
 - release: `docs/operations/RELEASE_CHECKLIST.md` + ADR-004;
 - macOS: `docs/specs/SPEC_G-MAC_CONSEGNA_MACOS.md` + ADR-026;
-- frontend: `docs/specs/SPEC_FRONTEND_CORE_INTUITIVITA.md`;
+- frontend: `docs/specs/hold/SPEC_FRONTEND_CORE_INTUITIVITA.md`;
 - verità finanziaria: `docs/specs/SPEC_G8.4_TRASPARENZA_FINANZIARIA_FE.md` Addendum FT +
   `docs/incidents/INC-2026-08-05-grafico-cassa-netting-rimborsi.md`;
-- blocco P in HOLD: `docs/specs/SPEC_P_PRESTAZIONI_SINGOLE_E_PORTAFOGLIO.md`;
+- blocco P in HOLD: `docs/specs/hold/SPEC_P_PRESTAZIONI_SINGOLE_E_PORTAFOGLIO.md`;
 - verità prodotto: `MANIFESTO.md` e, dopo il gate dedicato, `.agents/product-marketing-context.md`;
 - exit relazione Alessio: `docs/specs/SPEC_EXIT_ALESSIO.md`;
 - storia di sviluppo: `docs/learning/BUILD_LOG.md`.

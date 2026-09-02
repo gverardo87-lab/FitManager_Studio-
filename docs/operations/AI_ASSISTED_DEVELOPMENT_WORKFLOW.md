@@ -199,7 +199,7 @@ CONTRACT SMOKE — READ ONLY. Non modificare file, configurazioni o stato Git e 
 Scope dichiarato: <SCOPE_DICHIARATO>.
 
 Limita le letture a: AGENTS.md, prime istruzioni del root CLAUDE.md,
-docs/specs/SPEC_COLLABORAZIONE_CLAUDE_CODEX.md,
+docs/specs/hold/SPEC_COLLABORAZIONE_CLAUDE_CODEX.md,
 docs/operations/AI_ASSISTED_DEVELOPMENT_WORKFLOW.md e sezione specs di docs/INDEX.md.
 Non eseguire ricerche workspace-wide e non leggere docs/archive/.
 

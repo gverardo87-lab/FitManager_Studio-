@@ -289,7 +289,7 @@ dover leggere gli header. Contratto di contesto sintetico anche in `CLAUDE.md`.
 | Specie | Casa | Ciclo di vita |
 |--------|------|---------------|
 | **ADR** (`docs/adr/`) | La LEGGE | Nasce quando cambia una regola del dominio. Immortale: mai archiviato, evolve per **Addendum**. Indice in `adr/README.md` |
-| **SPEC** (`docs/specs/`) | Il lavoro APERTO | Nasce da/with un ADR, prescrive UN blocco. Riga `Stato:` obbligatoria in testa. **A chiusura blocco: consuntivo (commit, suite, esiti) + spostamento in `docs/archive/specs/` nello STESSO commit docs del gate** |
+| **SPEC** (`docs/specs/`) | Il lavoro APERTO | Nasce da/with un ADR, prescrive UN blocco. Riga `Stato:` obbligatoria in testa. Le spec CONGELATE (HOLD/differite) vivono in `docs/specs/hold/` — posizione=stato anche per il freeze. **A chiusura blocco: consuntivo (commit, suite, esiti) + spostamento in `docs/archive/specs/` nello STESSO commit docs del gate** |
 | **SSoT evergreen** (`docs/technical/`) | Com'è FATTO il sistema | FDM, TASSONOMIA, SECURITY_MODEL, TUNNEL, ecc. Aggiornati dal fold-back di ogni gate che li tocca. **Zero SPEC_*/IMPL_PLAN_* qui** (guard in `check-all.sh`) |
 | **AUDIT/ROADMAP** | Fotografie | Foldate nelle decisioni che generano (ADR/SPEC), poi → `docs/archive/` con header di esito. Mai riferimento vivo |
 | **LOG** | `docs/learning/BUILD_LOG.md` | UNICO log di sviluppo, append-only, mai riscritto. (`docs/upgrades/` dismesso 2026-07-03) |

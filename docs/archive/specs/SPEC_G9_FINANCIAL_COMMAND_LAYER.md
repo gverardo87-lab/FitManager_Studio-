@@ -1,5 +1,10 @@
 # SPEC_G9_FINANCIAL_COMMAND_LAYER
 
+> **CONSUNTIVATA E ARCHIVIATA 2026-09-02 (G-DOC.2)** — blocco G9 chiuso 2026-07-05 (G9.0→G9.5;
+> commit, suite ed esiti nella riga Stato e in `BUILD_LOG.md`). **G9.6 «Money» resta DIFFERITO:**
+> non è prescritto altrove; si riapre solo con nuovo gate e GO founder (anti-scope pre-POC). La
+> prescrizione vive nel §G9.6 di questa spec archiviata.
+
 **Tipo:** specifica prescrittiva (cosa-deve-essere-vero; silente sul come dove possibile). Bridge Chat→Code.
 **Data:** 2026-06-30 · **Branch:** `FitManager_Studio`
 **Stato:** 🟢 **G9.0 → G9.5 FATTI E CHIUSI** (G9.5: `tests/test_financial_state_machine.py` — macchina

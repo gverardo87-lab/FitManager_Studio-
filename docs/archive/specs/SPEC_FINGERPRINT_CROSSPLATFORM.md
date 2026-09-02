@@ -1,5 +1,10 @@
 # SPEC — Machine Fingerprint cross-platform (Windows preservato + ramo macOS)
 
+> **CONSUNTIVATA E ARCHIVIATA 2026-09-02 (G-DOC.2)** — codice fatto e sigillato 2026-07-17 (T1
+> PASS, hash Windows invariato, suite 867). I residui di verifica NON muoiono qui: T2 sul target
+> esatto e il cross-check binding SONO i gate C0.2 e G-MAC.4 di `SPEC_G-MAC_CONSEGNA_MACOS.md`
+> (viva, pull-based per D11). Nessun lavoro resta orfano con l'archiviazione.
+
 **Stato:** 🟡 CODICE FATTO E SIGILLATO (2026-07-17) — T1 PASS (hash Windows mascherato e
 invariato pre/post refactor, suite 867 verde). C0.2, ora HOLD trigger Mac e non bloccante per S1,
 verifica stabilità T2 con probe source-free sul target M1/8 GB/Tahoe 26.5.1; il gate chiude

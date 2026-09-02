@@ -328,7 +328,7 @@ Skills installate in `.agents/skills/` — knowledge base attive per audit e cod
 |-----------|-----------|-----------------|
 | `docs/business/` | BP, Financial Model, Legal (baseline pre-validazione + compliance) | Pricing, proiezioni, fondi, NASpI |
 | `docs/product/` | Roadmap post-lancio, FitScan, Video production/strategy | Pianificazione feature, video, post-lancio |
-| `docs/specs/` | **SOLO spec APERTE** (il fronte di lavoro: `ls docs/specs/` = work-queue) | Quando implementi un blocco |
+| `docs/specs/` | **SOLO spec APERTE** (`ls docs/specs/` = work-queue); le congelate in `specs/hold/` | Quando implementi un blocco |
 | `docs/technical/` | SOLO SSoT evergreen (FDM, Tassonomia, Security, Tunnel, License, Deploy) | Architettura, sicurezza, infra |
 | `docs/operations/` | Release checklist, Diagnostics, Support, Upgrade | Release, troubleshooting, supporto |
 | `docs/adr/` | Architecture Decision Records (13 ADR attivi + ADR-012 riservato) | Decisioni architetturali |

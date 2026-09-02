@@ -1,5 +1,10 @@
 # SPEC_G9.7_SEMANTICA_PER_CLASSE
 
+> **CONSUNTIVATA E ARCHIVIATA 2026-09-02 (G-DOC.2)** — G9.7.0→G9.7.5 tutti chiusi (2026-07-16;
+> commit e suite nella riga Stato e in `BUILD_LOG.md`). L'unica voce pendente (recupero orfani
+> reali) è trasferita al runbook vivo `docs/operations/RUNBOOK_RECUPERO_ORFANI.md`: questa spec non
+> tiene più aperto nulla.
+
 **Tipo:** specifica prescrittiva. **Data:** 2026-07-07 · **Branch:** `FitManager_Studio`
 **Stato:** 🟢 **TUTTI I GATE CHIUSI — G9.7.0 ✅ · G9.7.1 ✅ (incl. -bis) · G9.7.2 ✅ 2026-07-09 ·
 G9.7.3 ✅ 2026-07-11 · G9.7.4 ✅ 2026-07-14 · G9.7.5 ✅ 2026-07-16.** La spec resta aperta SOLO

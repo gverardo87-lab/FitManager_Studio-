@@ -78,15 +78,23 @@ commit docs del gate (ciclo di vita: `AGENTS.md`).
 |------|-------|-------|
 | `SPEC_PRE_POC.md` | 🟡 **IN CORSO — D0+C0.0+FT.0+E0+D11 CHIUSI; PROSSIMO FOUNDER E1; PROSSIMO TECNICO C0.1; C0.2/G-MAC.2–5 HOLD** | Unica regia pre-POC: v1.0.15 Windows security/readiness, C0.1 portability hedge pre-S1, Financial Truth e percorso founder-led; prima POC Windows, distribuzione Mac pull-based dopo trigger diretto |
 | `SPEC_EXIT_ALESSIO.md` | 🟡 **E0 STRATEGIA RATIFICATA; E1 TESTO DA COSTRUIRE; E2–E4 NON ESEGUITI** | Exit commerciale/contrattuale/operativa: comunicazione separata, verifica NDA, export/no-data, licenza/tunnel, fold-back e reset commerciale; nessuna revoca implicita |
-| `SPEC_COLLABORAZIONE_CLAUDE_CODEX.md` | 🟡 **APERTA — A1.2 CHIUSO; SMOKE CLAUDE A1.1 DIFFERITO; A2+ NON AUTORIZZATI** | Contratto agent-neutral: gate come unità di commit/push; ACX-D9 distingue staging meccanico, atomicità semantica e fold-back nello stesso checkpoint. Remoto `0 0` e zero tracked del gate precedente restano obbligatori; smoke Claude A1.1 da recuperare prima di A2+ |
-| `SPEC_FINGERPRINT_CROSSPLATFORM.md` | 🟡 **CODICE FATTO E SIGILLATO — C0.2 HOLD TRIGGER MAC, BINDING IN G-MAC.4** | Gate G-MAC.0: Windows output-invariante PASS; T2 sul target esatto prima di G-MAC.2, binding finale nel canale amministrativo; non blocca S1/R1-WIN |
-| `SPEC_FRONTEND_CORE_INTUITIVITA.md` | ⏸️ **HOLD PRE-POC — FE-0/FE-1 CHIUSI** | FE-2..4 e cleanup riaprono soltanto su finding osservato da rehearsal/pilota; nessun lavoro frontend generalista nella v1.0.15 |
-| `SPEC_G9_FINANCIAL_COMMAND_LAYER.md` | 🟢 G9.0→G9.5 CHIUSI · **resta G9.6 (differito)** | Write-model del dominio finanziario (ADR-022): penna unica ✅, ledger rettifiche ✅, TransitionExecutor+FSM ✅, enforcement ✅ + test semantici ✅ (grep ritirati), Hypothesis stateful ✅ (G9.5, 2026-07-05); resta SOLO **G9.6** Money centesimi (differito, gated) |
 | `SPEC_G8.4_TRASPARENZA_FINANZIARIA_FE.md` | 🟡 **G8.4 ORIGINALE CHIUSO · FT.0 ✅ · FT.1–FT.5 APERTI** | Casa tecnica Financial Truth: FT.1 grafico cash-direction; FT.2 trend/empty/conguagli; FT.3 audit flow; FT.4 cache symmetry; FT.5 bonifica legacy per-record. F0 HOLD su FT.1–FT.4; Real-data GO del DB interessato HOLD su FT.5. G8.5 goodwill resta separato |
-| `SPEC_G9.7_SEMANTICA_PER_CLASSE.md` | 🟢 **G9.7.0→G9.7.5 CHIUSI** · resta solo runbook orfani reali trainer-driven | Generalizzazione per-classe delle leggi semantiche (ADR-024): matrice assi×regole, mai-silenzio eventi, recupero esplicito, occupazione spiegabile, guard di classe, perimetro transizioni, birth-auditor e Hypothesis estesa. Tutti i gate di codice sono consuntivati; la spec resta nel work-queue esclusivamente per il recupero esplicito 640/641/643/647/649 |
-| `SPEC_VOCABOLARIO_E_CLASSIFICAZIONE_CONTRATTI.md` | ✅ Giro 1 · **⏳ Giro 2 pendente** | Consumo-SSoT stati contratto su tutte le superfici: restano `rinnovi-incassi` + `workspace_engine` off-SSoT + grep-guard |
-| `SPEC_P_PRESTAZIONI_SINGOLE_E_PORTAFOGLIO.md` | ⏸️ **HOLD PRE-POC — P0 CHIUSO; P1–P6 NON AUTORIZZATI** | Decisioni preservate; riapertura solo dopo Wave 0 e nuovo GO. Escluso dalla v1.0.15 |
 | `SPEC_G-MAC_CONSEGNA_MACOS.md` | 🟡 **C0.0 CHIUSO; PROSSIMO C0.1 RED; C0.2/G-MAC.2–5 HOLD** | C0.1 `macos-15`→stesso artefatto `macos-26` protegge G1 e apre S1; target exact e distribuzione Mac soltanto dopo R1-WIN e trigger commerciale D11 |
+
+### specs/hold/ — Spec CONGELATE (posizione=stato anche per il freeze)
+
+Vive ma non nel fronte di lavoro: riaprono SOLO col trigger dichiarato nel loro Stato.
+
+| File | Trigger di riapertura |
+|------|----------------------|
+| `SPEC_FRONTEND_CORE_INTUITIVITA.md` | Finding osservato da rehearsal/pilota (D7); FE-2..4 |
+| `SPEC_P_PRESTAZIONI_SINGOLE_E_PORTAFOGLIO.md` | Evidenze Wave 0 + nuovo GO founder (D6); P1–P6 |
+| `SPEC_VOCABOLARIO_E_CLASSIFICAZIONE_CONTRATTI.md` | Giro 2 (rinnovi-incassi + workspace_engine off-SSoT + grep-guard); fuori scope v1.0.15 |
+| `SPEC_COLLABORAZIONE_CLAUDE_CODEX.md` | GO founder su A2+ (smoke Claude A1.1 da recuperare prima) |
+
+Archiviate 2026-09-02 (G-DOC.2) con consuntivo: `SPEC_G9` (resta solo G9.6 differito, prescritto
+nella spec archiviata), `SPEC_G9.7` (runbook orfani → `operations/RUNBOOK_RECUPERO_ORFANI.md`),
+`SPEC_FINGERPRINT` (T2/binding = gate C0.2/G-MAC.4 di SPEC_G-MAC).
 
 **Backlog (non-spec, censito qui):** G8.2 wallet auto-cross-contratto (in panchina, D2 aperta) + Q9
 conversione singole→pacchetto (casa: G8.2+G8.5, P-D6 blocco P) · wallet
@@ -108,6 +116,7 @@ punto tributarista: policy `pro_sedute` + penale nel recesso (PROVISIONAL) · FD
 | `RUNTIME_DIAGNOSTICS_PLAYBOOK.md` | Diagnostica runtime: log, errori, recovery |
 | `SUPPORT_RUNBOOK.md` | Runbook supporto: licenza, backup, restore, troubleshoot |
 | `RUNBOOK_REMEDIATION_CONTRATTI_MUTI.md` | **G7.6** — bonifica contratti chiusi legacy (`motivo_chiusura=NULL`): diagnostica data-driven, albero decisionale per profilo (LEAVE/reopen/terminate), per-contratto, reversibile, mai bulk. Esecuzione trainer-driven via endpoint G7.3/G7.4 |
+| `RUNBOOK_RECUPERO_ORFANI.md` | 🟡 **PENDENTE** — recupero orfani reali 640/641/643 + 647/649 (da SPEC_G9.7 archiviata), trainer-driven via endpoint auditati, mai a mano nel DB |
 | `UPGRADE_PROCEDURE.md` | Procedura upgrade: in-place, fallback, checklist |
 | `DEPLOYMENTS.md` | Registro consegne: chi ha quale versione, SHA-256, licenza |
 | `AUDIT_DEEPLINK_CROSS_PAGE_2026-07-24.md` | 🟡 Unica fotografia con remediation APERTA (fasce A/B/C, coordinata col blocco P in HOLD); a fold-back avvenuto → `archive/operations/` |

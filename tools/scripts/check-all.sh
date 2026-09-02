@@ -71,9 +71,10 @@ if compgen -G "docs/technical/SPEC_*.md" >/dev/null || compgen -G "docs/technica
     DOCS_FAIL=1
 fi
 # Una spec IMPLEMENTATA non resta tra le vive (fold-back + archiviazione nello stesso commit del gate).
-if grep -l "^\*\*Stato:\*\* ✅" docs/specs/*.md >/dev/null 2>&1; then
-    echo "  FAIL [docs]: spec con Stato IMPLEMENTATA in docs/specs/ - consuntiva e archivia (AGENTS.md par.11)."
-    grep -l "^\*\*Stato:\*\* ✅" docs/specs/*.md | sed 's/^/         /'
+# Copre anche docs/specs/hold/ (G-DOC.2 2026-09-02: posizione=stato anche per il freeze).
+if grep -l "^\*\*Stato:\*\* ✅" docs/specs/*.md docs/specs/hold/*.md >/dev/null 2>&1; then
+    echo "  FAIL [docs]: spec con Stato IMPLEMENTATA in docs/specs/ o hold/ - consuntiva e archivia (AGENTS.md par.11)."
+    grep -l "^\*\*Stato:\*\* ✅" docs/specs/*.md docs/specs/hold/*.md 2>/dev/null | sed 's/^/         /'
     DOCS_FAIL=1
 fi
 if [ "$DOCS_FAIL" -eq 0 ]; then
