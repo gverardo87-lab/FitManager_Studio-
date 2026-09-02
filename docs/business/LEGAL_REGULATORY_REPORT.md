@@ -5,7 +5,9 @@
 **Stato:** Documento operativo di riferimento per pre-launch e POC  
 **Documenti correlati:**
 - `TUNNEL_ARCHITECTURE.md` (architettura di accesso e tunnel; ex `CRM_ACCESS_ARCHITECTURE.md` v2.0, consolidato 2026-06-14)
-- `BUSINESS_PLAN.md` v1.0 (modello di business, proiezioni, partnership)
+- `BUSINESS_PLAN.md` (modello di business, proiezioni, partnership; il richiamo «v1.0» è d'epoca —
+  oggi il BP è v4.3 baseline superseded. Verifica di merito dei passaggi legali che vi si appoggiano
+  demandata alla review legale del gate E2, `SPEC_EXIT_ALESSIO.md`)
 - `docs/specs/SPEC_EXIT_ALESSIO.md` (uscita partner e offboarding, ratificata 2026-08-29)
 
 ---
@@ -522,7 +524,8 @@ generale a luglio. Stato operativo e gate: `docs/specs/SPEC_EXIT_ALESSIO.md`.
 
 ### 8.5 IP nel rapporto con Alessio Crociani
 
-Riferimento al `BUSINESS_PLAN.md` v1.0: la titolarità del marchio FitManager e del codice sorgente è
+Riferimento al `BUSINESS_PLAN.md` (richiamo d'epoca «v1.0», oggi v4.3 superseded): la titolarità del
+marchio FitManager e del codice sorgente è
 **esclusiva di AVGV/Giacomo**. Il rapporto ipotizzato con Alessio era B2B tra entità distinte e non
 co-sviluppo IP. Al 2026-08-29 nessun Partnership Agreement eseguito è censito nel repository; le
 proposte economiche di marzo sono superseded e non governano l'exit.

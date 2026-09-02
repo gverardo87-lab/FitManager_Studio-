@@ -4469,3 +4469,34 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
   scope, intatto e non staged.
 - **Prossimo gate tecnico dopo checkpoint remoto:** C0.1 RED reale; preservare le evidenze, poi aprire
   G-MAC.1 in un gate codice separato e rieseguire C0.1 fino a GREEN.
+
+---
+
+## 2026-09-02 — Allineamento commerciale-tecnica e semplificazione pre-A0
+
+- **Trigger founder:** rilettura del MANIFESTO giudicata obsoleta e fuorviante prima di sviluppare
+  materiale promozionale; richiesta di allineare docs commerciale-tecnica e semplificare
+  drasticamente prima del lavoro A0.
+- **Evidenza:** audit read-only docs↔codice (agente drift-auditor) su MANIFESTO, LAUNCH_SCOPE,
+  INDEX, `docs/business/*`, integrità riferimenti `docs/product/*`: **18 finding** (4 ALTA, 12
+  MEDIA, 2 BASSA) + 3 decisioni escalate. LAUNCH_SCOPE: **zero finding** (già allineato a D11).
+- **Decisioni founder (ratificate una a una):** (1) FitScan fuori dal Posizionamento del MANIFESTO,
+  sezione Visione AI/CV compressa a roadmap con puntatore ADR-010; (2) BP/FM: blocco «claim
+  superati» nell'header, corpo storico non riscritto (la storia si annota, non si falsifica);
+  (3) COMPETITIVE_ANALYSIS archiviata come fotografia marzo 2026.
+- **Interventi:** MANIFESTO (M-1 ADR-007→ADR-010, M-2 posizionamento senza feature inesistenti);
+  BP delta di verità in header (v1.0.5→1.0.14, Box roadmap, Nutrizione UI rimossa, 500→466/522
+  esercizi, POC 10→3 design partner, Tailscale→FRP); FM delta (ricavi Box = prodotto non esistente,
+  pricing in HOLD); CA → `docs/archive/business/COMPETITIVE_ANALYSIS_2026-03-29.md` con header di
+  archiviazione (git mv, storia preservata); INDEX (riga CA rimossa, FITSCAN marcata
+  pre-implementazione); FITSCAN_ARCHITECTURE ADR corretto ADR-007→ADR-010; ADR-006 puntatore CA
+  aggiornato al path archivio; report legale: richiamo «BP v1.0» annotato come richiamo d'epoca
+  (oggi v4.3), verifica di merito demandata alla review legale E2 senza mascherare la divergenza;
+  CLAUDE.md riga `docs/business/` allineata al contenuto reale della directory.
+- **Verifiche docs/process:** vecchio path CA referenziato solo dentro `docs/archive/` (storia,
+  invariata); zero riferimenti ADR-007↔FitScan residui nel perimetro; Ruff `api/` PASS;
+  `git diff --check` PASS. Gate esclusivamente documentale: nessuna suite applicativa.
+- **Esclusioni:** nessun codice, schema, dato, artifact o azione esterna. Il non tracciato
+  `.agents/product-marketing-context.md` (bozza D8 con claims matrix, auto-draftata 2026-09-01)
+  resta fuori dal commit: si ratifica nel gate A0.
+- **Prossimo gate founder:** E1 testo exit. Prossimo gate tecnico: C0.1 RED reale.

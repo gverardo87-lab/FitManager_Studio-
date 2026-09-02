@@ -1,7 +1,7 @@
 # FitScan — Architettura Tecnica
 
 > Data: 2026-03-25
-> ADR: ADR-007
+> ADR: ADR-010
 > Stato: specifica tecnica approvata, pre-implementazione
 
 ---

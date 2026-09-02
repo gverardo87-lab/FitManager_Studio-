@@ -16,7 +16,7 @@ La prima utilizzatrice reale (Chiara) ha confermato che:
 
 Il problema fondamentale: **se il PC e' spento, il server non esiste**. Tailscale, WiFi locale, PWA — tutto dipende da un server attivo.
 
-L'analisi competitiva (docs/business/COMPETITIVE_ANALYSIS.md) conferma che tutti i competitor sono cloud SaaS con abbonamento mensile. Nessuno offre: hosting locale, privacy-first, motori scientifici, italiano nativo.
+L'analisi competitiva (docs/archive/business/COMPETITIVE_ANALYSIS_2026-03-29.md, archiviata come fotografia marzo 2026) conferma che tutti i competitor sono cloud SaaS con abbonamento mensile. Nessuno offre: hosting locale, privacy-first, motori scientifici, italiano nativo.
 
 ## Decision Drivers
 

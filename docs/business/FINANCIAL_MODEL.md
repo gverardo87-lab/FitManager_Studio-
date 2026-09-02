@@ -11,6 +11,11 @@
 > le viste founder+partner restano scenari storici di marzo, non forecast corrente, obbligo economico
 > o base per un nuovo accordo. Il modello commerciale sarà sostituito in un gate separato dopo
 > `docs/specs/SPEC_EXIT_ALESSIO.md` E1–E4.
+>
+> **Claim superati nel corpo — 2026-09-02:** le linee di ricavo FitManager Box modellano un prodotto
+> non esistente (Box = roadmap post-Wave 0, `LAUNCH_SCOPE.md`); il pricing è baseline pre-validazione
+> in HOLD fino alla nuova strategia commerciale. Nessun numero di questo modello è un claim esterno
+> autorizzato.
 
 ---
 

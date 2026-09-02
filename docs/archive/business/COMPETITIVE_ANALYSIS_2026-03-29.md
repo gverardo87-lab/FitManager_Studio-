@@ -1,5 +1,10 @@
 # FitManager AI Studio — Analisi Competitiva
 
+> **ARCHIVIATA 2026-09-02** — fotografia marzo 2026, superseded. Nessuna autorità su claim,
+> posizionamento o stato prodotto. Contiene riferimenti superati (Tailscale, nutrizione come feature
+> attiva, «500 esercizi», ADR-007 citato per FitScan — l'ADR corretto è ADR-010). La verità
+> commerciale corrente vive nel product marketing context (gate A0, `SPEC_PRE_POC.md` D8).
+
 > Ultimo aggiornamento: 2026-03-29
 > Intelligence di prodotto per posizionamento commerciale.
 > Versione prodotto di riferimento: 1.0.5

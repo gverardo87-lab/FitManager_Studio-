@@ -14,6 +14,14 @@
 > un'offerta corrente né una policy riutilizzabile. Nessuna parte del modello matura compensi o diritti
 > per Alessio. Il percorso è founder-led fino alla nuova strategia commerciale; fonte operativa:
 > `docs/specs/SPEC_EXIT_ALESSIO.md`.
+>
+> **Claim superati nel corpo — delta di verità al 2026-09-02:** il corpo riflette marzo 2026 e NON va
+> citato su questi punti: versione prodotto «1.0.5» (reale: `api/__init__.py`, oggi 1.0.14);
+> FitManager Box presentata come componente esistente (è roadmap post-Wave 0, `LAUNCH_SCOPE.md`);
+> Nutrizione presentata come feature attiva (UI rimossa, backend dormiente); «500 esercizi»
+> (canonico: 466 attivi su 522, catalog.db); POC «10 professionisti» (regia corrente: max 3 design
+> partner, `SPEC_PRE_POC.md` D9); accesso remoto «Tailscale» (sostituito da tunnel FRP self-hosted).
+> I claim commerciali autorizzati vivono solo nel product marketing context (gate A0).
 
 ---
 

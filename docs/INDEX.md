@@ -14,7 +14,6 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 | `BUSINESS_PLAN.md` | BP v4.3 — baseline marzo; struttura partner superseded 2026-08-29; non governa prodotto o scheduling | Numeri e assunzioni storiche pre-validazione |
 | `FINANCIAL_MODEL.md` | Modello analitico marzo; formule partner e viste founder+partner superseded; da sostituire col reset commerciale | Proiezioni storiche pre-validazione |
 | `LEGAL_REGULATORY_REPORT.md` | Report legale-regolamentare v1.4: GDPR, fiscale, IP, EAA, SBOM, PSD2, exit partner | Compliance |
-| `COMPETITIVE_ANALYSIS.md` | Competitor, posizionamento, differenziatori | Analisi mercato |
 
 **Gerarchia:** `SPEC_PRE_POC.md` governa il lavoro corrente; `SPEC_EXIT_ALESSIO.md` governa il blocco
 di uscita partner. BP/FM conservano assunzioni e numeri pre-validazione, ora superseded per la
@@ -29,7 +28,7 @@ superseded vivono in `docs/archive/` e non sono contesto operativo.
 |------|-------|
 | `CATALOGO_SCENARI_PT.md` | **Fondamento product ADR-025 (vivo):** 96 scenari quotidiani reali del PT/chinesiologo (6 lenti + critic), copertura mappata sul modello attuale (15% piena · 51% parziale · 34% assente), 23 domande aperte per l'ADR. Base di conoscenza del futuro agente `pt-reality-auditor`. Gemello: `archive/RICERCA_COMPETITOR_WALLET_SEDUTE_SINGOLE_2026-07-07.md` (leggi W1-W11) |
 | `POST_LAUNCH_ISSUES.md` | Issue aperte post-lancio |
-| `FITSCAN_ARCHITECTURE.md` | Spec tecnica FitScan: DB schema, Biomechanical Engine, Pose Provider |
+| `FITSCAN_ARCHITECTURE.md` | Spec tecnica FitScan (pre-implementazione, roadmap ADR-010): DB schema, Biomechanical Engine, Pose Provider |
 | `VIDEO_GUIDE_STRATEGY.md` | Sistema video-guide contestuali: 4 livelli, mapping pagine |
 | `VIDEO_PRODUCTION.md` | Pipeline video: manifest SSoT, flusso continuo, selettori |
 | `RECURRING_SESSIONS_SPEC.md` | Spec sessioni ricorrenti (pianificazione, aderenza, calendario) |

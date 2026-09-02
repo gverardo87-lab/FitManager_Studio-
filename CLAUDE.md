@@ -326,7 +326,7 @@ Skills installate in `.agents/skills/` — knowledge base attive per audit e cod
 
 | Directory | Contenuto | Quando leggerlo |
 |-----------|-----------|-----------------|
-| `docs/business/` | BP, Strategy Plan, Financial Model, Partner, Legal, Competitive | Pricing, proiezioni, partner, fondi, NASpI |
+| `docs/business/` | BP, Financial Model, Legal (baseline pre-validazione + compliance) | Pricing, proiezioni, fondi, NASpI |
 | `docs/product/` | Roadmap post-lancio, FitScan, Video production/strategy | Pianificazione feature, video, post-lancio |
 | `docs/specs/` | **SOLO spec APERTE** (il fronte di lavoro: `ls docs/specs/` = work-queue) | Quando implementi un blocco |
 | `docs/technical/` | SOLO SSoT evergreen (FDM, Tassonomia, Security, Tunnel, License, Deploy) | Architettura, sicurezza, infra |
