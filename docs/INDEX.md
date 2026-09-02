@@ -77,17 +77,17 @@ commit docs del gate (ciclo di vita: `AGENTS.md`).
 
 | File | Stato | Scopo |
 |------|-------|-------|
-| `SPEC_PRE_POC.md` | 🟡 **IN CORSO — D0+C0.0+FT.0+E0 CHIUSI; PROSSIMO FOUNDER E1; PROSSIMO TECNICO C0.1; F0 HOLD FT.1–FT.4** | Unica regia pre-POC: v1.0.15 security/readiness, canary mirato M1/8 GB/Tahoe 26.5.1, Financial Truth, Windows + macOS ARM64, percorso founder-led; Wave 0 HOLD fino alla nuova strategia commerciale |
+| `SPEC_PRE_POC.md` | 🟡 **IN CORSO — D0+C0.0+FT.0+E0+D11 CHIUSI; PROSSIMO FOUNDER E1; PROSSIMO TECNICO C0.1; C0.2/G-MAC.2–5 HOLD** | Unica regia pre-POC: v1.0.15 Windows security/readiness, C0.1 portability hedge pre-S1, Financial Truth e percorso founder-led; prima POC Windows, distribuzione Mac pull-based dopo trigger diretto |
 | `SPEC_EXIT_ALESSIO.md` | 🟡 **E0 STRATEGIA RATIFICATA; E1 TESTO DA COSTRUIRE; E2–E4 NON ESEGUITI** | Exit commerciale/contrattuale/operativa: comunicazione separata, verifica NDA, export/no-data, licenza/tunnel, fold-back e reset commerciale; nessuna revoca implicita |
 | `SPEC_COLLABORAZIONE_CLAUDE_CODEX.md` | 🟡 **APERTA — A1.2 CHIUSO; SMOKE CLAUDE A1.1 DIFFERITO; A2+ NON AUTORIZZATI** | Contratto agent-neutral: gate come unità di commit/push; ACX-D9 distingue staging meccanico, atomicità semantica e fold-back nello stesso checkpoint. Remoto `0 0` e zero tracked del gate precedente restano obbligatori; smoke Claude A1.1 da recuperare prima di A2+ |
-| `SPEC_FINGERPRINT_CROSSPLATFORM.md` | 🟡 **CODICE FATTO E SIGILLATO — C0.2 T2 SOURCE-FREE, BINDING IN G-MAC.4** | Gate G-MAC.0: Windows output-invariante PASS; stabilità T2 senza identificatori nei log sul target esatto, binding finale nel canale amministrativo |
+| `SPEC_FINGERPRINT_CROSSPLATFORM.md` | 🟡 **CODICE FATTO E SIGILLATO — C0.2 HOLD TRIGGER MAC, BINDING IN G-MAC.4** | Gate G-MAC.0: Windows output-invariante PASS; T2 sul target esatto prima di G-MAC.2, binding finale nel canale amministrativo; non blocca S1/R1-WIN |
 | `SPEC_FRONTEND_CORE_INTUITIVITA.md` | ⏸️ **HOLD PRE-POC — FE-0/FE-1 CHIUSI** | FE-2..4 e cleanup riaprono soltanto su finding osservato da rehearsal/pilota; nessun lavoro frontend generalista nella v1.0.15 |
 | `SPEC_G9_FINANCIAL_COMMAND_LAYER.md` | 🟢 G9.0→G9.5 CHIUSI · **resta G9.6 (differito)** | Write-model del dominio finanziario (ADR-022): penna unica ✅, ledger rettifiche ✅, TransitionExecutor+FSM ✅, enforcement ✅ + test semantici ✅ (grep ritirati), Hypothesis stateful ✅ (G9.5, 2026-07-05); resta SOLO **G9.6** Money centesimi (differito, gated) |
 | `SPEC_G8.4_TRASPARENZA_FINANZIARIA_FE.md` | 🟡 **G8.4 ORIGINALE CHIUSO · FT.0 ✅ · FT.1–FT.5 APERTI** | Casa tecnica Financial Truth: FT.1 grafico cash-direction; FT.2 trend/empty/conguagli; FT.3 audit flow; FT.4 cache symmetry; FT.5 bonifica legacy per-record. F0 HOLD su FT.1–FT.4; Real-data GO del DB interessato HOLD su FT.5. G8.5 goodwill resta separato |
 | `SPEC_G9.7_SEMANTICA_PER_CLASSE.md` | 🟢 **G9.7.0→G9.7.5 CHIUSI** · resta solo runbook orfani reali trainer-driven | Generalizzazione per-classe delle leggi semantiche (ADR-024): matrice assi×regole, mai-silenzio eventi, recupero esplicito, occupazione spiegabile, guard di classe, perimetro transizioni, birth-auditor e Hypothesis estesa. Tutti i gate di codice sono consuntivati; la spec resta nel work-queue esclusivamente per il recupero esplicito 640/641/643/647/649 |
 | `SPEC_VOCABOLARIO_E_CLASSIFICAZIONE_CONTRATTI.md` | ✅ Giro 1 · **⏳ Giro 2 pendente** | Consumo-SSoT stati contratto su tutte le superfici: restano `rinnovi-incassi` + `workspace_engine` off-SSoT + grep-guard |
 | `SPEC_P_PRESTAZIONI_SINGOLE_E_PORTAFOGLIO.md` | ⏸️ **HOLD PRE-POC — P0 CHIUSO; P1–P6 NON AUTORIZZATI** | Decisioni preservate; riapertura solo dopo Wave 0 e nuovo GO. Escluso dalla v1.0.15 |
-| `SPEC_G-MAC_CONSEGNA_MACOS.md` | 🟡 **C0.0 CHIUSO; PROSSIMO C0.1 RED** | Target M1/8 GB/Tahoe 26.5.1; build `macos-15`, stesso artefatto su `macos-26`, probe source-free sul target; G-MAC.1 prima dell'application freeze, G-MAC.2–5 dopo |
+| `SPEC_G-MAC_CONSEGNA_MACOS.md` | 🟡 **C0.0 CHIUSO; PROSSIMO C0.1 RED; C0.2/G-MAC.2–5 HOLD** | C0.1 `macos-15`→stesso artefatto `macos-26` protegge G1 e apre S1; target exact e distribuzione Mac soltanto dopo R1-WIN e trigger commerciale D11 |
 
 **Backlog (non-spec, censito qui):** G8.2 wallet auto-cross-contratto (in panchina, D2 aperta) + Q9
 conversione singole→pacchetto (casa: G8.2+G8.5, P-D6 blocco P) · wallet
@@ -124,9 +124,9 @@ punto tributarista: policy `pro_sedute` + penale nel recesso (PROVISIONAL) · FD
 ## adr/ — Architecture Decision Records
 
 24 ADR accettati (ADR-001 → ADR-026; ADR-002 rimossa come obsoleta, ADR-012 riservato). Ultimi:
-**ADR-026 + Addendum I** (macOS ARM64: build evidence separata dalla compatibilità target; canary
-prima del freeze, distribuzione firmata/notarizzata dopo; primo target Daniele, capacità indipendente
-dal prospect) · **ADR-025** (prestazione singola + Portafoglio cliente: fatto economico proprio, insoluto derivato
+**ADR-026 + Addendum I/II** (macOS ARM64: build evidence separata dalla compatibilità target; C0.1
+GREEN protegge G1 e apre S1; C0.2/distribuzione pull-based dopo R1-WIN e trigger diretto, con release
+Mac distinta) · **ADR-025** (prestazione singola + Portafoglio cliente: fatto economico proprio, insoluto derivato
 fail-loud, compensazione wallet come atto esplicito; blocco P) · **ADR-024** (semantica per-classe:
 matrice assi×regole, fail-loud, perimetro transizioni, birth-auditor; G9.7) · **ADR-023**
 (temporal fence: storia contabilizzata immutabile, varco unico `reopen`; G7.8-ter) · **ADR-022**

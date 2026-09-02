@@ -1,7 +1,8 @@
 # SPEC — Strategia e readiness pre-POC
 
-**Stato:** 🟡 IN CORSO — D0, C0.0, FT.0 ed E0 chiusi; prossimo gate founder E1 testo exit;
-prossimo gate tecnico C0.1 canary RED; F0 in HOLD finché FT.1–FT.4 non sono chiusi
+**Stato:** 🟡 IN CORSO — D0, C0.0, FT.0, E0 e D11 chiusi; prossimo gate founder E1 testo exit;
+prossimo gate tecnico C0.1 canary RED; C0.2/G-MAC.2–5 in HOLD su trigger Mac; F0 in HOLD finché
+FT.1–FT.4 non sono chiusi
 **Data di ratifica founder:** 2026-07-31
 **Branch:** `FitManager_Studio`
 **Tipo:** regia operativa pre-POC; non duplica le specifiche tecniche sottostanti
@@ -69,7 +70,7 @@ La `v1.0.15` è la release di sicurezza e readiness pre-POC. Comprende:
 Non comprende P, nuove macro-feature, cleanup generalisti, refactor monolitici o framework frontend
 non richiesti da evidenza utente.
 
-### D3 — Prima il codice applicativo, poi la distribuzione
+### D3 — Prima il codice applicativo, poi la distribuzione Windows
 
 La sequenza è vincolante:
 
@@ -78,27 +79,30 @@ scope freeze v1.0.15
 → portability canary macOS
 → core/security
 → application code freeze
-→ distribuzione Windows + G-MAC
-→ release freeze, seal e tag
-→ consegna
+→ distribuzione Windows
+→ release freeze, seal e tag v1.0.15
+→ consegna e prima POC Windows
+→ C0.2 + distribuzione G-MAC solo su trigger commerciale diretto
 ```
 
 L'**application code freeze** chiude comportamento e feature della release. Il **release freeze**
-arriva dopo che build, installer e verifiche di entrambe le piattaforme sono entrati nel commit da
-sigillare. Il tag `v1.0.15` deve identificare la stessa baseline dei due artefatti.
+arriva dopo che build, installer e verifiche Windows sono entrati nel commit da sigillare. Il tag
+`v1.0.15` identifica un solo commit e un solo artefatto Windows riproducibile. Una futura release Mac
+usa una propria versione/tag e conserva gli stessi contratti applicativi congelati, senza
+ricostruire `v1.0.15` da un commit differente.
 
-### D4 — macOS ARM64 è un deliverable impegnato
+### D4 — La portabilità macOS ARM64 è impegnata; la distribuzione è pull-based
 
-macOS ARM64 non è subordinato a ulteriori conferme commerciali. Daniele è il primo target di
-accettazione e consegna, non il centro della strategia né un gate allo sviluppo. Il percorso conserva
-valore come capacità di distribuzione riutilizzabile; non è più legato alla credibilità o alla
-relazione commerciale con Alessio. Una consegna a Daniele richiede contatto diretto e disponibilità
-verificata, oltre ai normali gate tecnici e di sicurezza.
+Il portability hedge macOS ARM64 non è subordinato a ulteriori conferme commerciali: C0.1 e i minimi
+adattamenti G-MAC.1 restano pre-S1 per impedire che G1 venga progettato Windows-only. La pipeline di
+distribuzione, il packaging e la consegna macOS sono invece subordinati a evidenza commerciale
+diretta. Daniele è un target tecnico noto, non un design partner verificato né un gate allo sviluppo.
 
 Prima dell'application freeze sono autorizzati il portability canary e i minimi adattamenti runtime
 che esso dimostra necessari, incluso G-MAC.1. Devono provare che dipendenze e G1 siano realmente
-implementabili su ARM64 senza avviare packaging cliente. G-MAC.2–5 — pipeline di distribuzione,
-firma, notarizzazione, installazione e validazione — aprono dopo l'application freeze.
+implementabili su ARM64 senza avviare packaging cliente. C0.1 GREEN è sufficiente ad aprire S1.
+C0.2 e G-MAC.2–5 — target exact, pipeline di distribuzione, firma, notarizzazione, installazione e
+validazione — restano in HOLD fino al trigger D11 e si aprono soltanto dopo la release Windows.
 
 Il canary C0 usa tre checkpoint: C0.0 fissa il contratto; C0.1 costruisce su GitHub `macos-15` e
 prova lo stesso artefatto su `macos-26`; C0.2 esegue un probe compilato e source-free sul target
@@ -111,9 +115,9 @@ redatto, endpoint auth già esenti, superfici frontend corrispondenti e self-tes
 dati sintetici. Non modifica middleware/exempt/enforcement, non usa licenze fittizie e non attribuisce
 PASS alle API CRM protette. Licenza reale e flusso applicativo end-to-end restano G-MAC.4.
 
-L'intero percorso definito è pre-autorizzato. Non servono nuovi GO founder tra gate già descritti;
-serve escalation solo se cambiano scope, policy di sicurezza, architettura, branch/remoto, support
-boundary o costi esterni materiali.
+Il percorso C0.1 → G-MAC.1 → C0.1 GREEN è pre-autorizzato. C0.2 e G-MAC.2–5 richiedono invece il
+trigger e il nuovo GO previsti da D11; serve comunque escalation se cambiano scope, policy di
+sicurezza, architettura, branch/remoto, support boundary o costi esterni materiali.
 
 Support boundary pre-POC: Apple Silicon ARM64, configurazioni macOS testate, pilot assistito. Intel,
 self-service generalizzato e parità non verificata con ogni configurazione Mac restano fuori scope.
@@ -169,23 +173,45 @@ sufficienti.
 
 - FT.0 è il gate docs-only che registra baseline, finding, canary e interlock;
 - C0.1 resta il prossimo gate esecutivo: il finding non corrompe dati e non invalida il canary Mac;
-- FT.1–FT.4 aprono in gate atomici dopo C0.2/A0 e dopo le fondazioni S1 G1/G2/G4, senza lavoro
+- FT.1–FT.4 aprono in gate atomici dopo C0.1 GREEN/A0 e dopo le fondazioni S1 G1/G2/G4, senza lavoro
   concorrente sugli stessi file, e devono chiudere prima di F0;
 - FT.5 è una bonifica dati separata: richiede backup, dry-run, GO founder specifico e verifier; fino
   alla sua chiusura il database interessato non ottiene il Real-data GO;
 - nessun code gate finanziario può essere dichiarato verde finché il runner pytest locale non è
   nuovamente eseguibile.
 
+### D11 — POC Windows-first e distribuzione Mac su evidenza — 2026-09-01
+
+Il founder ratifica la separazione tra capacità architetturale e canale di distribuzione:
+
+- **C0.1 GREEN è fondamentale e pre-S1:** costruzione `macos-15`, esecuzione del medesimo artefatto
+  su `macos-26`, supply chain finale ARM64, SQLCipher/Nuitka/frontend/auth e zero bypass;
+- **C0.2 non blocca S1/F0/R1-WIN:** resta obbligatorio prima di aprire G-MAC.2 e non viene chiamato
+  PASS finché il canary source-free non gira sul target esatto;
+- **G-MAC.2–5 sono pull-based:** si aprono dopo la release Windows soltanto con un design partner Mac
+  diretto e qualificato, protocollo pilota accettato, installazione assistita calendarizzata e
+  capacità di supporto confermata;
+- **Wave 0 Windows-first:** quando la nuova strategia commerciale autorizza W0/W1, la prima coorte
+  usa Windows per mantenere omogenei onboarding, supporto e misurazione; un partecipante Mac entra
+  soltanto attraverso il trigger precedente;
+- **versioning univoco:** `v1.0.15` è la candidate Windows security/readiness. Una futura release Mac
+  riceve un nuovo numero/tag secondo ADR-004, anche se riusa gli stessi contratti applicativi
+  congelati. Nessun artefatto diverso viene pubblicato sotto `v1.0.15`.
+
+Il trigger Mac è una decisione founder esplicita e verificabile, non deriva da un contatto indiretto,
+da un prospect non qualificato o dal solo interesse tecnico. L'enrollment Apple può avanzare come
+opzione amministrativa, ma non autorizza codice G-MAC.2–5 né spese senza il normale GO.
+
 ## 4. Classificazione stabile delle priorità
 
 | Classe | Elementi | Regola |
 |---|---|---|
-| Fondamentali | G1–G4, G9–G11, Financial Truth FT.1–FT.4, candidate, backup/restore, onboarding, misurazione, macOS ARM64 consegnabile | Senza questi la POC non parte o non è interpretabile |
+| Fondamentali | C0.1 GREEN/G-MAC.1, G1–G4, G9–G11, Financial Truth FT.1–FT.4, candidate Windows, backup/restore, onboarding, misurazione | Senza questi la POC Windows non parte o non è interpretabile |
 | Abilitatori | Recruitment founder-led, product truth, materiali approvati e rehearsal | Accelerano senza creare dipendenze esterne |
 | Target di accettazione | Chiara/non-dev Windows, Daniele macOS | Verificano gli artefatti; non governano la roadmap |
 | Exit | Alessio: E1–E4 in `SPEC_EXIT_ALESSIO.md` | Nessuna dipendenza; nessuna azione esterna o tecnica implicita |
 | Upside | Contatto indiretto associato a Virgin, scala commerciale Mac, category creation | Non entra nel critical path senza rapporto diretto ed evidenza |
-| HOLD | Nuova strategia commerciale, Wave 0 commerciale, P, FE non dimostrato, cleanup, refactor, nuove feature | Nuovo GO secondo la SPEC pertinente |
+| HOLD | C0.2/G-MAC.2–5, nuova strategia commerciale, Wave 0 commerciale, P, FE non dimostrato, cleanup, refactor, nuove feature | Nuovo GO secondo la SPEC pertinente |
 
 Una nuova informazione aggiorna questa matrice solo con evidenza o decisione founder esplicita. Non
 riscrive automaticamente l'intera strategia.
@@ -199,22 +225,25 @@ ma il calendario viene ripianificato dopo E1 e nella nuova strategia commerciale
 | Deadline | Gate | Evidenza di uscita |
 |---|---|---|
 | 2026-08-02 | **D0 — Autorità documentale** | questa SPEC viva; fonti concorrenti archiviate; INDEX/CLAUDE/LAUNCH_SCOPE e interlock allineati |
-| Da ripianificare | **C0 — Scope + portability canary** | C0.0 contratto target e boundary licenza chiusi; C0.1 build `macos-15` + esecuzione medesimo artefatto `macos-26`; C0.2 probe source-free su M1/8 GB/Tahoe 26.5.1; SQLCipher/G1, Nuitka, frontend ARM64, auth exempt, memoria e display verificati senza packaging cliente né claim sul CRM protetto |
+| Prossimo gate tecnico | **C0.1 — Portability hedge CI** | build `macos-15` + esecuzione medesimo artefatto `macos-26`; SQLCipher/G1, Nuitka, frontend ARM64, auth exempt e supply chain finale ARM64 verificati senza packaging cliente né claim sul CRM protetto |
+| HOLD trigger Mac | **C0.2 — Target exact source-free** | medesimo canary sul target M1/8 GB/Tahoe 26.5.1; obbligatorio prima di G-MAC.2, non blocca S1/F0/R1-WIN |
 | Da ripianificare | **A0 — Product truth founder-led** | context agent-neutral e claims matrix approvata; nessun claim esterno non sostenuto; nessuna dipendenza da materiale o readiness Alessio |
 | Da ripianificare | **S1 — Core/security** | G1/G2/G4 verdi; backup/restore coerenti; G9–G11 pronti per il real-data gate |
 | Da ripianificare | **F0 — Application code freeze** | suite completa Windows + runtime Mac CI; FT.1–FT.4 chiusi; nessuna feature o finding release-critical aperto |
 | 2026-08-29 | **E0 — Strategia exit Alessio** | ruolo e dipendenza ritirati; interlock documentale e `SPEC_EXIT_ALESSIO.md` ratificati; nessuna azione esterna o tecnica |
 | Prossimo gate founder | **E1 — Testo comunicazione exit** | testo costruito e approvato col founder in `docs/`; nessun invio nel gate E1 |
 | HOLD nuova strategia | **W0 — Protocollo Wave 0** | massimo tre candidati qualificati; ipotesi, metriche, calendario, support boundary e criteri stop scritti |
-| Da ripianificare | **D1 — Distribution engineering** | installer Windows e artifact Mac ARM64 firmato/notarizzato; clean install, upgrade, licenza, process lifecycle e data preservation verificati |
-| Da ripianificare | **R1 — Release freeze** | candidate e2e, restore, FRP/TLS, seal, manifest e tag `v1.0.15` dalla stessa baseline |
+| Da ripianificare | **D1-WIN — Distribution engineering Windows** | installer Windows; clean install, upgrade, licenza, process lifecycle e data preservation verificati |
+| Da ripianificare | **R1-WIN — Release freeze v1.0.15** | candidate Windows e2e, restore, FRP/TLS, seal, manifest e tag univoco `v1.0.15` |
+| HOLD trigger Mac | **G-MAC.2–5 — Distribuzione Mac** | dopo R1-WIN e C0.2: nuova release/versione, artifact ARM64 firmato/notarizzato, rehearsal, licenza, upgrade e lifecycle verificati |
 | HOLD nuova strategia | **M0 — Field delivery** | target e canale di consegna nuovamente confermati; dati reali solo dopo GO security |
 | HOLD nuova strategia | **W1 — Wave 0 live** | massimo tre design partner attivati e misurazione avviata |
 | HOLD nuova strategia | **W2 — Scale checkpoint** | decisione evidence-based su espansione 5→10 |
 
-Se C0 scopre un'incompatibilità Mac, il finding diventa requisito della v1.0.15: non riapre la
-decisione strategica G-MAC. Se un gate supera la deadline, slitta il milestone dipendente o si riduce
-lo scope non fondamentale; sicurezza, test e tracciabilità non vengono ridotti.
+Se C0.1 scopre un'incompatibilità nel portability hedge, il finding viene classificato e chiuso nel
+perimetro minimo necessario prima di S1 oppure escalato se cambia architettura/scope. C0.2 e i finding
+di distribuzione Mac spostano il solo milestone Mac e non la release Windows. Sicurezza, test e
+tracciabilità non vengono ridotti.
 
 ## 6. Sequenza dei gate repository
 
@@ -228,15 +257,15 @@ in calendario, ma non sono «zero ore founder» e non autorizzano lavoro concorr
 5. E1 testo comunicazione exit, docs-only e senza invio esterno;
 6. C0.1 canary RED;
 7. G-MAC.1 remediation runtime dimostrata dal canary, in gate codice separato, e re-run C0.1 GREEN;
-8. C0.2 probe source-free sul target esatto;
-9. A0 product truth founder-led, docs-only e checkpoint remoto pulito;
-10. S1 in gate tecnici atomici secondo ADR-013 e Security Gate; dopo G1/G2/G4 e prima di F0 si
+8. A0 product truth founder-led, docs-only e checkpoint remoto pulito;
+9. S1 in gate tecnici atomici secondo ADR-013 e Security Gate; dopo G1/G2/G4 e prima di F0 si
    inseriscono FT.1–FT.4, ciascuno con checkpoint proprio;
-11. F0 application freeze;
-12. D1 distribuzione Windows e macOS in gate separati ma sulla stessa baseline applicativa;
-13. R1 build/seal/tag;
-14. M0 consegne e registrazione, dopo nuova conferma commerciale dei target;
-15. W1 Wave 0, dopo la nuova strategia commerciale.
+10. F0 application freeze;
+11. D1-WIN distribuzione Windows;
+12. R1-WIN build/seal/tag `v1.0.15`;
+13. M0-WIN consegna e registrazione Windows, dopo nuova strategia commerciale e GO security;
+14. W1 prima Wave 0 Windows;
+15. soltanto su trigger D11: C0.2 → G-MAC.2–5 in gate separati → nuova release/tag Mac.
 
 FT.5 non è un gate di codice e non viene assorbito in FT.1–FT.4: è una manutenzione controllata del
 database interessato, dopo i relativi checkpoint e prima del suo Real-data GO, con autorizzazione
@@ -353,7 +382,22 @@ operativo del prossimo gate C0, che richiede prove runtime reali.
 - nessuna comunicazione esterna, revoca, modifica infrastrutturale, nuova politica commerciale o
   modifica applicativa eseguita in E0.
 
-## 13. Chiusura della SPEC
+## 13. Addendum D11 — Windows-first, Mac pull-based — 2026-09-01
+
+- separati il portability hedge pre-S1 e la distribuzione commerciale Mac;
+- mantenuti C0.1/G-MAC.1 come unico interlock Mac prima di S1 e spostati C0.2/G-MAC.2–5 dopo
+  R1-WIN, in HOLD su trigger diretto;
+- resa `v1.0.15` una release Windows univoca; vietato ricostruire lo stesso numero da una baseline
+  diversa per la futura distribuzione Mac;
+- definita la prima POC Windows-first, senza autorizzare W0/W1 prima della nuova strategia
+  commerciale e dei normali gate security;
+- definito il trigger Mac come design partner diretto e qualificato, protocollo accettato,
+  installazione calendarizzata e capacità di supporto confermata;
+- preservati integralmente boundary licenza C0, privacy del probe, G1–G4/G9–G11, parità Windows e
+  requisiti Developer ID/notarizzazione per qualunque futura consegna Mac;
+- nessuna comunicazione esterna, spesa Apple, modifica codice, artifact o consegna eseguita in D11.
+
+## 14. Chiusura della SPEC
 
 La SPEC chiude quando la Wave 0 è attiva, le evidenze iniziali sono raccolte e la decisione di scala è
 registrata. A quel punto riceve consuntivo, fold-back nelle SSoT toccate e viene spostata in

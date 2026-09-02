@@ -171,8 +171,10 @@ Nel gate E0:
 - Alessio non è più una ragione di credibilità o una dipendenza del percorso;
 - Daniele resta un target tecnico noto, ma qualunque consegna commerciale richiede contatto diretto,
   disponibilità verificata e i normali gate di sicurezza;
-- la priorità commerciale di G-MAC verrà riesaminata nella nuova strategia, senza riaprire oggi ADR-026
-  o introdurre scope tecnico aggiuntivo.
+- il scheduling tecnico di G-MAC è stato riesaminato dal founder il 2026-09-01 in
+  `SPEC_PRE_POC.md` D11 e ADR-026 Addendum II: C0.1 resta pre-S1, mentre C0.2/G-MAC.2–5 sono
+  pull-based dopo la release Windows; la nuova strategia commerciale dovrà qualificare l'eventuale
+  design partner Mac senza introdurre scope tecnico per inerzia.
 
 ## 7. Rischi e mitigazioni
 

@@ -1,15 +1,13 @@
 # SPEC BLOCCO G-MAC — Consegna macOS ARM64
 
-**Stato:** 🟡 DELIVERABLE PRE-POC IMPEGNATO — C0.0 contratto target + boundary licenza CHIUSI;
-prossimo gate C0.1 canary RED. G-MAC.0 codice FATTO e sigillato (T1 PASS, suite 867). Prima
-dell'application freeze
-`v1.0.15` chiudono C0 + G-MAC.1 runtime; G-MAC.2–5 di distribuzione completano dopo il freeze
-applicativo, senza ulteriori GO finché scope e policy non cambiano. Sequenza vincolante:
-`SPEC_PRE_POC.md` (decisione founder 2026-07-31; Addendum ADR-026 del 2026-08-02).
+**Stato:** 🟡 PORTABILITY HEDGE PRE-S1 IMPEGNATO — C0.0 contratto target + boundary licenza CHIUSI;
+prossimo gate C0.1 canary RED. G-MAC.0 codice FATTO e sigillato (T1 PASS, suite 867). C0.1 GREEN
+chiude l'interlock pre-S1; C0.2 e G-MAC.2–5 sono in HOLD fino al trigger commerciale Mac e dopo la
+release Windows `v1.0.15`. Sequenza vincolante: `SPEC_PRE_POC.md` D11; ADR-026 Addendum II.
 **ADR di riferimento:** ADR-026 (accepted 2026-07-31) · ADR-004 (pipeline release) · ADR-007 (anti-RE) · ADR-011 (tunnel FRP)
 **Ground-truth:** audit accoppiamenti Windows 2026-07-17 (workflow 6 agenti: 4 audit codebase + 2 ricerche web con fonti). Il codice reale vince sulla spec.
-**Timeline:** milestone assolute e interlock in `SPEC_PRE_POC.md`; la stima tecnica di 14 giorni in
-§5 resta riferimento di capacità, non autorizza packaging prima dell'application freeze.
+**Timeline:** milestone e interlock in `SPEC_PRE_POC.md`; la stima tecnica di 14 giorni in §5 resta
+riferimento di capacità e non riserva lavoro prima del trigger commerciale.
 
 ---
 
@@ -47,7 +45,8 @@ questa SPEC.
 10. **Le dipendenze hanno un percorso ARM64 verificabile, non ancora un PASS.** Il perimetro runtime
     reale deriva dalla build lean, non dallo stack AI dormiente. PyPI pubblica per `sqlcipher3 0.6.2`
     una wheel CPython 3.12 `macosx_11_0_arm64`; il lock frontend contiene varianti darwin-arm64 di
-    Sharp e SWC. C0 deve comunque fissare versione e hash, installare solo wheel ARM64, eseguire il
+    Sharp e SWC. C0 deve comunque fissare versione e hash, produrre un artefatto nativo ARM64-only
+    secondo la policy C0.1 (incluse eventuali wheel `universal2` assottigliate e rifirmate), eseguire il
     round-trip SQLCipher e provare il binario Nuitka: la disponibilità nominale non certifica il
     runtime.
 11. **Anomalia da chiarire pre-build**: `--include-package=email_validator` in build-backend-nuitka.sh:80 ma il pacchetto non risulta nella venv → verificare prima di replicare la build.
@@ -82,16 +81,17 @@ C0 è un gate di evidenza pre-freeze, non packaging cliente. È composto da tre 
   `macos-15` e lo esegue, senza ricompilarlo, su `macos-26`. Il primo risultato reale è RED finché tutte
   le prove sotto non producono evidenza; ogni incompatibilità apre un requisito v1.0.15, non una
   deroga.
-- **C0.2 — conferma target source-free.** Lo stesso canary compilato viene eseguito in call guidata
+- **C0.2 — conferma target source-free, HOLD trigger Mac.** Lo stesso canary compilato viene eseguito in call guidata
   sul Mac di Daniele. Sul target non arrivano repository, sorgenti, venv, chiavi private, dati reali
-  o strumenti di build. Un PASS solo CI è **condizionale**, non certifica il target esatto.
+  o strumenti di build. Un PASS solo CI è **condizionale**, non certifica il target esatto. C0.2 è
+  obbligatorio prima di G-MAC.2, ma non blocca S1, F0, R1-WIN o la prima POC Windows.
 
 Matrice minima e falsificabile:
 
 | Area | Evidenza C0.1 CI | Evidenza C0.2 target esatto |
 |------|------------------|-----------------------------|
 | Identità ambiente | `arm64`; build `macos-15`; esecuzione dello stesso artefatto su `macos-26` | `arm64`; macOS `26.5.1`; modello M1/2020 e RAM 8 GB già confermati, senza esportare identificatori |
-| Supply chain | versioni + SHA-256; solo wheel/tag ARM64; `file` e `otool` senza slice x86 o dylib irrisolte | nessuna dipendenza installata e nessuna richiesta Rosetta |
+| Supply chain | versioni + SHA-256; wheel pure/ARM64 o `universal2` controllate; artefatto finale `file`/`otool` ARM64-only senza slice x86 o dylib irrisolte | nessuna dipendenza installata e nessuna richiesta Rosetta |
 | SQLCipher/G1 | create→write→close→reopen, wrong-key fail, plaintext assente, smoke dal binario Nuitka standalone | medesimo smoke con DB sintetico temporaneo, poi rimozione |
 | Frontend | `npm ci` + `next build` su ARM64; moduli nativi darwin-arm64 | boot standalone e render delle sole superfici auth/diagnostiche ammesse; nessun claim sul CRM protetto |
 | Runtime/auth | `/health`, endpoint auth già esenti e self-test tecnico compilato su DB sintetico; nessuna rotta CRM protetta | medesimo perimetro source-free sul target; nessuna modifica all'enforcement |
@@ -126,10 +126,19 @@ Privacy del probe C0.2:
 - il report committato contiene solo esiti e misure non identificanti. La prova di binding licenza
   resta G-MAC.4/G-MAC.5 nel canale amministrativo dedicato.
 
-**Definition of Done C0:** C0.1 e C0.2 entrambi PASS sullo stesso artefatto, con zero bypass e zero
-claim sul CRM protetto. Ogni finding viene classificato; se richiede G-MAC.1, la remediation avviene
-in un gate codice separato e C0.1 viene rieseguito prima di C0.2. C0 non produce un installer
-consegnabile e non autorizza dati reali.
+**Definition of Done C0.1 / interlock pre-S1:** build `macos-15` e smoke del medesimo artefatto su
+`macos-26` PASS, con zero bypass e zero claim sul CRM protetto; SQLCipher, Nuitka, frontend e auth
+nel perimetro canary verdi; il pacchetto finale contiene esclusivamente Mach-O ARM64 e non richiede
+Rosetta. Le wheel `universal2` sono ammesse soltanto se hash/versione sono registrati, contengono una
+slice ARM64, vengono installate senza Rosetta, ogni Mach-O trasferito è assottigliato e rifirmato, e
+l'audit finale esclude slice x86/universal e dylib irrisolte. Il tag wheel da solo non è né PASS né
+FAIL: governa l'artefatto nativo finale. Ogni finding G-MAC.1 viene corretto in un gate codice
+separato e C0.1 viene rieseguito. C0.1 GREEN apre S1.
+
+**Definition of Done C0.2 / trigger distribuzione Mac:** C0.1 resta verde e il canary source-free
+PASS sul target esatto con privacy e soglie della matrice. Solo allora G-MAC.2 diventa eleggibile,
+sempre dopo R1-WIN e il trigger commerciale. C0 non produce un installer consegnabile e non
+autorizza dati reali.
 
 ### G-MAC.1 — Portabilità runtime tunnel (unico codice `api/` rimasto)
 - `tunnel_config.py`: `_FRPC_FILENAME` e `_ACME_CLIENT_FILENAME` platform-conditional
@@ -142,6 +151,9 @@ consegnabile e non autorizza dati reali.
 - Opzionale se il tempo regge (rischio residuo dichiarato altrimenti): PID-file + sweep al boot (~20 LOC) contro l'orfano da SIGKILL.
 
 ### G-MAC.2 — Pipeline build macOS di release (CI GitHub Actions)
+- **HOLD:** apre soltanto dopo R1-WIN, C0.2 PASS e trigger commerciale D11: rapporto diretto con un
+  design partner Mac qualificato, protocollo pilota accettato, installazione calendarizzata e
+  capacità di supporto confermata.
 - `requirements-api-macos.txt` lean derivato dalla lista `--include-package` (13 pacchetti + dev: pytest/httpx/hypothesis/ruff/alembic). MAI installare pyproject completo su mac.
 - Promuovere il workflow minimo C0 a pipeline di release: build su runner `macos-15` ARM64 (pin
   esplicito), poi smoke dello **stesso artefatto** su runner `macos-26`; step: venv → pytest suite
@@ -182,18 +194,26 @@ consegnabile e non autorizza dati reali.
 - **D-MAC-4 — Compilatore**: Nuitka anche su mac (parità ADR-007). Fallback dichiarato se la build arm64 dà problemi nei tempi: PyInstaller (`fitmanager.spec` da duplicare per darwin) accettando downgrade anti-RE **esplicito e temporaneo** per il solo pilota.
 - **D-MAC-5 — Interplay G1 (cifratura crm.db)**: nessuna consegna data-bearing con `crm.db`
   plaintext. Portability canary e G-MAC.1 precedono l'application freeze; verificano SQLCipher,
-  boot e runtime su Darwin. G-MAC.2–5 consumano poi la baseline G1 congelata. Un'incompatibilità
-  sposta il milestone o entra nello scope v1.0.15, mai in una deroga sicurezza.
+  boot e runtime su Darwin. C0.1 GREEN apre S1; C0.2/G-MAC.2–5 consumano in seguito i contratti G1
+  congelati. Un'incompatibilità C0.1 blocca il solo interlock pre-S1; un finding successivo sposta il
+  milestone Mac, mai la sicurezza o la release Windows.
+- **D-MAC-6 — Scheduling pull-based (founder 2026-09-01)**: `v1.0.15` è Windows. C0.2 e
+  G-MAC.2–5 aprono dopo R1-WIN soltanto col trigger D11; la futura release Mac ha versione/tag
+  propri e non usa Daniele o Virgin come evidenza senza rapporto diretto.
 
-## 5. Timeline proposta (14 giorni)
+## 5. Sequenza condizionale e stima tecnica
 
 | Giorni | Cosa |
 |--------|------|
-| pre-freeze | C0.0 contratto target → C0.1 canary RED → G-MAC.1 remediation (`frpc` + `lego`) + re-run C0.1 GREEN → C0.2 probe source-free target |
-| 1-3 post-freeze | G-MAC.2: requirements lean, patch bash, workflow CI, prima build verde |
-| 4-7 post-freeze | G-MAC.3: launcher.command, install.sh, firma/notarizzazione; bundle installabile |
-| 8-11 post-freeze | G-MAC.4 su Mac pulito: checklist completa, fix emersi, candidate e2e |
-| 12-14 post-freeze | G-MAC.5: licenza+DNS, runbook, consegna assistita Daniele + buffer |
+| pre-S1 | C0.0 contratto target → C0.1 canary RED → G-MAC.1 remediation (`frpc` + `lego`) + re-run C0.1 GREEN → stop Mac |
+| dopo R1-WIN + trigger Mac | C0.2 probe source-free target esatto; solo su PASS apre G-MAC.2 |
+| 1-3 percorso Mac | G-MAC.2: requirements lean, patch bash, workflow CI, prima build verde |
+| 4-7 percorso Mac | G-MAC.3: launcher.command, install.sh, firma/notarizzazione; bundle installabile |
+| 8-11 percorso Mac | G-MAC.4 su Mac pulito: checklist completa, fix emersi, candidate e2e |
+| 12-14 percorso Mac | G-MAC.5: licenza+DNS, runbook, consegna assistita al design partner + buffer |
+
+La stima di 14 giorni non è una deadline e non riserva capacità prima del trigger. Ogni futura
+release Mac usa un nuovo numero/tag secondo ADR-004; non ricostruisce `v1.0.15` da un altro commit.
 
 ## 6. Does NOT touch (blinda lo scope)
 

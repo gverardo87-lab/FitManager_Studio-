@@ -1,8 +1,9 @@
 # SPEC — Machine Fingerprint cross-platform (Windows preservato + ramo macOS)
 
 **Stato:** 🟡 CODICE FATTO E SIGILLATO (2026-07-17) — T1 PASS (hash Windows mascherato e
-invariato pre/post refactor, suite 867 verde). C0.2 verifica stabilità T2 con probe source-free sul
-target M1/8 GB/Tahoe 26.5.1; il gate chiude definitivamente con cross-check binding in G-MAC.4.
+invariato pre/post refactor, suite 867 verde). C0.2, ora HOLD trigger Mac e non bloccante per S1,
+verifica stabilità T2 con probe source-free sul target M1/8 GB/Tahoe 26.5.1; il gate chiude
+definitivamente con cross-check binding in G-MAC.4.
 Sequenza: `SPEC_PRE_POC.md`; contratto C0: `SPEC_G-MAC_CONSEGNA_MACOS.md` §3.
 **Blocco:** G-MAC.0 — Fingerprint feasibility gate
 **Tipo:** Refactor isolato (Windows) + estensione additiva (macOS)
@@ -139,7 +140,8 @@ Questo blocco **NON deve**:
 **macOS (T2 — comportamento nuovo):**
 1. In C0.1, eseguire i test automatici Darwin e un probe compilato sul runner `macos-26` usando
    l'artefatto costruito su `macos-15`.
-2. In C0.2, eseguire lo stesso probe source-free sul target M1/8 GB/Tahoe 26.5.1.
+2. Dopo R1-WIN e trigger D11, in C0.2 eseguire lo stesso probe source-free sul target
+   M1/8 GB/Tahoe 26.5.1 prima di aprire G-MAC.2.
 3. **PASS** se il probe riporta `AVAILABLE=true` e `STABLE=true` tra letture previste dal contratto,
    senza stampare primitive o hash. La stabilità attraverso riavvio viene chiusa in G-MAC.4.
 4. Verifica tutto-o-niente automatica: simulare una primitiva vuota → `UNAVAILABLE`, mai hash
@@ -152,7 +154,8 @@ Questo blocco **NON deve**:
 3. `verify` sulla stessa macchina deve riportare `MATCH`; il consuntivo registra solo l'esito.
 
 > ⚠️ **Vincolo operativo:** il runner macOS prova il ramo Darwin, ma non certifica la patch esatta
-> del target. T2 richiede C0.2 sul Mac reale; il binding end-to-end chiude in G-MAC.4. Nessun sorgente
+> del target. T2 richiede C0.2 sul Mac reale nel percorso Mac pull-based; il binding end-to-end
+> chiude in G-MAC.4. Nessun sorgente
 > o toolchain viene copiato sul Mac cliente.
 
 ---

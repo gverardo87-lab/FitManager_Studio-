@@ -4435,3 +4435,37 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
   Nessuna suite applicativa eseguita o dichiarata: gate esclusivamente documentale.
 - **Prossimo gate minimo:** E1, costruzione founder-led del testo della comunicazione da salvare in
   `docs/`; nessun invio esterno implicito. C0.1 resta il prossimo gate tecnico.
+
+---
+
+## 2026-09-01 — D11 separa il portability hedge dalla distribuzione Mac
+
+- **Trigger founder:** dopo review strategica comparata Codex/Claude Code, ratificata la sequenza
+  docs-first prima del codice: proteggere G1 con il canary Mac, ma non lasciare che un target di
+  secondo grado blocchi la candidate o la prima POC Windows.
+- **Decisione:** C0.1 GREEN (`macos-15` → medesimo artefatto `macos-26`) e G-MAC.1 restano l'unico
+  interlock Mac pre-S1. C0.2 e G-MAC.2–5 diventano pull-based dopo R1-WIN e richiedono design partner
+  Mac diretto/qualificato, protocollo accettato, installazione calendarizzata, supporto confermato e
+  nuovo GO.
+- **Release identity:** `v1.0.15` è Windows security/readiness. La futura distribuzione Mac usa una
+  propria versione/tag ADR-004; vietato ricostruire `v1.0.15` da un commit differente.
+- **POC:** la prima Wave 0, quando autorizzata dalla nuova strategia commerciale e dai gate security,
+  è Windows-first per mantenere omogenei onboarding, supporto e metriche. D11 non autorizza W0/W1,
+  recruiting, claim, spese Apple o azioni esterne.
+- **Supply chain C0.1:** la policy governa l'artefatto finale, non il solo tag della wheel. Una wheel
+  `universal2` è ammessa solo con hash/versione, slice ARM64, installazione senza Rosetta,
+  assottigliamento+ripristino firma e audit finale ARM64-only senza dylib irrisolte.
+- **Fold-back:** aggiornati regia pre-POC, SPEC G-MAC/fingerprint/Financial Truth/exit, ADR-026
+  Addendum II e indice ADR, Launch Scope, checklist release Windows e INDEX. Boundary licenza,
+  privacy, G1–G4/G9–G11, requisiti Developer ID/notarizzazione e parità Windows restano invariati.
+- **Verifiche docs/process:** lifecycle PASS (**11/11** SPEC vive con `Stato:` e indicizzate, zero
+  file vietati in `docs/technical/`, zero SPEC implementate ancora vive); link Markdown locali PASS
+  sui **10** documenti del gate; guard semantico D11 **7/7 PASS**; ricerca dei vecchi interlock PASS;
+  Ruff `api/` PASS; `git diff --check` PASS. Un primo tentativo del guard semantico ha avuto soltanto
+  un errore di quoting PowerShell, corretto prima del PASS; nessun prodotto è stato verificato da quel
+  tentativo fallito.
+- **Esclusioni:** nessun codice, workflow, schema, dato, artifact, versione, consegna o azione esterna
+  modificata. Il file preesistente non tracciato `.agents/product-marketing-context.md` resta fuori
+  scope, intatto e non staged.
+- **Prossimo gate tecnico dopo checkpoint remoto:** C0.1 RED reale; preservare le evidenze, poi aprire
+  G-MAC.1 in un gate codice separato e rieseguire C0.1 fino a GREEN.

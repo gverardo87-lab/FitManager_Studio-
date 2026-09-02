@@ -7,8 +7,9 @@ operativi vivono esclusivamente in `docs/specs/SPEC_PRE_POC.md`.
 ## Obiettivo
 
 Portare FitManager a un lancio credibile come software locale per chinesiologi, personal trainer e
-professionisti fitness a P.IVA, con Windows come baseline primaria e macOS Apple Silicon ARM64 come
-deliverable pilot assistito, installazione ripetibile, supporto gestibile e flussi core affidabili.
+professionisti fitness a P.IVA, con Windows come piattaforma della prima POC e macOS Apple Silicon
+ARM64 preservato come capacità architetturale e futuro pilot assistito pull-based, installazione
+ripetibile, supporto gestibile e flussi core affidabili.
 
 ## In scope ora
 
@@ -29,15 +30,19 @@ deliverable pilot assistito, installazione ripetibile, supporto gestibile e flus
 - portale pubblico per anamnesi cliente
 - runbook di supporto e procedura di upgrade realmente eseguibili
 - `v1.0.15` security/readiness: G1, G2, completamento G4 e processo G9-G11 prima dei dati reali
-- portability canary macOS prima dell'application freeze, senza packaging cliente
-- artifact macOS ARM64 firmato/notarizzato dopo l'application freeze, dalla stessa baseline Windows
+- portability canary macOS C0.1 prima di S1, senza packaging cliente
+- candidate Windows `v1.0.15`, installazione/upgrade e prima POC Windows
+- C0.2 + artifact macOS ARM64 firmato/notarizzato solo dopo la release Windows e il trigger
+  commerciale diretto definito da `SPEC_PRE_POC.md` D11, con versione/tag propri
 
 ## Criteri di passaggio al launch
 
 Prima del lancio allargato servono evidenze su:
 
 - installazione o upgrade su macchina Windows non-dev
-- installazione/upgrade su Mac ARM64 pulito per il pilot assistito
+- per il lancio Windows: nessun gate Mac oltre C0.1 GREEN
+- prima di dichiarare supporto/consegna Mac: C0.2 sul target esatto e installazione/upgrade su Mac
+  ARM64 pulito per il pilot assistito
 - percorso negativo licenza (`/licenza`) verificato
 - backup e restore riusciti con dati reali
 - validazione LAN e origine FRP gestita `https://<instance_id>.fitmanagerstudio.com` da rete esterna

@@ -1,13 +1,13 @@
-# FitManager AI Studio — Release Checklist v1.0.15
+# FitManager AI Studio — Release Checklist Windows v1.0.15
 
 > Checklist viva della prossima candidate. `[x]` indica evidenza valida sul sorgente corrente;
 > `[ ]` indica una prova da ripetere sul nuovo artefatto. Un PASS di una release precedente non viene
 > trasferito automaticamente alla candidate.
 
-> **Scope ratificato 2026-07-31:** `v1.0.15` è la release security/readiness pre-POC. Il blocco P è
-> in HOLD. Prima si chiude e congela il codice applicativo (inclusi G1/G2/G4 e portability canary),
-> poi si producono gli artefatti Windows e macOS ARM64 dalla stessa baseline; seal e tag arrivano
-> soltanto dopo le verifiche di distribuzione. Regia: `../specs/SPEC_PRE_POC.md`.
+> **Scope aggiornato 2026-09-01:** `v1.0.15` è la release Windows security/readiness pre-POC. Il
+> blocco P è in HOLD. C0.1 GREEN protegge la portabilità di G1 prima di S1; C0.2 e G-MAC.2–5 non
+> bloccano questa candidate e aprono soltanto dopo la release Windows e il trigger commerciale D11,
+> con una propria versione/tag. Regia: `../specs/SPEC_PRE_POC.md`.
 
 ## 1. Baseline e autorità
 
@@ -32,10 +32,8 @@
   seriale/foto/UUID conservato nel repository o nei log.
 - [ ] C0.1 RED→GREEN: build canary su `macos-15`, esecuzione dello stesso artefatto su `macos-26`;
   SQLCipher/G1, Nuitka standalone, frontend darwin-arm64 e dipendenze/hash verificati.
-- [ ] C0.2 source-free sul target esatto: `/health` redatto, auth già exempt e self-test tecnico su
-  DB sintetico; fingerprint booleano, 30 minuti di stabilità, memoria combinata backend+Node
-  (warning >1,5 GB; FAIL >2 GB/memory pressure), viewport 1440×900 e 1024×640. Nessun dato reale,
-  identificatore hardware, bypass licenza o claim sulle API CRM protette nel report.
+- **Tracker non bloccante v1.0.15:** C0.2 source-free sul target esatto resta in HOLD trigger Mac ed
+  è obbligatorio prima di G-MAC.2; non viene attribuito come PASS della candidate Windows.
 
 ## 3. Build e packaging candidate
 
@@ -45,10 +43,6 @@
 - [x] Launcher versionato con `LICENSE_ENFORCEMENT_ENABLED=true` e senza avvio del trasporto legacy.
 - [x] Build fail-closed su leak `crm.db`, riferimenti ISS, cataloghi cifrati e nutrition integrity.
 - [x] `lego.exe` v5.2.1 entra nel bundle solo dopo verifica hash/versione/target e licenza MIT.
-- [ ] Bundle macOS: companion `frpc` e `lego` Darwin ARM64 entrano solo dopo verifica
-  versione/SHA-256/licenza; nessun `.exe`, slice x86 o dipendenza Rosetta.
-- [ ] Artifact Mac costruito su `macos-15`, provato invariato su `macos-26` e poi sul target esatto;
-  un PASS solo CI non è accettazione del target.
 - [ ] Costruire `dist/FitManager_Setup_1.0.15.exe` con la pipeline ADR-004.
 - [ ] Ispezionare l'installer finale: `backend/lego.exe` e
   `backend/THIRD_PARTY_LICENSES/lego-MIT.txt` presenti.
@@ -118,8 +112,6 @@ Non consegnare la v1.0.15 finché resta aperto uno di questi punti:
 - [ ] installazione/upgrade reale e licenza negativa/positiva;
 - [ ] restore reale e flussi core manuali;
 - [ ] test FRP esterno sulla candidate con TLS strict, portale 200 e CRM 404;
-- [ ] macOS: C0.1+C0.2 verdi, artifact Developer ID/notarizzato, fingerprint/licenza, upgrade
-  `data/`-safe e zero processi orfani verificati sul target M1/8 GB/Tahoe 26.5.1;
 - [ ] `CHANGELOG.md` con sezione v1.0.15 e note Upgrade;
 - [ ] registrazione dell'artefatto/consegna in `docs/operations/DEPLOYMENTS.md` quando effettuata.
 
@@ -132,3 +124,13 @@ Non consegnare la v1.0.15 finché resta aperto uno di questi punti:
 
 Storico release e prove precedenti: `CHANGELOG.md`, `docs/operations/DEPLOYMENTS.md` e
 `docs/learning/BUILD_LOG.md`.
+
+## 10. Tracker distribuzione macOS — fuori dal go/no-go v1.0.15
+
+Dopo R1-WIN e trigger D11, una release Mac dedicata deve riprendere almeno questi gate:
+
+- C0.2 source-free sul target esatto, senza dati reali o identificatori nei report;
+- companion `frpc` e `lego` Darwin ARM64 con versione/SHA-256/licenza verificati;
+- artifact costruito su `macos-15`, provato invariato su `macos-26` e sul target esatto;
+- Developer ID/notarizzazione, fingerprint/licenza, upgrade `data/`-safe e zero processi orfani;
+- nuova versione/tag ADR-004: mai ricostruire `v1.0.15` da un commit differente.
