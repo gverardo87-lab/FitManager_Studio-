@@ -4551,3 +4551,13 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
 - **Verifiche:** `ls docs/specs/` = 4 spec vive + hold/; guard docs-lifecycle PASS; Ruff PASS;
   `git diff --check` PASS. Gate documentale (unico tocco codice: path in una docstring).
 - **Prossimo:** G-DOC.3 contratto di specie del dominio commerciale in `docs/business/`.
+- **⚠️ INCIDENTE DI GATE (rimediato nel commit successivo):** lo staging di G-DOC.2 ha usato
+  `git add -A` e ha trascinato nel commit `ee60c81` due file estranei allo scope, modificati nel
+  working tree condiviso da lavoro parallelo sul canary C0.1
+  (`.github/workflows/macos-portability-canary.yml` +78/−8, `tests/test_macos_c0_canary.py` +14)
+  — violazione di AGENTS §2 (mai includere file non attribuiti; `git add .`/`-A` vietati).
+  **Remediation:** `git restore --source=ee60c81~1 --staged` sui soli 2 file → commit di ripristino
+  del contenuto pre-incidente NELLA STORIA, working tree INTATTO (hash su disco verificati
+  identici prima/dopo: il lavoro canary resta sul disco come modifiche non committate, con la sua
+  paternità). **Lezione:** staging SEMPRE per path espliciti attribuiti al gate, mai `-A`, anche
+  nei gate docs; il working tree è condiviso con sessioni parallele per policy di progetto.
