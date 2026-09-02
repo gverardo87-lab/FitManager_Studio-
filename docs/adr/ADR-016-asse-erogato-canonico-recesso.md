@@ -4,7 +4,7 @@
 - Status: accepted
 - Deciders: Giacomo Verardo (AVGV Technologies); analisi e proposta di Claude Code (audit senior crediti/contratti/rimborso)
 - Related upgrade ID: G7.7 (remediation audit)
-- Audit di provenienza: `docs/operations/AUDIT_CREDITI_RIMBORSO_2026-06-26.md`
+- Audit di provenienza: `docs/archive/operations/AUDIT_CREDITI_RIMBORSO_2026-06-26.md`
 - Correlati: `ADR-014` (gestione finanziaria), `ADR-015` (funnel rinnovi/retention); modello vivo: `docs/technical/FINANCIAL_DOMAIN_MODEL.md` (v1.3), `docs/technical/TASSONOMIA_FINANZIARIA.md` (v1.2); catena G7.0→G7.6 (`SPEC_G7.0_SCHEMA_TERMINAZIONE.md`)
 
 ## Context

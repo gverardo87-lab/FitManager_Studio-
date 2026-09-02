@@ -5,7 +5,7 @@
 - Deciders: Giacomo Verardo (AVGV Technologies); review senior multi-agente code-grounded di Claude Code (8 reader + 5 lenti indipendenti + sintesi)
 - Related upgrade ID: programma di elevazione architetturale del dominio contrattuale-economico (blocco **G9**, sequenza G9.0→G9.6)
 - Trigger: osservazione del founder dopo G8.3 — «continuano a uscire scenari secondari che gestiamo singolarmente; le SSoT non sono come dovrebbero, mancano strati che unifichino le variabili»
-- Audit fondante: review architetturale `docs/operations/AUDIT_FINANCIAL_ARCHITECTURE_2026-06-30.md` (questa stessa analisi, da depositare a corredo)
+- Audit fondante: review architetturale `docs/archive/operations/AUDIT_FINANCIAL_ARCHITECTURE_2026-06-30.md` (questa stessa analisi, da depositare a corredo)
 - Consolida (NON supersede): il **meta-pattern** che `ADR-016`→`ADR-021` istanziano scenario per scenario — una grandezza carica deve restare funzione pura di pochi fatti-sorgente, e ogni transizione deve preservarla. Quegli ADR restano decisioni valide; ADR-022 fornisce loro lo **strato di scrittura** che presupponevano e che non esisteva.
 - Correlati: `ADR-014` (gestione finanziaria), `ADR-019` (cassa-immutabile, residuo net-aware), `ADR-021` (INV-RATE), `FINANCIAL_DOMAIN_MODEL.md`, `TASSONOMIA_FINANZIARIA.md`; spec di dettaglio `SPEC_G9_FINANCIAL_COMMAND_LAYER.md`
 

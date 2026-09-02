@@ -3,7 +3,7 @@
 CRM locale Windows per chinesiologi, personal trainer e professionisti fitness a P.IVA.
 Dati sul PC del professionista, zero cloud obbligatorio, privacy-first.
 
-> Versione corrente: **1.0.10** — SSoT in `api/__init__.py`.
+> Versione corrente: SSoT in `api/__init__.py` (mai hardcodata qui — evita lo stale).
 
 ## Cosa copre oggi
 

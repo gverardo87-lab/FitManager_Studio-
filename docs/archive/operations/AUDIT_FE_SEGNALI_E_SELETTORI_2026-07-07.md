@@ -1,5 +1,8 @@
 # Audit — Architettura informativa FE (segnali operativi) + selettori clienti
 
+> **ARCHIVIATO 2026-09-02** — foldato in ADR-025 e SPEC_P (P4/P5, in HOLD); interim #2/#3 chiusi in
+> G9.7.1-bis. Riferimento storico, mai contesto di lavoro.
+
 **Data:** 2026-07-07 · **Trigger:** founder su cattura EventForm («(2 crediti)» accanto a «non ha
 contratti attivi» = PANICO; «il frontend è rimasto con la vecchia logica») · **Tipo:** audit
 READ-ONLY, 2 censimenti agente. Input per **ADR-025** (seduta singola + portafoglio cliente).

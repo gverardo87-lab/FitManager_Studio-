@@ -1,5 +1,8 @@
 # Audit Senior - Terminazione bilaterale e tutela trainer
 
+> **ARCHIVIATO 2026-09-02** — audit fondante di ADR-018; foldato nel blocco G7.10 chiuso.
+> Riferimento storico, mai contesto di lavoro.
+
 > **Provenienza:** audit backend read-only eseguito su `FitManager_Studio` dopo riallineamento a `CLAUDE.md`, `api/CLAUDE.md`, `docs/learning/BUILD_LOG.md` e ai fix G7.7/G7.8 gia chiusi.  
 > **Data:** 2026-06-27  
 > **Modalita:** sola lettura (codice + docs vive). Nessuna mutazione runtime nel corso dell'audit.  

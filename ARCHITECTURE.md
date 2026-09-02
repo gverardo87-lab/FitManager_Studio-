@@ -9,7 +9,7 @@
 > documento ci punta. Tieni questo file **piccolo e stabile**: descrive la struttura, non l'implementazione.
 >
 > **Numeri volatili** (conteggi file, esercizi, versione) non vivono qui: hanno una sola casa
-> (versione → `api/__init__.py`; conteggi DB → `docs/operations/DB_INTEGRITY_AUDIT_*.md`).
+> (versione → `api/__init__.py`; conteggi DB → `docs/archive/operations/DB_INTEGRITY_AUDIT_*.md`).
 > Questo evita che l'overview diventi l'ennesimo posto da aggiornare e contraddire.
 
 ---
@@ -213,7 +213,7 @@ Questo documento è l'hub. Per il dettaglio, segui il puntatore:
 | Modello di sicurezza completo | `docs/technical/SECURITY_MODEL.md` |
 | Come funziona il tunnel (design, build, ops) | `docs/technical/TUNNEL_ARCHITECTURE.md` |
 | Certificazione dei motori scientifici | `docs/scientific/` |
-| Stato fisico dei DB (conteggi reali) | `docs/operations/DB_INTEGRITY_AUDIT_*.md` |
+| Stato fisico dei DB (conteggi reali) | `docs/archive/operations/DB_INTEGRITY_AUDIT_*.md` |
 | Indice di tutta la documentazione | `docs/INDEX.md` |
 | Modello di business e numeri | `docs/business/BUSINESS_PLAN.md` |
 

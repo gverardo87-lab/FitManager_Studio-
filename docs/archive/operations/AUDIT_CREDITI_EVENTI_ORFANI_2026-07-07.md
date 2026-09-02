@@ -1,5 +1,8 @@
 # Audit — Eventi orfani su contratto chiuso + occupazione crediti invisibile a video
 
+> **ARCHIVIATO 2026-09-02** — 13 finding foldati in ADR-024 e SPEC_G9.7 (tutti i gate chiusi
+> 2026-07-16). Riferimento storico, mai contesto di lavoro.
+
 **Data:** 2026-07-07 · **Trigger:** segnalazione founder su caso reale (contratto 39, Verardo Giacomo,
 crm.db dev) · **Tipo:** audit READ-ONLY (forensics DB + 2 censimenti code-grounded). **ZERO fix applicati** —
 questo documento è l'input della riflessione di metodo, non una spec.

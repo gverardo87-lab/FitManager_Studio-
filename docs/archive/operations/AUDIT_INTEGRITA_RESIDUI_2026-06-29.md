@@ -1,5 +1,8 @@
 # Audit — Difetti residui di integrità contabile dopo G8.2-prep (audit-trail · force-delete · storico reopen)
 
+> **ARCHIVIATO 2026-09-02** — fondante per ADR-019; difetti foldati nei gate G8.x chiusi.
+> Riferimento storico, mai contesto di lavoro.
+
 > **Provenienza:** audit senior code-grounded read-only su `FitManager_Studio` dopo G8.1/G8.1.1/G8.2-prep
 > (snapshot `8b699e7`). Trigger: terzo passaggio adversariale (Codex) sul filone finanziario, poi **verificato
 > riga-per-riga** da Claude Code sul codice vivo.

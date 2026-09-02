@@ -1,5 +1,8 @@
 # AUDIT PRE-RELEASE 2026-07-16 — Triade auditor sul batch v1.0.13 → HEAD (candidata v1.0.14)
 
+> **ARCHIVIATO 2026-09-02** — R1 + OD-1 chiusi 2026-07-19; v1.0.14 taggata 2026-07-20. Riferimento
+> storico, mai contesto di lavoro.
+
 > **ESITO R1 + OD-1 (2026-07-19): CHIUSI.** R1-code sigillato in `41d62e8`; full suite **873 passed**,
 > `check-all.sh` verde, financial-invariant-verifier mirato **MONEY AXIS PRESERVED**, zero coverage
 > gap. Il fold-back R1-docs risolve H1/H2, M1/M2/M4, L2 e L1/L3/L4/L6-sem senza nuova policy

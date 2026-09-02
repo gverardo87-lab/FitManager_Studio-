@@ -4,7 +4,7 @@
 - Status: accepted
 - Deciders: Giacomo Verardo (AVGV Technologies); analisi senior e bridge code-grounded di Claude Code
 - Related upgrade ID: programma post-G7 "integrita' contabile + completamento bilaterale" (blocco wallet)
-- Audit fondante: `docs/operations/AUDIT_REOPEN_SCENARIOS_2026-06-28.md` (§6/§7 instradamento + overpayment) · `AUDIT_TERMINAZIONE_BILATERALE_2026-06-27.md`
+- Audit fondante: `docs/archive/operations/AUDIT_REOPEN_SCENARIOS_2026-06-28.md` (§6/§7 instradamento + overpayment) · `AUDIT_TERMINAZIONE_BILATERALE_2026-06-27.md`
 - Estende: **ADR-018** (completa il lato cliente della simmetria bilaterale) · si appoggia a **ADR-019** (reopen instrada il credito al wallet)
 - Correlati: `ADR-016` (asse EROGATO); modello vivo `FINANCIAL_DOMAIN_MODEL.md`; entita' gemella lato trainer = `crediti_terminazione` (G7.10)
 

@@ -1,5 +1,9 @@
 # DB Integrity Audit — 2026-06-14
 
+> **ARCHIVIATO 2026-09-02** — Thread A catalog.db chiuso (shippato v1.0.11/v1.0.12); i numeri
+> canonici vivono in CLAUDE.md e `docs/technical/EXERCISE_LIBRARY_STRATEGY.md`. Riferimento storico,
+> mai contesto di lavoro.
+
 **Tipo:** record operativo d'audit (read-only). Fotografia della solidità dei 3 database prima del tuning di contenuto del catalogo.
 **Scope:** `catalog.db` (focus), `crm.db` (separazione + integrità cross-DB), `nutrition.db` (sanity), `crm_dev.db` (artefatto legacy).
 **Metodo:** query dirette SQLite sui file reali in `data/`, in dev mode (DB in chiaro). Strumento: skill `audit-db` + script di introspezione. **Nessuna mutazione** eseguita.

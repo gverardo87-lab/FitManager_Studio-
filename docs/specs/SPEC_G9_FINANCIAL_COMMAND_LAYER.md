@@ -311,7 +311,7 @@ A chiusura dei gate, aggiornare: `FINANCIAL_DOMAIN_MODEL.md` (ledger load-bearin
 postings; storno-posting), `TASSONOMIA_FINANZIARIA.md` (categoria storno contra-ricavo non-cash; predicati
 penna), `api/CLAUDE.md` (Contract Integrity Engine → financial command layer; penna unica come punto-di-
 scrittura; invariant gate), `BUILD_LOG.md` (cronologia G9.x), e l'indice `docs/INDEX.md` / `docs/adr/README.md`.
-Depositare l'audit fondante `docs/operations/AUDIT_FINANCIAL_ARCHITECTURE_2026-06-30.md`.
+Depositare l'audit fondante `docs/archive/operations/AUDIT_FINANCIAL_ARCHITECTURE_2026-06-30.md`.
 
 ---
 

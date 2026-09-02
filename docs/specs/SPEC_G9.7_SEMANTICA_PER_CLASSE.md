@@ -4,7 +4,7 @@
 **Stato:** 🟢 **TUTTI I GATE CHIUSI — G9.7.0 ✅ · G9.7.1 ✅ (incl. -bis) · G9.7.2 ✅ 2026-07-09 ·
 G9.7.3 ✅ 2026-07-11 · G9.7.4 ✅ 2026-07-14 · G9.7.5 ✅ 2026-07-16.** La spec resta aperta SOLO
 per il §Runbook in coda (recupero orfani reali, esecuzione trainer-driven). Governance: `ADR-024`
-(accepted). Audit fondante: `docs/operations/AUDIT_CREDITI_EVENTI_ORFANI_2026-07-07.md` (13 finding
+(accepted). Audit fondante: `docs/archive/operations/AUDIT_CREDITI_EVENTI_ORFANI_2026-07-07.md` (13 finding
 B1-B8/D1-D5) + `AUDIT_CENSIMENTO_ASSI_SEMANTICI_CASSA_2026-07-04.md` (assi A1-A10).
 **Mappa di verità:** ADR-024 · ADR-022+Add.II · ADR-017 Add.I · ADR-019 (D-PROPONE) · ADR-023 ·
 `api/services/contract_state.py` (STATI_OCCUPAZIONE_CREDITO) · `api/routers/agenda.py` ·

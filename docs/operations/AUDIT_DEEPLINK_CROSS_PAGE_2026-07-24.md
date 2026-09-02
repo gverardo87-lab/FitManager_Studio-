@@ -1,6 +1,8 @@
 # Audit — Deep-link & navigazione contestuale cross-page
 
-**Stato:** 🔍 AUDIT READ-ONLY — nessuna modifica al codice. Report per decisione di remediation.
+**Stato:** 🟡 REMEDIATION APERTA — audit read-only con remediation non ancora foldata (fasce A/B/C,
+coordinata con il blocco P in HOLD). Unica fotografia che resta in `operations/` finché la
+remediation non è foldata in un gate; poi → `docs/archive/operations/`.
 **Data:** 2026-07-24 (completato 2026-07-25)
 **Branch:** `FitManager_Studio`
 **Trigger:** il founder ha trovato LIVE «molti» link cross-page che non funzionano — non attivano il tab/sezione giusta e non scrollano all'oggetto — pur esistendo già il codice canonico costruito su `rinnovi-incassi` (pattern FE-1.0, `useOverdueRateContextFocus`).

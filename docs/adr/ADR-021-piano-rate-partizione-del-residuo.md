@@ -3,7 +3,7 @@
 - Date: 2026-06-29
 - Status: accepted
 - Deciders: Giacomo Verardo (AVGV Technologies); diagnosi senior code-grounded di Claude Code
-- Audit fondante: `docs/operations/AUDIT_PIANO_RATE_VS_RESIDUO_2026-06-29.md`
+- Audit fondante: `docs/archive/operations/AUDIT_PIANO_RATE_VS_RESIDUO_2026-06-29.md`
 - Generalizza: **D-RECONCILIA-RATE** (ADR-019 Addendum I), oggi cablata **solo su reopen** → su **ogni** path che muove il residuo
 - Correlati: `ADR-019` (residuo net-aware, cassa-immutabile), `FINANCIAL_DOMAIN_MODEL.md`; blocco **G8.3**
 

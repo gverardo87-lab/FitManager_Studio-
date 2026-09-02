@@ -1,5 +1,8 @@
 # Audit specifico — Reopen di un contratto terminato (scenari)
 
+> **ARCHIVIATO 2026-09-02** — audit fondante di ADR-019 e ADR-020; scenari foldati nei gate chiusi.
+> Riferimento storico, mai contesto di lavoro.
+
 > **Provenienza:** audit code-grounded read-only su `FitManager_Studio` dopo G7.9/G7.10 (terminazione bilaterale).
 > **Data:** 2026-06-28 · **Modalita:** sola lettura.
 > **Trigger:** osservazione del founder — riaprire un contratto terminato non e' un'operazione sola ma una

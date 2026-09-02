@@ -1,5 +1,8 @@
 # Audit Senior — Logica Crediti / Contratti / Clienti (focus rimborso da recesso)
 
+> **ARCHIVIATO 2026-09-02** — H1 + M1-M3 foldati nella remediation G7.7/G7.8 (chiusa); fondante per
+> ADR-016. Riferimento storico, mai contesto di lavoro.
+
 > **Provenienza:** audit multi-agente L0–L5 (8 finder paralleli + grounding su `data/crm.db` reale + coverage test → verifica avversariale refute-by-default per ogni finding → sintesi). 54 finding grezzi → **34 confermati**. Eseguito 2026-06-26 su HEAD `324be75`.
 > **Trigger:** segnalazione trainer reale (Chiara) su "errore logico" nei crediti residui usati per il rimborso da recesso anticipato.
 > **Nota metodo:** 10 verifiche dello strato L0 (modello/doc) sono fallite per session limit → le invarianti L0 sono confermate indirettamente dagli strati L1–L5 + DATA; un ri-pass mirato L0 è opportuno se si vuole chiudere anche la coerenza doc↔codice formalmente.

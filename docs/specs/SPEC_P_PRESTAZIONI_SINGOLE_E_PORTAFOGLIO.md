@@ -12,7 +12,7 @@ D-PREZZO-LIBERO-CONSIGLIATO, D-PORTAFOGLIO, D-SCELTA-ALLA-CREAZIONE, D-SEGNALE-A
 rate · ADR-023 fence · ADR-014 classi ricavo distinte) e la **checklist di nascita ADR-024**.
 **Fondamenta:** `product/CATALOGO_SCENARI_PT.md` (96 scenari, Q1-Q23) ·
 `archive/RICERCA_COMPETITOR_WALLET_SEDUTE_SINGOLE_2026-07-07.md` (W1-W11) ·
-`operations/AUDIT_FE_SEGNALI_E_SELETTORI_2026-07-07.md` (P1-P5, B4/B5, I1-I7).
+`archive/operations/AUDIT_FE_SEGNALI_E_SELETTORI_2026-07-07.md` (P1-P5, B4/B5, I1-I7).
 **Mappa di verità:** `api/services/cash_categories.py` (ClasseContabile + classify) ·
 `api/services/financial/ledger.py` (penna) · `invariant_gate.py` · `contract_state.py` ·
 `transitions.py` · `api/models/credito_cliente.py`+`credito_terminazione.py` (pattern gemelli) ·

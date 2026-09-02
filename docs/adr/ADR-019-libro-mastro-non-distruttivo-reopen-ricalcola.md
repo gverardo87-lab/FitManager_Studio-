@@ -4,7 +4,7 @@
 - Status: accepted
 - Deciders: Giacomo Verardo (AVGV Technologies); analisi senior e bridge code-grounded di Claude Code
 - Related upgrade ID: programma post-G7 "integrita' contabile + completamento bilaterale" (blocco reopen-recompute; il wallet e' ADR-020)
-- Audit fondante: `docs/operations/AUDIT_REOPEN_SCENARIOS_2026-06-28.md`
+- Audit fondante: `docs/archive/operations/AUDIT_REOPEN_SCENARIOS_2026-06-28.md`
 - Emenda: la decisione **G7.4 "reopen = inverso esatto / round-trip byte-identico"** (ADR-018 / SPEC_TERMINAZIONE_BILATERALE)
 - Correlati: `ADR-016` (asse EROGATO), `ADR-018` (terminazione bilaterale); modello vivo `FINANCIAL_DOMAIN_MODEL.md`; **ADR-020** (wallet cliente, instrada il credito)
 
@@ -229,7 +229,7 @@ non un nuovo blocco.
 
 ## Addendum 2026-06-29 (III) — Difetti residui di integrità (audit-trail · force-delete · storico reopen)
 
-Audit fondante: `docs/operations/AUDIT_INTEGRITA_RESIDUI_2026-06-29.md` (terzo passaggio adversariale, poi
+Audit fondante: `docs/archive/operations/AUDIT_INTEGRITA_RESIDUI_2026-06-29.md` (terzo passaggio adversariale, poi
 verificato riga-per-riga sul codice vivo). Tre difetti residui che NON toccano l'aritmetica (asse DENARO/EROGATO
 regge) ma la **trasparenza/integrità amministrativa**. Sono tutti **conseguenze residue di decisioni già
 accettate** — **nessuna nuova decisione architetturale**, nessun nuovo ADR:

@@ -5,7 +5,7 @@
 - Deciders: Giacomo Verardo (AVGV Technologies); analisi senior e bridge code-grounded di Claude Code
 - Related upgrade ID: G7.9 (core: esito balance-based + incasso contestuale editabile + rinuncia) + G7.10 (credito differito: entità receivable)
 - Spec di dettaglio (contratto d'implementazione): `docs/archive/specs/SPEC_TERMINAZIONE_BILATERALE_E_TUTELA_TRAINER.md`
-- Audit fondante: `docs/operations/AUDIT_TERMINAZIONE_BILATERALE_2026-06-27.md`
+- Audit fondante: `docs/archive/operations/AUDIT_TERMINAZIONE_BILATERALE_2026-06-27.md`
 - Estende: `ADR-016` (asse EROGATO canonico) sul **ramo positivo del conguaglio**, lasciato collassare su `SALDO_A_PERDERE`
 - Correlati: `ADR-017` (rinvio libera credito), `ADR-014` (gestione finanziaria, framing "proposta non obbligo"); modello vivo: `FINANCIAL_DOMAIN_MODEL.md`, `TASSONOMIA_FINANZIARIA.md`
 

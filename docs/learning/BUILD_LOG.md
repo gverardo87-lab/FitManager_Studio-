@@ -4500,3 +4500,28 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
   `.agents/product-marketing-context.md` (bozza D8 con claims matrix, auto-draftata 2026-09-01)
   resta fuori dal commit: si ratifica nel gate A0.
 - **Prossimo gate founder:** E1 testo exit. Prossimo gate tecnico: C0.1 RED reale.
+
+---
+
+## 2026-09-02 — G-DOC.1: bonifica fotografie e zombie documentali
+
+- **Trigger founder:** percezione di frammentazione/gerarchia confusa in docs/; audit architetturale
+  senior contro la legge ratificata (AGENTS §11, posizione=stato) prima del materiale commerciale.
+  Esito audit: 18+ finding strutturali; 3 decisioni ratificate una a una (casa commerciale,
+  bonifica specs, bonifica fotografie). Questo gate esegue la terza.
+- **Mosse (tutte `git mv`, storia preservata):** 11 fotografie audit (10 `AUDIT_*` + `DB_INTEGRITY`)
+  → `docs/archive/operations/` con header di esito ciascuna (esiti già foldati in ADR-016→024 e
+  gate chiusi); `docs/upgrades/` (dismessa per legge 2026-07-03) → `docs/archive/upgrades/`;
+  `LAUNCH_SPRINT.md` (fotografia 2026-03-18 a root) → `docs/archive/LAUNCH_SPRINT_2026-03-18.md`.
+- **Eccezione dichiarata:** `AUDIT_DEEPLINK_CROSS_PAGE_2026-07-24.md` resta in `operations/` con
+  Stato 🟡 REMEDIATION APERTA (fasce A/B/C coordinate col blocco P in HOLD); si archivia al fold-back.
+- **Puntatori vivi aggiornati:** 6 ADR fondati sugli audit (016, 018, 019 ×2, 020, 021, 022),
+  SPEC_P, SPEC_G9.7, SPEC_G9, CLAUDE.md, ARCHITECTURE.md, EXERCISE_LIBRARY_STRATEGY, INDEX
+  (tabella operations ridotta ai runbook vivi + nota archivio; sezione Altre directory).
+  BUILD_LOG e docs/archive/ intenzionalmente NON riscritti (storia).
+- **Bonus:** `README.md` non dichiara più una versione hardcoded (era stale a 1.0.10; SSoT
+  `api/__init__.py`).
+- **Verifiche:** grep residuo `docs/operations/AUDIT_*|DB_INTEGRITY` fuori da archive/BUILD_LOG =
+  zero; righe AUDIT rimosse dall'INDEX = 7/7; Ruff `api/` PASS; `git diff --check` PASS. Gate
+  esclusivamente documentale.
+- **Prossimo:** G-DOC.2 bonifica work-queue specs (stesso mandato founder).

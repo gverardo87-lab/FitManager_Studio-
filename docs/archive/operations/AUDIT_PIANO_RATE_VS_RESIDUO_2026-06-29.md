@@ -1,5 +1,8 @@
 # Audit — Il piano rate diverge dal residuo (denaro-fantasma a livello rata)
 
+> **ARCHIVIATO 2026-09-02** — audit fondante di ADR-021; remediation foldata nel filone G8/G9
+> chiuso. Riferimento storico, mai contesto di lavoro.
+
 > **Provenienza:** test di flusso del trainer reale (Chiara Pais, contratto 35) → diagnosi senior code-grounded
 > sul DB reale (`data/crm.db`, read-only). **Data:** 2026-06-29.
 > **Trigger founder:** «contratto saldato ma la rata è ancora segnalata in ritardo — stiamo andando a tentativi,

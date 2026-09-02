@@ -1,5 +1,8 @@
 # AUDIT — Censimento assi semantici del dominio finanziario (S1) + interpreti della cassa (S2)
 
+> **ARCHIVIATO 2026-09-02** — fotografia foldata in ADR-024 e nel blocco G9.7 (chiuso); la matrice
+> viva è `docs/technical/MATRICE_ASSI_SEMANTICI.md`. Riferimento storico, mai contesto di lavoro.
+
 - **Data**: 2026-07-04
 - **Trigger**: `INC-2026-07-03-falso-allarme-entrate-negative-cassa.md` (falso allarme entrate nette −140,42 €) + decisione founder: metodo "anticipare per struttura" (4 regole), perimetro finanziario
 - **Natura**: READ-ONLY, code-grounded (grep + lettura mirata, ogni sito `file:riga`). Zero modifiche.

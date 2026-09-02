@@ -1,5 +1,8 @@
 # AUDIT_FINANCIAL_ARCHITECTURE — write-model del dominio contrattuale-economico
 
+> **ARCHIVIATO 2026-09-02** — audit fondante di ADR-022; filone G9 chiuso 2026-07-05. Riferimento
+> storico, mai contesto di lavoro.
+
 **Tipo:** audit architetturale **READ-ONLY** (mappa lo stato, non muta codice). **Data:** 2026-06-30 ·
 **Branch:** `FitManager_Studio` (post-G8.3).
 **Trigger:** osservazione del founder dopo G8.3 — «continuano a uscire scenari secondari che gestiamo
