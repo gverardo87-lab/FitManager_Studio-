@@ -2,6 +2,14 @@ name: macOS portability canary (C0.1)
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - FitManager_Studio
+    paths:
+      - ".github/workflows/macos-portability-canary.yml"
+      - "api/services/tunnel_config.py"
+      - "tools/canary/**"
+      - "tests/test_macos_c0_canary.py"
 
 permissions:
   contents: read
