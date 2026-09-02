@@ -20,6 +20,14 @@ di uscita partner. BP/FM conservano assunzioni e numeri pre-validazione, ora sup
 struttura partner; Legal governa il proprio dominio. Strategie, roadmap e materiali partner
 superseded vivono in `docs/archive/` e non sono contesto operativo.
 
+**Contratto di specie (G-DOC.3, 2026-09-02):** `docs/business/` è la casa del dominio COMMERCIALE.
+Tre specie ammesse: **(a) verità commerciale CORRENTE** — al gate A0 approdano qui il product
+marketing context (oggi bozza non tracciata in `.agents/product-marketing-context.md`), la claims
+matrix e il kit design partner; la conoscenza competitor viva (leggi W1-W11) viene estratta
+dall'archive in un documento vivo in questa casa; **(b) baseline storiche ANNOTATE** (BP/FM con
+delta di verità in header); **(c) compliance** (Legal). Le fotografie superseded →
+`docs/archive/business/`. **Nessun claim esterno nasce fuori da questa casa.**
+
 ---
 
 ## product/ — Roadmap, feature future, video

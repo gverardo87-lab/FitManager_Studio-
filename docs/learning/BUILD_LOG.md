@@ -4561,3 +4561,29 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
   identici prima/dopo: il lavoro canary resta sul disco come modifiche non committate, con la sua
   paternità). **Lezione:** staging SEMPRE per path espliciti attribuiti al gate, mai `-A`, anche
   nei gate docs; il working tree è condiviso con sessioni parallele per policy di progetto.
+
+---
+
+## 2026-09-02 — G-DOC.3: contratto di specie del dominio commerciale
+
+- **Mandato founder:** decisione 1/3 dell'audit architetturale — il dominio commerciale corrente
+  vive in `docs/business/` con contratto di specie (zero directory nuove).
+- **Contratto depositato:** INDEX §business definisce le tre specie ammesse — (a) verità
+  commerciale CORRENTE (al gate A0 approdano marketing context, claims matrix, kit design partner
+  e l'estrazione delle leggi W1-W11 dall'archive in documento vivo); (b) baseline storiche
+  ANNOTATE (BP/FM); (c) compliance (Legal). Fotografie superseded → `docs/archive/business/`.
+  Legge: **nessun claim esterno nasce fuori da questa casa.**
+- **Legge estesa:** AGENTS §11 nuova riga di specie **COMMERCIALE** (`docs/business/`);
+  CLAUDE.md riga Layer 2 allineata.
+- **Nota:** il deposito effettivo di context/claims/kit resta il gate A0 (founder-led, D8) —
+  questo gate crea la CASA, non il contenuto. La bozza `.agents/product-marketing-context.md`
+  resta non tracciata fino ad A0.
+- **Verifiche:** Ruff PASS; `git diff --check` PASS; staging per path espliciti (lezione
+  dell'incidente precedente applicata).
+- **Chiusura mandato audit 2026-09-02:** G-DOC.1 (`390b279`) + G-DOC.2 (`ee60c81` + remediation
+  `5250206`) + G-DOC.3 (questo commit). Albero risultante: root 9 file (governance pulita),
+  specs = 4 vive + 4 hold, operations = solo runbook vivi + 1 fotografia con remediation aperta,
+  business con contratto. Residui censiti, non eseguiti (fuori mandato): ruolo di
+  `ARCHITECTURE.md` da ratificare in catena di autorità; `product/` senza contratto di specie
+  formale (RECURRING_SESSIONS_SPEC e VIDEO_PRODUCTION fuori specie); README conteggi feature da
+  rivedere in A0.
