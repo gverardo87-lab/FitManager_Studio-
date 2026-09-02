@@ -96,6 +96,12 @@ jobs:
           mkdir -p "$NUITKA_CACHE_DIR"
           python -m pip install \
             --no-deps \
+            --only-binary=:all: \
+            --require-hashes \
+            -r tools/canary/requirements-macos-c0-build-bootstrap.txt
+          python -c 'import setuptools.build_meta'
+          python -m pip install \
+            --no-deps \
             --no-build-isolation \
             --require-hashes \
             -r tools/canary/requirements-macos-c0-build.txt

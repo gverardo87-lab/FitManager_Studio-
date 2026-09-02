@@ -1,0 +1,5 @@
+# Build backend required to read the hash-pinned Nuitka sdist with build
+# isolation disabled. Keep this bootstrap separate so pip installs it before
+# resolving the sdist metadata. PyPI wheel metadata verified 2026-09-02.
+setuptools==84.0.0 \
+    --hash=sha256:51a52592b3b99e102b609654876bd65f19f999935166d1352678931132b0c670

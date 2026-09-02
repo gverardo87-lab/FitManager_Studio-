@@ -8,6 +8,31 @@ from tools.canary.check_macos_runtime_contract import evaluate_runtime_contract
 from tools.canary.wheelhouse_manifest import _tag_is_arm64_safe
 
 
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_nuitka_build_backend_is_hash_pinned_before_sdist_install():
+    bootstrap_path = ROOT / "tools" / "canary" / "requirements-macos-c0-build-bootstrap.txt"
+    workflow_path = ROOT / ".github" / "workflows" / "macos-portability-canary.yml"
+
+    bootstrap = bootstrap_path.read_text(encoding="utf-8")
+    workflow = workflow_path.read_text(encoding="utf-8")
+
+    assert "setuptools==84.0.0" in bootstrap
+    assert "sha256:51a52592b3b99e102b609654876bd65f19f999935166d1352678931132b0c670" in bootstrap
+    bootstrap_install = "-r tools/canary/requirements-macos-c0-build-bootstrap.txt"
+    nuitka_install = "-r tools/canary/requirements-macos-c0-build.txt"
+    bootstrap_index = workflow.index(bootstrap_install)
+    nuitka_index = workflow.index(nuitka_install)
+    bootstrap_block = workflow[bootstrap_index - 180 : nuitka_index]
+
+    assert bootstrap_index < nuitka_index
+    assert "--no-deps" in bootstrap_block
+    assert "--only-binary=:all:" in bootstrap_block
+    assert "--require-hashes" in bootstrap_block
+    assert "import setuptools.build_meta" in bootstrap_block
+
+
 def test_runtime_contract_exposes_current_darwin_filename_coupling():
     report = evaluate_runtime_contract(
         target_system="Darwin",
