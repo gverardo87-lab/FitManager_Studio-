@@ -14,6 +14,8 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 | `BUSINESS_PLAN.md` | BP v4.3 — baseline marzo; struttura partner superseded 2026-08-29; non governa prodotto o scheduling | Numeri e assunzioni storiche pre-validazione |
 | `FINANCIAL_MODEL.md` | Modello analitico marzo; formule partner e viste founder+partner superseded; da sostituire col reset commerciale | Proiezioni storiche pre-validazione |
 | `LEGAL_REGULATORY_REPORT.md` | Report legale-regolamentare v1.4: GDPR, fiscale, IP, EAA, SBOM, PSD2, exit partner | Compliance |
+| `PRODUCT_MARKETING_CONTEXT.md` | 🟢 **SSoT verità commerciale (A0, 2026-09-03):** ICP, posizionamento, claims matrix 🟢/🟡/🔴, obiezioni, canali ORB, vincoli. Solo le righe 🟢 sono claim esterni autorizzati | Claim commerciali |
+| `LEGGI_COMPETITOR.md` | Conoscenza competitor VIVA estratta dagli archivi (A0): leggi W1-W11 + L1-L6 + lacune N-1..N-8 (guardrail: niente assoluti «nessun competitor italiano» finché N-1 aperta) | Mercato e benchmark |
 
 **Gerarchia:** `SPEC_PRE_POC.md` governa il lavoro corrente; `SPEC_EXIT_ALESSIO.md` governa il blocco
 di uscita partner. BP/FM conservano assunzioni e numeri pre-validazione, ora superseded per la
@@ -21,10 +23,9 @@ struttura partner; Legal governa il proprio dominio. Strategie, roadmap e materi
 superseded vivono in `docs/archive/` e non sono contesto operativo.
 
 **Contratto di specie (G-DOC.3, 2026-09-02):** `docs/business/` è la casa del dominio COMMERCIALE.
-Tre specie ammesse: **(a) verità commerciale CORRENTE** — al gate A0 approdano qui il product
-marketing context (oggi bozza non tracciata in `.agents/product-marketing-context.md`), la claims
-matrix e il kit design partner; la conoscenza competitor viva (leggi W1-W11) viene estratta
-dall'archive in un documento vivo in questa casa; **(b) baseline storiche ANNOTATE** (BP/FM con
+Tre specie ammesse: **(a) verità commerciale CORRENTE** — depositata con A0 (2026-09-03):
+`PRODUCT_MARKETING_CONTEXT.md` (context + claims matrix) e `LEGGI_COMPETITOR.md` (estrazione viva
+dagli archivi); il kit design partner nasce qui; **(b) baseline storiche ANNOTATE** (BP/FM con
 delta di verità in header); **(c) compliance** (Legal). Le fotografie superseded →
 `docs/archive/business/`. **Nessun claim esterno nasce fuori da questa casa.**
 
@@ -84,7 +85,7 @@ commit docs del gate (ciclo di vita: `AGENTS.md`).
 
 | File | Stato | Scopo |
 |------|-------|-------|
-| `SPEC_PRE_POC.md` | 🟡 **IN CORSO — D0+C0.0+FT.0+E0+D11 CHIUSI; PROSSIMO FOUNDER E1; PROSSIMO TECNICO C0.1; C0.2/G-MAC.2–5 HOLD** | Unica regia pre-POC: v1.0.15 Windows security/readiness, C0.1 portability hedge pre-S1, Financial Truth e percorso founder-led; prima POC Windows, distribuzione Mac pull-based dopo trigger diretto |
+| `SPEC_PRE_POC.md` | 🟡 **IN CORSO — D0+C0.0+FT.0+E0+D11+A0 CHIUSI; PROSSIMO FOUNDER E1; PROSSIMO TECNICO C0.1; C0.2/G-MAC.2–5 HOLD** | Unica regia pre-POC: v1.0.15 Windows security/readiness, C0.1 portability hedge pre-S1, Financial Truth e percorso founder-led; prima POC Windows, distribuzione Mac pull-based dopo trigger diretto |
 | `SPEC_EXIT_ALESSIO.md` | 🟡 **E0 STRATEGIA RATIFICATA; E1 TESTO DA COSTRUIRE; E2–E4 NON ESEGUITI** | Exit commerciale/contrattuale/operativa: comunicazione separata, verifica NDA, export/no-data, licenza/tunnel, fold-back e reset commerciale; nessuna revoca implicita |
 | `SPEC_G8.4_TRASPARENZA_FINANZIARIA_FE.md` | 🟡 **G8.4 ORIGINALE CHIUSO · FT.0 ✅ · FT.1–FT.5 APERTI** | Casa tecnica Financial Truth: FT.1 grafico cash-direction; FT.2 trend/empty/conguagli; FT.3 audit flow; FT.4 cache symmetry; FT.5 bonifica legacy per-record. F0 HOLD su FT.1–FT.4; Real-data GO del DB interessato HOLD su FT.5. G8.5 goodwill resta separato |
 | `SPEC_G-MAC_CONSEGNA_MACOS.md` | 🟡 **C0.0 CHIUSO; PROSSIMO C0.1 RED; C0.2/G-MAC.2–5 HOLD** | C0.1 `macos-15`→stesso artefatto `macos-26` protegge G1 e apre S1; target exact e distribuzione Mac soltanto dopo R1-WIN e trigger commerciale D11 |

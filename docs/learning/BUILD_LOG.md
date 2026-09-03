@@ -4587,3 +4587,34 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
   `ARCHITECTURE.md` da ratificare in catena di autorità; `product/` senza contratto di specie
   formale (RECURRING_SESSIONS_SPEC e VIDEO_PRODUCTION fuori specie); README conteggi feature da
   rivedere in A0.
+
+---
+
+## 2026-09-03 — A0 CHIUSO: product truth founder-led ratificata e depositata
+
+- **Trigger founder:** «riprendiamo lasciando temporaneamente fuori E1» — A0 anticipato per
+  decisione founder (docs-only, zero conflitto coi gate tecnici; E1 resta il prossimo gate founder
+  dell'exit, non toccato).
+- **Evidenza raccolta PRIMA delle domande:** claim «email automatiche» del BP marzo = FALSO (zero
+  SMTP/invio email in `api/`; la comunicazione è WhatsApp) — riga risolta da codice, non da
+  decisione. Registro consegne: Chiara non è mai stata una consegna registrata, è su v1.0.10 col
+  bug fingerprint (45+ blocchi) e la v1.0.14 tagliata per lei non è consegnata.
+- **Ratifiche founder (una a una):** uso reale quotidiano ATTESTATO → claim 🟢 con wording onesto
+  («in uso quotidiano da una professionista reale dal 2026»); pricing DIFFERITO (il kit design
+  partner non espone prezzi; resta 🟢 solo «si compra una volta»); deposito completo A0 GO.
+- **Finding aggiuntivo incorporato:** la ricerca competitor è al 100% anglofona (lacuna N-1
+  dichiarata) → riga nuova in matrix: claim assoluti «nessun competitor italiano» VIETATI finché
+  N-1 non chiude; posizionamento riformulato in forma verificabile.
+- **Depositi:** `docs/business/PRODUCT_MARKETING_CONTEXT.md` (SSoT claims matrix, ratificata,
+  tracciata; in `.agents/` resta solo un puntatore per le skill di marketing) +
+  `docs/business/LEGGI_COMPETITOR.md` (estrazione sanzionata W1-W11 + L1-L6 + lacune N dagli
+  archivi — prima attuazione del contratto di specie G-DOC.3).
+- **Fold-back:** SPEC_PRE_POC (Stato +A0, ground truth §2, riga gate A0 ✅, fonti §10, Addendum
+  A0 §14); BP delta di verità esteso con email; INDEX (2 righe business nuove, contratto di specie
+  aggiornato, riga PRE_POC).
+- **Coda commerciale dopo A0 (strategia ratificata 2026-09-02, customer-first):** kit design
+  partner strato 1 — (1) one-pager problema/soluzione senza prezzi, (2) demo pack con dati
+  sintetici (vincolo D5), (3) FAQ/obiezioni, (4) video hero, (5) pagina «cosa comporta il pilota».
+  Strato 2 (partner layer) SOLO dopo le prime conversazioni reali. Ricerca N-1 competitor italiani
+  da pianificare.
+- **Verifiche:** Ruff PASS; `git diff --check` PASS; staging per path espliciti. Gate docs-only.

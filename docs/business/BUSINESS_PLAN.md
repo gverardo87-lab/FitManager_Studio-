@@ -20,8 +20,10 @@
 > FitManager Box presentata come componente esistente (è roadmap post-Wave 0, `LAUNCH_SCOPE.md`);
 > Nutrizione presentata come feature attiva (UI rimossa, backend dormiente); «500 esercizi»
 > (canonico: 466 attivi su 522, catalog.db); POC «10 professionisti» (regia corrente: max 3 design
-> partner, `SPEC_PRE_POC.md` D9); accesso remoto «Tailscale» (sostituito da tunnel FRP self-hosted).
-> I claim commerciali autorizzati vivono solo nel product marketing context (gate A0).
+> partner, `SPEC_PRE_POC.md` D9); accesso remoto «Tailscale» (sostituito da tunnel FRP self-hosted);
+> «Email automatiche» (MAI esistite nel prodotto — verificato 2026-09-03, zero SMTP/invio email in
+> `api/`; la comunicazione è WhatsApp). I claim commerciali autorizzati vivono solo in
+> `PRODUCT_MARKETING_CONTEXT.md` (A0 ratificato 2026-09-03).
 
 ---
 

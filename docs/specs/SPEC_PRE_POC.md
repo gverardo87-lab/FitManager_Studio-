@@ -1,6 +1,6 @@
 # SPEC — Strategia e readiness pre-POC
 
-**Stato:** 🟡 IN CORSO — D0, C0.0, FT.0, E0 e D11 chiusi; prossimo gate founder E1 testo exit;
+**Stato:** 🟡 IN CORSO — D0, C0.0, FT.0, E0, D11 e A0 chiusi; prossimo gate founder E1 testo exit;
 prossimo gate tecnico C0.1 canary RED; C0.2/G-MAC.2–5 in HOLD su trigger Mac; F0 in HOLD finché
 FT.1–FT.4 non sono chiusi
 **Data di ratifica founder:** 2026-07-31
@@ -43,7 +43,8 @@ esperimenti separati o secondari: non devono rendere il risultato prodotto illeg
 - Daniele è il primo target macOS noto: MacBook Air M1 2020, ARM64, 8 GB, macOS Tahoe 26.5.1,
   configurazione confermata il 2026-08-02; foto e identificatori hardware non sono conservati nel
   repository o nei log. Il potenziale rapporto Virgin è upside non validato;
-- non esiste ancora `.agents/product-marketing-context.md`.
+- il product marketing context è depositato e ratificato: `docs/business/PRODUCT_MARKETING_CONTEXT.md`
+  (A0, 2026-09-03; `.agents/product-marketing-context.md` è solo un puntatore per le skill).
 
 I fatti cambiano solo con evidenza. Le valutazioni founder su fiducia, opportunità e priorità sono
 decisioni strategiche dichiarate, non metriche osservate.
@@ -227,7 +228,7 @@ ma il calendario viene ripianificato dopo E1 e nella nuova strategia commerciale
 | 2026-08-02 | **D0 — Autorità documentale** | questa SPEC viva; fonti concorrenti archiviate; INDEX/CLAUDE/LAUNCH_SCOPE e interlock allineati |
 | Prossimo gate tecnico | **C0.1 — Portability hedge CI** | build `macos-15` + esecuzione medesimo artefatto `macos-26`; SQLCipher/G1, Nuitka, frontend ARM64, auth exempt e supply chain finale ARM64 verificati senza packaging cliente né claim sul CRM protetto |
 | HOLD trigger Mac | **C0.2 — Target exact source-free** | medesimo canary sul target M1/8 GB/Tahoe 26.5.1; obbligatorio prima di G-MAC.2, non blocca S1/F0/R1-WIN |
-| Da ripianificare | **A0 — Product truth founder-led** | context agent-neutral e claims matrix approvata; nessun claim esterno non sostenuto; nessuna dipendenza da materiale o readiness Alessio |
+| 2026-09-03 ✅ | **A0 — Product truth founder-led** | CHIUSO: context + claims matrix ratificati riga per riga (`docs/business/PRODUCT_MARKETING_CONTEXT.md`); leggi competitor estratte (`LEGGI_COMPETITOR.md`); nessun claim esterno non sostenuto; zero dipendenze Alessio |
 | Da ripianificare | **S1 — Core/security** | G1/G2/G4 verdi; backup/restore coerenti; G9–G11 pronti per il real-data gate |
 | Da ripianificare | **F0 — Application code freeze** | suite completa Windows + runtime Mac CI; FT.1–FT.4 chiusi; nessuna feature o finding release-critical aperto |
 | 2026-08-29 | **E0 — Strategia exit Alessio** | ruolo e dipendenza ritirati; interlock documentale e `SPEC_EXIT_ALESSIO.md` ratificati; nessuna azione esterna o tecnica |
@@ -347,7 +348,7 @@ strategica: si diagnostica, si corregge o si riporta il milestone dipendente.
 - verità finanziaria: `docs/specs/SPEC_G8.4_TRASPARENZA_FINANZIARIA_FE.md` Addendum FT +
   `docs/incidents/INC-2026-08-05-grafico-cassa-netting-rimborsi.md`;
 - blocco P in HOLD: `docs/specs/hold/SPEC_P_PRESTAZIONI_SINGOLE_E_PORTAFOGLIO.md`;
-- verità prodotto: `MANIFESTO.md` e, dopo il gate dedicato, `.agents/product-marketing-context.md`;
+- verità prodotto: `MANIFESTO.md` + `docs/business/PRODUCT_MARKETING_CONTEXT.md` (A0, claims matrix);
 - exit relazione Alessio: `docs/specs/SPEC_EXIT_ALESSIO.md`;
 - storia di sviluppo: `docs/learning/BUILD_LOG.md`.
 
@@ -397,7 +398,22 @@ operativo del prossimo gate C0, che richiede prove runtime reali.
   requisiti Developer ID/notarizzazione per qualunque futura consegna Mac;
 - nessuna comunicazione esterna, spesa Apple, modifica codice, artifact o consegna eseguita in D11.
 
-## 14. Chiusura della SPEC
+## 14. Addendum A0 — Product truth founder-led — 2026-09-03
+
+- anticipato A0 per decisione founder esplicita (docs-only, nessun conflitto coi gate tecnici;
+  E1 lasciato intatto come prossimo gate founder dell'exit);
+- ratificate riga per riga le tre righe gialle della claims matrix: uso reale quotidiano ATTESTATO
+  dal founder (wording onesto, consegna v1.0.14 resta gate aperto); pricing DIFFERITO (il kit
+  design partner non espone prezzi, coerente con l'HOLD della strategia commerciale); «email
+  automatiche» declassata a NON DICHIARABILE su evidenza di codice (zero SMTP in `api/`);
+- aggiunto guardrail competitor: claim assoluti «nessun competitor italiano» vietati finché la
+  lacuna N-1 (vendor italiani mai censiti) non è chiusa da ricerca dedicata;
+- depositi: `docs/business/PRODUCT_MARKETING_CONTEXT.md` (SSoT claims, tracciata) +
+  `docs/business/LEGGI_COMPETITOR.md` (W1-W11, L1-L6, lacune N estratte dagli archivi);
+- nessun materiale esterno prodotto o inviato; nessun claim nuovo pubblicato; nessuna modifica
+  applicativa.
+
+## 15. Chiusura della SPEC
 
 La SPEC chiude quando la Wave 0 è attiva, le evidenze iniziali sono raccolte e la decisione di scala è
 registrata. A quel punto riceve consuntivo, fold-back nelle SSoT toccate e viene spostata in
