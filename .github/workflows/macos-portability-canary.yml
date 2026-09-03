@@ -121,7 +121,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python tools/canary/check_macos_runtime_contract.py \
+          python -m tools.canary.check_macos_runtime_contract \
             --target-system Darwin \
             --output build/macos-c0/portability-contract.json
 
@@ -348,11 +348,21 @@ jobs:
 
           run_headless_chrome() {
             canary/node/bin/node - "$@" <<'NODE'
+          const fs = require("node:fs");
           const { spawn } = require("node:child_process");
-          const [command, ...args] = process.argv.slice(2);
+          const [expectedOutput, command, ...args] = process.argv.slice(2);
           const child = spawn(command, args, { stdio: "inherit", detached: true });
           let timedOut = false;
           let forceKill;
+
+          const outputIsReady = () => {
+            try {
+              return fs.statSync(expectedOutput).size > 0;
+            } catch (error) {
+              if (error.code === "ENOENT") return false;
+              throw error;
+            }
+          };
 
           const killGroup = (signal) => {
             if (!child.pid) return;
@@ -369,6 +379,11 @@ jobs:
             killGroup("SIGTERM");
             forceKill = setTimeout(() => {
               killGroup("SIGKILL");
+              if (outputIsReady()) {
+                console.error(`Headless Chrome output ready; process group cleaned: ${expectedOutput}`);
+                process.exit(0);
+              }
+              console.error(`Headless Chrome produced no usable output: ${expectedOutput}`);
               process.exit(124);
             }, 5000);
           }, 45000);
@@ -384,7 +399,11 @@ jobs:
             clearTimeout(timeout);
             if (timedOut) return;
             clearTimeout(forceKill);
-            if (code === 0) process.exit(0);
+            if (code === 0 && outputIsReady()) process.exit(0);
+            if (code === 0) {
+              console.error(`Headless Chrome exited without usable output: ${expectedOutput}`);
+              process.exit(1);
+            }
             console.error(`Headless Chrome exited with ${code ?? signal}`);
             process.exit(code ?? 1);
           });
@@ -409,14 +428,15 @@ jobs:
             viewport="$2"
             width="${viewport%x*}"
             height="${viewport#*x}"
-            run_headless_chrome "$chrome" \
+            output="$GITHUB_WORKSPACE/evidence/${route}-${viewport}.png"
+            run_headless_chrome "$output" "$chrome" \
               "${chrome_common_args[@]}" \
               --virtual-time-budget=3000 \
               --user-data-dir="$RUNNER_TEMP/chrome-${viewport}-${route}" \
               --window-size="$width,$height" \
-              --screenshot="$GITHUB_WORKSPACE/evidence/${route}-${viewport}.png" \
+              --screenshot="$output" \
               "http://127.0.0.1:3000/${route}"
-            sips -g pixelWidth -g pixelHeight "evidence/${route}-${viewport}.png"
+            sips -g pixelWidth -g pixelHeight "$output"
           }
 
           # Before registration, /setup is the truthful first-run surface.
@@ -424,13 +444,19 @@ jobs:
             capture_route setup "$viewport"
           done
 
-          run_headless_chrome "$chrome" \
+          setup_dom="$GITHUB_WORKSPACE/evidence/setup-dom.html"
+          run_headless_chrome "$setup_dom" "$chrome" \
             "${chrome_common_args[@]}" \
             --virtual-time-budget=3000 \
             --user-data-dir="$RUNNER_TEMP/chrome-dom-setup" \
             --dump-dom http://127.0.0.1:3000/setup \
-            > evidence/setup-dom.html
-          if grep -Eqi 'Application error|Internal Server Error' evidence/setup-dom.html; then
+            > "$setup_dom"
+          test -s "$setup_dom"
+          if ! grep -Eqi '</html>' "$setup_dom"; then
+            echo "Frontend setup DOM is incomplete" >&2
+            exit 1
+          fi
+          if grep -Eqi 'Application error|Internal Server Error' "$setup_dom"; then
             echo "Frontend auth surface contains an application error" >&2
             exit 1
           fi
@@ -445,13 +471,19 @@ jobs:
             capture_route login "$viewport"
           done
 
-          run_headless_chrome "$chrome" \
+          login_dom="$GITHUB_WORKSPACE/evidence/login-dom.html"
+          run_headless_chrome "$login_dom" "$chrome" \
             "${chrome_common_args[@]}" \
             --virtual-time-budget=3000 \
             --user-data-dir="$RUNNER_TEMP/chrome-dom-login" \
             --dump-dom http://127.0.0.1:3000/login \
-            > evidence/login-dom.html
-          if grep -Eqi 'Application error|Internal Server Error' evidence/login-dom.html; then
+            > "$login_dom"
+          test -s "$login_dom"
+          if ! grep -Eqi '</html>' "$login_dom"; then
+            echo "Frontend login DOM is incomplete" >&2
+            exit 1
+          fi
+          if grep -Eqi 'Application error|Internal Server Error' "$login_dom"; then
             echo "Frontend auth surface contains an application error" >&2
             exit 1
           fi

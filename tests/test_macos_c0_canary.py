@@ -40,6 +40,9 @@ def test_macos_smoke_timeboxes_chrome_and_disables_background_updates():
 
     assert "timeout-minutes: 10" in smoke[:500]
     assert "run_headless_chrome()" in smoke
+    assert "const [expectedOutput, command, ...args]" in smoke
+    assert "fs.statSync(expectedOutput).size > 0" in smoke
+    assert "if (outputIsReady())" in smoke
     assert "process.kill(-child.pid" in smoke
     assert '"SIGKILL"' in smoke
     assert "if (timedOut) return;" in smoke
@@ -47,6 +50,23 @@ def test_macos_smoke_timeboxes_chrome_and_disables_background_updates():
     assert "--disable-background-networking" in smoke
     assert "--disable-component-update" in smoke
     assert "--no-first-run" in smoke
+    assert 'run_headless_chrome "$output" "$chrome"' in smoke
+    assert 'run_headless_chrome "$setup_dom" "$chrome"' in smoke
+    assert 'run_headless_chrome "$login_dom" "$chrome"' in smoke
+    assert "grep -Eqi '</html>'" in smoke
+
+
+def test_runtime_contract_cli_is_invoked_as_repo_root_module():
+    workflow_path = ROOT / ".github" / "workflows" / "macos-portability-canary.yml"
+    workflow = workflow_path.read_text(encoding="utf-8")
+    contract_step = workflow[
+        workflow.index("Record the current G-MAC.1 runtime coupling") : workflow.index(
+            "Compile the source-free technical/auth runtime"
+        )
+    ]
+
+    assert "python -m tools.canary.check_macos_runtime_contract" in contract_step
+    assert "python tools/canary/check_macos_runtime_contract.py" not in contract_step
 
 
 def test_runtime_contract_exposes_current_darwin_filename_coupling():
