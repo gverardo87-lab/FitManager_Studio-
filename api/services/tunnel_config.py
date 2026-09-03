@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import datetime
 import logging
+import platform
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -33,9 +34,16 @@ TUNNEL_KEY_PATH = TUNNEL_DATA_DIR / "key.pem"
 ACME_WEBROOT_PATH = TUNNEL_DATA_DIR / "acme-webroot"
 ACME_STATE_PATH = TUNNEL_DATA_DIR / "acme"
 
-# frpc binary: in compiled mode sta accanto all'exe, in dev in tools/bin/
-_FRPC_FILENAME = "frpc.exe"
-_ACME_CLIENT_FILENAME = "lego.exe"
+def _companion_filenames(system_name: str) -> tuple[str, str]:
+    """Nomi companion per il target; ogni piattaforma non Darwin resta fail-safe Windows."""
+    if system_name == "Darwin":
+        return "frpc", "lego"
+    return "frpc.exe", "lego.exe"
+
+
+# In compiled mode i companion stanno accanto all'exe, in dev in tools/bin/.
+# Il fallback conserva il comportamento Windows e non abilita piattaforme non supportate.
+_FRPC_FILENAME, _ACME_CLIENT_FILENAME = _companion_filenames(platform.system())
 
 
 @dataclass(frozen=True)
@@ -232,8 +240,9 @@ def get_tunnel_config() -> TunnelConfig | None:
     if frpc_path is None:
         logger.warning(
             "Tunnel config: instance_id '%s' presente ma frpc non trovato. "
-            "Dev: scaricare in tools/bin/frpc.exe. Compiled: verificare bundle.",
+            "Dev: scaricare in tools/bin/%s. Compiled: verificare bundle.",
             instance_id,
+            _FRPC_FILENAME,
         )
         return None
 

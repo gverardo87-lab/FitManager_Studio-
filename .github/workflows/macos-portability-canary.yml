@@ -8,6 +8,7 @@ on:
     paths:
       - ".github/workflows/macos-portability-canary.yml"
       - "api/services/tunnel_config.py"
+      - "api/services/tunnel_manager.py"
       - "tools/canary/**"
       - "tests/test_macos_c0_canary.py"
 
@@ -72,7 +73,7 @@ jobs:
             --dest build/macos-c0/wheelhouse \
             -r tools/canary/requirements-macos-c0.txt
 
-      - name: Record the strict ARM64 wheel-tag contract
+      - name: Record the ARM64-compatible wheel input contract
         id: wheelhouse-contract
         continue-on-error: true
         shell: bash
@@ -246,13 +247,13 @@ jobs:
             build/macos-c0/thinning-evidence.txt
             build/macos-c0/wheelhouse-manifest.json
 
-      - name: Preserve RED as evidence, not an early abort
+      - name: Require build contracts before transfer
         shell: bash
         run: |
           echo "Runtime contract step outcome: ${{ steps.runtime-contract.outcome }}"
           echo "Wheelhouse contract step outcome: ${{ steps.wheelhouse-contract.outcome }}"
-          test "${{ steps.runtime-contract.outcome }}" = "failure"
-          test "${{ steps.wheelhouse-contract.outcome }}" = "failure"
+          test "${{ steps.runtime-contract.outcome }}" = "success"
+          test "${{ steps.wheelhouse-contract.outcome }}" = "success"
 
   smoke-same-artifact:
     name: Run the same artifact on macos-26

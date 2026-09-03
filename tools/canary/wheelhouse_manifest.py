@@ -35,7 +35,10 @@ def _tag_is_arm64_safe(tag: str) -> bool:
     platform_tag = parts[2]
     if platform_tag == "any":
         return True
-    return "arm64" in platform_tag and "x86_64" not in platform_tag and "universal2" not in platform_tag
+    return any(
+        candidate.endswith("_arm64") or candidate.endswith("_universal2")
+        for candidate in platform_tag.split(".")
+    )
 
 
 def build_manifest(wheelhouse: Path) -> dict[str, object]:
@@ -67,7 +70,8 @@ def build_manifest(wheelhouse: Path) -> dict[str, object]:
 
     return {
         "schema": 1,
-        "architecture_policy": "pure-python-or-macos-arm64-only",
+        "architecture_policy": "pure-python-or-macos-arm64-compatible-input",
+        "final_artifact_policy": "mach-o-arm64-only-after-thinning-and-codesign",
         "result": "PASS" if not findings else "FAIL",
         "findings": sorted(findings),
         "wheels": entries,

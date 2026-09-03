@@ -13,6 +13,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509.oid import NameOID
 
 from api.services import tunnel_config
+from api.services import tunnel_manager
 from api.services.tunnel_config import TunnelConfig
 from api.services.tunnel_manager import TunnelManager, generate_frpc_toml
 
@@ -66,6 +67,23 @@ def _config(tmp_path: Path) -> TunnelConfig:
         acme_state_path=tmp_path / "acme",
         acme_client_path=tmp_path / "lego.exe",
     )
+
+
+@pytest.mark.parametrize(
+    ("system_name", "expected"),
+    [
+        ("Windows", ("frpc.exe", "lego.exe")),
+        ("Darwin", ("frpc", "lego")),
+        ("Linux", ("frpc.exe", "lego.exe")),
+    ],
+)
+def test_companion_filenames_preserve_windows_and_enable_darwin(system_name, expected):
+    assert tunnel_config._companion_filenames(system_name) == expected
+
+
+def test_frpc_permission_hint_is_platform_specific():
+    assert tunnel_manager._frpc_permission_hint("win32") == "possibile blocco antivirus/firewall"
+    assert "Gatekeeper/quarantena" in tunnel_manager._frpc_permission_hint("darwin")
 
 
 def test_frpc_config_separates_https_app_from_http_acme_webroot(tmp_path):

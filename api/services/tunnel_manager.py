@@ -28,6 +28,13 @@ from api.services.tunnel_config import TunnelConfig
 logger = logging.getLogger(__name__)
 
 
+def _frpc_permission_hint(platform_name: str) -> str:
+    """Diagnostica azionabile senza cambiare il comportamento di avvio."""
+    if platform_name == "darwin":
+        return "possibile blocco Gatekeeper/quarantena o permesso eseguibile mancante"
+    return "possibile blocco antivirus/firewall"
+
+
 # ---------------------------------------------------------------------------
 # Windows Job Object — kill frpc quando il backend muore (anche brusco)
 # ---------------------------------------------------------------------------
@@ -422,8 +429,9 @@ class TunnelManager:
                 self.state = TunnelState.ERROR
             except PermissionError:
                 logger.error(
-                    "Permesso negato per frpc: %s — possibile blocco antivirus/firewall",
+                    "Permesso negato per frpc: %s — %s",
                     self.config.frpc_path,
+                    _frpc_permission_hint(sys.platform),
                 )
                 self.state = TunnelState.ERROR
             except OSError as e:

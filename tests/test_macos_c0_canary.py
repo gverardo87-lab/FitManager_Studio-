@@ -94,11 +94,21 @@ def test_runtime_contract_accepts_native_darwin_filenames():
     assert report["findings"] == []
 
 
-def test_wheel_policy_accepts_pure_and_arm64_tags_only():
+def test_wheel_policy_accepts_arm64_compatible_inputs_and_rejects_x86_only():
     assert _tag_is_arm64_safe("py3-none-any")
     assert _tag_is_arm64_safe("cp312-cp312-macosx_11_0_arm64")
+    assert _tag_is_arm64_safe("cp39-abi3-macosx_10_12_universal2")
     assert not _tag_is_arm64_safe("cp312-cp312-macosx_10_13_x86_64")
-    assert not _tag_is_arm64_safe("cp312-cp312-macosx_10_13_universal2")
+
+
+def test_green_canary_requires_both_build_contracts_before_transfer():
+    workflow_path = ROOT / ".github" / "workflows" / "macos-portability-canary.yml"
+    workflow = workflow_path.read_text(encoding="utf-8")
+
+    assert '"api/services/tunnel_manager.py"' in workflow
+    assert "Require build contracts before transfer" in workflow
+    assert 'test "${{ steps.runtime-contract.outcome }}" = "success"' in workflow
+    assert 'test "${{ steps.wheelhouse-contract.outcome }}" = "success"' in workflow
 
 
 def test_runtime_is_deny_by_default_and_allows_only_loopback_cors():
