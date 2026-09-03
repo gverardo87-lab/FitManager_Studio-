@@ -1,8 +1,8 @@
 # SPEC — Strategia e readiness pre-POC
 
-**Stato:** 🟡 IN CORSO — D0, C0.0, FT.0, E0, D11 e A0 chiusi; prossimo gate founder E1 testo exit;
-prossimo gate tecnico C0.1 canary RED; C0.2/G-MAC.2–5 in HOLD su trigger Mac; F0 in HOLD finché
-FT.1–FT.4 non sono chiusi
+**Stato:** 🟡 IN CORSO — D0, C0.0, C0.1 RED, FT.0, E0, D11 e A0 chiusi; prossimo gate founder
+E1 testo exit; prossimo gate tecnico G-MAC.1 + re-run C0.1 GREEN; C0.2/G-MAC.2–5 in HOLD su trigger
+Mac; F0 in HOLD finché FT.1–FT.4 non sono chiusi
 **Data di ratifica founder:** 2026-07-31
 **Branch:** `FitManager_Studio`
 **Tipo:** regia operativa pre-POC; non duplica le specifiche tecniche sottostanti
@@ -226,7 +226,8 @@ ma il calendario viene ripianificato dopo E1 e nella nuova strategia commerciale
 | Deadline | Gate | Evidenza di uscita |
 |---|---|---|
 | 2026-08-02 | **D0 — Autorità documentale** | questa SPEC viva; fonti concorrenti archiviate; INDEX/CLAUDE/LAUNCH_SCOPE e interlock allineati |
-| Prossimo gate tecnico | **C0.1 — Portability hedge CI** | build `macos-15` + esecuzione medesimo artefatto `macos-26`; SQLCipher/G1, Nuitka, frontend ARM64, auth exempt e supply chain finale ARM64 verificati senza packaging cliente né claim sul CRM protetto |
+| 2026-09-03 ✅ | **C0.1 RED — Portability hedge CI** | run `33763567587`: build `macos-15` + smoke stesso artefatto `macos-26` verdi; RED falsificabile su `frpc.exe`, `lego.exe` e policy input wheel universal2 |
+| Prossimo gate tecnico | **G-MAC.1 + re-run C0.1 GREEN** | filename tunnel/ACME platform-conditional con parità Windows; policy wheel allineata all'artefatto ARM64 finale; medesima matrice C0.1 tutta verde |
 | HOLD trigger Mac | **C0.2 — Target exact source-free** | medesimo canary sul target M1/8 GB/Tahoe 26.5.1; obbligatorio prima di G-MAC.2, non blocca S1/F0/R1-WIN |
 | 2026-09-03 ✅ | **A0 — Product truth founder-led** | CHIUSO: context + claims matrix ratificati riga per riga (`docs/business/PRODUCT_MARKETING_CONTEXT.md`); leggi competitor estratte (`LEGGI_COMPETITOR.md`); nessun claim esterno non sostenuto; zero dipendenze Alessio |
 | Da ripianificare | **S1 — Core/security** | G1/G2/G4 verdi; backup/restore coerenti; G9–G11 pronti per il real-data gate |
@@ -256,8 +257,8 @@ in calendario, ma non sono «zero ore founder» e non autorizzano lavoro concorr
 3. FT.0 Financial Truth docs-only e checkpoint remoto pulito;
 4. E0 strategia exit Alessio docs-only e checkpoint remoto pulito;
 5. E1 testo comunicazione exit, docs-only e senza invio esterno;
-6. C0.1 canary RED;
-7. G-MAC.1 remediation runtime dimostrata dal canary, in gate codice separato, e re-run C0.1 GREEN;
+6. C0.1 canary RED — CHIUSO 2026-09-03, run `33763567587`, commit `5ca635e`;
+7. G-MAC.1 remediation runtime/policy wheel dimostrata dal canary, in gate codice separato, e re-run C0.1 GREEN;
 8. A0 product truth founder-led, docs-only e checkpoint remoto pulito;
 9. S1 in gate tecnici atomici secondo ADR-013 e Security Gate; dopo G1/G2/G4 e prima di F0 si
    inseriscono FT.1–FT.4, ciascuno con checkpoint proprio;

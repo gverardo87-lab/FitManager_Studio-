@@ -4663,3 +4663,38 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
   Ruff sul file e `git diff --check`: PASS.
 - **Scope preservato:** il lavoro C0.1 e' rimasto parcheggiato separatamente; nessun file macOS,
   business, schema o runtime e' incluso in questo gate.
+
+---
+
+## 2026-09-03 — C0.1 RED chiuso: canary ARM64 reale, finding G-MAC.1 isolati
+
+- **Harness pubblicato:** push-trigger limitato ai path C0.1 (`2b5dba8`), bootstrap Nuitka con
+  `setuptools==84.0.0` hash-pinned (`fdcedb2`), timebox/process-group Chrome (`09c23fd`) e
+  validazione evidence-driven + CLI runtime come modulo (`5ca635e`).
+- **Apprendimento dalle run:** `33655820750` ha trovato il bootstrap PEP 517 mancante;
+  `33656508927` ha prodotto il primo bundle ARM64 ma ha esposto l'hang GoogleUpdater;
+  `33758472542` ha provato il timeout/cleanup in 61 secondi; `33763567587` è la prima evidenza
+  C0.1 RED completa e auditabile.
+- **Runner finale:** build `macos-15` PASS; download senza checkout sorgenti, SHA-256 e re-audit
+  dello stesso artefatto su `macos-26` PASS (ARM64, patch osservata `26.5.2`; non sostituisce il
+  target esatto `26.5.1`). Workflow finale: build job 23/23; smoke job PASS in 5m21s; solo il
+  verdict falsificabile resta rosso.
+- **Runtime/G1/auth:** binario Nuitka source-free avviato; SQLCipher create/write/reopen PASS,
+  wrong-key respinta, plaintext assente; fingerprint disponibile e stabile in forma booleana;
+  health redatto, setup-status, register e login PASS. Nessuna rotta CRM protetta chiamata e
+  nessun bypass licenza introdotto.
+- **Display/stabilità:** setup e login renderizzati a `1440x900` e `1024x640`; quattro PNG e due
+  DOM completi ispezionati, zero error page/clipping. Chrome del runner avvia GoogleUpdater anche
+  con i flag background disabilitati: il wrapper accetta solo output non vuoto, valida PNG/DOM e
+  chiude sempre il process-group. RSS backend+Node `213824 KB`; bundle `303016 KB`.
+- **Supply chain:** wheelhouse 23 file con versioni/hash registrati; thinning/rifirma e audit Mach-O
+  finale ARM64-only PASS. Il verdict RED elenca: `G-MAC.1-FRPC-FILENAME`,
+  `G-MAC.1-ACME-FILENAME`, `WHEEL_TAG_NON_ARM64:bcrypt-5.0.0-cp39-abi3-macosx_10_12_universal2.whl`.
+  L'ultimo è un mismatch del verifier: la SPEC ammette input universal2 se l'artefatto finale è
+  assottigliato, rifirmato e auditato ARM64-only.
+- **Verifiche locali:** regressione canary RED 2 failure/5 pass, poi `7 passed`; Ruff, parsing YAML,
+  `git diff --check` e pre-commit PASS. La full-suite applicativa del checkpoint precedente ha
+  coperto 922 test funzionali (920 nel run integrale + 2 verifier Git Bash ripetuti fuori sandbox).
+- **Esito gate:** C0.1 RED chiuso. Prossimo gate tecnico: G-MAC.1 minimale su `tunnel_config.py`,
+  test gemelli Windows/Darwin e policy wheel final-artifact-authoritative; poi re-run C0.1 GREEN.
+  C0.2/G-MAC.2–5 restano HOLD e la POC resta Windows-first.

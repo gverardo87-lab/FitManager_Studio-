@@ -1,9 +1,10 @@
 # SPEC BLOCCO G-MAC — Consegna macOS ARM64
 
-**Stato:** 🟡 PORTABILITY HEDGE PRE-S1 IMPEGNATO — C0.0 contratto target + boundary licenza CHIUSI;
-prossimo gate C0.1 canary RED. G-MAC.0 codice FATTO e sigillato (T1 PASS, suite 867). C0.1 GREEN
-chiude l'interlock pre-S1; C0.2 e G-MAC.2–5 sono in HOLD fino al trigger commerciale Mac e dopo la
-release Windows `v1.0.15`. Sequenza vincolante: `SPEC_PRE_POC.md` D11; ADR-026 Addendum II.
+**Stato:** 🟡 PORTABILITY HEDGE PRE-S1 IMPEGNATO — C0.0 e C0.1 RED CHIUSI; prossimo gate
+G-MAC.1 remediation + re-run C0.1 GREEN. G-MAC.0 codice FATTO e sigillato (T1 PASS, suite 867).
+C0.1 GREEN chiude l'interlock pre-S1; C0.2 e G-MAC.2–5 sono in HOLD fino al trigger commerciale
+Mac e dopo la release Windows `v1.0.15`. Sequenza vincolante: `SPEC_PRE_POC.md` D11; ADR-026
+Addendum II. Evidenza C0.1 RED: run GitHub `33763567587`, commit `5ca635e` (2026-09-03).
 **ADR di riferimento:** ADR-026 (accepted 2026-07-31) · ADR-004 (pipeline release) · ADR-007 (anti-RE) · ADR-011 (tunnel FRP)
 **Ground-truth:** audit accoppiamenti Windows 2026-07-17 (workflow 6 agenti: 4 audit codebase + 2 ricerche web con fonti). Il codice reale vince sulla spec.
 **Timeline:** milestone e interlock in `SPEC_PRE_POC.md`; la stima tecnica di 14 giorni in §5 resta
@@ -135,6 +136,16 @@ l'audit finale esclude slice x86/universal e dylib irrisolte. Il tag wheel da so
 FAIL: governa l'artefatto nativo finale. Ogni finding G-MAC.1 viene corretto in un gate codice
 separato e C0.1 viene rieseguito. C0.1 GREEN apre S1.
 
+**Consuntivo C0.1 RED — 2026-09-03:** la run GitHub `33763567587` sul commit `5ca635e` ha costruito
+su `macos-15` e verificato lo stesso artefatto su `macos-26` ARM64 (patch osservata `26.5.2`). Build,
+SHA-256 di trasferimento, re-audit Mach-O finale, self-test compilato SQLCipher/G1, fingerprint
+sanitizzato, frontend, auth exempt, stabilità, memoria e display sono PASS. Quattro screenshot e due
+DOM completi sono stati prodotti alle viewport prescritte; RSS backend+Node `213824 KB`, bundle
+`303016 KB`. Zero bypass licenza e zero claim sul CRM protetto. Il verdict finale è RED soltanto per
+`G-MAC.1-FRPC-FILENAME`, `G-MAC.1-ACME-FILENAME` e per il controllo wheel che rifiuta a priori
+`bcrypt-5.0.0-...-universal2.whl` nonostante thinning e audit ARM64 finale verdi. Il runner CI non
+sostituisce C0.2 sul target esatto `26.5.1`.
+
 **Definition of Done C0.2 / trigger distribuzione Mac:** C0.1 resta verde e il canary source-free
 PASS sul target esatto con privacy e soglie della matrice. Solo allora G-MAC.2 diventa eleggibile,
 sempre dopo R1-WIN e il trigger commerciale. C0 non produce un installer consegnabile e non
@@ -148,6 +159,9 @@ autorizza dati reali.
 - Windows resta **bit-identico** (branch, mai modifica del ramo esistente). Test gemelli per la
   risoluzione di entrambi i filename e canary Darwin aggiornato. G-MAC.1 è un gate codice separato:
   si apre soltanto dopo l'evidenza C0.1 RED o per i due accoppiamenti già dimostrati dal codice.
+- `wheelhouse_manifest.py`: il tag `universal2` resta un input da registrare e verificare, non un
+  FAIL autonomo. Il gate deve continuare a rifiutare wheel solo x86/non compatibili e deve restare
+  fail-closed se thinning, rifirma o audit Mach-O dell'artefatto finale non provano ARM64-only.
 - Opzionale se il tempo regge (rischio residuo dichiarato altrimenti): PID-file + sweep al boot (~20 LOC) contro l'orfano da SIGKILL.
 
 ### G-MAC.2 — Pipeline build macOS di release (CI GitHub Actions)
