@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<!--
+  FitManager — One-pager kit design partner (strato 1, pezzo 1)
+  Gate: post-A0 (2026-09-03). Ogni claim qui presente è una riga 🟢 della claims matrix
+  in docs/business/PRODUCT_MARKETING_CONTEXT.md. Vietato aggiungere claim senza passare
+  dalla matrix. Niente prezzi (decisione founder 2026-09-03). Niente assoluti competitor (N-1).
+  Stampa: Chrome/Edge → Stampa → Salva come PDF, A4, margini predefiniti "Nessuno".
+-->
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>FitManager — Il CRM locale per professionisti del fitness</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+
+  :root {
+    --accent: #12917e;            /* teal — oklch hue 170 (MANIFESTO) */
+    --accent-soft: #e6f4f1;
+    --ink: #1c1917;               /* stone-900 */
+    --muted: #78716c;             /* stone-500 */
+    --line: #e7e5e4;              /* stone-200 */
+    --paper: #ffffff;
+    --wash: #fafaf9;              /* stone-50 */
+  }
+  @supports (color: oklch(0% 0 0)) {
+    :root { --accent: oklch(0.55 0.11 170); --accent-soft: oklch(0.96 0.02 170); }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  @page { size: A4; margin: 0; }
+  html, body { background: #e8e8e7; }
+  body {
+    font-family: Inter, "Segoe UI", system-ui, -apple-system, sans-serif;
+    color: var(--ink);
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .mono { font-family: "JetBrains Mono", Consolas, monospace; }
+
+  .page {
+    width: 210mm; min-height: 297mm;
+    margin: 0 auto; background: var(--paper);
+    padding: 14mm 15mm 10mm;
+    display: flex; flex-direction: column; gap: 7mm;
+  }
+  @media print { html, body { background: var(--paper); } .page { margin: 0; } }
+
+  .label {
+    font-size: 8.5px; font-weight: 700; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--muted);
+  }
+
+  /* ── Header ─────────────────────────────── */
+  header { display: flex; align-items: center; justify-content: space-between; }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-mark {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: var(--accent); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .brand-mark svg { width: 26px; height: 26px; }
+  .brand-name { font-size: 21px; font-weight: 800; letter-spacing: -0.02em; }
+  .brand-sub { font-size: 10.5px; color: var(--muted); margin-top: 1px; }
+  .pill {
+    font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--accent); background: var(--accent-soft);
+    border: 1px solid var(--accent); border-radius: 999px; padding: 5px 12px;
+  }
+
+  /* ── Hook ───────────────────────────────── */
+  .hook h1 {
+    font-size: 27px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.15;
+    max-width: 165mm;
+  }
+  .hook h1 em { font-style: normal; color: var(--accent); }
+  .hook p {
+    margin-top: 4mm; font-size: 12px; line-height: 1.55; color: var(--muted);
+    max-width: 170mm;
+  }
+  .hook p strong { color: var(--ink); font-weight: 600; }
+
+  /* ── Feature grid ───────────────────────── */
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
+  .card {
+    border: 1px solid var(--line); border-radius: 10px;
+    padding: 4.5mm 5mm; background: var(--wash);
+    display: flex; flex-direction: column; gap: 1.6mm;
+  }
+  .card .label { color: var(--accent); }
+  .card h3 { font-size: 12.5px; font-weight: 700; letter-spacing: -0.01em; }
+  .card p { font-size: 10.5px; line-height: 1.5; color: var(--muted); }
+
+  /* ── Numbers strip ──────────────────────── */
+  .numbers {
+    display: flex; justify-content: space-between;
+    border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+    padding: 3.5mm 2mm;
+  }
+  .num { text-align: center; flex: 1; }
+  .num b { display: block; font-size: 19px; font-weight: 700; }
+  .num span { font-size: 8.5px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+
+  /* ── Model + proof ──────────────────────── */
+  .model {
+    border-left: 3px solid var(--accent); border-radius: 0 10px 10px 0;
+    background: var(--accent-soft); padding: 4.5mm 6mm;
+    display: flex; flex-direction: column; gap: 2mm;
+  }
+  .model h2 { font-size: 15px; font-weight: 800; letter-spacing: -0.01em; }
+  .model p { font-size: 10.8px; line-height: 1.55; color: #44403c; }
+
+  .proof { display: flex; gap: 4mm; }
+  .proof-item { flex: 1; display: flex; gap: 2.5mm; align-items: flex-start; }
+  .dot { width: 6px; height: 6px; border-radius: 999px; background: var(--accent); margin-top: 4px; flex-shrink: 0; }
+  .proof-item p { font-size: 10.3px; line-height: 1.5; color: var(--muted); }
+  .proof-item p strong { color: var(--ink); font-weight: 600; }
+
+  /* ── Footer ─────────────────────────────── */
+  footer {
+    margin-top: auto; border-top: 1px solid var(--line); padding-top: 4mm;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  footer .left { font-size: 9.5px; color: var(--muted); line-height: 1.5; }
+  footer .left b { color: var(--ink); }
+  footer .cta {
+    font-size: 10.5px; font-weight: 700; color: var(--accent);
+    text-align: right; line-height: 1.45;
+  }
+  footer .cta span { display: block; font-size: 9px; font-weight: 500; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <!-- LogoIcon ufficiale (frontend/src/components/ui/logo.tsx) — proporzioni intoccabili -->
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 21 C12 21, 3 15, 3 8.5 C3 5.4, 5.4 3, 8.5 3 C10.2 3, 11.7 3.8, 12 5 C12.3 3.8, 13.8 3, 15.5 3 C18.6 3, 21 5.4, 21 8.5 C21 15, 12 21, 12 21 Z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" opacity="0.35"/>
+          <rect x="5" y="10" width="2.5" height="5" rx="0.8" fill="currentColor" opacity="0.7"/>
+          <rect x="16.5" y="10" width="2.5" height="5" rx="0.8" fill="currentColor" opacity="0.7"/>
+          <rect x="7.5" y="11.5" width="9" height="2" rx="0.6" fill="currentColor" opacity="0.55"/>
+          <rect x="3.8" y="11" width="1.2" height="3" rx="0.5" fill="currentColor" opacity="0.5"/>
+          <rect x="19" y="11" width="1.2" height="3" rx="0.5" fill="currentColor" opacity="0.5"/>
+          <path d="M8 8.5 L10 8.5 L11 6.5 L12 10 L13 7 L14 8.5 L16 8.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+        </svg>
+      </div>
+      <div>
+        <div class="brand-name">FitManager</div>
+        <div class="brand-sub">Il CRM locale per chinesiologi e personal trainer a P.IVA</div>
+      </div>
+    </div>
+    <div class="pill">Programma pilota · su invito</div>
+  </header>
+
+  <section class="hook">
+    <h1>Ogni lunedì perdi due ore a ricostruire chi ha pagato.<br>
+    <em>Non è colpa tua: è colpa dei tuoi strumenti.</em></h1>
+    <p>Anamnesi su Word, schede in PDF, pagamenti su Excel, appuntamenti su WhatsApp.
+    Funziona — finché un cliente non ti sfugge, una rata non si perde, o assegni un esercizio
+    a chi non doveva farlo. <strong>FitManager mette clienti, contratti, agenda, cassa e schede
+    in un unico strumento professionale</strong> — che rispetta il modo in cui lavori già.</p>
+  </section>
+
+  <section class="grid">
+    <div class="card">
+      <span class="label">Privacy</span>
+      <h3>I dati restano sul tuo computer</h3>
+      <p>Niente cloud obbligatorio: non esiste un nostro server con i dati dei tuoi clienti.
+      Il gestionale è invisibile da Internet — pubblico è solo il portale che scegli di condividere.</p>
+    </div>
+    <div class="card">
+      <span class="label">Sicurezza clinica</span>
+      <h3>Un controllo automatico sugli errori clinici</h3>
+      <p>Il Safety Engine incrocia le condizioni del cliente con ogni esercizio che assegni:
+      se c'è una controindicazione, te lo dice prima — non dopo.</p>
+    </div>
+    <div class="card">
+      <span class="label">Comunicazione</span>
+      <h3>Il tuo WhatsApp, potenziato</h3>
+      <p>Promemoria, solleciti, benvenuti e auguri già scritti con nome, data e importo:
+      un click e il messaggio parte dal tuo WhatsApp. Ogni invio resta nel registro.</p>
+    </div>
+    <div class="card">
+      <span class="label">Portale cliente</span>
+      <h3>Anamnesi e allenamento dal telefono, senza app</h3>
+      <p>Il cliente compila l'anamnesi da solo e registra la sessione dal proprio telefono,
+      da un link sicuro. Tu vedi tutto, aggiornato, nel suo profilo.</p>
+    </div>
+    <div class="card">
+      <span class="label">Scienza</span>
+      <h3>Analisi che nessun foglio Excel ti darà</h3>
+      <p>Compliance esercizio per esercizio, volume per gruppo muscolare confrontato con i
+      target scientifici, equilibri biomeccanici. Ti siedi col cliente e gli mostri dove
+      il suo corpo risponde.</p>
+    </div>
+    <div class="card">
+      <span class="label">Denaro</span>
+      <h3>Chi ha pagato, chi deve, cosa scade</h3>
+      <p>Contratti, rate, incassi e cassa in tempo reale, con solleciti pronti.
+      Il lunedì mattina sai già tutto — in trenta secondi, non in due ore.</p>
+    </div>
+  </section>
+
+  <section class="numbers mono">
+    <div class="num"><b>466</b><span>esercizi con tassonomia</span></div>
+    <div class="num"><b>47</b><span>condizioni cliniche</span></div>
+    <div class="num"><b>80</b><span>regole di sicurezza</span></div>
+    <div class="num"><b>15</b><span>template WhatsApp</span></div>
+  </section>
+
+  <section class="model">
+    <h2>Si compra una volta. Non si paga ogni mese.</h2>
+    <p>FitManager si installa sul tuo computer ed è tuo — non l'ennesimo abbonamento che si
+    somma agli altri. Il gestionale funziona anche senza connessione: serve la rete solo per
+    il portale dei tuoi clienti.</p>
+  </section>
+
+  <section class="proof">
+    <div class="proof-item"><span class="dot"></span>
+      <p><strong>In uso quotidiano da una professionista reale dal 2026</strong> — costruito
+      sul campo, sul lavoro vero di studio, non in una demo.</p>
+    </div>
+    <div class="proof-item"><span class="dot"></span>
+      <p><strong>Progettato in italiano, per il lavoro in Italia</strong> — linguaggio,
+      flussi e strumenti pensati per il professionista a P.IVA, non tradotti.</p>
+    </div>
+  </section>
+
+  <footer>
+    <div class="left">
+      <b>FitManager Studio</b> · AVGV Technologies<br>
+      fitmanagerstudio.com
+    </div>
+    <div class="cta">
+      Programma pilota: massimo 3 professionisti<br>
+      <span>Avvio assistito di persona · si accede solo su invito</span>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

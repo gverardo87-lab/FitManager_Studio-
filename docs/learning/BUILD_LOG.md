@@ -4618,3 +4618,29 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
   Strato 2 (partner layer) SOLO dopo le prime conversazioni reali. Ricerca N-1 competitor italiani
   da pianificare.
 - **Verifiche:** Ruff PASS; `git diff --check` PASS; staging per path espliciti. Gate docs-only.
+
+---
+
+## 2026-09-03 — Kit design partner, pezzo 1: one-pager (GO founder)
+
+- **Primo artefatto commerciale del progetto**, costruito sopra la claims matrix ratificata A0:
+  `docs/business/kit/ONE_PAGER_DESIGN_PARTNER.html` — HTML self-contained A4 print-ready
+  (Chrome/Edge → Stampa → Salva come PDF), header di tracciabilità nel file (ogni claim = riga 🟢
+  della matrix; vietato aggiungerne senza passare dalla matrix).
+- **Contenuto:** hook sul problema reale (le due ore del lunedì), 6 card (privacy locale, Safety
+  Engine, WhatsApp potenziato, portale senza app, analisi scientifica, denaro), strip numeri
+  canonici (466/47/80/15), modello «si compra una volta» SENZA prezzi (decisione A0), prova
+  «in uso quotidiano da una professionista reale dal 2026» (wording attestato), footer programma
+  pilota max 3 professionisti (D9). Zero claim rossi/gialli: no nutrizione, no Box, no FitScan,
+  no Mac, no email, no assoluti competitor (N-1).
+- **Identità visiva dal MANIFESTO:** teal oklch 170 (fallback hex), neutri stone, Inter +
+  JetBrains Mono, regola del singolo colore, LogoIcon ufficiale inlined da
+  `frontend/src/components/ui/logo.tsx` (proporzioni intoccabili).
+- **Verifica visiva REALE:** servito via HTTP locale e renderizzato in Playwright (viewport
+  proporzione A4, screenshot full-page ispezionato) — layout una pagina, gerarchia corretta;
+  unico errore console = favicon assente (irrilevante per la stampa). Server e artefatti
+  temporanei rimossi.
+- **Nota canale:** il footer cita `fitmanagerstudio.com` come identità (dominio di proprietà);
+  la landing sul dominio root NON esiste ancora — pezzo futuro, post nuova strategia commerciale.
+- **Coda kit strato 1:** (2) demo pack dati sintetici (D5) · (3) FAQ/obiezioni · (4) video hero ·
+  (5) pagina «cosa comporta il pilota».
