@@ -25,7 +25,7 @@ def _create_client(client, headers, nome, cognome, anamnesi=None):
 def _structured_anamnesi():
     return {
         "infortuni_attuali": {"presente": False, "dettaglio": None},
-        "data_compilazione": "2026-03-01",
+        "data_compilazione": date.today().isoformat(),
         "obiettivo_principale": "salute",
     }
 

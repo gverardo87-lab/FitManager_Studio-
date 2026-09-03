@@ -4644,3 +4644,22 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
   la landing sul dominio root NON esiste ancora — pezzo futuro, post nuova strategia commerciale.
 - **Coda kit strato 1:** (2) demo pack dati sintetici (D5) · (3) FAQ/obiezioni · (4) video hero ·
   (5) pagina «cosa comporta il pilota».
+
+---
+
+## 2026-09-03 — Remediation verifier: fixture readiness indipendente dall'orologio
+
+- **Finding:** la full-suite ha dimostrato che `_structured_anamnesi()` in
+  `tests/test_dashboard_clinical_readiness.py` fissava `data_compilazione` al `2026-03-01`.
+  Superati i 180 giorni previsti dalla policy viva, il dato diventava correttamente
+  `anamnesi_review` e rendeva false due attese che volevano rappresentare un'anamnesi recente.
+- **Fix test-only:** la fixture usa `date.today().isoformat()`; nessuna logica applicativa,
+  policy clinica, query o ordinamento e' stato modificato.
+- **RED→GREEN mirato:** prima del fix 2 failure/3 pass nel modulo readiness; dopo il fix
+  `5 passed`.
+- **Suite:** run integrale `920 passed, 2 failed` in 1h34m; i due failure erano entrambi
+  `Permission denied` prodotti da Git Bash sotto sandbox, non assertion applicative. Rerun
+  fuori sandbox dei soli due verifier (`single_db_migration`, `tunnel_packaging`): `2 passed`.
+  Ruff sul file e `git diff --check`: PASS.
+- **Scope preservato:** il lavoro C0.1 e' rimasto parcheggiato separatamente; nessun file macOS,
+  business, schema o runtime e' incluso in questo gate.
