@@ -4698,3 +4698,34 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
 - **Esito gate:** C0.1 RED chiuso. Prossimo gate tecnico: G-MAC.1 minimale su `tunnel_config.py`,
   test gemelli Windows/Darwin e policy wheel final-artifact-authoritative; poi re-run C0.1 GREEN.
   C0.2/G-MAC.2–5 restano HOLD e la POC resta Windows-first.
+
+---
+
+## 2026-09-03 — G-MAC.1 e C0.1 GREEN: portability hedge pre-S1 chiuso
+
+- **RED→GREEN codice:** i test nuovi hanno inizialmente prodotto `6 failed, 12 passed` sui due
+  filename Windows hardcoded, sulla diagnostica PermissionError Darwin, sulla wheel `universal2`
+  e sul contratto GREEN del workflow. Il commit `b7b74c2` introduce un resolver unico:
+  `frpc.exe`/`lego.exe` su Windows, `frpc`/`lego` su Darwin, fallback conservativo Windows sulle
+  piattaforme non supportate; warning dev e hint Gatekeeper/quarantena sono ora coerenti col target.
+- **Supply chain:** `wheelhouse_manifest.py` ammette wheel pure, ARM64 o `universal2` come input
+  compatibile, ma dichiara separatamente la policy finale `mach-o-arm64-only-after-thinning-and-codesign`.
+  Il workflow resta fail-closed: i due contract devono essere success prima del trasferimento e
+  thinning, rifirma, `file`/`lipo`/`otool` e re-audit sul medesimo artifact restano obbligatori.
+- **Verifiche locali:** tunnel/canary/certificati `28 passed`; packaging tunnel `5 passed` fuori
+  sandbox (Git Bash richiede accesso al path Windows); full suite `929 passed, 31 warnings` in
+  13m49s; Ruff sull'intero `api/` e sui file del gate PASS; YAML workflow valido; `git diff --check`
+  e pre-commit PASS. Nessun frontend applicativo, schema, enforcement licenza o dato è cambiato.
+- **C0.1 GREEN reale:** run GitHub `33772591605` sul commit `b7b74c2`; build ARM64 `macos-15`
+  `success` in 18m57s e smoke dello stesso artifact su `macos-26` `success` in 6m10s. Runtime
+  contract e wheel manifest: `PASS`, finding vuoti. SHA-256 di trasferimento, artefatto finale
+  ARM64-only, SQLCipher create/write/reopen, wrong-key, plaintext assente, fingerprint sanitizzato,
+  health redatto, setup-status, register, login, stabilità e quattro render browser: tutti PASS.
+- **Misure e boundary:** RSS backend+Node `243488 KB`; bundle `303016 KB`; runner osservato
+  `arm64`, macOS `26.6.2`. Nessuna rotta CRM protetta, bypass licenza, sorgente o identificatore
+  hardware nel target/report. Il runner non certifica il Mac M1/Tahoe `26.5.1`: C0.2 resta HOLD e
+  obbligatorio prima di G-MAC.2.
+- **Esito gate:** G-MAC.1 e C0.1 GREEN chiusi; interlock Mac pre-S1 rimosso. Prossimo gate tecnico
+  S1. C0.2/G-MAC.2–5 restano HOLD dopo R1-WIN e trigger commerciale D11; la POC resta Windows-first.
+  Il PID-file/sweep opzionale contro orfani SIGKILL non è stato implementato e resta rischio
+  dichiarato da verificare in G-MAC.3/4.

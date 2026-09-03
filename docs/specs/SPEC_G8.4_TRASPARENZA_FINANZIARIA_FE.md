@@ -317,7 +317,7 @@ dominio è introdotta; se il RED dimostra il contrario, il code gate si ferma pr
 ### 9.6 Scheduling, rollback e stop
 
 FT non apre un branch o una roadmap parallela. `SPEC_PRE_POC.md` resta la regia; questa SPEC è la
-casa tecnica. C0.1 resta il prossimo gate esecutivo. FT.1–FT.4 entrano dopo C0.1 GREEN/A0 e dopo le
+casa tecnica. C0.1 GREEN/A0 sono chiusi e S1 è il prossimo gate tecnico. FT.1–FT.4 entrano dopo le
 fondazioni S1 G1/G2/G4, un gate alla volta, prima di F0. Se un gate S1 tocca gli stessi file, la
 precedenza viene risolta prima di aprire lo stage: mai modifiche concorrenti.
 

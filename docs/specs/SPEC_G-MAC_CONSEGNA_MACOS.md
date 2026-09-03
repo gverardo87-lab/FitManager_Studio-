@@ -1,10 +1,10 @@
 # SPEC BLOCCO G-MAC — Consegna macOS ARM64
 
-**Stato:** 🟡 PORTABILITY HEDGE PRE-S1 IMPEGNATO — C0.0 e C0.1 RED CHIUSI; prossimo gate
-G-MAC.1 remediation + re-run C0.1 GREEN. G-MAC.0 codice FATTO e sigillato (T1 PASS, suite 867).
-C0.1 GREEN chiude l'interlock pre-S1; C0.2 e G-MAC.2–5 sono in HOLD fino al trigger commerciale
-Mac e dopo la release Windows `v1.0.15`. Sequenza vincolante: `SPEC_PRE_POC.md` D11; ADR-026
-Addendum II. Evidenza C0.1 RED: run GitHub `33763567587`, commit `5ca635e` (2026-09-03).
+**Stato:** 🟡 PORTABILITY HEDGE PRE-S1 CHIUSO — C0.0, G-MAC.1 e C0.1 GREEN completati;
+prossimo gate tecnico S1. G-MAC.0 codice FATTO e sigillato (T1 PASS, suite 867). C0.2 e
+G-MAC.2–5 sono in HOLD fino al trigger commerciale Mac e dopo la release Windows `v1.0.15`.
+Sequenza vincolante: `SPEC_PRE_POC.md` D11; ADR-026 Addendum II. Evidenza C0.1 GREEN: run
+GitHub `33772591605`, commit `b7b74c2` (2026-09-03).
 **ADR di riferimento:** ADR-026 (accepted 2026-07-31) · ADR-004 (pipeline release) · ADR-007 (anti-RE) · ADR-011 (tunnel FRP)
 **Ground-truth:** audit accoppiamenti Windows 2026-07-17 (workflow 6 agenti: 4 audit codebase + 2 ricerche web con fonti). Il codice reale vince sulla spec.
 **Timeline:** milestone e interlock in `SPEC_PRE_POC.md`; la stima tecnica di 14 giorni in §5 resta
@@ -30,11 +30,11 @@ questa SPEC.
 2. **La montagna è la pipeline di distribuzione, non il codice**: launcher.bat, Inno Setup, node.exe, Nuitka `--msvc` sono 4 sostituzioni obbligate.
 3. **Nuitka NON cross-compila**: la build backend DEVE girare su hardware macOS ARM64 (conferma ufficiale, issue #43/#2149). Cross-arch x86→arm64 sconsigliata (bug #2724): build nativa arm64.
 4. **Il bundle Next standalone è platform-specific** (`@img/sharp-win32-x64`, swc/oxide/lightningcss win32 nel lock): `npm ci && next build` va rieseguito su macOS. Le varianti darwin-arm64 esistono già come optionalDependencies.
-5. **Il runtime tunnel/ACME hardcoda due companion Windows:** `frpc.exe` e `lego.exe` in
-   `api/services/tunnel_config.py`. Su macOS FRP si spegne in silenzio e il rinnovo ACME non trova
-   il client. G-MAC.1 deve rendere platform-conditional **entrambi** i nomi, con regressione Windows
-   e test Darwin. Il binario ufficiale `frp_0.61.1_darwin_arm64.tar.gz` esiste — stessa versione del
-   frps sul VPS; versione, licenza e SHA-256 di ogni companion vanno bloccati prima dello staging.
+5. **Il runtime tunnel/ACME hardcodava due companion Windows:** `frpc.exe` e `lego.exe` in
+   `api/services/tunnel_config.py`. G-MAC.1 ha reso platform-conditional **entrambi** i nomi,
+   mantenendo il comportamento Windows e aggiungendo la risoluzione Darwin `frpc`/`lego`. Il
+   binario ufficiale `frp_0.61.1_darwin_arm64.tar.gz` esiste — stessa versione del frps sul VPS;
+   versione, licenza e SHA-256 di ogni companion restano da bloccare prima dello staging G-MAC.2.
 6. **Il Job Object non ha equivalente macOS.** Il pitfall #16 cambia natura: niente lock del file immagine (upgrade non fallisce), ma un frpc orfano tiene il proxy-name su frps → il nuovo frpc fallisce la registrazione e cicla in backoff ("tunnel rotto/stantio").
 7. **Layout flat = zero modifiche a `config.py`**: `PROJECT_ROOT = exe.parent.parent` funziona invariato con `FitManager/{backend,frontend,node,data,launcher.command}` in una cartella scrivibile dall'utente (MAI /Applications con .app bundle, per ora).
 8. **Gatekeeper è il rischio di consegna n.1.** Su ARM64 la firma (almeno ad-hoc) è obbligatoria per eseguire. Il bypass right-click→Apri NON esiste più (rimosso in Sequoia). Su Tahoe, app ad-hoc in quarantena → "app danneggiata", e "Open Anyway" a volte non compare. La candidate esterna richiede Developer ID + notarizzazione; la firma ad-hoc è ammessa soltanto nel canary/debug interno e non sostituisce il gate di consegna.
@@ -43,13 +43,12 @@ questa SPEC.
    esatta `26.5.1`. `macos-15` resta la build machine; lo stesso artefatto canary deve girare su
    `macos-26` e poi sul target esatto. Minuti e billing si verificano subito prima dell'esecuzione,
    senza assumere prezzi o quote storiche.
-10. **Le dipendenze hanno un percorso ARM64 verificabile, non ancora un PASS.** Il perimetro runtime
-    reale deriva dalla build lean, non dallo stack AI dormiente. PyPI pubblica per `sqlcipher3 0.6.2`
-    una wheel CPython 3.12 `macosx_11_0_arm64`; il lock frontend contiene varianti darwin-arm64 di
-    Sharp e SWC. C0 deve comunque fissare versione e hash, produrre un artefatto nativo ARM64-only
-    secondo la policy C0.1 (incluse eventuali wheel `universal2` assottigliate e rifirmate), eseguire il
-    round-trip SQLCipher e provare il binario Nuitka: la disponibilità nominale non certifica il
-    runtime.
+10. **Le dipendenze hanno un percorso ARM64 verificato per C0.1, non ancora per la release.** Il
+    perimetro runtime reale deriva dalla build lean, non dallo stack AI dormiente. La run GREEN ha
+    fissato versioni/hash, usato la wheel CPython 3.12 ARM64 di `sqlcipher3 0.6.2`, costruito Next con
+    i moduli Darwin e prodotto un artefatto finale ARM64-only; la wheel `universal2` di bcrypt è
+    stata assottigliata e rifirmata prima dell'audit. G-MAC.2 dovrà ripetere ed estendere la prova
+    sul perimetro completo della release: il PASS canary non certifica ancora il bundle cliente.
 11. **Anomalia da chiarire pre-build**: `--include-package=email_validator` in build-backend-nuitka.sh:80 ma il pacchetto non risulta nella venv → verificare prima di replicare la build.
 12. **Local Network prompt / firewall macOS: non ci toccano** (bind 127.0.0.1 loopback; firewall spento di default; il prompt Local Network non scatta per localhost).
 13. **Il target ha 8 GB, non un margine teorico illimitato.** La compatibilità richiede una misura
@@ -146,12 +145,24 @@ DOM completi sono stati prodotti alle viewport prescritte; RSS backend+Node `213
 `bcrypt-5.0.0-...-universal2.whl` nonostante thinning e audit ARM64 finale verdi. Il runner CI non
 sostituisce C0.2 sul target esatto `26.5.1`.
 
+**Consuntivo G-MAC.1 + C0.1 GREEN — 2026-09-03:** il commit `b7b74c2` ha introdotto il resolver
+platform-conditional dei companion (`frpc.exe`/`lego.exe` su Windows, `frpc`/`lego` su Darwin),
+il warning dev coerente e la diagnostica PermissionError Gatekeeper/quarantena su macOS. La policy
+wheel ammette input `universal2` compatibili ARM64 ma conserva il gate finale fail-closed dopo
+thinning, rifirma e audit Mach-O. La run GitHub `33772591605` ha chiuso build `macos-15` in 18m57s
+e smoke del medesimo artefatto su `macos-26` in 6m10s, entrambi `success`: runtime contract e
+wheelhouse manifest senza finding, SHA-256/re-audit ARM64-only, SQLCipher/G1, fingerprint
+sanitizzato, frontend e auth exempt tutti PASS. Quattro screenshot e due DOM completi sono stati
+prodotti alle viewport prescritte; RSS backend+Node `243488 KB`, bundle `303016 KB`. La patch runner
+osservata è `26.6.2`, quindi il PASS CI non sostituisce C0.2 sul target esatto `26.5.1`. Zero bypass
+licenza e zero claim sul CRM protetto. C0.1 GREEN chiude l'interlock Mac pre-S1.
+
 **Definition of Done C0.2 / trigger distribuzione Mac:** C0.1 resta verde e il canary source-free
 PASS sul target esatto con privacy e soglie della matrice. Solo allora G-MAC.2 diventa eleggibile,
 sempre dopo R1-WIN e il trigger commerciale. C0 non produce un installer consegnabile e non
 autorizza dati reali.
 
-### G-MAC.1 — Portabilità runtime tunnel (unico codice `api/` rimasto)
+### G-MAC.1 — Portabilità runtime tunnel ✅ CHIUSO (2026-09-03, `b7b74c2`)
 - `tunnel_config.py`: `_FRPC_FILENAME` e `_ACME_CLIENT_FILENAME` platform-conditional
   (`frpc.exe`/`lego.exe` su Windows, `frpc`/`lego` su Darwin) + warning aggiornati; dev-path
   `tools/bin/` per i binari Darwin.
@@ -162,7 +173,12 @@ autorizza dati reali.
 - `wheelhouse_manifest.py`: il tag `universal2` resta un input da registrare e verificare, non un
   FAIL autonomo. Il gate deve continuare a rifiutare wheel solo x86/non compatibili e deve restare
   fail-closed se thinning, rifirma o audit Mach-O dell'artefatto finale non provano ARM64-only.
-- Opzionale se il tempo regge (rischio residuo dichiarato altrimenti): PID-file + sweep al boot (~20 LOC) contro l'orfano da SIGKILL.
+- **Verifiche:** RED mirato `6 failed, 12 passed`; GREEN mirato tunnel/canary/certificati `28 passed`;
+  packaging tunnel `5 passed`; full suite `929 passed`; Ruff `api/` e file gate PASS; workflow YAML
+  valido; run C0.1 GREEN `33772591605` con entrambi i job `success`.
+- **Rischio residuo dichiarato:** PID-file + sweep al boot contro l'orfano da SIGKILL non è stato
+  implementato perché opzionale e non necessario a C0.1; resta candidato per G-MAC.3/4, dove il
+  lifecycle reale viene verificato con `pgrep`.
 
 ### G-MAC.2 — Pipeline build macOS di release (CI GitHub Actions)
 - **HOLD:** apre soltanto dopo R1-WIN, C0.2 PASS e trigger commerciale D11: rapporto diretto con un

@@ -1,8 +1,8 @@
 # SPEC — Strategia e readiness pre-POC
 
-**Stato:** 🟡 IN CORSO — D0, C0.0, C0.1 RED, FT.0, E0, D11 e A0 chiusi; prossimo gate founder
-E1 testo exit; prossimo gate tecnico G-MAC.1 + re-run C0.1 GREEN; C0.2/G-MAC.2–5 in HOLD su trigger
-Mac; F0 in HOLD finché FT.1–FT.4 non sono chiusi
+**Stato:** 🟡 IN CORSO — D0, C0.0, G-MAC.1, C0.1 GREEN, FT.0, E0, D11 e A0 chiusi; prossimo
+gate founder E1 testo exit; prossimo gate tecnico S1; C0.2/G-MAC.2–5 in HOLD su trigger Mac; F0
+in HOLD finché FT.1–FT.4 non sono chiusi
 **Data di ratifica founder:** 2026-07-31
 **Branch:** `FitManager_Studio`
 **Tipo:** regia operativa pre-POC; non duplica le specifiche tecniche sottostanti
@@ -173,8 +173,8 @@ ADR: le leggi esistenti su cassa bidirezionale, nessun netto nudo, auditabilità
 sufficienti.
 
 - FT.0 è il gate docs-only che registra baseline, finding, canary e interlock;
-- C0.1 resta il prossimo gate esecutivo: il finding non corrompe dati e non invalida il canary Mac;
-- FT.1–FT.4 aprono in gate atomici dopo C0.1 GREEN/A0 e dopo le fondazioni S1 G1/G2/G4, senza lavoro
+- C0.1 GREEN è chiuso; S1 è il prossimo gate tecnico e mantiene la precedenza sulle remediation FT;
+- FT.1–FT.4 aprono in gate atomici dopo le fondazioni S1 G1/G2/G4, senza lavoro
   concorrente sugli stessi file, e devono chiudere prima di F0;
 - FT.5 è una bonifica dati separata: richiede backup, dry-run, GO founder specifico e verifier; fino
   alla sua chiusura il database interessato non ottiene il Real-data GO;
@@ -227,10 +227,10 @@ ma il calendario viene ripianificato dopo E1 e nella nuova strategia commerciale
 |---|---|---|
 | 2026-08-02 | **D0 — Autorità documentale** | questa SPEC viva; fonti concorrenti archiviate; INDEX/CLAUDE/LAUNCH_SCOPE e interlock allineati |
 | 2026-09-03 ✅ | **C0.1 RED — Portability hedge CI** | run `33763567587`: build `macos-15` + smoke stesso artefatto `macos-26` verdi; RED falsificabile su `frpc.exe`, `lego.exe` e policy input wheel universal2 |
-| Prossimo gate tecnico | **G-MAC.1 + re-run C0.1 GREEN** | filename tunnel/ACME platform-conditional con parità Windows; policy wheel allineata all'artefatto ARM64 finale; medesima matrice C0.1 tutta verde |
+| 2026-09-03 ✅ | **G-MAC.1 + C0.1 GREEN** | commit `b7b74c2`, run `33772591605`: filename tunnel/ACME platform-conditional con parità Windows; policy wheel final-artifact-authoritative; build e smoke stesso artefatto entrambi success |
 | HOLD trigger Mac | **C0.2 — Target exact source-free** | medesimo canary sul target M1/8 GB/Tahoe 26.5.1; obbligatorio prima di G-MAC.2, non blocca S1/F0/R1-WIN |
 | 2026-09-03 ✅ | **A0 — Product truth founder-led** | CHIUSO: context + claims matrix ratificati riga per riga (`docs/business/PRODUCT_MARKETING_CONTEXT.md`); leggi competitor estratte (`LEGGI_COMPETITOR.md`); nessun claim esterno non sostenuto; zero dipendenze Alessio |
-| Da ripianificare | **S1 — Core/security** | G1/G2/G4 verdi; backup/restore coerenti; G9–G11 pronti per il real-data gate |
+| Prossimo gate tecnico | **S1 — Core/security** | G1/G2/G4 verdi; backup/restore coerenti; G9–G11 pronti per il real-data gate |
 | Da ripianificare | **F0 — Application code freeze** | suite completa Windows + runtime Mac CI; FT.1–FT.4 chiusi; nessuna feature o finding release-critical aperto |
 | 2026-08-29 | **E0 — Strategia exit Alessio** | ruolo e dipendenza ritirati; interlock documentale e `SPEC_EXIT_ALESSIO.md` ratificati; nessuna azione esterna o tecnica |
 | Prossimo gate founder | **E1 — Testo comunicazione exit** | testo costruito e approvato col founder in `docs/`; nessun invio nel gate E1 |
@@ -258,7 +258,8 @@ in calendario, ma non sono «zero ore founder» e non autorizzano lavoro concorr
 4. E0 strategia exit Alessio docs-only e checkpoint remoto pulito;
 5. E1 testo comunicazione exit, docs-only e senza invio esterno;
 6. C0.1 canary RED — CHIUSO 2026-09-03, run `33763567587`, commit `5ca635e`;
-7. G-MAC.1 remediation runtime/policy wheel dimostrata dal canary, in gate codice separato, e re-run C0.1 GREEN;
+7. G-MAC.1 remediation runtime/policy wheel + re-run C0.1 GREEN — CHIUSO 2026-09-03, commit
+   `b7b74c2`, run `33772591605`;
 8. A0 product truth founder-led, docs-only e checkpoint remoto pulito;
 9. S1 in gate tecnici atomici secondo ADR-013 e Security Gate; dopo G1/G2/G4 e prima di F0 si
    inseriscono FT.1–FT.4, ciascuno con checkpoint proprio;
