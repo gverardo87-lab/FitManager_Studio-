@@ -33,6 +33,22 @@ def test_nuitka_build_backend_is_hash_pinned_before_sdist_install():
     assert "import setuptools.build_meta" in bootstrap_block
 
 
+def test_macos_smoke_timeboxes_chrome_and_disables_background_updates():
+    workflow_path = ROOT / ".github" / "workflows" / "macos-portability-canary.yml"
+    workflow = workflow_path.read_text(encoding="utf-8")
+    smoke = workflow[workflow.index("Run compiled self-test, auth, stability, memory and display smoke") :]
+
+    assert "timeout-minutes: 10" in smoke[:500]
+    assert "run_headless_chrome()" in smoke
+    assert "process.kill(-child.pid" in smoke
+    assert '"SIGKILL"' in smoke
+    assert "if (timedOut) return;" in smoke
+    assert 'process.exit(124)' in smoke
+    assert "--disable-background-networking" in smoke
+    assert "--disable-component-update" in smoke
+    assert "--no-first-run" in smoke
+
+
 def test_runtime_contract_exposes_current_darwin_filename_coupling():
     report = evaluate_runtime_contract(
         target_system="Darwin",

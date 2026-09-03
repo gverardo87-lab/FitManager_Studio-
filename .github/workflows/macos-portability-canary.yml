@@ -304,6 +304,7 @@ jobs:
 
       - name: Run compiled self-test, auth, stability, memory and display smoke
         shell: bash
+        timeout-minutes: 10
         run: |
           set -euo pipefail
           /usr/bin/time -l canary/backend/fitmanager-c0-canary --self-test \
@@ -345,15 +346,71 @@ jobs:
           chrome="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
           test -x "$chrome"
 
+          run_headless_chrome() {
+            canary/node/bin/node - "$@" <<'NODE'
+          const { spawn } = require("node:child_process");
+          const [command, ...args] = process.argv.slice(2);
+          const child = spawn(command, args, { stdio: "inherit", detached: true });
+          let timedOut = false;
+          let forceKill;
+
+          const killGroup = (signal) => {
+            if (!child.pid) return;
+            try {
+              process.kill(-child.pid, signal);
+            } catch (error) {
+              if (error.code !== "ESRCH") throw error;
+            }
+          };
+
+          const timeout = setTimeout(() => {
+            timedOut = true;
+            console.error("Headless Chrome exceeded 45 seconds");
+            killGroup("SIGTERM");
+            forceKill = setTimeout(() => {
+              killGroup("SIGKILL");
+              process.exit(124);
+            }, 5000);
+          }, 45000);
+
+          child.once("error", (error) => {
+            clearTimeout(timeout);
+            clearTimeout(forceKill);
+            console.error(`Headless Chrome failed to start: ${error.code || error.name}`);
+            process.exit(1);
+          });
+
+          child.once("exit", (code, signal) => {
+            clearTimeout(timeout);
+            if (timedOut) return;
+            clearTimeout(forceKill);
+            if (code === 0) process.exit(0);
+            console.error(`Headless Chrome exited with ${code ?? signal}`);
+            process.exit(code ?? 1);
+          });
+          NODE
+          }
+
+          chrome_common_args=(
+            "--headless=new"
+            "--disable-gpu"
+            "--hide-scrollbars"
+            "--disable-background-networking"
+            "--disable-component-update"
+            "--disable-default-apps"
+            "--disable-sync"
+            "--metrics-recording-only"
+            "--no-default-browser-check"
+            "--no-first-run"
+          )
+
           capture_route() {
             route="$1"
             viewport="$2"
             width="${viewport%x*}"
             height="${viewport#*x}"
-            "$chrome" \
-              --headless=new \
-              --disable-gpu \
-              --hide-scrollbars \
+            run_headless_chrome "$chrome" \
+              "${chrome_common_args[@]}" \
               --virtual-time-budget=3000 \
               --user-data-dir="$RUNNER_TEMP/chrome-${viewport}-${route}" \
               --window-size="$width,$height" \
@@ -367,8 +424,12 @@ jobs:
             capture_route setup "$viewport"
           done
 
-          "$chrome" --headless=new --virtual-time-budget=3000 \
-            --dump-dom http://127.0.0.1:3000/setup > evidence/setup-dom.html
+          run_headless_chrome "$chrome" \
+            "${chrome_common_args[@]}" \
+            --virtual-time-budget=3000 \
+            --user-data-dir="$RUNNER_TEMP/chrome-dom-setup" \
+            --dump-dom http://127.0.0.1:3000/setup \
+            > evidence/setup-dom.html
           if grep -Eqi 'Application error|Internal Server Error' evidence/setup-dom.html; then
             echo "Frontend auth surface contains an application error" >&2
             exit 1
@@ -384,8 +445,12 @@ jobs:
             capture_route login "$viewport"
           done
 
-          "$chrome" --headless=new --virtual-time-budget=3000 \
-            --dump-dom http://127.0.0.1:3000/login > evidence/login-dom.html
+          run_headless_chrome "$chrome" \
+            "${chrome_common_args[@]}" \
+            --virtual-time-budget=3000 \
+            --user-data-dir="$RUNNER_TEMP/chrome-dom-login" \
+            --dump-dom http://127.0.0.1:3000/login \
+            > evidence/login-dom.html
           if grep -Eqi 'Application error|Internal Server Error' evidence/login-dom.html; then
             echo "Frontend auth surface contains an application error" >&2
             exit 1
