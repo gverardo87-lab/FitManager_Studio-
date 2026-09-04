@@ -86,7 +86,8 @@ commit docs del gate (ciclo di vita: `AGENTS.md`).
 
 | File | Stato | Scopo |
 |------|-------|-------|
-| `SPEC_PRE_POC.md` | 🟡 **IN CORSO — D0+C0.0+G-MAC.1+C0.1 GREEN+FT.0+E0+D11+A0 CHIUSI; PROSSIMO FOUNDER E1; PROSSIMO TECNICO S1; C0.2/G-MAC.2–5 HOLD** | Unica regia pre-POC: v1.0.15 Windows security/readiness, portability hedge pre-S1 chiuso, Financial Truth e percorso founder-led; prima POC Windows, distribuzione Mac pull-based dopo trigger diretto |
+| `SPEC_PRE_POC.md` | 🟡 **IN CORSO — D0+C0.0+G-MAC.1+C0.1 GREEN+FT.0+E0+D11+A0+S1.0 CHIUSI; PROSSIMO FOUNDER E1; PROSSIMO TECNICO S1.1; C0.2/G-MAC.2–5 HOLD** | Unica regia pre-POC: v1.0.15 Windows security/readiness, portability hedge pre-S1 chiuso, Financial Truth e percorso founder-led; prima POC Windows, distribuzione Mac pull-based dopo trigger diretto |
+| `SPEC_S1_G1_G5_CIFRATURA_CRM.md` | 🟡 **APERTA E RATIFICATA — S1.0 DOCS-FIRST CHIUSO; PROSSIMO S1.1** | Contratto esecutivo G1+G5: owner unico, SQLCipher password-bound, envelope DEK–KEK, engine late-bound, recovery, migrazione atomica e backup/restore cifrati |
 | `SPEC_EXIT_ALESSIO.md` | 🟡 **E0 STRATEGIA RATIFICATA; E1 TESTO DA COSTRUIRE; E2–E4 NON ESEGUITI** | Exit commerciale/contrattuale/operativa: comunicazione separata, verifica NDA, export/no-data, licenza/tunnel, fold-back e reset commerciale; nessuna revoca implicita |
 | `SPEC_G8.4_TRASPARENZA_FINANZIARIA_FE.md` | 🟡 **G8.4 ORIGINALE CHIUSO · FT.0 ✅ · FT.1–FT.5 APERTI** | Casa tecnica Financial Truth: FT.1 grafico cash-direction; FT.2 trend/empty/conguagli; FT.3 audit flow; FT.4 cache symmetry; FT.5 bonifica legacy per-record. F0 HOLD su FT.1–FT.4; Real-data GO del DB interessato HOLD su FT.5. G8.5 goodwill resta separato |
 | `SPEC_G-MAC_CONSEGNA_MACOS.md` | 🟡 **C0.0+G-MAC.1+C0.1 GREEN CHIUSI; C0.2/G-MAC.2–5 HOLD** | Run `33772591605`: build `macos-15` e smoke stesso artefatto `macos-26` success, zero finding; target exact e distribuzione Mac soltanto dopo R1-WIN e trigger D11 |
@@ -141,7 +142,8 @@ header di esito: gli esiti vivono negli ADR-016→024 e nei gate chiusi, mai nel
 24 ADR accettati (ADR-001 → ADR-026; ADR-002 rimossa come obsoleta, ADR-012 riservato). Ultimi:
 **ADR-026 + Addendum I/II** (macOS ARM64: build evidence separata dalla compatibilità target; C0.1
 GREEN protegge G1 e apre S1; C0.2/distribuzione pull-based dopo R1-WIN e trigger diretto, con release
-Mac distinta) · **ADR-025** (prestazione singola + Portafoglio cliente: fatto economico proprio, insoluto derivato
+Mac distinta) · **ADR-013 + Addendum I** (G1/G5: owner unico compiled; engine candidato pubblicato
+solo dopo unwrap + verifica bcrypt/account; nessun downgrade plaintext) · **ADR-025** (prestazione singola + Portafoglio cliente: fatto economico proprio, insoluto derivato
 fail-loud, compensazione wallet come atto esplicito; blocco P) · **ADR-024** (semantica per-classe:
 matrice assi×regole, fail-loud, perimetro transizioni, birth-auditor; G9.7) · **ADR-023**
 (temporal fence: storia contabilizzata immutabile, varco unico `reopen`; G7.8-ter) · **ADR-022**

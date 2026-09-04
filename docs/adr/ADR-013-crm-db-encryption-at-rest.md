@@ -1,7 +1,8 @@
 # ADR-013 — Cifratura a riposo di crm.db (password-bound) + boot a due fasi
 
 - Date: 2026-06-16 (creazione) · **accettato 2026-06-17**
-- Status: **accepted** — decisioni founder integrate (§Decision); spike prerequisito sciolto; design di dettaglio in apertura
+- Status: **accepted + Addendum I (2026-09-04)** — decisioni founder integrate (§Decision);
+  spike prerequisito sciolto; owner unico e boundary auth/DB ratificati
 - Deciders: Giacomo Verardo (founder), Claude Code (architetto nel codebase)
 - Related: `docs/technical/PRE_DELIVERY_SECURITY_GATE.md` §G1 + §G5 · ADR-003 (separazione 3 DB) · ADR-007 (anti-RE, cifratura cataloghi)
 
@@ -161,3 +162,68 @@ Razionale: è l'unica combinazione che soddisfa **tutti** i driver insieme — D
 - Supersedes: nessuno.
 - Superseded by: —
 - Si appoggia a: ADR-007 (cifratura cataloghi read-only — modello *diverso*, chiave embedded, da NON confondere con questo).
+
+---
+
+## Addendum I — 2026-09-04: owner unico e unlock autenticato
+
+### Trigger
+
+Il grounding S1.0 ha mostrato due ambiguità che il design originario non poteva lasciare al codice:
+
+1. il prodotto e la licenza descrivono una istanza locale per trainer, ma il register corrente
+   permette tecnicamente più account;
+2. l'hash bcrypt dell'owner vive dentro `crm.db`, quindi non è possibile verificare l'identità
+   completa prima di aprire il database cifrato.
+
+Il founder ha ratificato il 2026-09-04 l'owner unico per la POC e il trattamento proof-first
+separato di G2. Questo Addendum norma il solo confine G1; G2 resta fuori scope.
+
+### Decisione
+
+#### D-A1 — Un owner per installazione compilata
+
+- Una installazione licenziata e compilata contiene un solo trainer owner.
+- Il register è un protocollo di primo setup ed è chiuso dopo la creazione dell'owner.
+- Un database legacy con più trainer non viene migrato automaticamente: richiede decisione e
+  intervento separati.
+- La creazione di più trainer nei test resta ammessa esclusivamente come harness per dimostrare
+  ownership e Deep IDOR; non costituisce una funzionalità multi-operatore.
+
+Una futura installazione multi-operatore richiede un nuovo atto decisionale: slot per-owner,
+revoca/rotazione e recovery multi-account non entrano implicitamente in ADR-013.
+
+#### D-A2 — Apertura candidata prima della verifica bcrypt, pubblicazione dopo
+
+L'uso corretto della password per unwrap della DEK è necessario ma non sufficiente per autenticare
+il trainer. Il flusso vincolante è:
+
+```text
+password → unwrap DEK → engine SQLCipher candidato
+→ verifica email + bcrypt + account attivo
+→ manutenzione post-unlock
+→ pubblicazione engine → JWT
+```
+
+- L'engine candidato è confinato alla singola transizione e viene disposto su ogni fallimento.
+- La DEK non entra nello stato globale prima della verifica completa dell'unico owner.
+- Errori di email, password, envelope, cipher o owner sono indistinguibili fuori dal boundary auth.
+- Un JWT residuo non è materiale di unlock e non può aprire il database dopo un riavvio.
+
+Questa sequenza chiarisce, senza indebolirla, la decisione originaria «password-bound»: il possesso
+del file o il solo superamento del wrapping non crea una sessione applicativa valida.
+
+#### D-A3 — Nessun downgrade compiled; test seam esplicito
+
+- In compiled mode il CRM è SQLCipher oppure resta bloccato/in recovery: SQLite plaintext non è un
+  fallback operativo.
+- Il dev mode plaintext previsto dalla decisione originaria resta disponibile.
+- I test devono però poter istanziare esplicitamente il percorso cifrato di produzione senza
+  dipendere dal flag compiled, così che G1 non sia verificato soltanto da canary isolati.
+
+### Specifica esecutiva
+
+Formato envelope, state machine, recovery, migrazione, backup e acceptance matrix sono prescritti
+da `docs/specs/SPEC_S1_G1_G5_CIFRATURA_CRM.md`. La SPEC può scegliere dettagli implementativi entro
+questa legge; non può riaprire owner multipli, pubblicare l'engine prima della verifica completa o
+introdurre un fallback plaintext compilato.

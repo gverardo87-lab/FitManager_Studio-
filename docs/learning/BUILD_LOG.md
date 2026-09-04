@@ -4729,3 +4729,32 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
   S1. C0.2/G-MAC.2–5 restano HOLD dopo R1-WIN e trigger commerciale D11; la POC resta Windows-first.
   Il PID-file/sweep opzionale contro orfani SIGKILL non è stato implementato e resta rischio
   dichiarato da verificare in G-MAC.3/4.
+
+---
+
+## 2026-09-04 — S1.0 docs-first: contratto G1/G5 ratificato
+
+- **Decisioni founder:** una installazione compilata ha un solo trainer owner; il multi-tenant resta
+  harness IDOR nei test. G2 seguirà un gate proof-first separato: nessun header client viene creduto
+  senza trust boundary dimostrata e il vecchio criterio non riceve un falso GREEN.
+- **SPEC esecutiva:** aperta `SPEC_S1_G1_G5_CIFRATURA_CRM.md` con impact map, state machine,
+  envelope DEK–KEK, candidate engine, recovery obbligatoria, migrazione journaled, backup bundle,
+  gate atomici e matrice negativa.
+- **Legge aggiornata:** ADR-013 Addendum I ratifica owner unico, ordine
+  unwrap→engine candidato→email+bcrypt+account→maintenance→publish/JWT e nessun downgrade
+  plaintext in compiled mode.
+- **Grounding:** `database.py` crea ancora l'engine plaintext a import-time; lifespan e backup
+  toccano il CRM pre-login; register permette più trainer. G1/G5 restano esplicitamente non
+  implementati dopo questo gate docs-only.
+- **KDF evidence:** scrypt `N=2^17, r=8, p=1` misurato su Windows/Python 3.12.10 con
+  `cryptography 46.0.5`: 337,4 / 341,7 / 357,3 ms, mediana 341,7 ms; profilo coerente col minimo
+  OWASP corrente. SQLCipher `sqlcipher_export` e `cipher_integrity_check` verificati contro la
+  documentazione primaria Zetetic.
+- **Review:** fonti e path locali esistenti, 7 file docs UTF-8, una sola riga Stato nella nuova
+  SPEC, zero SPEC/IMPL_PLAN in `docs/technical`, riferimenti S1.0/S1.1 coerenti tra regia, ADR,
+  security gate, SSoT e indici. `ruff check api/` e `git diff --check`: PASS.
+- **Suite:** nessuna suite applicativa rilanciata perché il gate modifica esclusivamente
+  documentazione; baseline immutata del checkpoint codice precedente: `929 passed, 31 warnings`.
+- **Esclusioni rispettate:** zero codice, schema, dipendenza, DB, dato reale, build, tunnel,
+  infrastruttura o comunicazione esterna modificati.
+- **Prossimo gate tecnico:** S1.1 primitive envelope RED→GREEN; nessun cambio boot nello stesso gate.

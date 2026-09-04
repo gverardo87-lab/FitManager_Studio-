@@ -1,6 +1,6 @@
 # PRE_DELIVERY_SECURITY_GATE.md
 
-**Versione:** 1.1
+**Versione:** 1.2
 **Stato:** Vincolante sui criteri di accettazione — non vincolante sull'implementazione
 **Owner:** Giacomo Verardo (AVGV Technologies)
 **Destinatario:** agenti e sviluppatori che implementano o verificano la consegna
@@ -13,6 +13,10 @@
 > Next), e il report legale Tier 3 vive in `docs/business/LEGAL_REGULATORY_REPORT.md`
 > (non in `docs/technical/`). Il design del gate più pesante (G1) è in
 > `docs/adr/ADR-013-crm-db-encryption-at-rest.md` (accepted 2026-06-17).
+
+> **Nota di versione 1.2 (2026-09-04):** S1.0 docs-first ratifica owner unico per installazione
+> compilata e chiarisce il boundary auth/DB in ADR-013 Addendum I. Il contratto esecutivo G1+G5 è
+> `docs/specs/SPEC_S1_G1_G5_CIFRATURA_CRM.md`. Lo stato nel codice resta gap fino ai code gate.
 
 ---
 
@@ -65,9 +69,11 @@ Tutto ciò che è in Tier 1 e Tier 2 è un criterio di accettazione su una di qu
 - Il flusso di derivazione/sblocco della chiave è legato all'autenticazione del trainer, così che il solo possesso del file sia insufficiente.
 - L'approccio è documentato in una voce di `BUILD_LOG.md`, incluso dove vive la chiave e da quale minaccia difende e da quale no.
 
-**Stato nel codice (verificato 2026-06-16):** ❌ **Gap reale, confermato.** L'engine business nasce da `create_engine(DATABASE_URL)` in chiaro (`api/database.py:101`); **crm.db è plaintext sul disco**. Solo `catalog.db`/`nutrition.db` passano per `decrypt_db_to_bytes` → `sqlite3.deserialize` (`api/services/db_crypto.py`), ma quel modello **non è riutilizzabile** per crm.db per due motivi: (a) la chiave è derivata da un **seed embedded nel binario** (`_EMBEDDED_KEY_SEED`) — adeguato per cataloghi read-only (minaccia = reverse engineering, ADR-007), ma **viola il criterio G1** "il solo possesso del file è insufficiente" perché file + binario viaggiano insieme; (b) è **read-only** (decrypt-to-memory), mentre crm.db è read-write. Inoltre il **lifespan tocca crm.db prima di qualsiasi login** (auto-backup, `create_db_and_tables`, `schema_sync`, integrity check), quindi una chiave password-bound impone un **boot a due fasi**. Tensione concreta con G5: `_auto_backup_on_startup` produce oggi una **copia in chiaro** via `sqlite3.backup()`. → Design completo in **`docs/adr/ADR-013-crm-db-encryption-at-rest.md` (accepted 2026-06-17)**.
+**Stato nel codice (riverificato 2026-09-04):** ❌ **Gap reale, confermato.** L'engine business nasce da `create_engine(DATABASE_URL)` in chiaro (`api/database.py`); **crm.db è plaintext sul disco**. Solo `catalog.db`/`nutrition.db` passano per `decrypt_db_to_bytes` → `sqlite3.deserialize` (`api/services/db_crypto.py`), ma quel modello **non è riutilizzabile** per crm.db per due motivi: (a) la chiave è derivata da un **seed embedded nel binario** (`_EMBEDDED_KEY_SEED`) — adeguato per cataloghi read-only (minaccia = reverse engineering, ADR-007), ma **viola il criterio G1** "il solo possesso del file è insufficiente" perché file + binario viaggiano insieme; (b) è **read-only** (decrypt-to-memory), mentre crm.db è read-write. Inoltre il **lifespan tocca crm.db prima di qualsiasi login** (auto-backup, `create_db_and_tables`, `schema_sync`, integrity check), quindi una chiave password-bound impone un **boot a due fasi**. Tensione concreta con G5: `_auto_backup_on_startup` produce oggi una **copia in chiaro** via `sqlite3.backup()`. Decisione in **ADR-013 + Addendum I**; contratto code-gate in **`docs/specs/SPEC_S1_G1_G5_CIFRATURA_CRM.md`**.
 
-**Esplicitamente fuori dalla decisione implementativa (sceglie Claude Code):** il meccanismo specifico (es. SQLCipher vs. cifratura a livello di campo applicativo vs. meccanismi a livello di OS), la KDF, e come il segreto di sblocco viene fornito a runtime. Il criterio è la proprietà, non la libreria.
+**Decisione implementativa ora ratificata:** ADR-013 sceglie SQLCipher + envelope DEK–KEK + boot a
+due fasi; l'Addendum I e la SPEC S1 fissano owner unico, candidate engine, KDF/recovery, migrazione e
+backup. Il criterio di questo gate resta la proprietà verificabile, non il solo uso della libreria.
 
 ---
 
@@ -146,7 +152,7 @@ P2-preserving*. R0.4 ha riportato questi controlli nelle procedure vive di relea
 - Il percorso è realisticamente seguibile da un trainer non tecnico (la frizione qui è un rischio di prodotto, per il principio fermo di Giacomo di non aggiungere frizione ai trainer clienti).
 - Documentato, così che il trainer sappia che esiste e come usarlo.
 
-**Stato nel codice (verificato 2026-06-16):** 🟠 Esiste un'infrastruttura backup/restore (`api/routers/backup.py`, 7 endpoint WAL-safe) **e** un auto-backup al boot (`_auto_backup_on_startup`, max 5) — ma **produce copie in chiaro** (`sqlite3.backup()`). Con G1 attivo, ogni copia di backup va cifrata o riapre il buco. **G5 va progettato dentro lo stesso design di G1** (ADR-013), non dopo: sono lo stesso problema visto da due lati (riservatezza a riposo ↔ disponibilità).
+**Stato nel codice (riverificato 2026-09-04):** 🟠 Esiste un'infrastruttura backup/restore (`api/routers/backup.py`, 7 endpoint WAL-safe) **e** un auto-backup al boot (`_auto_backup_on_startup`, max 5) — ma **produce copie in chiaro** (`sqlite3.backup()`). Con G1 attivo, ogni copia di backup va cifrata o riapre il buco. **G5 è ora progettato nello stesso blocco G1** da ADR-013 Addendum I + `SPEC_S1_G1_G5_CIFRATURA_CRM.md`; nessun code gate è ancora GREEN.
 
 > **Perché Tier 2 e non Tier 1:** a differenza di G1–G4, un backup mancante non causa di per sé un *breach* (la riservatezza è intatta). Causa una *perdita di disponibilità*. È un grave rischio di prodotto e di fiducia, e una preoccupazione GDPR borderline su integrità e disponibilità (art. 32), ma non espone dati a un attaccante. Se la consegna deve procedere prima che questo sia costruito, richiede un'eccezione esplicita documentata e un'istruzione manuale temporanea al trainer.
 

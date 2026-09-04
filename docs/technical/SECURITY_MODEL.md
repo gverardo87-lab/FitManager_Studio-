@@ -3,8 +3,8 @@
 Modello di sicurezza del prodotto. Copre: threat model, protezioni implementate,
 limitazioni note, roadmap futuri interventi.
 
-Ultimo aggiornamento: 2026-08-02 (hardware binding Windows/macOS e privacy identificatori;
-drift Tailscale→FRP, tassonomia attaccanti L0–L4, gate G1 crm.db attivo).
+Ultimo aggiornamento: 2026-09-04 (S1.0 docs-first: ADR-013 Addendum I, owner unico compiled,
+boundary auth/DB e SPEC esecutiva G1+G5; il codice G1 resta non implementato).
 
 ## Principi
 
@@ -284,7 +284,7 @@ convenienza.
 | Rischio | Probabilita' | Impatto | Mitigazione attuale | Stato |
 |---------|-------------|---------|-------------------|-------|
 | RE binario nativo (Ghidra/IDA) | Molto bassa | Alto | Nuitka nativo + crittografia DB (L6) | Accettato |
-| Copia crm.db su altra istanza | Media | Medio | Hardware binding blocca l'app, dati inutili senza app | Accettato |
+| Copia/lettura diretta di crm.db plaintext | Media | Alto | **Gap aperto:** hardware binding blocca l'app ma non rende il file illeggibile; G1 password-bound è il blocco S1 attivo | Da chiudere prima della consegna |
 | Keylogger/screen capture su PC trainer | Bassa | Alto | Fuori scope (sicurezza OS) | Accettato |
 | Distribuzione installer a terzi | Media | Alto | NDA + hardware binding + codice nativo | Mitigato |
 | JWT replay (license.key copiata) | Bassa | Medio | machine_id impedisce uso su altra macchina | Mitigato |
@@ -303,8 +303,9 @@ art. 9 GDPR degli atleti) e' un **bloccante Tier-1 attivo** del Pre-Delivery Sec
 possesso del file e' insufficiente), nessuna postura interim. Tocca boot, auth, backup e ciclo di
 vita dell'engine (boot a due fasi).
 
-- Decisione architetturale: **ADR-013** (`docs/adr/ADR-013-crm-db-encryption-at-rest.md`) — **accepted (2026-06-17)**, spike SQLCipher validato
-- Specifica del gate: `docs/technical/PRE_DELIVERY_SECURITY_GATE.md` §G1 (+ §G5 — ogni backup di `crm.db` cifrato allo stesso standard, progettato nello stesso ADR-013)
+- Decisione architetturale: **ADR-013 + Addendum I** (`docs/adr/ADR-013-crm-db-encryption-at-rest.md`) — **accepted**, spike SQLCipher validato; owner unico compiled e candidate engine ratificati il 2026-09-04
+- Specifica esecutiva aperta: `docs/specs/SPEC_S1_G1_G5_CIFRATURA_CRM.md` — envelope, state machine, recovery, migrazione e backup; prossimo gate S1.1
+- Criteri del gate: `docs/technical/PRE_DELIVERY_SECURITY_GATE.md` §G1 + §G5
 
 #### Fase 1 — Pre-lancio (IMPLEMENTATO)
 

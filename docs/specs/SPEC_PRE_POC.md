@@ -1,7 +1,7 @@
 # SPEC — Strategia e readiness pre-POC
 
-**Stato:** 🟡 IN CORSO — D0, C0.0, G-MAC.1, C0.1 GREEN, FT.0, E0, D11 e A0 chiusi; prossimo
-gate founder E1 testo exit; prossimo gate tecnico S1; C0.2/G-MAC.2–5 in HOLD su trigger Mac; F0
+**Stato:** 🟡 IN CORSO — D0, C0.0, G-MAC.1, C0.1 GREEN, FT.0, E0, D11, A0 e S1.0 chiusi;
+prossimo gate founder E1 testo exit; prossimo gate tecnico S1.1 envelope; C0.2/G-MAC.2–5 in HOLD su trigger Mac; F0
 in HOLD finché FT.1–FT.4 non sono chiusi
 **Data di ratifica founder:** 2026-07-31
 **Branch:** `FitManager_Studio`
@@ -203,6 +203,20 @@ Il trigger Mac è una decisione founder esplicita e verificabile, non deriva da 
 da un prospect non qualificato o dal solo interesse tecnico. L'enrollment Apple può avanzare come
 opzione amministrativa, ma non autorizza codice G-MAC.2–5 né spese senza il normale GO.
 
+### D12 — S1 owner unico e G2 proof-first — 2026-09-04
+
+Il founder apre S1 con due decisioni vincolanti:
+
+- la POC compilata ha un solo trainer owner per installazione; il multi-tenant resta un harness di
+  sicurezza nei test, non una funzionalità produttiva;
+- G2 parte da una prova della catena client→FRP→Next→FastAPI e non si fida di header inoltrati senza
+  una trust boundary dimostrata. Se il vero IP non è trasportabile in modo non spoofabile, il vecchio
+  criterio non viene dichiarato GREEN: si presenta un Addendum con compensazioni prima del codice.
+
+G1 e G5 sono un unico blocco perché una copia di backup plaintext annullerebbe la cifratura del CRM.
+La casa esecutiva è `SPEC_S1_G1_G5_CIFRATURA_CRM.md`; S1.0 ratifica soltanto il contratto e non
+modifica codice, schema, dipendenze o dati.
+
 ## 4. Classificazione stabile delle priorità
 
 | Classe | Elementi | Regola |
@@ -230,7 +244,9 @@ ma il calendario viene ripianificato dopo E1 e nella nuova strategia commerciale
 | 2026-09-03 ✅ | **G-MAC.1 + C0.1 GREEN** | commit `b7b74c2`, run `33772591605`: filename tunnel/ACME platform-conditional con parità Windows; policy wheel final-artifact-authoritative; build e smoke stesso artefatto entrambi success |
 | HOLD trigger Mac | **C0.2 — Target exact source-free** | medesimo canary sul target M1/8 GB/Tahoe 26.5.1; obbligatorio prima di G-MAC.2, non blocca S1/F0/R1-WIN |
 | 2026-09-03 ✅ | **A0 — Product truth founder-led** | CHIUSO: context + claims matrix ratificati riga per riga (`docs/business/PRODUCT_MARKETING_CONTEXT.md`); leggi competitor estratte (`LEGGI_COMPETITOR.md`); nessun claim esterno non sostenuto; zero dipendenze Alessio |
-| Prossimo gate tecnico | **S1 — Core/security** | G1/G2/G4 verdi; backup/restore coerenti; G9–G11 pronti per il real-data gate |
+| 2026-09-04 ✅ | **S1.0 — G1/G5 docs-first** | owner unico, auth/DB boundary, envelope, recovery, migrazione e backup prescritti; ADR-013 Add. I; zero codice |
+| Prossimo gate tecnico | **S1.1 — Primitive envelope** | RED→GREEN su envelope v1, scrypt/HKDF/AES-GCM e atomic write; nessun cambio boot |
+| Dopo i gate S1 atomici | **S1 — Core/security** | G1/G2/G4 verdi; backup/restore coerenti; G9–G11 pronti per il real-data gate |
 | Da ripianificare | **F0 — Application code freeze** | suite completa Windows + runtime Mac CI; FT.1–FT.4 chiusi; nessuna feature o finding release-critical aperto |
 | 2026-08-29 | **E0 — Strategia exit Alessio** | ruolo e dipendenza ritirati; interlock documentale e `SPEC_EXIT_ALESSIO.md` ratificati; nessuna azione esterna o tecnica |
 | Prossimo gate founder | **E1 — Testo comunicazione exit** | testo costruito e approvato col founder in `docs/`; nessun invio nel gate E1 |
@@ -261,8 +277,10 @@ in calendario, ma non sono «zero ore founder» e non autorizzano lavoro concorr
 7. G-MAC.1 remediation runtime/policy wheel + re-run C0.1 GREEN — CHIUSO 2026-09-03, commit
    `b7b74c2`, run `33772591605`;
 8. A0 product truth founder-led, docs-only e checkpoint remoto pulito;
-9. S1 in gate tecnici atomici secondo ADR-013 e Security Gate; dopo G1/G2/G4 e prima di F0 si
-   inseriscono FT.1–FT.4, ciascuno con checkpoint proprio;
+9. S1.0 G1/G5 docs-first — CHIUSO 2026-09-04; S1.1–S1.6 implementano G1/G5 in gate atomici
+   secondo ADR-013 Add. I e `SPEC_S1_G1_G5_CIFRATURA_CRM.md`; seguono G2 proof-first e G4 in
+   SPEC/gate separati; dopo G1/G2/G4 e prima di F0 si inseriscono FT.1–FT.4, ciascuno con
+   checkpoint proprio;
 10. F0 application freeze;
 11. D1-WIN distribuzione Windows;
 12. R1-WIN build/seal/tag `v1.0.15`;
@@ -415,7 +433,18 @@ operativo del prossimo gate C0, che richiede prove runtime reali.
 - nessun materiale esterno prodotto o inviato; nessun claim nuovo pubblicato; nessuna modifica
   applicativa.
 
-## 15. Chiusura della SPEC
+## 15. Consuntivo S1.0 — G1/G5 docs-first — 2026-09-04
+
+- ratificato un solo trainer owner per installazione compilata, senza ridurre i test IDOR;
+- risolto il boundary auth/DB: unwrap della DEK, engine candidato, verifica email+bcrypt+account,
+  manutenzione e solo infine pubblicazione/JWT;
+- congelati envelope v1, state machine, recovery confermata, migrazione journaled, backup bundle e
+  matrice di accettazione nella SPEC G1/G5;
+- ratificato G2 proof-first: nessun header client diventa fidato per assunzione e nessun falso GREEN
+  se il criterio real-IP richiede un Addendum;
+- nessun codice, schema, dipendenza, dato, artefatto o infrastruttura modificato in S1.0.
+
+## 16. Chiusura della SPEC
 
 La SPEC chiude quando la Wave 0 è attiva, le evidenze iniziali sono raccolte e la decisione di scala è
 registrata. A quel punto riceve consuntivo, fold-back nelle SSoT toccate e viene spostata in
