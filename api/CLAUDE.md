@@ -86,6 +86,7 @@ api/
     ├── contract_state.py  SSoT derivazione stato di vita contratto (Lifecycle 4 stati + sotto-stato denaro, funzioni pure)
     ├── cash_categories.py  SSoT categorie cassa + predicato "movimento contrattuale" bidirezionale (IN/OUT)
     ├── condition_rules.py  Regole deterministiche anamnesi → condizioni (80 pattern rules)
+    ├── crm_envelope/       Primitive pure envelope v1 per DEK password/recovery (S1.1; zero wiring DB/runtime)
     ├── goal_engine.py      Calcolo progresso obiettivi
     ├── license.py          Verifica licenza JWT RSA (4-tier key resolution)
     ├── tunnel_config.py    Config FRP + webroot HTTP-01 dedicato + risoluzione binari

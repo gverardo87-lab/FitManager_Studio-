@@ -4786,3 +4786,31 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
   + test), non toccati. Gate docs-only, staging per path espliciti.
 - **Coda:** ratifica founder del copione → al checkpoint S1/G1: DP.2 seeder + DP.3 collaudo e
   rehearsal. Poi pezzi 3-5 del kit (FAQ, video hero, pagina pilota).
+
+---
+
+## 2026-09-04 — S1.1 GREEN: primitive envelope CRM
+
+- **RED falsificabile:** `tests/test_crm_envelope.py` è stato scritto prima del servizio e la prima
+  collection è fallita perché `api.services.crm_envelope` non esisteva.
+- **Implementazione:** package puro `api/services/crm_envelope/`, separato in modelli, primitive
+  crittografiche e storage; nessun import di database, engine, sessione, auth, config o lifecycle.
+  Envelope v1 strict e bounded, DEK/recovery casuali da 256 bit, scrypt password-bound
+  (`N=2^17`, `r=8`, `p=1`), HKDF-SHA256 recovery e due wrap AES-256-GCM indipendenti con AAD su
+  versione, database, cipher profile e slot.
+- **Fail-closed e secret hygiene:** JSON canonico; rifiuto di campi extra, duplicati, base64 non
+  canonico, UUID/versioni/cipher/parametri KDF inattesi e payload oltre 16 KiB; errore pubblico
+  uniforme per credenziale/tamper; nessun segreto in JSON o `repr`; atomic replace same-directory,
+  permessi best-effort e cleanup del temporaneo su failure.
+- **Test mirati:** `19 passed, 1 warning` — round-trip password/recovery sulla stessa DEK, materiale
+  indipendente, wrong password/recovery, tamper dei due slot, AAD/database mismatch, recovery
+  normalizzata e malformed, unknown version/cipher, extra field, KDF ostile, base64/nonce/UUID,
+  slot swap, JSON truncated/duplicate/oversize e rollback atomico.
+- **Suite e verifier:** full suite `948 passed, 31 warnings` in 12m00s; Ruff su `api/` e test,
+  compileall, import-boundary scan, weak-primitive scan, fuzz del parser su 128 input, round-trip
+  Unicode, limite 300 LOC e `git diff --check`: PASS. I warning sono quelli già noti di
+  configurazione Hypothesis e alias HTTP 422 deprecato.
+- **Commit codice:** `efda1fe` (`security: introduce primitive envelope CRM`).
+- **Boundary:** nessun wiring SQLCipher, engine, boot, auth, frontend, schema, migrazione, backup o
+  dato reale. `crm.db` resta plaintext e G1/G5 restano aperti. Prossimo gate autorizzabile: S1.2
+  engine late-bound e boundary locked.

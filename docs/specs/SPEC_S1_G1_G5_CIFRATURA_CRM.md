@@ -1,7 +1,7 @@
 # SPEC — S1 G1/G5: cifratura password-bound di crm.db e recovery
 
-**Stato:** APERTA E RATIFICATA — S1.0 docs-first chiuso il 2026-09-04; prossimo gate S1.1
-primitive envelope RED→GREEN; nessun codice G1/G5 implementato da questa SPEC
+**Stato:** APERTA E RATIFICATA — S1.0 chiuso; S1.1 primitive envelope GREEN il 2026-09-04
+(`efda1fe`); prossimo gate S1.2 engine late-bound; G1/G5 non ancora completi
 **Data:** 2026-09-04
 **Branch:** `FitManager_Studio`
 **Blocco:** S1 / G1 + G5, inseparabili
@@ -342,6 +342,11 @@ Ogni gate sotto è una unità coesa, verificata, committata e pushata prima del 
 - test wrong password, wrong recovery, tamper, truncation, slot swap, versione ignota;
 - nessun cambiamento al boot corrente in questo gate.
 
+**Esito:** ✅ GREEN il 2026-09-04, commit `efda1fe`. Il package puro
+`api/services/crm_envelope/` realizza il perimetro sopra senza importare engine, sessioni, auth,
+configurazione o lifecycle applicativo. `crm.db`, boot e backup restano invariati e quindi questo
+esito non rende verdi G1/G5.
+
 ### S1.2 — Engine late-bound e boundary locked
 
 - controller business DB e session accessor;
@@ -496,4 +501,21 @@ compilato, skip dei test o migrazione diretta di dati reali.
 - congelati state machine, envelope v1, scrypt, recovery, migration journal e backup bundle;
 - confermato G2 proof-first come blocco successivo separato, senza indebolimento implicito;
 - nessun codice, schema, dipendenza, DB, artefatto o dato reale modificato in S1.0;
-- prossimo gate autorizzabile: **S1.1 primitive envelope RED→GREEN**.
+- gate successivo allora autorizzato: **S1.1 primitive envelope RED→GREEN**.
+
+## 13. Consuntivo S1.1 — Primitive envelope — 2026-09-04
+
+- RED osservato prima dell'implementazione: collection error per package
+  `api.services.crm_envelope` assente;
+- implementato envelope v1 strict e bounded con DEK casuale da 256 bit, doppio slot indipendente,
+  scrypt password-bound (`N=2^17`, `r=8`, `p=1`), HKDF-SHA256 per recovery e AES-256-GCM con AAD
+  che autentica versione, database, profilo cipher e tipo slot;
+- implementati serializzazione canonica, rifiuto di duplicati/parametri KDF ostili/versioni ignote,
+  errori pubblici indistinguibili, redazione dei segreti e salvataggio atomico same-directory con
+  cleanup su errore;
+- verifiche: `19 passed` mirati; suite completa `948 passed, 31 warnings`; Ruff `api/` e test,
+  compileall, boundary scan, parser fuzz su 128 input, limite 300 LOC e `git diff --check`: PASS;
+- commit implementazione e test: `efda1fe` (`security: introduce primitive envelope CRM`);
+- esclusioni rispettate: nessun wiring SQLCipher, engine, boot, auth, schema, frontend, backup,
+  migrazione o dato reale; **G1/G5 restano aperti**;
+- prossimo gate autorizzabile: **S1.2 engine late-bound e boundary locked**.

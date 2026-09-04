@@ -1,7 +1,8 @@
 # SPEC — Strategia e readiness pre-POC
 
-**Stato:** 🟡 IN CORSO — D0, C0.0, G-MAC.1, C0.1 GREEN, FT.0, E0, D11, A0 e S1.0 chiusi;
-prossimo gate founder E1 testo exit; prossimo gate tecnico S1.1 envelope; C0.2/G-MAC.2–5 in HOLD su trigger Mac; F0
+**Stato:** 🟡 IN CORSO — D0, C0.0, G-MAC.1, C0.1 GREEN, FT.0, E0, D11, A0, S1.0 e S1.1
+chiusi; prossimo gate founder E1 testo exit; prossimo gate tecnico S1.2 engine late-bound;
+C0.2/G-MAC.2–5 in HOLD su trigger Mac; F0
 in HOLD finché FT.1–FT.4 non sono chiusi
 **Data di ratifica founder:** 2026-07-31
 **Branch:** `FitManager_Studio`
@@ -245,7 +246,8 @@ ma il calendario viene ripianificato dopo E1 e nella nuova strategia commerciale
 | HOLD trigger Mac | **C0.2 — Target exact source-free** | medesimo canary sul target M1/8 GB/Tahoe 26.5.1; obbligatorio prima di G-MAC.2, non blocca S1/F0/R1-WIN |
 | 2026-09-03 ✅ | **A0 — Product truth founder-led** | CHIUSO: context + claims matrix ratificati riga per riga (`docs/business/PRODUCT_MARKETING_CONTEXT.md`); leggi competitor estratte (`LEGGI_COMPETITOR.md`); nessun claim esterno non sostenuto; zero dipendenze Alessio |
 | 2026-09-04 ✅ | **S1.0 — G1/G5 docs-first** | owner unico, auth/DB boundary, envelope, recovery, migrazione e backup prescritti; ADR-013 Add. I; zero codice |
-| Prossimo gate tecnico | **S1.1 — Primitive envelope** | RED→GREEN su envelope v1, scrypt/HKDF/AES-GCM e atomic write; nessun cambio boot |
+| 2026-09-04 ✅ | **S1.1 — Primitive envelope** | commit `efda1fe`: envelope v1 strict, scrypt/HKDF/AES-GCM e atomic write; `19 passed` mirati, suite `948 passed`; nessun cambio boot |
+| Prossimo gate tecnico | **S1.2 — Engine late-bound** | controller business DB, session accessor, candidate-open e boundary locked; catalog/nutrition invariati |
 | Dopo i gate S1 atomici | **S1 — Core/security** | G1/G2/G4 verdi; backup/restore coerenti; G9–G11 pronti per il real-data gate |
 | Da ripianificare | **F0 — Application code freeze** | suite completa Windows + runtime Mac CI; FT.1–FT.4 chiusi; nessuna feature o finding release-critical aperto |
 | 2026-08-29 | **E0 — Strategia exit Alessio** | ruolo e dipendenza ritirati; interlock documentale e `SPEC_EXIT_ALESSIO.md` ratificati; nessuna azione esterna o tecnica |
@@ -277,8 +279,9 @@ in calendario, ma non sono «zero ore founder» e non autorizzano lavoro concorr
 7. G-MAC.1 remediation runtime/policy wheel + re-run C0.1 GREEN — CHIUSO 2026-09-03, commit
    `b7b74c2`, run `33772591605`;
 8. A0 product truth founder-led, docs-only e checkpoint remoto pulito;
-9. S1.0 G1/G5 docs-first — CHIUSO 2026-09-04; S1.1–S1.6 implementano G1/G5 in gate atomici
-   secondo ADR-013 Add. I e `SPEC_S1_G1_G5_CIFRATURA_CRM.md`; seguono G2 proof-first e G4 in
+9. S1.0 G1/G5 docs-first — CHIUSO 2026-09-04; S1.1 primitive envelope — GREEN 2026-09-04,
+   commit `efda1fe`; S1.2–S1.6 completano G1/G5 in gate atomici secondo ADR-013 Add. I e
+   `SPEC_S1_G1_G5_CIFRATURA_CRM.md`; seguono G2 proof-first e G4 in
    SPEC/gate separati; dopo G1/G2/G4 e prima di F0 si inseriscono FT.1–FT.4, ciascuno con
    checkpoint proprio;
 10. F0 application freeze;
@@ -444,7 +447,18 @@ operativo del prossimo gate C0, che richiede prove runtime reali.
   se il criterio real-IP richiede un Addendum;
 - nessun codice, schema, dipendenza, dato, artefatto o infrastruttura modificato in S1.0.
 
-## 16. Chiusura della SPEC
+## 16. Consuntivo S1.1 — Primitive envelope — 2026-09-04
+
+- RED osservato su import del package ancora assente, poi GREEN con commit `efda1fe`;
+- introdotto un servizio crittografico puro e isolato per envelope v1: DEK/recovery casuali,
+  scrypt/HKDF-SHA256, due wrap AES-256-GCM indipendenti, parsing strict e salvataggio atomico;
+- coperti wrong credential, tamper, truncation, slot swap, AAD/database mismatch, versione/cipher
+  ignoti, KDF ostile, JSON duplicato/oversize e failure atomica;
+- evidenze: `19 passed` mirati; full suite `948 passed, 31 warnings` in 12m00s; Ruff, compileall,
+  boundary scan, fuzz 128 input, limite LOC e diff check PASS;
+- nessun wiring a `crm.db`: G1/G5 restano aperti; prossimo gate tecnico S1.2.
+
+## 17. Chiusura della SPEC
 
 La SPEC chiude quando la Wave 0 è attiva, le evidenze iniziali sono raccolte e la decisione di scala è
 registrata. A quel punto riceve consuntivo, fold-back nelle SSoT toccate e viene spostata in

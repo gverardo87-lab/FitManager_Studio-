@@ -75,6 +75,11 @@ Tutto ciò che è in Tier 1 e Tier 2 è un criterio di accettazione su una di qu
 due fasi; l'Addendum I e la SPEC S1 fissano owner unico, candidate engine, KDF/recovery, migrazione e
 backup. Il criterio di questo gate resta la proprietà verificabile, non il solo uso della libreria.
 
+**Fondazione S1.1 (2026-09-04):** ✅ commit `efda1fe` implementa e verifica le primitive pure
+dell'envelope v1 (scrypt/HKDF/AES-GCM, doppio slot e atomic write). Non cambia ancora engine, boot,
+auth, migrazione o backup e `crm.db` resta plaintext: **G1 non è GREEN** e la tensione G5 resta
+aperta. Prossimo gate tecnico: S1.2 engine late-bound e boundary locked.
+
 ---
 
 ### G2. La cecità del rate limiter deve essere risolta per il portale pubblico
