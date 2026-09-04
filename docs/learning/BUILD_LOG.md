@@ -4758,3 +4758,31 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
 - **Esclusioni rispettate:** zero codice, schema, dipendenza, DB, dato reale, build, tunnel,
   infrastruttura o comunicazione esterna modificati.
 - **Prossimo gate tecnico:** S1.1 primitive envelope RED→GREEN; nessun cambio boot nello stesso gate.
+
+---
+
+## 2026-09-04 — DP.1: demo pack (copione + dataset spec + checklist) — deconflitto con S1
+
+- **Trigger founder:** «per il demo pack come procediamo?» + alert esplicito: Codex sta eseguendo
+  S1 (cifratura crm.db, priorità) in parallelo — evitare confusione sul DB.
+- **Scoperta:** i seeder demo esistenti (`seed_demo_full/crm/direct/part2/workouts`) sono
+  inservibili by-design: puntano al defunto `crm_dev.db`, SQL grezzo sullo schema di marzo
+  (pre-G7..G9), date hardcoded. Non si riparano: oggi il write-path finanziario passa dalla
+  penna unica (ADR-022) → il seeder nuovo andrà **via API**, mai SQL diretto. I vecchi restano
+  al triage obsolescenza.
+- **Deconflitto ratificato in sessione:** DP.1 = solo docs (zero contatto con crm.db e coi file
+  S1) → ESEGUITO ORA. **DP.2 (seeder `tools/scripts/seed_demo_tenant.py`) e DP.3 (semina +
+  collaudo Playwright + rehearsal) CONGELATI fino al checkpoint S1/G1**: niente secondo gate
+  codice in parallelo, niente scritture su crm.db sotto chirurgia. Post-G1 il seeder via API su
+  DB cifrato = collaudo gratuito del boot a due fasi. Decisione ambiente (tenant demo nello
+  stesso crm.db — raccomandata — vs backup/restore) RINVIATA a design G1 visibile.
+- **Depositi (`docs/business/kit/`):** `DEMO_SCRIPT.md` (8 beat B0-B7 mappati 1:1 sulle card del
+  one-pager; il prospect tocca in B2 — anamnesi dal SUO telefono — e riceve in B5 — WhatsApp;
+  frasi chiave, claim matrix per beat, «cosa non dire mai» = righe 🔴/🟡) · `DEMO_DATASET.md`
+  (6 personaggi-segnale sintetici + slot live; date SEMPRE relative a oggi — lezione dei seeder
+  di marzo; telefoni = founder; requisiti dashboard-viva e idempotenza) · `DEMO_CHECKLIST.md`
+  (T-30', regole ferree, piani B per beat, post-demo).
+- **Stato repo al deposito:** tracked pulito; in volo untracked S1 (`api/services/crm_envelope/`
+  + test), non toccati. Gate docs-only, staging per path espliciti.
+- **Coda:** ratifica founder del copione → al checkpoint S1/G1: DP.2 seeder + DP.3 collaudo e
+  rehearsal. Poi pezzi 3-5 del kit (FAQ, video hero, pagina pilota).

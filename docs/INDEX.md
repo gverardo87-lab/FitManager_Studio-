@@ -17,6 +17,7 @@ Ogni documento ha un dominio. Se non sai dove cercare, parti dalla directory del
 | `PRODUCT_MARKETING_CONTEXT.md` | 🟢 **SSoT verità commerciale (A0, 2026-09-03):** ICP, posizionamento, claims matrix 🟢/🟡/🔴, obiezioni, canali ORB, vincoli. Solo le righe 🟢 sono claim esterni autorizzati | Claim commerciali |
 | `LEGGI_COMPETITOR.md` | Conoscenza competitor VIVA estratta dagli archivi (A0): leggi W1-W11 + L1-L6 + lacune N-1..N-8 (guardrail: niente assoluti «nessun competitor italiano» finché N-1 aperta) | Mercato e benchmark |
 | `kit/ONE_PAGER_DESIGN_PARTNER.html` | **Kit design partner, pezzo 1:** one-pager A4 print-ready (Chrome → Salva come PDF). Solo righe 🟢 della claims matrix, zero prezzi, identità visiva MANIFESTO. Ogni claim nuovo passa PRIMA dalla matrix | Materiale di partenza |
+| `kit/DEMO_SCRIPT.md` + `DEMO_DATASET.md` + `DEMO_CHECKLIST.md` | **Kit pezzo 2 (DP.1, bozza):** copione demo 15' (8 beat mappati sulle card del one-pager), specifica dataset sintetico (6 personaggi-segnale, date relative, tel=founder), checklist pre-demo + piani B. ⏸️ DP.2 seeder via API e DP.3 collaudo CONGELATI fino a checkpoint S1/G1 | Demo founder-led |
 
 **Gerarchia:** `SPEC_PRE_POC.md` governa il lavoro corrente; `SPEC_EXIT_ALESSIO.md` governa il blocco
 di uscita partner. BP/FM conservano assunzioni e numeri pre-validazione, ora superseded per la
