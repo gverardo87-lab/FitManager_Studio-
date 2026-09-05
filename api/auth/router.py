@@ -9,23 +9,33 @@ POST /auth/login     -> verifica credenziali, ritorna JWT
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlmodel import Session, select, func as sa_func
 
-from api.database import get_session
+from api.database import (
+    get_business_database_state,
+    get_optional_business_session,
+    get_session,
+)
 from api.models.trainer import Trainer
 from api.auth.schemas import TrainerRegister, TrainerLogin, TokenResponse, PasswordResetRequest
 from api.auth.service import hash_password, verify_password, create_access_token
 from api.services.rate_limiter import auth_limiter
+from api.services.business_database import BusinessDatabaseState
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.get("/setup-status")
-def setup_status(session: Session = Depends(get_session)):
+def setup_status(session: Session | None = Depends(get_optional_business_session)):
     """
     Controlla se esiste almeno un trainer nel DB.
 
     Usato dal Setup Wizard per decidere se mostrare il primo avvio.
     Endpoint pubblico (no JWT), in allowlist license middleware.
     """
+    state = get_business_database_state()
+    if state is BusinessDatabaseState.UNINITIALIZED:
+        return {"needs_setup": True}
+    if session is None:
+        return {"needs_setup": False}
     count = session.exec(select(sa_func.count(Trainer.id))).one()
     return {"needs_setup": count == 0}
 

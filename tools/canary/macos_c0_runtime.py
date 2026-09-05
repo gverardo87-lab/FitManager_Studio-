@@ -32,11 +32,11 @@ os.environ["LICENSE_ENFORCEMENT_ENABLED"] = "true"
 from fastapi import FastAPI, Request  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from fastapi.responses import JSONResponse  # noqa: E402
-from sqlmodel import SQLModel  # noqa: E402
+from sqlmodel import SQLModel, Session, create_engine  # noqa: E402
 
 from api import __version__  # noqa: E402
 from api.auth.router import router as auth_router  # noqa: E402
-from api.database import engine  # noqa: E402
+from api.database import get_optional_business_session, get_session  # noqa: E402
 from api.models.trainer import Trainer  # noqa: E402
 
 
@@ -49,9 +49,22 @@ _ALLOWED_PATHS = frozenset(
     }
 )
 
+engine = create_engine(
+    os.environ["DATABASE_URL"],
+    connect_args={"check_same_thread": False},
+)
 SQLModel.metadata.create_all(engine, tables=[Trainer.__table__])
 
 app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
+
+
+def _canary_session():
+    with Session(engine) as session:
+        yield session
+
+
+app.dependency_overrides[get_session] = _canary_session
+app.dependency_overrides[get_optional_business_session] = _canary_session
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://127.0.0.1:3000", "http://localhost:3000"],

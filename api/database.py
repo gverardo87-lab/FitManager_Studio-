@@ -12,12 +12,10 @@ e caricati in memoria (AES-256-GCM). In dev mode, usano i file .db plain.
 """
 
 import logging
-import sqlite3 as sqlite3_stdlib
-from pathlib import Path
 from typing import Generator
 
 from sqlalchemy import event
-from sqlalchemy.pool import StaticPool
+from sqlalchemy.engine import Engine
 from sqlmodel import SQLModel, Session, create_engine
 
 from api.config import (
@@ -30,83 +28,61 @@ from api.config import (
 import api.models.share_token  # noqa: F401 — registra ShareToken nel metadata SQLModel
 import api.models.nutrition  # noqa: F401 — registra modelli nutrition nel metadata SQLModel
 import api.models.rettifica_contratto  # noqa: F401 — registra RettificaContratto nel metadata SQLModel (G9.2b)
+from api.services.business_database import (
+    BUSINESS_DATABASE_UNAVAILABLE_DETAIL,
+    BusinessDatabaseController,
+    BusinessDatabaseState,
+    BusinessDatabaseStorageMode,
+    BusinessDatabaseUnavailableError,
+)
+from api.services.database_engines import (
+    load_encrypted_db as _load_encrypted_db,
+    setup_sqlite_pragmas as _setup_sqlite_pragmas,
+)
 
 logger = logging.getLogger("fitmanager.database")
 
-# --- SQLite PRAGMA setup ---
+# --- Business Engine (data.db / crm.db) — late-bound ---
 
-
-def _setup_sqlite_pragmas(dbapi_conn, connection_record):
-    """
-    Configura PRAGMA SQLite per sicurezza e performance.
-
-    - WAL: crash resistance, letture concorrenti
-    - foreign_keys: integrita' referenziale enforced
-    - busy_timeout: evita "database is locked" su accessi concorrenti
-    """
-    cursor = dbapi_conn.cursor()
-    cursor.execute("PRAGMA journal_mode=WAL")
-    cursor.execute("PRAGMA foreign_keys=ON")
-    cursor.execute("PRAGMA busy_timeout=5000")
-    cursor.close()
-
-
-def _load_encrypted_db(enc_path: Path, label: str):
-    """Load an AES-256-GCM encrypted SQLite DB.
-
-    Strategy 1: deserialize into in-memory DB (fastest, zero I/O).
-    Strategy 2: write to temp file (fallback if bundled sqlite3 lacks deserialize).
-    """
-    from api.services.db_crypto import decrypt_db_to_bytes
-
-    db_bytes = decrypt_db_to_bytes(enc_path)
-
-    # Strategy 1: in-memory deserialize
-    try:
-        conn = sqlite3_stdlib.connect(":memory:")
-        conn.deserialize(db_bytes)
-        conn.execute("PRAGMA foreign_keys=ON")
-        # Verify it actually works (deserialize can silently fail)
-        conn.execute("SELECT name FROM sqlite_master WHERE type='table' LIMIT 1").fetchone()
-        logger.info("Loaded encrypted %s (%d bytes) via deserialize", label, len(db_bytes))
-        return create_engine(
-            "sqlite://",
-            connect_args={"check_same_thread": False},
-            poolclass=StaticPool,
-            creator=lambda: conn,
-        )
-    except Exception:
-        pass
-
-    # Strategy 2: temp file (bundled sqlite3 without SQLITE_ENABLE_DESERIALIZE)
-    import tempfile
-    tmp = Path(tempfile.mkdtemp()) / f"{label}.db"
-    tmp.write_bytes(db_bytes)
-    db_url = f"sqlite:///{tmp}"
-    logger.info("Loaded encrypted %s (%d bytes) via temp file: %s", label, len(db_bytes), tmp)
-    eng = create_engine(
-        db_url,
-        echo=False,
-        connect_args={"check_same_thread": False},
-    )
-    event.listen(eng, "connect", _setup_sqlite_pragmas)
-    return eng
-
-
-# --- Business Engine (data.db / crm.db) ---
-
-_connect_args = {}
-if DATABASE_URL.startswith("sqlite"):
-    _connect_args = {"check_same_thread": False}
-
-engine = create_engine(
-    DATABASE_URL,
-    echo=False,
-    connect_args=_connect_args,
+business_db_controller = BusinessDatabaseController(
+    BusinessDatabaseState.LOCKED if is_compiled() else BusinessDatabaseState.UNINITIALIZED,
+    allow_plaintext_development=not is_compiled(),
 )
 
-if DATABASE_URL.startswith("sqlite"):
-    event.listen(engine, "connect", _setup_sqlite_pragmas)
+
+def _create_plaintext_business_engine(database_url: str) -> Engine:
+    """Crea l'engine plaintext ammesso esclusivamente nel runtime source/dev."""
+    connect_args = {}
+    if database_url.startswith("sqlite"):
+        connect_args = {"check_same_thread": False}
+    candidate = create_engine(database_url, echo=False, connect_args=connect_args)
+    if database_url.startswith("sqlite"):
+        event.listen(candidate, "connect", _setup_sqlite_pragmas)
+    return candidate
+
+
+def initialize_development_business_database() -> Engine:
+    """Inizializza esplicitamente il CRM plaintext; vietato in compiled mode."""
+    if is_compiled():
+        raise BusinessDatabaseUnavailableError(
+            BUSINESS_DATABASE_UNAVAILABLE_DETAIL
+        ) from None
+    return business_db_controller.initialize_plaintext_development_engine(
+        lambda: _create_plaintext_business_engine(DATABASE_URL)
+    )
+
+
+def get_business_engine() -> Engine:
+    """Accessor fail-closed dell'engine CRM pubblicato."""
+    return business_db_controller.require_engine()
+
+
+def get_business_database_state() -> BusinessDatabaseState:
+    return business_db_controller.state
+
+
+def get_business_database_storage_mode() -> BusinessDatabaseStorageMode | None:
+    return business_db_controller.storage_mode
 
 # --- Catalog Engine (catalog.db or catalog.db.enc) ---
 
@@ -195,7 +171,7 @@ NUTRITION_TABLE_NAMES = frozenset({
 })
 
 
-def create_db_and_tables() -> None:
+def create_db_and_tables(target_engine: Engine | None = None) -> None:
     """
     Crea le tabelle BUSINESS nel database principale (crm.db).
 
@@ -209,7 +185,8 @@ def create_db_and_tables() -> None:
         t for t in SQLModel.metadata.sorted_tables
         if t.name not in _excluded
     ]
-    SQLModel.metadata.create_all(engine, tables=business_tables)
+    selected_engine = target_engine if target_engine is not None else get_business_engine()
+    SQLModel.metadata.create_all(selected_engine, tables=business_tables)
 
 
 def create_catalog_tables() -> None:
@@ -255,7 +232,18 @@ def get_session() -> Generator[Session, None, None]:
 
     Usata dalla maggior parte degli endpoint (clienti, contratti, agenda, etc.).
     """
-    with Session(engine) as session:
+    with business_db_controller.session() as session:
+        yield session
+
+
+def get_optional_business_session() -> Generator[Session | None, None, None]:
+    """Dependency health-only: non apre né sblocca il CRM quando è sigillato."""
+    try:
+        target_engine = get_business_engine()
+    except BusinessDatabaseUnavailableError:
+        yield None
+        return
+    with Session(target_engine) as session:
         yield session
 
 

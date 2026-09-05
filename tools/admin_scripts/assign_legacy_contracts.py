@@ -32,7 +32,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from sqlmodel import Session, select
-from api.database import engine
+from api.database import initialize_development_business_database
 from api.models.trainer import Trainer
 from api.models.contract import Contract
 from api.models.client import Client
@@ -102,7 +102,7 @@ def main():
     parser.add_argument("--dry-run", action="store_true", help="Preview senza scrivere")
     args = parser.parse_args()
 
-    with Session(engine) as session:
+    with Session(initialize_development_business_database()) as session:
         trainer = get_first_trainer(session)
         if not trainer:
             print("ERRORE: Nessun trainer registrato.")

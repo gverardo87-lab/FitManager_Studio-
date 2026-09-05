@@ -8,6 +8,7 @@ from sqlmodel import Session, text
 
 from api import __version__
 from api.config import DATA_DIR
+from api.database import get_business_database_state
 from api.schemas.system import (
     HealthResponse,
     SupportSnapshotBackupItem,
@@ -15,6 +16,7 @@ from api.schemas.system import (
 )
 from api.services.license import check_license
 from api.services.machine_fingerprint import get_machine_fingerprint, get_machine_fingerprint_short
+from api.services.business_database import BusinessDatabaseState
 
 BACKUP_DIR = DATA_DIR / "backups"
 APP_STARTED_AT = datetime.now(timezone.utc)
@@ -99,13 +101,19 @@ def list_recent_backups(limit: int = 5) -> list[SupportSnapshotBackupItem]:
 
 
 def build_health_response(
-    session: Session,
+    session: Session | None,
     catalog_session: Session,
 ) -> HealthResponse:
-    db_ok = _ping(session)
+    db_ok = session is not None and _ping(session)
     catalog_ok = _ping(catalog_session)
     license_result = check_license()
-    healthy = db_ok and catalog_ok
+    business_state = get_business_database_state()
+    business_ok = (
+        db_ok
+        if business_state is BusinessDatabaseState.UNLOCKED
+        else business_state is not BusinessDatabaseState.ERROR
+    )
+    healthy = business_ok and catalog_ok
 
     from api.config import is_compiled
     return HealthResponse(

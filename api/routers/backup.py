@@ -32,8 +32,12 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
-from api.config import DATA_DIR, DATABASE_URL
-from api.database import engine, get_session
+from api.config import DATA_DIR, DATABASE_URL, is_compiled
+from api.database import (
+    get_business_database_storage_mode,
+    get_business_engine,
+    get_session,
+)
 from api.dependencies import get_current_trainer
 from api.models.audit_log import AuditLog
 from api.models.client import Client
@@ -54,10 +58,28 @@ from api.models.workout import (
     WorkoutSession,
 )
 from api.models.workout_log import WorkoutLog
+from api.services.business_database import (
+    BUSINESS_DATABASE_UNAVAILABLE_DETAIL,
+    BusinessDatabaseStorageMode,
+)
 
 logger = logging.getLogger("fitmanager.backup")
 
-router = APIRouter(prefix="/backup", tags=["backup"])
+def _require_safe_backup_runtime() -> None:
+    """Il backup plaintext legacy resta spento nelle build finché S1.5 non lo sostituisce."""
+    storage_mode = get_business_database_storage_mode()
+    if is_compiled() or storage_mode is not BusinessDatabaseStorageMode.PLAINTEXT_DEVELOPMENT:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=BUSINESS_DATABASE_UNAVAILABLE_DETAIL,
+        )
+
+
+router = APIRouter(
+    prefix="/backup",
+    tags=["backup"],
+    dependencies=[Depends(_require_safe_backup_runtime)],
+)
 
 BACKUP_DIR = DATA_DIR / "backups"
 
@@ -160,6 +182,7 @@ def _create_backup_file(dest_path: Path, label: str = "backup") -> tuple[int, st
     Returns: (size_bytes, checksum)
     Raises HTTPException se integrity check fallisce.
     """
+    get_business_engine()
     source = sqlite3.connect(str(DB_PATH))
     dest = sqlite3.connect(str(dest_path))
     try:
@@ -380,16 +403,17 @@ def restore_backup(
         logger.warning("WAL checkpoint post-restore fallito: %s", e)
 
     # 2. Chiudi il pool connessioni — le prossime request creano connessioni fresche
-    engine.dispose()
+    business_engine = get_business_engine()
+    business_engine.dispose()
 
     # 3. Assicura che tutte le tabelle esistano (CREATE IF NOT EXISTS)
     #    e aggiunge colonne mancanti (ALTER TABLE ADD COLUMN).
     #    Se il backup e' piu' vecchio, potrebbe mancare una tabella o colonna
     #    recente — senza questo step l'app crasherebbe.
     from api.database import create_db_and_tables
-    create_db_and_tables()
+    create_db_and_tables(business_engine)
     from api.services.schema_sync import sync_schema
-    added = sync_schema(engine)
+    added = sync_schema(business_engine)
     if added:
         logger.info("Post-restore schema sync: %d changes", len(added))
 

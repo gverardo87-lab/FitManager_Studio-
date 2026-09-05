@@ -26,7 +26,10 @@ from sqlmodel import Session
 
 from api import __version__
 from api.schemas.system import HealthResponse
-from api.database import get_catalog_session, get_session
+from api.database import (
+    get_catalog_session,
+    get_optional_business_session,
+)
 
 from api.config import (
     API_PREFIX,
@@ -43,8 +46,8 @@ from api.database import (
     create_catalog_tables,
     create_db_and_tables,
     create_nutrition_tables,
-    engine,
     catalog_engine,
+    initialize_development_business_database,
 )
 from api.logging_config import configure_app_logging
 from api.seed_exercises import seed_builtin_exercises, seed_exercise_media, seed_exercise_relations
@@ -78,9 +81,12 @@ from api.routers.training_intelligence import router as training_intelligence_ro
 from api.routers.workout_diff import router as workout_diff_router
 from api.routers.communications import router as communications_router
 from api.services.system_runtime import (
-    BACKUP_DIR,
     build_health_response,
     is_license_enforcement_enabled,
+)
+from api.services.business_database import (
+    BUSINESS_DATABASE_UNAVAILABLE_DETAIL,
+    BusinessDatabaseUnavailableError,
 )
 
 APP_LOG_PATH = configure_app_logging(
@@ -92,7 +98,6 @@ APP_LOG_PATH = configure_app_logging(
 logger = logging.getLogger("fitmanager.api")
 
 _COMPILED = is_compiled()
-MAX_AUTO_BACKUPS = 5  # solo gli ultimi 5 backup automatici
 
 # Manager globali tunnel/certificato (inizializzati nel lifespan se provision FRP presente)
 _tunnel_manager = None
@@ -111,55 +116,14 @@ if not _COMPILED:
 LICENSE_EXEMPT_PREFIXES = ("/media/", "/videos/", f"{API_PREFIX}/public/")
 
 
-def _auto_backup_on_startup(database_url: str) -> None:
-    """
-    Backup automatico del DB business al startup (solo prod).
-
-    Usa sqlite3.backup() per copia atomica. Mantiene max 5 backup auto.
-    Non blocca se fallisce (best-effort, log error).
-    """
-    db_path = database_url.replace("sqlite:///", "")
-    if not Path(db_path).exists():
-        return
-
-    try:
-        BACKUP_DIR.mkdir(parents=True, exist_ok=True)
-        from datetime import datetime, timezone
-        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-        dest = BACKUP_DIR / f"auto_{timestamp}.sqlite"
-
-        source = sqlite3.connect(db_path)
-        backup = sqlite3.connect(str(dest))
-        try:
-            source.backup(backup)
-        finally:
-            backup.close()
-            source.close()
-
-        size = dest.stat().st_size
-        logger.info(f"Auto-backup: {dest.name} ({size:,} bytes)")
-
-        # Retention: solo ultimi MAX_AUTO_BACKUPS
-        auto_files = sorted(
-            BACKUP_DIR.glob("auto_*.sqlite"),
-            key=lambda p: p.stat().st_mtime,
-            reverse=True,
-        )
-        for old in auto_files[MAX_AUTO_BACKUPS:]:
-            old.unlink(missing_ok=True)
-            old.with_suffix(".sha256").unlink(missing_ok=True)
-    except Exception as e:
-        logger.error(f"Auto-backup fallito (non bloccante): {e}")
-
-
-def _integrity_check_on_startup(business_url: str, catalog_url: str) -> None:
+def _integrity_check_on_startup(*databases: tuple[str, str]) -> None:
     """
     PRAGMA integrity_check su entrambi i DB al startup.
 
     Se fallisce, log CRITICAL ma NON blocca (l'app parte comunque).
     L'operatore deve intervenire con restore.
     """
-    for label, url in [("business", business_url), ("catalog", catalog_url)]:
+    for label, url in databases:
         if not url.startswith("sqlite"):
             continue
         db_path = url.replace("sqlite:///", "")
@@ -206,11 +170,11 @@ async def lifespan(app: FastAPI):
     Lifecycle dell'app.
 
     Startup sequence:
-    1. Auto-backup (solo prod, non dev — protegge dati reali)
-    2. Crea tabelle business (CREATE IF NOT EXISTS)
-    3. Inizializza catalog DB
+    1. In source/dev inizializza esplicitamente il CRM plaintext
+    2. In compiled lascia il CRM sigillato e non lo tocca
+    3. Inizializza catalog e nutrition
     4. Seed esercizi builtin
-    5. Integrity check
+    5. Integrity check dei soli database accessibili
     """
     # Dev/prod NON si deduce piu' dal nome del DB (un solo crm.db): il segnale
     # canonico e' is_compiled() — sorgente = dev, binario Nuitka/PyInstaller = prod.
@@ -230,16 +194,16 @@ async def lifespan(app: FastAPI):
         safe_url = DATABASE_URL.split("@", 1)[0].rsplit(":", 1)[0] + ":***@" + DATABASE_URL.split("@", 1)[1]
     logger.info(f"  DATABASE_URL = {safe_url}")
 
-    # ── 1. Auto-backup (solo prod) ──
-    if not is_dev and DATABASE_URL.startswith("sqlite"):
-        _auto_backup_on_startup(DATABASE_URL)
-
-    # ── 2. Business tables ──
-    create_db_and_tables()
-
-    # ── 2b. Schema sync: aggiunge colonne mancanti dopo upgrade/restore ──
-    from api.services.schema_sync import sync_schema
-    sync_schema(engine)
+    # ── 1. Business DB boundary ──
+    # Il source/dev conserva il CRM plaintext ma lo inizializza esplicitamente.
+    # Il compiled non crea engine, backup o connessioni prima dell'unlock S1.
+    if is_dev:
+        business_engine = initialize_development_business_database()
+        create_db_and_tables(business_engine)
+        from api.services.schema_sync import sync_schema
+        sync_schema(business_engine)
+    else:
+        logger.info("  CRM_DB = locked (nessun accesso pre-auth)")
 
     # ── 3. Catalog DB ──
     from api.database import is_catalog_encrypted, is_nutrition_encrypted
@@ -309,13 +273,14 @@ async def lifespan(app: FastAPI):
             logger.warning(f"Impossibile verificare template nutrizione: {e}")
 
     # ── 5. Integrity check ──
+    integrity_targets: list[tuple[str, str]] = []
+    if is_dev:
+        integrity_targets.append(("business", DATABASE_URL))
     if not is_catalog_encrypted():
-        _integrity_check_on_startup(DATABASE_URL, CATALOG_DATABASE_URL)
-    else:
-        _integrity_check_on_startup(DATABASE_URL, DATABASE_URL)
-    # Integrity check nutrition.db (separato, non blocca se mancante)
+        integrity_targets.append(("catalog", CATALOG_DATABASE_URL))
     if not is_nutrition_encrypted() and Path(nutrition_path).exists():
-        _integrity_check_on_startup(NUTRITION_DATABASE_URL, NUTRITION_DATABASE_URL)
+        integrity_targets.append(("nutrition", NUTRITION_DATABASE_URL))
+    _integrity_check_on_startup(*integrity_targets)
 
     # ── 6. Tunnel FRP (auto-start se licenza con instance_id + frpc presente) ──
     global _certificate_manager, _tunnel_manager
@@ -389,6 +354,18 @@ app = FastAPI(
     redoc_url=None if _COMPILED else "/redoc",
     openapi_url=None if _COMPILED else "/openapi.json",
 )
+
+
+@app.exception_handler(BusinessDatabaseUnavailableError)
+async def business_database_unavailable_handler(
+    _request: Request,
+    _exc: BusinessDatabaseUnavailableError,
+) -> JSONResponse:
+    """Risposta uniforme: nessun dettaglio su stato, owner, chiave o database."""
+    return JSONResponse(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        content={"detail": BUSINESS_DATABASE_UNAVAILABLE_DETAIL},
+    )
 
 def _is_license_exempt_path(path: str) -> bool:
     if path in LICENSE_EXEMPT_PATHS:
@@ -498,7 +475,7 @@ app.include_router(communications_router, prefix=API_PREFIX)
 @app.get("/health", response_model=HealthResponse)
 def health_check(
     response: Response,
-    session: Session = Depends(get_session),
+    session: Session | None = Depends(get_optional_business_session),
     catalog_session: Session = Depends(get_catalog_session),
 ):
     """Endpoint di salute — verifica DB + catalog + licenza + versione."""
