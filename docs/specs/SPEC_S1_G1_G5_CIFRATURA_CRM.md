@@ -1,8 +1,8 @@
 # SPEC — S1 G1/G5: cifratura password-bound di crm.db e recovery
 
-**Stato:** APERTA E RATIFICATA — S1.0 chiuso; S1.1 primitive envelope GREEN il 2026-09-04
-(`efda1fe`); prossimo gate S1.2 engine late-bound; G1/G5 non ancora completi
-**Data:** 2026-09-04
+**Stato:** APERTA E RATIFICATA — S1.0 chiuso; S1.1 primitive envelope GREEN (`efda1fe`);
+S1.2 engine late-bound GREEN il 2026-09-05 (`d197467`); prossimo gate S1.3; G1/G5 non ancora completi
+**Data:** 2026-09-05
 **Branch:** `FitManager_Studio`
 **Blocco:** S1 / G1 + G5, inseparabili
 **Autorità:** `AGENTS.md` → `SPEC_PRE_POC.md` → ADR-013 + Addendum I →
@@ -356,6 +356,13 @@ esito non rende verdi G1/G5.
 - test concorrenza e dependency override;
 - catalog/nutrition engine invariati.
 
+**Esito:** ✅ GREEN il 2026-09-05, commit `d197467`. Il business engine è ora posseduto da un
+controller late-bound e non nasce più all'import; il runtime compilato resta `LOCKED` e non tocca
+`crm.db` prima dell'unlock. Un candidate engine viene verificato e preparato prima della pubblicazione
+atomica; sessioni, CRM, backup legacy e portale falliscono chiusi con errore pubblico uniforme mentre
+il servizio dati non è disponibile. L'opener SQLCipher e il wiring envelope/login restano a S1.3:
+questo esito non rende ancora verdi G1/G5.
+
 ### S1.3 — Setup owner e recovery UX
 
 - register solo `UNINITIALIZED`;
@@ -518,4 +525,26 @@ compilato, skip dei test o migrazione diretta di dati reali.
 - commit implementazione e test: `efda1fe` (`security: introduce primitive envelope CRM`);
 - esclusioni rispettate: nessun wiring SQLCipher, engine, boot, auth, schema, frontend, backup,
   migrazione o dato reale; **G1/G5 restano aperti**;
-- prossimo gate autorizzabile: **S1.2 engine late-bound e boundary locked**.
+- il gate successivo allora autorizzabile era **S1.2 engine late-bound e boundary locked**.
+
+## 14. Consuntivo S1.2 — Engine late-bound e boundary locked — 2026-09-05
+
+- RED osservato prima dell'implementazione: collection error per modulo `api.auth.candidate` assente;
+- introdotto `BusinessDatabaseController` con stato esplicito, ownership esclusiva dell'engine
+  pubblicato, accessor fail-closed e transizione serializzata `LOCKED → UNLOCKING → UNLOCKED`;
+- rimosso l'engine business import-time: in compiled mode il boot non apre, crea, sincronizza,
+  verifica o copia `crm.db`; health resta disponibile e dichiara il DB business disconnesso;
+- implementato il percorso candidate-open → verifica owner singolo attivo con email normalizzata e
+  bcrypt → maintenance → pubblicazione atomica. Ogni failure dispone il candidato e ritorna `LOCKED`;
+- rimossi gli import diretti del singleton business da API e tooling; catalog/nutrition restano sul
+  percorso precedente; il plaintext è ammesso solo dall'inizializzatore esplicito di sviluppo e
+  rifiutato strutturalmente in compiled mode;
+- fail-closed verificato per CRM, JWT residuo, portale e backup legacy; quest'ultimo resta operativo
+  soltanto in modalità `PLAINTEXT_DEVELOPMENT`, mai su un engine classificato `ENCRYPTED`;
+- verifiche: `18 passed` mirati; `60 passed` d'integrazione; suite completa finale
+  `966 passed, 31 warnings`; canary C0 runtime `ok: true`; Ruff, compileall, AST import guard,
+  limiti LOC e `git diff --check`: PASS;
+- commit implementazione e test: `d197467` (`security: lock boundary engine CRM late-bound`);
+- esclusioni rispettate: nessun opener SQLCipher reale, wiring envelope/login, setup/recovery,
+  migrazione legacy o backup bundle; `crm.db` esistente resta plaintext e **G1/G5 restano aperti**;
+- prossimo gate autorizzabile: **S1.3 setup owner e recovery UX**.

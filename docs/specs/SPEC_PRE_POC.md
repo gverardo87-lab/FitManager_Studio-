@@ -1,7 +1,7 @@
 # SPEC — Strategia e readiness pre-POC
 
-**Stato:** 🟡 IN CORSO — D0, C0.0, G-MAC.1, C0.1 GREEN, FT.0, E0, D11, A0, S1.0 e S1.1
-chiusi; prossimo gate founder E1 testo exit; prossimo gate tecnico S1.2 engine late-bound;
+**Stato:** 🟡 IN CORSO — D0, C0.0, G-MAC.1, C0.1 GREEN, FT.0, E0, D11, A0, S1.0, S1.1 e S1.2
+chiusi; prossimo gate founder E1 testo exit; prossimo gate tecnico S1.3 setup owner/recovery;
 C0.2/G-MAC.2–5 in HOLD su trigger Mac; F0
 in HOLD finché FT.1–FT.4 non sono chiusi
 **Data di ratifica founder:** 2026-07-31
@@ -247,7 +247,8 @@ ma il calendario viene ripianificato dopo E1 e nella nuova strategia commerciale
 | 2026-09-03 ✅ | **A0 — Product truth founder-led** | CHIUSO: context + claims matrix ratificati riga per riga (`docs/business/PRODUCT_MARKETING_CONTEXT.md`); leggi competitor estratte (`LEGGI_COMPETITOR.md`); nessun claim esterno non sostenuto; zero dipendenze Alessio |
 | 2026-09-04 ✅ | **S1.0 — G1/G5 docs-first** | owner unico, auth/DB boundary, envelope, recovery, migrazione e backup prescritti; ADR-013 Add. I; zero codice |
 | 2026-09-04 ✅ | **S1.1 — Primitive envelope** | commit `efda1fe`: envelope v1 strict, scrypt/HKDF/AES-GCM e atomic write; `19 passed` mirati, suite `948 passed`; nessun cambio boot |
-| Prossimo gate tecnico | **S1.2 — Engine late-bound** | controller business DB, session accessor, candidate-open e boundary locked; catalog/nutrition invariati |
+| 2026-09-05 ✅ | **S1.2 — Engine late-bound** | commit `d197467`: controller business DB, candidate verify-before-publish, compiled boot locked e fail-closed; suite finale `966 passed`; catalog/nutrition invariati |
+| Prossimo gate tecnico | **S1.3 — Setup owner e recovery UX** | wiring envelope/SQLCipher, bootstrap owner unico, recovery confermata e frontend secret-safe |
 | Dopo i gate S1 atomici | **S1 — Core/security** | G1/G2/G4 verdi; backup/restore coerenti; G9–G11 pronti per il real-data gate |
 | Da ripianificare | **F0 — Application code freeze** | suite completa Windows + runtime Mac CI; FT.1–FT.4 chiusi; nessuna feature o finding release-critical aperto |
 | 2026-08-29 | **E0 — Strategia exit Alessio** | ruolo e dipendenza ritirati; interlock documentale e `SPEC_EXIT_ALESSIO.md` ratificati; nessuna azione esterna o tecnica |
@@ -280,7 +281,8 @@ in calendario, ma non sono «zero ore founder» e non autorizzano lavoro concorr
    `b7b74c2`, run `33772591605`;
 8. A0 product truth founder-led, docs-only e checkpoint remoto pulito;
 9. S1.0 G1/G5 docs-first — CHIUSO 2026-09-04; S1.1 primitive envelope — GREEN 2026-09-04,
-   commit `efda1fe`; S1.2–S1.6 completano G1/G5 in gate atomici secondo ADR-013 Add. I e
+   commit `efda1fe`; S1.2 engine late-bound — GREEN 2026-09-05, commit `d197467`; S1.3–S1.6
+   completano G1/G5 in gate atomici secondo ADR-013 Add. I e
    `SPEC_S1_G1_G5_CIFRATURA_CRM.md`; seguono G2 proof-first e G4 in
    SPEC/gate separati; dopo G1/G2/G4 e prima di F0 si inseriscono FT.1–FT.4, ciascuno con
    checkpoint proprio;
@@ -456,9 +458,24 @@ operativo del prossimo gate C0, che richiede prove runtime reali.
   ignoti, KDF ostile, JSON duplicato/oversize e failure atomica;
 - evidenze: `19 passed` mirati; full suite `948 passed, 31 warnings` in 12m00s; Ruff, compileall,
   boundary scan, fuzz 128 input, limite LOC e diff check PASS;
-- nessun wiring a `crm.db`: G1/G5 restano aperti; prossimo gate tecnico S1.2.
+- nessun wiring a `crm.db`: G1/G5 restano aperti; il gate tecnico successivo era S1.2.
 
-## 17. Chiusura della SPEC
+## 17. Consuntivo S1.2 — Engine late-bound e boundary locked — 2026-09-05
+
+- RED osservato sul verifier owner ancora assente; GREEN con commit `d197467`;
+- il business engine non nasce più all'import: il controller espone sessioni soltanto in
+  `UNLOCKED`, serializza l'unlock e pubblica il candidate engine solo dopo verifica owner e
+  maintenance; ogni errore dispone il candidato e richiude il boundary;
+- compiled boot non tocca `crm.db`; health resta disponibile, mentre CRM, JWT residuo, portale e
+  backup legacy falliscono chiusi con dettaglio pubblico uniforme;
+- il percorso plaintext corrente resta disponibile solo tramite initializer esplicito di sviluppo;
+  catalog e nutrition engine non cambiano;
+- evidenze: `18 passed` mirati, `60 passed` d'integrazione, full suite finale
+  `966 passed, 31 warnings`, canary C0 `ok: true`; Ruff, compileall, AST guard, LOC e diff check PASS;
+- nessun SQLCipher opener, wiring envelope/login, setup/recovery, migrazione o backup bundle:
+  `crm.db` reale resta plaintext, G1/G5 restano aperti e il prossimo gate tecnico è S1.3.
+
+## 18. Chiusura della SPEC
 
 La SPEC chiude quando la Wave 0 è attiva, le evidenze iniziali sono raccolte e la decisione di scala è
 registrata. A quel punto riceve consuntivo, fold-back nelle SSoT toccate e viene spostata in

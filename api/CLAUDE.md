@@ -87,6 +87,8 @@ api/
     ├── cash_categories.py  SSoT categorie cassa + predicato "movimento contrattuale" bidirezionale (IN/OUT)
     ├── condition_rules.py  Regole deterministiche anamnesi → condizioni (80 pattern rules)
     ├── crm_envelope/       Primitive pure envelope v1 per DEK password/recovery (S1.1; zero wiring DB/runtime)
+    ├── business_database.py Controller late-bound + state/storage mode + publish boundary business DB (S1.2)
+    ├── database_engines.py Loader engine catalog/nutrition separato dal boundary business (S1.2)
     ├── goal_engine.py      Calcolo progresso obiettivi
     ├── license.py          Verifica licenza JWT RSA (4-tier key resolution)
     ├── tunnel_config.py    Config FRP + webroot HTTP-01 dedicato + risoluzione binari

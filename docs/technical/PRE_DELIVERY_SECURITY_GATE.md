@@ -69,7 +69,16 @@ Tutto ciò che è in Tier 1 e Tier 2 è un criterio di accettazione su una di qu
 - Il flusso di derivazione/sblocco della chiave è legato all'autenticazione del trainer, così che il solo possesso del file sia insufficiente.
 - L'approccio è documentato in una voce di `BUILD_LOG.md`, incluso dove vive la chiave e da quale minaccia difende e da quale no.
 
-**Stato nel codice (riverificato 2026-09-04):** ❌ **Gap reale, confermato.** L'engine business nasce da `create_engine(DATABASE_URL)` in chiaro (`api/database.py`); **crm.db è plaintext sul disco**. Solo `catalog.db`/`nutrition.db` passano per `decrypt_db_to_bytes` → `sqlite3.deserialize` (`api/services/db_crypto.py`), ma quel modello **non è riutilizzabile** per crm.db per due motivi: (a) la chiave è derivata da un **seed embedded nel binario** (`_EMBEDDED_KEY_SEED`) — adeguato per cataloghi read-only (minaccia = reverse engineering, ADR-007), ma **viola il criterio G1** "il solo possesso del file è insufficiente" perché file + binario viaggiano insieme; (b) è **read-only** (decrypt-to-memory), mentre crm.db è read-write. Inoltre il **lifespan tocca crm.db prima di qualsiasi login** (auto-backup, `create_db_and_tables`, `schema_sync`, integrity check), quindi una chiave password-bound impone un **boot a due fasi**. Tensione concreta con G5: `_auto_backup_on_startup` produce oggi una **copia in chiaro** via `sqlite3.backup()`. Decisione in **ADR-013 + Addendum I**; contratto code-gate in **`docs/specs/SPEC_S1_G1_G5_CIFRATURA_CRM.md`**.
+**Stato nel codice (riverificato 2026-09-05):** ❌ **Gap G1 ancora reale, boundary pre-login
+corretto in S1.2.** `crm.db` esistente è ancora plaintext sul disco e non esiste ancora l'opener
+SQLCipher password-bound: i criteri G1/G5 non sono quindi soddisfatti. Il commit `d197467` ha però
+rimosso l'engine business import-time e gli accessi anticipati: in compiled mode il lifespan resta
+`LOCKED` e non apre, crea, sincronizza, verifica o copia `crm.db`; health resta disponibile senza
+sessione business. Il modello `catalog.db`/`nutrition.db` (`decrypt_db_to_bytes` →
+`sqlite3.deserialize`) resta invariato e non è riutilizzabile per il CRM read-write/password-bound.
+Restano da collegare envelope/login e SQLCipher (S1.3), migrazione legacy (S1.4) e backup bundle
+cifrato (S1.5). Decisione in **ADR-013 + Addendum I**; contratto code-gate in
+**`docs/specs/SPEC_S1_G1_G5_CIFRATURA_CRM.md`**.
 
 **Decisione implementativa ora ratificata:** ADR-013 sceglie SQLCipher + envelope DEK–KEK + boot a
 due fasi; l'Addendum I e la SPEC S1 fissano owner unico, candidate engine, KDF/recovery, migrazione e
@@ -78,7 +87,14 @@ backup. Il criterio di questo gate resta la proprietà verificabile, non il solo
 **Fondazione S1.1 (2026-09-04):** ✅ commit `efda1fe` implementa e verifica le primitive pure
 dell'envelope v1 (scrypt/HKDF/AES-GCM, doppio slot e atomic write). Non cambia ancora engine, boot,
 auth, migrazione o backup e `crm.db` resta plaintext: **G1 non è GREEN** e la tensione G5 resta
-aperta. Prossimo gate tecnico: S1.2 engine late-bound e boundary locked.
+aperta.
+
+**Boundary S1.2 (2026-09-05):** ✅ commit `d197467` rende l'engine business late-bound, verifica e
+prepara un candidate engine prima della pubblicazione atomica, serializza gli unlock concorrenti e
+fa fallire chiusi CRM/backup/portale/JWT mentre il DB non è disponibile. Il boot compilato non tocca
+più `crm.db`; un initializer plaintext esplicito resta solo per lo sviluppo. **G1/G5 non sono ancora
+GREEN** perché storage reale, setup/recovery, migrazione e backup cifrato sono i gate successivi.
+Prossimo gate tecnico: S1.3 setup owner e recovery UX.
 
 ---
 
@@ -157,7 +173,14 @@ P2-preserving*. R0.4 ha riportato questi controlli nelle procedure vive di relea
 - Il percorso è realisticamente seguibile da un trainer non tecnico (la frizione qui è un rischio di prodotto, per il principio fermo di Giacomo di non aggiungere frizione ai trainer clienti).
 - Documentato, così che il trainer sappia che esiste e come usarlo.
 
-**Stato nel codice (riverificato 2026-09-04):** 🟠 Esiste un'infrastruttura backup/restore (`api/routers/backup.py`, 7 endpoint WAL-safe) **e** un auto-backup al boot (`_auto_backup_on_startup`, max 5) — ma **produce copie in chiaro** (`sqlite3.backup()`). Con G1 attivo, ogni copia di backup va cifrata o riapre il buco. **G5 è ora progettato nello stesso blocco G1** da ADR-013 Addendum I + `SPEC_S1_G1_G5_CIFRATURA_CRM.md`; nessun code gate è ancora GREEN.
+**Stato nel codice (riverificato 2026-09-05):** 🟠 L'infrastruttura legacy backup/restore
+(`api/routers/backup.py`, 7 endpoint WAL-safe) resta disponibile soltanto sul percorso esplicito
+`PLAINTEXT_DEVELOPMENT`. S1.2 ha rimosso l'auto-backup CRM dal boot e blocca il router sia in
+compiled mode sia davanti a un engine classificato `ENCRYPTED`, impedendo che il vecchio
+`sqlite3.backup()` produca una copia plaintext nel nuovo boundary. Non esiste ancora il backup
+bundle cifrato né il percorso trainer-facing di recovery/restore: **G5 non è GREEN**. Il contratto
+resta nello stesso blocco G1, ADR-013 Addendum I + `SPEC_S1_G1_G5_CIFRATURA_CRM.md`; implementazione
+prevista in S1.5 dopo setup/recovery e migrazione.
 
 > **Perché Tier 2 e non Tier 1:** a differenza di G1–G4, un backup mancante non causa di per sé un *breach* (la riservatezza è intatta). Causa una *perdita di disponibilità*. È un grave rischio di prodotto e di fiducia, e una preoccupazione GDPR borderline su integrità e disponibilità (art. 32), ma non espone dati a un attaccante. Se la consegna deve procedere prima che questo sia costruito, richiede un'eccezione esplicita documentata e un'istruzione manuale temporanea al trainer.
 

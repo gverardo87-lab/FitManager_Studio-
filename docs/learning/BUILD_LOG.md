@@ -4814,3 +4814,37 @@ allineamento `main` (modello B). L'audit pre-release passa in `docs/archive/` a 
 - **Boundary:** nessun wiring SQLCipher, engine, boot, auth, frontend, schema, migrazione, backup o
   dato reale. `crm.db` resta plaintext e G1/G5 restano aperti. Prossimo gate autorizzabile: S1.2
   engine late-bound e boundary locked.
+
+---
+
+## 2026-09-05 — S1.2 GREEN: engine CRM late-bound e boundary locked
+
+- **RED falsificabile:** i test del boundary sono stati scritti prima dei nuovi moduli; la prima
+  collection è fallita con `ModuleNotFoundError: No module named 'api.auth.candidate'`.
+- **Controller e state machine:** introdotto `BusinessDatabaseController`, owner esclusivo
+  dell'engine pubblicato, con accessor sessione fail-closed e transizione serializzata
+  `LOCKED → UNLOCKING → UNLOCKED`. Il candidate engine resta privato durante verifica e maintenance,
+  viene pubblicato atomicamente solo a esito positivo ed è sempre disposed su failure.
+- **Verify-before-publish:** il verifier richiede esattamente un trainer owner attivo, confronta
+  email normalizzata e bcrypt, usa dummy-verify nei casi zero/multipli e non espone differenze tra
+  credenziale errata, tamper o stato non valido.
+- **Boot e confini:** rimosso l'engine business import-time. In compiled mode startup e health non
+  aprono, creano, sincronizzano, verificano o copiano `crm.db`; health resta disponibile con DB
+  business disconnesso. CRM, JWT residuo, portale e backup legacy falliscono chiusi con dettaglio
+  pubblico uniforme. Catalog/nutrition restano invariati.
+- **Plaintext development:** lo sviluppo conserva il comportamento corrente solo tramite
+  inizializzatore esplicito e controller abilitato a `PLAINTEXT_DEVELOPMENT`; compiled mode lo
+  rifiuta. Finding adversariale corretto prima del commit: il backup legacy è ora bloccato anche
+  nello seam source con engine classificato `ENCRYPTED`, non soltanto quando `is_compiled()` è vero.
+- **Tooling:** rimossi gli import diretti del singleton business anche dagli admin script; il canary
+  macOS possiede un engine sintetico locale e usa dependency override FastAPI, senza aprire il DB
+  plaintext di produzione.
+- **Verifiche:** `18 passed` mirati; `60 passed` d'integrazione su health, support snapshot, licenza,
+  portale, canary e schema sync; suite completa finale `966 passed, 31 warnings`; self-test C0
+  `ok: true` con round-trip SQLCipher e wrong-key rejection. Ruff, compileall, AST guard contro
+  `from api.database import engine`, limiti LOC, `git diff --check` e pre-commit: PASS. I warning
+  restano quelli noti di configurazione Hypothesis e alias HTTP 422 deprecato.
+- **Commit codice:** `d197467` (`security: lock boundary engine CRM late-bound`).
+- **Boundary residuo:** nessun opener SQLCipher reale, wiring envelope/login, setup/recovery,
+  migrazione legacy o backup bundle. `crm.db` esistente resta plaintext: **G1/G5 restano aperti**.
+  Prossimo gate autorizzabile: S1.3 setup owner e recovery UX.

@@ -3,8 +3,9 @@
 Modello di sicurezza del prodotto. Copre: threat model, protezioni implementate,
 limitazioni note, roadmap futuri interventi.
 
-Ultimo aggiornamento: 2026-09-04 (S1.1: primitive envelope v1 GREEN in `efda1fe`; `crm.db`, boot,
-migrazione e backup non sono ancora collegati, quindi G1/G5 restano aperti).
+Ultimo aggiornamento: 2026-09-05 (S1.2: boundary business DB late-bound GREEN in `d197467`;
+compiled boot non tocca `crm.db`, ma SQLCipher, envelope/login, migrazione e backup bundle non sono
+ancora collegati, quindi G1/G5 restano aperti).
 
 ## Principi
 
@@ -306,7 +307,8 @@ vita dell'engine (boot a due fasi).
 - Decisione architetturale: **ADR-013 + Addendum I** (`docs/adr/ADR-013-crm-db-encryption-at-rest.md`) — **accepted**, spike SQLCipher validato; owner unico compiled e candidate engine ratificati il 2026-09-04
 - Specifica esecutiva aperta: `docs/specs/SPEC_S1_G1_G5_CIFRATURA_CRM.md` — envelope, state machine, recovery, migrazione e backup
 - Fondazione S1.1: **GREEN** in `efda1fe` — envelope v1 strict, doppio wrap DEK con scrypt/HKDF/AES-GCM e atomic write; package puro, non ancora connesso al runtime
-- Prossimo gate: **S1.2**, engine late-bound e boundary locked; G1/G5 restano bloccanti fino al completamento dei gate successivi
+- Boundary S1.2: **GREEN** in `d197467` — controller late-bound, compiled boot senza accesso a `crm.db`, candidate verify/maintenance-before-publish e fail-closed uniforme; l'opener SQLCipher reale non è ancora collegato
+- Prossimo gate: **S1.3**, setup owner e recovery UX; G1/G5 restano bloccanti fino al completamento dei gate successivi
 - Criteri del gate: `docs/technical/PRE_DELIVERY_SECURITY_GATE.md` §G1 + §G5
 
 #### Fase 1 — Pre-lancio (IMPLEMENTATO)
@@ -374,9 +376,12 @@ Le protezioni tecniche sono una barriera, non una garanzia. Per tutela completa:
 | `api/services/system_runtime.py` | Enforcement toggle + health (version masking) |
 | `api/services/db_crypto.py` | AES-256-GCM encrypt/decrypt per cataloghi |
 | `api/services/crm_envelope/` | Primitive envelope v1 password/recovery per crm.db (S1.1; non ancora wired al runtime) |
+| `api/services/business_database.py` | Controller late-bound, state machine, storage mode e publication boundary del business engine (S1.2) |
+| `api/services/database_engines.py` | Loader invariato degli engine catalog/nutrition, separato dal boundary business (S1.2) |
+| `api/auth/candidate.py` | Verifica fail-closed dell'owner singolo sul candidate engine prima della pubblicazione (S1.2) |
 | `api/config.py` | `is_compiled()` helper + path encrypted DB |
-| `api/database.py` | `_load_encrypted_db()` + engine condizionale |
-| `api/main.py` | LicenseMiddleware |
+| `api/database.py` | Accessor sessione business late-bound + inizializzatore plaintext esplicito solo sviluppo |
+| `api/main.py` | Lifecycle compiled locked + LicenseMiddleware |
 | `tools/build/build-backend-nuitka.sh` | Build script Nuitka |
 | `tools/build/fitmanager.spec` | Build spec PyInstaller (backup/rollback) |
 | `tools/admin_scripts/generate_license.py` | CLI generazione licenze |
